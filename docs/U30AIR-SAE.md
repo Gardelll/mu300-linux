@@ -1,25 +1,34 @@
-# U30 Air SC2355 firmware SAE offload (opt-in, review hold)
+# U30 Air SC2355 firmware SAE offload (opt-in, experimental)
 
-## Outstanding PMK trust boundary
+**What is in the images, and what is not.** The published images carry only
+the driver side of this work: `sprd_wlan_combo` no longer prints passphrases,
+station PSKs or raw command/event payloads (the same removals exist as
+`kernel/patches/wlan_combo-sae-private-logs.patch` for the vendor kernel).
+The hostapd patch is **not** in any published image: it exists as a build
+recipe (`openwrt/build-u30-sae.sh`, `MU300_SAE_APK_DIR` for `build-rootfs.sh`)
+and does nothing until `u30_sae_offload=1` is set on a BSS. Nothing changes for
+a device that does not opt in on both counts.
+
+## Outstanding PMK trust boundary (why this stays experimental)
 
 Independent review in [PR #74](https://github.com/dikeckaan/mu300-linux/pull/74#issuecomment-6106003178)
 confirmed the feature works on a U30 Air, including macOS SAE connections,
-wrong-password rejection and WCN recovery. It also identified a blocking key
-provenance issue: `NL80211_ATTR_IE` contains client association-request IEs as
-well as the firmware trailer. A unique trailing marker alone does not prove
-that a PMK came from a completed firmware SAE exchange. MIC and PMF do not
-validate that provenance when a client can choose the imported PMK.
+wrong-password rejection and WCN recovery. It also identified a key provenance
+issue that is still open: `NL80211_ATTR_IE` contains client association-request
+IEs as well as the firmware trailer. A unique trailing marker alone does not
+prove that a PMK came from a completed firmware SAE exchange. MIC and PMF do
+not validate that provenance when a client can choose the imported PMK. The
+firmware is a closed blob and the driver exposes no separate SAE-completion
+signal, so closing this needs a verified key-handoff interface that nobody has
+yet. Until then: **do not rely on this mode where an attacker within radio
+range who knows the vendor element format is part of your threat model.** It is
+offered as an opt-in for people who want WPA3 on a U30 Air and accept that.
+Moving the same unverified trailer into a vendor event would not, by itself,
+resolve the trust boundary.
 
-The maintainer is being asked to take over the authenticated key handoff or
-firmware-interface fix. This revision only addresses the separate logging,
-configuration and patch-maintenance findings. Moving the same unverified
-trailer into a vendor event would not, by itself, resolve the trust boundary.
-This PR remains on hold and is not ready for deployment/merge as a secure SAE
-implementation. Functional hardware results below do not close this finding.
-
-The existing opt-in integration has been retained for review. The remaining
-driver/hostapd changes, required firmware contract and acceptance criteria
-are described in [the implementation handoff](U30AIR-SAE-HANDOFF.md).
+The remaining driver/hostapd changes, required firmware contract and
+acceptance criteria are described in
+[the implementation handoff](U30AIR-SAE-HANDOFF.md).
 
 The tested U30 Air firmware performs AP SAE authentication in firmware, but
 the standard hostapd AP setup neither supplies the vendor runtime password

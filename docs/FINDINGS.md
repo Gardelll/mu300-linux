@@ -3565,3 +3565,36 @@ adbd's connection, and adbd hung in it, holding its endpoints: FunctionFS never 
 the loop saw it bound and had nothing to do, and the pulled-down gadget stayed off the bus until the board was
 unplugged (its root port on the Mac cannot be power-cycled). Without adb a soft disconnect stays too, until
 `echo connect`; with the fixed adbd it was not tried again.
+
+### 44. WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat)
+The AP side of 14b's station finding. `docs/U30AIR-SAE.md` has the recipe and the open question; what the hardware
+showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
+
+* **Stock hostapd cannot do SAE on this driver.** The SME is in the firmware (`iw phy`: `connect`, no
+  `authenticate`), so hostapd never sees the SAE frames: a WPA3-only BSS comes up, a client finishes SAE with the
+  firmware and then fails association or the 4-way handshake (macOS: `-3912`).
+* **Two vendor interfaces make it work.** hostapd hands the passphrase to the firmware with vendor command OUI
+  `0x001374`, subcommand 43, nested attributes 8 (passphrase), 6 (group, 19) and 7 (ACT, `0xffffffff`); the
+  firmware answers each association with the derived PMK and PMKID as a trailing vendor element in the
+  `NEW_STATION` IE buffer: EID 221, length 52, prefix `40:45:da:04`, then 32 + 16 bytes. Hunting-and-pecking,
+  group 19 only; H2E-only clients and other groups untested.
+* **The PMK arrives in a client-controlled buffer.** The driver passes `evt_new_station.ie` straight through as
+  `assoc_req_ies` (`sc2355/cmdevt.c` -> `common/report.c`), the same bytes that carry the station's own IEs. The
+  parser accepts exactly one trailing element and rejects any second marker, which only holds if the firmware
+  always appends its own; nothing proves it refuses an association without a completed SAE exchange. Open.
+* **The stock driver printed secrets at `L_DBG`**: the SAE passphrase (`pwd is :%s`, `vendor.c`), a station PSK
+  (`cfg80211.c`, `%s` on a buffer that is not NUL-terminated), every TX command and up to 400 bytes of every RX
+  message on PCIe (`pcie.c`, `sdio.c`), the `NEW_STATION` event (`cmdevt.c`). The default level is `L_INFO` and this
+  kernel exposes no debugfs node for it, so none leaked by default; the removals are unconditional now. Confirmed
+  on the device with the rebuilt 7.2.9 module: `dmesg` and `logread` through a boot, a WPA2 association and a
+  package swap hold none of the patterns (the only `EVENT:` matches are `reorder_wlan_delba_event`).
+* **Option off is the stock path.** With the patched `wpad-basic-openssl` r8 installed and the WPA2-PSK hotspot
+  untouched, the generated `hostapd-phy0.conf` has no `sae`/`u30_sae` key, a WPA2 client is back 32 s after the
+  package swap, the VPN stays up. The mode needs pure SAE, `ieee80211w=2`, `sae_pwe=0` and PMKSA caching, and a
+  BSS with the option and any other mode fails closed (`Failed to set beacon parameters`, AP-DISABLED).
+* **A second BSS with the option, added live, took the radio down (2026-10-12).** `wifi reload` with a new
+  `wifi-iface` (`encryption sae`, `ieee80211w 2`, `sae_pwe 0`, `u30_sae_offload=1`) next to the WPA2 hotspot: both
+  SSIDs disappeared and did not come back within ten minutes. The device could only be reached over that hotspot,
+  so the cause is not known yet (hostapd gives the whole phy up when one BSS fails to set up; the earlier maintainer
+  test used a separate BSS with r6 and a full `wifi down/up`). Enable the option on a device you can reach another
+  way, and with a full `wifi down; wifi up`, never `wifi reload`.
