@@ -1236,6 +1236,60 @@ msgstr "자동 (%d개 지원)"
 msgid "%d locked: %s"
 msgstr "%d개 잠김: %s"
 
+msgid "started"
+msgstr "시작됨"
+
+msgid "asleep now (asked)"
+msgstr "지금 절전 (요청됨)"
+
+msgid "woken: power daemon stopping"
+msgstr "깨어남: 전원 데몬 중지 중"
+
+msgid "woken by a key"
+msgstr "버튼으로 깨어남"
+
+msgid "woken by the Wi-Fi key"
+msgstr "Wi-Fi 버튼으로 깨어남"
+
+msgid "woken (mu300-power wake)"
+msgstr "깨어남 (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "USB 컴퓨터로 깨어남"
+
+msgid "woken: plugged in"
+msgstr "깨어남: 전원 연결됨"
+
+msgid "woken by a Wi-Fi client"
+msgstr "Wi-Fi 클라이언트로 깨어남"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "충전 부팅 (충전기가 켬)"
+
+msgid "the hotspot is down"
+msgstr "핫스팟이 꺼져 있음"
+
+msgid "the VPN is still stopped"
+msgstr "VPN이 아직 중지됨"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "재개 실패 후 5G(EN-DC)가 아직 꺼져 있음"
+
+msgid "self-check: %s"
+msgstr "자체 점검: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "절전: %d분 동안 클라이언트 없음 (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "절전: 프로필이 이제 %s"
+
+msgid "woken by the %s key"
+msgstr "%s 버튼으로 깨어남"
+
+msgid "the modem is suspended (%s)"
+msgstr "모뎀이 일시 중단됨 (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0에서 %d 사이의 정수를 입력하세요"
 

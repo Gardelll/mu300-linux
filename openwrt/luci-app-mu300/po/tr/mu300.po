@@ -1236,6 +1236,60 @@ msgstr "Otomatik (%d destekleniyor)"
 msgid "%d locked: %s"
 msgstr "%d kilitli: %s"
 
+msgid "started"
+msgstr "başlatıldı"
+
+msgid "asleep now (asked)"
+msgstr "şimdi uyku (istendi)"
+
+msgid "woken: power daemon stopping"
+msgstr "uyandı: güç servisi duruyor"
+
+msgid "woken by a key"
+msgstr "bir tuşla uyandı"
+
+msgid "woken by the Wi-Fi key"
+msgstr "Wi-Fi tuşuyla uyandı"
+
+msgid "woken (mu300-power wake)"
+msgstr "uyandı (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "USB'deki bir bilgisayarla uyandı"
+
+msgid "woken: plugged in"
+msgstr "uyandı: şarja takıldı"
+
+msgid "woken by a Wi-Fi client"
+msgstr "bir Wi-Fi istemcisiyle uyandı"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "şarj açılışı (şarj cihazı açtı)"
+
+msgid "the hotspot is down"
+msgstr "hotspot kapalı"
+
+msgid "the VPN is still stopped"
+msgstr "VPN hâlâ durmuş"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "başarısız devamdan sonra 5G (EN-DC) hâlâ kapalı"
+
+msgid "self-check: %s"
+msgstr "öz denetim: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "uyku: %d dk istemci yok (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "uyku: profil artık %s"
+
+msgid "woken by the %s key"
+msgstr "%s tuşuyla uyandı"
+
+msgid "the modem is suspended (%s)"
+msgstr "modem askıda (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0 ile %d arasında bir tam sayı girin"
 

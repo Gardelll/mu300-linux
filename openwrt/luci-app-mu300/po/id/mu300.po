@@ -1236,6 +1236,60 @@ msgstr "Otomatis (%d didukung)"
 msgid "%d locked: %s"
 msgstr "%d terkunci: %s"
 
+msgid "started"
+msgstr "dimulai"
+
+msgid "asleep now (asked)"
+msgstr "tidur sekarang (diminta)"
+
+msgid "woken: power daemon stopping"
+msgstr "bangun: layanan daya berhenti"
+
+msgid "woken by a key"
+msgstr "dibangunkan oleh tombol"
+
+msgid "woken by the Wi-Fi key"
+msgstr "dibangunkan oleh tombol Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "bangun (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "dibangunkan oleh komputer di USB"
+
+msgid "woken: plugged in"
+msgstr "bangun: dicolokkan ke listrik"
+
+msgid "woken by a Wi-Fi client"
+msgstr "dibangunkan oleh klien Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "boot pengisian (dinyalakan oleh pengisi daya)"
+
+msgid "the hotspot is down"
+msgstr "hotspot mati"
+
+msgid "the VPN is still stopped"
+msgstr "VPN masih berhenti"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) masih mati setelah lanjut yang gagal"
+
+msgid "self-check: %s"
+msgstr "pemeriksaan mandiri: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "tidur: tanpa klien selama %d mnt (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "tidur: profil sekarang %s"
+
+msgid "woken by the %s key"
+msgstr "dibangunkan oleh tombol %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "modem ditangguhkan (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Masukkan bilangan bulat dari 0 hingga %d"
 

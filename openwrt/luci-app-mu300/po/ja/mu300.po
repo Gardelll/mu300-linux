@@ -1236,6 +1236,60 @@ msgstr "自動 (%d 個対応)"
 msgid "%d locked: %s"
 msgstr "%d 件ロック中: %s"
 
+msgid "started"
+msgstr "起動しました"
+
+msgid "asleep now (asked)"
+msgstr "今すぐスリープ（要求）"
+
+msgid "woken: power daemon stopping"
+msgstr "復帰：電源デーモン停止"
+
+msgid "woken by a key"
+msgstr "キーで復帰"
+
+msgid "woken by the Wi-Fi key"
+msgstr "Wi-Fi キーで復帰"
+
+msgid "woken (mu300-power wake)"
+msgstr "復帰（mu300-power wake）"
+
+msgid "woken by a computer on USB"
+msgstr "USB 接続のコンピューターで復帰"
+
+msgid "woken: plugged in"
+msgstr "復帰：電源に接続"
+
+msgid "woken by a Wi-Fi client"
+msgstr "Wi-Fi クライアントで復帰"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "充電起動（充電器で電源オン）"
+
+msgid "the hotspot is down"
+msgstr "ホットスポットはオフです"
+
+msgid "the VPN is still stopped"
+msgstr "VPN はまだ停止中です"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "再開に失敗したため 5G（EN-DC）はまだオフです"
+
+msgid "self-check: %s"
+msgstr "セルフチェック：%s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "スリープ：%d 分間クライアントなし（%s）"
+
+msgid "asleep: profile now %s"
+msgstr "スリープ：プロファイルは %s になりました"
+
+msgid "woken by the %s key"
+msgstr "%s キーで復帰"
+
+msgid "the modem is suspended (%s)"
+msgstr "モデムは一時停止中です（%s）"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0 から %d までの整数を入力してください"
 

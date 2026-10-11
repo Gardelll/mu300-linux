@@ -1236,6 +1236,60 @@ msgstr "Automat (%d suportate)"
 msgid "%d locked: %s"
 msgstr "%d blocate: %s"
 
+msgid "started"
+msgstr "pornit"
+
+msgid "asleep now (asked)"
+msgstr "adormit acum (cerut)"
+
+msgid "woken: power daemon stopping"
+msgstr "trezit: serviciul de alimentare se oprește"
+
+msgid "woken by a key"
+msgstr "trezit de o tastă"
+
+msgid "woken by the Wi-Fi key"
+msgstr "trezit de tasta Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "trezit (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "trezit de un computer pe USB"
+
+msgid "woken: plugged in"
+msgstr "trezit: conectat la priză"
+
+msgid "woken by a Wi-Fi client"
+msgstr "trezit de un client Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "pornire la încărcare (pornit de încărcător)"
+
+msgid "the hotspot is down"
+msgstr "hotspotul este oprit"
+
+msgid "the VPN is still stopped"
+msgstr "VPN-ul este încă oprit"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) este încă oprit după o reluare eșuată"
+
+msgid "self-check: %s"
+msgstr "autoverificare: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "adormit: niciun client de %d min (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "adormit: profilul acum %s"
+
+msgid "woken by the %s key"
+msgstr "trezit de tasta %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "modemul este suspendat (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Introduceți un număr întreg de la 0 la %d"
 
