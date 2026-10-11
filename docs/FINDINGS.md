@@ -178,7 +178,8 @@ The UDC only appears when the whole chain probes, in this order:
   libraries. Requirements that were each discovered by failure:
   1. Copy `/dev/__properties__` from a running Android so property reads work.
   2. Create `/dev/block/by-name` links and apply Android's node ownership (`ueventd.rc` plus `chown`/`chmod`
-     from vendor `init*.rc`), because `modem_control` drops to uid `system` (1000).
+     from vendor `init*.rc`), because `modem_control` drops to uid `system` (1000). (On a distribution it starts as
+     the account `mu300vnd` instead and the nodes are that account's: 40.)
   3. Bind-mount a copy of `/proc/cmdline` with `androidboot.slot_suffix=_a` so it loads the `_a` modem images
      (LK passes `_b` when booting the trial slot).
   4. **Exec the binary directly.** `sprd_modem_loader` rejects every ioctl/write unless `current->comm` is
@@ -781,7 +782,8 @@ buffers to the bus and leave when there is no tx context yet.
 * `docker export` leaves an empty `/etc/resolv.conf`: `resolvectl query` works but glibc programs cannot resolve names.
   Link it to `../run/systemd/resolve/stub-resolv.conf`.
 * busybox/toybox tar drop xattrs, so `ping` loses `cap_net_raw`; `mu300-fixups.service` restores it.
-* Android's uid `system` (1000) is also Ubuntu's first user, so modem device nodes show up as owned by `ubuntu`.
+* Android's uid `system` (1000) is also Ubuntu's first user, so modem device nodes showed up as owned by `ubuntu` -
+  writable by it, the modem's calibration among them. Fixed in 40: they are the vendor account's (`mu300vnd`) now.
 
 ### 26b. The tunnel needs sing-box's gvisor stack on this kernel
 **2026-10-09: the VPN moved to its own repository.** `mu300-vpn`, its drivers and engines are the module of
@@ -3246,3 +3248,49 @@ brings it back for a while. Read in the code, not measured on a device:
   (`ndp -p`: pltime 0, vltime 7200) while the live /64 stayed preferred and the default router stayed; a WAN restart
   that got the same /64 back withdrew nothing. Not measured: a real carrier renumber (the carrier here kept its /64
   across WAN restarts), and a second relay behind the device, which forwards the RA like any other.
+
+## Security
+
+### 40. The vendor daemons' own account
+
+Found on an F50 (Ubuntu 24.04, kernel 7.2.9): `/dev/disk/by-partlabel/nr_fixnv1_a` (the modem's calibration NV, which
+nothing can restore) and `persist` were `ubuntu:ubuntu 0660`, so any process of the login user could overwrite them
+without sudo; `/dev/data0_gnss` and `/dev/mali0` were `0666`, and so were `spipe_pm*`, `ion`, `dma_heap/*`, ...
+where the kernel has them. `modem_control` and `refnotify` ran as `ubuntu` too: the login user could ptrace them
+(`modem_control` keeps `CAP_CHOWN` and `CAP_BLOCK_SUSPEND`, `refnotify` `CAP_SYS_TIME`).
+
+* Cause: `gen-ueventd-perms.py` translated Android's ids as numbers. Android's `system` is uid 1000, and uid 1000 is
+  the first human account on a distribution (`ubuntu`; `alarm` on Arch). Modes were taken over as they were, `0666`
+  included.
+* The number is in the binaries. Both daemons begin `main` with `switchUserToSystem`: `setgroups` (1000 1001 2000
+  3010), `prctl(PR_SET_KEEPCAPS)`, `setuid(0x3e8)` (an immediate in the code, `mov w0, #0x3e8`), then `capset` down to
+  what they keep. They never call `setgid` (they ran with gid 0) and nothing else checks the uid (`getuid` is not
+  even imported). A failed `setgroups` or `setuid` is logged (`setgroups failed`, `uidset failed`) and they carry on.
+* Fix: a system account `mu300vnd` (the images: `rootfs/assemble.sh`, `arch/build-rootfs.sh`; a system without it:
+  `android-vendor-start` makes it before anything else uses it). `android-run` starts the two daemons as it with
+  `setpriv`: no other groups, no new privileges, and only the capabilities they keep on Android plus `CAP_SYS_CHROOT`
+  for `chroot`, which their own `capset` drops - their `setuid(1000)` then fails, harmlessly. `android-vendor-start`
+  starts `modem_control` through `android-run` (still an exec, so the task name stays `modem_control`).
+  `cp_diskserver` never switches users on Android either and stays root.
+* `ueventd-perms.sh`: `system` and `radio` become `mu300vnd` (owner `$V`, group `$VG`), `graphics` the `video` group
+  (the GPU's nodes `root:video 0660`), every other Android id root. No node is left with bits for others, nothing is
+  writable by everyone, a node that is root's alone is `0600`. Left as Linux has them: input events, the USB serial
+  console `ttyGS*`, and `firmware_class`'s path (whoever writes it chooses the firmware the kernel loads). The RTC
+  stays root's but is the vendor group's: `refnotify` opens `/dev/rtc0` (`root:root 0660`), which it reached through
+  gid 0 before ("RefNotify open /dev/rtc0 failed, error: Permission denied" until it was). The ids are looked up when
+  the script runs, in `/etc/passwd` and `/etc/group`; without the account (OpenWrt, the initramfs: no account at
+  1000 there) it is uid/gid 1000, which the daemons switch to themselves, and the GPU's group is root.
+* The generator's inputs are in `android-vendor/ueventd/` now (the `/dev` rules of the device's `ueventd.rc` and the
+  `chown`/`chmod` lines of its vendor init `*.rc`), and a test checks the committed script is the generator's.
+* Updates: `mu300-update` takes the new image's `/etc/passwd` and adds the old system's human accounts, so an updated
+  system has the image's `mu300vnd`; the nodes are handed out by name at every boot, so its uid does not matter.
+* Measured on F50-B (Ubuntu 24.04, 7.2.9, no SIM), the three files replaced on a v2026.10.18 system: the account
+  made at boot (`mu300vnd` 999/991); `modem_control` and `refnotify` Uid 999, Gid 991, no groups, NoNewPrivs 1,
+  CapEff `0x1000000001` and `0x2000000` (as on Android); `cp_diskserver` root; the modem booted (`modem@0..2 start
+  over`), `AT` OK, `+CFUN: 1`, `+CPIN` `+CME ERROR: 10` (no SIM, as before), `AT+CGMR` answers; `nr_fixnv1_a` and
+  `persist` `mu300vnd:mu300vnd 0660` and `head` on them as `ubuntu` "Permission denied"; no world-writable node in
+  `/dev` besides the standard ones, nothing in `/dev` or `/sys` owned by uid 1000; `mali0` `root:video 0660` and
+  `cltest` (OpenCL) passes; Wi-Fi client still connected; `timedatectl` reads the RTC; up past the PM watchdog's
+  ~290 s. The vendor log has the same errors as before the change (no `/dev/cp_dump`, no `/proc/bootconfig`, no
+  property service) plus the two logged failed switches. Not measured: the 5.4 kernel, OpenWrt (unchanged there but
+  for the modes), the modem with a SIM.
