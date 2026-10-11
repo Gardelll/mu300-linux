@@ -42,6 +42,9 @@ msgstr "Daya"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Packages after an update"
+msgstr "Paket setelah pembaruan"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Pusat kontrol MU300: dasbor status, kunci jaringan, terminal AT, dan SMS"
 
@@ -1164,6 +1167,60 @@ msgstr "Otomatis (%d didukung)"
 msgid "%d locked: %s"
 msgstr "%d terkunci: %s"
 
+msgid "Repair DNS?"
+msgstr "Perbaiki DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Ini menghapus penerusan DNS milik paket yang sudah tidak terpasang. Jika tidak ada server DNS lain yang tersisa, perangkat akan memakai server DNS koneksi seluler: operator dapat melihat nama yang Anda cari, di luar proxy atau VPN apa pun."
+
+msgid "Repair DNS"
+msgstr "Perbaiki DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Paket yang dipasang di perangkat bukan bagian dari image rilis. Pembaruan mencatatnya, dan sistem baru memasangnya kembali saat boot pertama, begitu terhubung ke internet. Sampai paket kembali, pengaturannya disisihkan."
+
+msgid "No packages to install again."
+msgstr "Tidak ada paket untuk dipasang ulang."
+
+msgid "All back"
+msgstr "Semua kembali"
+
+msgid "Not installed yet"
+msgstr "Belum terpasang"
+
+msgid "Could not be installed again"
+msgstr "Tidak dapat dipasang ulang"
+
+msgid "Waiting for the internet"
+msgstr "Menunggu internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Dihentikan: tidak ada internet selama lima kali boot"
+
+msgid "Skipped"
+msgstr "Dilewati"
+
+msgid "Written down by the update from %s"
+msgstr "Dicatat oleh pembaruan dari %s"
+
+msgid "Installed again"
+msgstr "Dipasang ulang"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Pasang sendiri dari tempat Anda mendapatkannya (berkas paket: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Pengaturan yang disisihkan di /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS masih mengarah ke paket yang tidak terpasang: perangkat tidak punya DNS melaluinya."
+
+msgid "Try again"
+msgstr "Coba lagi"
+
+msgid "Dismiss the note"
+msgstr "Tutup catatan"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Masukkan bilangan bulat dari 0 hingga %d"
 
@@ -1728,6 +1785,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Adaptor paket tidak memberi balasan yang valid"
+
+msgid "Invalid packages operation"
+msgstr "Operasi paket tidak valid"
+
 msgid "Request too large"
 msgstr "Permintaan terlalu besar"
 
@@ -1910,6 +1973,21 @@ msgstr "Cache kunci tidak tersedia"
 
 msgid "No serving cell to lock to"
 msgstr "Tidak ada sel layanan untuk dikunci"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Pemasangan ulang paket tidak tersedia di sistem ini"
+
+msgid "No packages were written down by an update"
+msgstr "Tidak ada paket yang dicatat oleh pembaruan"
+
+msgid "Reinstalling is running already"
+msgstr "Pemasangan ulang sudah berjalan"
+
+msgid "The note could not be dropped"
+msgstr "Catatan tidak dapat dihapus"
+
+msgid "Unknown packages operation"
+msgstr "Operasi paket tidak dikenal"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

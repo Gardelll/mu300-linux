@@ -37,7 +37,16 @@ The release's image has only its own packages. `apply` lists the ones you added 
 system installs them again at its first boot, once it is online (an hour of tries, then again at the next boots, five
 at most). Until they are back their OpenWrt settings (`/etc/config/<name>`) wait in `/etc/mu300/orphaned-config/`:
 settings without their program used to stay active - OpenClash's left the device without DNS. A package the feeds do
-not have (installed from a `.apk` file) cannot come back by itself; its settings stay aside.
+not have (installed from a `.apk` file) cannot come back by itself; its settings stay aside. Services come back
+enabled or disabled as they were (OpenWrt's init scripts, Ubuntu's systemd units).
+
+On Ubuntu the apt sources you added (`/etc/apt/sources.list.d`, a PPA, with the keys they name) are kept, so their
+packages can come back; the image's own sources are never replaced. A kept source that makes `apt-get update` fail
+(a PPA of 24.04 after a move to 26.04) is turned off as `NAME.disabled`, and `status` says so.
+
+In the control panel (OpenWrt with the panel) the same is under **System -> Packages after an update**: what came
+back, what did not and why, the settings set aside, and the buttons Try again, Repair DNS (it asks first: DNS then
+goes to the carrier) and Dismiss the note.
 
 ```sh
 mu300-user-packages status    # what came back, what failed and why, how to put settings back

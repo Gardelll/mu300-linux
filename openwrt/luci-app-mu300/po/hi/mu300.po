@@ -42,6 +42,9 @@ msgstr "पावर"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Packages after an update"
+msgstr "अपडेट के बाद पैकेज"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 नियंत्रण केंद्र: स्थिति डैशबोर्ड, नेटवर्क लॉक, AT टर्मिनल और SMS"
 
@@ -1164,6 +1167,60 @@ msgstr "स्वचालित (%d समर्थित)"
 msgid "%d locked: %s"
 msgstr "%d लॉक: %s"
 
+msgid "Repair DNS?"
+msgstr "DNS ठीक करें?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "यह उस पैकेज का DNS फ़ॉरवर्डर हटाता है जो अब इंस्टॉल नहीं है। अगर कोई और DNS सर्वर नहीं बचता, तो डिवाइस मोबाइल कनेक्शन के DNS सर्वर इस्तेमाल करता है: ऑपरेटर आपके खोजे गए नाम किसी भी प्रॉक्सी या VPN के बाहर देख सकता है।"
+
+msgid "Repair DNS"
+msgstr "DNS ठीक करें"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "डिवाइस पर इंस्टॉल किए गए पैकेज रिलीज़ इमेज का हिस्सा नहीं होते। अपडेट उन्हें दर्ज करता है, और नया सिस्टम पहली बार चालू होने पर, ऑनलाइन होते ही, उन्हें फिर से इंस्टॉल करता है। पैकेज वापस आने तक उसकी सेटिंग्स अलग रखी जाती हैं।"
+
+msgid "No packages to install again."
+msgstr "फिर से इंस्टॉल करने के लिए कोई पैकेज नहीं।"
+
+msgid "All back"
+msgstr "सभी वापस आ गए"
+
+msgid "Not installed yet"
+msgstr "अभी इंस्टॉल नहीं हुआ"
+
+msgid "Could not be installed again"
+msgstr "फिर से इंस्टॉल नहीं हो सका"
+
+msgid "Waiting for the internet"
+msgstr "इंटरनेट की प्रतीक्षा"
+
+msgid "Given up: no internet at five boots"
+msgstr "छोड़ दिया: पाँच बार चालू होने पर भी इंटरनेट नहीं"
+
+msgid "Skipped"
+msgstr "छोड़ा गया"
+
+msgid "Written down by the update from %s"
+msgstr "%s से हुए अपडेट ने दर्ज किया"
+
+msgid "Installed again"
+msgstr "फिर से इंस्टॉल हुए"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "इन्हें वहीं से खुद इंस्टॉल करें जहाँ से आपने लिया था (पैकेज फ़ाइल: apk add --allow-untrusted FILE.apk)।"
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "/etc/mu300/orphaned-config में अलग रखी सेटिंग्स"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS अब भी ऐसे पैकेज पर जाता है जो इंस्टॉल नहीं है: उसके ज़रिए डिवाइस के पास DNS नहीं है।"
+
+msgid "Try again"
+msgstr "फिर से कोशिश करें"
+
+msgid "Dismiss the note"
+msgstr "सूचना हटाएँ"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0 से %d के बीच की पूर्ण संख्या दर्ज करें"
 
@@ -1728,6 +1785,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "पैकेज एडेप्टर ने मान्य जवाब नहीं दिया"
+
+msgid "Invalid packages operation"
+msgstr "अमान्य पैकेज क्रिया"
+
 msgid "Request too large"
 msgstr "अनुरोध बहुत बड़ा है"
 
@@ -1910,6 +1973,21 @@ msgstr "लॉक कैश उपलब्ध नहीं"
 
 msgid "No serving cell to lock to"
 msgstr "लॉक करने के लिए कोई सर्विंग सेल नहीं"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "इस सिस्टम पर पैकेज फिर से इंस्टॉल करना उपलब्ध नहीं है"
+
+msgid "No packages were written down by an update"
+msgstr "किसी अपडेट ने कोई पैकेज दर्ज नहीं किया"
+
+msgid "Reinstalling is running already"
+msgstr "फिर से इंस्टॉल करना पहले से चल रहा है"
+
+msgid "The note could not be dropped"
+msgstr "सूचना हटाई नहीं जा सकी"
+
+msgid "Unknown packages operation"
+msgstr "अज्ञात पैकेज क्रिया"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

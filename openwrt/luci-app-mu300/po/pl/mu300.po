@@ -42,6 +42,9 @@ msgstr "Zasilanie"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Packages after an update"
+msgstr "Pakiety po aktualizacji"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Centrum sterowania MU300: panel stanu, blokady sieci, terminal AT i SMS"
 
@@ -1164,6 +1167,60 @@ msgstr "Automatyczny (obsługiwanych: %d)"
 msgid "%d locked: %s"
 msgstr "Zablokowano %d: %s"
 
+msgid "Repair DNS?"
+msgstr "Naprawić DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "To usuwa przekierowanie DNS pakietu, który nie jest już zainstalowany. Jeśli nie zostanie żaden inny serwer DNS, urządzenie użyje serwerów DNS połączenia komórkowego: operator zobaczy nazwy, które wyszukujesz, z pominięciem proxy i VPN."
+
+msgid "Repair DNS"
+msgstr "Napraw DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Pakiety zainstalowane na urządzeniu nie są częścią obrazu wydania. Aktualizacja je zapisuje, a nowy system instaluje je ponownie przy pierwszym uruchomieniu, gdy tylko będzie online. Dopóki pakiet nie wróci, jego ustawienia są odłożone."
+
+msgid "No packages to install again."
+msgstr "Brak pakietów do ponownej instalacji."
+
+msgid "All back"
+msgstr "Wszystkie wróciły"
+
+msgid "Not installed yet"
+msgstr "Jeszcze niezainstalowany"
+
+msgid "Could not be installed again"
+msgstr "Nie udało się zainstalować ponownie"
+
+msgid "Waiting for the internet"
+msgstr "Oczekiwanie na internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Zaniechano: brak internetu przez pięć uruchomień"
+
+msgid "Skipped"
+msgstr "Pominięto"
+
+msgid "Written down by the update from %s"
+msgstr "Zapisane przez aktualizację z %s"
+
+msgid "Installed again"
+msgstr "Zainstalowane ponownie"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Zainstaluj je samodzielnie ze źródła, z którego je masz (plik pakietu: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Odłożone ustawienia w /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS nadal kieruje do niezainstalowanego pakietu: urządzenie nie ma przez niego DNS."
+
+msgid "Try again"
+msgstr "Spróbuj ponownie"
+
+msgid "Dismiss the note"
+msgstr "Zamknij powiadomienie"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Wpisz liczbę całkowitą od 0 do %d"
 
@@ -1728,6 +1785,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Adapter pakietów nie zwrócił prawidłowej odpowiedzi"
+
+msgid "Invalid packages operation"
+msgstr "Nieprawidłowa operacja na pakietach"
+
 msgid "Request too large"
 msgstr "Żądanie jest za duże"
 
@@ -1910,6 +1973,21 @@ msgstr "Pamięć podręczna blokad niedostępna"
 
 msgid "No serving cell to lock to"
 msgstr "Brak komórki obsługującej do zablokowania"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Ponowna instalacja pakietów nie jest dostępna w tym systemie"
+
+msgid "No packages were written down by an update"
+msgstr "Żadna aktualizacja nie zapisała pakietów"
+
+msgid "Reinstalling is running already"
+msgstr "Ponowna instalacja już trwa"
+
+msgid "The note could not be dropped"
+msgstr "Nie udało się usunąć powiadomienia"
+
+msgid "Unknown packages operation"
+msgstr "Nieznana operacja na pakietach"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

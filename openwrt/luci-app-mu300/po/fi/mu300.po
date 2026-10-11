@@ -42,6 +42,9 @@ msgstr "Virta"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Packages after an update"
+msgstr "Paketit päivityksen jälkeen"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-ohjauskeskus: tilan yleiskatsaus, verkkolukitukset, AT-pääte ja SMS"
 
@@ -1164,6 +1167,60 @@ msgstr "Automaattinen (%d tuettu)"
 msgid "%d locked: %s"
 msgstr "%d lukittu: %s"
 
+msgid "Repair DNS?"
+msgstr "Korjataanko DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Tämä poistaa sellaisen paketin DNS-uudelleenohjauksen, joka ei ole enää asennettuna. Jos muuta DNS-palvelinta ei jää, laite käyttää mobiiliyhteyden DNS-palvelimia: operaattori näkee hakemasi nimet minkään välityspalvelimen tai VPN:n ohi."
+
+msgid "Repair DNS"
+msgstr "Korjaa DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Laitteeseen asennetut paketit eivät kuulu julkaisun levykuvaan. Päivitys kirjaa ne, ja uusi järjestelmä asentaa ne uudelleen ensimmäisellä käynnistyksellä heti, kun se on verkossa. Kunnes paketti on palannut, sen asetukset on siirretty sivuun."
+
+msgid "No packages to install again."
+msgstr "Ei uudelleen asennettavia paketteja."
+
+msgid "All back"
+msgstr "Kaikki palautettu"
+
+msgid "Not installed yet"
+msgstr "Ei vielä asennettu"
+
+msgid "Could not be installed again"
+msgstr "Uudelleenasennus ei onnistunut"
+
+msgid "Waiting for the internet"
+msgstr "Odotetaan internetiä"
+
+msgid "Given up: no internet at five boots"
+msgstr "Luovuttu: ei internetiä viidellä käynnistyksellä"
+
+msgid "Skipped"
+msgstr "Ohitettu"
+
+msgid "Written down by the update from %s"
+msgstr "Kirjattu päivityksessä versiosta %s"
+
+msgid "Installed again"
+msgstr "Asennettu uudelleen"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Asenna ne itse sieltä, mistä sait ne (pakettitiedosto: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Sivuun siirretyt asetukset kansiossa /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS ohjautuu yhä pakettiin, jota ei ole asennettu: laitteella ei ole sen kautta DNS:ää."
+
+msgid "Try again"
+msgstr "Yritä uudelleen"
+
+msgid "Dismiss the note"
+msgstr "Sulje ilmoitus"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Anna kokonaisluku väliltä 0–%d"
 
@@ -1728,6 +1785,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Pakettisovitin ei antanut kelvollista vastausta"
+
+msgid "Invalid packages operation"
+msgstr "Virheellinen pakettitoiminto"
+
 msgid "Request too large"
 msgstr "Pyyntö on liian suuri"
 
@@ -1910,6 +1973,21 @@ msgstr "Lukitusvälimuisti ei käytettävissä"
 
 msgid "No serving cell to lock to"
 msgstr "Ei palvelevaa solua lukittavaksi"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Pakettien uudelleenasennus ei ole käytettävissä tässä järjestelmässä"
+
+msgid "No packages were written down by an update"
+msgstr "Mikään päivitys ei kirjannut paketteja"
+
+msgid "Reinstalling is running already"
+msgstr "Uudelleenasennus on jo käynnissä"
+
+msgid "The note could not be dropped"
+msgstr "Ilmoitusta ei voitu poistaa"
+
+msgid "Unknown packages operation"
+msgstr "Tuntematon pakettitoiminto"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

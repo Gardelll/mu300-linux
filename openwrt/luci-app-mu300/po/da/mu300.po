@@ -42,6 +42,9 @@ msgstr "Strøm"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Packages after an update"
+msgstr "Pakker efter en opdatering"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-kontrolcenter: statusoversigt, netværkslåse, AT-terminal og SMS"
 
@@ -1164,6 +1167,60 @@ msgstr "Automatisk (%d understøttet)"
 msgid "%d locked: %s"
 msgstr "%d låst: %s"
 
+msgid "Repair DNS?"
+msgstr "Reparér DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Dette fjerner DNS-videresendelsen for en pakke, der ikke længere er installeret. Er der ingen anden DNS-server tilbage, bruger enheden mobilforbindelsens DNS-servere: operatøren ser de navne, du slår op, uden om enhver proxy eller VPN."
+
+msgid "Repair DNS"
+msgstr "Reparér DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Pakker installeret på enheden er ikke en del af udgivelsens billede. En opdatering noterer dem, og det nye system installerer dem igen ved første opstart, så snart det er online. Indtil en pakke er tilbage, lægges dens indstillinger til side."
+
+msgid "No packages to install again."
+msgstr "Ingen pakker at installere igen."
+
+msgid "All back"
+msgstr "Alle tilbage"
+
+msgid "Not installed yet"
+msgstr "Ikke installeret endnu"
+
+msgid "Could not be installed again"
+msgstr "Kunne ikke installeres igen"
+
+msgid "Waiting for the internet"
+msgstr "Venter på internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Opgivet: intet internet ved fem opstarter"
+
+msgid "Skipped"
+msgstr "Sprunget over"
+
+msgid "Written down by the update from %s"
+msgstr "Noteret af opdateringen fra %s"
+
+msgid "Installed again"
+msgstr "Installeret igen"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Installér dem selv fra der, hvor du fik dem (en pakkefil: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Indstillinger lagt til side i /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS går stadig til en pakke, der ikke er installeret: enheden har ingen DNS gennem den."
+
+msgid "Try again"
+msgstr "Prøv igen"
+
+msgid "Dismiss the note"
+msgstr "Luk beskeden"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Angiv et helt tal fra 0 til %d"
 
@@ -1728,6 +1785,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Pakkeadapteren gav intet gyldigt svar"
+
+msgid "Invalid packages operation"
+msgstr "Ugyldig pakkehandling"
+
 msgid "Request too large"
 msgstr "Anmodningen er for stor"
 
@@ -1910,6 +1973,21 @@ msgstr "Låsecache utilgængelig"
 
 msgid "No serving cell to lock to"
 msgstr "Ingen betjenende celle at låse til"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Geninstallation af pakker er ikke tilgængelig på dette system"
+
+msgid "No packages were written down by an update"
+msgstr "Ingen opdatering har noteret pakker"
+
+msgid "Reinstalling is running already"
+msgstr "Geninstallationen kører allerede"
+
+msgid "The note could not be dropped"
+msgstr "Beskeden kunne ikke fjernes"
+
+msgid "Unknown packages operation"
+msgstr "Ukendt pakkehandling"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

@@ -42,6 +42,9 @@ msgstr "電源"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Packages after an update"
+msgstr "更新後的套件"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 控制中心：狀態儀表板、網路鎖定、AT 終端機與簡訊"
 
@@ -1164,6 +1167,60 @@ msgstr "自動（支援 %d 個）"
 msgid "%d locked: %s"
 msgstr "已鎖定 %d 個：%s"
 
+msgid "Repair DNS?"
+msgstr "修復 DNS？"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "這會移除一個已不再安裝的套件的 DNS 轉發。如果沒有其他 DNS 伺服器，裝置將使用行動連線的 DNS 伺服器：電信業者會看到你查詢的網域名稱，不經過任何代理或 VPN。"
+
+msgid "Repair DNS"
+msgstr "修復 DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "裝置上自行安裝的套件不屬於發行映像。更新會記錄它們，新系統在首次開機並連網後會重新安裝。套件恢復之前，其設定會被暫存。"
+
+msgid "No packages to install again."
+msgstr "沒有需要重新安裝的套件。"
+
+msgid "All back"
+msgstr "全部已恢復"
+
+msgid "Not installed yet"
+msgstr "尚未安裝"
+
+msgid "Could not be installed again"
+msgstr "無法重新安裝"
+
+msgid "Waiting for the internet"
+msgstr "正在等待網路"
+
+msgid "Given up: no internet at five boots"
+msgstr "已放棄：連續五次開機都沒有網路"
+
+msgid "Skipped"
+msgstr "已略過"
+
+msgid "Written down by the update from %s"
+msgstr "由來自 %s 的更新記錄"
+
+msgid "Installed again"
+msgstr "已重新安裝"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "請從原本的來源自行安裝（套件檔案：apk add --allow-untrusted FILE.apk）。"
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "暫存在 /etc/mu300/orphaned-config 中的設定"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS 仍指向一個未安裝的套件：裝置無法透過它解析 DNS。"
+
+msgid "Try again"
+msgstr "重試"
+
+msgid "Dismiss the note"
+msgstr "關閉提示"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "請輸入 0 到 %d 之間的整數"
 
@@ -1728,6 +1785,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "套件轉接器沒有傳回有效回覆"
+
+msgid "Invalid packages operation"
+msgstr "無效的套件操作"
+
 msgid "Request too large"
 msgstr "請求過大"
 
@@ -1910,6 +1973,21 @@ msgstr "鎖定快取無法使用"
 
 msgid "No serving cell to lock to"
 msgstr "沒有可鎖定的服務基地台"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "此系統不支援重新安裝套件"
+
+msgid "No packages were written down by an update"
+msgstr "沒有更新記錄的套件"
+
+msgid "Reinstalling is running already"
+msgstr "重新安裝已在執行"
+
+msgid "The note could not be dropped"
+msgstr "無法移除提示"
+
+msgid "Unknown packages operation"
+msgstr "未知的套件操作"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

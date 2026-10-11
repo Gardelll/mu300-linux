@@ -604,7 +604,9 @@ at the end, so an interrupted download cannot leave a half-updated system.
 **Packages you installed yourself** (`apk add` on OpenWrt, `apt install` on Ubuntu) are not part of the release's
 image. `apply` lists them before the switch, sets their OpenWrt settings (`/etc/config/<name>`) aside in
 `/etc/mu300/orphaned-config/` until they are back, and the new system installs them again at its first boot once it
-is online, with their settings put back. A package the feeds do not have (installed from a file) stays out, with its
+is online, with their settings and their services' enabled/disabled state put back. Ubuntu keeps the apt sources you
+added (a PPA, with its key); one that makes `apt-get update` fail on the new release is turned off and said so. The
+panel shows it all under System -> Packages after an update. A package the feeds do not have (installed from a file) stays out, with its
 settings aside: `mu300-user-packages status` says what came back and how to restore the rest. If such a proxy
 (OpenClash) had pointed dnsmasq at itself, the device reports it and never falls back to the connection's resolvers by
 itself: `mu300-user-packages repair-dns` does that on request. `mu300-update apply --no-reinstall` (or

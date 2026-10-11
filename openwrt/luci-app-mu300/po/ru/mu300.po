@@ -42,6 +42,9 @@ msgstr "Питание"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Packages after an update"
+msgstr "Пакеты после обновления"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Центр управления MU300: панель состояния, фиксация сети, AT-терминал и SMS"
 
@@ -1164,6 +1167,60 @@ msgstr "Автоматически (поддерживается: %d)"
 msgid "%d locked: %s"
 msgstr "Зафиксировано %d: %s"
 
+msgid "Repair DNS?"
+msgstr "Восстановить DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Будет удалена DNS-переадресация пакета, который больше не установлен. Если других DNS-серверов не останется, устройство будет использовать DNS-серверы мобильного подключения: оператор увидит имена, которые вы запрашиваете, в обход любого прокси или VPN."
+
+msgid "Repair DNS"
+msgstr "Восстановить DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Пакеты, установленные на устройстве, не входят в образ выпуска. Обновление записывает их, и новая система устанавливает их заново при первой загрузке, как только появится интернет. Пока пакет не вернётся, его настройки отложены."
+
+msgid "No packages to install again."
+msgstr "Нет пакетов для повторной установки."
+
+msgid "All back"
+msgstr "Все возвращены"
+
+msgid "Not installed yet"
+msgstr "Ещё не установлен"
+
+msgid "Could not be installed again"
+msgstr "Не удалось установить заново"
+
+msgid "Waiting for the internet"
+msgstr "Ожидание интернета"
+
+msgid "Given up: no internet at five boots"
+msgstr "Прекращено: нет интернета за пять загрузок"
+
+msgid "Skipped"
+msgstr "Пропущено"
+
+msgid "Written down by the update from %s"
+msgstr "Записано обновлением с %s"
+
+msgid "Installed again"
+msgstr "Установлены заново"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Установите их сами из того источника, откуда вы их взяли (файл пакета: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Отложенные настройки в /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS всё ещё направлен на неустановленный пакет: через него у устройства нет DNS."
+
+msgid "Try again"
+msgstr "Повторить"
+
+msgid "Dismiss the note"
+msgstr "Скрыть уведомление"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Введите целое число от 0 до %d"
 
@@ -1728,6 +1785,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Адаптер пакетов не дал корректного ответа"
+
+msgid "Invalid packages operation"
+msgstr "Недопустимая операция с пакетами"
+
 msgid "Request too large"
 msgstr "Слишком большой запрос"
 
@@ -1910,6 +1973,21 @@ msgstr "Кэш фиксации недоступен"
 
 msgid "No serving cell to lock to"
 msgstr "Нет обслуживающей соты для фиксации"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Повторная установка пакетов недоступна в этой системе"
+
+msgid "No packages were written down by an update"
+msgstr "Ни одно обновление не записало пакеты"
+
+msgid "Reinstalling is running already"
+msgstr "Повторная установка уже выполняется"
+
+msgid "The note could not be dropped"
+msgstr "Не удалось убрать уведомление"
+
+msgid "Unknown packages operation"
+msgstr "Неизвестная операция с пакетами"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

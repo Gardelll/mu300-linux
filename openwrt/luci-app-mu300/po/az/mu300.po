@@ -42,6 +42,9 @@ msgstr "Enerji"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Packages after an update"
+msgstr "Yeniləmədən sonrakı paketlər"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 idarəetmə mərkəzi: status paneli, şəbəkə kilidləri, AT terminalı və SMS"
 
@@ -1164,6 +1167,60 @@ msgstr "Avtomatik (%d dəstəklənir)"
 msgid "%d locked: %s"
 msgstr "%d kilidlənib: %s"
 
+msgid "Repair DNS?"
+msgstr "DNS bərpa edilsin?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Bu, artıq quraşdırılmamış paketin DNS yönləndirməsini silir. Başqa DNS serveri qalmazsa, cihaz mobil bağlantının DNS serverlərindən istifadə edir: operator axtardığınız adları istənilən proksi və ya VPN-dən kənarda görür."
+
+msgid "Repair DNS"
+msgstr "DNS-i bərpa et"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Cihaza quraşdırılan paketlər buraxılış təsvirinin hissəsi deyil. Yeniləmə onları qeyd edir və yeni sistem ilk açılışda, internet olan kimi onları yenidən quraşdırır. Paket geri gələnə qədər onun ayarları kənara qoyulur."
+
+msgid "No packages to install again."
+msgstr "Yenidən quraşdırılacaq paket yoxdur."
+
+msgid "All back"
+msgstr "Hamısı geri qayıtdı"
+
+msgid "Not installed yet"
+msgstr "Hələ quraşdırılmayıb"
+
+msgid "Could not be installed again"
+msgstr "Yenidən quraşdırmaq mümkün olmadı"
+
+msgid "Waiting for the internet"
+msgstr "İnternet gözlənilir"
+
+msgid "Given up: no internet at five boots"
+msgstr "İmtina edildi: beş açılışda internet olmadı"
+
+msgid "Skipped"
+msgstr "Ötürüldü"
+
+msgid "Written down by the update from %s"
+msgstr "%s versiyasından yeniləmə tərəfindən qeyd edilib"
+
+msgid "Installed again"
+msgstr "Yenidən quraşdırıldı"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Onları əldə etdiyiniz yerdən özünüz quraşdırın (paket faylı: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "/etc/mu300/orphaned-config daxilində kənara qoyulan ayarlar"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS hələ də quraşdırılmamış paketə gedir: cihazın onun vasitəsilə DNS-i yoxdur."
+
+msgid "Try again"
+msgstr "Yenidən cəhd et"
+
+msgid "Dismiss the note"
+msgstr "Qeydi bağla"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0 ilə %d arasında tam ədəd daxil edin"
 
@@ -1728,6 +1785,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Paket adapteri etibarlı cavab vermədi"
+
+msgid "Invalid packages operation"
+msgstr "Etibarsız paket əməliyyatı"
+
 msgid "Request too large"
 msgstr "Sorğu çox böyükdür"
 
@@ -1910,6 +1973,21 @@ msgstr "Kilid keşi əlçatan deyil"
 
 msgid "No serving cell to lock to"
 msgstr "Kilidlənəcək xidmət edən hüceyrə yoxdur"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Paketlərin yenidən quraşdırılması bu sistemdə mövcud deyil"
+
+msgid "No packages were written down by an update"
+msgstr "Heç bir yeniləmə paket qeyd etməyib"
+
+msgid "Reinstalling is running already"
+msgstr "Yenidən quraşdırma artıq işləyir"
+
+msgid "The note could not be dropped"
+msgstr "Qeydi silmək mümkün olmadı"
+
+msgid "Unknown packages operation"
+msgstr "Naməlum paket əməliyyatı"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
