@@ -146,6 +146,9 @@ otherwise at install, it has the same name and password as under Android, so you
 </tbody></table></div>
 <pre><code>sudo nano /etc/mu300/hotspot.conf        <span class="c"># SSID=, PSK=, BAND=5 or 2.4, CHANNEL=auto, COUNTRY=</span>
 sudo systemctl restart mu300-hotspot</code></pre>
+<p>On 5 GHz the hotspot uses channels 36-48 or 149-165, never a DFS channel (52-144): the Wi-Fi driver cannot detect
+radar, so a DFS channel chosen in the file or in LuCI is replaced by channel 36 (149 where 36-48 are not allowed) and
+the log says why.</p>
 <p>If the Wi-Fi chip's firmware crashes, the driver resets the chip and the Wi-Fi comes back by itself, as a hotspot
 or as a client of another network: in the tests within 15 to 20 seconds, on 6.18 and 7.2. If the chip cannot be reset
 within 70 seconds, the device restarts cleanly instead of hanging.</p>

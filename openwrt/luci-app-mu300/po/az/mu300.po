@@ -1302,6 +1302,60 @@ msgstr "Yenidən cəhd et"
 msgid "Dismiss the note"
 msgstr "Qeydi bağla"
 
+msgid "started"
+msgstr "başladıldı"
+
+msgid "asleep now (asked)"
+msgstr "indi yuxu (istənildi)"
+
+msgid "woken: power daemon stopping"
+msgstr "oyandı: enerji xidməti dayanır"
+
+msgid "woken by a key"
+msgstr "düymə ilə oyandı"
+
+msgid "woken by the Wi-Fi key"
+msgstr "Wi-Fi düyməsi ilə oyandı"
+
+msgid "woken (mu300-power wake)"
+msgstr "oyandı (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "USB-dəki kompüterlə oyandı"
+
+msgid "woken: plugged in"
+msgstr "oyandı: şəbəkəyə qoşuldu"
+
+msgid "woken by a Wi-Fi client"
+msgstr "Wi-Fi müştərisi ilə oyandı"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "şarj açılışı (şarj cihazı açdı)"
+
+msgid "the hotspot is down"
+msgstr "hotspot söndürülüb"
+
+msgid "the VPN is still stopped"
+msgstr "VPN hələ dayanıb"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "uğursuz davamdan sonra 5G (EN-DC) hələ sönülüdür"
+
+msgid "self-check: %s"
+msgstr "özünüyoxlama: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "yuxu: %d dəq müştəri yoxdur (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "yuxu: profil indi %s"
+
+msgid "woken by the %s key"
+msgstr "%s düyməsi ilə oyandı"
+
+msgid "the modem is suspended (%s)"
+msgstr "modem dayandırılıb (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0 ilə %d arasında tam ədəd daxil edin"
 

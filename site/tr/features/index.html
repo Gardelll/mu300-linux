@@ -146,6 +146,9 @@ seçmediyseniz adı ve şifresi Android'dekiyle aynıdır; telefonlarınız eski
 </tbody></table></div>
 <pre><code>sudo nano /etc/mu300/hotspot.conf        <span class="c"># SSID=, PSK=, BAND=5 ya da 2.4, CHANNEL=auto, COUNTRY=</span>
 sudo systemctl restart mu300-hotspot</code></pre>
+<p>5 GHz'de hotspot 36-48 ya da 149-165 kanallarını kullanır, hiçbir zaman bir DFS kanalını (52-144) değil: Wi-Fi
+sürücüsü radar algılayamaz; dosyada ya da LuCI'de seçilen bir DFS kanalının yerine 36. kanal (36-48'e izin verilmeyen
+ülkelerde 149) kullanılır ve günlükte nedeni yazar.</p>
 <p>Wi-Fi çipinin yazılımı çökerse sürücü çipi sıfırlar ve Wi-Fi kendiliğinden geri gelir; hotspot olarak da, başka bir
 ağın istemcisi olarak da: testlerde 15 ile 20 saniye içinde, 6.18 ve 7.2'de. Çip 70 saniye içinde sıfırlanamazsa
 cihaz donup kalmak yerine düzgünce yeniden başlar.</p>

@@ -23,6 +23,14 @@ network), not both at the same time. The hotspot is the default.
 
 On 5 GHz the firmware allows channels 36-48 and 149-165; if it refuses 5 GHz, the hotspot falls back to 2.4 GHz.
 
+**No DFS channels.** The hotspot never runs on a DFS channel (52-64 and 100-144, and in a few countries more): an
+access point there must first listen for radar, and the Wi-Fi driver cannot do that, so hostapd would stop with
+`start_dfs_cac() failed` and the hotspot would stay down. A DFS channel in `hotspot.conf` or in LuCI is replaced by
+channel 36 (149 in the countries that do not allow 36-48), with one line in the log that says why
+(`journalctl -u mu300-hotspot` on Ubuntu, `logread` on OpenWrt); `auto` never picks one either. LuCI still lists
+the DFS channels; on OpenWrt the setting itself is changed to the replacement at the next boot. Joining someone
+else's Wi-Fi on a DFS channel (as a client) works as before.
+
 ## The Wi-Fi client (join another network)
 
 ```mermaid

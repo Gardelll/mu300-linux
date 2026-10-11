@@ -1302,6 +1302,60 @@ msgstr "Erneut versuchen"
 msgid "Dismiss the note"
 msgstr "Hinweis ausblenden"
 
+msgid "started"
+msgstr "gestartet"
+
+msgid "asleep now (asked)"
+msgstr "jetzt schlafen (angefordert)"
+
+msgid "woken: power daemon stopping"
+msgstr "geweckt: Energiedienst wird beendet"
+
+msgid "woken by a key"
+msgstr "durch eine Taste geweckt"
+
+msgid "woken by the Wi-Fi key"
+msgstr "durch die WLAN-Taste geweckt"
+
+msgid "woken (mu300-power wake)"
+msgstr "geweckt (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "durch einen Computer an USB geweckt"
+
+msgid "woken: plugged in"
+msgstr "geweckt: Netzteil angeschlossen"
+
+msgid "woken by a Wi-Fi client"
+msgstr "durch einen WLAN-Client geweckt"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "Ladestart (vom Ladegerät eingeschaltet)"
+
+msgid "the hotspot is down"
+msgstr "der Hotspot ist aus"
+
+msgid "the VPN is still stopped"
+msgstr "das VPN ist noch gestoppt"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) ist nach einer fehlgeschlagenen Wiederaufnahme noch aus"
+
+msgid "self-check: %s"
+msgstr "Selbsttest: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "schläft: seit %d min kein Client (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "schläft: Profil jetzt %s"
+
+msgid "woken by the %s key"
+msgstr "durch die %s-Taste geweckt"
+
+msgid "the modem is suspended (%s)"
+msgstr "das Modem ist angehalten (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Ganze Zahl von 0 bis %d eingeben"
 

@@ -1302,6 +1302,60 @@ msgstr "Повторить"
 msgid "Dismiss the note"
 msgstr "Скрыть уведомление"
 
+msgid "started"
+msgstr "запущено"
+
+msgid "asleep now (asked)"
+msgstr "сон сейчас (по запросу)"
+
+msgid "woken: power daemon stopping"
+msgstr "пробуждение: служба питания останавливается"
+
+msgid "woken by a key"
+msgstr "пробуждение кнопкой"
+
+msgid "woken by the Wi-Fi key"
+msgstr "пробуждение кнопкой Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "пробуждение (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "пробуждение компьютером по USB"
+
+msgid "woken: plugged in"
+msgstr "пробуждение: подключено питание"
+
+msgid "woken by a Wi-Fi client"
+msgstr "пробуждение клиентом Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "зарядная загрузка (включено зарядным устройством)"
+
+msgid "the hotspot is down"
+msgstr "точка доступа выключена"
+
+msgid "the VPN is still stopped"
+msgstr "VPN всё ещё остановлен"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) всё ещё выключен после неудачного возобновления"
+
+msgid "self-check: %s"
+msgstr "самопроверка: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "сон: нет клиентов %d мин (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "сон: профиль теперь %s"
+
+msgid "woken by the %s key"
+msgstr "пробуждение кнопкой %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "модем приостановлен (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Введите целое число от 0 до %d"
 
