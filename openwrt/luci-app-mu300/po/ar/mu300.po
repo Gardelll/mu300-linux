@@ -42,8 +42,17 @@ msgstr "الطاقة"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "الطرفية"
+
+msgid "Terminal settings"
+msgstr "إعدادات الطرفية"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "مركز تحكم MU300: لوحة الحالة، أقفال الشبكة، طرفية AT وSMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "الطرفية: صدفة root على الجهاز داخل المتصفح"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1236,6 +1245,60 @@ msgstr "تلقائي (%d مدعوم)"
 msgid "%d locked: %s"
 msgstr "%d مقفل: %s"
 
+msgid "started"
+msgstr "بدأ"
+
+msgid "asleep now (asked)"
+msgstr "سكون الآن (بطلب)"
+
+msgid "woken: power daemon stopping"
+msgstr "استيقظ: خدمة الطاقة تتوقف"
+
+msgid "woken by a key"
+msgstr "استيقظ بزر"
+
+msgid "woken by the Wi-Fi key"
+msgstr "استيقظ بزر Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "استيقظ (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "استيقظ بحاسوب عبر USB"
+
+msgid "woken: plugged in"
+msgstr "استيقظ: تم توصيل الشاحن"
+
+msgid "woken by a Wi-Fi client"
+msgstr "استيقظ بعميل Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "إقلاع الشحن (شغّله الشاحن)"
+
+msgid "the hotspot is down"
+msgstr "نقطة الاتصال متوقفة"
+
+msgid "the VPN is still stopped"
+msgstr "الـ VPN ما زال متوقفًا"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "ما زال 5G (EN-DC) متوقفًا بعد استئناف فاشل"
+
+msgid "self-check: %s"
+msgstr "فحص ذاتي: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "سكون: لا عملاء منذ %d دقيقة (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "سكون: الملف الشخصي الآن %s"
+
+msgid "woken by the %s key"
+msgstr "استيقظ بزر %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "المودم معلّق (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "أدخل عددًا صحيحًا من 0 إلى %d"
 
@@ -1502,6 +1565,39 @@ msgstr "غير مكتملة: وصل %d من %d أجزاء"
 
 msgid "Delete"
 msgstr "حذف"
+
+msgid "ttyd is not installed."
+msgstr "ttyd غير مثبت."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "الطرفية متوقفة (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "تُفتح طرفيات كثيرة في الوقت نفسه. حاول مرة أخرى بعد دقيقة."
+
+msgid "The terminal is not available."
+msgstr "الطرفية غير متاحة."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "هذه صدفة root على الجهاز: يعمل كل أمر بصلاحيات كاملة، وقد يجعل خطأ واحد الجهاز غير قابل للإقلاع."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "يمكن الوصول إليها من الشبكة المحلية فقط (USB ونقطة الاتصال)، ولا يمكن أبدًا من بيانات الجوال، ومن هذه الصفحة المسجّل الدخول إليها فقط."
+
+msgid "It closes after a minute without activity."
+msgstr "تُغلق بعد دقيقة من عدم النشاط."
+
+msgid "It closes after %d minutes without activity."
+msgstr "تُغلق بعد %d دقيقة من عدم النشاط."
+
+msgid "Reconnect"
+msgstr "إعادة الاتصال"
+
+msgid "Open in a new tab"
+msgstr "فتح في علامة تبويب جديدة"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "فُتحت هذه الصفحة عبر HTTPS، والطرفية تُقدَّم عبر HTTP على الشبكة المحلية: لذا تُفتح في علامة تبويب خاصة بها."
 
 msgid "The data usage could not be read"
 msgstr "تعذرت قراءة استهلاك البيانات"

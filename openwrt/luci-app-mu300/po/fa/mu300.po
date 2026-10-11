@@ -42,8 +42,17 @@ msgstr "توان"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "ترمینال"
+
+msgid "Terminal settings"
+msgstr "تنظیمات ترمینال"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "مرکز کنترل MU300: داشبورد وضعیت، قفل‌های شبکه، ترمینال AT و SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "ترمینال: یک پوسته root روی دستگاه در مرورگر"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1236,6 +1245,60 @@ msgstr "خودکار (%d پشتیبانی‌شده)"
 msgid "%d locked: %s"
 msgstr "%d قفل‌شده: %s"
 
+msgid "started"
+msgstr "آغاز شد"
+
+msgid "asleep now (asked)"
+msgstr "خواب اکنون (درخواستی)"
+
+msgid "woken: power daemon stopping"
+msgstr "بیدار شد: سرویس انرژی در حال توقف"
+
+msgid "woken by a key"
+msgstr "با یک کلید بیدار شد"
+
+msgid "woken by the Wi-Fi key"
+msgstr "با کلید Wi-Fi بیدار شد"
+
+msgid "woken (mu300-power wake)"
+msgstr "بیدار شد (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "با رایانه از طریق USB بیدار شد"
+
+msgid "woken: plugged in"
+msgstr "بیدار شد: به برق وصل شد"
+
+msgid "woken by a Wi-Fi client"
+msgstr "با یک کلاینت Wi-Fi بیدار شد"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "راه‌اندازی شارژ (با شارژر روشن شد)"
+
+msgid "the hotspot is down"
+msgstr "هات‌اسپات خاموش است"
+
+msgid "the VPN is still stopped"
+msgstr "VPN هنوز متوقف است"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) پس از ازسرگیری ناموفق هنوز خاموش است"
+
+msgid "self-check: %s"
+msgstr "خودآزمایی: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "خواب: %d دقیقه بدون کلاینت (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "خواب: پروفایل اکنون %s"
+
+msgid "woken by the %s key"
+msgstr "با کلید %s بیدار شد"
+
+msgid "the modem is suspended (%s)"
+msgstr "مودم معلق است (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "یک عدد صحیح از 0 تا %d وارد کنید"
 
@@ -1502,6 +1565,39 @@ msgstr "ناقص: %d از %d بخش رسید"
 
 msgid "Delete"
 msgstr "حذف"
+
+msgid "ttyd is not installed."
+msgstr "ttyd نصب نیست."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "ترمینال خاموش است (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "ترمینال‌های زیادی هم‌زمان باز می‌شوند. یک دقیقه دیگر دوباره امتحان کنید."
+
+msgid "The terminal is not available."
+msgstr "ترمینال در دسترس نیست."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "این یک پوسته root روی دستگاه است: هر فرمان با دسترسی کامل اجرا می‌شود و یک اشتباه می‌تواند دستگاه را از راه‌اندازی بازدارد."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "فقط از LAN (USB و هات‌اسپات) در دسترس است، هرگز از داده همراه، و فقط از همین صفحه‌ای که با آن وارد شده‌اید."
+
+msgid "It closes after a minute without activity."
+msgstr "پس از یک دقیقه بدون فعالیت بسته می‌شود."
+
+msgid "It closes after %d minutes without activity."
+msgstr "پس از %d دقیقه بدون فعالیت بسته می‌شود."
+
+msgid "Reconnect"
+msgstr "اتصال دوباره"
+
+msgid "Open in a new tab"
+msgstr "باز کردن در زبانه جدید"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "این صفحه با HTTPS باز شده و ترمینال روی LAN با HTTP ارائه می‌شود: در زبانه جداگانه‌ای باز می‌شود."
 
 msgid "The data usage could not be read"
 msgstr "مصرف داده خوانده نشد"

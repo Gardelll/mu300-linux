@@ -42,8 +42,17 @@ msgstr "Energie"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Terminal-Einstellungen"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-Kontrollzentrum: Status-Dashboard, Netzsperren, AT-Terminal und SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: eine Root-Shell auf dem Gerät im Browser"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1236,6 +1245,60 @@ msgstr "Automatisch (%d unterstützt)"
 msgid "%d locked: %s"
 msgstr "%d gesperrt: %s"
 
+msgid "started"
+msgstr "gestartet"
+
+msgid "asleep now (asked)"
+msgstr "jetzt schlafen (angefordert)"
+
+msgid "woken: power daemon stopping"
+msgstr "geweckt: Energiedienst wird beendet"
+
+msgid "woken by a key"
+msgstr "durch eine Taste geweckt"
+
+msgid "woken by the Wi-Fi key"
+msgstr "durch die WLAN-Taste geweckt"
+
+msgid "woken (mu300-power wake)"
+msgstr "geweckt (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "durch einen Computer an USB geweckt"
+
+msgid "woken: plugged in"
+msgstr "geweckt: Netzteil angeschlossen"
+
+msgid "woken by a Wi-Fi client"
+msgstr "durch einen WLAN-Client geweckt"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "Ladestart (vom Ladegerät eingeschaltet)"
+
+msgid "the hotspot is down"
+msgstr "der Hotspot ist aus"
+
+msgid "the VPN is still stopped"
+msgstr "das VPN ist noch gestoppt"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) ist nach einer fehlgeschlagenen Wiederaufnahme noch aus"
+
+msgid "self-check: %s"
+msgstr "Selbsttest: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "schläft: seit %d min kein Client (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "schläft: Profil jetzt %s"
+
+msgid "woken by the %s key"
+msgstr "durch die %s-Taste geweckt"
+
+msgid "the modem is suspended (%s)"
+msgstr "das Modem ist angehalten (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Ganze Zahl von 0 bis %d eingeben"
 
@@ -1502,6 +1565,39 @@ msgstr "Unvollständig: %d von %d Teilen angekommen"
 
 msgid "Delete"
 msgstr "Löschen"
+
+msgid "ttyd is not installed."
+msgstr "ttyd ist nicht installiert."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Das Terminal ist ausgeschaltet (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Zu viele Terminals werden gleichzeitig geöffnet. Versuchen Sie es in einer Minute erneut."
+
+msgid "The terminal is not available."
+msgstr "Das Terminal ist nicht verfügbar."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Dies ist eine Root-Shell auf dem Gerät: Jeder Befehl läuft mit vollen Rechten, und ein Fehler kann das Gerät unstartbar machen."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Es ist nur aus dem LAN erreichbar (USB und Hotspot), nie über mobile Daten, und nur von dieser angemeldeten Seite aus."
+
+msgid "It closes after a minute without activity."
+msgstr "Es wird nach einer Minute ohne Aktivität geschlossen."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Es wird nach %d Minuten ohne Aktivität geschlossen."
+
+msgid "Reconnect"
+msgstr "Neu verbinden"
+
+msgid "Open in a new tab"
+msgstr "In neuem Tab öffnen"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Diese Seite wurde über HTTPS geöffnet, das Terminal läuft im LAN über HTTP: Es öffnet sich in einem eigenen Tab."
 
 msgid "The data usage could not be read"
 msgstr "Der Datenverbrauch konnte nicht gelesen werden"

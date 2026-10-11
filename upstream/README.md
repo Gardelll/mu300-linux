@@ -41,7 +41,10 @@ The config is allnoconfig plus `mu300-mainline.config`: what the board and the b
 KVM (`/dev/kvm`; the CPUs start at EL2); what only matters once used - netfilter extras, tunnels, IPsec, tc,
 filesystems, USB modems/adapters/Wi-Fi sticks, device mapper - is a module. `build-modules.sh` installs the
 kernel's own modules (stripped) flat into `out/modules` next to the vendor ones, and the bundle ships them all;
-`mu300-update` indexes them on Ubuntu (depmod) and OpenWrt loads them by name (FINDINGS 31o).
+`mu300-update` indexes them on Ubuntu (depmod) and OpenWrt loads them by name (FINDINGS 31o). Both kernels carry
+BTF (`/sys/kernel/btf/vmlinux`, made by `pahole` from the build image) and the BPF JIT, tcx/clsact, cgroup and
+kprobe hooks that eBPF programs such as the dae transparent proxy need (FINDINGS 31p); the DWARF it is made from
+stays in `vmlinux`, and `build-modules.sh` strips it from the vendor modules.
 
 The bring-up path of old (hand-built image, `init-bringup`, `boot/flash-trial.sh`) still works for experiments:
 ```sh

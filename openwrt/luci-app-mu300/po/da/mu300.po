@@ -42,8 +42,17 @@ msgstr "Strøm"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Terminalindstillinger"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-kontrolcenter: statusoversigt, netværkslåse, AT-terminal og SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: en root-shell på enheden i browseren"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1236,6 +1245,60 @@ msgstr "Automatisk (%d understøttet)"
 msgid "%d locked: %s"
 msgstr "%d låst: %s"
 
+msgid "started"
+msgstr "startet"
+
+msgid "asleep now (asked)"
+msgstr "dvale nu (anmodet)"
+
+msgid "woken: power daemon stopping"
+msgstr "vækket: strømtjenesten stopper"
+
+msgid "woken by a key"
+msgstr "vækket af en knap"
+
+msgid "woken by the Wi-Fi key"
+msgstr "vækket af Wi-Fi-knappen"
+
+msgid "woken (mu300-power wake)"
+msgstr "vækket (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "vækket af en computer via USB"
+
+msgid "woken: plugged in"
+msgstr "vækket: oplader tilsluttet"
+
+msgid "woken by a Wi-Fi client"
+msgstr "vækket af en Wi-Fi-klient"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "opladerstart (tændt af opladeren)"
+
+msgid "the hotspot is down"
+msgstr "hotspottet er slukket"
+
+msgid "the VPN is still stopped"
+msgstr "VPN er stadig stoppet"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) er stadig slukket efter en mislykket genoptagelse"
+
+msgid "self-check: %s"
+msgstr "selvtest: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "dvale: ingen klient i %d min (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "dvale: profil nu %s"
+
+msgid "woken by the %s key"
+msgstr "vækket af %s-knappen"
+
+msgid "the modem is suspended (%s)"
+msgstr "modemmet er sat på pause (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Angiv et helt tal fra 0 til %d"
 
@@ -1502,6 +1565,39 @@ msgstr "Ufuldstændig: %d af %d dele ankom"
 
 msgid "Delete"
 msgstr "Slet"
+
+msgid "ttyd is not installed."
+msgstr "ttyd er ikke installeret."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminalen er slået fra (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "For mange terminaler åbnes på én gang. Prøv igen om et minut."
+
+msgid "The terminal is not available."
+msgstr "Terminalen er ikke tilgængelig."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Dette er en root-shell på enheden: hver kommando kører med fulde rettigheder, og en fejl kan gøre enheden ude af stand til at starte."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Den kan kun nås fra LAN (USB og hotspot), aldrig fra mobildata, og kun fra denne side, hvor du er logget ind."
+
+msgid "It closes after a minute without activity."
+msgstr "Den lukkes efter et minut uden aktivitet."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Den lukkes efter %d minutter uden aktivitet."
+
+msgid "Reconnect"
+msgstr "Forbind igen"
+
+msgid "Open in a new tab"
+msgstr "Åbn i en ny fane"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Denne side blev åbnet via HTTPS, og terminalen leveres via HTTP på LAN: den åbnes i sin egen fane."
 
 msgid "The data usage could not be read"
 msgstr "Dataforbruget kunne ikke læses"

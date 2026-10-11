@@ -273,6 +273,12 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom AT adapter).
 * **System > Languages:** the language of the interface, and the lang extra: download it, or upload the file.
 * **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (0-100 %, U30 Air; also `mu300-power charge-limit N`).
+* **System > Terminal:** a root shell in the browser ([ttyd](https://github.com/tsl0922/ttyd)). It listens on the LAN
+  address only (port 7681; the cellular side never reaches it), and opens a shell only for a one-time token the page
+  gets for a logged-in panel session: there is no second password to guess. It closes after 15 minutes without
+  activity (`uci set ttyd.mu300.idle=<seconds>`, 0 never). A panel opened over https opens it in a tab of its own
+  (ttyd serves HTTP: its websocket over TLS fails in Chrome). **Terminal settings** is ttyd's own page; turning the
+  instance off (`enable`) removes the terminal.
 
 IPv6 on this system is relayed from the carrier (router advertisements and NAT66) instead of the prefix extension
 plain OpenWrt uses. Aurora is the default theme, Bootstrap stays installed. Its boot timings, measured on an F50
@@ -283,6 +289,30 @@ The panel is the work of kanoqwq ([`kanoqwq/mu300-linux`](https://github.com/kan
 `clean-tf-7.2`); this repository ports it, with translations rewritten as standard LuCI catalogs and the shared
 fixes applied to all three systems. The theme is [Aurora](https://github.com/eamonxg/luci-theme-aurora) by
 eamonxg. The app's own notes are in [`openwrt/luci-app-mu300/README.md`](openwrt/luci-app-mu300/README.md).
+
+### A web panel on Ubuntu (optional)
+
+Ubuntu can have a web panel too: [Cockpit](https://cockpit-project.org/), Ubuntu's own web console (a terminal,
+logs, services, networking, storage, accounts), with an **MU300** page in it: the mobile network (operator,
+technology, registration, RSRP/RSRQ), mobile data on/off, data usage and live rates, the battery and temperatures,
+SMS (read, send, delete), the VPN (on/off, profiles; with the VPN module), the CPU profile and the power state, the
+hotspot's name and password, joining a Wi-Fi network, and updates (`mu300-update check` / `apply`). Network locks stay
+a feature of the OpenWrt panel. It is the panel extra, not part of the image:
+
+```sh
+sudo mu300-extra install panel                      # Cockpit from Ubuntu's archive (about 12 MB, online)
+sudo mu300-extra install panel --from mu300-extra-panel-offline.tar.gz   # offline: the release's file, Cockpit inside
+sudo mu300-extra remove panel
+```
+
+or answer yes to the installer's question (it takes the offline file, so the first boot needs no network). Then open
+`https://192.168.77.1:9090` (the U30 Air: `.78.1`; your LAN address if you changed it), accept Cockpit's own
+certificate, and log in as `ubuntu` with your password; "Turn on administrative access" (your password again) for
+the pages that need root. Cockpit listens on the LAN bridge only (USB and the hotspot: `BindToDevice=br-lan`), and the
+firewall drops everything new from the cellular uplink (and a Wi-Fi uplink) in front of it anyway; root cannot log in,
+the login page offers no other host, and a session ends after 15 minutes idle. An update replaces Ubuntu without
+Cockpit's packages: its first boot puts them back in the background (from the extra when it carries them, else from
+the archive once online). `mu300-panel status` says where it is.
 
 ## Everyday use
 
@@ -296,6 +326,7 @@ eamonxg. The app's own notes are in [`openwrt/luci-app-mu300/README.md`](openwrt
 | Check the mobile connection | `sudo mobile-data status` |
 | Set the APN | Ubuntu: `/etc/mu300/mobile-data.conf` (`MU300_APN`, `MU300_PDP_TYPE`). OpenWrt: LuCI → Network → Interfaces → wan, or `uci set network.wan.apn='…'; uci commit network; ifup wan`. Leave it empty to keep the context the SIM defines, which is what most carriers expect |
 | Change the Wi-Fi name or password | Ubuntu: edit `/etc/mu300/hotspot.conf`, then `sudo systemctl restart mu300-hotspot`. OpenWrt: LuCI → Network → Wireless (that file is only read once, at the first boot) |
+| Change the hotspot's channel | Ubuntu: `CHANNEL=` in `/etc/mu300/hotspot.conf` (`auto`, or on 5 GHz 36-48 / 149-165). OpenWrt: LuCI → Network → Wireless. Never a DFS channel (52-144): the Wi-Fi driver cannot detect radar, so hostapd could not start there; a DFS channel is replaced by 36 (149 where 36-48 are not allowed) and the log says why (FINDINGS 40) |
 | Read and send SMS | `sudo sms list`, `sudo sms send NUMBER TEXT...`, `sudo sms delete INDEX` (OpenWrt with the panel: Cellular → SMS) |
 | Send a USSD code (balance, own number) | `sudo mu300-ussd '*101#'` |
 | Change the kernel | `sudo mu300-update kernel 6.18` (or `5.4`, `7.2`), then reboot |
@@ -337,7 +368,7 @@ authorised sees it as `unauthorized` and gets nothing: there is no prompt to acc
 for its WinUSB driver (MS OS descriptors; not tried on Windows yet - without it, Google's USB driver serves). The
 setting stays across reboots and updates; it needs a kernel with FunctionFS (5.4, and the mainline kernels from this
 release on). The daemon is AOSP's adbd (platform-tools 34.0.5), built static for both systems by
-`tools/adbd/build.sh`; see FINDINGS 41.
+`tools/adbd/build.sh`; see FINDINGS 43.
 
 
 ### Installing from Android with a Magisk zip
@@ -744,6 +775,11 @@ v2026.10.11). The firewall's boot ruleset had no rules for the LAN, and on 5.4 t
 always failed ([FINDINGS 38c](docs/FINDINGS.md)). Fixed from the next release; until then the USB serial console
 (`ttyGS0`, a root shell) is the way in, and `nft delete flowtable inet fw4 ft; fw4 reload` brings the LAN up. On
 5.4 a firewall change saved in LuCI still needs those two commands (or a reboot) to take effect.
+
+**The hotspot does not start on a 5 GHz channel between 52 and 144** (hostapd: `start_dfs_cac() failed`,
+`AP-DISABLED`; releases up to v2026.10.18). Those are DFS channels, and the Wi-Fi driver cannot detect radar
+([FINDINGS 40](docs/FINDINGS.md)). Fixed from the next release: such a channel is replaced by 36 (or 149). Until then
+choose 36-48 or 149-165 (165 at 20 MHz), or `auto` on Ubuntu.
 
 **The installer prints nothing for minutes and the device gets hot.** A read past the end of the eMMC never
 returned on devices whose partition table ends at the end of the disk (the 32 GB variant and an F50 with no gap

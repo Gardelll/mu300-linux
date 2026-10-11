@@ -42,8 +42,17 @@ msgstr "Güç"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Terminal ayarları"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 kontrol merkezi: durum paneli, ağ kilitleri, AT terminali ve SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: tarayıcıda cihazın root kabuğu"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1236,6 +1245,60 @@ msgstr "Otomatik (%d destekleniyor)"
 msgid "%d locked: %s"
 msgstr "%d kilitli: %s"
 
+msgid "started"
+msgstr "başlatıldı"
+
+msgid "asleep now (asked)"
+msgstr "şimdi uyku (istendi)"
+
+msgid "woken: power daemon stopping"
+msgstr "uyandı: güç servisi duruyor"
+
+msgid "woken by a key"
+msgstr "bir tuşla uyandı"
+
+msgid "woken by the Wi-Fi key"
+msgstr "Wi-Fi tuşuyla uyandı"
+
+msgid "woken (mu300-power wake)"
+msgstr "uyandı (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "USB'deki bir bilgisayarla uyandı"
+
+msgid "woken: plugged in"
+msgstr "uyandı: şarja takıldı"
+
+msgid "woken by a Wi-Fi client"
+msgstr "bir Wi-Fi istemcisiyle uyandı"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "şarj açılışı (şarj cihazı açtı)"
+
+msgid "the hotspot is down"
+msgstr "hotspot kapalı"
+
+msgid "the VPN is still stopped"
+msgstr "VPN hâlâ durmuş"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "başarısız devamdan sonra 5G (EN-DC) hâlâ kapalı"
+
+msgid "self-check: %s"
+msgstr "öz denetim: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "uyku: %d dk istemci yok (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "uyku: profil artık %s"
+
+msgid "woken by the %s key"
+msgstr "%s tuşuyla uyandı"
+
+msgid "the modem is suspended (%s)"
+msgstr "modem askıda (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0 ile %d arasında bir tam sayı girin"
 
@@ -1502,6 +1565,39 @@ msgstr "Eksik: %d / %d parça ulaştı"
 
 msgid "Delete"
 msgstr "Sil"
+
+msgid "ttyd is not installed."
+msgstr "ttyd kurulu değil."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminal kapalı (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Aynı anda çok fazla terminal açılıyor. Bir dakika sonra yeniden deneyin."
+
+msgid "The terminal is not available."
+msgstr "Terminal kullanılamıyor."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Bu, cihazın root kabuğudur: her komut tam yetkiyle çalışır ve bir hata cihazı açılamaz hale getirebilir."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Yalnızca LAN'dan (USB ve hotspot) ve yalnızca oturum açılmış bu sayfadan erişilebilir; mobil veriden asla erişilemez."
+
+msgid "It closes after a minute without activity."
+msgstr "1 dakika işlem yapılmazsa kapanır."
+
+msgid "It closes after %d minutes without activity."
+msgstr "%d dakika işlem yapılmazsa kapanır."
+
+msgid "Reconnect"
+msgstr "Yeniden bağlan"
+
+msgid "Open in a new tab"
+msgstr "Yeni sekmede aç"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Bu sayfa HTTPS ile açıldı, terminal ise LAN'da HTTP ile sunuluyor: bu yüzden kendi sekmesinde açılır."
 
 msgid "The data usage could not be read"
 msgstr "Veri kullanımı okunamadı"

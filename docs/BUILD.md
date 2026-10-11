@@ -76,6 +76,9 @@ and the vendor-init tool: `docker run --rm -v "$PWD/tools/bt-init":/w mu300-kbui
 ```sh
 android-vendor/extract-subset.sh android-subset
 python3 android-vendor/gen-ueventd-perms.py android-subset/vendor/etc/ueventd.rc <vendor init *.rc> > android-vendor/ueventd-perms.sh
+# the F50's inputs are kept in android-vendor/ueventd/: regenerate after changing the generator with
+# python3 android-vendor/gen-ueventd-perms.py android-vendor/ueventd/ueventd.rc android-vendor/ueventd/init-perms.rc > android-vendor/ueventd-perms.sh
+# (and copy it to rootfs/overlay/opt/mu300/bin/ueventd-perms.sh; tests/test_vendor_ids.py checks both)
 ```
 
 ### 3. Boot image

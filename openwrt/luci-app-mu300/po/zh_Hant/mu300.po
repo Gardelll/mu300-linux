@@ -42,8 +42,17 @@ msgstr "電源"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "終端機"
+
+msgid "Terminal settings"
+msgstr "終端機設定"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 控制中心：狀態儀表板、網路鎖定、AT 終端機與簡訊"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "終端機：在瀏覽器中使用裝置的 root shell"
 
 msgid "China Mobile"
 msgstr "中國移動"
@@ -1236,6 +1245,60 @@ msgstr "自動（支援 %d 個）"
 msgid "%d locked: %s"
 msgstr "已鎖定 %d 個：%s"
 
+msgid "started"
+msgstr "已啟動"
+
+msgid "asleep now (asked)"
+msgstr "立即休眠（已要求）"
+
+msgid "woken: power daemon stopping"
+msgstr "已喚醒：電源常駐程式停止"
+
+msgid "woken by a key"
+msgstr "按鍵喚醒"
+
+msgid "woken by the Wi-Fi key"
+msgstr "Wi-Fi 鍵喚醒"
+
+msgid "woken (mu300-power wake)"
+msgstr "已喚醒（mu300-power wake）"
+
+msgid "woken by a computer on USB"
+msgstr "USB 上的電腦喚醒"
+
+msgid "woken: plugged in"
+msgstr "已喚醒：已接上電源"
+
+msgid "woken by a Wi-Fi client"
+msgstr "Wi-Fi 用戶端喚醒"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "充電開機（由充電器開機）"
+
+msgid "the hotspot is down"
+msgstr "熱點已關閉"
+
+msgid "the VPN is still stopped"
+msgstr "VPN 仍處於停止狀態"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "恢復失敗後 5G（EN-DC）仍關閉"
+
+msgid "self-check: %s"
+msgstr "自我檢查：%s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "休眠：%d 分鐘無用戶端（%s）"
+
+msgid "asleep: profile now %s"
+msgstr "休眠：設定檔現為 %s"
+
+msgid "woken by the %s key"
+msgstr "%s 鍵喚醒"
+
+msgid "the modem is suspended (%s)"
+msgstr "數據機已暫停（%s）"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "請輸入 0 到 %d 之間的整數"
 
@@ -1502,6 +1565,39 @@ msgstr "不完整：收到 %d / %d 個分段"
 
 msgid "Delete"
 msgstr "刪除"
+
+msgid "ttyd is not installed."
+msgstr "未安裝 ttyd。"
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "終端機已關閉（/etc/config/ttyd）。"
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "同時開啟的終端機過多，請一分鐘後重試。"
+
+msgid "The terminal is not available."
+msgstr "終端機無法使用。"
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "這是裝置上的 root shell：每個指令都以完整權限執行，一個錯誤就可能讓裝置無法開機。"
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "只能從區域網路（USB 和熱點）並且只能從這個已登入的頁面存取，行動數據一側永遠無法存取。"
+
+msgid "It closes after a minute without activity."
+msgstr "無操作 1 分鐘後自動關閉。"
+
+msgid "It closes after %d minutes without activity."
+msgstr "無操作 %d 分鐘後自動關閉。"
+
+msgid "Reconnect"
+msgstr "重新連線"
+
+msgid "Open in a new tab"
+msgstr "在新分頁中開啟"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "此頁面透過 HTTPS 開啟，而終端機在區域網路上透過 HTTP 提供，因此會在單獨的分頁中開啟。"
 
 msgid "The data usage could not be read"
 msgstr "無法讀取流量統計"
