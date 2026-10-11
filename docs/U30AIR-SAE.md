@@ -84,16 +84,21 @@ The package recipe must have source
 `ca266cc24d8705eb1a2a0857ad326e48b1408b20`, revision 1 (the official SDK's
 pinned feed) or 5 (the previously recorded release feed). Other sources and
 revisions are refused. The helper finds the SDK feed recipe, applies the patch
-after OpenWrt's existing patches, bumps revision to 7, replaces the dedicated
+after OpenWrt's existing patches, bumps revision to 8, replaces the dedicated
 SDK's `.config`, and builds the OpenSSL variant with its normal dependencies:
 
 ```sh
 sh openwrt/build-u30-sae.sh /absolute/path/to/sdk /absolute/path/to/u30-sae-apks
 ```
 
-The output must contain a matching revision 7 `hostapd-common` and
+The output must contain a matching revision 8 `hostapd-common` and
 `wpad-basic-openssl` pair. Start with a clean dedicated SDK; the helper refuses
-an older local r6 patch rather than silently overwriting it. The image builder accepts that directory on the tested release:
+an older local r6/r7 patch rather than silently overwriting it. Revision 8
+includes the marker-length hardening added after the r7 build: every complete
+private OUI/type marker counts towards duplicate rejection, regardless of its
+element length. This does not establish PMK provenance. The helper only exports
+r8 package files, so stale r6/r7 artifacts in the SDK are not included.
+The image builder accepts that directory on the tested release:
 
 ```sh
 MU300_SYSTEM=openwrt-luci MU300_SAE_APK_DIR=/absolute/path/to/u30-sae-apks \
@@ -151,6 +156,30 @@ have not been exhaustively validated; use a complete Wi-Fi/wpad restart for
 those operations. APK replacement after a later upgrade needs revalidation.
 
 ## Validation and limits
+
+The latest follow-up is rebased onto main `7a044d5`. The marker-length
+hardening is packaged as r8 rather than reusing r7 for different source. The
+SDK helper exports only r8 packages and refuses an earlier locally patched
+SDK revision. SAE/parser/SDK/privacy tests passed (15, with required UBSan),
+Wi-Fi bring-up/client tests passed (64), and static checks passed (42).
+The matching r8 pair was built through the official SDK and installed over
+r6 on the local U30 Air (OpenWrt 25.12.5, kernel 7.2.9), with offline r6
+packages retained for rollback.
+
+A separate managed Linux Wi-Fi interface kept the home Wi-Fi connection up
+while testing the U30. Pure SAE with required PMF completed association,
+DHCP and router HTTP (200). A full wpad restart and a subsequent client
+reassociation also passed. Certificate-verified TLS 1.2 HTTPS to
+`www.baidu.com` returned 200 over both the test Wi-Fi and USB in a same-target
+comparison. An earlier HTTPS request to `connectivitycheck.gstatic.com`
+timed out; this is not recorded as a successful internet check.
+With the existing automatic channel selection,
+the AP took approximately 33 seconds to become enabled after the restart;
+an early connection attempt before that reported the SSID unavailable.
+The wireless configuration and both module files were unchanged. This test
+used the previously installed modules, not a new build of the rebased pair:
+the latest driver privacy changes and #100 recovery path were not installed
+or hardware-tested in this follow-up. The PMK provenance finding remains open.
 
 The follow-up logging/configuration revision was rebased onto main `53ebbf5`.
 Its hostapd-common/wpad-basic-openssl r7 pair was built through the official
