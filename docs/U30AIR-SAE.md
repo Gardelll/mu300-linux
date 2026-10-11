@@ -17,6 +17,10 @@ trailer into a vendor event would not, by itself, resolve the trust boundary.
 This PR remains on hold and is not ready for deployment/merge as a secure SAE
 implementation. Functional hardware results below do not close this finding.
 
+The existing opt-in integration has been retained for review. The remaining
+driver/hostapd changes, required firmware contract and acceptance criteria
+are described in [the implementation handoff](U30AIR-SAE-HANDOFF.md).
+
 The tested U30 Air firmware performs AP SAE authentication in firmware, but
 the standard hostapd AP setup neither supplies the vendor runtime password
 request nor consumes the firmware's PMK handoff. A client can finish SAE and
