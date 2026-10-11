@@ -1,7 +1,10 @@
 /* mu300-hfp: a minimal Bluetooth Hands-Free audio gateway (HFP AG) for one paired headset, so a cellular call's
  * audio can go to it. Raw BlueZ kernel sockets, no libbluetooth, no D-Bus: it builds static for Ubuntu and OpenWrt.
  *
- *   mu300-hfp [-c CHANNEL] [-C FIFO] [-a ANSWER_CMD] [-x HANGUP_CMD] BDADDR
+ *   mu300-hfp [-c CHANNEL] [-C FIFO] [-a ANSWER_CMD] [-x HANGUP_CMD] [-r|-l] BDADDR
+ *     -r  report what arrives over the SCO socket (bytes and the loudest sample, once a second): a microphone
+ *         test; -l also plays it back to the headset. With the PCM route (below) nothing arrives: measured on
+ *         F50-B with a Xiaomi Sound Pocket, 30 s of SCO up, 0 bytes.
  *
  * It connects to the headset (BlueZ must already have paired it - bluetoothctl pair/trust), finds the headset's
  * Hands-Free RFCOMM channel by SDP unless -c gives it, and runs the service level connection: the AT exchange a
@@ -42,6 +45,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 /* the few BlueZ kernel ABI definitions this needs, so no libbluetooth headers are required */
@@ -163,6 +167,10 @@ static void sco_open(void)
 	}
 	say("sco up%s", "");
 }
+
+static int sco_report, sco_loop, rx_peak;
+static long rx_bytes;
+static time_t rx_t;
 
 static void sco_close(void)
 {
@@ -343,12 +351,14 @@ int main(int argc, char **argv)
 {
 	int ch = 0, o;
 	const char *fifo = "/run/mu300-hfp.ctl";
-	while ((o = getopt(argc, argv, "c:C:a:x:")) != -1)
+	while ((o = getopt(argc, argv, "c:C:a:x:rl")) != -1)
 		switch (o) {
 		case 'c': ch = atoi(optarg); break;
 		case 'C': fifo = optarg; break;
 		case 'a': answer_cmd = optarg; break;
 		case 'x': hangup_cmd = optarg; break;
+		case 'r': sco_report = 1; break;
+		case 'l': sco_report = sco_loop = 1; break;
 		default: goto usage;
 		}
 	if (optind >= argc || str2ba(argv[optind], &peer) < 0) {
@@ -403,8 +413,17 @@ usage:
 		}
 		if (sco >= 0 && (p[2].revents & (POLLHUP | POLLERR))) { say("sco closed by the headset%s", ""); close(sco); sco = -1; }
 		else if (sco >= 0 && (p[2].revents & POLLIN)) {
-			/* with the PCM route nothing should arrive over HCI; drain whatever does */
-			if (read(sco, tmp, sizeof tmp) <= 0) { close(sco); sco = -1; }
+			/* with the PCM route nothing should arrive over HCI; drain whatever does. -r reports what did
+			 * (bytes and the loudest sample each second: a microphone test), -l also plays it back */
+			ssize_t n = read(sco, tmp, sizeof tmp);
+			if (n <= 0) { close(sco); sco = -1; }
+			else if (sco_report) {
+				const int16_t *sm = (const int16_t *)tmp;
+				for (ssize_t i = 0; i < n / 2; i++) { int v = sm[i] < 0 ? -sm[i] : sm[i]; if (v > rx_peak) rx_peak = v; }
+				rx_bytes += n;
+				if (sco_loop) { ssize_t w = write(sco, tmp, n); (void)w; }
+				if (time(NULL) != rx_t) { rx_t = time(NULL); char st[64]; snprintf(st, sizeof st, "%ld bytes, peak %d", rx_bytes, rx_peak); say("sco rx: %s", st); rx_bytes = 0; rx_peak = 0; }
+			}
 		}
 	}
 	sco_close();
