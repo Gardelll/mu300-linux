@@ -42,8 +42,38 @@ msgstr "Daya"
 msgid "CPU"
 msgstr "CPU"
 
-msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "Pusat kontrol MU300: dasbor status, kunci jaringan, terminal AT, dan SMS"
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Pengaturan terminal"
+
+msgid "Overview"
+msgstr "Ikhtisar"
+
+msgid "Profiles"
+msgstr "Profil"
+
+msgid "Subscriptions"
+msgstr "Langganan"
+
+msgid "Engines"
+msgstr "Mesin"
+
+msgid "Settings"
+msgstr "Pengaturan"
+
+msgid "Logs"
+msgstr "Log"
+
+msgid "Packages after an update"
+msgstr "Paket setelah pembaruan"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
+msgstr "Pusat kendali MU300: dasbor status, kunci jaringan, terminal AT, SMS, dan VPN"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: shell root perangkat di peramban"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -105,6 +135,12 @@ msgstr "OK"
 msgid "Cancel"
 msgstr "Batal"
 
+msgid "%d s"
+msgstr "%d dtk"
+
+msgid "%d h"
+msgstr "%d j"
+
 msgid "New SMS · %s"
 msgstr "SMS baru · %s"
 
@@ -113,6 +149,108 @@ msgstr "Nomor tidak diketahui"
 
 msgid "Select"
 msgstr "Pilih"
+
+msgid "never"
+msgstr "tidak pernah"
+
+msgid "just now"
+msgstr "baru saja"
+
+msgid "%s ago"
+msgstr "%s yang lalu"
+
+msgid "Failed: %s"
+msgstr "Gagal: %s"
+
+msgid "Management connection lost"
+msgstr "Koneksi manajemen terputus"
+
+msgid "Installing the VPN module"
+msgstr "Memasang modul VPN"
+
+msgid "Installing the engine"
+msgstr "Memasang mesin"
+
+msgid "Adding the subscription"
+msgstr "Menambahkan langganan"
+
+msgid "Refreshing the subscriptions"
+msgstr "Menyegarkan langganan"
+
+msgid "Testing the latency of every profile"
+msgstr "Menguji latensi setiap profil"
+
+msgid "Downloading the config"
+msgstr "Mengunduh konfigurasi"
+
+msgid "Working…"
+msgstr "Sedang bekerja…"
+
+msgid "done"
+msgstr "selesai"
+
+msgid "failed"
+msgstr "gagal"
+
+msgid "Verify the uploaded file"
+msgstr "Verifikasi berkas yang diunggah"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "Berkas yang diunggah diperiksa dengan SHA256SUMS dari rilis terbaru modul VPN yang diunduh melalui HTTPS. Jika tidak memungkinkan (luring, rilis lama), berkas hanya dipasang bila Anda mengizinkan berkas yang tidak terverifikasi: berkas itu lalu berjalan sebagai root tanpa pemeriksaan apa pun."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Pasang meski tidak dapat diverifikasi"
+
+msgid "Install only a verified file"
+msgstr "Hanya pasang berkas yang terverifikasi"
+
+msgid "Upload failed: %s"
+msgstr "Gagal mengunggah: %s"
+
+msgid "The VPN module is too old for this panel"
+msgstr "Modul VPN terlalu usang untuk panel ini"
+
+msgid "The VPN module is not installed"
+msgstr "Modul VPN belum terpasang"
+
+msgid "This page needs the VPN module with the machine-readable mu300-vpn (module v2 or newer). Updating it keeps the profiles and the settings."
+msgstr "Halaman ini memerlukan modul VPN dengan mu300-vpn yang dapat dibaca mesin (modul v2 atau lebih baru). Memperbaruinya mempertahankan profil dan pengaturan."
+
+msgid "The VPN is a module of its own: mu300-vpn with its kill switch and profiles, and one extra per engine (Xray, sing-box, mihomo, dae). It is installed with mu300-extra install vpn."
+msgstr "VPN adalah modul tersendiri: mu300-vpn dengan kill switch dan profilnya, ditambah satu ekstra per mesin (Xray, sing-box, mihomo, dae). Modul ini dipasang dengan mu300-extra install vpn."
+
+msgid "The download is a few MB for the module and up to tens of MB per engine: on mobile data it counts towards your plan."
+msgstr "Unduhannya beberapa MB untuk modul dan hingga puluhan MB per mesin: pada data seluler, ini memotong kuota Anda."
+
+msgid "Update the VPN module"
+msgstr "Perbarui modul VPN"
+
+msgid "Install the VPN module"
+msgstr "Pasang modul VPN"
+
+msgid "Upload the file…"
+msgstr "Unggah berkas…"
+
+msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
+msgstr "Offline: unggah mu300-linux-vpn-core.tar.gz (atau bundel mu300-linux-vpn.tar.gz) dari halaman rilis modul VPN."
+
+msgid "VPN"
+msgstr "VPN"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Ini adalah pemindaian jaringan atau frekuensi: memakan waktu satu sampai tiga menit, menahan kanal AT modem selama itu, dan data seluler bisa terhenti sementara. Berjalan di latar belakang; balasannya muncul di sini setelah selesai."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Ini mengubah mode jaringan, pita, atau pengaturan sel yang disimpan modem: tetap berlaku setelah reboot, dan juga di Android, tempat jaringan yang tidak cocok tampil sebagai Tidak ada layanan. Halaman Kunci menampilkan pengaturan ini dan mengatur ulangnya."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Ini mengalihkan radio, koneksi data, atau modem itu sendiri: data seluler terputus sampai dipulihkan, dan halaman ini bisa kehilangan koneksi untuk sementara."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Ini mengubah profil data (APN) yang tersimpan di modem, yang digunakan data seluler dan Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Ini mengubah kunci PIN SIM atau memasukkan PIN: PIN yang salah memblokir SIM sampai PUK-nya dimasukkan."
 
 msgid "Basic"
 msgstr "Dasar"
@@ -141,8 +279,32 @@ msgstr "Siap."
 msgid "Session history (click to reuse)"
 msgstr "Riwayat sesi (klik untuk menggunakan lagi)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "Berjalan di latar belakang (paling lama %d dtk); balasannya muncul di sini setelah selesai…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Modem tidak memberi jawaban akhir tepat waktu"
+
+msgid "%d s in the background"
+msgstr "%d dtk di latar belakang"
+
 msgid "(no output)"
 msgstr "(tidak ada keluaran)"
+
+msgid "This command changes the modem's state."
+msgstr "Perintah ini mengubah status modem."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Belum dikirim: menunggu konfirmasi"
+
+msgid "Send this AT command?"
+msgstr "Kirim perintah AT ini?"
+
+msgid "Send anyway"
+msgstr "Tetap kirim"
+
+msgid "Not sent"
+msgstr "Tidak dikirim"
 
 msgid "Request failed"
 msgstr "Permintaan gagal"
@@ -150,14 +312,20 @@ msgstr "Permintaan gagal"
 msgid "(empty)"
 msgstr "(kosong)"
 
-msgid "Failed: %s"
-msgstr "Gagal: %s"
+msgid "Loading…"
+msgstr "Memuat…"
+
+msgid "Channel Analysis"
+msgstr "Analisis Kanal"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Pemindaian membuat hotspot Wi-Fi meninggalkan kanalnya sesaat: perangkat yang terhubung terputus, dan beberapa (terutama macOS) mungkin tidak tersambung kembali sendiri. Halaman ini memindai begitu dibuka lalu setiap beberapa detik. Jika Anda bergantung pada hotspot, akses panel lewat USB atau cara lain terlebih dahulu."
+
+msgid "Scan anyway"
+msgstr "Tetap pindai"
 
 msgid "Saved"
 msgstr "Disimpan"
-
-msgid "Management connection lost"
-msgstr "Koneksi manajemen terputus"
 
 msgid "CPU profile unavailable"
 msgstr "CPU profile unavailable"
@@ -273,6 +441,15 @@ msgstr "Segarkan"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Hanya tersedia dalam mode host. Segarkan menyalakan adaptor USB yang ditemukan; menambahkan ke LAN menyimpan bridge dan memuat ulang jaringan."
 
+msgid "Recent modem operations"
+msgstr "Operasi modem terbaru"
+
+msgid "Show"
+msgstr "Tampilkan"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Panggilan terbaru panel kontrol, dari boot ini dan sebelumnya: kapan, panggilan halaman atau perintah AT apa, berapa lama, dan bagaimana berakhirnya (ok, galat, sibuk, dihentikan). Tidak ada nilai, balasan, atau pesan yang disimpan. Berguna saat panel macet."
+
 msgid "Unavailable"
 msgstr "Tidak tersedia"
 
@@ -326,6 +503,12 @@ msgstr "Pengaturan disimpan"
 
 msgid "Save failed: %s"
 msgstr "Gagal menyimpan: %s"
+
+msgid "This boot"
+msgstr "Boot ini"
+
+msgid "Previous boot"
+msgstr "Boot sebelumnya"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Peran belum dapat dipastikan; sambungkan ulang dan segarkan halaman."
@@ -798,6 +981,9 @@ msgstr "Radio mati"
 msgid "No response"
 msgstr "Tidak ada respons"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Modem sibuk: pembacaan seluler dari %s yang lalu"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Sinyal %s %s/10"
 
@@ -864,9 +1050,6 @@ msgstr "%s klien"
 msgid "Recent DHCP leases"
 msgstr "Sewa DHCP terbaru"
 
-msgid "%d h"
-msgstr "%d j"
-
 msgid "Board"
 msgstr "Papan"
 
@@ -918,9 +1101,6 @@ msgstr "Paket bahasa sudah terpasang"
 msgid "The language pack could not be installed"
 msgstr "Paket bahasa tidak dapat dipasang"
 
-msgid "Upload failed: %s"
-msgstr "Gagal mengunggah: %s"
-
 msgid "Language of the browser"
 msgstr "Bahasa peramban"
 
@@ -941,9 +1121,6 @@ msgstr "Paket bahasa (mu300-extra-lang.tar.gz, sekitar 2 MB) menambahkan LuCI da
 
 msgid "Download from the release"
 msgstr "Unduh dari rilis"
-
-msgid "Upload the file…"
-msgstr "Unggah berkas…"
 
 msgid "Release"
 msgstr "Rilis"
@@ -1086,11 +1263,11 @@ msgstr "Aktifkan penerapan saat startup"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Membaca modem secara langsung (paling lama beberapa detik)…"
 
-msgid "Refreshed"
-msgstr "Disegarkan"
-
 msgid "Refresh failed"
 msgstr "Gagal menyegarkan"
+
+msgid "Refreshed"
+msgstr "Disegarkan"
 
 msgid "NR bands: back to automatic"
 msgstr "Band NR: kembali ke otomatis"
@@ -1163,6 +1340,114 @@ msgstr "Otomatis (%d didukung)"
 
 msgid "%d locked: %s"
 msgstr "%d terkunci: %s"
+
+msgid "Repair DNS?"
+msgstr "Perbaiki DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Ini menghapus penerusan DNS milik paket yang sudah tidak terpasang. Jika tidak ada server DNS lain yang tersisa, perangkat akan memakai server DNS koneksi seluler: operator dapat melihat nama yang Anda cari, di luar proxy atau VPN apa pun."
+
+msgid "Repair DNS"
+msgstr "Perbaiki DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Paket yang dipasang di perangkat bukan bagian dari image rilis. Pembaruan mencatatnya, dan sistem baru memasangnya kembali saat boot pertama, begitu terhubung ke internet. Sampai paket kembali, pengaturannya disisihkan."
+
+msgid "No packages to install again."
+msgstr "Tidak ada paket untuk dipasang ulang."
+
+msgid "All back"
+msgstr "Semua kembali"
+
+msgid "Not installed yet"
+msgstr "Belum terpasang"
+
+msgid "Could not be installed again"
+msgstr "Tidak dapat dipasang ulang"
+
+msgid "Waiting for the internet"
+msgstr "Menunggu internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Dihentikan: tidak ada internet selama lima kali boot"
+
+msgid "Skipped"
+msgstr "Dilewati"
+
+msgid "Written down by the update from %s"
+msgstr "Dicatat oleh pembaruan dari %s"
+
+msgid "Installed again"
+msgstr "Dipasang ulang"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Pasang sendiri dari tempat Anda mendapatkannya (berkas paket: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Pengaturan yang disisihkan di /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS masih mengarah ke paket yang tidak terpasang: perangkat tidak punya DNS melaluinya."
+
+msgid "Try again"
+msgstr "Coba lagi"
+
+msgid "Dismiss the note"
+msgstr "Tutup catatan"
+
+msgid "started"
+msgstr "dimulai"
+
+msgid "asleep now (asked)"
+msgstr "tidur sekarang (diminta)"
+
+msgid "woken: power daemon stopping"
+msgstr "bangun: layanan daya berhenti"
+
+msgid "woken by a key"
+msgstr "dibangunkan oleh tombol"
+
+msgid "woken by the Wi-Fi key"
+msgstr "dibangunkan oleh tombol Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "bangun (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "dibangunkan oleh komputer di USB"
+
+msgid "woken: plugged in"
+msgstr "bangun: dicolokkan ke listrik"
+
+msgid "woken by a Wi-Fi client"
+msgstr "dibangunkan oleh klien Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "boot pengisian (dinyalakan oleh pengisi daya)"
+
+msgid "the hotspot is down"
+msgstr "hotspot mati"
+
+msgid "the VPN is still stopped"
+msgstr "VPN masih berhenti"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) masih mati setelah lanjut yang gagal"
+
+msgid "self-check: %s"
+msgstr "pemeriksaan mandiri: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "tidur: tanpa klien selama %d mnt (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "tidur: profil sekarang %s"
+
+msgid "woken by the %s key"
+msgstr "dibangunkan oleh tombol %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "modem ditangguhkan (%s)"
 
 msgid "Enter a whole number from 0 to %d"
 msgstr "Masukkan bilangan bulat dari 0 hingga %d"
@@ -1241,6 +1526,9 @@ msgstr "Beralih ke Hemat di bawah %"
 
 msgid "Stop charging at"
 msgstr "Hentikan pengisian pada"
+
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % tidak pernah mengisi baterai (perangkat berjalan dari pengisi daya), 100 % mengisinya penuh; di antaranya, pengisian berhenti di tingkat itu dan mulai lagi 5 poin lebih rendah. Di bawah 5 % baterai selalu diisi."
 
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % menjaga baterai tetap sehat pada perangkat yang terus tercolok."
@@ -1353,9 +1641,6 @@ msgstr "Sinkronkan dari SIM"
 msgid "Clear local pool"
 msgstr "Kosongkan pool lokal"
 
-msgid "Loading…"
-msgstr "Memuat…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Pilih percakapan di sebelah kiri, atau masukkan nomor di bawah untuk mengirim."
 
@@ -1430,6 +1715,39 @@ msgstr "Tidak lengkap: %d dari %d bagian tiba"
 
 msgid "Delete"
 msgstr "Hapus"
+
+msgid "ttyd is not installed."
+msgstr "ttyd tidak terpasang."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminal dimatikan (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Terlalu banyak terminal dibuka sekaligus. Coba lagi dalam satu menit."
+
+msgid "The terminal is not available."
+msgstr "Terminal tidak tersedia."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Ini adalah shell root perangkat: setiap perintah berjalan dengan hak penuh, dan satu kesalahan dapat membuat perangkat tidak bisa boot."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Hanya dapat dijangkau dari LAN (USB dan hotspot), tidak pernah dari data seluler, dan hanya dari halaman yang sudah login ini."
+
+msgid "It closes after a minute without activity."
+msgstr "Ditutup setelah satu menit tanpa aktivitas."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Ditutup setelah %d menit tanpa aktivitas."
+
+msgid "Reconnect"
+msgstr "Sambung ulang"
+
+msgid "Open in a new tab"
+msgstr "Buka di tab baru"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Halaman ini dibuka lewat HTTPS, dan terminal disajikan lewat HTTP di LAN: terminal dibuka di tab tersendiri."
 
 msgid "The data usage could not be read"
 msgstr "Penggunaan data tidak dapat dibaca"
@@ -1566,6 +1884,594 @@ msgstr "Matikan"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "Dengan 64 setiap paket keluar seperti lalu lintas perangkat itu sendiri"
 
+msgid "running"
+msgstr "berjalan"
+
+msgid "(about %s)"
+msgstr "(sekitar %s)"
+
+msgid "Install %s?"
+msgstr "Pasang %s?"
+
+msgid "It is installed from this system's package feed."
+msgstr "Dipasang dari feed paket sistem ini."
+
+msgid "It is downloaded from the release of the VPN module and checked against its SHA256SUMS."
+msgstr "Diunduh dari rilis modul VPN dan diperiksa terhadap SHA256SUMS-nya."
+
+msgid "An engine is tens of MB: on mobile data the download counts towards your plan."
+msgstr "Satu mesin berukuran puluhan MB: pada data seluler, unduhan memotong kuota Anda."
+
+msgid "Install"
+msgstr "Pasang"
+
+msgid "Remove %s?"
+msgstr "Hapus %s?"
+
+msgid "Profiles run on it: %s. They cannot start until it is installed again (the module refuses while the running profile needs it)."
+msgstr "Profil yang berjalan di atasnya: %s. Profil tidak dapat dimulai sampai mesin dipasang lagi (modul menolak selama profil yang berjalan membutuhkannya)."
+
+msgid "No profile runs on it."
+msgstr "Tidak ada profil yang berjalan di atasnya."
+
+msgid "Removed"
+msgstr "Dihapus"
+
+msgid "Check for updates"
+msgstr "Periksa pembaruan"
+
+msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
+msgstr "Setiap mesin adalah ekstra tersendiri: pasang hanya yang dibutuhkan profil Anda. Xray menjalankan tautan vless, vmess, trojan, dan ss (dengan hev-socks5-tunnel), sing-box tautan yang sama dan JSON-nya sendiri, mihomo langganan Clash, dae hysteria2, tuic, dan lainnya pada kernel yang lebih baru. WireGuard dan OpenVPN adalah paket sistem."
+
+msgid "Downloads are tens of MB per engine: on mobile data they count towards your plan. Offline, upload the engine's tarball from the release page of the VPN module."
+msgstr "Unduhan berukuran puluhan MB per mesin: pada data seluler, ini memotong kuota Anda. Secara offline, unggah tarball mesin dari halaman rilis modul VPN."
+
+msgid "The available versions come from the latest release of the VPN module."
+msgstr "Versi yang tersedia berasal dari rilis terbaru modul VPN."
+
+msgid "Update"
+msgstr "Perbarui"
+
+msgid "system package"
+msgstr "paket sistem"
+
+msgid "in the vpn bundle"
+msgstr "dalam bundel vpn"
+
+msgid "extra %s"
+msgstr "ekstra %s"
+
+msgid "not installed"
+msgstr "belum terpasang"
+
+msgid "cannot run here"
+msgstr "tidak dapat berjalan di sini"
+
+msgid "update available"
+msgstr "pembaruan tersedia"
+
+msgid "installed"
+msgstr "terpasang"
+
+msgid "Kind"
+msgstr "Jenis"
+
+msgid "Version"
+msgstr "Versi"
+
+msgid "Available"
+msgstr "Tersedia"
+
+msgid "not checked"
+msgstr "belum diperiksa"
+
+msgid "Size"
+msgstr "Ukuran"
+
+msgid "Needed by"
+msgstr "Dibutuhkan oleh"
+
+msgid "no profile"
+msgstr "tidak ada profil"
+
+msgid "dae needs a kernel with BTF, 5.17 or newer: not the 5.4 vendor kernel (mu300-update kernel 6.18). It can be installed anyway."
+msgstr "dae memerlukan kernel dengan BTF, 5.17 atau lebih baru: bukan kernel vendor 5.4 (mu300-update kernel 6.18). Tetap dapat dipasang."
+
+msgid "All engines"
+msgstr "Semua mesin"
+
+msgid "Last %s lines"
+msgstr "%s baris terakhir"
+
+msgid "VPN service log"
+msgstr "Log layanan VPN"
+
+msgid "Every 5 s"
+msgstr "Setiap 5 dtk"
+
+msgid "The log is empty."
+msgstr "Log kosong."
+
+msgid "The VPN is starting"
+msgstr "VPN sedang dimulai"
+
+msgid "The VPN is stopped"
+msgstr "VPN dihentikan"
+
+msgid "The VPN is restarting"
+msgstr "VPN sedang dimulai ulang"
+
+msgid "With the kill switch on, nothing leaves the device or the LAN outside the tunnel: while the VPN is down, starting or broken, every connection fails instead of going out directly. It stays up until you stop the VPN here (Stop removes it)."
+msgstr "Dengan kill switch aktif, tidak ada yang keluar dari perangkat atau LAN di luar terowongan: saat VPN mati, sedang dimulai, atau rusak, setiap koneksi gagal alih-alih keluar secara langsung. Tetap aktif sampai Anda menghentikan VPN di sini (Hentikan menghapusnya)."
+
+msgid "Without the kill switch, traffic goes out directly, unprotected, whenever the tunnel is down (while it starts, after a crash, when the engine is missing)."
+msgstr "Tanpa kill switch, lalu lintas keluar langsung tanpa perlindungan setiap kali terowongan mati (saat dimulai, setelah crash, saat mesin tidak ada)."
+
+msgid "Turn the kill switch on?"
+msgstr "Aktifkan kill switch?"
+
+msgid "Turn the kill switch off?"
+msgstr "Matikan kill switch?"
+
+msgid "Turn on"
+msgstr "Aktifkan"
+
+msgid "unknown"
+msgstr "tidak diketahui"
+
+msgid "The exit address could not be found (is the tunnel up?)"
+msgstr "Alamat keluar tidak ditemukan (apakah terowongan aktif?)"
+
+msgid "Connecting…"
+msgstr "Menghubungkan…"
+
+msgid "On, but not running"
+msgstr "Aktif, tetapi tidak berjalan"
+
+msgid "Stopped"
+msgstr "Dihentikan"
+
+msgid "Install it"
+msgstr "Pasang"
+
+msgid "The engine of the active profile is not installed: %s"
+msgstr "Mesin profil aktif belum terpasang: %s"
+
+msgid "The kill switch keeps everything closed until it is there; the service downloads it by itself when it can."
+msgstr "Kill switch menutup semuanya sampai mesin itu ada; layanan mengunduhnya sendiri bila bisa."
+
+msgid "The VPN cannot start until it is installed."
+msgstr "VPN tidak dapat dimulai sampai terpasang."
+
+msgid "%s cannot run on this system"
+msgstr "%s tidak dapat berjalan di sistem ini"
+
+msgid "The VPN is on, but no profile is active: choose one below."
+msgstr "VPN aktif, tetapi tidak ada profil aktif: pilih salah satu di bawah."
+
+msgid "Profile: %s"
+msgstr "Profil: %s"
+
+msgid "No active profile"
+msgstr "Tidak ada profil aktif"
+
+msgid "engine %s"
+msgstr "mesin %s"
+
+msgid "interface %s"
+msgstr "antarmuka %s"
+
+msgid "Kill switch active"
+msgstr "Kill switch aktif"
+
+msgid "Kill switch on"
+msgstr "Kill switch menyala"
+
+msgid "Kill switch off"
+msgstr "Kill switch mati"
+
+msgid "IPv6 in the tunnel"
+msgstr "IPv6 di terowongan"
+
+msgid "IPv6 blocked"
+msgstr "IPv6 diblokir"
+
+msgid "IPv6 untouched"
+msgstr "IPv6 tidak diubah"
+
+msgid "Module %s"
+msgstr "Modul %s"
+
+msgid "Check"
+msgstr "Periksa"
+
+msgid "Uptime"
+msgstr "Waktu aktif"
+
+msgid "Rate"
+msgstr "Kecepatan"
+
+msgid "Exit address"
+msgstr "Alamat keluar"
+
+msgid "Start"
+msgstr "Mulai"
+
+msgid "Stop"
+msgstr "Hentikan"
+
+msgid "Restart"
+msgstr "Mulai ulang"
+
+msgid "Stop the VPN?"
+msgstr "Hentikan VPN?"
+
+msgid "Traffic then goes out directly, without the tunnel; the kill switch is taken down with it."
+msgstr "Lalu lintas kemudian keluar langsung tanpa terowongan; kill switch ikut dimatikan."
+
+msgid "The VPN is on: it starts again by itself after a reboot."
+msgstr "VPN menyala: akan dimulai lagi sendiri setelah reboot."
+
+msgid "The VPN is off."
+msgstr "VPN mati."
+
+msgid "Kill switch"
+msgstr "Kill switch"
+
+msgid "Setting"
+msgstr "Pengaturan"
+
+msgid "Active: only the tunnel can reach the internet"
+msgstr "Aktif: hanya terowongan yang dapat mencapai internet"
+
+msgid "Not active"
+msgstr "Tidak aktif"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down, so nothing ever leaves without the tunnel. If the tunnel cannot come up (a dead server, an expired account), the device stays offline until you fix the profile or stop the VPN. The panel itself stays reachable from the LAN."
+msgstr "Kill switch memblokir seluruh lalu lintas perangkat dan LAN saat VPN mati, sehingga tidak ada yang keluar tanpa terowongan. Jika terowongan tidak dapat naik (server mati, akun kedaluwarsa), perangkat tetap offline sampai Anda memperbaiki profil atau menghentikan VPN. Panel itu sendiri tetap dapat diakses dari LAN."
+
+msgid "Choose a profile"
+msgstr "Pilih profil"
+
+msgid "No profiles yet"
+msgstr "Belum ada profil"
+
+msgid "engine not installed"
+msgstr "mesin belum terpasang"
+
+msgid "Use"
+msgstr "Gunakan"
+
+msgid "Switched: the VPN restarts on the new profile"
+msgstr "Dialihkan: VPN dimulai ulang dengan profil baru"
+
+msgid "Active profile"
+msgstr "Profil aktif"
+
+msgid "A running VPN restarts on the profile you choose; the kill switch stays up in between."
+msgstr "VPN yang berjalan dimulai ulang dengan profil yang Anda pilih; kill switch tetap aktif di antaranya."
+
+msgid "Manage the profiles"
+msgstr "Kelola profil"
+
+msgid "Automatic: through the tunnel where the engine can carry it"
+msgstr "Otomatis: lewat terowongan bila mesin mampu membawanya"
+
+msgid "Ask the engine for IPv6 in the tunnel"
+msgstr "Minta IPv6 di terowongan dari mesin"
+
+msgid "Never through the tunnel (blocked while the VPN is up)"
+msgstr "Tidak pernah lewat terowongan (diblokir saat VPN aktif)"
+
+msgid "Saved: it applies from the next start (Restart)"
+msgstr "Tersimpan: berlaku mulai awal berikutnya (Mulai ulang)"
+
+msgid "IPv6"
+msgstr "IPv6"
+
+msgid "The tunnel carries IPv6"
+msgstr "Terowongan membawa IPv6"
+
+msgid "Yes"
+msgstr "Ya"
+
+msgid "IPv6 guard"
+msgstr "Penjaga IPv6"
+
+msgid "Active: IPv6 outside the tunnel is refused"
+msgstr "Aktif: IPv6 di luar terowongan ditolak"
+
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
+msgstr "Saat VPN aktif, IPv6 tidak pernah keluar di samping terowongan yang tidak membawanya: langsung ditolak, sehingga program dan klien LAN beralih ke IPv4 alih-alih bocor atau menunggu. Otomatis: WireGuard memakai alamat IPv6 dari konfigurasinya, mesin lain tetap IPv4."
+
+msgid "%d ms"
+msgstr "%d ms"
+
+msgid "UDP: not testable"
+msgstr "UDP: tidak dapat diuji"
+
+msgid "blocked by the kill switch"
+msgstr "diblokir oleh kill switch"
+
+msgid "A WireGuard or OpenVPN config, a Clash/mihomo YAML, an Xray or sing-box JSON, a dae config"
+msgstr "Konfigurasi WireGuard atau OpenVPN, YAML Clash/mihomo, JSON Xray atau sing-box, konfigurasi dae"
+
+msgid "After OK, choose the file: a WireGuard .conf, an OpenVPN .ovpn, a Clash/mihomo .yaml, an Xray or sing-box .json or a dae config (at most 1 MiB)."
+msgstr "Setelah OK, pilih file: .conf WireGuard, .ovpn OpenVPN, .yaml Clash/mihomo, .json Xray atau sing-box, atau konfigurasi dae (maksimal 1 MiB)."
+
+msgid "From the source"
+msgstr "Dari sumber"
+
+msgid "Detect"
+msgstr "Deteksi"
+
+msgid "The URL may hold a token: it goes to the device on its own, never into a command line or a log."
+msgstr "URL dapat memuat token: dikirim ke perangkat tersendiri, tidak pernah masuk ke baris perintah atau log."
+
+msgid "Type"
+msgstr "Jenis"
+
+msgid "Share link"
+msgstr "Tautan bagikan"
+
+msgid "Paste"
+msgstr "Tempel"
+
+msgid "File"
+msgstr "File"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Not a share link this panel takes"
+msgstr "Bukan tautan bagikan yang diterima panel ini"
+
+msgid "The config is empty"
+msgstr "Konfigurasi kosong"
+
+msgid "Not an https URL"
+msgstr "Bukan URL https"
+
+msgid "Invalid name: 1-64 characters, no control characters"
+msgstr "Nama tidak valid: 1-64 karakter, tanpa karakter kontrol"
+
+msgid "Add a profile"
+msgstr "Tambah profil"
+
+msgid "Name"
+msgstr "Nama"
+
+msgid "Detect: the module tells the kind from the link or the file. Choose the type for a JSON that could be either Xray or sing-box, or for a link that should run on another engine."
+msgstr "Deteksi: modul menentukan jenis dari tautan atau file. Pilih jenisnya untuk JSON yang bisa berupa Xray atau sing-box, atau untuk tautan yang harus berjalan di mesin lain."
+
+msgid "The profile is added"
+msgstr "Profil ditambahkan"
+
+msgid "Rename the profile"
+msgstr "Ganti nama profil"
+
+msgid "Delete the profile %s?"
+msgstr "Hapus profil %s?"
+
+msgid "It is the active profile: with the VPN on, the module refuses; stop the VPN or choose another profile first."
+msgstr "Ini profil aktif: saat VPN menyala, modul menolak; hentikan VPN atau pilih profil lain terlebih dahulu."
+
+msgid "Its config and credentials are deleted from the device."
+msgstr "Konfigurasi dan kredensialnya dihapus dari perangkat."
+
+msgid "Deleted"
+msgstr "Dihapus"
+
+msgid "The profile passes the check"
+msgstr "Profil lolos pemeriksaan"
+
+msgid "Show the config?"
+msgstr "Tampilkan konfigurasi?"
+
+msgid "The config holds the credentials of the profile (keys, passwords, UUIDs). It is shown on this screen only; anyone who can see the screen can read it."
+msgstr "Konfigurasi memuat kredensial profil (kunci, kata sandi, UUID). Hanya ditampilkan di layar ini; siapa pun yang dapat melihat layar dapat membacanya."
+
+msgid "Saving checks the config with the engine first (profile edit); a config that does not pass is not saved and the old one stays."
+msgstr "Saat menyimpan, konfigurasi diperiksa dulu dengan mesin (profile edit); konfigurasi yang tidak lolos tidak disimpan dan yang lama tetap ada."
+
+msgid "This profile comes from a subscription: its next refresh replaces your changes."
+msgstr "Profil ini berasal dari langganan: penyegaran berikutnya menimpa perubahan Anda."
+
+msgid "Config of %s"
+msgstr "Konfigurasi %s"
+
+msgid "Close"
+msgstr "Tutup"
+
+msgid "Rename"
+msgstr "Ganti nama"
+
+msgid "Show / edit the config"
+msgstr "Tampilkan / ubah konfigurasi"
+
+msgid "Test the latency of all"
+msgstr "Uji latensi semuanya"
+
+msgid "No profiles yet: add one from a share link, a config file or a subscription."
+msgstr "Belum ada profil: tambahkan dari tautan bagikan, file konfigurasi, atau langganan."
+
+msgid "Active"
+msgstr "Aktif"
+
+msgid "This profile is the active one now"
+msgstr "Profil ini sekarang yang aktif"
+
+msgid "More"
+msgstr "Lainnya"
+
+msgid "active"
+msgstr "aktif"
+
+msgid "subscription"
+msgstr "langganan"
+
+msgid "migrated"
+msgstr "dimigrasikan"
+
+msgid "gone from its subscription"
+msgstr "hilang dari langganannya"
+
+msgid "Server"
+msgstr "Server"
+
+msgid "Engine"
+msgstr "Mesin"
+
+msgid "Latency"
+msgstr "Latensi"
+
+msgid "The latency is a TCP connection to the server, through the tunnel when the VPN is up. WireGuard and OpenVPN servers usually speak UDP and cannot be tested this way."
+msgstr "Latensi adalah koneksi TCP ke server, lewat terowongan saat VPN aktif. Server WireGuard dan OpenVPN biasanya memakai UDP dan tidak dapat diuji dengan cara ini."
+
+msgid "Enter an IPv4 or IPv6 address"
+msgstr "Masukkan alamat IPv4 atau IPv6"
+
+msgid "On: nothing leaves outside the tunnel"
+msgstr "Aktif: tidak ada yang keluar di luar terowongan"
+
+msgid "Off: traffic goes out directly while the tunnel is down"
+msgstr "Mati: lalu lintas keluar langsung saat terowongan mati"
+
+msgid "Yes: Tailscale's own connections go through the tunnel"
+msgstr "Ya: koneksi Tailscale sendiri lewat terowongan"
+
+msgid "No: Tailscale connects directly"
+msgstr "Tidak: Tailscale terhubung langsung"
+
+msgid "Routing"
+msgstr "Perutean"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down."
+msgstr "Kill switch memblokir seluruh lalu lintas perangkat dan LAN saat VPN mati."
+
+msgid "Bypass the tunnel"
+msgstr "Lewati terowongan"
+
+msgid "Enter address ranges like 192.168.0.0/16, separated by commas"
+msgstr "Masukkan rentang alamat seperti 192.168.0.0/16, dipisahkan koma"
+
+msgid "Address ranges that never go into the tunnel, besides the LAN itself (which never does). Empty: the LAN only."
+msgstr "Rentang alamat yang tidak pernah masuk ke terowongan, selain LAN itu sendiri (yang tidak pernah). Kosong: hanya LAN."
+
+msgid "Tailscale through the VPN"
+msgstr "Tailscale lewat VPN"
+
+msgid "When Tailscale runs on the device, its WireGuard, DERP and control connections go through whichever tunnel runs (dae catches them like any other)."
+msgstr "Saat Tailscale berjalan di perangkat, koneksi WireGuard, DERP, dan kontrolnya lewat terowongan mana pun yang berjalan (dae menangkapnya seperti yang lain)."
+
+msgid "DNS"
+msgstr "DNS"
+
+msgid "DNS through the tunnel"
+msgstr "DNS lewat terowongan"
+
+msgid "The resolver the device's and the LAN's lookups go to, through the tunnel. Nothing goes to the carrier's resolver."
+msgstr "Resolver tempat kueri perangkat dan LAN dikirim, lewat terowongan. Tidak ada yang dikirim ke resolver operator."
+
+msgid "Bootstrap DNS"
+msgstr "DNS bootstrap"
+
+msgid "Finds the VPN server's own address before the tunnel is up (directly, on the engine's own connection)."
+msgstr "Menemukan alamat server VPN sendiri sebelum terowongan naik (secara langsung, lewat koneksi mesin sendiri)."
+
+msgid "Empty puts a setting back to its default."
+msgstr "Kosong mengembalikan pengaturan ke bawaannya."
+
+msgid "TUN stack"
+msgstr "Tumpukan TUN"
+
+msgid "Default (gvisor)"
+msgstr "Bawaan (gvisor)"
+
+msgid "system (not on the 5.4 kernel)"
+msgstr "system (tidak di kernel 5.4)"
+
+msgid "set (unchanged unless you type a new one)"
+msgstr "diatur (tidak berubah kecuali Anda mengetik yang baru)"
+
+msgid "not set"
+msgstr "belum diatur"
+
+msgid "Upstream HTTP proxy"
+msgstr "Proxy HTTP upstream"
+
+msgid "TLS certificate pin (SHA-256)"
+msgstr "Pin sertifikat TLS (SHA-256)"
+
+msgid "Enter host:port"
+msgstr "Masukkan host:port"
+
+msgid "Enter the SHA-256 in hex"
+msgstr "Masukkan SHA-256 dalam heksadesimal"
+
+msgid "Profile options"
+msgstr "Opsi profil"
+
+msgid "None of the profiles has options of its type."
+msgstr "Tidak ada profil yang memiliki opsi untuk jenisnya."
+
+msgid "mihomo's mode (rule, global, direct), the engines' log levels, dae's groups and routing are part of each profile's own config: VPN > Profiles, Show / edit the config."
+msgstr "Mode mihomo (rule, global, direct), tingkat log mesin, grup dan perutean dae adalah bagian dari konfigurasi masing-masing profil: VPN > Profil, Tampilkan / ubah konfigurasi."
+
+msgid "Delete the subscription %s?"
+msgstr "Hapus langganan %s?"
+
+msgid "Its profiles can go with it or stay as profiles of their own. The active profile is never removed while the VPN is on."
+msgstr "Profilnya dapat ikut dihapus atau tetap sebagai profil tersendiri. Profil aktif tidak pernah dihapus saat VPN menyala."
+
+msgid "Keep the profiles"
+msgstr "Pertahankan profil"
+
+msgid "Delete with its profiles"
+msgstr "Hapus beserta profilnya"
+
+msgid "Only by hand"
+msgstr "Hanya manual"
+
+msgid "Every %d h"
+msgstr "Setiap %d jam"
+
+msgid "Share links: one profile per link"
+msgstr "Tautan bagikan: satu profil per tautan"
+
+msgid "Clash/mihomo YAML: one mihomo profile"
+msgstr "YAML Clash/mihomo: satu profil mihomo"
+
+msgid "dae: one profile with every node in one group"
+msgstr "dae: satu profil dengan setiap node dalam satu grup"
+
+msgid "Add a subscription"
+msgstr "Tambah langganan"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "The URL usually holds your account token: it is stored on the device readable by root only, and never shown again. The subscription is fetched over the device's own connection: through the tunnel when the VPN is up; with the kill switch up and the tunnel down it cannot be fetched."
+msgstr "URL biasanya memuat token akun Anda: disimpan di perangkat dan hanya dapat dibaca root, dan tidak pernah ditampilkan lagi. Langganan diambil lewat koneksi perangkat sendiri: lewat terowongan saat VPN aktif; dengan kill switch aktif dan terowongan mati, langganan tidak dapat diambil."
+
+msgid "Refresh all"
+msgstr "Segarkan semua"
+
+msgid "No subscriptions yet."
+msgstr "Belum ada langganan."
+
+msgid "Host"
+msgstr "Host"
+
+msgid "Updated"
+msgstr "Diperbarui"
+
+msgid "Share links"
+msgstr "Tautan bagikan"
+
+msgid "A refresh keeps the profiles whose name is unchanged, adds the new ones and removes the ones that are gone (the active one stays while the VPN is on, marked as gone). A refresh of the active profile restarts the running VPN."
+msgstr "Penyegaran mempertahankan profil yang namanya tidak berubah, menambah yang baru, dan menghapus yang hilang (profil aktif tetap ada saat VPN menyala, ditandai hilang). Penyegaran profil aktif memulai ulang VPN yang berjalan."
+
 msgid "Dashboard info failed"
 msgstr "Gagal memuat info dasbor"
 
@@ -1587,6 +2493,9 @@ msgstr "Radio sedang sibuk: dial atau watchdog sedang mengalihkannya, coba lagi 
 msgid "The action gave no valid reply"
 msgstr "Tindakan tidak memberikan balasan yang valid"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Parameter confirm harus 0 atau 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "Perintah AT adalah satu baris ASCII yang dapat dicetak, paling banyak 512 karakter"
 
@@ -1602,6 +2511,12 @@ msgstr "Ditolak: perintah ini membuat port AT macet hingga boot ulang"
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Menerapkan kunci jaringan: modem sedang dimulai ulang (sekitar setengah menit), coba lagi sebentar lagi"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Perintah AT yang panjang masih berjalan di latar belakang; coba lagi setelah selesai"
+
+msgid "This command needs confirmation"
+msgstr "Perintah ini memerlukan konfirmasi"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "Kanal AT sedang sibuk; perintah tidak dikirim, coba lagi"
 
@@ -1610,6 +2525,9 @@ msgstr "Modem tidak menjawab tepat waktu; perintah mungkin masih berjalan, perik
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Parameter fresh harus 0 atau 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Membaca kunci dari modem; coba lagi dalam beberapa detik"
 
 msgid "Lock read failed"
 msgstr "Gagal membaca kunci"
@@ -1728,6 +2646,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Adaptor paket tidak memberi balasan yang valid"
+
+msgid "Invalid packages operation"
+msgstr "Operasi paket tidak valid"
+
 msgid "Request too large"
 msgstr "Permintaan terlalu besar"
 
@@ -1736,6 +2660,150 @@ msgstr "Direktori runtime tidak aman; tidak ada yang dijalankan"
 
 msgid "No such method"
 msgstr "Metode tidak ada"
+
+msgid "The VPN module refused the request"
+msgstr "Modul VPN menolak permintaan"
+
+msgid "The VPN panel is busy, try again"
+msgstr "Panel VPN sedang sibuk, coba lagi"
+
+msgid "Another VPN task is still running"
+msgstr "Tugas VPN lain masih berjalan"
+
+msgid "The exit_ip parameter must be 0 or 1"
+msgstr "Parameter exit_ip harus 0 atau 1"
+
+msgid "The VPN status could not be read"
+msgstr "Status VPN tidak dapat dibaca"
+
+msgid "The profiles could not be read"
+msgstr "Profil tidak dapat dibaca"
+
+msgid "The check parameter must be 0 or 1"
+msgstr "Parameter check harus 0 atau 1"
+
+msgid "The engines could not be read"
+msgstr "Mesin tidak dapat dibaca"
+
+msgid "The subscriptions could not be read"
+msgstr "Langganan tidak dapat dibaca"
+
+msgid "The VPN settings could not be read"
+msgstr "Pengaturan VPN tidak dapat dibaca"
+
+msgid "Unknown VPN operation"
+msgstr "Operasi VPN tidak dikenal"
+
+msgid "The VPN could not be switched"
+msgstr "VPN tidak dapat dialihkan"
+
+msgid "The kill switch is on or off"
+msgstr "Kill switch hidup atau mati"
+
+msgid "The kill switch could not be changed"
+msgstr "Kill switch tidak dapat diubah"
+
+msgid "Invalid profile id"
+msgstr "ID profil tidak valid"
+
+msgid "The profile could not be made the active one"
+msgstr "Profil tidak dapat dijadikan aktif"
+
+msgid "Unknown profile source"
+msgstr "Sumber profil tidak dikenal"
+
+msgid "Unknown profile type"
+msgstr "Jenis profil tidak dikenal"
+
+msgid "The config is empty, too large or holds control characters"
+msgstr "Konfigurasi kosong, terlalu besar, atau memuat karakter kontrol"
+
+msgid "Invalid profile request"
+msgstr "Permintaan profil tidak valid"
+
+msgid "A config from a URL takes the type it says"
+msgstr "Konfigurasi dari URL memakai jenis yang disebutkannya"
+
+msgid "No uploaded file"
+msgstr "Tidak ada file yang diunggah"
+
+msgid "The file is larger than 1 MiB"
+msgstr "File lebih besar dari 1 MiB"
+
+msgid "The profile could not be added"
+msgstr "Profil tidak dapat ditambahkan"
+
+msgid "The profile could not be renamed"
+msgstr "Profil tidak dapat diganti namanya"
+
+msgid "The profile could not be removed"
+msgstr "Profil tidak dapat dihapus"
+
+msgid "The profile does not pass the check"
+msgstr "Profil tidak lolos pemeriksaan"
+
+msgid "Unknown profile option"
+msgstr "Opsi profil tidak dikenal"
+
+msgid "Invalid value for this option"
+msgstr "Nilai tidak valid untuk opsi ini"
+
+msgid "The option could not be set"
+msgstr "Opsi tidak dapat diatur"
+
+msgid "The config could not be read"
+msgstr "Konfigurasi tidak dapat dibaca"
+
+msgid "The config was not saved"
+msgstr "Konfigurasi tidak disimpan"
+
+msgid "The latency test failed"
+msgstr "Pengujian latensi gagal"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Interval penyegaran adalah 1 sampai 999 jam"
+
+msgid "Unknown subscription type"
+msgstr "Jenis langganan tidak dikenal"
+
+msgid "Invalid subscription id"
+msgstr "ID langganan tidak valid"
+
+msgid "The keep parameter must be 0 or 1"
+msgstr "Parameter keep harus 0 atau 1"
+
+msgid "The subscription could not be removed"
+msgstr "Langganan tidak dapat dihapus"
+
+msgid "The file is too large"
+msgstr "Berkas terlalu besar"
+
+msgid "Unknown engine"
+msgstr "Mesin tidak dikenal"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "Parameter unverified harus 0 atau 1"
+
+msgid "This engine is a system package: it has no file to upload"
+msgstr "Mesin ini adalah paket sistem: tidak ada file untuk diunggah"
+
+msgid "The engine could not be removed"
+msgstr "Mesin tidak dapat dihapus"
+
+msgid "mu300-extra is not on this system"
+msgstr "mu300-extra tidak ada di sistem ini"
+
+msgid "Unknown VPN setting"
+msgstr "Pengaturan VPN tidak dikenal"
+
+msgid "The setting could not be saved"
+msgstr "Pengaturan tidak dapat disimpan"
+
+msgid "The number of lines is 1 to 1000"
+msgstr "Jumlah baris adalah 1 sampai 1000"
+
+msgid "The log could not be read"
+msgstr "Log tidak dapat dibaca"
 
 msgid "Radio did not come up"
 msgstr "Radio tidak menyala"
@@ -1911,14 +2979,26 @@ msgstr "Cache kunci tidak tersedia"
 msgid "No serving cell to lock to"
 msgstr "Tidak ada sel layanan untuk dikunci"
 
+msgid "Reinstalling packages is not available on this system"
+msgstr "Pemasangan ulang paket tidak tersedia di sistem ini"
+
+msgid "No packages were written down by an update"
+msgstr "Tidak ada paket yang dicatat oleh pembaruan"
+
+msgid "Reinstalling is running already"
+msgstr "Pemasangan ulang sudah berjalan"
+
+msgid "The note could not be dropped"
+msgstr "Catatan tidak dapat dihapus"
+
+msgid "Unknown packages operation"
+msgstr "Operasi paket tidak dikenal"
+
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
 
 msgid "Data usage is not available on this system"
 msgstr "Penggunaan data tidak tersedia di sistem ini"
-
-msgid "The setting could not be saved"
-msgstr "Pengaturan tidak dapat disimpan"
 
 msgid "Unknown data usage operation"
 msgstr "Operasi penggunaan data tidak dikenal"

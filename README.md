@@ -227,7 +227,7 @@ If Linux is already installed it asks whether to **update** or **wipe**:
 
 * **update** — reinstalls the systems but keeps your settings and data: `/etc/mu300` (hotspot, VPN, toolkit), user
   accounts and home directories, `/usr/local`, SSH host keys, OpenWrt's UCI config, and the services you enabled
-  yourself.
+  yourself. Packages you installed yourself are installed again at the first boot (see [Updating](#updating)).
 * **wipe** — erases the Linux filesystem and installs from scratch.
 
 If the device is running Linux rather than Android when you start, the installer notices and offers to reboot it
@@ -272,7 +272,13 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   adapters in host mode that can join the LAN bridge.
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom AT adapter).
 * **System > Languages:** the language of the interface, and the lang extra: download it, or upload the file.
-* **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (100 or 80 %).
+* **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (0-100 %, U30 Air; also `mu300-power charge-limit N`).
+* **System > Terminal:** a root shell in the browser ([ttyd](https://github.com/tsl0922/ttyd)). It listens on the LAN
+  address only (port 7681; the cellular side never reaches it), and opens a shell only for a one-time token the page
+  gets for a logged-in panel session: there is no second password to guess. It closes after 15 minutes without
+  activity (`uci set ttyd.mu300.idle=<seconds>`, 0 never). A panel opened over https opens it in a tab of its own
+  (ttyd serves HTTP: its websocket over TLS fails in Chrome). **Terminal settings** is ttyd's own page; turning the
+  instance off (`enable`) removes the terminal.
 
 IPv6 on this system is relayed from the carrier (router advertisements and NAT66) instead of the prefix extension
 plain OpenWrt uses. Aurora is the default theme, Bootstrap stays installed. Its boot timings, measured on an F50
@@ -283,6 +289,30 @@ The panel is the work of kanoqwq ([`kanoqwq/mu300-linux`](https://github.com/kan
 `clean-tf-7.2`); this repository ports it, with translations rewritten as standard LuCI catalogs and the shared
 fixes applied to all three systems. The theme is [Aurora](https://github.com/eamonxg/luci-theme-aurora) by
 eamonxg. The app's own notes are in [`openwrt/luci-app-mu300/README.md`](openwrt/luci-app-mu300/README.md).
+
+### A web panel on Ubuntu (optional)
+
+Ubuntu can have a web panel too: [Cockpit](https://cockpit-project.org/), Ubuntu's own web console (a terminal,
+logs, services, networking, storage, accounts), with an **MU300** page in it: the mobile network (operator,
+technology, registration, RSRP/RSRQ), mobile data on/off, data usage and live rates, the battery and temperatures,
+SMS (read, send, delete), the VPN (on/off, profiles; with the VPN module), the CPU profile and the power state, the
+hotspot's name and password, joining a Wi-Fi network, and updates (`mu300-update check` / `apply`). Network locks stay
+a feature of the OpenWrt panel. It is the panel extra, not part of the image:
+
+```sh
+sudo mu300-extra install panel                      # Cockpit from Ubuntu's archive (about 12 MB, online)
+sudo mu300-extra install panel --from mu300-extra-panel-offline.tar.gz   # offline: the release's file, Cockpit inside
+sudo mu300-extra remove panel
+```
+
+or answer yes to the installer's question (it takes the offline file, so the first boot needs no network). Then open
+`https://192.168.77.1:9090` (the U30 Air: `.78.1`; your LAN address if you changed it), accept Cockpit's own
+certificate, and log in as `ubuntu` with your password; "Turn on administrative access" (your password again) for
+the pages that need root. Cockpit listens on the LAN bridge only (USB and the hotspot: `BindToDevice=br-lan`), and the
+firewall drops everything new from the cellular uplink (and a Wi-Fi uplink) in front of it anyway; root cannot log in,
+the login page offers no other host, and a session ends after 15 minutes idle. An update replaces Ubuntu without
+Cockpit's packages: its first boot puts them back in the background (from the extra when it carries them, else from
+the archive once online). `mu300-panel status` says where it is.
 
 ## Everyday use
 
@@ -296,6 +326,7 @@ eamonxg. The app's own notes are in [`openwrt/luci-app-mu300/README.md`](openwrt
 | Check the mobile connection | `sudo mobile-data status` |
 | Set the APN | Ubuntu: `/etc/mu300/mobile-data.conf` (`MU300_APN`, `MU300_PDP_TYPE`). OpenWrt: LuCI → Network → Interfaces → wan, or `uci set network.wan.apn='…'; uci commit network; ifup wan`. Leave it empty to keep the context the SIM defines, which is what most carriers expect |
 | Change the Wi-Fi name or password | Ubuntu: edit `/etc/mu300/hotspot.conf`, then `sudo systemctl restart mu300-hotspot`. OpenWrt: LuCI → Network → Wireless (that file is only read once, at the first boot) |
+| Change the hotspot's channel | Ubuntu: `CHANNEL=` in `/etc/mu300/hotspot.conf` (`auto`, or on 5 GHz 36-48 / 149-165). OpenWrt: LuCI → Network → Wireless. Never a DFS channel (52-144): the Wi-Fi driver cannot detect radar, so hostapd could not start there; a DFS channel is replaced by 36 (149 where 36-48 are not allowed) and the log says why (FINDINGS 42) |
 | Read and send SMS | `sudo sms list`, `sudo sms send NUMBER TEXT...`, `sudo sms delete INDEX` (OpenWrt with the panel: Cellular → SMS) |
 | Send a USSD code (balance, own number) | `sudo mu300-ussd '*101#'` |
 | Change the kernel | `sudo mu300-update kernel 6.18` (or `5.4`, `7.2`), then reboot |
@@ -312,6 +343,32 @@ eamonxg. The app's own notes are in [`openwrt/luci-app-mu300/README.md`](openwrt
 | Save battery: profiles, radios that go idle when nobody is connected, a charge limit | `mu300-power status`, `sudo mu300-power profile battery` (`plugged`, `saver`, `auto`), `sudo mu300-power set battery.WIFI_IDLE 10`, `mu300-power log 5 /tmp/power.csv`; on `openwrt-luci` the page System -> Power. A boot that started from a charger stays a charging boot (LED blinking, hotspot and modem down) until the Wi-Fi key is pressed; see FINDINGS 36 |
 | Language of the web interface (OpenWrt) | System -> System -> Language and Style; more languages: see Languages below |
 | Find out which LED is which | `sudo mu300-led test` |
+| `adb shell`, `adb push`/`pull`, `adb forward` to Linux from a computer, as with Android | `sudo mu300-usb adb key adbkey.pub` (the computer's `~/.android/adbkey.pub`), then `sudo mu300-usb adb on`; see [adb to Linux](#adb-to-linux) |
+
+### adb to Linux
+
+Linux can offer adb over the USB cable, next to the USB network and the serial console, as Android does: `adb shell`
+(a root login shell), `adb push`/`pull`, `adb forward`/`reverse`. It is **off by default**. adb has no password:
+**anyone whose adb key is authorised gets a root shell**, so authorise only your own computers.
+
+```sh
+# on the computer: the key adb made for itself (adb keygen makes one where there is none)
+scp ~/.android/adbkey.pub ubuntu@192.168.77.1:      # root@ on OpenWrt; 192.168.78.1 on a U30 Air
+# on the device
+sudo mu300-usb adb key ~/adbkey.pub    # authorise it (/etc/mu300/adb_keys)
+sudo mu300-usb adb on                  # the USB connection drops for a moment and comes back with adb
+sudo mu300-usb adb keys                # the authorised keys; delete a line of /etc/mu300/adb_keys to take one back
+sudo mu300-usb adb off
+```
+
+The installers ask whether to turn it on for the computer they run on (`install.sh`, `install.ps1`). The device shows
+up in `adb devices` as `MU300LINUX-...`; a device in Android has another serial number. A computer whose key is not
+authorised sees it as `unauthorized` and gets nothing: there is no prompt to accept a key on the device, no TCP port
+(adb over Wi-Fi is left out) and no setting that turns the check off. Like Android's, the adb interface asks Windows
+for its WinUSB driver (MS OS descriptors; not tried on Windows yet - without it, Google's USB driver serves). The
+setting stays across reboots and updates; it needs a kernel with FunctionFS (5.4, and the mainline kernels from this
+release on). The daemon is AOSP's adbd (platform-tools 34.0.5), built static for both systems by
+`tools/adbd/build.sh`; see FINDINGS 43.
 
 
 ### Installing from Android with a Magisk zip
@@ -485,21 +542,24 @@ security model): the images carry none of it, and mu300-linux keeps the kernel s
 and the places that work with it (mobile data, the Wi-Fi client, power saving, the toolkit, the panel).
 
 ```sh
-sudo mu300-extra install vpn                                # online: the module's latest release, checked against its SHA256SUMS
-sudo mu300-extra install vpn --from mu300-linux-vpn.tar.gz  # offline: a copy brought onto the device (USB, scp)
-sudo mu300-extra install vpn --from /mnt/usb/               # offline, verified: a directory with the tarball and its SHA256SUMS
-sudo mu300-extra install vpn-mihomo                         # mihomo, for Clash/mihomo profiles
+sudo mu300-extra install vpn                                # online: the core and the engines its profiles need (first time: xray)
+sudo mu300-vpn engine install sing-box                      # each engine is an extra: xray, sing-box, mihomo, dae (= mu300-extra install vpn-singbox ...)
+sudo mu300-extra install vpn --from /mnt/usb/               # offline, verified: a directory with the tarballs and their SHA256SUMS
+sudo mu300-extra remove vpn-mihomo                          # an engine; refused while the VPN runs on it
 sudo mu300-extra remove vpn                                 # turn the VPN off first
 ```
 
-The installer asks for it too. The module lives on the Linux partition (`/mnt/mu300-disk/extra/vpn`), so Ubuntu and
-OpenWrt share one copy; installing it links it into every installed system, and each system links it again at boot.
-`mu300-update apply` brings it to its latest release, and a device that uses the VPN is never updated without it:
-offline, the update stops before it changes anything and says how to stage the module
-(`mu300-linux-vpn.tar.gz` and its `SHA256SUMS` in `/mnt/mu300-disk/.mu300-update/vpn/`, or
-`MU300_VPN_MODULE=FILE mu300-update apply`). An older vpn extra (the engines alone) is replaced by the module. A
+The installer asks for it too. The module lives on the Linux partition (`/mnt/mu300-disk/extra/vpn`, the engines in
+`extra/vpn-xray`, `vpn-singbox`, `vpn-mihomo`, `vpn-dae`), so Ubuntu and OpenWrt share one copy; installing it links
+it into every installed system, and each system links it again at boot. `mu300-update apply` brings the core and every
+engine the device has or a profile needs to their latest release, as one set (engines first, the core last), and a
+device that uses the VPN is never updated without them: offline, the update stops before it changes anything and says
+how to stage the module (`mu300-linux-vpn-core.tar.gz` with the engine tarballs, or `mu300-linux-vpn.tar.gz` - the
+core with xray and sing-box - and `SHA256SUMS`, in `/mnt/mu300-disk/.mu300-update/vpn/`, or `MU300_VPN_MODULE=DIR
+mu300-update apply`). Module v1 (the engines inside the vpn extra) keeps both its engines when it is upgraded. A
 system whose VPN is on with its kill switch and has lost the module fails closed: mobile data and the Wi-Fi client stay
-down until it is installed again (`mu300-extra install vpn`) or the VPN is turned off.
+down until it is installed again (`mu300-extra install vpn`) or the VPN is turned off. A missing engine fails closed
+too, behind the kill switch, while the service fetches it again; mu300-toolkit says which one.
 
 ### Languages
 
@@ -602,6 +662,17 @@ to the new release, the [VPN](#vpn) module to its latest one), and the previous 
 
 a rollback until you run `mu300-update clean`. The new filesystem is unpacked beside the old one and only swapped in
 at the end, so an interrupted download cannot leave a half-updated system.
+
+**Packages you installed yourself** (`apk add` on OpenWrt, `apt install` on Ubuntu) are not part of the release's
+image. `apply` lists them before the switch, sets their OpenWrt settings (`/etc/config/<name>`) aside in
+`/etc/mu300/orphaned-config/` until they are back, and the new system installs them again at its first boot once it
+is online, with their settings and their services' enabled/disabled state put back. Ubuntu keeps the apt sources you
+added (a PPA, with its key); one that makes `apt-get update` fail on the new release is turned off and said so. The
+panel shows it all under System -> Packages after an update. A package the feeds do not have (installed from a file) stays out, with its
+settings aside: `mu300-user-packages status` says what came back and how to restore the rest. If such a proxy
+(OpenClash) had pointed dnsmasq at itself, the device reports it and never falls back to the connection's resolvers by
+itself: `mu300-user-packages repair-dns` does that on request. `mu300-update apply --no-reinstall` (or
+`MU300_KEEP_PACKAGES=0`) skips the reinstall. The installers' **update** does the same.
 
 The kernel and the boot image are updated too. The boot image keeps your device's own part (its Android files and
 the stock header) as it is and gets the release's kernel and the generic part of its ramdisk, so no computer and
@@ -718,6 +789,11 @@ v2026.10.11). The firewall's boot ruleset had no rules for the LAN, and on 5.4 t
 always failed ([FINDINGS 38c](docs/FINDINGS.md)). Fixed from the next release; until then the USB serial console
 (`ttyGS0`, a root shell) is the way in, and `nft delete flowtable inet fw4 ft; fw4 reload` brings the LAN up. On
 5.4 a firewall change saved in LuCI still needs those two commands (or a reboot) to take effect.
+
+**The hotspot does not start on a 5 GHz channel between 52 and 144** (hostapd: `start_dfs_cac() failed`,
+`AP-DISABLED`; releases up to v2026.10.18). Those are DFS channels, and the Wi-Fi driver cannot detect radar
+([FINDINGS 42](docs/FINDINGS.md)). Fixed from the next release: such a channel is replaced by 36 (or 149). Until then
+choose 36-48 or 149-165 (165 at 20 MHz), or `auto` on Ubuntu.
 
 **The installer prints nothing for minutes and the device gets hot.** A read past the end of the eMMC never
 returned on devices whose partition table ends at the end of the disk (the 32 GB variant and an F50 with no gap

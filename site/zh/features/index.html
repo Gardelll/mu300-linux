@@ -135,6 +135,7 @@ sudo mu300-ttl off             <span class="c"># 恢复默认</span></code></pre
 </tbody></table></div>
 <pre><code>sudo nano /etc/mu300/hotspot.conf        <span class="c"># SSID=、PSK=、BAND=5 或 2.4、CHANNEL=auto、COUNTRY=</span>
 sudo systemctl restart mu300-hotspot</code></pre>
+<p>在 5 GHz 上，热点使用 36-48 或 149-165 信道，从不使用 DFS 信道（52-144）：Wi-Fi 驱动无法检测雷达，所以在文件或 LuCI 中选择的 DFS 信道会被换成 36 信道（不允许 36-48 的国家用 149），日志里会写明原因。</p>
 <p>如果 Wi-Fi 芯片的固件崩溃，驱动会重置芯片，Wi-Fi 自己就会恢复，无论是热点还是连接其他网络的客户端：测试中在 6.18 和 7.2 上 15 到 20 秒就回来了。如果 70 秒内芯片重置不成功，设备会干净地重启，而不是卡死。</p>
 </section>
 

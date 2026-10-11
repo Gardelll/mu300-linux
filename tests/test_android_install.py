@@ -396,6 +396,7 @@ class Systems(ShellTest):
                          'else exec "$S" -i "" "$@"; fi; fi; exec "$S" "$@"')
         self.wipe = self.block('legacy-wipe')
         self.install = self.block('install-os')
+        self.upk = self.block('user-packages')
 
     def block(self, name):
         m = re.search(rf'# --- {name} begin\n(.*?)# --- {name} end', SRC, re.S)
@@ -412,7 +413,7 @@ class Systems(ShellTest):
         e.update(env)
         # sd_unmark and extra_keep_vpn are other blocks of the script (SdCard and Extras test them)
         pre = ('set -e\nsay() { echo "[device] $*"; }\nsd_unmark() { :; }\nextra_keep_vpn() { :; }\nssid=; psk=\n'
-               + f'T="{self.T}"; M="{self.M}"\n')
+               + f'T="{self.T}"; M="{self.M}"\n' + self.upk)
         r = self.sh(shell, pre + self.install, **e)
         if fails:
             self.assertNotEqual(r.returncode, 0, r.stderr + r.stdout)
@@ -440,6 +441,30 @@ class Systems(ShellTest):
             self.tarball('openwrt-luci')
             self.run_install(shell, UPDATE='1', PWHASH='$6$salt$hash')
             self.assertEqual((self.M / 'openwrt-luci' / 'etc' / 'config' / 'network').read_text(), 'mine\n')
+
+    def test_adb_for_the_installing_computer(self):
+        key = 'QAAAA' + 'A' * 694 + '= me@my-pc'
+        etc = self.M / 'openwrt-luci' / 'etc' / 'mu300'
+        for shell in self.each_shell():
+            shutil.rmtree(self.M / 'openwrt-luci', ignore_errors=True)
+            self.tarball('openwrt-luci')
+            self.run_install(shell, PWHASH='$6$salt$hash')
+            self.assertFalse((etc / 'adb').exists())         # off unless asked for
+            self.assertFalse((etc / 'adb_keys').exists())
+            self.tarball('openwrt-luci')
+            r = self.run_install(shell, PWHASH='$6$salt$hash', ADB='1', ADB_KEY=key)
+            self.assertEqual('on\n', (etc / 'adb').read_text())
+            self.assertEqual(key + '\n', (etc / 'adb_keys').read_text())
+            self.assertEqual(0o600, (etc / 'adb_keys').stat().st_mode & 0o777)
+            self.assertIn('adb over USB on, for me@my-pc', r.stdout)
+            # an update: the key once, and ADB=0 takes nothing away
+            self.tarball('openwrt-luci')
+            self.run_install(shell, UPDATE='1', PWHASH='$6$salt$hash', ADB='1', ADB_KEY=key)
+            self.assertEqual(key + '\n', (etc / 'adb_keys').read_text())
+            self.tarball('openwrt-luci')
+            self.run_install(shell, UPDATE='1', PWHASH='$6$salt$hash', ADB='0', ADB_KEY='')
+            self.assertEqual('on\n', (etc / 'adb').read_text())
+            self.assertEqual(key + '\n', (etc / 'adb_keys').read_text())
 
     def test_update_adds_the_config_files_of_the_images_new_packages(self):
         # the old settings stay; a package the image brings keeps its own config file (the old etc/config copied
