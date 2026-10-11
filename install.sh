@@ -480,6 +480,15 @@ fi
 ask vx "$(t 'Install the VPN module (about 40 MB more to download, 120 MB on the device)? (yes/no)')" $vx_default
 # its kill switch on too: without the module nothing would enforce it (android-install.sh refuses the same, later)
 [ "$vx" = yes ] || [ -z "$vpn_ks" ] || die "$(t 'The VPN is on with its kill switch in {1}: an update without the VPN module would leave it to nothing. Answer yes to install the module, or turn the VPN off there first (ENABLE=0 in /etc/mu300/vpn.conf).' "${vpn_ks% }")"
+# adb over USB to Linux (mu300-usb adb on|off on the device): off unless wanted; this computer's adb key, which the
+# installer runs with anyway, is the one authorised. Whoever has an authorised key gets a root shell.
+ADB=0 ADB_KEY=
+ask ab "$(t "Allow adb (adb shell, push, pull) to Linux over USB from this computer? Its adb key (~/.android/adbkey.pub) gets a root shell (yes/no)")" no
+if [ "$ab" = yes ]; then
+    ADB_KEY=$(adb_pubkey "${ANDROID_USER_HOME:-$HOME/.android}/adbkey.pub") ||
+        die "$(t 'no adb key of this computer to authorise ({1})' "$HOME/.android/adbkey.pub")"
+    ADB=1
+fi
 EXTRA_VPN=
 KERNEL=5.4
 if [ $MODE = prebuilt ]; then
@@ -633,6 +642,8 @@ rm -rf "$WORK/out/modules" && cp -R "$KOUT/modules" "$WORK/out/modules"
 cp "$KOUT/modules.builtin" "$KOUT/modules.builtin.modinfo" "$WORK/out/" 2>/dev/null || true
 docker build -q -t mu300-ubuntu:24.04 "$TOP/rootfs" >/dev/null
 docker run --rm mu300-ubuntu:24.04 cat /bin/busybox > "$WORK/busybox"; chmod +x "$WORK/busybox"
+# adbd, only when adb is wanted (it is in the release images; a build here takes a few minutes)
+[ "$ADB" = 0 ] || sh "$TOP/tools/adbd/build.sh" "$WORK/tools/adbd/adbd" >/dev/null
 docker run --rm -v "$TOP/tools":/src:ro -v "$WORK/tools":/o mu300-kbuild sh -c '
   gcc -O2 -static -o /o/logdw/logdw /src/logdw/logdw.c &&
   gcc -O2 -static -o /o/bt-init/mu300-bt-init /src/bt-init/mu300-bt-init.c &&
@@ -656,7 +667,8 @@ case " $OSES " in *" ubuntu "*) reuse ubuntu || {
     tar -C "$TOP/rootfs" --exclude ./base.tar --exclude './*.tar.gz' -cf - . | tar -xf - -C "$B"
     cid=$(docker create mu300-ubuntu:24.04 /bin/true); docker export "$cid" > "$B/base.tar"; docker rm "$cid" >/dev/null
     gpuargs=""
-    [ -d "$WORK/android-gpu-subset" ] && gpuargs="-v $WORK/android-gpu-subset:/android-gpu-subset:ro -v $WORK/tools/gpu/cltest:/cltest:ro"
+    [ -f "$WORK/tools/adbd/adbd" ] && gpuargs="-v $WORK/tools/adbd/adbd:/adbd:ro"
+    [ -d "$WORK/android-gpu-subset" ] && gpuargs="$gpuargs -v $WORK/android-gpu-subset:/android-gpu-subset:ro -v $WORK/tools/gpu/cltest:/cltest:ro"
     # shellcheck disable=SC2086
     docker run --rm -v "$B":/w -v "$WORK/out/modules":/kmods:ro -v "$WORK/out":/kout:ro -v "$WORK/firmware":/firmware:ro \
       -v "$WORK/android-subset":/android-subset:ro -v "$WORK/tools/logdw/logdw":/logdw:ro \
@@ -689,6 +701,7 @@ echo "  $(t 'source:         {1}' "$([ $MODE = prebuilt ] && t 'prebuilt release
 echo "  $(t 'systems:        {1} (boots: {2})' "$OSES$(case " $OSES " in (*" ubuntu "*) echo " (Ubuntu $UBUNTU)" ;; esac)" "$BOOT_OS")"
 echo "  $(t 'kernel:         {1}' "$KERNEL$([ -n "$KMAIN" ] && echo " (mainline, $(cat "$KMAIN/kernel.release"))")")"
 echo "  $(t 'extras:         {1}' "$([ -n "$EXTRA_VPN" ] && echo vpn || t 'none')")"
+echo "  $(t 'adb to Linux:   {1}' "$([ "$ADB" = 1 ] && t 'on, for this computer' || t 'off')")"
 echo "  $(t 'default boot:   {1}' "$([ $DEFAULT_LINUX = 1 ] && t 'Linux (Android after {1} failed boots in a row)' "$BOOT_ATTEMPTS" || t 'Android, Linux on demand')")"
 echo "  $(t 'filesystem:     {1}' "$([ $FORMAT = 0 ] && t 'keep existing' || { [ $SD_MODE = 1 ] && t 'CREATE new ext4 (erases the SD card)' || t 'CREATE new ext4 (erases the Linux region)'; })")"
 [ $UPDATE = 1 ] && echo "  $(t 'update:         settings and user data of the chosen systems are kept, everything else is replaced')"
