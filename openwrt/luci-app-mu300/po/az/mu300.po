@@ -42,8 +42,17 @@ msgstr "Enerji"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Terminal ayarları"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 idarəetmə mərkəzi: status paneli, şəbəkə kilidləri, AT terminalı və SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: brauzerdə cihazın root qabığı"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1502,6 +1511,39 @@ msgstr "Natamam: %d / %d hissə çatdı"
 
 msgid "Delete"
 msgstr "Sil"
+
+msgid "ttyd is not installed."
+msgstr "ttyd quraşdırılmayıb."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminal söndürülüb (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Eyni anda çox terminal açılır. Bir dəqiqədən sonra yenidən cəhd edin."
+
+msgid "The terminal is not available."
+msgstr "Terminal əlçatan deyil."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Bu, cihazda root qabığıdır: hər əmr tam hüquqlarla işləyir və bir səhv cihazın açılmamasına səbəb ola bilər."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Ona yalnız LAN-dan (USB və hotspot) çatmaq olar, heç vaxt mobil datadan yox, və yalnız bu daxil olunmuş səhifədən."
+
+msgid "It closes after a minute without activity."
+msgstr "Bir dəqiqə fəaliyyətsizlikdən sonra bağlanır."
+
+msgid "It closes after %d minutes without activity."
+msgstr "%d dəqiqə fəaliyyətsizlikdən sonra bağlanır."
+
+msgid "Reconnect"
+msgstr "Yenidən qoşul"
+
+msgid "Open in a new tab"
+msgstr "Yeni tabda aç"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Bu səhifə HTTPS ilə açılıb, terminal isə LAN-da HTTP ilə verilir: o, ayrıca tabda açılır."
 
 msgid "The data usage could not be read"
 msgstr "Məlumat istifadəsi oxuna bilmədi"

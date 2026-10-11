@@ -42,8 +42,17 @@ msgstr "電源"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "ターミナル"
+
+msgid "Terminal settings"
+msgstr "ターミナルの設定"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 コントロールセンター: ステータスダッシュボード、ネットワークロック、AT ターミナル、SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "ターミナル: ブラウザーで使うデバイスの root シェル"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1502,6 +1511,39 @@ msgstr "不完全: %d / %d 部分が届きました"
 
 msgid "Delete"
 msgstr "削除"
+
+msgid "ttyd is not installed."
+msgstr "ttyd がインストールされていません。"
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "ターミナルはオフです (/etc/config/ttyd)。"
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "同時に開かれているターミナルが多すぎます。1 分後にもう一度お試しください。"
+
+msgid "The terminal is not available."
+msgstr "ターミナルは利用できません。"
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "これはデバイスの root シェルです。すべてのコマンドが完全な権限で実行され、操作を誤るとデバイスが起動しなくなることがあります。"
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "LAN (USB とホットスポット) からのみ、ログイン済みのこのページからのみ利用でき、モバイルデータ側からは決して届きません。"
+
+msgid "It closes after a minute without activity."
+msgstr "1 分間操作がないと閉じます。"
+
+msgid "It closes after %d minutes without activity."
+msgstr "%d 分間操作がないと閉じます。"
+
+msgid "Reconnect"
+msgstr "再接続"
+
+msgid "Open in a new tab"
+msgstr "新しいタブで開く"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "このページは HTTPS で開かれていますが、ターミナルは LAN 上の HTTP で提供されるため、別のタブで開きます。"
 
 msgid "The data usage could not be read"
 msgstr "データ使用量を読み取れませんでした"

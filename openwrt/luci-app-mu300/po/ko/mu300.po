@@ -42,8 +42,17 @@ msgstr "전원"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "터미널"
+
+msgid "Terminal settings"
+msgstr "터미널 설정"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 제어 센터: 상태 대시보드, 네트워크 잠금, AT 터미널 및 SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "터미널: 브라우저에서 쓰는 기기의 root 셸"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1502,6 +1511,39 @@ msgstr "불완전: %d / %d 부분 도착"
 
 msgid "Delete"
 msgstr "삭제"
+
+msgid "ttyd is not installed."
+msgstr "ttyd가 설치되어 있지 않습니다."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "터미널이 꺼져 있습니다 (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "동시에 열리는 터미널이 너무 많습니다. 1분 후에 다시 시도하세요."
+
+msgid "The terminal is not available."
+msgstr "터미널을 사용할 수 없습니다."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "기기의 root 셸입니다. 모든 명령이 전체 권한으로 실행되며, 실수하면 기기가 부팅되지 않을 수 있습니다."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "LAN(USB와 핫스팟)에서만, 그리고 로그인한 이 페이지에서만 접근할 수 있으며 모바일 데이터 쪽에서는 절대 접근할 수 없습니다."
+
+msgid "It closes after a minute without activity."
+msgstr "1분 동안 활동이 없으면 닫힙니다."
+
+msgid "It closes after %d minutes without activity."
+msgstr "%d분 동안 활동이 없으면 닫힙니다."
+
+msgid "Reconnect"
+msgstr "다시 연결"
+
+msgid "Open in a new tab"
+msgstr "새 탭에서 열기"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "이 페이지는 HTTPS로 열렸고 터미널은 LAN에서 HTTP로 제공되므로 별도의 탭에서 열립니다."
 
 msgid "The data usage could not be read"
 msgstr "데이터 사용량을 읽을 수 없습니다"
