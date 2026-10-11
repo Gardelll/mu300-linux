@@ -52,8 +52,31 @@ The installer recognises which device it is talking to. The **U30 Pro** is a dif
 ## What you get, and what you lose (spoiler: nothing)
 
 **You get:** Ubuntu 24.04 or 26.04 LTS, or OpenWrt 25.12 (plain or with a control panel for the modem); three
-kernels to choose from; 5G/LTE internet shared over Wi-Fi and USB; SSH; Bluetooth; SMS and USSD; an optional VPN
-module; a `raspi-config`-like menu called `mu300-toolkit`; automatic fallback to Android; updates on the device.
+kernels to choose from; 5G/LTE internet shared over Wi-Fi and USB; SSH, and `adb` over USB if you turn it on; Bluetooth;
+SMS and USSD; an optional VPN module; a web panel on Ubuntu too (Cockpit with an MU300 page, optional); a
+`raspi-config`-like menu called `mu300-toolkit`; automatic fallback to Android; updates on the device.
+
+## New in v2026.10.20
+
+The release of 2026-10-20 (a prerelease first, promoted once a board has run it). What it adds, and where to read on:
+
+* **Updates keep the packages you installed** (`apk add`, `apt install`): they come back at the first boot, with their
+  settings and their services' state; the panel shows it under System > Packages after an update. [Updating](Updating)
+* **The control panel gets a VPN section** (Overview, Profiles, Subscriptions, Engines, Settings, Logs), **System >
+  Terminal** (a root shell in the browser, LAN only), Wi-Fi clients with their speeds on the home page, the Power
+  page's reasons in your language, and it no longer freezes when an AT command gets stuck: on OpenWrt an AT command
+  now takes 0.13 s instead of a second. [Control Panel (LuCI)](Control-Panel-(LuCI))
+* **A web panel for Ubuntu:** Cockpit with an MU300 page, as the `panel` extra. [Control Panel (LuCI)](Control-Panel-(LuCI)#a-web-panel-on-ubuntu-cockpit)
+* **VPN module v2.0.0:** a core plus engine extras (`vpn-xray`, `vpn-singbox`, `vpn-mihomo`, `vpn-dae`), subscriptions,
+  and an IPv6 guard so nothing leaks beside a tunnel that carries no IPv6. [VPN](VPN)
+* **Kernels 6.18.56 and 7.2.10**, with BTF and the eBPF hooks dae needs. [Kernels](Kernels)
+* **U30 Air:** a charge limit of 0-100 % (`mu300-power charge-limit N`), and faster charging on Type-C ports that offer
+  1.5 or 3 A (mainline kernels). [Hardware Notes](Hardware-Notes)
+* **The hotspot never lands on a DFS channel** any more (it used to fail to start there). [Wi-Fi Hotspot and Client](Wi-Fi-Hotspot-and-Client)
+* **adb to Linux over USB** (`mu300-usb adb on`; off by default, your computer's key must be authorised). [Installation](Installation#adb-to-linux)
+* **The installers copy the boot chain** of Android's slot to the Linux slot after an Android update (issue #86). [Installation](Installation#the-boot-chain-of-the-linux-slot)
+* **Hardening:** the Android modem daemons run under their own account (`mu300vnd`) and nothing in `/dev` belongs to
+  the login user any more; `sms delete` sends only a message index to the modem. [Hardware Notes](Hardware-Notes), [SMS](SMS)
 
 **You lose:** nothing that was there. Android on these boxes has no screen, no speaker and no HDMI either; all Linux
 takes is your last excuse for not having a 5G Linux server in your pocket. Installing it costs you nothing; not

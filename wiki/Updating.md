@@ -78,9 +78,18 @@ flowchart LR
 
 ### With the VPN on
 
-A device that uses the VPN is never updated without it. Offline, the update stops **before** it changes anything and
-says how to stage the module: put `mu300-linux-vpn.tar.gz` and its `SHA256SUMS` in
-`/mnt/mu300-disk/.mu300-update/vpn/`, or run `MU300_VPN_MODULE=FILE mu300-update apply`.
+A device that uses the VPN is never updated without it. The update brings the module's core and every engine the
+device has or a profile needs to their latest release, as one set (engines first, the core last). Offline, it stops
+**before** it changes anything and says how to stage the module: put `mu300-linux-vpn-core.tar.gz` with the engine
+tarballs (`mu300-linux-vpn-xray.tar.gz`, `-singbox`, `-mihomo`, `-dae`), or the bundle `mu300-linux-vpn.tar.gz` (core,
+Xray and sing-box), and their `SHA256SUMS` in `/mnt/mu300-disk/.mu300-update/vpn/`, or run
+`MU300_VPN_MODULE=DIR mu300-update apply`. A tarball without a matching `SHA256SUMS` is refused.
+
+### On Ubuntu with the web panel
+
+A new Ubuntu image has no Cockpit in it. The first boot after an update puts the panel extra's packages back in the
+background (from the extra when it carries them, else from Ubuntu's archive once the device is online);
+`mu300-panel status` says where it is.
 
 ## Changing the Ubuntu release
 

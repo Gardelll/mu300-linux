@@ -120,6 +120,26 @@ Android still works.
 The mainline kernels (6.18, 7.2) of v2026.10.11 and older leave charging off. Update (charging on mainline comes from
 v2026.10.12 on), or use kernel 5.4.
 
+## The hotspot does not start on a 5 GHz channel between 52 and 144
+
+hostapd stops with `start_dfs_cac() failed` / `AP-DISABLED` (releases up to v2026.10.18). Those are DFS channels, and
+the Wi-Fi driver cannot detect radar. **Fixed from v2026.10.20 on:** such a channel is replaced by 36 (or 149) with
+a line in the log. On an older release choose 36-48 or 149-165, or `auto` on Ubuntu.
+[FINDINGS 42](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md)
+
+## The control panel went blank after an AT command got stuck
+
+On `openwrt-luci` up to v2026.10.18 one stuck AT command could blank every page, even the battery tile, for minutes,
+also after a reboot. The panel's lock wait counted whole seconds instead of tenths (OpenWrt's `sleep` takes no
+fractions), and some pages read the modem inside the request. **Fixed from v2026.10.20 on**; there the pages keep
+their last readings and say how old they are. On an older release wait it out, or restart `rpcd` and `mu300-atd`.
+[FINDINGS 40](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md)
+
+## The U30 Air charges slowly on a strong USB-C port
+
+The mainline kernels of v2026.10.19 and older took 500 mA from every port. From v2026.10.20 on they read the current
+the port offers (1.5 or 3 A) and charge at up to 2 A. On 5.4 the vendor stack decides.
+
 ## The U30 Air stays dark after starting from a charger
 
 A boot that started because a charger was plugged in stays a **charging boot** (LED blinking, hotspot and modem down)

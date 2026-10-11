@@ -148,6 +148,16 @@ adb shell su -c id</code></pre><p>设备应该显示为 <code>device</code>（�
 <p>在 v2026.10.13 之前的版本里，防火墙开机时的规则里没有 LAN 的部分，而在 5.4 上本该补上这些规则的重新加载总是失败。从 v2026.10.13 起已修复；请更新。在受影响的版本上，通过 USB 串口控制台（<code>ttyGS0</code>，root shell）登录，运行：</p><pre><code>nft delete flowtable inet fw4 ft; fw4 reload</code></pre><p>从 v2026.10.17 起，5.4 上单独执行 <code>fw4 reload</code> 或 <code>restart</code> 就能生效。</p>
 </section>
 
+<section id="dfs">
+<h3>热点在 52 到 144 之间的 5 GHz 信道上起不来</h3>
+<p>hostapd 报 <code>start_dfs_cac() failed</code> 然后停下（v2026.10.18 及之前的版本）。那些是 DFS 信道，而 Wi-Fi 驱动无法检测雷达。从 v2026.10.20 起已修复：这种信道会被换成 36（或 149），日志里有一行说明。在旧版本上请选 36-48 或 149-165，Ubuntu 上也可以用 <code>auto</code>。</p>
+</section>
+
+<section id="panel-stuck">
+<h3>一条 AT 命令卡住后，控制面板一片空白</h3>
+<p>在带控制面板的 OpenWrt 上，直到 v2026.10.18，一条卡住的 AT 命令能让所有页面空白好几分钟，连电池卡片也是，重启之后也一样。从 v2026.10.20 起已修复：页面会保留上一次的读数并说明它们有多旧，OpenWrt 上一条 AT 命令只要 0.13 秒而不是一秒。在旧版本上等它过去，或者重启 <code>rpcd</code> 和 <code>mu300-atd</code>。</p>
+</section>
+
 <section id="wpa3">
 <h3>Wi-Fi 客户端连不上某个网络</h3>
 <p>只有 WPA3 的网络连不上（Wi-Fi 驱动没有 SAE）；把路由器设成 WPA2/WPA3 混合模式。另外，无线要么当热点要么当客户端，在开机时决定：它正在当热点时，<code>wifi-client connect</code> 会请你重启。</p>

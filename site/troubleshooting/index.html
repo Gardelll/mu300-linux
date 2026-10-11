@@ -150,6 +150,16 @@ adb shell su -c id</code></pre><p>The device should be listed as <code>device</c
 <p>In releases before v2026.10.13 the firewall's start-up rules had nothing for the LAN, and on 5.4 the reload that should have added them always failed. Fixed from v2026.10.13 on; update. On an affected release, log in over the USB serial console (<code>ttyGS0</code>, a root shell) and run:</p><pre><code>nft delete flowtable inet fw4 ft; fw4 reload</code></pre><p>Since v2026.10.17 a <code>fw4 reload</code> or <code>restart</code> on 5.4 works on its own.</p>
 </section>
 
+<section id="dfs">
+<h3>The hotspot does not start on a 5 GHz channel between 52 and 144</h3>
+<p>hostapd stops with <code>start_dfs_cac() failed</code> (releases up to v2026.10.18). Those are DFS channels, and the Wi-Fi driver cannot detect radar. Fixed from v2026.10.20 on: such a channel is replaced by 36 (or 149) with a line in the log. On an older release choose 36-48 or 149-165, or <code>auto</code> on Ubuntu.</p>
+</section>
+
+<section id="panel-stuck">
+<h3>The control panel went blank after an AT command got stuck</h3>
+<p>On OpenWrt with the control panel, up to v2026.10.18, one stuck AT command could blank every page for minutes, even the battery tile, also after a restart. Fixed from v2026.10.20 on: the pages keep their last readings and say how old they are, and an AT command on OpenWrt takes 0.13 s instead of a second. On an older release wait it out, or restart <code>rpcd</code> and <code>mu300-atd</code>.</p>
+</section>
+
 <section id="wpa3">
 <h3>The Wi-Fi client cannot join a network</h3>
 <p>WPA3-only networks do not work (the Wi-Fi driver has no SAE); set the router to WPA2/WPA3 mixed mode. And the radio is either a hotspot or a client, decided at start-up: <code>wifi-client connect</code> asks for a restart while it is the hotspot.</p>

@@ -150,6 +150,16 @@ adb shell su -c id</code></pre><p>Cihaz <code>device</code> olarak listelenmeli 
 <p>v2026.10.13'ten önceki sürümlerde güvenlik duvarının açılış kurallarında LAN için hiçbir şey yoktu, ve 5.4'te onları eklemesi gereken yeniden yükleme hep başarısız oluyordu. v2026.10.13'ten beri düzeltildi; güncelleyin. Etkilenen bir sürümde USB seri konsoldan (<code>ttyGS0</code>, bir root kabuğu) girin ve şunu çalıştırın:</p><pre><code>nft delete flowtable inet fw4 ft; fw4 reload</code></pre><p>v2026.10.17'den beri 5.4'te <code>fw4 reload</code> ya da <code>restart</code> tek başına çalışır.</p>
 </section>
 
+<section id="dfs">
+<h3>Hotspot 52-144 arası bir 5 GHz kanalında başlamıyor</h3>
+<p>hostapd <code>start_dfs_cac() failed</code> diyerek durur (v2026.10.18'e kadarki sürümler). Bunlar DFS kanallarıdır ve Wi-Fi sürücüsü radar algılayamaz. v2026.10.20'den beri düzeltildi: böyle bir kanalın yerine 36 (ya da 149) kullanılır, günlüğe bir satır yazılır. Eski bir sürümde 36-48 ya da 149-165 seçin, Ubuntu'da <code>auto</code> da olur.</p>
+</section>
+
+<section id="panel-stuck">
+<h3>Bir AT komutu takılınca kontrol paneli bomboş kaldı</h3>
+<p>Kontrol panelli OpenWrt'de, v2026.10.18'e kadar, takılan tek bir AT komutu bütün sayfaları dakikalarca boş bırakabiliyordu, pil kutusunu bile, yeniden başlattıktan sonra da. v2026.10.20'den beri düzeltildi: sayfalar son değerlerini gösterip kaç saniyelik olduklarını söyler, OpenWrt'de bir AT komutu bir saniye yerine 0.13 s sürer. Eski bir sürümde bekleyin ya da <code>rpcd</code> ile <code>mu300-atd</code>'yi yeniden başlatın.</p>
+</section>
+
 <section id="wpa3">
 <h3>Wi-Fi istemcisi bir ağa katılamıyor</h3>
 <p>Yalnızca WPA3 olan ağlar çalışmaz (Wi-Fi sürücüsünde SAE yok); yönlendiriciyi karma WPA2/WPA3 kipine alın. Ayrıca radyo ya hotspot ya istemcidir ve buna açılışta karar verilir: hotspot iken <code>wifi-client connect</code> yeniden başlatma ister.</p>

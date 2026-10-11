@@ -17,6 +17,10 @@ sudo sms watch [COMMAND]            # wait for new messages, run COMMAND for eac
 ```
 
 No `sudo` on OpenWrt. All of it goes through `mu300-atd`, so it queues behind anything else talking to the modem.
+`sms delete` accepts only a message index, `read` or `all` (from v2026.10.20); anything else is refused before the
+modem sees it, so a stray `1,4` can no longer wipe the mailbox.
+
+On Ubuntu with the web panel extra (Cockpit), the MU300 page reads, sends and deletes messages too.
 
 ## On OpenWrt with the control panel
 
