@@ -62,8 +62,11 @@ into `/src/out-linux`. Copy `Image`, `modules.builtin*` and all `*.ko` (flattene
 Wi-Fi driver: extract `kernel_modules/kernel5.4/wcn/wlan/wlan_combo` from the realme C51/C53 AndroidT kernel source into
 the volume as `/src/ext-wlan_combo`, then run `kernel/build-wlan.sh` (applies the `patches/wlan_combo-*.patch` files).
 
-Kernel patches: apply `kernel/patches/bluetooth-marlin3-link-policy.patch`, `of-reserved-mem-skip.patch` and `regdb-wens-certificate.patch` to the kernel tree
-before building, and `echo -gb50db5b6224c > .scmversion` so the release string does not get a `-dirty` suffix.
+Kernel patches: apply the `kernel/patches/*.patch` files that `KPATCHES` in `kernel/build-all.sh` lists, in that order
+(`patch -p1`), to the kernel tree before building, and `echo -gb50db5b6224c > .scmversion` so the release string does
+not get a `-dirty` suffix. `xfrm-sysctl-fragment-per-netns.patch` is the one that is not optional on a system that
+creates network namespaces (Docker, sandboxes, `unshare -n`): without it the vendor kernel panics in their teardown
+(FINDINGS §44).
 
 GPU: copy `kernel_modules/kernel5.4/gpu/natt/mali` from the realme tree (master branch) to `/src/ext-mali` and run
 `kernel/build-mali.sh`; pull the userspace with `android-vendor/extract-gpu-subset.sh` and build `tools/gpu/cltest` with

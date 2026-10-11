@@ -28,6 +28,7 @@ MU300_FILES = {
     'mu300/mu300-update': 'rootfs/overlay/opt/mu300/bin/mu300-update',
     'mu300/android-install.sh': 'tools/android-install.sh',
     'mu300/android-mount-mu300root.sh': 'tools/android-mount-mu300root.sh',
+    'mu300/android-bootchain.sh': 'tools/android-bootchain.sh',
     'mu300/storage.sh': 'tools/storage.sh',
     'mu300/i18n.sh': 'tools/i18n.sh',
     'mu300/i18n/tr.tsv': 'i18n/tr.tsv',
@@ -233,7 +234,7 @@ class Conf(ShellTest):
             ex = (sd / 'mu300-install.conf.example').read_text()
             lines = ex.splitlines()
             keys = [l for l in lines if re.match(r'#MU300_[A-Z_]+=', l)]
-            self.assertEqual(len(keys), 15, ex)
+            self.assertEqual(len(keys), 16, ex)
             for line in keys:
                 i = lines.index(line)
                 self.assertTrue(lines[i - 1].startswith('# '), line)          # its explanation, on a line of its own
@@ -1183,6 +1184,59 @@ class Install(InstallerCase):
         self.assertEqual((self.fake.root / 'fs/home/precious').read_text(), 'a user file')
         self.assertEqual((self.fake.root / 'mounts').read_text(), '')                 # unmounted again
         self.assertEqual(self.work_dirs(), [])
+
+
+class Bootchain(InstallerCase):
+    """the boot chain of Android's slot for the Linux slot (tools/android-bootchain.sh, tests/test_bootchain.py): the
+    plan says what happens, a refusal stops the installation before anything is written, and android-install.sh is
+    told whether to sync"""
+
+    def chain(self, name, slot, data):
+        (self.fake.root / 'dev/block/by-name' / f'{name}_{slot}').write_bytes(data)
+
+    def test_identical(self):
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn('  boot chain:     identical on both slots', r.stdout)
+        self.assertTrue(self.nothing_written())
+
+    def test_differing_images_are_named(self):
+        # the same size, another build
+        self.chain('trustos', 'a', b'TRUSTOS' * 1024)
+        self.chain('vbmeta', 'a', b'VBMETA' * 1024)
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn("  boot chain:     trustos, vbmeta differ between the slots; Android's slot a is copied to slot b "
+                      '(backed up first)', r.stdout)
+        self.assertTrue(self.nothing_written())
+
+    def test_refusal_stops_before_anything(self):
+        (self.fake.root / 'dev/block/by-name/teecfg_b').unlink()
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn('the boot chain cannot be copied to the Linux slot: teecfg_a or teecfg_b is missing', r.stdout)
+        self.assertIn('MU300_SYNC_BOOTCHAIN=0', r.stdout)
+        self.assertFalse((self.fake.root / 'install.env').exists())
+        self.assertTrue(self.nothing_written())
+
+    def test_install_tells_android_install_to_sync(self):
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('SYNC_BOOTCHAIN=1', (self.fake.root / 'install.env').read_text())
+
+    def test_skip_setting(self):
+        (self.fake.root / 'dev/block/by-name/teecfg_b').unlink()
+        r = self.run_installer(conf='MU300_SYNC_BOOTCHAIN=0\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('boot chain:     not synced (MU300_SYNC_BOOTCHAIN=0)', r.stdout)
+        self.assertIn('SYNC_BOOTCHAIN=0', (self.fake.root / 'install.env').read_text())
+
+    def test_unrecognised_model_is_not_synced(self):
+        self.device(model='Generic Phone')
+        r = self.run_installer(trusted='MU300_DEVICE=f50\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('boot chain:     not synced (the model is not recognised)', r.stdout)
+        self.assertIn('SYNC_BOOTCHAIN=0', (self.fake.root / 'install.env').read_text())
 
 
 class Password(ShellTest):
