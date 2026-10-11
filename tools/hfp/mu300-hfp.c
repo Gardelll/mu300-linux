@@ -31,6 +31,7 @@
  * mSBC and VBC_SRC_BT_DAC/ADC stay at 8000. */
 #include <errno.h>
 #include <fcntl.h>
+#include <glob.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdint.h>
@@ -263,15 +264,28 @@ static void feed(char *acc, size_t *len, size_t cap, const char *in, ssize_t n, 
 
 static void on_term(int s) { (void)s; sco_close(); _exit(0); }
 
-/* BlueZ keeps a bonded device's link key in /var/lib/bluetooth/<adapter>/<ADDRESS>/info, section [LinkKey] */
+/* BlueZ keeps a bonded device's link key in /var/lib/bluetooth/<adapter>/<ADDRESS>/info, section [LinkKey].
+ * Read directly (no shell): main() ignores SIGCHLD, under which system() can never collect its child's status
+ * and always reports failure - the first board test ended in "not bonded" with the key in the store. */
 static int bonded(const char *addr, const char *store)
 {
-	char up[18], cmd[160];
-	size_t i;
+	char up[18], pat[200], line[256];
+	size_t i, g;
+	glob_t gl;
+	int found = 0;
 	for (i = 0; i < 17 && addr[i]; i++) up[i] = (addr[i] >= 'a' && addr[i] <= 'f') ? addr[i] - 32 : addr[i];
 	up[i] = 0;
-	snprintf(cmd, sizeof cmd, "grep -qs '^\\[LinkKey\\]' %s/*/%s/info", store, up);
-	return system(cmd) == 0;
+	snprintf(pat, sizeof pat, "%s/*/%s/info", store, up);
+	if (glob(pat, 0, NULL, &gl) != 0) return 0;
+	for (g = 0; g < gl.gl_pathc && !found; g++) {
+		FILE *f = fopen(gl.gl_pathv[g], "r");
+		if (!f) continue;
+		while (fgets(line, sizeof line, f))
+			if (!strncmp(line, "[LinkKey]", 9)) { found = 1; break; }
+		fclose(f);
+	}
+	globfree(&gl);
+	return found;
 }
 
 #ifndef MU300_HFP_TEST
