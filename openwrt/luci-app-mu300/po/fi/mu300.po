@@ -174,6 +174,21 @@ msgstr "valmis"
 msgid "failed"
 msgstr "epäonnistui"
 
+msgid "Verify the uploaded file"
+msgstr "Tarkista ladattu tiedosto"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "Ladattu tiedosto tarkistetaan VPN-moduulin uusimman julkaisun SHA256SUMS-tiedostoa vasten, joka ladataan HTTPS:n kautta. Jos se ei ole mahdollista (offline, vanhempi julkaisu), se asennetaan vain, jos sallit tarkistamattoman tiedoston: se suoritetaan silloin root-oikeuksin ilman tarkistusta."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Asenna, vaikka sitä ei voi tarkistaa"
+
+msgid "Install only a verified file"
+msgstr "Asenna vain tarkistettu tiedosto"
+
+msgid "Upload failed: %s"
+msgstr "Lähetys epäonnistui: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "VPN-moduuli on liian vanha tälle paneelille"
 
@@ -197,9 +212,6 @@ msgstr "Asenna VPN-moduuli"
 
 msgid "Upload the file…"
 msgstr "Lähetä tiedosto…"
-
-msgid "Upload failed: %s"
-msgstr "Lähetys epäonnistui: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "Offline-tilassa: lataa mu300-linux-vpn-core.tar.gz (tai paketti mu300-linux-vpn.tar.gz) VPN-moduulin julkaisusivulta."
@@ -2406,6 +2418,9 @@ msgstr "Menetelmää ei ole"
 msgid "The VPN module refused the request"
 msgstr "VPN-moduuli hylkäsi pyynnön"
 
+msgid "The VPN panel is busy, try again"
+msgstr "VPN-paneeli on varattu, yritä uudelleen"
+
 msgid "Another VPN task is still running"
 msgstr "Toinen VPN-tehtävä on vielä käynnissä"
 
@@ -2511,8 +2526,14 @@ msgstr "keep-parametrin on oltava 0 tai 1"
 msgid "The subscription could not be removed"
 msgstr "Tilausta ei voitu poistaa"
 
+msgid "The file is too large"
+msgstr "Tiedosto on liian suuri"
+
 msgid "Unknown engine"
 msgstr "Tuntematon moottori"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "Parametrin unverified on oltava 0 tai 1"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "Tämä moottori on järjestelmäpaketti: sillä ei ole ladattavaa tiedostoa"

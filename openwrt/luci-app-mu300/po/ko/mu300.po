@@ -174,6 +174,21 @@ msgstr "완료"
 msgid "failed"
 msgstr "실패"
 
+msgid "Verify the uploaded file"
+msgstr "업로드한 파일 확인"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "업로드한 파일은 HTTPS로 내려받은 VPN 모듈 최신 릴리스의 SHA256SUMS와 대조됩니다. 대조할 수 없는 경우(오프라인, 이전 릴리스)에는 확인되지 않은 파일을 허용할 때만 설치되며, 그때는 아무 검사 없이 root로 실행됩니다."
+
+msgid "Install it even if it cannot be verified"
+msgstr "확인할 수 없어도 설치"
+
+msgid "Install only a verified file"
+msgstr "확인된 파일만 설치"
+
+msgid "Upload failed: %s"
+msgstr "업로드 실패: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "VPN 모듈이 이 패널에 비해 너무 오래되었습니다"
 
@@ -197,9 +212,6 @@ msgstr "VPN 모듈 설치"
 
 msgid "Upload the file…"
 msgstr "파일 업로드…"
-
-msgid "Upload failed: %s"
-msgstr "업로드 실패: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "오프라인: VPN 모듈의 릴리스 페이지에서 받은 mu300-linux-vpn-core.tar.gz(또는 번들 mu300-linux-vpn.tar.gz)를 업로드하세요."
@@ -2406,6 +2418,9 @@ msgstr "해당 메서드가 없습니다"
 msgid "The VPN module refused the request"
 msgstr "VPN 모듈이 요청을 거부했습니다"
 
+msgid "The VPN panel is busy, try again"
+msgstr "VPN 패널이 사용 중입니다. 다시 시도하세요"
+
 msgid "Another VPN task is still running"
 msgstr "다른 VPN 작업이 아직 실행 중입니다"
 
@@ -2511,8 +2526,14 @@ msgstr "keep 매개변수는 0 또는 1이어야 합니다"
 msgid "The subscription could not be removed"
 msgstr "구독을 제거할 수 없습니다"
 
+msgid "The file is too large"
+msgstr "파일이 너무 큽니다"
+
 msgid "Unknown engine"
 msgstr "알 수 없는 엔진"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "unverified 매개변수는 0 또는 1이어야 합니다"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "이 엔진은 시스템 패키지이므로 업로드할 파일이 없습니다"

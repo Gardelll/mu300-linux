@@ -174,6 +174,21 @@ msgstr "تم"
 msgid "failed"
 msgstr "فشل"
 
+msgid "Verify the uploaded file"
+msgstr "التحقق من الملف المرفوع"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "يُطابَق الملف المرفوع مع ملف SHA256SUMS لأحدث إصدار من وحدة VPN، المُنزَّل عبر HTTPS. إذا تعذّر ذلك (دون اتصال، إصدار أقدم)، فلا يُثبَّت إلا إذا سمحت بملف غير متحقق منه: وعندها يعمل بصلاحيات root دون أي فحص."
+
+msgid "Install it even if it cannot be verified"
+msgstr "ثبّته حتى لو تعذّر التحقق منه"
+
+msgid "Install only a verified file"
+msgstr "ثبّت ملفًا متحققًا منه فقط"
+
+msgid "Upload failed: %s"
+msgstr "فشل الرفع: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "وحدة VPN قديمة جدًا لهذه اللوحة"
 
@@ -197,9 +212,6 @@ msgstr "تثبيت وحدة VPN"
 
 msgid "Upload the file…"
 msgstr "رفع الملف…"
-
-msgid "Upload failed: %s"
-msgstr "فشل الرفع: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "بدون اتصال: ارفع mu300-linux-vpn-core.tar.gz (أو الحزمة mu300-linux-vpn.tar.gz) من صفحة الإصدارات الخاصة بوحدة VPN."
@@ -2406,6 +2418,9 @@ msgstr "لا توجد طريقة بهذا الاسم"
 msgid "The VPN module refused the request"
 msgstr "رفضت وحدة VPN الطلب"
 
+msgid "The VPN panel is busy, try again"
+msgstr "لوحة VPN مشغولة، حاول مرة أخرى"
+
 msgid "Another VPN task is still running"
 msgstr "مهمة VPN أخرى ما زالت قيد التشغيل"
 
@@ -2511,8 +2526,14 @@ msgstr "يجب أن يكون المعامل keep هو 0 أو 1"
 msgid "The subscription could not be removed"
 msgstr "تعذّرت إزالة الاشتراك"
 
+msgid "The file is too large"
+msgstr "الملف كبير جدًا"
+
 msgid "Unknown engine"
 msgstr "محرك غير معروف"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "يجب أن تكون قيمة المعامل unverified هي 0 أو 1"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "هذا المحرك حزمة نظام: لا يوجد ملف لرفعه"

@@ -174,6 +174,21 @@ msgstr "hecho"
 msgid "failed"
 msgstr "fallido"
 
+msgid "Verify the uploaded file"
+msgstr "Verificar el archivo subido"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "El archivo subido se comprueba con el SHA256SUMS de la última versión del módulo VPN, descargado por HTTPS. Si no es posible (sin conexión, una versión anterior), solo se instala si permite un archivo no verificado: entonces se ejecuta como root sin ninguna comprobación."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Instalarlo aunque no se pueda verificar"
+
+msgid "Install only a verified file"
+msgstr "Instalar solo un archivo verificado"
+
+msgid "Upload failed: %s"
+msgstr "Error al subir: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "El módulo VPN es demasiado antiguo para este panel"
 
@@ -197,9 +212,6 @@ msgstr "Instalar el módulo VPN"
 
 msgid "Upload the file…"
 msgstr "Subir el archivo…"
-
-msgid "Upload failed: %s"
-msgstr "Error al subir: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "Sin conexión: suba mu300-linux-vpn-core.tar.gz (o el paquete mu300-linux-vpn.tar.gz) desde la página de versiones del módulo VPN."
@@ -2406,6 +2418,9 @@ msgstr "No existe ese método"
 msgid "The VPN module refused the request"
 msgstr "El módulo VPN rechazó la solicitud"
 
+msgid "The VPN panel is busy, try again"
+msgstr "El panel VPN está ocupado, inténtelo de nuevo"
+
 msgid "Another VPN task is still running"
 msgstr "Otra tarea de VPN sigue en ejecución"
 
@@ -2511,8 +2526,14 @@ msgstr "El parámetro keep debe ser 0 o 1"
 msgid "The subscription could not be removed"
 msgstr "No se pudo eliminar la suscripción"
 
+msgid "The file is too large"
+msgstr "El archivo es demasiado grande"
+
 msgid "Unknown engine"
 msgstr "Motor desconocido"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "El parámetro unverified debe ser 0 o 1"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "Este motor es un paquete del sistema: no tiene archivo que subir"

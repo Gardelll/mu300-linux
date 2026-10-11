@@ -174,6 +174,21 @@ msgstr "انجام شد"
 msgid "failed"
 msgstr "ناموفق"
 
+msgid "Verify the uploaded file"
+msgstr "تأیید فایل بارگذاری‌شده"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "فایل بارگذاری‌شده با SHA256SUMS آخرین نسخهٔ ماژول VPN که از طریق HTTPS دریافت می‌شود بررسی می‌شود. اگر این ممکن نباشد (آفلاین، نسخهٔ قدیمی‌تر)، فقط در صورتی نصب می‌شود که اجازهٔ فایل تأییدنشده را بدهید: در این صورت بدون هیچ بررسی با دسترسی root اجرا می‌شود."
+
+msgid "Install it even if it cannot be verified"
+msgstr "نصب کن حتی اگر تأیید نشود"
+
+msgid "Install only a verified file"
+msgstr "فقط فایل تأییدشده نصب شود"
+
+msgid "Upload failed: %s"
+msgstr "بارگذاری ناموفق بود: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "ماژول VPN برای این پنل بیش از حد قدیمی است"
 
@@ -197,9 +212,6 @@ msgstr "نصب ماژول VPN"
 
 msgid "Upload the file…"
 msgstr "بارگذاری فایل…"
-
-msgid "Upload failed: %s"
-msgstr "بارگذاری ناموفق بود: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "آفلاین: فایل mu300-linux-vpn-core.tar.gz (یا بسته mu300-linux-vpn.tar.gz) را از صفحه انتشارهای ماژول VPN بارگذاری کنید."
@@ -2406,6 +2418,9 @@ msgstr "چنین متدی وجود ندارد"
 msgid "The VPN module refused the request"
 msgstr "ماژول VPN درخواست را رد کرد"
 
+msgid "The VPN panel is busy, try again"
+msgstr "پنل VPN مشغول است، دوباره تلاش کنید"
+
 msgid "Another VPN task is still running"
 msgstr "وظیفه VPN دیگری هنوز در حال اجراست"
 
@@ -2511,8 +2526,14 @@ msgstr "پارامتر keep باید 0 یا 1 باشد"
 msgid "The subscription could not be removed"
 msgstr "اشتراک حذف نشد"
 
+msgid "The file is too large"
+msgstr "فایل خیلی بزرگ است"
+
 msgid "Unknown engine"
 msgstr "موتور ناشناخته"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "پارامتر unverified باید 0 یا 1 باشد"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "این موتور یک بسته سیستم است: فایلی برای بارگذاری ندارد"

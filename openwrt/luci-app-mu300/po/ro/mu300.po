@@ -174,6 +174,21 @@ msgstr "gata"
 msgid "failed"
 msgstr "eșuat"
 
+msgid "Verify the uploaded file"
+msgstr "Verifică fișierul încărcat"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "Fișierul încărcat este verificat cu SHA256SUMS din cea mai recentă versiune a modulului VPN, descărcat prin HTTPS. Dacă nu este posibil (offline, o versiune mai veche), este instalat doar dacă permiteți un fișier neverificat: rulează atunci ca root fără nicio verificare."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Instalează-l chiar dacă nu poate fi verificat"
+
+msgid "Install only a verified file"
+msgstr "Instalează doar un fișier verificat"
+
+msgid "Upload failed: %s"
+msgstr "Încărcarea a eșuat: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "Modulul VPN este prea vechi pentru acest panou"
 
@@ -197,9 +212,6 @@ msgstr "Instalează modulul VPN"
 
 msgid "Upload the file…"
 msgstr "Încărcare fișier…"
-
-msgid "Upload failed: %s"
-msgstr "Încărcarea a eșuat: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "Offline: încărcați mu300-linux-vpn-core.tar.gz (sau pachetul mu300-linux-vpn.tar.gz) de pe pagina de versiuni a modulului VPN."
@@ -2406,6 +2418,9 @@ msgstr "Metodă inexistentă"
 msgid "The VPN module refused the request"
 msgstr "Modulul VPN a refuzat cererea"
 
+msgid "The VPN panel is busy, try again"
+msgstr "Panoul VPN este ocupat, încercați din nou"
+
 msgid "Another VPN task is still running"
 msgstr "O altă sarcină VPN rulează încă"
 
@@ -2511,8 +2526,14 @@ msgstr "Parametrul keep trebuie să fie 0 sau 1"
 msgid "The subscription could not be removed"
 msgstr "Abonamentul nu a putut fi eliminat"
 
+msgid "The file is too large"
+msgstr "Fișierul este prea mare"
+
 msgid "Unknown engine"
 msgstr "Motor necunoscut"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "Parametrul unverified trebuie să fie 0 sau 1"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "Acest motor este un pachet de sistem: nu are niciun fișier de încărcat"

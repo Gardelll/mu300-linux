@@ -174,6 +174,21 @@ msgstr "ολοκληρώθηκε"
 msgid "failed"
 msgstr "απέτυχε"
 
+msgid "Verify the uploaded file"
+msgstr "Επαλήθευση του αρχείου που ανέβηκε"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "Το αρχείο που ανέβηκε ελέγχεται με το SHA256SUMS της τελευταίας έκδοσης της μονάδας VPN, που λαμβάνεται μέσω HTTPS. Αν αυτό δεν είναι δυνατό (εκτός σύνδεσης, παλαιότερη έκδοση), εγκαθίσταται μόνο αν επιτρέψετε μη επαληθευμένο αρχείο: τότε εκτελείται ως root χωρίς κανέναν έλεγχο."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Εγκατάσταση ακόμη κι αν δεν μπορεί να επαληθευτεί"
+
+msgid "Install only a verified file"
+msgstr "Εγκατάσταση μόνο επαληθευμένου αρχείου"
+
+msgid "Upload failed: %s"
+msgstr "Η μεταφόρτωση απέτυχε: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "Η μονάδα VPN είναι πολύ παλιά για αυτόν τον πίνακα"
 
@@ -197,9 +212,6 @@ msgstr "Εγκατάσταση της μονάδας VPN"
 
 msgid "Upload the file…"
 msgstr "Μεταφόρτωση του αρχείου…"
-
-msgid "Upload failed: %s"
-msgstr "Η μεταφόρτωση απέτυχε: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "Εκτός σύνδεσης: ανεβάστε το mu300-linux-vpn-core.tar.gz (ή το πακέτο mu300-linux-vpn.tar.gz) από τη σελίδα εκδόσεων της μονάδας VPN."
@@ -2406,6 +2418,9 @@ msgstr "Δεν υπάρχει τέτοια μέθοδος"
 msgid "The VPN module refused the request"
 msgstr "Η μονάδα VPN απέρριψε το αίτημα"
 
+msgid "The VPN panel is busy, try again"
+msgstr "Ο πίνακας VPN είναι απασχολημένος, δοκιμάστε ξανά"
+
 msgid "Another VPN task is still running"
 msgstr "Άλλη εργασία VPN εκτελείται ακόμη"
 
@@ -2511,8 +2526,14 @@ msgstr "Η παράμετρος keep πρέπει να είναι 0 ή 1"
 msgid "The subscription could not be removed"
 msgstr "Δεν ήταν δυνατή η αφαίρεση της συνδρομής"
 
+msgid "The file is too large"
+msgstr "Το αρχείο είναι πολύ μεγάλο"
+
 msgid "Unknown engine"
 msgstr "Άγνωστη μηχανή"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "Η παράμετρος unverified πρέπει να είναι 0 ή 1"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "Αυτή η μηχανή είναι πακέτο συστήματος: δεν έχει αρχείο για ανέβασμα"

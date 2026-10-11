@@ -174,6 +174,21 @@ msgstr "gotowe"
 msgid "failed"
 msgstr "niepowodzenie"
 
+msgid "Verify the uploaded file"
+msgstr "Zweryfikuj przesłany plik"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "Przesłany plik jest sprawdzany z SHA256SUMS najnowszego wydania modułu VPN, pobranym przez HTTPS. Jeśli to niemożliwe (offline, starsze wydanie), zostanie zainstalowany tylko wtedy, gdy zezwolisz na niezweryfikowany plik: uruchomi się wtedy jako root bez żadnej kontroli."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Zainstaluj, nawet jeśli nie można go zweryfikować"
+
+msgid "Install only a verified file"
+msgstr "Instaluj tylko zweryfikowany plik"
+
+msgid "Upload failed: %s"
+msgstr "Przesyłanie nie powiodło się: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "Moduł VPN jest zbyt stary dla tego panelu"
 
@@ -197,9 +212,6 @@ msgstr "Zainstaluj moduł VPN"
 
 msgid "Upload the file…"
 msgstr "Prześlij plik…"
-
-msgid "Upload failed: %s"
-msgstr "Przesyłanie nie powiodło się: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "Offline: wgraj mu300-linux-vpn-core.tar.gz (lub pakiet mu300-linux-vpn.tar.gz) ze strony wydania modułu VPN."
@@ -2406,6 +2418,9 @@ msgstr "Brak takiej metody"
 msgid "The VPN module refused the request"
 msgstr "Moduł VPN odrzucił żądanie"
 
+msgid "The VPN panel is busy, try again"
+msgstr "Panel VPN jest zajęty, spróbuj ponownie"
+
 msgid "Another VPN task is still running"
 msgstr "Inne zadanie VPN nadal trwa"
 
@@ -2511,8 +2526,14 @@ msgstr "Parametr keep musi wynosić 0 lub 1"
 msgid "The subscription could not be removed"
 msgstr "Nie udało się usunąć subskrypcji"
 
+msgid "The file is too large"
+msgstr "Plik jest za duży"
+
 msgid "Unknown engine"
 msgstr "Nieznany silnik"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "Parametr unverified musi mieć wartość 0 lub 1"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "Ten silnik jest pakietem systemowym: nie ma pliku do wgrania"

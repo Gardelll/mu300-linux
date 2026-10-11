@@ -174,6 +174,21 @@ msgstr "klart"
 msgid "failed"
 msgstr "misslyckades"
 
+msgid "Verify the uploaded file"
+msgstr "Verifiera den uppladdade filen"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "Den uppladdade filen kontrolleras mot SHA256SUMS från VPN-modulens senaste version, hämtad över HTTPS. Om det inte går (offline, en äldre version) installeras den bara om du tillåter en overifierad fil: den körs då som root utan någon kontroll."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Installera den även om den inte kan verifieras"
+
+msgid "Install only a verified file"
+msgstr "Installera bara en verifierad fil"
+
+msgid "Upload failed: %s"
+msgstr "Uppladdningen misslyckades: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "VPN-modulen är för gammal för den här panelen"
 
@@ -197,9 +212,6 @@ msgstr "Installera VPN-modulen"
 
 msgid "Upload the file…"
 msgstr "Ladda upp filen…"
-
-msgid "Upload failed: %s"
-msgstr "Uppladdningen misslyckades: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "Offline: ladda upp mu300-linux-vpn-core.tar.gz (eller paketet mu300-linux-vpn.tar.gz) från VPN-modulens releasesida."
@@ -2406,6 +2418,9 @@ msgstr "Ingen sådan metod"
 msgid "The VPN module refused the request"
 msgstr "VPN-modulen avvisade begäran"
 
+msgid "The VPN panel is busy, try again"
+msgstr "VPN-panelen är upptagen, försök igen"
+
 msgid "Another VPN task is still running"
 msgstr "En annan VPN-uppgift körs fortfarande"
 
@@ -2511,8 +2526,14 @@ msgstr "Parametern keep måste vara 0 eller 1"
 msgid "The subscription could not be removed"
 msgstr "Prenumerationen kunde inte tas bort"
 
+msgid "The file is too large"
+msgstr "Filen är för stor"
+
 msgid "Unknown engine"
 msgstr "Okänd motor"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "Parametern unverified måste vara 0 eller 1"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "Den här motorn är ett systempaket: den har ingen fil att ladda upp"

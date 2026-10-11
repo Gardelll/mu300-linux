@@ -174,6 +174,21 @@ msgstr "完了"
 msgid "failed"
 msgstr "失敗"
 
+msgid "Verify the uploaded file"
+msgstr "アップロードしたファイルを検証"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "アップロードしたファイルは、HTTPS でダウンロードした VPN モジュール最新リリースの SHA256SUMS と照合されます。照合できない場合 (オフライン、古いリリース) は、未検証ファイルを許可したときだけインストールされ、その場合は一切のチェックなしで root として実行されます。"
+
+msgid "Install it even if it cannot be verified"
+msgstr "検証できなくてもインストール"
+
+msgid "Install only a verified file"
+msgstr "検証済みのファイルのみインストール"
+
+msgid "Upload failed: %s"
+msgstr "アップロードに失敗しました: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "VPN モジュールがこのパネルには古すぎます"
 
@@ -197,9 +212,6 @@ msgstr "VPN モジュールをインストール"
 
 msgid "Upload the file…"
 msgstr "ファイルをアップロード…"
-
-msgid "Upload failed: %s"
-msgstr "アップロードに失敗しました: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "オフライン: VPN モジュールのリリースページから mu300-linux-vpn-core.tar.gz (またはバンドル mu300-linux-vpn.tar.gz) をアップロードしてください。"
@@ -2406,6 +2418,9 @@ msgstr "該当するメソッドがありません"
 msgid "The VPN module refused the request"
 msgstr "VPN モジュールがリクエストを拒否しました"
 
+msgid "The VPN panel is busy, try again"
+msgstr "VPN パネルは処理中です。再試行してください"
+
 msgid "Another VPN task is still running"
 msgstr "別の VPN タスクがまだ実行中です"
 
@@ -2511,8 +2526,14 @@ msgstr "keep パラメーターは 0 または 1 にしてください"
 msgid "The subscription could not be removed"
 msgstr "サブスクリプションを削除できませんでした"
 
+msgid "The file is too large"
+msgstr "ファイルが大きすぎます"
+
 msgid "Unknown engine"
 msgstr "不明なエンジン"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "unverified パラメーターは 0 または 1 である必要があります"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "このエンジンはシステムパッケージです: アップロードするファイルはありません"

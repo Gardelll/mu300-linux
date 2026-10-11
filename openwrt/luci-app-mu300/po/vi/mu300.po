@@ -174,6 +174,21 @@ msgstr "xong"
 msgid "failed"
 msgstr "thất bại"
 
+msgid "Verify the uploaded file"
+msgstr "Xác minh tệp đã tải lên"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "Tệp đã tải lên được đối chiếu với SHA256SUMS của bản phát hành mới nhất của mô-đun VPN, tải qua HTTPS. Nếu không thể (ngoại tuyến, bản cũ hơn), tệp chỉ được cài khi bạn cho phép tệp chưa xác minh: khi đó nó chạy với quyền root mà không có kiểm tra nào."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Vẫn cài dù không xác minh được"
+
+msgid "Install only a verified file"
+msgstr "Chỉ cài tệp đã xác minh"
+
+msgid "Upload failed: %s"
+msgstr "Tải lên thất bại: %s"
+
 msgid "The VPN module is too old for this panel"
 msgstr "Mô-đun VPN quá cũ so với bảng điều khiển này"
 
@@ -197,9 +212,6 @@ msgstr "Cài đặt mô-đun VPN"
 
 msgid "Upload the file…"
 msgstr "Tải tệp lên…"
-
-msgid "Upload failed: %s"
-msgstr "Tải lên thất bại: %s"
 
 msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
 msgstr "Ngoại tuyến: tải lên mu300-linux-vpn-core.tar.gz (hoặc gói tổng hợp mu300-linux-vpn.tar.gz) từ trang phát hành của mô-đun VPN."
@@ -2406,6 +2418,9 @@ msgstr "Không có phương thức này"
 msgid "The VPN module refused the request"
 msgstr "Mô-đun VPN đã từ chối yêu cầu"
 
+msgid "The VPN panel is busy, try again"
+msgstr "Bảng VPN đang bận, hãy thử lại"
+
 msgid "Another VPN task is still running"
 msgstr "Một tác vụ VPN khác vẫn đang chạy"
 
@@ -2511,8 +2526,14 @@ msgstr "Tham số keep phải là 0 hoặc 1"
 msgid "The subscription could not be removed"
 msgstr "Không thể xóa gói đăng ký"
 
+msgid "The file is too large"
+msgstr "Tệp quá lớn"
+
 msgid "Unknown engine"
 msgstr "Công cụ không xác định"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "Tham số unverified phải là 0 hoặc 1"
 
 msgid "This engine is a system package: it has no file to upload"
 msgstr "Công cụ này là gói hệ thống: không có tệp để tải lên"
