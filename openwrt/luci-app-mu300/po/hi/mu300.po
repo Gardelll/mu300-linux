@@ -105,6 +105,12 @@ msgstr "ठीक है"
 msgid "Cancel"
 msgstr "रद्द करें"
 
+msgid "%d s"
+msgstr "%d से"
+
+msgid "%d h"
+msgstr "%d घं"
+
 msgid "New SMS · %s"
 msgstr "नया SMS · %s"
 
@@ -113,6 +119,21 @@ msgstr "अज्ञात नंबर"
 
 msgid "Select"
 msgstr "चुनें"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "यह नेटवर्क या फ़्रीक्वेंसी स्कैन है: इसमें एक से तीन मिनट लगते हैं, यह पूरे समय मॉडेम का AT चैनल घेरे रखता है, और इस बीच मोबाइल डेटा रुक सकता है। यह बैकग्राउंड में चलता है; पूरा होने पर जवाब यहाँ दिखेगा।"
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "यह मॉडेम में सहेजी गई नेटवर्क मोड, बैंड या सेल सेटिंग बदलता है: यह रीबूट के बाद भी लागू रहती है, और Android में भी, जहाँ इससे मेल न खाने वाला नेटवर्क 'कोई सेवा नहीं' दिखता है। लॉक पेज इन सेटिंग्स को दिखाता है और रीसेट करता है।"
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "यह रेडियो, डेटा कनेक्शन या ख़ुद मॉडेम को बदलता है: मोबाइल डेटा बहाल होने तक कट जाता है, और यह पेज कुछ देर के लिए कनेक्शन खो सकता है।"
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "यह मॉडेम में सहेजे गए डेटा प्रोफ़ाइल (APN) बदलता है, जिनका उपयोग मोबाइल डेटा और Android करते हैं।"
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "यह SIM का PIN लॉक बदलता है या PIN दर्ज करता है: गलत PIN डालने पर SIM तब तक ब्लॉक रहती है जब तक उसका PUK दर्ज न किया जाए।"
 
 msgid "Basic"
 msgstr "मूल"
@@ -141,14 +162,50 @@ msgstr "तैयार।"
 msgid "Session history (click to reuse)"
 msgstr "सत्र इतिहास (फिर से उपयोग के लिए क्लिक करें)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "बैकग्राउंड में चल रहा है (अधिकतम %d से); पूरा होने पर जवाब यहाँ दिखेगा…"
+
+msgid "The modem gave no final answer in time"
+msgstr "मॉडेम ने समय पर अंतिम जवाब नहीं दिया"
+
+msgid "%d s in the background"
+msgstr "बैकग्राउंड में %d से"
+
 msgid "(no output)"
 msgstr "(कोई आउटपुट नहीं)"
+
+msgid "This command changes the modem's state."
+msgstr "यह कमांड मॉडेम की स्थिति बदलता है।"
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "अभी भेजा नहीं गया: पुष्टि की प्रतीक्षा है"
+
+msgid "Send this AT command?"
+msgstr "यह AT कमांड भेजें?"
+
+msgid "Send anyway"
+msgstr "फिर भी भेजें"
+
+msgid "Not sent"
+msgstr "नहीं भेजा गया"
 
 msgid "Request failed"
 msgstr "अनुरोध विफल"
 
 msgid "(empty)"
 msgstr "(खाली)"
+
+msgid "Loading…"
+msgstr "लोड हो रहा है…"
+
+msgid "Channel Analysis"
+msgstr "चैनल विश्लेषण"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "स्कैन के दौरान Wi-Fi हॉटस्पॉट कुछ पल के लिए अपना चैनल छोड़ देता है: जुड़े हुए डिवाइस कट जाते हैं, और कुछ (ख़ासकर macOS) अपने-आप दोबारा नहीं जुड़ते। यह पेज खुलते ही और फिर हर कुछ सेकंड में स्कैन करता है। अगर आप हॉटस्पॉट पर निर्भर हैं, तो पहले USB या किसी अन्य रास्ते से पैनल तक पहुँचें।"
+
+msgid "Scan anyway"
+msgstr "फिर भी स्कैन करें"
 
 msgid "Failed: %s"
 msgstr "विफल: %s"
@@ -273,6 +330,15 @@ msgstr "रीफ़्रेश करें"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "केवल होस्ट मोड में उपलब्ध। रीफ़्रेश करने पर मिले हुए USB एडेप्टर चालू हो जाते हैं; LAN में जोड़ने से ब्रिज सहेजा जाता है और नेटवर्किंग पुनः लोड होती है।"
 
+msgid "Recent modem operations"
+msgstr "हाल के मॉडेम संचालन"
+
+msgid "Show"
+msgstr "दिखाएँ"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "इस और पिछले बूट में कंट्रोल पैनल की हाल की कॉल: कब, कौन-सी पेज कॉल या AT कमांड, कितना समय लगा और कैसे ख़त्म हुई (ok, त्रुटि, व्यस्त, रोकी गई)। कोई मान, जवाब या संदेश नहीं रखा जाता। पैनल अटक जाने पर उपयोगी।"
+
 msgid "Unavailable"
 msgstr "अनुपलब्ध"
 
@@ -326,6 +392,12 @@ msgstr "सेटिंग्स सहेजी गईं"
 
 msgid "Save failed: %s"
 msgstr "सहेजना विफल: %s"
+
+msgid "This boot"
+msgstr "यह बूट"
+
+msgid "Previous boot"
+msgstr "पिछला बूट"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "भूमिका की अभी पुष्टि नहीं हो सकी; फिर से कनेक्ट करें और पेज रीफ़्रेश करें।"
@@ -798,6 +870,9 @@ msgstr "रेडियो बंद"
 msgid "No response"
 msgstr "कोई प्रतिक्रिया नहीं"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "मॉडेम व्यस्त है: सेलुलर रीडिंग %s पहले की है"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · सिग्नल %s %s/10"
 
@@ -863,9 +938,6 @@ msgstr "%s क्लाइंट"
 
 msgid "Recent DHCP leases"
 msgstr "हाल की DHCP लीज़"
-
-msgid "%d h"
-msgstr "%d घं"
 
 msgid "Board"
 msgstr "बोर्ड"
@@ -1086,11 +1158,11 @@ msgstr "स्टार्टअप पर लागू करना सक्�
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "मॉडेम को सीधे पढ़ा जा रहा है (अधिकतम कुछ सेकंड)…"
 
-msgid "Refreshed"
-msgstr "रीफ़्रेश किया गया"
-
 msgid "Refresh failed"
 msgstr "रीफ़्रेश विफल"
+
+msgid "Refreshed"
+msgstr "रीफ़्रेश किया गया"
 
 msgid "NR bands: back to automatic"
 msgstr "NR बैंड: स्वचालित पर वापस"
@@ -1356,9 +1428,6 @@ msgstr "SIM से सिंक करें"
 msgid "Clear local pool"
 msgstr "स्थानीय पूल साफ़ करें"
 
-msgid "Loading…"
-msgstr "लोड हो रहा है…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "बाईं ओर कोई बातचीत चुनें, या भेजने के लिए नीचे नंबर दर्ज करें।"
 
@@ -1590,6 +1659,9 @@ msgstr "रेडियो व्यस्त है: डायल या वॉ
 msgid "The action gave no valid reply"
 msgstr "कार्रवाई से कोई मान्य उत्तर नहीं मिला"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "confirm पैरामीटर 0 या 1 होना चाहिए"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "AT कमांड प्रिंट करने योग्य ASCII की एक पंक्ति होती है, अधिकतम 512 अक्षर"
 
@@ -1605,6 +1677,12 @@ msgstr "अस्वीकृत: यह कमांड रीबूट हो�
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "नेटवर्क लॉक लागू हो रहे हैं: मॉडेम पुनः आरंभ हो रहा है (लगभग आधा मिनट), थोड़ी देर में फिर से प्रयास करें"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "एक लंबा AT कमांड अभी भी बैकग्राउंड में चल रहा है; उसके पूरा होने पर फिर कोशिश करें"
+
+msgid "This command needs confirmation"
+msgstr "इस कमांड के लिए पुष्टि ज़रूरी है"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "AT चैनल व्यस्त है; कमांड नहीं भेजा गया, फिर से प्रयास करें"
 
@@ -1613,6 +1691,9 @@ msgstr "मॉडेम ने समय पर उत्तर नहीं द
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "fresh पैरामीटर 0 या 1 होना चाहिए"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "मॉडेम से लॉक पढ़े जा रहे हैं; कुछ सेकंड बाद फिर कोशिश करें"
 
 msgid "Lock read failed"
 msgstr "लॉक स्थिति पढ़ना विफल"
