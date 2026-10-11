@@ -102,7 +102,7 @@ what replaced it. The table below gives each section's state.
 | 38a | A read past the end of the eMMC never returns | current (fixed) |
 | 38b | RNDIS: the port kept the bridge's address | current (fixed) |
 | 38c | fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails | current (fixed at boot; a reload by hand still needs the flowtable deleted first) |
-| 40 | One stuck AT command wedged the control panel | current (fixed in the panel; mu300-atd's 1 s drain open) |
+| 40 | One stuck AT command wedged the control panel; a second per AT command on OpenWrt | current (fixed) |
 
 ## Hardware and firmware facts
 
@@ -3260,7 +3260,19 @@ it opens and on every poll, and a scan takes this driver's access point off its 
 rejoin), so with an access point it waits for a click; System Log reads 250 lines every 15 s instead of 1000 every 5 s
 (the ~19 s AT round trips seen with it open were not reproduced: one 1000-line `log read` costs 0.02 s here).
 
-**Open:** OpenWrt's `/bin/sh` refuses a fractional `read -t` too ("invalid timeout"), so `mu300-atd` drains a whole
-second before every command: every AT command takes about 1 s and a collector round about 7 s. Running the daemon
-under the static busybox (`/opt/mu300/bin/busybox ash`, which takes fractions) would fix it; it needs a reboot to
-take effect, since restarting the daemon closes the channel (13b), and was not done here.
+**A second per AT command on OpenWrt (fixed).** OpenWrt's `/bin/sh` refuses a fractional `read -t` too ("read:
+invalid timeout"), so `mu300-atd` drained a whole second before every command: every AT command took about a second
+and the panel's fast collector round seven. The daemon now runs itself again under a shell that takes fractions when
+its own does not: the static busybox next to it (`/opt/mu300/bin/busybox ash`), else bash. On Ubuntu, dash already
+hands over to bash 5, which takes them, so nothing changes there. `mobile-data` and `mu300-nfc` nap through the
+static busybox's `sleep` as well (bash has no `sleep` of its own, and `/bin/sleep` refuses "0.2": `mobile-data`'s lock
+polls waited whole seconds, and `mu300-nfc`'s bare `sleep 0.2` did not wait at all). Measured on the U30 Air, before
+and after a reboot onto the change (`mu300-at -t 2 AT+CSQ`, five in a row on each panel channel; a `cell fast` round):
+
+| | nr1 | nr6 | nr7 | fast collector round |
+|---|---|---|---|---|
+| before (`/bin/sh`) | 1.04 s | 1.04 s | 1.04 s | 7.37 s |
+| after (`busybox ash`) | 0.13 s | 0.13 s | 0.13 s | 1.08 s |
+
+(The first command on each channel after the boot still takes a second: nothing has ended cleanly yet, so the first
+drain is the slow one, by design.)
