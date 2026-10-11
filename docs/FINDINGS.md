@@ -3272,14 +3272,20 @@ where the kernel has them. `modem_control` and `refnotify` ran as `ubuntu` too: 
   for `chroot`, which their own `capset` drops - their `setuid(1000)` then fails, harmlessly. `android-vendor-start`
   starts `modem_control` through `android-run` (still an exec, so the task name stays `modem_control`).
   `cp_diskserver` never switches users on Android either and stays root.
-* `ueventd-perms.sh`: `system` and `radio` become `mu300vnd` (owner `$V`, group `$VG`), `graphics` the `video` group
-  (the GPU's nodes `root:video 0660`), every other Android id root. No node is left with bits for others, nothing is
-  writable by everyone, a node that is root's alone is `0600`. Left as Linux has them: input events, the USB serial
-  console `ttyGS*`, and `firmware_class`'s path (whoever writes it chooses the firmware the kernel loads). The RTC
+* `ueventd-perms.sh`: `system` and `radio` become `mu300vnd` (owner `$V`, group `$VG`), `graphics` on a node Android
+  gives everyone (`mali0`, `ion`, `dma_heap/*`, `sprd_dmabuf`, `pvr_sync`: `0666`) the `video` group (`root:video
+  0660`), anywhere else root, as is every other Android id and every id the generator does not know. No node is left
+  with bits for others, nothing is writable by everyone, a node that is root's alone is `0600`. Root's alone: input
+  events, the USB serial console `ttyGS*` (getty and login hand it out as on any Linux: a serial login still works) and
+  `firmware_class`'s path (whoever writes it chooses the firmware the kernel loads) - all three were `ubuntu`'s. The RTC
   stays root's but is the vendor group's: `refnotify` opens `/dev/rtc0` (`root:root 0660`), which it reached through
   gid 0 before ("RefNotify open /dev/rtc0 failed, error: Permission denied" until it was). The ids are looked up when
   the script runs, in `/etc/passwd` and `/etc/group`; without the account (OpenWrt, the initramfs: no account at
   1000 there) it is uid/gid 1000, which the daemons switch to themselves, and the GPU's group is root.
+* Nobody gains anything: `tests/test_vendor_ids.py` applies the script of v2026.10.18 and the new one to every node
+  they name (a glob as one name) and fails if `ubuntu`, a second login user in the usual groups (`video`, `render`,
+  `input`, `dialout`, ...) or everyone else can do anything with a node they could not before. 333 of 349 nodes
+  changed; the only one more open is the RTC, for the vendor group (it was not touched before).
 * The generator's inputs are in `android-vendor/ueventd/` now (the `/dev` rules of the device's `ueventd.rc` and the
   `chown`/`chmod` lines of its vendor init `*.rc`), and a test checks the committed script is the generator's.
 * Updates: `mu300-update` takes the new image's `/etc/passwd` and adds the old system's human accounts, so an updated
@@ -3290,7 +3296,8 @@ where the kernel has them. `modem_control` and `refnotify` ran as `ubuntu` too: 
   over`), `AT` OK, `+CFUN: 1`, `+CPIN` `+CME ERROR: 10` (no SIM, as before), `AT+CGMR` answers; `nr_fixnv1_a` and
   `persist` `mu300vnd:mu300vnd 0660` and `head` on them as `ubuntu` "Permission denied"; no world-writable node in
   `/dev` besides the standard ones, nothing in `/dev` or `/sys` owned by uid 1000; `mali0` `root:video 0660` and
-  `cltest` (OpenCL) passes; Wi-Fi client still connected; `timedatectl` reads the RTC; up past the PM watchdog's
+  `cltest` (OpenCL) passes; Wi-Fi client still connected; `ttyGS0`, `input/event0` and the firmware path `root:root
+0600`, and a login on the serial console works (login gives `ttyGS0` to the user, getty takes it back); `timedatectl` reads the RTC; up past the PM watchdog's
   ~290 s. The vendor log has the same errors as before the change (no `/dev/cp_dump`, no `/proc/bootconfig`, no
   property service) plus the two logged failed switches. Not measured: the 5.4 kernel, OpenWrt (unchanged there but
   for the modes), the modem with a SIM.
