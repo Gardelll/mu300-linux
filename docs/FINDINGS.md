@@ -3565,3 +3565,31 @@ adbd's connection, and adbd hung in it, holding its endpoints: FunctionFS never 
 the loop saw it bound and had nothing to do, and the pulled-down gadget stayed off the bus until the board was
 unplugged (its root port on the Mac cannot be power-cycled). Without adb a soft disconnect stays too, until
 `echo connect`; with the fixed adbd it was not tried again.
+
+### 44. `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146)
+
+Found on the U30 Air during the #123 test (7.2.9, also on main): with Wi-Fi idle (`wifi down`, OpenWrt),
+`rmmod sprd_wlan_combo` panics in `__run_timers` within a second. Not a timer that one deinit forgot: **the port's
+platform remove tore nothing down.** The vendor's `sprd_wlan_remove` (`common/sprd_wlan.c`) ends in
+`return sprd_iface_remove(pdev)`; the mainline port dropped that line with the SC2332/SIPC variants, so remove logged
+one line and returned. The module was then freed with the recovery watchdog of PR #100 (`iface_wd.tick`, a
+`delayed_work` in the module's `.bss`, on `system_wq`, rearming itself every second) still armed, and with the
+wiphy, `wlan0`, the WCN reset notifier, the misc device and the inetaddr notifiers all still registered on the
+freed `priv`: the watchdog's timer is the first to go off. The vendor 5.4 driver still has the call (and no
+watchdog), so only the mainline module was affected.
+
+Fix (`upstream/modules/sprd_wlan_combo`):
+- `sprd_wlan_remove` calls `sprd_iface_remove()` for the PCIe variant again: watchdog stopped first, the chip
+  powered on for the close commands, the notifiers, the interfaces and the wiphy unregistered, the chip powered off,
+  TX/RX torn down, `priv` freed.
+- `sprd_iface_remove` no longer returns on a failed WCN power-on with everything still registered: a platform
+  remove cannot refuse, the device is unbound and the module freed either way. The power-on only fails from a count
+  of 0 (no interface open), so the teardown goes on without the chip and skips the power-off that would have
+  balanced it.
+- Two timers that live in `priv` and had no owner where `priv` is freed: the scan timer
+  (`timer_shutdown_sync` in `sprd_core_free`; a scan still running is reported done by `iface_deinit_vif`, which
+  deleted it, but nothing did so unconditionally) and the TCP ACK timers (`sc2355_tcp_ack_deinit` used `del_timer`
+  under the seqlock the callback takes, so a timeout running on another CPU could outlive the deinit; a
+  `timer_shutdown_sync` pass after the lock is dropped waits for it).
+
+Built for 6.18.56 and 7.2.10 (modules only). Device test: see the PR for #146.
