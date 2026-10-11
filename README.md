@@ -272,7 +272,7 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   adapters in host mode that can join the LAN bridge.
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom AT adapter).
 * **System > Languages:** the language of the interface, and the lang extra: download it, or upload the file.
-* **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (100 or 80 %).
+* **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (0-100 %, U30 Air; also `mu300-power charge-limit N`).
 
 IPv6 on this system is relayed from the carrier (router advertisements and NAT66) instead of the prefix extension
 plain OpenWrt uses. Aurora is the default theme, Bootstrap stays installed. Its boot timings, measured on an F50

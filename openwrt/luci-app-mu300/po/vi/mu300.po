@@ -108,6 +108,12 @@ msgstr "OK"
 msgid "Cancel"
 msgstr "Hủy"
 
+msgid "%d s"
+msgstr "%d giây"
+
+msgid "%d h"
+msgstr "%d giờ"
+
 msgid "New SMS · %s"
 msgstr "SMS mới · %s"
 
@@ -116,6 +122,21 @@ msgstr "Số không xác định"
 
 msgid "Select"
 msgstr "Chọn"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Đây là quét mạng hoặc quét tần số: mất từ một đến ba phút, chiếm kênh AT của modem suốt thời gian đó, và dữ liệu di động có thể tạm dừng trong lúc này. Lệnh chạy ở chế độ nền; phản hồi sẽ hiện ở đây khi xong."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Lệnh này thay đổi chế độ mạng, băng tần hoặc thiết lập ô mà modem lưu lại: nó vẫn có hiệu lực sau khi khởi động lại, và trong Android cũng vậy, nơi một mạng không khớp sẽ hiển thị là Không có dịch vụ. Trang Khóa hiển thị và đặt lại các thiết lập này."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Lệnh này bật/tắt sóng, kết nối dữ liệu hoặc chính modem: dữ liệu di động bị ngắt cho đến khi được khôi phục, và trang này có thể mất kết nối một lúc."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Lệnh này thay đổi các cấu hình dữ liệu (APN) lưu trong modem, được dữ liệu di động và Android sử dụng."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Lệnh này thay đổi khóa PIN của SIM hoặc nhập mã PIN: nhập sai PIN sẽ khóa SIM cho đến khi nhập mã PUK."
 
 msgid "Basic"
 msgstr "Cơ bản"
@@ -144,14 +165,50 @@ msgstr "Sẵn sàng."
 msgid "Session history (click to reuse)"
 msgstr "Lịch sử phiên (nhấp để dùng lại)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "Đang chạy ở chế độ nền (tối đa %d giây); phản hồi sẽ hiện ở đây khi xong…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Modem không đưa ra phản hồi cuối cùng kịp thời"
+
+msgid "%d s in the background"
+msgstr "%d giây ở chế độ nền"
+
 msgid "(no output)"
 msgstr "(không có đầu ra)"
+
+msgid "This command changes the modem's state."
+msgstr "Lệnh này thay đổi trạng thái của modem."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Chưa gửi: đang chờ xác nhận"
+
+msgid "Send this AT command?"
+msgstr "Gửi lệnh AT này?"
+
+msgid "Send anyway"
+msgstr "Vẫn gửi"
+
+msgid "Not sent"
+msgstr "Chưa gửi"
 
 msgid "Request failed"
 msgstr "Yêu cầu thất bại"
 
 msgid "(empty)"
 msgstr "(trống)"
+
+msgid "Loading…"
+msgstr "Đang tải…"
+
+msgid "Channel Analysis"
+msgstr "Phân tích kênh"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Việc quét khiến điểm phát Wi-Fi rời kênh của nó trong chốc lát: các thiết bị đang kết nối bị ngắt, và một số (đặc biệt là macOS) có thể không tự kết nối lại. Trang này quét ngay khi mở và sau đó cứ vài giây lại quét. Nếu bạn phụ thuộc vào điểm phát, hãy truy cập bảng điều khiển qua USB hoặc cách khác trước."
+
+msgid "Scan anyway"
+msgstr "Vẫn quét"
 
 msgid "Failed: %s"
 msgstr "Thất bại: %s"
@@ -276,6 +333,15 @@ msgstr "Làm mới"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Chỉ khả dụng ở chế độ host. Làm mới sẽ bật các bộ điều hợp USB tìm thấy; thêm vào LAN sẽ lưu cầu nối và tải lại mạng."
 
+msgid "Recent modem operations"
+msgstr "Thao tác modem gần đây"
+
+msgid "Show"
+msgstr "Hiển thị"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Các lệnh gọi gần đây của bảng điều khiển trong lần khởi động này và lần trước: khi nào, lệnh gọi trang hoặc lệnh AT nào, mất bao lâu và kết thúc ra sao (ok, lỗi, bận, bị dừng). Không lưu giá trị, phản hồi hay tin nhắn nào. Hữu ích khi bảng điều khiển bị treo."
+
 msgid "Unavailable"
 msgstr "Không khả dụng"
 
@@ -329,6 +395,12 @@ msgstr "Đã lưu cài đặt"
 
 msgid "Save failed: %s"
 msgstr "Lưu thất bại: %s"
+
+msgid "This boot"
+msgstr "Lần khởi động này"
+
+msgid "Previous boot"
+msgstr "Lần khởi động trước"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Chưa thể xác nhận vai trò; hãy kết nối lại và làm mới trang."
@@ -801,6 +873,9 @@ msgstr "Radio tắt"
 msgid "No response"
 msgstr "Không phản hồi"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Modem đang bận: số liệu di động từ %s trước"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Tín hiệu %s %s/10"
 
@@ -866,9 +941,6 @@ msgstr "%s thiết bị"
 
 msgid "Recent DHCP leases"
 msgstr "Cấp phát DHCP gần đây"
-
-msgid "%d h"
-msgstr "%d giờ"
 
 msgid "Board"
 msgstr "Bo mạch"
@@ -1089,11 +1161,11 @@ msgstr "Bật áp dụng khi khởi động"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Đang đọc trực tiếp từ modem (tối đa vài giây)…"
 
-msgid "Refreshed"
-msgstr "Đã làm mới"
-
 msgid "Refresh failed"
 msgstr "Làm mới thất bại"
+
+msgid "Refreshed"
+msgstr "Đã làm mới"
 
 msgid "NR bands: back to automatic"
 msgstr "Băng tần NR: trở về tự động"
@@ -1299,6 +1371,9 @@ msgstr "Chuyển sang Tiết kiệm khi dưới %"
 msgid "Stop charging at"
 msgstr "Dừng sạc ở mức"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % không bao giờ sạc pin (thiết bị chạy bằng bộ sạc), 100 % sạc đầy; ở giữa, việc sạc dừng ở mức đó và bắt đầu lại khi thấp hơn 5 điểm. Dưới 5 % pin luôn được sạc."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % giúp pin bền hơn trên thiết bị luôn cắm sạc."
 
@@ -1409,9 +1484,6 @@ msgstr "Đồng bộ từ SIM"
 
 msgid "Clear local pool"
 msgstr "Xóa kho cục bộ"
-
-msgid "Loading…"
-msgstr "Đang tải…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Chọn một cuộc hội thoại bên trái, hoặc nhập số bên dưới để gửi."
@@ -1644,6 +1716,9 @@ msgstr "Radio đang bận: trình quay số hoặc watchdog đang chuyển trạ
 msgid "The action gave no valid reply"
 msgstr "Thao tác không trả về phản hồi hợp lệ"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Tham số confirm phải là 0 hoặc 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "Lệnh AT phải là một dòng ASCII in được, tối đa 512 ký tự"
 
@@ -1659,6 +1734,12 @@ msgstr "Bị từ chối: lệnh này làm treo cổng AT cho đến khi khởi 
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Đang áp dụng khóa mạng: modem đang khởi động lại (khoảng nửa phút), hãy thử lại sau ít phút"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Một lệnh AT dài vẫn đang chạy ở chế độ nền; hãy thử lại khi nó xong"
+
+msgid "This command needs confirmation"
+msgstr "Lệnh này cần xác nhận"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "Kênh AT đang bận; lệnh chưa được gửi, hãy thử lại"
 
@@ -1667,6 +1748,9 @@ msgstr "Modem không trả lời kịp thời; lệnh có thể vẫn đang ch�
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Tham số fresh phải là 0 hoặc 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Đang đọc trạng thái khóa từ modem; hãy thử lại sau vài giây"
 
 msgid "Lock read failed"
 msgstr "Đọc trạng thái khóa thất bại"

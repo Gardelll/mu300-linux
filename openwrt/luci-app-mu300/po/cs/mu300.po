@@ -108,6 +108,12 @@ msgstr "OK"
 msgid "Cancel"
 msgstr "Zrušit"
 
+msgid "%d s"
+msgstr "%d s"
+
+msgid "%d h"
+msgstr "%d h"
+
 msgid "New SMS · %s"
 msgstr "Nová SMS · %s"
 
@@ -116,6 +122,21 @@ msgstr "Neznámé číslo"
 
 msgid "Select"
 msgstr "Vybrat"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Jde o vyhledávání sítí nebo frekvencí: trvá jednu až tři minuty, celou dobu drží AT kanál modemu a mobilní data se mezitím mohou pozastavit. Běží na pozadí; odpověď se zobrazí zde, až skončí."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Tímto se mění režim sítě, pásmo nebo nastavení buňky, které si modem ukládá: platí i po restartu, a to i v Androidu, kde se síť, která mu neodpovídá, zobrazí jako Žádná služba. Stránka Zámky tato nastavení zobrazuje a obnovuje."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Tímto se přepíná rádio, datové připojení nebo samotný modem: mobilní data vypadnou, dokud se neobnoví, a tato stránka může na chvíli ztratit spojení."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Tímto se mění datové profily (APN) uložené v modemu, které používají mobilní data a Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Tímto se mění zámek PIN karty SIM nebo zadává PIN: chybné kódy PIN zablokují SIM, dokud se nezadá její PUK."
 
 msgid "Basic"
 msgstr "Základní"
@@ -144,14 +165,50 @@ msgstr "Připraveno."
 msgid "Session history (click to reuse)"
 msgstr "Historie relace (kliknutím znovu použít)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "Běží na pozadí (nejvýše %d s); odpověď se zobrazí zde, až skončí…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Modem neodpověděl včas konečnou odpovědí"
+
+msgid "%d s in the background"
+msgstr "%d s na pozadí"
+
 msgid "(no output)"
 msgstr "(žádný výstup)"
+
+msgid "This command changes the modem's state."
+msgstr "Tento příkaz mění stav modemu."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Zatím neodesláno: čeká se na potvrzení"
+
+msgid "Send this AT command?"
+msgstr "Odeslat tento příkaz AT?"
+
+msgid "Send anyway"
+msgstr "Přesto odeslat"
+
+msgid "Not sent"
+msgstr "Neodesláno"
 
 msgid "Request failed"
 msgstr "Požadavek selhal"
 
 msgid "(empty)"
 msgstr "(prázdné)"
+
+msgid "Loading…"
+msgstr "Načítání…"
+
+msgid "Channel Analysis"
+msgstr "Analýza kanálů"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Vyhledávání na chvíli odvede přístupový bod Wi-Fi z jeho kanálu: připojená zařízení se odpojí a některá (zejména macOS) se nemusí sama znovu připojit. Tato stránka vyhledává hned po otevření a pak každých několik sekund. Pokud jste na přístupovém bodu závislí, připojte se nejprve k panelu přes USB nebo jinou cestou."
+
+msgid "Scan anyway"
+msgstr "Přesto vyhledat"
 
 msgid "Failed: %s"
 msgstr "Selhalo: %s"
@@ -276,6 +333,15 @@ msgstr "Obnovit"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Dostupné pouze v režimu hostitele. Obnovit aktivuje nalezené adaptéry USB; přidání do LAN uloží most a znovu načte síť."
 
+msgid "Recent modem operations"
+msgstr "Nedávné operace modemu"
+
+msgid "Show"
+msgstr "Zobrazit"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Nedávná volání ovládacího panelu z tohoto a předchozího spuštění: kdy, které volání stránky nebo příkaz AT, jak dlouho trvalo a jak skončilo (ok, chyba, obsazeno, ukončeno). Neukládají se žádné hodnoty, odpovědi ani zprávy. Užitečné, když panel zamrzl."
+
 msgid "Unavailable"
 msgstr "Nedostupné"
 
@@ -329,6 +395,12 @@ msgstr "Nastavení uloženo"
 
 msgid "Save failed: %s"
 msgstr "Uložení selhalo: %s"
+
+msgid "This boot"
+msgstr "Toto spuštění"
+
+msgid "Previous boot"
+msgstr "Předchozí spuštění"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Roli zatím nelze potvrdit; připojte se znovu a obnovte stránku."
@@ -801,6 +873,9 @@ msgstr "Rádio vypnuto"
 msgid "No response"
 msgstr "Žádná odpověď"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Modem je zaneprázdněn: mobilní údaje staré %s"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Signál %s %s/10"
 
@@ -866,9 +941,6 @@ msgstr "Klientů: %s"
 
 msgid "Recent DHCP leases"
 msgstr "Nedávno přidělené adresy DHCP"
-
-msgid "%d h"
-msgstr "%d h"
 
 msgid "Board"
 msgstr "Deska"
@@ -1089,11 +1161,11 @@ msgstr "Zapnout použití při spuštění"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Přímé čtení z modemu (nejvýše několik sekund)…"
 
-msgid "Refreshed"
-msgstr "Obnoveno"
-
 msgid "Refresh failed"
 msgstr "Obnovení selhalo"
+
+msgid "Refreshed"
+msgstr "Obnoveno"
 
 msgid "NR bands: back to automatic"
 msgstr "Pásma NR: zpět na automatický režim"
@@ -1299,6 +1371,9 @@ msgstr "Přepnout na Úsporný pod %"
 msgid "Stop charging at"
 msgstr "Přestat nabíjet na"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % baterii nikdy nenabíjí (zařízení běží z nabíječky), 100 % ji nabije úplně; mezi tím se nabíjení zastaví na dané úrovni a znovu začne o 5 bodů níže. Pod 5 % se baterie nabíjí vždy."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % šetří baterii zařízení, které zůstává připojené k síti."
 
@@ -1409,9 +1484,6 @@ msgstr "Synchronizovat ze SIM"
 
 msgid "Clear local pool"
 msgstr "Vymazat místní fond"
-
-msgid "Loading…"
-msgstr "Načítání…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Vyberte konverzaci vlevo, nebo zadejte číslo níže a odešlete."
@@ -1644,6 +1716,9 @@ msgstr "Rádio je zaneprázdněné: přepíná ho vytáčení nebo watchdog, zku
 msgid "The action gave no valid reply"
 msgstr "Akce nevrátila platnou odpověď"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Parametr confirm musí být 0 nebo 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "Příkaz AT je jeden řádek tisknutelných znaků ASCII, nejvýše 512 znaků"
 
@@ -1659,6 +1734,12 @@ msgstr "Zamítnuto: tento příkaz zablokuje port AT až do restartu"
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Použití zámků sítě: modem se restartuje (asi půl minuty), zkuste to za chvíli znovu"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Na pozadí stále běží dlouhý příkaz AT; zkuste to znovu, až skončí"
+
+msgid "This command needs confirmation"
+msgstr "Tento příkaz vyžaduje potvrzení"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "Kanál AT je obsazen; příkaz nebyl odeslán, zkuste to znovu"
 
@@ -1667,6 +1748,9 @@ msgstr "Modem neodpověděl včas; příkaz může stále běžet, před opětov
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Parametr fresh musí být 0 nebo 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Zámky se čtou z modemu; zkuste to znovu za několik sekund"
 
 msgid "Lock read failed"
 msgstr "Čtení zámků selhalo"
