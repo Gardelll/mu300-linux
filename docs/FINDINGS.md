@@ -3421,3 +3421,58 @@ where the kernel has them. `modem_control` and `refnotify` ran as `ubuntu` too: 
   ~290 s. The vendor log has the same errors as before the change (no `/dev/cp_dump`, no `/proc/bootconfig`, no
   property service) plus the two logged failed switches. Not measured: the 5.4 kernel, OpenWrt (unchanged there but
   for the modes), the modem with a SIM.
+
+### 42. No access point on a DFS channel (user report, 2026-10-11)
+
+A user's SC2355 device on OpenWrt 25.12.5, hotspot on channel 60 (5 GHz, 80 MHz, country CN): hostapd logs
+`start_dfs_cac() failed, -1`, `Interface initialization failed`, `AP-DISABLED`, and the hotspot never comes up;
+channel 149 works.
+
+* **Cause.** 52-64 and 100-144 are DFS channels in every regulatory domain (wireless-regdb flags them `DFS`, the
+  kernel `radar detection`; a few countries also have 36-48 or 149-165 so). An access point there must first listen
+  for radar (CAC); hostapd asks the driver through `NL80211_CMD_RADAR_DETECT`, and cfg80211 answers `-EOPNOTSUPP`
+  when the driver has no `start_radar_detection` op. Neither SC2355 driver has one: not `sprd_cfg80211_ops`
+  (`common/cfg80211.c`) nor the sc2355 ops (`sc2355/init.c`) of `upstream/modules/sprd_wlan_combo`, and not the
+  vendor tree the 5.4 module is built from. No interface combination of the wiphy carries `radar_detect_widths`
+  either. The firmware does define the commands - `CMD_RADAR_DETECT` (77) and `EVT_RADAR_DETECTED` (0xA1) are in
+  `sc2355/cmdevt.h` and the API version table - but nothing in the driver sends or handles them. (The vendor tree's
+  `merlion` driver, another chip, implements `start_radar_detection` over the same command number 77, in `11h.c`; a
+  port to the sc2355 would need its CAC and radar events measured against real radar before it could be offered.)
+  Android's SoftAP never uses these channels either: its ACS list is 36-48 and 149-165 (§23).
+* **Decision.** The hotspot never goes onto a DFS channel; nothing tries to make DFS work. Every layer that picks or
+  writes the channel keeps it off them, and a DFS channel is replaced, never refused, so the hotspot does not stay
+  down:
+  * `opt/mu300/lib/wifi-channels.sh` (shared by the tools below): the firmware's channels a country allows without
+    DFS and without NO-IR, from wireless-regdb's `db.txt` - the full 36-48 + 149-165 except in about 70 countries
+    (no 149-165 in TR, JP and much of Europe's neighbourhood; no 36-48 in BD, PK and a few more; no 165 in ID; none
+    at all in the world domain `00` and five countries, which use 2.4 GHz). The default is 36, else 149; the width
+    is 80 MHz where the block of four is allowed (36-48, 149-161), 40 for a pair, 20 for 165.
+  * Ubuntu `hotspot-start`: `CHANNEL=` from `hotspot.conf` goes through it (a DFS channel becomes the default with
+    one line on stderr, in the journal; `auto` is the default); when the kernel's flags (`iw list`) still refuse the
+    channel it tries the country's other channels before falling back to 2.4 GHz (it used to fall back at once).
+  * OpenWrt `openwrt-wifi-config`: the first configuration from `hotspot.conf` writes the resolved channel, the
+    width as `VHT80/40/20`, `channels` (the country's list, hostapd's `chanlist` for ACS) and `acs_exclude_dfs 1`.
+    At every later boot it rewrites a DFS channel set in LuCI to the default (the htmode narrowed to what fits),
+    so LuCI shows the channel the hotspot really uses. `mu300-wifi-band 5` writes the same. The Android import keeps
+    writing `CHANNEL=auto`.
+  * wifi-scripts (`openwrt/patches/wifi-scripts-no-dfs.patch`, applied by `openwrt/build-rootfs.sh` with
+    `--fuzz=0` like the fw4 patches, the build stops if it no longer applies): `hostapd.uc` reads the capability
+    from the driver - no interface combination with `radar_detect_widths` - and for such a driver, on 5 GHz, an
+    explicit channel the kernel flags `radar` becomes 36, else 149, else the first allowed one, with the width
+    narrowed to what the allowed channels hold (160 becomes 80), and a `wifi-scripts: channel 60 is a DFS channel
+    and this driver cannot detect radar ...` line in `logread`; `auto` gets `acs_exclude_dfs=1`. This is what
+    catches a DFS channel chosen in LuCI's Network > Wireless before the next boot. Drivers that can detect radar
+    are untouched.
+* **Not changed.** LuCI's channel list still offers the DFS channels: `luci-mod-network` marks a channel unavailable
+  only when iwinfo reports it restricted (NO-IR without radar), and iwinfo does not report radar at all; hiding them
+  would mean patching LuCI's own (minified) page. The driver is not changed either: the only ways to make cfg80211
+  refuse an AP there (clearing `IEEE80211_CHAN_RADAR` would let an AP start without CAC, which is not allowed;
+  marking the channels disabled would cost the Wi-Fi client its DFS networks) are worse than the user-space guard.
+  The Wi-Fi client (`wifi-client`) still joins networks on DFS channels: radar detection is the access point's job.
+* **Tested** (`tests/test_wifi_channels.py`): the table, the replacement and its one line, `auto`, the widths, under
+  dash, bash and busybox ash; `hotspot-start`'s hostapd configuration with a stub `iw`; `openwrt-wifi-config` and
+  `mu300-wifi-band` with a stub `uci`, and again with the real `uci` and ash of the v2026.10.18 `openwrt-luci`
+  rootfs; and, with `MU300_WRT_IMAGE` naming an OpenWrt 25.12 image, the patch applied to the feed's wifi-scripts
+  (OpenWrt 25.12.5, ImmortalWrt 25.12.2 and the v2026.10.18 rootfs) and the hostapd configuration they generate for
+  a fake wiphy with and without radar detection. Not yet on a device: the hotspot on 36 after LuCI was set to 60,
+  and ACS (`auto` in LuCI) on this driver.
