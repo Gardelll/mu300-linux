@@ -105,6 +105,12 @@ msgstr "אישור"
 msgid "Cancel"
 msgstr "ביטול"
 
+msgid "%d s"
+msgstr "%d שנ׳"
+
+msgid "%d h"
+msgstr "%d שע׳"
+
 msgid "New SMS · %s"
 msgstr "SMS חדש · %s"
 
@@ -113,6 +119,21 @@ msgstr "מספר לא ידוע"
 
 msgid "Select"
 msgstr "בחירה"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "זוהי סריקת רשתות או תדרים: היא נמשכת דקה עד שלוש דקות, מחזיקה את ערוץ ה-AT של המודם כל אותו זמן, ונתונים סלולריים עשויים להיעצר בינתיים. היא רצה ברקע; התשובה תופיע כאן כשתסתיים."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "פעולה זו משנה מצב רשת, פס או הגדרת תא שהמודם שומר: היא נשארת בתוקף אחרי הפעלה מחדש, וגם ב-Android, שם רשת שאינה תואמת לה מוצגת כ'אין שירות'. דף הנעילות מציג את ההגדרות האלה ומאפס אותן."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "פעולה זו מחליפה מצב של הרדיו, של חיבור הנתונים או של המודם עצמו: הנתונים הסלולריים יתנתקו עד שישוחזרו, ודף זה עלול לאבד את החיבור לזמן מה."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "פעולה זו משנה את פרופילי הנתונים (APN) השמורים במודם, שבהם משתמשים הנתונים הסלולריים ו-Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "פעולה זו משנה את נעילת ה-PIN של ה-SIM או מזינה PIN: קודי PIN שגויים חוסמים את ה-SIM עד להזנת ה-PUK שלו."
 
 msgid "Basic"
 msgstr "בסיסי"
@@ -141,14 +162,50 @@ msgstr "מוכן."
 msgid "Session history (click to reuse)"
 msgstr "היסטוריית הפעלה (לחיצה לשימוש חוזר)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "רץ ברקע (לכל היותר %d שנ׳); התשובה תופיע כאן כשיסתיים…"
+
+msgid "The modem gave no final answer in time"
+msgstr "המודם לא נתן תשובה סופית בזמן"
+
+msgid "%d s in the background"
+msgstr "%d שנ׳ ברקע"
+
 msgid "(no output)"
 msgstr "(אין פלט)"
+
+msgid "This command changes the modem's state."
+msgstr "פקודה זו משנה את מצב המודם."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "טרם נשלח: ממתין לאישור"
+
+msgid "Send this AT command?"
+msgstr "לשלוח את פקודת ה-AT הזו?"
+
+msgid "Send anyway"
+msgstr "לשלוח בכל זאת"
+
+msgid "Not sent"
+msgstr "לא נשלח"
 
 msgid "Request failed"
 msgstr "הבקשה נכשלה"
 
 msgid "(empty)"
 msgstr "(ריק)"
+
+msgid "Loading…"
+msgstr "טוען…"
+
+msgid "Channel Analysis"
+msgstr "ניתוח ערוצים"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "סריקה מוציאה את נקודת הגישה של ה-Wi-Fi מהערוץ שלה לרגע: המכשירים המחוברים מתנתקים, וחלקם (במיוחד macOS) עלולים לא להתחבר מחדש בעצמם. דף זה סורק מיד עם פתיחתו ואחר כך כל כמה שניות. אם אתם תלויים בנקודת הגישה, היכנסו קודם ללוח דרך USB או בדרך אחרת."
+
+msgid "Scan anyway"
+msgstr "לסרוק בכל זאת"
 
 msgid "Failed: %s"
 msgstr "נכשל: %s"
@@ -273,6 +330,15 @@ msgstr "רענון"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "זמין במצב מארח בלבד. רענון מעלה את מתאמי ה-USB שהתגלו; הוספה ל-LAN שומרת את הגשר וטוענת מחדש את הרשת."
 
+msgid "Recent modem operations"
+msgstr "פעולות מודם אחרונות"
+
+msgid "Show"
+msgstr "הצג"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "הקריאות האחרונות של לוח הבקרה, מהאתחול הזה ומהקודם: מתי, איזו קריאת דף או פקודת AT, כמה זמן ארכה ואיך הסתיימה (ok, שגיאה, תפוס, הופסק). לא נשמרים ערכים, תשובות או הודעות. שימושי כשהלוח נתקע."
+
 msgid "Unavailable"
 msgstr "לא זמין"
 
@@ -326,6 +392,12 @@ msgstr "ההגדרות נשמרו"
 
 msgid "Save failed: %s"
 msgstr "השמירה נכשלה: %s"
+
+msgid "This boot"
+msgstr "האתחול הזה"
+
+msgid "Previous boot"
+msgstr "האתחול הקודם"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "עדיין לא ניתן לאשר את התפקיד; יש להתחבר מחדש ולרענן את הדף."
@@ -798,6 +870,9 @@ msgstr "הרדיו כבוי"
 msgid "No response"
 msgstr "אין תגובה"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "המודם עסוק: נתוני הרשת הסלולרית מלפני %s"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · אות %s %s/10"
 
@@ -863,9 +938,6 @@ msgstr "%s לקוחות"
 
 msgid "Recent DHCP leases"
 msgstr "החכרות DHCP אחרונות"
-
-msgid "%d h"
-msgstr "%d שע׳"
 
 msgid "Board"
 msgstr "לוח"
@@ -1086,11 +1158,11 @@ msgstr "הפעלת ההחלה בעת האתחול"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "קורא ישירות מהמודם (כמה שניות לכל היותר)…"
 
-msgid "Refreshed"
-msgstr "רוענן"
-
 msgid "Refresh failed"
 msgstr "הרענון נכשל"
+
+msgid "Refreshed"
+msgstr "רוענן"
 
 msgid "NR bands: back to automatic"
 msgstr "פסי NR: חזרה לאוטומטי"
@@ -1353,9 +1425,6 @@ msgstr "סנכרון מה-SIM"
 msgid "Clear local pool"
 msgstr "ניקוי המאגר המקומי"
 
-msgid "Loading…"
-msgstr "טוען…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "יש לבחור שיחה מהרשימה, או להזין מספר למטה כדי לשלוח."
 
@@ -1587,6 +1656,9 @@ msgstr "הרדיו תפוס: החייגן או ה-watchdog מחליפים את �
 msgid "The action gave no valid reply"
 msgstr "הפעולה לא החזירה תשובה תקינה"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "הפרמטר confirm חייב להיות 0 או 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "פקודת AT היא שורה אחת של תווי ASCII הניתנים להדפסה, עד 512 תווים"
 
@@ -1602,6 +1674,12 @@ msgstr "נדחה: פקודה זו תוקעת את יציאת ה-AT עד לאתח
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "מחיל נעילות רשת: המודם מופעל מחדש (כחצי דקה), יש לנסות שוב בעוד רגע"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "פקודת AT ארוכה עדיין רצה ברקע; נסו שוב כשתסתיים"
+
+msgid "This command needs confirmation"
+msgstr "פקודה זו דורשת אישור"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "ערוץ ה-AT תפוס; הפקודה לא נשלחה, יש לנסות שוב"
 
@@ -1610,6 +1688,9 @@ msgstr "המודם לא ענה בזמן; ייתכן שהפקודה עדיין ר
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "הפרמטר fresh חייב להיות 0 או 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "הנעילות נקראות מהמודם; נסו שוב בעוד כמה שניות"
 
 msgid "Lock read failed"
 msgstr "קריאת הנעילה נכשלה"

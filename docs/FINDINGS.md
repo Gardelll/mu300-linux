@@ -102,6 +102,7 @@ what replaced it. The table below gives each section's state.
 | 38a | A read past the end of the eMMC never returns | current (fixed) |
 | 38b | RNDIS: the port kept the bridge's address | current (fixed) |
 | 38c | fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails | current (fixed at boot; a reload by hand still needs the flowtable deleted first) |
+| 40 | One stuck AT command wedged the control panel | current (fixed in the panel; mu300-atd's 1 s drain open) |
 
 ## Hardware and firmware facts
 
@@ -3214,3 +3215,52 @@ brings it back for a while. Read in the code, not measured on a device:
   (`ndp -p`: pltime 0, vltime 7200) while the live /64 stayed preferred and the default router stayed; a WAN restart
   that got the same /64 back withdrew nothing. Not measured: a real carrier renumber (the carrier here kept its /64
   across WAN restarts), and a second relay behind the device, which forwards the RA like any other.
+
+### 40. One stuck AT command wedged the control panel
+
+**Report (U30 Air, openwrt-luci, v2026.10.18):** an AT command hung on one of the panel's pages; after that the whole
+panel was useless, also after a reboot, and later it came back by itself. The dashboard's battery tile, which needs no
+AT at all, stayed empty. The logs of that boot were in RAM and gone.
+
+**What could do that, measured on the U30 Air (2026-10-11):**
+
+* **`mu300-at`'s lock wait was ten times longer than asked.** It counted 0.1 s naps with `sleep 0.1 || sleep 1`, and
+  OpenWrt's `/bin/sleep` refuses a fraction (`sleep: invalid number '0.1'`), so every nap was a second:
+  `MU300_AT_LOCK_WAIT=1` took 10 s on the device, the panel's 5 s wait 50 s, the 12 s of every collector and lock read
+  two minutes, mobile-data's 90 s a quarter of an hour. rpcd ends a call at 30 s (`rpcd -t 30`) and the browser at 20 s
+  (LuCI's `rpctimeout`), but the client went on waiting, took the lock long after nobody wanted the answer, and sent
+  the command anyway. The wait is now seconds on the clock (`MU300_AT_LOCK_WAIT=0` is one try).
+* **Requests that read the modem inline.** `lock_get` read eight AT commands inside the request whenever there was no
+  cache - after every reboot, since the cache is in `/run`, and the home page asks at once. `signal` ran a collector
+  round inside the request, and a collector waited each command's whole budget (T + 31 s) on each of four channels.
+  rpcd killed the call, never its children: they ran on, held the pool slots and the nr1 lock, and the page started
+  new ones. Now `lock_get` serves the cache and reads in the background (one reader at a time), and a collector round
+  has a deadline (14 s for the page's live read, 12 s and 25 s in the background).
+* **One slow call blanked the page.** LuCI sends the calls a page makes in the same moment as one HTTP request, and
+  uhttpd answers them one after the other: the status snapshot (battery, CPU) waited behind the lock reading, and
+  when the browser gave up at 20 s every call in the request failed together. uhttpd's `max_requests 3` does not apply
+  to `/ubus` (measured: a fourth call was answered at once beside three slow ones). Every panel call now goes on its
+  own (`nobatch`), and the polls back off after failures.
+* **After a reboot** the panel asked for the lock state with no cache, while mobile-data's bring-up and the boot
+  replay of saved locks (an SFUN restart) held the modem; with the ten-fold waits above that is minutes of busy
+  channels, which fits "even after a reboot, then it came back by itself".
+
+Reproduced safely: the nr1, nr6 and nr7 daemons stopped (SIGSTOP; never a restart, see 13b) for 150 s. With the fix,
+`sysinfo` and `status` answered in 0.5 s throughout and the dashboard showed battery and CPU within seconds of a
+reload, the AT terminal said "busy" after 3 s, `lock_get fresh` served the cache after 12 s, `signal` gave up at 14 s,
+at most three collectors were alive at any time, and everything was back by itself once the daemons ran again.
+
+**Also in the fix:** AT commands that take minutes or change the modem beyond the answer need a confirmation in the
+terminal (scans run as a background job of at most three minutes; band, mode and cell locks are said to persist into
+Android, #96); a client holding the AT lock past the deadline it wrote for itself (`lock/until`) is ended. The panel
+keeps a log of its calls - method, time taken, outcome, never a value - in RAM, copied to
+`/etc/unisoc-modem/panel-ops.log` at most every five minutes and at shutdown, with the previous boot's copy beside it
+(Device page, "Recent modem operations"). Two LuCI status pages are put in front of: Channel Analysis scans as soon as
+it opens and on every poll, and a scan takes this driver's access point off its channel (a Mac on the hotspot did not
+rejoin), so with an access point it waits for a click; System Log reads 250 lines every 15 s instead of 1000 every 5 s
+(the ~19 s AT round trips seen with it open were not reproduced: one 1000-line `log read` costs 0.02 s here).
+
+**Open:** OpenWrt's `/bin/sh` refuses a fractional `read -t` too ("invalid timeout"), so `mu300-atd` drains a whole
+second before every command: every AT command takes about 1 s and a collector round about 7 s. Running the daemon
+under the static busybox (`/opt/mu300/bin/busybox ash`, which takes fractions) would fix it; it needs a reboot to
+take effect, since restarting the daemon closes the channel (13b), and was not done here.

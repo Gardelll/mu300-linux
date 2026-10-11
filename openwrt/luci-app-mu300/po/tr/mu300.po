@@ -105,6 +105,12 @@ msgstr "Tamam"
 msgid "Cancel"
 msgstr "İptal"
 
+msgid "%d s"
+msgstr "%d sn"
+
+msgid "%d h"
+msgstr "%d sa"
+
 msgid "New SMS · %s"
 msgstr "Yeni SMS · %s"
 
@@ -113,6 +119,21 @@ msgstr "Bilinmeyen numara"
 
 msgid "Select"
 msgstr "Seç"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Bu bir ağ veya frekans taramasıdır: bir ila üç dakika sürer, modemin AT kanalını bu süre boyunca meşgul eder ve bu arada mobil veri duraklayabilir. Arka planda çalışır; yanıt bittiğinde burada görünür."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Bu, modemin sakladığı bir ağ modu, bant veya hücre ayarını değiştirir: yeniden başlatmadan sonra da geçerli kalır, Android'de de; orada ayarla uyuşmayan bir ağ Servis Yok olarak görünür. Kilitler sayfası bu ayarları gösterir ve sıfırlar."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Bu, radyoyu, veri bağlantısını veya modemin kendisini açıp kapatır: mobil veri yeniden kurulana kadar kesilir ve bu sayfa bir süre bağlantısını kaybedebilir."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Bu, modemde saklanan ve mobil verinin ile Android'in kullandığı veri profillerini (APN'leri) değiştirir."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Bu, SIM'in PIN kilidini değiştirir veya bir PIN girer: yanlış PIN'ler SIM'i PUK girilene kadar kilitler."
 
 msgid "Basic"
 msgstr "Temel"
@@ -141,14 +162,50 @@ msgstr "Hazır."
 msgid "Session history (click to reuse)"
 msgstr "Oturum geçmişi (yeniden kullanmak için tıklayın)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "Arka planda çalışıyor (en fazla %d sn); yanıt bittiğinde burada görünür…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Modem zamanında son bir yanıt vermedi"
+
+msgid "%d s in the background"
+msgstr "Arka planda %d sn"
+
 msgid "(no output)"
 msgstr "(çıktı yok)"
+
+msgid "This command changes the modem's state."
+msgstr "Bu komut modemin durumunu değiştirir."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Henüz gönderilmedi: onay bekleniyor"
+
+msgid "Send this AT command?"
+msgstr "Bu AT komutu gönderilsin mi?"
+
+msgid "Send anyway"
+msgstr "Yine de gönder"
+
+msgid "Not sent"
+msgstr "Gönderilmedi"
 
 msgid "Request failed"
 msgstr "İstek başarısız"
 
 msgid "(empty)"
 msgstr "(boş)"
+
+msgid "Loading…"
+msgstr "Yükleniyor…"
+
+msgid "Channel Analysis"
+msgstr "Kanal Analizi"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Tarama, Wi-Fi erişim noktasını bir anlığına kanalından ayırır: bağlı cihazların bağlantısı düşer ve bazıları (özellikle macOS) kendiliğinden yeniden bağlanmayabilir. Bu sayfa açılır açılmaz ve sonra birkaç saniyede bir tarar. Erişim noktasına bağımlıysanız panele önce USB veya başka bir yoldan ulaşın."
+
+msgid "Scan anyway"
+msgstr "Yine de tara"
 
 msgid "Failed: %s"
 msgstr "Başarısız: %s"
@@ -273,6 +330,15 @@ msgstr "Yenile"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Yalnızca ana makine modunda kullanılabilir. Yenileme bulunan USB bağdaştırıcılarını açar; LAN’a ekleme köprüyü kaydeder ve ağı yeniden yükler."
 
+msgid "Recent modem operations"
+msgstr "Son modem işlemleri"
+
+msgid "Show"
+msgstr "Göster"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Kontrol panelinin bu açılıştaki ve bir öncekindeki son çağrıları: ne zaman, hangi sayfa çağrısı veya AT komutu, ne kadar sürdüğü ve nasıl bittiği (tamam, hata, meşgul, sonlandırıldı). Hiçbir değer, yanıt veya mesaj saklanmaz. Panel takıldığında işe yarar."
+
 msgid "Unavailable"
 msgstr "Kullanılamıyor"
 
@@ -326,6 +392,12 @@ msgstr "Ayarlar kaydedildi"
 
 msgid "Save failed: %s"
 msgstr "Kaydetme başarısız: %s"
+
+msgid "This boot"
+msgstr "Bu açılış"
+
+msgid "Previous boot"
+msgstr "Önceki açılış"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Rol henüz doğrulanamadı; yeniden bağlanıp sayfayı yenileyin."
@@ -798,6 +870,9 @@ msgstr "Radyo kapalı"
 msgid "No response"
 msgstr "Yanıt yok"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Modem meşgul: hücresel değerler %s önce okundu"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Sinyal %s %s/10"
 
@@ -863,9 +938,6 @@ msgstr "%s istemci"
 
 msgid "Recent DHCP leases"
 msgstr "Son DHCP kiraları"
-
-msgid "%d h"
-msgstr "%d sa"
 
 msgid "Board"
 msgstr "Anakart"
@@ -1086,11 +1158,11 @@ msgstr "Başlangıçta uygulamayı aç"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Modem doğrudan okunuyor (en fazla birkaç saniye)…"
 
-msgid "Refreshed"
-msgstr "Yenilendi"
-
 msgid "Refresh failed"
 msgstr "Yenileme başarısız"
+
+msgid "Refreshed"
+msgstr "Yenilendi"
 
 msgid "NR bands: back to automatic"
 msgstr "NR bantları: otomatiğe dön"
@@ -1353,9 +1425,6 @@ msgstr "SIM’den eşitle"
 msgid "Clear local pool"
 msgstr "Yerel havuzu temizle"
 
-msgid "Loading…"
-msgstr "Yükleniyor…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Soldan bir görüşme seçin veya göndermek için aşağıya bir numara girin."
 
@@ -1587,6 +1656,9 @@ msgstr "Radyo meşgul: bağlantı kurulumu ya da izleyici (watchdog) onu değiş
 msgid "The action gave no valid reply"
 msgstr "İşlem geçerli bir yanıt vermedi"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "confirm parametresi 0 veya 1 olmalıdır"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "AT komutu, en fazla 512 karakterlik tek satır yazdırılabilir ASCII olmalıdır"
 
@@ -1602,6 +1674,12 @@ msgstr "Reddedildi: bu komut AT bağlantı noktasını yeniden başlatmaya kadar
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Ağ kilitleri uygulanıyor: modem yeniden başlıyor (yaklaşık yarım dakika), birazdan yeniden deneyin"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Uzun bir AT komutu hâlâ arka planda çalışıyor; bittiğinde yeniden deneyin"
+
+msgid "This command needs confirmation"
+msgstr "Bu komut onay gerektiriyor"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "AT kanalı meşgul; komut gönderilmedi, yeniden deneyin"
 
@@ -1610,6 +1688,9 @@ msgstr "Modem zamanında yanıt vermedi; komut hâlâ çalışıyor olabilir, ye
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "fresh parametresi 0 veya 1 olmalı"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Kilitler modemden okunuyor; birkaç saniye sonra yeniden deneyin"
 
 msgid "Lock read failed"
 msgstr "Kilit durumu okunamadı"
