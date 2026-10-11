@@ -1,0 +1,279 @@
+/* mu300-hfp: a minimal Bluetooth Hands-Free audio gateway (HFP AG) for one paired headset, so a cellular call's
+ * audio can go to it. Raw BlueZ kernel sockets, no libbluetooth, no D-Bus: it builds static for Ubuntu and OpenWrt.
+ *
+ *   mu300-hfp [-c CHANNEL] [-C FIFO] [-a ANSWER_CMD] [-x HANGUP_CMD] BDADDR
+ *
+ * It connects to the headset (BlueZ must already have paired it - bluetoothctl pair/trust), finds the headset's
+ * Hands-Free RFCOMM channel by SDP unless -c gives it, and runs the service level connection: the AT exchange a
+ * headset expects from a phone (BRSF, CIND, CMER ...). The audio itself never passes through this program. On
+ * the UMS9620 the Bluetooth controller's PSKey has g_sys_sco_transmit_mode = 0, which sends SCO audio over its PCM
+ * pins to the audio DSP's IIS3, not over HCI (kanoqwq/e5-linux FINDINGS 58-59 measured exactly that on the same
+ * controller), so all this does is open and hold the SCO link while the DSP moves the call audio
+ * (mu300-voice audio start bt).
+ *
+ * Control, one line at a time, through the FIFO (default /run/mu300-hfp.ctl):
+ *   sco on | sco off          open / close the SCO audio link
+ *   call 0|1                  call indicator (1 = a call is up)
+ *   setup 0|1|2|3             callsetup indicator (none, incoming, outgoing, alerting)
+ *   ring [NUMBER]             RING (+CLIP) to the headset, once; send it every few seconds while it rings
+ *   quit
+ * The headset's buttons come back as commands: ATA runs ANSWER_CMD, AT+CHUP runs HANGUP_CMD (both through
+ * /bin/sh -c, in the background). Status goes to stdout, one line per event.
+ *
+ * Only CVSD (8 kHz narrowband) is offered: no codec negotiation is advertised, so a headset never switches to
+ * mSBC and VBC_SRC_BT_DAC/ADC stay at 8000. */
+#include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+/* the few BlueZ kernel ABI definitions this needs, so no libbluetooth headers are required */
+#ifndef AF_BLUETOOTH
+#define AF_BLUETOOTH 31
+#endif
+#define BTPROTO_L2CAP 0
+#define BTPROTO_SCO 2
+#define BTPROTO_RFCOMM 3
+#define SOL_BLUETOOTH 274
+#define BT_VOICE 11
+#define BT_VOICE_CVSD_16BIT 0x0060
+typedef struct { uint8_t b[6]; } __attribute__((packed)) bdaddr_t;
+struct sockaddr_l2 { sa_family_t l2_family; uint16_t l2_psm; bdaddr_t l2_bdaddr; uint16_t l2_cid; uint8_t l2_bdaddr_type; };
+struct sockaddr_rc { sa_family_t rc_family; bdaddr_t rc_bdaddr; uint8_t rc_channel; };
+struct sockaddr_sco { sa_family_t sco_family; bdaddr_t sco_bdaddr; };
+struct bt_voice { uint16_t setting; };
+
+/* AG features: bit 5, the ability to reject a call. No three-way calling, no codec negotiation (CVSD only). */
+#define AG_FEATURES 32
+
+static bdaddr_t peer;
+static const char *answer_cmd, *hangup_cmd;
+static int rc = -1, sco = -1;
+static int ind_call, ind_setup, ind_service = 1, ind_signal = 4, ind_roam, ind_batt = 5, ind_held;
+static int cmer;          /* the headset asked for indicator events */
+static int clip;          /* the headset asked for caller id */
+
+static int str2ba(const char *s, bdaddr_t *ba)
+{
+	unsigned int v[6];
+	if (sscanf(s, "%2x:%2x:%2x:%2x:%2x:%2x", &v[5], &v[4], &v[3], &v[2], &v[1], &v[0]) != 6) return -1;
+	for (int i = 0; i < 6; i++) ba->b[i] = v[i];
+	return 0;
+}
+
+static void say(const char *fmt, const char *a)
+{
+	printf(fmt, a ? a : ""); putchar('\n'); fflush(stdout);
+}
+
+static void send_at(const char *line)
+{
+	char buf[256];
+	int n = snprintf(buf, sizeof buf, "\r\n%s\r\n", line);
+	if (rc >= 0 && write(rc, buf, n) != n) say("write to headset failed: %s", strerror(errno));
+}
+
+static void run_bg(const char *cmd)
+{
+	if (!cmd || !*cmd) return;
+	pid_t p = fork();
+	if (p == 0) { setsid(); execl("/bin/sh", "sh", "-c", cmd, (char *)NULL); _exit(127); }
+}
+
+static void ciev(int idx, int val)
+{
+	char b[32];
+	if (!cmer) return;
+	snprintf(b, sizeof b, "+CIEV: %d,%d", idx, val);
+	send_at(b);
+}
+
+/* The headset's Hands-Free RFCOMM channel, from its SDP record: a ServiceSearchAttributeRequest for the Handsfree
+ * UUID (0x111E) asking only for the ProtocolDescriptorList, and the channel is the uint8 that follows the RFCOMM
+ * UUID (0x0003) in it. No continuation handling: one short attribute fits in one response. */
+static int sdp_hf_channel(void)
+{
+	int s = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+	if (s < 0) return -1;
+	struct sockaddr_l2 a; memset(&a, 0, sizeof a);
+	a.l2_family = AF_BLUETOOTH; a.l2_psm = 1; a.l2_bdaddr = peer;
+	if (connect(s, (struct sockaddr *)&a, sizeof a) < 0) { close(s); return -1; }
+	static const uint8_t req[] = {
+		0x06, 0x00, 0x01, 0x00, 0x0f,          /* ServiceSearchAttributeRequest, tid 1, 15 bytes */
+		0x35, 0x03, 0x19, 0x11, 0x1e,          /* search pattern: UUID16 Handsfree */
+		0xff, 0xff,                            /* max attribute bytes */
+		0x35, 0x03, 0x09, 0x00, 0x04,          /* attribute: ProtocolDescriptorList */
+		0x00 };                                /* no continuation */
+	uint8_t rsp[1024];
+	int ch = -1;
+	if (write(s, req, sizeof req) == (ssize_t)sizeof req) {
+		struct pollfd p = { s, POLLIN, 0 };
+		if (poll(&p, 1, 5000) > 0) {
+			ssize_t n = read(s, rsp, sizeof rsp);
+			for (ssize_t i = 0; i + 4 < n; i++)
+				if (rsp[i] == 0x19 && rsp[i + 1] == 0x00 && rsp[i + 2] == 0x03 && rsp[i + 3] == 0x08)
+					{ ch = rsp[i + 4]; break; }
+		}
+	}
+	close(s);
+	return ch;
+}
+
+static void sco_open(void)
+{
+	if (sco >= 0) return;
+	sco = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_SCO);
+	if (sco < 0) { say("SCO socket: %s", strerror(errno)); return; }
+	struct bt_voice v = { BT_VOICE_CVSD_16BIT };
+	setsockopt(sco, SOL_BLUETOOTH, BT_VOICE, &v, sizeof v);
+	struct sockaddr_sco a; memset(&a, 0, sizeof a);
+	a.sco_family = AF_BLUETOOTH; a.sco_bdaddr = peer;
+	if (connect(sco, (struct sockaddr *)&a, sizeof a) < 0) {
+		say("SCO connect failed: %s", strerror(errno));
+		close(sco); sco = -1; return;
+	}
+	say("sco up%s", "");
+}
+
+static void sco_close(void)
+{
+	if (sco < 0) return;
+	shutdown(sco, SHUT_RDWR); close(sco); sco = -1;
+	say("sco down%s", "");
+}
+
+/* one AT command from the headset */
+static void handle_at(char *l)
+{
+	char b[160];
+	say("< %s", l);
+	if (!strncmp(l, "AT+BRSF=", 8)) {
+		snprintf(b, sizeof b, "+BRSF: %d", AG_FEATURES); send_at(b); send_at("OK");
+	} else if (!strcmp(l, "AT+CIND=?")) {
+		send_at("+CIND: (\"call\",(0,1)),(\"callsetup\",(0-3)),(\"service\",(0,1)),(\"signal\",(0-5)),"
+			"(\"roam\",(0,1)),(\"battchg\",(0-5)),(\"callheld\",(0-2))");
+		send_at("OK");
+	} else if (!strcmp(l, "AT+CIND?")) {
+		snprintf(b, sizeof b, "+CIND: %d,%d,%d,%d,%d,%d,%d", ind_call, ind_setup, ind_service, ind_signal,
+			 ind_roam, ind_batt, ind_held);
+		send_at(b); send_at("OK");
+	} else if (!strncmp(l, "AT+CMER=", 8)) {
+		/* AT+CMER=3,0,0,1: the fourth field switches indicator events on - and ends the SLC setup */
+		char *p = strrchr(l, ',');
+		cmer = p && p[1] == '1';
+		send_at("OK");
+		say("service level connection up%s", "");
+	} else if (!strcmp(l, "AT+CHLD=?")) {
+		send_at("+CHLD: (0,1,2,3)"); send_at("OK");
+	} else if (!strncmp(l, "AT+CLIP=", 8)) {
+		clip = l[8] == '1'; send_at("OK");
+	} else if (!strcmp(l, "ATA")) {
+		send_at("OK"); say("headset: answer%s", ""); run_bg(answer_cmd);
+	} else if (!strcmp(l, "AT+CHUP")) {
+		send_at("OK"); say("headset: hang up%s", ""); run_bg(hangup_cmd);
+	} else if (!strcmp(l, "AT+COPS?")) {
+		send_at("+COPS: 0,0,\"\""); send_at("OK");
+	} else if (!strcmp(l, "AT+CLCC")) {
+		send_at("OK");
+	} else if (!strncmp(l, "AT+BLDN", 7) || !strncmp(l, "ATD", 3) || !strncmp(l, "AT+BVRA", 7)) {
+		send_at("ERROR");     /* dialling from the headset is not offered */
+	} else {
+		send_at("OK");        /* AT+VGS, AT+VGM, AT+NREC, AT+CMEE, AT+BIA, AT+CCWA, AT+COPS=3,0 ... */
+	}
+}
+
+static void handle_ctl(char *l)
+{
+	say("ctl: %s", l);
+	if (!strcmp(l, "sco on")) sco_open();
+	else if (!strcmp(l, "sco off")) sco_close();
+	else if (!strncmp(l, "call ", 5)) { int v = atoi(l + 5) ? 1 : 0; if (v != ind_call) { ind_call = v; ciev(1, v); } }
+	else if (!strncmp(l, "setup ", 6)) { int v = atoi(l + 6); if (v < 0 || v > 3) v = 0;
+		if (v != ind_setup) { ind_setup = v; ciev(2, v); } }
+	else if (!strncmp(l, "ring", 4)) {
+		send_at("RING");
+		if (clip && l[4] == ' ' && l[5]) {
+			char b[96]; snprintf(b, sizeof b, "+CLIP: \"%.40s\",%d", l + 5, l[5] == '+' ? 145 : 129);
+			send_at(b);
+		}
+	} else if (!strcmp(l, "quit")) { sco_close(); exit(0); }
+}
+
+/* split a byte stream into lines on \r or \n */
+static void feed(char *acc, size_t *len, size_t cap, const char *in, ssize_t n, void (*fn)(char *))
+{
+	for (ssize_t i = 0; i < n; i++) {
+		char c = in[i];
+		if (c == '\r' || c == '\n') {
+			if (*len) { acc[*len] = 0; fn(acc); *len = 0; }
+		} else if (*len < cap - 1) acc[(*len)++] = c;
+	}
+}
+
+static void on_term(int s) { (void)s; sco_close(); _exit(0); }
+
+int main(int argc, char **argv)
+{
+	int ch = 0, o;
+	const char *fifo = "/run/mu300-hfp.ctl";
+	while ((o = getopt(argc, argv, "c:C:a:x:")) != -1)
+		switch (o) {
+		case 'c': ch = atoi(optarg); break;
+		case 'C': fifo = optarg; break;
+		case 'a': answer_cmd = optarg; break;
+		case 'x': hangup_cmd = optarg; break;
+		default: goto usage;
+		}
+	if (optind >= argc || str2ba(argv[optind], &peer) < 0) {
+usage:
+		fprintf(stderr, "usage: %s [-c CHANNEL] [-C FIFO] [-a ANSWER_CMD] [-x HANGUP_CMD] BDADDR\n", argv[0]);
+		return 2;
+	}
+	signal(SIGTERM, on_term); signal(SIGINT, on_term); signal(SIGCHLD, SIG_IGN); signal(SIGPIPE, SIG_IGN);
+
+	if (!ch) ch = sdp_hf_channel();
+	if (ch <= 0) { say("no Hands-Free service found on %s (is it on, paired and in range?)", argv[optind]); return 1; }
+	rc = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+	struct sockaddr_rc a; memset(&a, 0, sizeof a);
+	a.rc_family = AF_BLUETOOTH; a.rc_bdaddr = peer; a.rc_channel = ch;
+	if (rc < 0 || connect(rc, (struct sockaddr *)&a, sizeof a) < 0) {
+		say("RFCOMM connect failed: %s", strerror(errno)); return 1;
+	}
+	printf("connected to %s, Hands-Free channel %d\n", argv[optind], ch); fflush(stdout);
+
+	unlink(fifo);
+	if (mkfifo(fifo, 0620) < 0) { say("mkfifo: %s", strerror(errno)); return 1; }
+	int ctl = open(fifo, O_RDWR | O_NONBLOCK);   /* O_RDWR: no EOF when a writer closes */
+	char rbuf[512], cbuf[256], tmp[256];
+	size_t rlen = 0, clen = 0;
+	for (;;) {
+		struct pollfd p[3] = { { rc, POLLIN, 0 }, { ctl, POLLIN, 0 }, { sco, POLLIN, 0 } };
+		if (poll(p, sco >= 0 ? 3 : 2, -1) < 0) { if (errno == EINTR) continue; break; }
+		if (p[0].revents) {
+			ssize_t n = read(rc, tmp, sizeof tmp);
+			if (n <= 0) { say("headset disconnected%s", ""); break; }
+			feed(rbuf, &rlen, sizeof rbuf, tmp, n, handle_at);
+		}
+		if (p[1].revents & POLLIN) {
+			ssize_t n = read(ctl, tmp, sizeof tmp);
+			if (n > 0) feed(cbuf, &clen, sizeof cbuf, tmp, n, handle_ctl);
+		}
+		if (sco >= 0 && (p[2].revents & (POLLHUP | POLLERR))) { say("sco closed by the headset%s", ""); close(sco); sco = -1; }
+		else if (sco >= 0 && (p[2].revents & POLLIN)) {
+			/* with the PCM route nothing should arrive over HCI; drain whatever does */
+			if (read(sco, tmp, sizeof tmp) <= 0) { close(sco); sco = -1; }
+		}
+	}
+	sco_close();
+	close(rc); close(ctl); unlink(fifo);
+	return 0;
+}
