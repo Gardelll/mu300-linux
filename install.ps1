@@ -760,6 +760,15 @@ if ($vx -ne 'yes' -and $vpnKs.Count -gt 0) {
     Die (T 'The VPN is on with its kill switch in {1}: an update without the VPN module would leave it to nothing. Answer yes to install the module, or turn the VPN off there first (ENABLE=0 in /etc/mu300/vpn.conf).' ($vpnKs -join ' '))
 }
 $EXTRA_VPN = $null
+# the web panel for Ubuntu (Cockpit and the MU300 page): the panel extra, optional; offline from the release (Cockpit's
+# packages in it), so the first boot needs no network for it
+$px = 'no'
+$EXTRA_PANEL = $null
+if ($OSES -contains 'ubuntu') {
+    Write-Host ('  ' + (T 'The web panel for Ubuntu (Cockpit with an MU300 page: signal, SMS, VPN, Wi-Fi, updates, a terminal; on the LAN only) is optional. It can also be added later on the device:'))
+    Write-Host '    sudo mu300-extra install panel'
+    $px = Ask (T 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)') 'no'
+}
 $KERNEL = $null
 Say (T 'Which kernel?')
 Write-Host ('  ' + (T "1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports"))
@@ -870,6 +879,13 @@ if ($vx -eq 'yes') {
     if ($sums.ContainsKey('mu300-extra-vpn.tar.gz')) { $files += 'mu300-extra-vpn.tar.gz'; $EXTRA_VPN = "$REL\mu300-extra-vpn.tar.gz" }
     else { $vpnFromModule = $true }
 }
+if ($px -eq 'yes') {
+    if ($sums.ContainsKey('mu300-extra-panel-offline.tar.gz')) {
+        $files += 'mu300-extra-panel-offline.tar.gz'; $EXTRA_PANEL = "$REL\mu300-extra-panel-offline.tar.gz"
+    } else {
+        Write-Host ('  ' + (T 'release {1} has no web panel for Ubuntu; it can be added on the device later: sudo mu300-extra install panel' $Release))
+    }
+}
 foreach ($f in $files) {
     if (-not $sums.ContainsKey($f)) {
         $why = if ($KERNEL -ne '5.4' -and $f -eq "mu300-kernel-$KERNEL.tar.gz") { ' ' + (T '(choose kernel 5.4, or a newer release)') } else { '' }
@@ -941,7 +957,8 @@ Write-Host ('  ' + (T 'source:         {1}' (T 'prebuilt release {1} + vendor fi
 $sysText = ($OSES -join ' ') + $(if ($OSES -contains 'ubuntu') { " (Ubuntu $UBUNTU)" } else { '' })
 Write-Host ('  ' + (T 'systems:        {1} (boots: {2})' $sysText $BOOT_OS))
 Write-Host ('  ' + (T 'kernel:         {1}' "$KERNEL$(if ($KMAIN) { " (mainline, $((Get-Content "$KMAIN\kernel.release").Trim()))" })"))
-Write-Host ('  ' + (T 'extras:         {1}' $(if ($EXTRA_VPN) { 'vpn' } else { T 'none' })))
+$extras = @($(if ($EXTRA_VPN) { 'vpn' }), $(if ($EXTRA_PANEL) { 'panel' }) | Where-Object { $_ })
+Write-Host ('  ' + (T 'extras:         {1}' $(if ($extras.Count -gt 0) { $extras -join ' ' } else { T 'none' })))
 Write-Host ('  ' + (T 'default boot:   {1}' $(if ($DEFAULT_LINUX -eq 1) { T 'Linux (Android after {1} failed boots in a row)' $BOOT_ATTEMPTS } else { T 'Android, Linux on demand' })))
 $fsText = if ($FORMAT -eq 0) { T 'keep existing' } elseif ($SD_MODE -eq 1) { T 'CREATE new ext4 (erases the SD card)' } else { T 'CREATE new ext4 (erases the Linux region)' }
 Write-Host ('  ' + (T 'filesystem:     {1}' $fsText))
@@ -962,6 +979,8 @@ foreach ($os in $OSES) {
 # android-install.sh puts every pushed mu300-extra-<name>.tar.gz onto the Linux partition (extra/<name>); the VPN
 # module goes as the vpn extra, and each system links it into itself at its first boot (mu300-extra link)
 if ($EXTRA_VPN) { & adb push $EXTRA_VPN "$T/mu300-extra-vpn.tar.gz" | Out-Null }
+# the web panel goes as the panel extra; Ubuntu's first boot installs Cockpit from it in the background (mu300-extra link)
+if ($EXTRA_PANEL) { & adb push $EXTRA_PANEL "$T/mu300-extra-panel.tar.gz" | Out-Null }
 $envFile = "$Work\mu300-install.env"
 WriteUnix $envFile (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_SIZE; FORMAT = $FORMAT; OSES = $OSES
     WIPE_LEGACY = $WIPE_LEGACY; UPDATE = $UPDATE; BOOT_OS = $BOOT_OS; DEFAULT_LINUX = $DEFAULT_LINUX
