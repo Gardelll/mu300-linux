@@ -42,8 +42,17 @@ msgstr "Daya"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Pengaturan terminal"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Pusat kontrol MU300: dasbor status, kunci jaringan, terminal AT, dan SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: shell root perangkat di peramban"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1502,6 +1511,39 @@ msgstr "Tidak lengkap: %d dari %d bagian tiba"
 
 msgid "Delete"
 msgstr "Hapus"
+
+msgid "ttyd is not installed."
+msgstr "ttyd tidak terpasang."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminal dimatikan (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Terlalu banyak terminal dibuka sekaligus. Coba lagi dalam satu menit."
+
+msgid "The terminal is not available."
+msgstr "Terminal tidak tersedia."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Ini adalah shell root perangkat: setiap perintah berjalan dengan hak penuh, dan satu kesalahan dapat membuat perangkat tidak bisa boot."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Hanya dapat dijangkau dari LAN (USB dan hotspot), tidak pernah dari data seluler, dan hanya dari halaman yang sudah login ini."
+
+msgid "It closes after a minute without activity."
+msgstr "Ditutup setelah satu menit tanpa aktivitas."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Ditutup setelah %d menit tanpa aktivitas."
+
+msgid "Reconnect"
+msgstr "Sambung ulang"
+
+msgid "Open in a new tab"
+msgstr "Buka di tab baru"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Halaman ini dibuka lewat HTTPS, dan terminal disajikan lewat HTTP di LAN: terminal dibuka di tab tersendiri."
 
 msgid "The data usage could not be read"
 msgstr "Penggunaan data tidak dapat dibaca"

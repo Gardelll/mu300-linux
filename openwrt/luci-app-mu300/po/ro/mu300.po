@@ -42,8 +42,17 @@ msgstr "Alimentare"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Setările terminalului"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Centru de control MU300: panou de stare, blocări de rețea, terminal AT și SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: un shell root al dispozitivului în browser"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1502,6 +1511,39 @@ msgstr "Incomplet: au sosit %d din %d părți"
 
 msgid "Delete"
 msgstr "Ștergere"
+
+msgid "ttyd is not installed."
+msgstr "ttyd nu este instalat."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminalul este oprit (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Se deschid prea multe terminale deodată. Încercați din nou peste un minut."
+
+msgid "The terminal is not available."
+msgstr "Terminalul nu este disponibil."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Acesta este un shell root al dispozitivului: fiecare comandă rulează cu drepturi depline, iar o greșeală poate face dispozitivul să nu mai pornească."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Este accesibil doar din LAN (USB și hotspot), niciodată din datele mobile, și doar din această pagină autentificată."
+
+msgid "It closes after a minute without activity."
+msgstr "Se închide după un minut fără activitate."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Se închide după %d minute fără activitate."
+
+msgid "Reconnect"
+msgstr "Reconectare"
+
+msgid "Open in a new tab"
+msgstr "Deschide într-o filă nouă"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Această pagină a fost deschisă prin HTTPS, iar terminalul este servit prin HTTP în LAN: se deschide într-o filă separată."
 
 msgid "The data usage could not be read"
 msgstr "Consumul de date nu a putut fi citit"

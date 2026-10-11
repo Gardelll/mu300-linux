@@ -42,8 +42,17 @@ msgstr "Nguồn"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Cài đặt terminal"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Trung tâm điều khiển MU300: bảng trạng thái, khóa mạng, terminal AT và SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: shell root của thiết bị trong trình duyệt"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1502,6 +1511,39 @@ msgstr "Không đầy đủ: đã nhận %d / %d phần"
 
 msgid "Delete"
 msgstr "Xóa"
+
+msgid "ttyd is not installed."
+msgstr "ttyd chưa được cài đặt."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminal đang tắt (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Có quá nhiều terminal đang mở cùng lúc. Hãy thử lại sau một phút."
+
+msgid "The terminal is not available."
+msgstr "Terminal không khả dụng."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Đây là shell root của thiết bị: mọi lệnh chạy với toàn quyền, và một sai sót có thể khiến thiết bị không khởi động được."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Chỉ truy cập được từ LAN (USB và điểm phát sóng), không bao giờ từ dữ liệu di động, và chỉ từ trang đã đăng nhập này."
+
+msgid "It closes after a minute without activity."
+msgstr "Tự đóng sau một phút không hoạt động."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Tự đóng sau %d phút không hoạt động."
+
+msgid "Reconnect"
+msgstr "Kết nối lại"
+
+msgid "Open in a new tab"
+msgstr "Mở trong thẻ mới"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Trang này được mở qua HTTPS, còn terminal được phục vụ qua HTTP trong LAN: nó mở trong một thẻ riêng."
 
 msgid "The data usage could not be read"
 msgstr "Không đọc được lưu lượng dữ liệu"

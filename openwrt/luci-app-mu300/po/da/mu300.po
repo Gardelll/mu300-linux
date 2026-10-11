@@ -42,8 +42,17 @@ msgstr "Strøm"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Terminalindstillinger"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-kontrolcenter: statusoversigt, netværkslåse, AT-terminal og SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: en root-shell på enheden i browseren"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1502,6 +1511,39 @@ msgstr "Ufuldstændig: %d af %d dele ankom"
 
 msgid "Delete"
 msgstr "Slet"
+
+msgid "ttyd is not installed."
+msgstr "ttyd er ikke installeret."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminalen er slået fra (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "For mange terminaler åbnes på én gang. Prøv igen om et minut."
+
+msgid "The terminal is not available."
+msgstr "Terminalen er ikke tilgængelig."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Dette er en root-shell på enheden: hver kommando kører med fulde rettigheder, og en fejl kan gøre enheden ude af stand til at starte."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Den kan kun nås fra LAN (USB og hotspot), aldrig fra mobildata, og kun fra denne side, hvor du er logget ind."
+
+msgid "It closes after a minute without activity."
+msgstr "Den lukkes efter et minut uden aktivitet."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Den lukkes efter %d minutter uden aktivitet."
+
+msgid "Reconnect"
+msgstr "Forbind igen"
+
+msgid "Open in a new tab"
+msgstr "Åbn i en ny fane"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Denne side blev åbnet via HTTPS, og terminalen leveres via HTTP på LAN: den åbnes i sin egen fane."
 
 msgid "The data usage could not be read"
 msgstr "Dataforbruget kunne ikke læses"
