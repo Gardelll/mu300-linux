@@ -1245,6 +1245,60 @@ msgstr "Автоматично (%d поддържани)"
 msgid "%d locked: %s"
 msgstr "%d заключени: %s"
 
+msgid "started"
+msgstr "стартирано"
+
+msgid "asleep now (asked)"
+msgstr "заспиване сега (поискано)"
+
+msgid "woken: power daemon stopping"
+msgstr "събуждане: услугата за захранване спира"
+
+msgid "woken by a key"
+msgstr "събуждане с бутон"
+
+msgid "woken by the Wi-Fi key"
+msgstr "събуждане с бутона Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "събуждане (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "събуждане от компютър по USB"
+
+msgid "woken: plugged in"
+msgstr "събуждане: включено захранване"
+
+msgid "woken by a Wi-Fi client"
+msgstr "събуждане от Wi-Fi клиент"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "зарядно стартиране (включено от зарядното)"
+
+msgid "the hotspot is down"
+msgstr "хотспотът е изключен"
+
+msgid "the VPN is still stopped"
+msgstr "VPN все още е спрян"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) все още е изключен след неуспешно възобновяване"
+
+msgid "self-check: %s"
+msgstr "самопроверка: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "спи: няма клиенти от %d мин (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "спи: профилът сега е %s"
+
+msgid "woken by the %s key"
+msgstr "събуждане с бутона %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "модемът е спрян временно (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Въведете цяло число от 0 до %d"
 

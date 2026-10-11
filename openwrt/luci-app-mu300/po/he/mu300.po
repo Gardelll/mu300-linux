@@ -1245,6 +1245,60 @@ msgstr "אוטומטי (%d נתמכים)"
 msgid "%d locked: %s"
 msgstr "%d נעולים: %s"
 
+msgid "started"
+msgstr "הופעל"
+
+msgid "asleep now (asked)"
+msgstr "שינה עכשיו (לבקשה)"
+
+msgid "woken: power daemon stopping"
+msgstr "התעורר: שירות החשמל נעצר"
+
+msgid "woken by a key"
+msgstr "התעורר מלחצן"
+
+msgid "woken by the Wi-Fi key"
+msgstr "התעורר מלחצן ה-Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "התעורר (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "התעורר ממחשב ב-USB"
+
+msgid "woken: plugged in"
+msgstr "התעורר: חובר לחשמל"
+
+msgid "woken by a Wi-Fi client"
+msgstr "התעורר מלקוח Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "אתחול טעינה (הודלק על ידי המטען)"
+
+msgid "the hotspot is down"
+msgstr "הנקודה החמה כבויה"
+
+msgid "the VPN is still stopped"
+msgstr "ה-VPN עדיין עצור"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "ה-5G (EN-DC) עדיין כבוי אחרי חידוש שנכשל"
+
+msgid "self-check: %s"
+msgstr "בדיקה עצמית: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "שינה: אין לקוח %d דק' (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "שינה: הפרופיל כעת %s"
+
+msgid "woken by the %s key"
+msgstr "התעורר מלחצן %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "המודם מושהה (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "הזינו מספר שלם בין 0 ל-%d"
 

@@ -1245,6 +1245,60 @@ msgstr "Αυτόματο (%d υποστηριζόμενες)"
 msgid "%d locked: %s"
 msgstr "%d κλειδωμένες: %s"
 
+msgid "started"
+msgstr "ξεκίνησε"
+
+msgid "asleep now (asked)"
+msgstr "αναστολή τώρα (κατόπιν αιτήματος)"
+
+msgid "woken: power daemon stopping"
+msgstr "αφύπνιση: η υπηρεσία ενέργειας σταματά"
+
+msgid "woken by a key"
+msgstr "αφύπνιση με πλήκτρο"
+
+msgid "woken by the Wi-Fi key"
+msgstr "αφύπνιση με το πλήκτρο Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "αφύπνιση (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "αφύπνιση από υπολογιστή μέσω USB"
+
+msgid "woken: plugged in"
+msgstr "αφύπνιση: συνδέθηκε στο ρεύμα"
+
+msgid "woken by a Wi-Fi client"
+msgstr "αφύπνιση από πελάτη Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "εκκίνηση φόρτισης (ενεργοποίηση από τον φορτιστή)"
+
+msgid "the hotspot is down"
+msgstr "το hotspot είναι κλειστό"
+
+msgid "the VPN is still stopped"
+msgstr "το VPN είναι ακόμη σταματημένο"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "το 5G (EN-DC) είναι ακόμη κλειστό μετά από αποτυχημένη συνέχιση"
+
+msgid "self-check: %s"
+msgstr "αυτοέλεγχος: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "αναστολή: κανένας πελάτης για %d λεπ. (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "αναστολή: προφίλ τώρα %s"
+
+msgid "woken by the %s key"
+msgstr "αφύπνιση με το πλήκτρο %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "το μόντεμ έχει ανασταλεί (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Εισαγάγετε έναν ακέραιο από 0 έως %d"
 

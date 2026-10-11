@@ -1245,6 +1245,60 @@ msgstr "تلقائي (%d مدعوم)"
 msgid "%d locked: %s"
 msgstr "%d مقفل: %s"
 
+msgid "started"
+msgstr "بدأ"
+
+msgid "asleep now (asked)"
+msgstr "سكون الآن (بطلب)"
+
+msgid "woken: power daemon stopping"
+msgstr "استيقظ: خدمة الطاقة تتوقف"
+
+msgid "woken by a key"
+msgstr "استيقظ بزر"
+
+msgid "woken by the Wi-Fi key"
+msgstr "استيقظ بزر Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "استيقظ (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "استيقظ بحاسوب عبر USB"
+
+msgid "woken: plugged in"
+msgstr "استيقظ: تم توصيل الشاحن"
+
+msgid "woken by a Wi-Fi client"
+msgstr "استيقظ بعميل Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "إقلاع الشحن (شغّله الشاحن)"
+
+msgid "the hotspot is down"
+msgstr "نقطة الاتصال متوقفة"
+
+msgid "the VPN is still stopped"
+msgstr "الـ VPN ما زال متوقفًا"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "ما زال 5G (EN-DC) متوقفًا بعد استئناف فاشل"
+
+msgid "self-check: %s"
+msgstr "فحص ذاتي: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "سكون: لا عملاء منذ %d دقيقة (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "سكون: الملف الشخصي الآن %s"
+
+msgid "woken by the %s key"
+msgstr "استيقظ بزر %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "المودم معلّق (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "أدخل عددًا صحيحًا من 0 إلى %d"
 

@@ -1245,6 +1245,60 @@ msgstr "Automatiskt (%d stöds)"
 msgid "%d locked: %s"
 msgstr "%d låsta: %s"
 
+msgid "started"
+msgstr "startad"
+
+msgid "asleep now (asked)"
+msgstr "viloläge nu (begärt)"
+
+msgid "woken: power daemon stopping"
+msgstr "väckt: energitjänsten stoppas"
+
+msgid "woken by a key"
+msgstr "väckt av en knapp"
+
+msgid "woken by the Wi-Fi key"
+msgstr "väckt av Wi-Fi-knappen"
+
+msgid "woken (mu300-power wake)"
+msgstr "väckt (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "väckt av en dator via USB"
+
+msgid "woken: plugged in"
+msgstr "väckt: laddare ansluten"
+
+msgid "woken by a Wi-Fi client"
+msgstr "väckt av en Wi-Fi-klient"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "laddstart (påslagen av laddaren)"
+
+msgid "the hotspot is down"
+msgstr "hotspoten är avstängd"
+
+msgid "the VPN is still stopped"
+msgstr "VPN är fortfarande stoppat"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) är fortfarande av efter en misslyckad återupptagning"
+
+msgid "self-check: %s"
+msgstr "självtest: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "viloläge: ingen klient på %d min (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "viloläge: profil nu %s"
+
+msgid "woken by the %s key"
+msgstr "väckt av %s-knappen"
+
+msgid "the modem is suspended (%s)"
+msgstr "modemet är pausat (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Ange ett heltal från 0 till %d"
 

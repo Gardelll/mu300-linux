@@ -1245,6 +1245,60 @@ msgstr "स्वचालित (%d समर्थित)"
 msgid "%d locked: %s"
 msgstr "%d लॉक: %s"
 
+msgid "started"
+msgstr "शुरू हुआ"
+
+msgid "asleep now (asked)"
+msgstr "अभी स्लीप (अनुरोध पर)"
+
+msgid "woken: power daemon stopping"
+msgstr "जागा: पावर सेवा रुक रही है"
+
+msgid "woken by a key"
+msgstr "एक बटन से जागा"
+
+msgid "woken by the Wi-Fi key"
+msgstr "Wi-Fi बटन से जागा"
+
+msgid "woken (mu300-power wake)"
+msgstr "जागा (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "USB पर कंप्यूटर से जागा"
+
+msgid "woken: plugged in"
+msgstr "जागा: चार्जर लगाया गया"
+
+msgid "woken by a Wi-Fi client"
+msgstr "Wi-Fi क्लाइंट से जागा"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "चार्जिंग बूट (चार्जर ने चालू किया)"
+
+msgid "the hotspot is down"
+msgstr "हॉटस्पॉट बंद है"
+
+msgid "the VPN is still stopped"
+msgstr "VPN अभी भी रुका है"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "विफल रिज़्यूम के बाद 5G (EN-DC) अभी भी बंद है"
+
+msgid "self-check: %s"
+msgstr "स्व-जाँच: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "स्लीप: %d मिनट से कोई क्लाइंट नहीं (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "स्लीप: प्रोफ़ाइल अब %s"
+
+msgid "woken by the %s key"
+msgstr "%s बटन से जागा"
+
+msgid "the modem is suspended (%s)"
+msgstr "मॉडेम निलंबित है (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0 से %d के बीच की पूर्ण संख्या दर्ज करें"
 
