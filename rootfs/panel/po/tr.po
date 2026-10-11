@@ -47,6 +47,9 @@ msgstr "Kayıt reddedildi"
 msgid "Not registered"
 msgstr "Kayıtlı değil"
 
+msgid "Emergency calls only"
+msgstr "Yalnızca acil aramalar"
+
 msgid "Operator"
 msgstr "Operatör"
 

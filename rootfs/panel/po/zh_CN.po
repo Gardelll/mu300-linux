@@ -47,6 +47,9 @@ msgstr "注册被拒绝"
 msgid "Not registered"
 msgstr "未注册"
 
+msgid "Emergency calls only"
+msgstr "仅限紧急呼叫"
+
 msgid "Operator"
 msgstr "运营商"
 

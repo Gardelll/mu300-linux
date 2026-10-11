@@ -122,7 +122,7 @@ do_remove() {
     [ -f "$CONF" ] && head -n1 "$CONF" | grep -qF "$MARK" && rm -f "$CONF"
     if have_cockpit || dpkg-query -W cockpit-bridge >/dev/null 2>&1; then
         # shellcheck disable=SC2086
-        apt_env apt-get remove -y -q $PKGS || say "the packages could not be removed: sudo apt-get remove $PKGS"
+        apt_env apt-get purge -y -q $PKGS || say "the packages could not be removed: sudo apt-get purge $PKGS"
     fi
     systemctl daemon-reload 2>/dev/null || true
     echo "the panel is off; the packages Cockpit pulled in (python3 and others) stay: sudo apt autoremove"
@@ -204,7 +204,8 @@ signal_json() {
     rsrq=$(printf '%s' "$cesq" | awk -F'[,:]' '{gsub(/ /, "", $6); print $6}')
     rsrp=$(printf '%s' "$cesq" | awk -F'[,:]' '{gsub(/ /, "", $7); print $7}')
     case $act in 7) rat=LTE ;; 13) rat="5G NSA" ;; 11|12) rat=5G ;; 2|4|5|6) rat=3G ;; 0|1|3) rat=2G ;; *) rat= ;; esac
-    case $reg in 1) regs=home ;; 5) regs=roaming ;; 2) regs=searching ;; 3) regs=denied ;; 0) regs=none ;; *) regs= ;; esac
+    # 8: emergency services only (no SIM, as on a board without one)
+    case $reg in 1) regs=home ;; 5) regs=roaming ;; 2) regs=searching ;; 3) regs=denied ;; 0) regs=none ;; 8) regs=emergency ;; *) regs= ;; esac
     rsrp_dbm=null; rsrq_db=null
     case $rsrp in ''|255|*[!0-9]*) ;; *) rsrp_dbm=$((rsrp - 140)) ;; esac
     case $rsrq in ''|255|*[!0-9]*) ;; *) rsrq_db=$(awk -v i="$rsrq" 'BEGIN { printf "%.1f", -19.5 + i * 0.5 }') ;; esac
@@ -212,7 +213,9 @@ signal_json() {
         "$(js "$regs")" "$rsrp_dbm" "$rsrq_db" > "$_c.new" && mv "$_c.new" "$_c"
     cat "$_c"
 }
+# the battery of the U30 Air (the F50 has none; its charger driver still lists a "Battery" supply that reads 19 %)
 battery_json() {
+    [ "$(mu300-device 2>/dev/null)" = u30air ] || { echo null; return; }
     for s in "$R"/sys/class/power_supply/*; do
         [ "$(cat "$s/type" 2>/dev/null)" = Battery ] || continue
         printf '{"capacity":%s,"status":%s,"voltage_uv":%s,"current_ua":%s}' "$(num "$(cat "$s/capacity" 2>/dev/null)")" \

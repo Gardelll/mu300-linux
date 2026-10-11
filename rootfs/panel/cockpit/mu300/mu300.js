@@ -115,7 +115,8 @@
         function paint(info) {
             var s = info.signal || {};
             var regs = { home: _('Registered (home network)'), roaming: _('Registered (roaming)'),
-                searching: _('Searching'), denied: _('Registration denied'), none: _('Not registered') };
+                searching: _('Searching'), denied: _('Registration denied'), none: _('Not registered'),
+                emergency: _('Emergency calls only') };
             clear(sigBody).appendChild(row(_('Operator'), s.operator));
             sigBody.appendChild(row(_('Technology'), s.rat));
             sigBody.appendChild(row(_('Registration'), regs[s.registration] || s.registration));
@@ -314,7 +315,8 @@
                 });
                 cb.appendChild(bar);
                 (s.policies || []).forEach(function (pol) {
-                    var mhz = function (v) { return typeof v === 'number' ? Math.round(v / 1000) + ' MHz' : v; };
+                    /* mu300-cpu reports MHz */
+                    var mhz = function (v) { return typeof v === 'number' ? v + ' MHz' : '-'; };
                     cb.appendChild(row('CPU ' + pol.cpus, pol.governor + ', ' + mhz(pol.cur) + ' (' + mhz(pol.min) + ' - ' + mhz(pol.max) + ')'));
                 });
                 if (s.throttling) cb.appendChild(note(_('Thermal throttling is active right now.'), 'warn'));
