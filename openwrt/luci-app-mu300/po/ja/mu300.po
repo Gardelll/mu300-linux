@@ -48,6 +48,9 @@ msgstr "ターミナル"
 msgid "Terminal settings"
 msgstr "ターミナルの設定"
 
+msgid "Packages after an update"
+msgstr "アップデート後のパッケージ"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 コントロールセンター: ステータスダッシュボード、ネットワークロック、AT ターミナル、SMS"
 
@@ -1245,6 +1248,60 @@ msgstr "自動 (%d 個対応)"
 msgid "%d locked: %s"
 msgstr "%d 件ロック中: %s"
 
+msgid "Repair DNS?"
+msgstr "DNS を修復しますか？"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "インストールされなくなったパッケージの DNS 転送先を削除します。ほかに DNS サーバーが残っていない場合、デバイスはモバイル回線の DNS サーバーを使います。通信事業者は、プロキシや VPN を経由せずに調べた名前を見ることができます。"
+
+msgid "Repair DNS"
+msgstr "DNS を修復"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "デバイスに入れたパッケージはリリースイメージに含まれません。アップデートがそれらを記録し、新しいシステムは初回起動時にオンラインになると再インストールします。パッケージが戻るまで、その設定は退避されます。"
+
+msgid "No packages to install again."
+msgstr "再インストールするパッケージはありません。"
+
+msgid "All back"
+msgstr "すべて復元済み"
+
+msgid "Not installed yet"
+msgstr "まだインストールされていません"
+
+msgid "Could not be installed again"
+msgstr "再インストールできませんでした"
+
+msgid "Waiting for the internet"
+msgstr "インターネット待ち"
+
+msgid "Given up: no internet at five boots"
+msgstr "中止：5 回の起動でインターネットなし"
+
+msgid "Skipped"
+msgstr "スキップ"
+
+msgid "Written down by the update from %s"
+msgstr "%s からのアップデートで記録"
+
+msgid "Installed again"
+msgstr "再インストール済み"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "入手元から自分でインストールしてください（パッケージファイル：apk add --allow-untrusted FILE.apk）。"
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "/etc/mu300/orphaned-config に退避された設定"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS がまだインストールされていないパッケージに向いています：それを通じた DNS は使えません。"
+
+msgid "Try again"
+msgstr "再試行"
+
+msgid "Dismiss the note"
+msgstr "通知を閉じる"
+
 msgid "started"
 msgstr "起動しました"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "パッケージアダプターから有効な応答がありません"
+
+msgid "Invalid packages operation"
+msgstr "無効なパッケージ操作"
+
 msgid "Request too large"
 msgstr "リクエストが大きすぎます"
 
@@ -2090,6 +2153,21 @@ msgstr "ロックキャッシュを利用できません"
 
 msgid "No serving cell to lock to"
 msgstr "ロックできるサービングセルがありません"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "このシステムではパッケージの再インストールを利用できません"
+
+msgid "No packages were written down by an update"
+msgstr "アップデートで記録されたパッケージはありません"
+
+msgid "Reinstalling is running already"
+msgstr "再インストールはすでに実行中です"
+
+msgid "The note could not be dropped"
+msgstr "通知を削除できませんでした"
+
+msgid "Unknown packages operation"
+msgstr "不明なパッケージ操作"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

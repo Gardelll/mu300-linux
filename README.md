@@ -227,7 +227,7 @@ If Linux is already installed it asks whether to **update** or **wipe**:
 
 * **update** — reinstalls the systems but keeps your settings and data: `/etc/mu300` (hotspot, VPN, toolkit), user
   accounts and home directories, `/usr/local`, SSH host keys, OpenWrt's UCI config, and the services you enabled
-  yourself.
+  yourself. Packages you installed yourself are installed again at the first boot (see [Updating](#updating)).
 * **wipe** — erases the Linux filesystem and installs from scratch.
 
 If the device is running Linux rather than Android when you start, the installer notices and offers to reboot it
@@ -326,7 +326,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Check the mobile connection | `sudo mobile-data status` |
 | Set the APN | Ubuntu: `/etc/mu300/mobile-data.conf` (`MU300_APN`, `MU300_PDP_TYPE`). OpenWrt: LuCI → Network → Interfaces → wan, or `uci set network.wan.apn='…'; uci commit network; ifup wan`. Leave it empty to keep the context the SIM defines, which is what most carriers expect |
 | Change the Wi-Fi name or password | Ubuntu: edit `/etc/mu300/hotspot.conf`, then `sudo systemctl restart mu300-hotspot`. OpenWrt: LuCI → Network → Wireless (that file is only read once, at the first boot) |
-| Change the hotspot's channel | Ubuntu: `CHANNEL=` in `/etc/mu300/hotspot.conf` (`auto`, or on 5 GHz 36-48 / 149-165). OpenWrt: LuCI → Network → Wireless. Never a DFS channel (52-144): the Wi-Fi driver cannot detect radar, so hostapd could not start there; a DFS channel is replaced by 36 (149 where 36-48 are not allowed) and the log says why (FINDINGS 40) |
+| Change the hotspot's channel | Ubuntu: `CHANNEL=` in `/etc/mu300/hotspot.conf` (`auto`, or on 5 GHz 36-48 / 149-165). OpenWrt: LuCI → Network → Wireless. Never a DFS channel (52-144): the Wi-Fi driver cannot detect radar, so hostapd could not start there; a DFS channel is replaced by 36 (149 where 36-48 are not allowed) and the log says why (FINDINGS 42) |
 | Read and send SMS | `sudo sms list`, `sudo sms send NUMBER TEXT...`, `sudo sms delete INDEX` (OpenWrt with the panel: Cellular → SMS) |
 | Send a USSD code (balance, own number) | `sudo mu300-ussd '*101#'` |
 | Change the kernel | `sudo mu300-update kernel 6.18` (or `5.4`, `7.2`), then reboot |
@@ -660,6 +660,17 @@ to the new release, the [VPN](#vpn) module to its latest one), and the previous 
 a rollback until you run `mu300-update clean`. The new filesystem is unpacked beside the old one and only swapped in
 at the end, so an interrupted download cannot leave a half-updated system.
 
+**Packages you installed yourself** (`apk add` on OpenWrt, `apt install` on Ubuntu) are not part of the release's
+image. `apply` lists them before the switch, sets their OpenWrt settings (`/etc/config/<name>`) aside in
+`/etc/mu300/orphaned-config/` until they are back, and the new system installs them again at its first boot once it
+is online, with their settings and their services' enabled/disabled state put back. Ubuntu keeps the apt sources you
+added (a PPA, with its key); one that makes `apt-get update` fail on the new release is turned off and said so. The
+panel shows it all under System -> Packages after an update. A package the feeds do not have (installed from a file) stays out, with its
+settings aside: `mu300-user-packages status` says what came back and how to restore the rest. If such a proxy
+(OpenClash) had pointed dnsmasq at itself, the device reports it and never falls back to the connection's resolvers by
+itself: `mu300-user-packages repair-dns` does that on request. `mu300-update apply --no-reinstall` (or
+`MU300_KEEP_PACKAGES=0`) skips the reinstall. The installers' **update** does the same.
+
 The kernel and the boot image are updated too. The boot image keeps your device's own part (its Android files and
 the stock header) as it is and gets the release's kernel and the generic part of its ramdisk, so no computer and
 nothing from Android are needed. The previous image is kept for `rollback-boot`, and a kernel that does not start
@@ -778,7 +789,7 @@ always failed ([FINDINGS 38c](docs/FINDINGS.md)). Fixed from the next release; u
 
 **The hotspot does not start on a 5 GHz channel between 52 and 144** (hostapd: `start_dfs_cac() failed`,
 `AP-DISABLED`; releases up to v2026.10.18). Those are DFS channels, and the Wi-Fi driver cannot detect radar
-([FINDINGS 40](docs/FINDINGS.md)). Fixed from the next release: such a channel is replaced by 36 (or 149). Until then
+([FINDINGS 42](docs/FINDINGS.md)). Fixed from the next release: such a channel is replaced by 36 (or 149). Until then
 choose 36-48 or 149-165 (165 at 20 MHz), or `auto` on Ubuntu.
 
 **The installer prints nothing for minutes and the device gets hot.** A read past the end of the eMMC never

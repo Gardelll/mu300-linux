@@ -48,6 +48,9 @@ msgstr "מסוף"
 msgid "Terminal settings"
 msgstr "הגדרות המסוף"
 
+msgid "Packages after an update"
+msgstr "חבילות אחרי עדכון"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "מרכז הבקרה של MU300: לוח מצב, נעילות רשת, מסוף AT ו-SMS"
 
@@ -1245,6 +1248,60 @@ msgstr "אוטומטי (%d נתמכים)"
 msgid "%d locked: %s"
 msgstr "%d נעולים: %s"
 
+msgid "Repair DNS?"
+msgstr "לתקן את ה-DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "פעולה זו מסירה את העברת ה-DNS של חבילה שכבר אינה מותקנת. אם לא נשאר שרת DNS אחר, המכשיר ישתמש בשרתי ה-DNS של החיבור הסלולרי: הספק רואה את השמות שאתם מחפשים, מחוץ לכל פרוקסי או VPN."
+
+msgid "Repair DNS"
+msgstr "תיקון DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "חבילות שהותקנו במכשיר אינן חלק מתמונת הגרסה. העדכון רושם אותן, והמערכת החדשה מתקינה אותן מחדש באתחול הראשון, ברגע שהיא מחוברת. עד שחבילה חוזרת, ההגדרות שלה נשמרות בצד."
+
+msgid "No packages to install again."
+msgstr "אין חבילות להתקנה מחדש."
+
+msgid "All back"
+msgstr "כולן חזרו"
+
+msgid "Not installed yet"
+msgstr "עדיין לא הותקנה"
+
+msgid "Could not be installed again"
+msgstr "לא ניתן היה להתקין מחדש"
+
+msgid "Waiting for the internet"
+msgstr "ממתין לאינטרנט"
+
+msgid "Given up: no internet at five boots"
+msgstr "ויתור: אין אינטרנט בחמישה אתחולים"
+
+msgid "Skipped"
+msgstr "דולג"
+
+msgid "Written down by the update from %s"
+msgstr "נרשם על ידי העדכון מ-%s"
+
+msgid "Installed again"
+msgstr "הותקנו מחדש"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "התקינו אותן בעצמכם מהמקום שממנו השגתם אותן (קובץ חבילה: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "הגדרות שנשמרו בצד ב-/etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "ה-DNS עדיין מופנה לחבילה שאינה מותקנת: אין למכשיר DNS דרכה."
+
+msgid "Try again"
+msgstr "נסו שוב"
+
+msgid "Dismiss the note"
+msgstr "סגירת ההודעה"
+
 msgid "started"
 msgstr "הופעל"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "מתאם החבילות לא החזיר תשובה תקינה"
+
+msgid "Invalid packages operation"
+msgstr "פעולת חבילות לא תקינה"
+
 msgid "Request too large"
 msgstr "הבקשה גדולה מדי"
 
@@ -2090,6 +2153,21 @@ msgstr "מטמון הנעילות אינו זמין"
 
 msgid "No serving cell to lock to"
 msgstr "אין תא משרת לנעילה"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "התקנה מחדש של חבילות אינה זמינה במערכת זו"
+
+msgid "No packages were written down by an update"
+msgstr "אף עדכון לא רשם חבילות"
+
+msgid "Reinstalling is running already"
+msgstr "ההתקנה מחדש כבר פועלת"
+
+msgid "The note could not be dropped"
+msgstr "לא ניתן היה להסיר את ההודעה"
+
+msgid "Unknown packages operation"
+msgstr "פעולת חבילות לא ידועה"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
