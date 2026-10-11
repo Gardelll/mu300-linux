@@ -62,7 +62,7 @@ what replaced it. The table below gives each section's state.
 | 24 | No internal audio hardware | open |
 | 24b | A second board, from a clean install: where the stall actually is | open |
 | 25 | SC2355 Bluetooth on BlueZ | current |
-| 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.55) |
+| 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.56) |
 | 31a | Wi-Fi RX: sync_for_device stopped invalidating | current |
 | 31b | The modem units' ordering cycle | current |
 | 31c | A context that comes back with a new address | current |
