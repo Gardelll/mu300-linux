@@ -1,4 +1,21 @@
-# U30 Air SC2355 firmware SAE offload (opt-in)
+# U30 Air SC2355 firmware SAE offload (opt-in, review hold)
+
+## Outstanding PMK trust boundary
+
+Independent review in [PR #74](https://github.com/dikeckaan/mu300-linux/pull/74#issuecomment-6106003178)
+confirmed the feature works on a U30 Air, including macOS SAE connections,
+wrong-password rejection and WCN recovery. It also identified a blocking key
+provenance issue: `NL80211_ATTR_IE` contains client association-request IEs as
+well as the firmware trailer. A unique trailing marker alone does not prove
+that a PMK came from a completed firmware SAE exchange. MIC and PMF do not
+validate that provenance when a client can choose the imported PMK.
+
+The maintainer is being asked to take over the authenticated key handoff or
+firmware-interface fix. This revision only addresses the separate logging,
+configuration and patch-maintenance findings. Moving the same unverified
+trailer into a vendor event would not, by itself, resolve the trust boundary.
+This PR remains on hold and is not ready for deployment/merge as a secure SAE
+implementation. Functional hardware results below do not close this finding.
 
 The tested U30 Air firmware performs AP SAE authentication in firmware, but
 the standard hostapd AP setup neither supplies the vendor runtime password
@@ -26,17 +43,29 @@ opt-in is enabled and firmware setup succeeded on a pure SAE/fullmac BSS.
 Malformed/duplicate/truncated metadata is rejected by a length-bounded parser.
 The key goes to the normal PMKSA/authenticator path; normal RSN validation,
 four-way handshake MIC checks and required PMF remain in place. The metadata
-must be trusted kernel/firmware output, never an over-the-air management frame.
+needs a trustworthy firmware origin; the current shared IE buffer does not
+establish it. See the outstanding review finding above.
 
 The driver previously printed SAE passphrases and command/event bytes. The
-module changes and vendor-kernel patch remove password logging and suppress
-key-bearing command/NEW_STATION dumps. hostapd also avoids dumping the entire
+module changes and vendor-kernel patch remove password and station PSK logging,
+omit raw command/response payload dumps, omit bulk PCIe/SDIO RX dumps, and
+suppress the NEW_STATION event dump. Command identifiers, message types and
+error/recovery diagnostics remain available. hostapd also avoids dumping the entire
 NEW_STATION IE payload. Rebuild/install the matching Wi-Fi module to get that
 log protection; an existing stock module still contains the original logging.
 
 ## Build and opt in
 
-Use a dedicated [official OpenWrt 25.12.5 armsr/armv8 SDK](https://downloads.openwrt.org/releases/25.12.5/targets/armsr/armv8/).
+Keep USB management access while changing these settings. With
+`u30_sae_offload=1`, an incompatible security mode (`sae-mixed`, WPA2), optional
+PMF, or missing `sae_pwe=0` causes setup to fail and the AP to stop. The option
+also requires PMKSA caching: leave `disable_pmksa_caching=0` (the default).
+The helper now checks this before sending the firmware password request and
+reports the unsupported configuration. Removing the offload option restores
+the normal configuration path.
+
+For source review/builds only while the key-provenance finding is open:
+use a dedicated [official OpenWrt 25.12.5 armsr/armv8 SDK](https://downloads.openwrt.org/releases/25.12.5/targets/armsr/armv8/).
 Verify its checksum before extracting. Use an ASCII-only SDK path: the SDK's
 package stripping scripts failed with a non-ASCII build path on the test host.
 Install the SDK's pinned base feed before running the helper:
@@ -51,15 +80,16 @@ The package recipe must have source
 `ca266cc24d8705eb1a2a0857ad326e48b1408b20`, revision 1 (the official SDK's
 pinned feed) or 5 (the previously recorded release feed). Other sources and
 revisions are refused. The helper finds the SDK feed recipe, applies the patch
-after OpenWrt's existing patches, bumps revision to 6, replaces the dedicated
+after OpenWrt's existing patches, bumps revision to 7, replaces the dedicated
 SDK's `.config`, and builds the OpenSSL variant with its normal dependencies:
 
 ```sh
 sh openwrt/build-u30-sae.sh /absolute/path/to/sdk /absolute/path/to/u30-sae-apks
 ```
 
-The output must contain a matching `hostapd-common` and `wpad-basic-openssl`
-pair. The image builder accepts that directory on the tested release:
+The output must contain a matching revision 7 `hostapd-common` and
+`wpad-basic-openssl` pair. Start with a clean dedicated SDK; the helper refuses
+an older local r6 patch rather than silently overwriting it. The image builder accepts that directory on the tested release:
 
 ```sh
 MU300_SYSTEM=openwrt-luci MU300_SAE_APK_DIR=/absolute/path/to/u30-sae-apks \
@@ -117,6 +147,14 @@ have not been exhaustively validated; use a complete Wi-Fi/wpad restart for
 those operations. APK replacement after a later upgrade needs revalidation.
 
 ## Validation and limits
+
+The follow-up logging/configuration revision was rebased onto main `53ebbf5`.
+Its hostapd-common/wpad-basic-openssl r7 pair was built through the official
+SDK. The SAE/parser/SDK and privacy regressions passed (12, with required
+UBSan); Wi-Fi bring-up/client tests passed (64) and static checks passed (40). The changed mainline `cfg80211.c`, `cmdevt.c`, `pcie.c`, `sdio.c` and
+`vendor.c` compiled against the prepared 7.2.9 kernel. These were individual
+object checks, not a complete module build. r7 packages and the revised modules
+were not installed on the device; the PMK trust finding is still unresolved.
 
 The review update rebases this branch onto main `9d21c77`, including #100's
 Wi-Fi recovery/backoff and rate-limited logging changes. Those changes are
