@@ -163,6 +163,7 @@ if (Get-Command sh -CommandType Application -ErrorAction SilentlyContinue) {
 }
 
 # ---- BootchainLine / BootchainRefused: the plan's line from android-bootchain.sh check (storage.sh's bootchain_line) --
+LoadLanguage 'en'
 Check 'bootchain identical' (BootchainLine "BOOTCHAIN-PLAN a b`r`nboot chain: identical on both slots") 'boot chain:     identical on both slots'
 Check 'bootchain differ'    (BootchainLine "BOOTCHAIN-PLAN b a sml trustos`nx") "boot chain:     sml, trustos differ between the slots; Android's slot b is copied to slot a (backed up first)"
 Check 'bootchain refused'   (BootchainLine 'BOOTCHAIN-REFUSED: uboot_a and uboot_b differ in size (1 and 2 bytes)') ''
