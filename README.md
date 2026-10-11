@@ -272,7 +272,13 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   adapters in host mode that can join the LAN bridge.
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom AT adapter).
 * **System > Languages:** the language of the interface, and the lang extra: download it, or upload the file.
-* **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (100 or 80 %).
+* **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (0-100 %, U30 Air; also `mu300-power charge-limit N`).
+* **System > Terminal:** a root shell in the browser ([ttyd](https://github.com/tsl0922/ttyd)). It listens on the LAN
+  address only (port 7681; the cellular side never reaches it), and opens a shell only for a one-time token the page
+  gets for a logged-in panel session: there is no second password to guess. It closes after 15 minutes without
+  activity (`uci set ttyd.mu300.idle=<seconds>`, 0 never). A panel opened over https opens it in a tab of its own
+  (ttyd serves HTTP: its websocket over TLS fails in Chrome). **Terminal settings** is ttyd's own page; turning the
+  instance off (`enable`) removes the terminal.
 
 IPv6 on this system is relayed from the carrier (router advertisements and NAT66) instead of the prefix extension
 plain OpenWrt uses. Aurora is the default theme, Bootstrap stays installed. Its boot timings, measured on an F50
@@ -283,6 +289,30 @@ The panel is the work of kanoqwq ([`kanoqwq/mu300-linux`](https://github.com/kan
 `clean-tf-7.2`); this repository ports it, with translations rewritten as standard LuCI catalogs and the shared
 fixes applied to all three systems. The theme is [Aurora](https://github.com/eamonxg/luci-theme-aurora) by
 eamonxg. The app's own notes are in [`openwrt/luci-app-mu300/README.md`](openwrt/luci-app-mu300/README.md).
+
+### A web panel on Ubuntu (optional)
+
+Ubuntu can have a web panel too: [Cockpit](https://cockpit-project.org/), Ubuntu's own web console (a terminal,
+logs, services, networking, storage, accounts), with an **MU300** page in it: the mobile network (operator,
+technology, registration, RSRP/RSRQ), mobile data on/off, data usage and live rates, the battery and temperatures,
+SMS (read, send, delete), the VPN (on/off, profiles; with the VPN module), the CPU profile and the power state, the
+hotspot's name and password, joining a Wi-Fi network, and updates (`mu300-update check` / `apply`). Network locks stay
+a feature of the OpenWrt panel. It is the panel extra, not part of the image:
+
+```sh
+sudo mu300-extra install panel                      # Cockpit from Ubuntu's archive (about 12 MB, online)
+sudo mu300-extra install panel --from mu300-extra-panel-offline.tar.gz   # offline: the release's file, Cockpit inside
+sudo mu300-extra remove panel
+```
+
+or answer yes to the installer's question (it takes the offline file, so the first boot needs no network). Then open
+`https://192.168.77.1:9090` (the U30 Air: `.78.1`; your LAN address if you changed it), accept Cockpit's own
+certificate, and log in as `ubuntu` with your password; "Turn on administrative access" (your password again) for
+the pages that need root. Cockpit listens on the LAN bridge only (USB and the hotspot: `BindToDevice=br-lan`), and the
+firewall drops everything new from the cellular uplink (and a Wi-Fi uplink) in front of it anyway; root cannot log in,
+the login page offers no other host, and a session ends after 15 minutes idle. An update replaces Ubuntu without
+Cockpit's packages: its first boot puts them back in the background (from the extra when it carries them, else from
+the archive once online). `mu300-panel status` says where it is.
 
 ## Everyday use
 

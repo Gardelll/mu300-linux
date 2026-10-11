@@ -63,6 +63,15 @@ msgstr "السجلات"
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "مركز تحكم MU300: لوحة الحالة، أقفال الشبكة، طرفية AT، الرسائل النصية وVPN"
 
+msgid "Terminal"
+msgstr "الطرفية"
+
+msgid "Terminal settings"
+msgstr "إعدادات الطرفية"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "الطرفية: صدفة root على الجهاز داخل المتصفح"
+
 msgid "China Mobile"
 msgstr "China Mobile"
 
@@ -122,6 +131,12 @@ msgstr "موافق"
 
 msgid "Cancel"
 msgstr "إلغاء"
+
+msgid "%d s"
+msgstr "%d ث"
+
+msgid "%d h"
+msgstr "%d ساعة"
 
 msgid "New SMS · %s"
 msgstr "رسالة SMS جديدة · %s"
@@ -219,6 +234,21 @@ msgstr "بدون اتصال: ارفع mu300-linux-vpn-core.tar.gz (أو الحز
 msgid "VPN"
 msgstr "VPN"
 
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "هذا مسح للشبكات أو الترددات: يستغرق من دقيقة إلى ثلاث دقائق، ويشغل قناة AT في المودم طوال ذلك الوقت، وقد تتوقف بيانات الجوال مؤقتًا في أثنائه. يعمل في الخلفية؛ ويظهر الرد هنا عند انتهائه."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "يغيّر هذا وضع الشبكة أو النطاق أو إعداد الخلية الذي يحفظه المودم: يبقى ساريًا بعد إعادة التشغيل، وفي Android أيضًا، حيث تظهر الشبكة غير المطابقة له على أنها «لا توجد خدمة». تعرض صفحة الأقفال هذه الإعدادات وتعيد ضبطها."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "يبدّل هذا الراديو أو اتصال البيانات أو المودم نفسه: تنقطع بيانات الجوال حتى تُستعاد، وقد تفقد هذه الصفحة اتصالها لبعض الوقت."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "يغيّر هذا ملفات تعريف البيانات (APN) المحفوظة في المودم، والتي تستخدمها بيانات الجوال وAndroid."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "يغيّر هذا قفل PIN لشريحة SIM أو يُدخل رمز PIN: الرموز الخاطئة تحظر الشريحة حتى يُدخل رمز PUK الخاص بها."
+
 msgid "Basic"
 msgstr "أساسي"
 
@@ -246,14 +276,50 @@ msgstr "جاهز."
 msgid "Session history (click to reuse)"
 msgstr "سجل الجلسة (انقر لإعادة الاستخدام)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "يعمل في الخلفية (بحد أقصى %d ث)؛ يظهر الرد هنا عند انتهائه…"
+
+msgid "The modem gave no final answer in time"
+msgstr "لم يقدّم المودم ردًا نهائيًا في الوقت المحدد"
+
+msgid "%d s in the background"
+msgstr "%d ث في الخلفية"
+
 msgid "(no output)"
 msgstr "(لا مخرجات)"
+
+msgid "This command changes the modem's state."
+msgstr "يغيّر هذا الأمر حالة المودم."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "لم يُرسل بعد: في انتظار التأكيد"
+
+msgid "Send this AT command?"
+msgstr "هل تريد إرسال أمر AT هذا؟"
+
+msgid "Send anyway"
+msgstr "إرسال على أي حال"
+
+msgid "Not sent"
+msgstr "لم يُرسل"
 
 msgid "Request failed"
 msgstr "فشل الطلب"
 
 msgid "(empty)"
 msgstr "(فارغ)"
+
+msgid "Loading…"
+msgstr "جارٍ التحميل…"
+
+msgid "Channel Analysis"
+msgstr "تحليل القنوات"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "يُخرج المسح نقطة الوصول Wi-Fi من قناتها للحظة: تنقطع الأجهزة المتصلة، وقد لا يعيد بعضها (macOS خاصة) الاتصال من تلقاء نفسه. تُجري هذه الصفحة المسح فور فتحها ثم كل بضع ثوانٍ. إن كنت تعتمد على نقطة الوصول، فادخل إلى اللوحة أولًا عبر USB أو بطريقة أخرى."
+
+msgid "Scan anyway"
+msgstr "المسح على أي حال"
 
 msgid "Saved"
 msgstr "تم الحفظ"
@@ -372,6 +438,15 @@ msgstr "تحديث"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "متاح في وضع المضيف فقط. يؤدي «تحديث» إلى تشغيل محوّلات USB المكتشفة؛ والإضافة إلى LAN تحفظ الجسر وتعيد تحميل الشبكة."
 
+msgid "Recent modem operations"
+msgstr "عمليات المودم الأخيرة"
+
+msgid "Show"
+msgstr "عرض"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "الاستدعاءات الأخيرة للوحة التحكم، في هذا الإقلاع والذي قبله: متى، وأي استدعاء صفحة أو أمر AT، وكم استغرق، وكيف انتهى (ok، خطأ، مشغول، أُنهي). لا تُحفظ أي قيم أو ردود أو رسائل. مفيد عندما تتعطل اللوحة."
+
 msgid "Unavailable"
 msgstr "غير متاح"
 
@@ -425,6 +500,12 @@ msgstr "تم حفظ الإعدادات"
 
 msgid "Save failed: %s"
 msgstr "فشل الحفظ: %s"
+
+msgid "This boot"
+msgstr "هذا الإقلاع"
+
+msgid "Previous boot"
+msgstr "الإقلاع السابق"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "تعذّر تأكيد الدور بعد؛ أعد الاتصال وحدّث الصفحة."
@@ -897,6 +978,9 @@ msgstr "الراديو متوقف"
 msgid "No response"
 msgstr "لا استجابة"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "المودم مشغول: قراءات الشبكة الخلوية منذ %s"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · الإشارة %s %s/10"
 
@@ -962,9 +1046,6 @@ msgstr "%s عملاء"
 
 msgid "Recent DHCP leases"
 msgstr "عقود DHCP الأخيرة"
-
-msgid "%d h"
-msgstr "%d ساعة"
 
 msgid "Board"
 msgstr "اللوحة الأم"
@@ -1179,11 +1260,11 @@ msgstr "تفعيل التطبيق عند بدء التشغيل"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "جارٍ القراءة من المودم مباشرة (بضع ثوانٍ على الأكثر)…"
 
-msgid "Refreshed"
-msgstr "تم التحديث"
-
 msgid "Refresh failed"
 msgstr "فشل التحديث"
+
+msgid "Refreshed"
+msgstr "تم التحديث"
 
 msgid "NR bands: back to automatic"
 msgstr "نطاقات NR: عودة إلى التلقائي"
@@ -1335,6 +1416,9 @@ msgstr "التبديل إلى توفير الطاقة عند أقل من %"
 msgid "Stop charging at"
 msgstr "إيقاف الشحن عند"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % لا يشحن البطارية أبدًا (يعمل الجهاز من الشاحن)، و100 % يشحنها بالكامل؛ وبينهما يتوقف الشحن عند تلك النسبة ويُستأنف عند انخفاضها 5 نقاط. تحت 5 % تُشحن البطارية دائمًا."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % تحافظ على صحة البطارية في جهاز يبقى موصولًا بالكهرباء."
 
@@ -1446,9 +1530,6 @@ msgstr "مزامنة من SIM"
 msgid "Clear local pool"
 msgstr "مسح المخزن المحلي"
 
-msgid "Loading…"
-msgstr "جارٍ التحميل…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "اختر محادثة من القائمة، أو أدخل رقماً أدناه للإرسال."
 
@@ -1523,6 +1604,39 @@ msgstr "غير مكتملة: وصل %d من %d أجزاء"
 
 msgid "Delete"
 msgstr "حذف"
+
+msgid "ttyd is not installed."
+msgstr "ttyd غير مثبت."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "الطرفية متوقفة (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "تُفتح طرفيات كثيرة في الوقت نفسه. حاول مرة أخرى بعد دقيقة."
+
+msgid "The terminal is not available."
+msgstr "الطرفية غير متاحة."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "هذه صدفة root على الجهاز: يعمل كل أمر بصلاحيات كاملة، وقد يجعل خطأ واحد الجهاز غير قابل للإقلاع."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "يمكن الوصول إليها من الشبكة المحلية فقط (USB ونقطة الاتصال)، ولا يمكن أبدًا من بيانات الجوال، ومن هذه الصفحة المسجّل الدخول إليها فقط."
+
+msgid "It closes after a minute without activity."
+msgstr "تُغلق بعد دقيقة من عدم النشاط."
+
+msgid "It closes after %d minutes without activity."
+msgstr "تُغلق بعد %d دقيقة من عدم النشاط."
+
+msgid "Reconnect"
+msgstr "إعادة الاتصال"
+
+msgid "Open in a new tab"
+msgstr "فتح في علامة تبويب جديدة"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "فُتحت هذه الصفحة عبر HTTPS، والطرفية تُقدَّم عبر HTTP على الشبكة المحلية: لذا تُفتح في علامة تبويب خاصة بها."
 
 msgid "The data usage could not be read"
 msgstr "تعذرت قراءة استهلاك البيانات"
@@ -2046,9 +2160,6 @@ msgstr "عرض الإعداد؟"
 msgid "The config holds the credentials of the profile (keys, passwords, UUIDs). It is shown on this screen only; anyone who can see the screen can read it."
 msgstr "يحتوي الإعداد على بيانات اعتماد الملف الشخصي (مفاتيح، كلمات مرور، UUID). يُعرض على هذه الشاشة فقط؛ ويستطيع أي شخص يرى الشاشة قراءته."
 
-msgid "Show"
-msgstr "عرض"
-
 msgid "Saving checks the config with the engine first (profile edit); a config that does not pass is not saved and the old one stays."
 msgstr "يفحص الحفظ الإعداد مع المحرك أولًا (profile edit)؛ والإعداد الذي لا يجتاز الفحص لا يُحفظ ويبقى القديم."
 
@@ -2271,6 +2382,9 @@ msgstr "الراديو مشغول: يقوم برنامج الاتصال أو ا�
 msgid "The action gave no valid reply"
 msgstr "لم يُرجع الإجراء رداً صالحاً"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "يجب أن تكون قيمة المعامل confirm هي 0 أو 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "أمر AT هو سطر واحد من محارف ASCII القابلة للطباعة، بحد أقصى 512 محرفاً"
 
@@ -2286,6 +2400,12 @@ msgstr "مرفوض: هذا الأمر يعطّل منفذ AT حتى إعادة �
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "جارٍ تطبيق أقفال الشبكة: المودم يعيد التشغيل (حوالي نصف دقيقة)، حاول مجدداً بعد قليل"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "لا يزال أمر AT طويل يعمل في الخلفية؛ حاول مجددًا عندما ينتهي"
+
+msgid "This command needs confirmation"
+msgstr "يحتاج هذا الأمر إلى تأكيد"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "قناة AT مشغولة؛ لم يُرسَل الأمر، حاول مجدداً"
 
@@ -2294,6 +2414,9 @@ msgstr "لم يُجب المودم في الوقت المحدد؛ قد يظل ا
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "يجب أن تكون قيمة المعامل fresh هي 0 أو 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "تجري قراءة الأقفال من المودم؛ حاول مجددًا بعد بضع ثوانٍ"
 
 msgid "Lock read failed"
 msgstr "فشلت قراءة القفل"

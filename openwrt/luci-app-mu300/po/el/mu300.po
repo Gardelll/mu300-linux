@@ -63,6 +63,15 @@ msgstr "Αρχεία καταγραφής"
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "Κέντρο ελέγχου MU300: πίνακας κατάστασης, κλειδώματα δικτύου, τερματικό AT, SMS και VPN"
 
+msgid "Terminal"
+msgstr "Τερματικό"
+
+msgid "Terminal settings"
+msgstr "Ρυθμίσεις τερματικού"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Τερματικό: ένα κέλυφος root της συσκευής στο πρόγραμμα περιήγησης"
+
 msgid "China Mobile"
 msgstr "China Mobile"
 
@@ -122,6 +131,12 @@ msgstr "OK"
 
 msgid "Cancel"
 msgstr "Ακύρωση"
+
+msgid "%d s"
+msgstr "%d δευτ."
+
+msgid "%d h"
+msgstr "%d ώρ."
 
 msgid "New SMS · %s"
 msgstr "Νέο SMS · %s"
@@ -219,6 +234,21 @@ msgstr "Εκτός σύνδεσης: ανεβάστε το mu300-linux-vpn-core.
 msgid "VPN"
 msgstr "VPN"
 
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Πρόκειται για σάρωση δικτύων ή συχνοτήτων: διαρκεί ένα έως τρία λεπτά, κρατά το κανάλι AT του μόντεμ όλο αυτό το διάστημα και τα δεδομένα κινητής μπορεί να διακοπούν στο μεταξύ. Εκτελείται στο παρασκήνιο· η απάντηση εμφανίζεται εδώ όταν ολοκληρωθεί."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Αυτό αλλάζει μια λειτουργία δικτύου, μια ζώνη ή μια ρύθμιση κυψέλης που αποθηκεύει το μόντεμ: παραμένει σε ισχύ μετά από επανεκκίνηση, και στο Android επίσης, όπου ένα δίκτυο που δεν ταιριάζει εμφανίζεται ως «Χωρίς υπηρεσία». Η σελίδα Κλειδώματα δείχνει αυτές τις ρυθμίσεις και τις επαναφέρει."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Αυτό αλλάζει την κατάσταση του ραδιοφώνου, της σύνδεσης δεδομένων ή του ίδιου του μόντεμ: τα δεδομένα κινητής διακόπτονται μέχρι να αποκατασταθούν και αυτή η σελίδα μπορεί να χάσει τη σύνδεσή της για λίγο."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Αυτό αλλάζει τα προφίλ δεδομένων (APN) που είναι αποθηκευμένα στο μόντεμ, τα οποία χρησιμοποιούν τα δεδομένα κινητής και το Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Αυτό αλλάζει το κλείδωμα PIN της SIM ή εισάγει ένα PIN: λανθασμένα PIN κλειδώνουν τη SIM μέχρι να εισαχθεί το PUK της."
+
 msgid "Basic"
 msgstr "Βασικά"
 
@@ -246,14 +276,50 @@ msgstr "Έτοιμο."
 msgid "Session history (click to reuse)"
 msgstr "Ιστορικό συνεδρίας (κλικ για επαναχρησιμοποίηση)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "Εκτελείται στο παρασκήνιο (το πολύ %d δευτ.)· η απάντηση εμφανίζεται εδώ όταν ολοκληρωθεί…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Το μόντεμ δεν έδωσε τελική απάντηση εγκαίρως"
+
+msgid "%d s in the background"
+msgstr "%d δευτ. στο παρασκήνιο"
+
 msgid "(no output)"
 msgstr "(χωρίς έξοδο)"
+
+msgid "This command changes the modem's state."
+msgstr "Αυτή η εντολή αλλάζει την κατάσταση του μόντεμ."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Δεν στάλθηκε ακόμα: αναμονή επιβεβαίωσης"
+
+msgid "Send this AT command?"
+msgstr "Αποστολή αυτής της εντολής AT;"
+
+msgid "Send anyway"
+msgstr "Αποστολή παρ' όλα αυτά"
+
+msgid "Not sent"
+msgstr "Δεν στάλθηκε"
 
 msgid "Request failed"
 msgstr "Το αίτημα απέτυχε"
 
 msgid "(empty)"
 msgstr "(κενό)"
+
+msgid "Loading…"
+msgstr "Φόρτωση…"
+
+msgid "Channel Analysis"
+msgstr "Ανάλυση καναλιών"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Μια σάρωση βγάζει για λίγο το σημείο πρόσβασης Wi-Fi από το κανάλι του: οι συνδεδεμένες συσκευές αποσυνδέονται και κάποιες (ιδίως macOS) μπορεί να μην επανασυνδεθούν μόνες τους. Αυτή η σελίδα σαρώνει μόλις ανοίξει και μετά κάθε λίγα δευτερόλεπτα. Αν εξαρτάστε από το σημείο πρόσβασης, συνδεθείτε πρώτα στον πίνακα μέσω USB ή με άλλο τρόπο."
+
+msgid "Scan anyway"
+msgstr "Σάρωση παρ' όλα αυτά"
 
 msgid "Saved"
 msgstr "Αποθηκεύτηκε"
@@ -372,6 +438,15 @@ msgstr "Ανανέωση"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Διαθέσιμο μόνο σε λειτουργία κεντρικού υπολογιστή. Η Ανανέωση ενεργοποιεί τους προσαρμογείς USB που εντοπίστηκαν· η προσθήκη στο LAN αποθηκεύει τη γέφυρα και επαναφορτώνει το δίκτυο."
 
+msgid "Recent modem operations"
+msgstr "Πρόσφατες λειτουργίες μόντεμ"
+
+msgid "Show"
+msgstr "Εμφάνιση"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Οι πρόσφατες κλήσεις του πίνακα ελέγχου, αυτής και της προηγούμενης εκκίνησης: πότε, ποια κλήση σελίδας ή εντολή AT, πόσο διήρκεσε και πώς τελείωσε (ok, σφάλμα, απασχολημένο, τερματίστηκε). Δεν διατηρούνται τιμές, απαντήσεις ή μηνύματα. Χρήσιμο όταν ο πίνακας κόλλησε."
+
 msgid "Unavailable"
 msgstr "Μη διαθέσιμο"
 
@@ -425,6 +500,12 @@ msgstr "Οι ρυθμίσεις αποθηκεύτηκαν"
 
 msgid "Save failed: %s"
 msgstr "Η αποθήκευση απέτυχε: %s"
+
+msgid "This boot"
+msgstr "Αυτή η εκκίνηση"
+
+msgid "Previous boot"
+msgstr "Προηγούμενη εκκίνηση"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Δεν είναι ακόμη δυνατή η επιβεβαίωση του ρόλου· συνδεθείτε ξανά και ανανεώστε τη σελίδα."
@@ -897,6 +978,9 @@ msgstr "Ραδιόφωνο ανενεργό"
 msgid "No response"
 msgstr "Καμία απόκριση"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Το μόντεμ είναι απασχολημένο: μετρήσεις κινητού δικτύου πριν από %s"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Σήμα %s %s/10"
 
@@ -962,9 +1046,6 @@ msgstr "%s πελάτες"
 
 msgid "Recent DHCP leases"
 msgstr "Πρόσφατες μισθώσεις DHCP"
-
-msgid "%d h"
-msgstr "%d ώρ."
 
 msgid "Board"
 msgstr "Πλακέτα"
@@ -1179,11 +1260,11 @@ msgstr "Ενεργοποίηση εφαρμογής κατά την εκκίνη
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Απευθείας ανάγνωση του μόντεμ (το πολύ λίγα δευτερόλεπτα)…"
 
-msgid "Refreshed"
-msgstr "Ανανεώθηκε"
-
 msgid "Refresh failed"
 msgstr "Η ανανέωση απέτυχε"
+
+msgid "Refreshed"
+msgstr "Ανανεώθηκε"
 
 msgid "NR bands: back to automatic"
 msgstr "Ζώνες NR: επιστροφή σε αυτόματο"
@@ -1335,6 +1416,9 @@ msgstr "Μετάβαση σε Εξοικονόμηση κάτω από %"
 msgid "Stop charging at"
 msgstr "Διακοπή φόρτισης στο"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "Το 0 % δεν φορτίζει ποτέ την μπαταρία (η συσκευή λειτουργεί από τον φορτιστή), το 100 % τη φορτίζει πλήρως· ενδιάμεσα, η φόρτιση σταματά σε εκείνο το επίπεδο και ξεκινά ξανά 5 μονάδες χαμηλότερα. Κάτω από 5 % η μπαταρία φορτίζει πάντα."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "Το 80 % προστατεύει την μπαταρία μιας συσκευής που μένει στην πρίζα."
 
@@ -1446,9 +1530,6 @@ msgstr "Συγχρονισμός από SIM"
 msgid "Clear local pool"
 msgstr "Εκκαθάριση τοπικής αποθήκης"
 
-msgid "Loading…"
-msgstr "Φόρτωση…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Επιλέξτε μια συνομιλία στα αριστερά ή εισαγάγετε έναν αριθμό παρακάτω για αποστολή."
 
@@ -1523,6 +1604,39 @@ msgstr "Ελλιπές: έφτασαν %d από %d τμήματα"
 
 msgid "Delete"
 msgstr "Διαγραφή"
+
+msgid "ttyd is not installed."
+msgstr "Το ttyd δεν είναι εγκατεστημένο."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Το τερματικό είναι απενεργοποιημένο (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Ανοίγουν πάρα πολλά τερματικά ταυτόχρονα. Δοκιμάστε ξανά σε ένα λεπτό."
+
+msgid "The terminal is not available."
+msgstr "Το τερματικό δεν είναι διαθέσιμο."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Αυτό είναι ένα κέλυφος root της συσκευής: κάθε εντολή εκτελείται με πλήρη δικαιώματα και ένα λάθος μπορεί να κάνει τη συσκευή να μην εκκινεί."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Είναι προσβάσιμο μόνο από το LAN (USB και hotspot), ποτέ από τα δεδομένα κινητής, και μόνο από αυτή τη σελίδα με σύνδεση."
+
+msgid "It closes after a minute without activity."
+msgstr "Κλείνει μετά από ένα λεπτό χωρίς δραστηριότητα."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Κλείνει μετά από %d λεπτά χωρίς δραστηριότητα."
+
+msgid "Reconnect"
+msgstr "Επανασύνδεση"
+
+msgid "Open in a new tab"
+msgstr "Άνοιγμα σε νέα καρτέλα"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Αυτή η σελίδα άνοιξε μέσω HTTPS και το τερματικό εξυπηρετείται μέσω HTTP στο LAN: ανοίγει σε δική του καρτέλα."
 
 msgid "The data usage could not be read"
 msgstr "Η χρήση δεδομένων δεν μπόρεσε να διαβαστεί"
@@ -2046,9 +2160,6 @@ msgstr "Εμφάνιση της διαμόρφωσης;"
 msgid "The config holds the credentials of the profile (keys, passwords, UUIDs). It is shown on this screen only; anyone who can see the screen can read it."
 msgstr "Η διαμόρφωση περιέχει τα διαπιστευτήρια του προφίλ (κλειδιά, κωδικούς, UUID). Εμφανίζεται μόνο σε αυτήν την οθόνη· όποιος βλέπει την οθόνη μπορεί να τη διαβάσει."
 
-msgid "Show"
-msgstr "Εμφάνιση"
-
 msgid "Saving checks the config with the engine first (profile edit); a config that does not pass is not saved and the old one stays."
 msgstr "Η αποθήκευση ελέγχει πρώτα τη διαμόρφωση με τη μηχανή (profile edit)· μια διαμόρφωση που δεν περνά τον έλεγχο δεν αποθηκεύεται και παραμένει η παλιά."
 
@@ -2271,6 +2382,9 @@ msgstr "Το ραδιόφωνο είναι απασχολημένο: η κλήσ
 msgid "The action gave no valid reply"
 msgstr "Η ενέργεια δεν έδωσε έγκυρη απάντηση"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Η παράμετρος confirm πρέπει να είναι 0 ή 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "Μια εντολή AT είναι μία γραμμή εκτυπώσιμων ASCII, έως 512 χαρακτήρες"
 
@@ -2286,6 +2400,12 @@ msgstr "Απορρίφθηκε: αυτή η εντολή μπλοκάρει τη
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Εφαρμογή κλειδωμάτων δικτύου: το μόντεμ επανεκκινείται (περίπου μισό λεπτό), δοκιμάστε ξανά σε λίγο"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Μια μεγάλη εντολή AT εκτελείται ακόμα στο παρασκήνιο· δοκιμάστε ξανά όταν τελειώσει"
+
+msgid "This command needs confirmation"
+msgstr "Αυτή η εντολή χρειάζεται επιβεβαίωση"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "Το κανάλι AT είναι απασχολημένο· η εντολή δεν στάλθηκε, δοκιμάστε ξανά"
 
@@ -2294,6 +2414,9 @@ msgstr "Το μόντεμ δεν απάντησε εγκαίρως· η εντο
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Η παράμετρος fresh πρέπει να είναι 0 ή 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Γίνεται ανάγνωση των κλειδωμάτων από το μόντεμ· δοκιμάστε ξανά σε λίγα δευτερόλεπτα"
 
 msgid "Lock read failed"
 msgstr "Η ανάγνωση κλειδώματος απέτυχε"

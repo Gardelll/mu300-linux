@@ -63,6 +63,15 @@ msgstr "Záznamy"
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "Riadiace centrum MU300: stavový panel, sieťové zámky, AT terminál, SMS a VPN"
 
+msgid "Terminal"
+msgstr "Terminál"
+
+msgid "Terminal settings"
+msgstr "Nastavenia terminálu"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminál: root shell zariadenia v prehliadači"
+
 msgid "China Mobile"
 msgstr "China Mobile"
 
@@ -122,6 +131,12 @@ msgstr "OK"
 
 msgid "Cancel"
 msgstr "Zrušiť"
+
+msgid "%d s"
+msgstr "%d s"
+
+msgid "%d h"
+msgstr "%d h"
 
 msgid "New SMS · %s"
 msgstr "Nová SMS · %s"
@@ -219,6 +234,21 @@ msgstr "Offline: nahrajte mu300-linux-vpn-core.tar.gz (alebo balík mu300-linux-
 msgid "VPN"
 msgstr "VPN"
 
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Ide o vyhľadávanie sietí alebo frekvencií: trvá jednu až tri minúty, celý čas drží AT kanál modemu a mobilné dáta sa medzitým môžu pozastaviť. Beží na pozadí; odpoveď sa zobrazí tu, keď skončí."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Týmto sa mení režim siete, pásmo alebo nastavenie bunky, ktoré si modem ukladá: platí aj po reštarte, a to aj v Androide, kde sa sieť, ktorá mu nezodpovedá, zobrazí ako Žiadna služba. Stránka Zámky tieto nastavenia zobrazuje a obnovuje."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Týmto sa prepína rádio, dátové pripojenie alebo samotný modem: mobilné dáta vypadnú, kým sa neobnovia, a táto stránka môže na chvíľu stratiť spojenie."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Týmto sa menia dátové profily (APN) uložené v modeme, ktoré používajú mobilné dáta a Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Týmto sa mení zámok PIN karty SIM alebo sa zadáva PIN: nesprávne kódy PIN zablokujú SIM, kým sa nezadá jej PUK."
+
 msgid "Basic"
 msgstr "Základné"
 
@@ -246,14 +276,50 @@ msgstr "Pripravené."
 msgid "Session history (click to reuse)"
 msgstr "História relácie (kliknutím znova použiť)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "Beží na pozadí (najviac %d s); odpoveď sa zobrazí tu, keď skončí…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Modem neodpovedal včas konečnou odpoveďou"
+
+msgid "%d s in the background"
+msgstr "%d s na pozadí"
+
 msgid "(no output)"
 msgstr "(žiadny výstup)"
+
+msgid "This command changes the modem's state."
+msgstr "Tento príkaz mení stav modemu."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Zatiaľ neodoslané: čaká sa na potvrdenie"
+
+msgid "Send this AT command?"
+msgstr "Odoslať tento príkaz AT?"
+
+msgid "Send anyway"
+msgstr "Napriek tomu odoslať"
+
+msgid "Not sent"
+msgstr "Neodoslané"
 
 msgid "Request failed"
 msgstr "Požiadavka zlyhala"
 
 msgid "(empty)"
 msgstr "(prázdne)"
+
+msgid "Loading…"
+msgstr "Načítava sa…"
+
+msgid "Channel Analysis"
+msgstr "Analýza kanálov"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Vyhľadávanie na chvíľu odvedie prístupový bod Wi-Fi z jeho kanála: pripojené zariadenia sa odpoja a niektoré (najmä macOS) sa nemusia samy znova pripojiť. Táto stránka vyhľadáva hneď po otvorení a potom každých niekoľko sekúnd. Ak ste na prístupovom bode závislí, pripojte sa najprv k panelu cez USB alebo inou cestou."
+
+msgid "Scan anyway"
+msgstr "Napriek tomu vyhľadať"
 
 msgid "Saved"
 msgstr "Uložené"
@@ -372,6 +438,15 @@ msgstr "Obnoviť"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Dostupné iba v režime hostiteľa. Obnoviť aktivuje nájdené adaptéry USB; pridanie do LAN uloží most a znova načíta sieť."
 
+msgid "Recent modem operations"
+msgstr "Nedávne operácie modemu"
+
+msgid "Show"
+msgstr "Zobraziť"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Nedávne volania ovládacieho panela z tohto a predchádzajúceho spustenia: kedy, ktoré volanie stránky alebo príkaz AT, ako dlho trvalo a ako skončilo (ok, chyba, obsadené, ukončené). Neukladajú sa žiadne hodnoty, odpovede ani správy. Užitočné, keď panel zamrzol."
+
 msgid "Unavailable"
 msgstr "Nedostupné"
 
@@ -425,6 +500,12 @@ msgstr "Nastavenia uložené"
 
 msgid "Save failed: %s"
 msgstr "Uloženie zlyhalo: %s"
+
+msgid "This boot"
+msgstr "Toto spustenie"
+
+msgid "Previous boot"
+msgstr "Predchádzajúce spustenie"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Rolu zatiaľ nemožno potvrdiť; pripojte sa znova a obnovte stránku."
@@ -897,6 +978,9 @@ msgstr "Rádio vypnuté"
 msgid "No response"
 msgstr "Žiadna odpoveď"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Modem je zaneprázdnený: mobilné údaje staré %s"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Signál %s %s/10"
 
@@ -962,9 +1046,6 @@ msgstr "Klientov: %s"
 
 msgid "Recent DHCP leases"
 msgstr "Nedávno pridelené adresy DHCP"
-
-msgid "%d h"
-msgstr "%d h"
 
 msgid "Board"
 msgstr "Doska"
@@ -1179,11 +1260,11 @@ msgstr "Zapnúť použitie pri štarte"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Priame čítanie z modemu (najviac niekoľko sekúnd)…"
 
-msgid "Refreshed"
-msgstr "Obnovené"
-
 msgid "Refresh failed"
 msgstr "Obnovenie zlyhalo"
+
+msgid "Refreshed"
+msgstr "Obnovené"
 
 msgid "NR bands: back to automatic"
 msgstr "Pásma NR: späť na automatický režim"
@@ -1335,6 +1416,9 @@ msgstr "Prepnúť na Úsporný pod %"
 msgid "Stop charging at"
 msgstr "Prestať nabíjať na"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % batériu nikdy nenabíja (zariadenie beží z nabíjačky), 100 % ju nabije úplne; medzi tým sa nabíjanie zastaví na danej úrovni a znova začne o 5 bodov nižšie. Pod 5 % sa batéria nabíja vždy."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % šetrí batériu zariadenia, ktoré zostáva pripojené k sieti."
 
@@ -1446,9 +1530,6 @@ msgstr "Synchronizovať zo SIM"
 msgid "Clear local pool"
 msgstr "Vymazať lokálny zásobník"
 
-msgid "Loading…"
-msgstr "Načítava sa…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Vyberte konverzáciu vľavo, alebo zadajte číslo nižšie a odošlite."
 
@@ -1523,6 +1604,39 @@ msgstr "Neúplná: prišlo %d z %d častí"
 
 msgid "Delete"
 msgstr "Odstrániť"
+
+msgid "ttyd is not installed."
+msgstr "ttyd nie je nainštalovaný."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminál je vypnutý (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Otvára sa príliš veľa terminálov naraz. Skúste to znova o minútu."
+
+msgid "The terminal is not available."
+msgstr "Terminál nie je k dispozícii."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Toto je root shell zariadenia: každý príkaz beží s plnými právami a chyba môže spôsobiť, že zariadenie nenaštartuje."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Je dostupný iba z LAN (USB a hotspot), nikdy z mobilných dát, a len z tejto prihlásenej stránky."
+
+msgid "It closes after a minute without activity."
+msgstr "Zatvorí sa po minúte bez aktivity."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Zatvorí sa po %d minútach bez aktivity."
+
+msgid "Reconnect"
+msgstr "Znova pripojiť"
+
+msgid "Open in a new tab"
+msgstr "Otvoriť na novej karte"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Táto stránka bola otvorená cez HTTPS a terminál beží v LAN cez HTTP: otvorí sa preto na vlastnej karte."
 
 msgid "The data usage could not be read"
 msgstr "Spotrebu dát nemožno načítať"
@@ -2046,9 +2160,6 @@ msgstr "Zobraziť konfiguráciu?"
 msgid "The config holds the credentials of the profile (keys, passwords, UUIDs). It is shown on this screen only; anyone who can see the screen can read it."
 msgstr "Konfigurácia obsahuje prihlasovacie údaje profilu (kľúče, heslá, UUID). Zobrazí sa len na tejto obrazovke; môže ju prečítať každý, kto obrazovku vidí."
 
-msgid "Show"
-msgstr "Zobraziť"
-
 msgid "Saving checks the config with the engine first (profile edit); a config that does not pass is not saved and the old one stays."
 msgstr "Pri ukladaní sa konfigurácia najprv skontroluje enginom (profile edit); konfigurácia, ktorá neprejde, sa neuloží a zostane stará."
 
@@ -2271,6 +2382,9 @@ msgstr "Rádio je zaneprázdnené: prepína ho vytáčanie alebo watchdog, skús
 msgid "The action gave no valid reply"
 msgstr "Akcia nevrátila platnú odpoveď"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Parameter confirm musí byť 0 alebo 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "Príkaz AT je jeden riadok tlačiteľných znakov ASCII, najviac 512 znakov"
 
@@ -2286,6 +2400,12 @@ msgstr "Zamietnuté: tento príkaz zablokuje port AT až do reštartu"
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Použitie zámkov siete: modem sa reštartuje (asi pol minúty), skúste to o chvíľu znova"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Na pozadí stále beží dlhý príkaz AT; skúste to znova, keď skončí"
+
+msgid "This command needs confirmation"
+msgstr "Tento príkaz vyžaduje potvrdenie"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "Kanál AT je obsadený; príkaz nebol odoslaný, skúste to znova"
 
@@ -2294,6 +2414,9 @@ msgstr "Modem neodpovedal včas; príkaz môže stále bežať, pred opätovným
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Parameter fresh musí byť 0 alebo 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Zámky sa čítajú z modemu; skúste to znova o niekoľko sekúnd"
 
 msgid "Lock read failed"
 msgstr "Čítanie zámkov zlyhalo"
