@@ -107,6 +107,7 @@ what replaced it. The table below gives each section's state.
 | 41 | The vendor daemons' own account | current |
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
+| 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
 
 ## Hardware and firmware facts
 
@@ -3565,3 +3566,56 @@ adbd's connection, and adbd hung in it, holding its endpoints: FunctionFS never 
 the loop saw it bound and had nothing to do, and the pulled-down gadget stayed off the bus until the board was
 unplugged (its root port on the Mac cannot be power-cycled). Without adb a soft disconnect stays too, until
 `echo connect`; with the fixed adbd it was not tried again.
+
+## Network namespaces on the vendor kernel
+
+### 44. Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103)
+
+Reported with four boots' worth of pstore on an F50 running OpenWrt on 5.4 with Docker (two containers,
+`restart=always`) and a Codex sandbox: about 25 s after boot a `WARNING` in `retire_sysctl_set` from
+`cleanup_net`, then within a second a fatal exception in an unrelated process in `__kmalloc`, or on the netns
+worker itself:
+
+```text
+Workqueue: netns cleanup_net
+pc : count_subheaders+0x18/0x74
+lr : unregister_sysctl_table+0x28/0xa8
+ xfrm_sysctl_fini+0x34/0x50
+ xfrm_net_exit+0x18/0x50
+ cleanup_net+0x2e4/0x54c
+Kernel panic - not syncing: Fatal exception
+```
+
+and, after a sandbox command finished, `kernel BUG at mm/slub.c:308` (a double free) in `kfree` from the same
+`xfrm_sysctl_fini`.
+
+**Cause**, in the vendor tree (`net/xfrm/xfrm_sysctl.c`, under `CONFIG_XFRM_FRAGMENT`, a Unisoc option - "only
+for sprd" says its Kconfig; it is not upstream, and linux-5.4.y has not changed this file since 2017, so no stable
+fix exists to take). The option adds a `net/core/enable_xfrm_fragment` sysctl, a global switch for fragmenting
+before ESP, and registers it with a *second* `ctl_table_header` whose pointer, and its `kmemdup`'d table, live in
+two `static` variables. `xfrm_sysctl_init()` runs for every network namespace and overwrites both; `xfrm_sysctl_fini()`
+runs for every namespace and unregisters and frees whatever they point at, without clearing them. With one
+namespace at a time the globals happen to track it. With two alive - Docker's containers, dnsmasq's, a sandbox - the
+first to exit unregisters and frees the *newer* namespace's registration and leaves its own behind in a dying
+namespace (`retire_sysctl_set`'s warning); the second's exit then walks a freed header (`count_subheaders`) and
+frees the table again (`slub.c:308`), or the stale memory has been reused and another process's allocation goes
+wrong. A failed second registration also freed the first table while leaving it registered. The entry was 0660 and,
+unlike the four `xfrm_*` entries next to it, not hidden from namespaces owned by an unprivileged user namespace,
+whose "root" has CAP_NET_ADMIN over them: a global kernel switch writable from `unshare -Urn`.
+
+**Fix** (`kernel/patches/xfrm-sysctl-fragment-per-netns.patch`, the reporter's candidate taken as proposed): the
+entry becomes the fifth member of `xfrm_table`, so each namespace's copy is registered and torn down with that
+namespace's own `net->xfrm.sysctl_hdr`, exactly like the four upstream entries; the second header, its table and
+their error path are gone. The switch stays one global `int` with default 1, `get_xfrm_fragment()` (used by the ESP
+output path) is unchanged, so are the path and the mode. One visible change: the entry now follows the table's rule
+and is absent in a namespace of a non-initial user namespace (`unshare -Urn` sees no `enable_xfrm_fragment`; the
+host's stays 1). No struct changes, so the module bundle is unaffected.
+
+**Reproduce** (unpatched 5.4; do it on a board you can reboot, the panic is on teardown and takes the kernel with
+it): two namespaces have to be alive at once, so `for i in $(seq 200); do unshare -n true & unshare -n true; wait;
+done` - or simply starting Docker with two containers - and the warning, then the panic, follow within a few
+iterations after the netns worker runs. `unshare -n true` in a single-threaded loop does not trigger it (one
+namespace at a time keeps the globals consistent), which is why a plain namespace test can pass on the broken
+kernel. The reporter's patched kernel passed 460 lifecycles (sequential and four-way parallel) and 10 sandbox runs
+on an F50 across two boots with no recurrence; our build of the patch (release config, ThinLTO) is in PR for #103,
+with the loop above to run on our F50 before the release.
