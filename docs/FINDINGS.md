@@ -62,7 +62,7 @@ what replaced it. The table below gives each section's state.
 | 24 | No internal audio hardware | open |
 | 24b | A second board, from a clean install: where the stall actually is | open |
 | 25 | SC2355 Bluetooth on BlueZ | current |
-| 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.55) |
+| 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.56) |
 | 31a | Wi-Fi RX: sync_for_device stopped invalidating | current |
 | 31b | The modem units' ordering cycle | current |
 | 31c | A context that comes back with a new address | current |
@@ -78,6 +78,7 @@ what replaced it. The table below gives each section's state.
 | 31m | Hard hangs in the first seconds under 6.18 | open |
 | 31n | Wi-Fi powered off and on at the same time: an Oops in the RX interrupt | current (fixed, PR #41); remaining races open |
 | 31o | KVM, and the module set a router needs | current |
+| 31p | BTF and eBPF for dae, and the tracing that broke boots | current; the writer at ~11.5 s is open |
 | 32 | Old kernels, an idle IPA, and an update that ended in Android | current |
 | 32a | The offset in init, replaced by every boot image update | current |
 | 32b | The Magisk installer on a device | partly superseded by PR #40 (passwords in update mode) |
@@ -97,10 +98,15 @@ what replaced it. The table below gives each section's state.
 | 35 | kanoqwq's fixes, measured | current (panel languages: PR #48) |
 | 36 | Power profiles: idle radios, the charging boot, the charge guard | current; power table and device questions open (PR #62) |
 | 37 | System suspend | current (fixes on branch `suspend-drivers`); power not measured |
+| 39 | The SMS pool: durable before the SIM lets go, long messages that never complete, forwarding | current |
 | 38 | Three defects from users' reports, 2026-10-07 | current |
 | 38a | A read past the end of the eMMC never returns | current (fixed) |
 | 38b | RNDIS: the port kept the bridge's address | current (fixed) |
 | 38c | fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails | current (fixed at boot; a reload by hand still needs the flowtable deleted first) |
+| 40 | One stuck AT command wedged the control panel; a second per AT command on OpenWrt | current (fixed) |
+| 41 | The vendor daemons' own account | current |
+| 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
+| 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 
 ## Hardware and firmware facts
 
@@ -177,7 +183,8 @@ The UDC only appears when the whole chain probes, in this order:
   libraries. Requirements that were each discovered by failure:
   1. Copy `/dev/__properties__` from a running Android so property reads work.
   2. Create `/dev/block/by-name` links and apply Android's node ownership (`ueventd.rc` plus `chown`/`chmod`
-     from vendor `init*.rc`), because `modem_control` drops to uid `system` (1000).
+     from vendor `init*.rc`), because `modem_control` drops to uid `system` (1000). (On a distribution it starts as
+     the account `mu300vnd` instead and the nodes are that account's: 41.)
   3. Bind-mount a copy of `/proc/cmdline` with `androidboot.slot_suffix=_a` so it loads the `_a` modem images
      (LK passes `_b` when booting the trial slot).
   4. **Exec the binary directly.** `sprd_modem_loader` rejects every ioctl/write unless `current->comm` is
@@ -780,9 +787,16 @@ buffers to the bus and leave when there is no tx context yet.
 * `docker export` leaves an empty `/etc/resolv.conf`: `resolvectl query` works but glibc programs cannot resolve names.
   Link it to `../run/systemd/resolve/stub-resolv.conf`.
 * busybox/toybox tar drop xattrs, so `ping` loses `cap_net_raw`; `mu300-fixups.service` restores it.
-* Android's uid `system` (1000) is also Ubuntu's first user, so modem device nodes show up as owned by `ubuntu`.
+* Android's uid `system` (1000) is also Ubuntu's first user, so modem device nodes showed up as owned by `ubuntu` -
+  writable by it, the modem's calibration among them. Fixed in 41: they are the vendor account's (`mu300vnd`) now.
 
 ### 26b. The tunnel needs sing-box's gvisor stack on this kernel
+**2026-10-09: the VPN moved to its own repository.** `mu300-vpn`, its drivers and engines are the module of
+[dikeckaan/mu300-linux-vpn](https://github.com/dikeckaan/mu300-linux-vpn) now, installed as the `vpn` extra
+(`mu300-extra install vpn`); the images carry none of it. These findings (26b, 26e, 26f) stay here as they were
+written, and are continued in that repository's docs; paths like `/opt/mu300/lib/vpn` are the module's, linked into
+each system by its `hooks/link`.
+
 Everything through the VPN failed while the VPN itself looked healthy: it connected to its server, resolved
 names through the tunnel, and `sbtun` counted the packets going in. Applications got `Connection refused` from
 `nc` and `Failed to send request: Operation not permitted` from `uclient-fetch`, and sing-box logged one line
@@ -827,6 +841,8 @@ Sending picks the encoding from the text - GSM 7-bit while every character fits 
 what makes `ığşçöü ÇĞİÖŞÜ` survive. Verified by sending to the SIM's own number and reading it back intact.
 
 ### 26e. The Xray engine, and a connectivity test that could only say no
+(Now the VPN module of [dikeckaan/mu300-linux-vpn](https://github.com/dikeckaan/mu300-linux-vpn): see 26b.)
+
 
 **Update 2026-10-07:** since PR #31 the engines (Xray-core, hev-socks5-tunnel, sing-box) are not in the Ubuntu or
 OpenWrt images. They are an optional release asset, `mu300-extra-vpn.tar.gz`, installed with
@@ -869,6 +885,8 @@ something that must succeed before believing a failure. To test the bearer while
 address around it: `ip rule add pref 8999 to <addr> lookup main`, test, delete the rule.
 
 ### 26f. One VPN command for every protocol: profiles and engine drivers
+(Now the VPN module of [dikeckaan/mu300-linux-vpn](https://github.com/dikeckaan/mu300-linux-vpn): see 26b.)
+
 `mu300-vpn` spoke one protocol: a VLESS link in `vpn.conf`. People have WireGuard configs, OpenVPN files,
 Clash/mihomo subscriptions and raw Xray/sing-box JSON from their panels, so it now keeps named profiles under
 `/etc/mu300/vpn` (`profile import|add|edit|use|remove|export|show|list`, `settings`, `engines`, `check`) and runs
@@ -2169,6 +2187,63 @@ the whole set together (65 kmods). xl2tpd starts at boot and listens on UDP 1701
 images also carry the 6.18 modules from `upstream/out` (about 20 MiB unpacked, some 6 MB more in the tarball), so
 the switch to 6.18 needs nothing more. Not tried on an OpenWrt device in this round.
 
+### 31p. BTF and eBPF for dae, and the tracing that broke boots
+dae (github.com/daeuniverse/dae, an eBPF transparent proxy; tested v2.1.1, linux-arm64, checksum from its
+release) needs kernel 5.17 or newer, BTF and a list of BPF options. Neither mainline kernel had BTF or the BPF
+JIT, and dae v2.1.1 refused to start on v2026.10.18's 7.2.9: `load eBPF objects: ... program
+tproxy_lan_ingress_l2: load program: invalid argument: callbacks are not allowed in non-JITed programs`. The 5.4
+kernel is too old for dae and was not changed.
+
+Now in `mu300-mainline.config`, for both kernels: `DEBUG_INFO_DWARF5`, `DEBUG_INFO_BTF`, `DEBUG_INFO_BTF_MODULES`,
+`MODULE_ALLOW_BTF_MISMATCH` (a module with bad BTF still loads), `BPF_JIT`, `BPF_STREAM_PARSER`, `NET_INGRESS`,
+`NET_EGRESS` and `NETKIT` (dae's preferred `dae0` pair; it uses a veth pair without it). The DWARF is compressed
+(`DEBUG_INFO_COMPRESSED_ZSTD`): vmlinux is 157 MB instead of 312 MB, and two build trees fit in one docker
+volume again. The build image has `dwarves` (pahole 1.31 on Ubuntu 26.04), and `build-modules.sh` now runs
+`strip --strip-debug` on the out-of-tree modules, which keeps their `.BTF`; without it every vendor module carries
+megabytes of DWARF.
+
+**Not taken: kprobes and tracing.** dae's list also has `KPROBES`, `KPROBE_EVENTS` and `BPF_EVENTS` (with
+`PERF_EVENTS` and `FTRACE` under them). With them, 7.2.9 came up 14 times in a row on F50-B and failed the 15th
+boot, then 21 times and failed the 22nd: 2 failures in 36 reboots. Both times the same thing at the same moment,
+about 11.5 s after start, as the modem's `kbc_start_cp` ran in Trusty and the Wi-Fi card's first PCIe scan
+failed as usual (`Device found, but not active`): page tables and the printk buffer overwritten (`Bad page map`
+with self-referencing PTEs, faults in `vfs_read`, `jbd2_write_access_granted`, `get_data`, and in both boots a
+fault at the same address `ffffffffffad82a0`), a panic, and LK's watchdog dumps until the board fell back to
+Android about 20 minutes later. Without the tracing group, the same kernel came up 47 of 47 times (6.18: 16 of 16); stock
+v2026.10.18 7.2.9 did 100 of 100 the day before. What writes there is not known. The tracing options change where
+early allocations land rather than doing anything at 11.5 s themselves, so this looks like a DMA write (modem or
+Wi-Fi) into memory the kernel owns, which another kernel layout may hit too; a kernel change that moves the early
+allocations needs a reboot loop of 40 or more. What dae loses without them: `dae trace`, the kprobe that accounts
+for its sockmap TCP offload (the fentry variant needs the function tracer), and `bpf_get_current_task` for
+process names in cgroup programs (it logs a warning and uses `bpf_get_current_comm`).
+
+dae on F50-B (Ubuntu 24.04, Wi-Fi client of a home network, `wan_interface: wlan0`, a shadowsocks node on the Mac
+over USB LAN; the oracle-arm test server was not reachable because the Mac's tailnet was logged out): it loads in
+1.2 s, creates the netkit pair `dae0`/`dae0peer` "via netlink API (performance mode)", and holds 14 `SCHED_CLS`, 4
+`CGROUP_SOCK_ADDR` (connect4/6, sendmsg4/6) and 2 `CGROUP_SOCK` programs, 21 maps, tcx links on `wlan0` (ingress,
+egress) and `dae0`, and 6 cgroup links. `curl https://ifconfig.me` answered 200 and the shadowsocks server logged
+`established tcp tunnel ... <-> 34.160.111.145:443` for each request; 50 MB from Cloudflare came at 16.5 MB/s
+through dae and the proxy, 20.0 MB/s direct once dae was stopped (`dae0` removed with it). The same test passed on
+the kernel without tracing, with the warning above.
+
+Measured (Image as built, before `wrap-image.py` adds 1.5 MiB; memory 20 s after boot on F50-B):
+
+| | 6.18.55 v2026.10.18 | 6.18.55 BTF | 7.2.9 v2026.10.18 | 7.2.9 BTF + tracing | 7.2.9 BTF |
+|---|---|---|---|---|---|
+| Image (bytes) | 17 512 456 | 21 649 416 | 18 069 512 | 26 925 064 | 22 337 544 |
+| of it `.BTF` | - | 4 019 543 | - | 4 875 150 | 4 104 758 |
+| modules in the bundle | 20.3 MiB | 23.8 MiB | 21.9 MiB | 34.6 MiB | 25.7 MiB |
+| ramdisk segment (bytes) | 1 776 099 | 1 832 495 | 1 777 340 | 1 836 866 | 1 833 918 |
+| MemTotal (kB) | | 1 501 344 | 1 455 776 | 1 447 840 | 1 451 616 |
+| MemAvailable (kB) | | 1 312 360-1 321 424 | 1 270 356-1 274 324 | 1 249 648-1 264 200 | 1 254 696-1 288 712 |
+| kernel boot (systemd-analyze) | | | 5.25 s | 5.40 s | 5.34 s |
+| reboots on F50-B | 100/100 (10-10) | 16/16 | 100/100 (10-10) | 34/36 | 47/47 |
+
+So BTF costs about 4 MiB of RAM (it is read-only data, in `rodata`: 3028K before, 7060K after) and the boot is
+0.1 s slower; the modules' own BTF is about 4.4 MB on disk. The boot image (header, wrapped 7.2 kernel 23.9 MB,
+F50-B's device ramdisk 6.5 MB, generic segment 1.8 MB) is 32.3 MB: under the 48 MiB where init keeps its
+persistent log in the same partition (64 MiB), with about 18 MB to spare.
+
 ## Updating on the device
 
 ### 32. Old kernels, an idle IPA, and an update that ended in Android
@@ -2255,6 +2330,30 @@ a system added beside another, or when `MU300_PASSWORD`/`MU300_PASSWORD_RESET=ye
 refuses a system that would be left with an empty password or the image's default. See
 `android/magisk/installer/mu300-install.sh` and `tools/android-install.sh`. No device test of that change is
 recorded.
+
+### 32c. Packages installed on the device, and the settings they left behind (#116)
+
+An update puts the release's image in place and keeps `/etc/config` (OpenWrt) and `/etc/mu300`. Packages added on
+the device (`apk add`) were gone afterwards and their settings stayed. A user with OpenClash lost the internet: while
+it runs, OpenClash points dnsmasq at itself (`dhcp.@dnsmasq[0].server=127.0.0.1#7874`, `noresolv=1`; its init
+script, `change_dnsmasq`) and reverts that when it stops, but the update had copied `/etc/config/dhcp` while it was
+running. The new system had dnsmasq forwarding to a port nothing listened on: no DNS. Its own `/etc/config/openclash`
+was inert without the program; fw4 skips an include whose path is missing (`openclash`'s is in `/var/etc`). Argon's
+theme entry in `/etc/config/luci` stayed and pointed at files that were gone.
+
+Since then `mu300-update apply` and the installers' update write down what was added (OpenWrt: `/etc/apk/world`;
+Ubuntu: dpkg's packages apt did not pull in) less the image's own list (`/etc/mu300/image-packages`, written at build
+time; older systems: the new image's world and `packages.txt`), move those packages' own `etc/config` files to
+`/etc/mu300/orphaned-config/` (never one the new image has), and `mu300-user-packages` installs them again at the
+first boot and puts the files back. A LuCI theme whose files are not there goes off LuCI's list. The DNS leftover is
+handled fail-closed (DNS privacy first; for some users the internet is only usable through the VPN): after the
+reinstall step, a loopback forwarder is touched only when its port is a value in the set-aside settings of a recorded
+package that is definitively absent (failed in the feeds, given up, skipped), nothing binds it over a window of
+looks, the project's own settings do not name it and the VPN is off - and then only when another server stays. The
+only forwarder is reported (status, the login note) and stays: `mu300-user-packages repair-dns` removes it on request
+and only then lets dnsmasq use the connection's resolvers (the file as it was:
+`orphaned-config/etc/config/dhcp.before-dns-repair`). Tested in a container of the openwrt-luci rootfs with real apk and uci; no device test
+recorded yet.
 
 ## ZTE U30 Air
 
@@ -2599,6 +2698,38 @@ Throughput did not move beyond its spread: phone -> device 537-555 vs 553-571 Mb
 
 ## The second F50
 
+### 33l. The charge limit, a Type-C source's current, and the Wi-Fi phy's address (a community build reviewed)
+
+A community build for the U30 Air, `v2026.10.15-charge2` by oswaldxdd (github.com/oswaldxdd/mu300-linux, tag
+`v2026.10.15-charge2`, commit 321f771: a snapshot of the source under `experimental/u30air-charge2/source`, the
+same files as its release zip), replaced the U30 Air's 7.2 charging with its own stack: a native SGM41511 driver
+with the stock JEITA tables and a kernel-enforced 0-100 % limit, a 1655-line fuel gauge with capacity learning
+(records hashed to the eMMC CID), and Unisoc's whole Type-C/PD/TCPM stack (about 8800 lines of vendor code). Its
+sources are GPL with their headers. What was taken, and how:
+
+- **The charge limit**, as a feature of mu300-power rather than of a second charger driver: `CHARGE_TO` is any
+  whole number 0-100. 1-99 stops charging at N % and starts it again under N-5 (at once when the limit was changed);
+  0 never charges, the device runs on the charger; 100 lets go at once. The build's 0 % held the battery for good,
+  but the SGM41511 still supplements a load its input does not cover from the battery, so on a 500 mA port the
+  battery would drain to the cut-off while plugged in: the guard never holds it under 5 %. The temperature guard
+  keeps the last word. `mu300-power charge-limit [N]`; System > Power has a number field (U30 Air only).
+- **A Type-C source's current.** BC1.2 sees a hub or splitter with a charger behind it as an SDP: 500 mA. The build
+  got the source's offer from the TCPM stack. Only one register of it is needed: the UMP9620's Type-C block (typec@380,
+  no driver here) runs its state machine on its own, and STATUS (+0x1c) holds the state in bits 4:0 (2: attached as
+  a sink) and the source's Rp in bits 7:6 (1: 1.5 A, 2: 3 A). Patch 0012 makes bq256xx take the larger of BC1.2's
+  current and the Rp's (3 A taken as 2 A). On the Mac's USB-C port (an SDP) the status read 0x6082 (sink, 3 A): input
+  2000 mA, the battery charging at 1.6 A instead of 0.36 A. Right after a USB role change the block was still in
+  attach-wait (0x6001) when the VBUS event came, so the read waits up to 1.5 s for the attach.
+- **USB host on outside power.** `mu300-usb host` refused while something powered the port. With a splitter (charger
+  and a USB network adapter on one port) that is the case to support: host with the boost left off.
+- **The Wi-Fi phy's address** (`/sys/class/ieee80211/phy0/macaddress`) was all zeros; it is now the factory address
+  LK passes (the one wlan0 had already), on both boards.
+
+Left out: the native charger and fuel gauge (they replace patches 0006/0009-0011, which are tested, for 7.2 only and
+for every 7.2 kernel - the F50 runs the same one), capacity learning and the 0.1 % display (a full learning cycle
+was not verified by its author), the TCPM stack (PD at 5 V gives nothing over the Rp read), and the build's mu300-usb,
+which drops the boost and with it host mode on battery.
+
 ### 34. LEDs, and the defects from a second board's test
 A second F50 (restored from F50 #1's backup, with its own eMMC and factory Wi-Fi address) was tested from a user's
 point of view; what came out of it, measured on 2026-10-05:
@@ -2774,7 +2905,7 @@ What was built:
   not). It powers the device off only unplugged (no charger online, no extcon `USB=1`, the battery not `Charging`),
   below 5 % for three loops in a row, never on one sample. OpenWrt's early radio warm-up skips a charging boot.
 * **Charge guard**: charging off at battery `temp` above 45.0 C or below 0 C, on again below 40.0 C and above 3.0 C;
-  with `CHARGE_TO=80` off at 80 % and on below 75 %. It writes the bq256xx charger's `charge_type` (`N/A` off,
+  with `CHARGE_TO=N` (0-100, §33l) off at N % and on below N-5. It writes the bq256xx charger's `charge_type` (`N/A` off,
   `Fast` on). bq256xx reads `N/A` whenever it is not charging, so `Fast` is written only when the guard itself turned
   charging off (`/run/mu300/power/charge-off`); the driver resets its switch at probe, so a marker lost with `/run`
   leaves nothing off. It logs only when that marker changes, and a failed write turns the guard off for the boot
@@ -3025,6 +3156,44 @@ the two panic records) and `/root/susp2/` (the follow-up, with the scripts that 
 6.18.55 build of branch `suspend-drivers` (radio on, Wi-Fi client, one more 20 s `mem` checked). The 7.2.9
 build of the branch compiles, kernel and all modules; it has not been booted yet.
 
+### 39. The SMS pool: durable before the SIM lets go, long messages that never complete, forwarding
+
+**Where a message can be lost.** This modem is told `AT+CNMI=2,1` (mu300-smsd): it stores a new message on the SIM
+(or ME) and announces it with `+CMTI`, it does not hand over a `+CMT` that the host must acknowledge. The SIM is the
+safe copy, and the only "acknowledgement" is the pool's `AT+CMGD` once the message is pooled. That used to follow a
+global `sync`, which on this device flushes the SD card's loop image too and can stall for seconds. Now each new
+message file is fsynced before its rename, and the pool directory, `next_id` and the pool's parent before the first
+`AT+CMGD` (busybox's `fsync` applet on OpenWrt; coreutils `sync FILE...` elsewhere; the global sync only with
+neither). `next_id` is written aside and renamed, and the highest id in the pool counts too: an id file a power cut
+left empty would have restarted the ids and overwritten message 1.
+
+**Parts that never come.** A long message waited on the SIM until all its parts were there - for ever, if one was
+lost. `$POOL/partial` now remembers when each waiting message was first seen and whether it was unread then
+(`AT+CMGL` marks what it lists read, §35); after `MU300_SMS_PARTIAL_WAIT` (an hour) the parts that did arrive are
+pooled with `[...]` for each missing one and an `incomplete: HAVE/TOTAL` header (the panel says so under the text). A
+part that turns up later is pooled at once as a message of its own. `sms watch` (every system) holds a long message
+back the same way.
+
+**Forwarding** (Cellular > SMS forwarding, `mu300-sms-forward`): driven by the pool (mu300-sms hands over new ids),
+never by the modem. HTTP goes through ucode's `uclient` module in a helper that reads the whole request on stdin, so
+the bot token in Telegram's URL and the webhook's headers are never in a command line; uclient sends a POST body
+chunked. Found on the device: `uclient.connect()` to a refused port returns null, and calling `request()` after it
+segfaults ucode, so the helper checks connect first; a timeout ends with `data_eof` and status 0. `ssl_init({verify:
+true})` refused self-signed, expired and wrong-host certificates (badssl.com: errors 3 and 4).
+
+Checked on the U30 Air (7.2.9, openwrt-luci, v2026.10.17 with these files copied over, then restored): sending to the
+SIM's own number failed (`+CMS ERROR: 28`, the line has no credit, as in §35), so received messages were stored with
+`AT+CMGW=<len>,0` (SMS-DELIVER PDUs, received-unread) and went through the same listing, pooling and `AT+CMGD` as a
+real one. A single message: pooled, off the SIM, forwarded to a webhook on the Mac (JSON, the custom header) within the
+30 s sync. With wrapped `fsync`/`sync`/`mu300-at`: fsync of the file, then of the directory and `next_id`, then
+`AT+CMGR`/`AT+CMGD`, and no global sync. Parts 1 and 3 of 3: waiting (state written once), pooled with the wait
+lowered as `first [...] third`, `incomplete: 2/3`; part 2 injected afterwards was pooled by the next periodic sync as
+`[...]second[...]`. Webhook down: `connect, attempt 1, next in 30 s`, `attempt 2, next in 60 s`, delivered when it
+came back; the queue file left `/etc` when empty. A fake Telegram token: `HTTP 401`, not retried. Every process's
+command line sampled ~45 000 times during deliveries: no token, URL or header. The keyword filter skipped a message
+without the keyword. The page in English and Turkish (save, a refusal translated, the test button, the log). Not
+tested: e-mail (the image has no msmtp), the SMS target (no credit), a real incoming SMS from the network.
+
 ## Users' reports
 
 ### 38. Three defects from users' reports, 2026-10-07
@@ -3117,11 +3286,12 @@ Two fixes, both in `openwrt/overlay`:
   reload, under the same conditions 20-firewall reloads on: an ifup of an interface that is in a zone. The reload
   succeeds; the offloaded flows of the moment take the ordinary path until the flowtable is back.
 
-Not covered on 5.4: a reload that is not an ifup's - the firewall saved in LuCI, `fw4 reload` by hand, and
-`mu300-vpn`'s own `/etc/init.d/firewall reload` after it adds the tunnel to the wan zone (the clients get no
-forwarding into the VPN until the next ifup of a zone interface) - still fails while the flowtable is there. Until a cleaner hook is found (the flowtable deleted from fw4's own reload
-path), the way to apply a firewall change on 5.4 is `nft delete flowtable inet fw4 ft; fw4 reload`, or a reboot.
-Turning software flow offloading off would end that, at the cost of the fast path on the one kernel that has
+Not covered by those two on 5.4: a reload that is not an ifup's - the firewall saved in LuCI, `fw4 reload` or
+`fw4 restart` by hand, a package's reload (PassWall2, #95), and `mu300-vpn`'s own `/etc/init.d/firewall reload`
+after it adds the tunnel to the wan zone. Since #95 the flowtable is deleted from fw4's own path:
+`openwrt/patches/fw4-old-kernel-flowtable.patch` makes `/sbin/fw4` delete `inet fw4 ft` in a transaction of its
+own before `start`/`reload` apply the ruleset and before `restart` checks it, on kernels before 5.13 only. Turning
+software flow offloading off is no longer needed for that; it would cost the fast path on the one kernel that has
 none other.
 
 #### 38d. Reports that were already fixed, or are not defects
@@ -3155,7 +3325,243 @@ brings it back for a while. Read in the code, not measured on a device:
   `forward_router_advertisement` in `src/router.c`) and keeps no prefix state, and the carrier sends nothing for a
   prefix of a previous PDP context. Clients keep such addresses for the lifetime the carrier gave, and a client that
   picks one as its source gets no NAT66 replies once the /64 has left the bearer (no route to `br-lan`). A deprecating
-  RA (preferred lifetime 0) for the old /64 would have to be sent by the device itself; there is no tool on the image
-  for that today. Open, to measure on a device: `ip -6 addr show dev sipa_eth0` and `ip -6 route show dev br-lan`
-  before and after a renumber (with and without a wan restart), and on the LAN `tcpdump -i br-lan -vv icmp6 and
-  ip6[40]=134` for the prefix options and lifetimes the relayed RA carries.
+  RA (preferred lifetime 0) for the old /64 has to come from the device itself. Fixed: `ndp-learn` sends one with
+  `ra-deprecate` (ucode, raw ICMPv6 socket; `ucode-mod-socket` in the panel image) on br-lan, valid lifetime 2 h
+  (the floor RFC 4862 lets a host apply), router lifetime what is left of the carrier's router, in three rounds 10 s
+  apart. It waits until a different /64 is on the bearer: a WAN restart flushes the bearer and usually gets the same
+  /64 back, which must not be deprecated. Measured on an F50 (openwrt-luci, 6.18; a macOS client on the USB LAN): a
+  /64 that left the bearer was withdrawn within one round and the client marked its addresses `deprecated`
+  (`ndp -p`: pltime 0, vltime 7200) while the live /64 stayed preferred and the default router stayed; a WAN restart
+  that got the same /64 back withdrew nothing. Not measured: a real carrier renumber (the carrier here kept its /64
+  across WAN restarts), and a second relay behind the device, which forwards the RA like any other.
+
+### 40. One stuck AT command wedged the control panel
+
+**Report (U30 Air, openwrt-luci, v2026.10.18):** an AT command hung on one of the panel's pages; after that the whole
+panel was useless, also after a reboot, and later it came back by itself. The dashboard's battery tile, which needs no
+AT at all, stayed empty. The logs of that boot were in RAM and gone.
+
+**What could do that, measured on the U30 Air (2026-10-11):**
+
+* **`mu300-at`'s lock wait was ten times longer than asked.** It counted 0.1 s naps with `sleep 0.1 || sleep 1`, and
+  OpenWrt's `/bin/sleep` refuses a fraction (`sleep: invalid number '0.1'`), so every nap was a second:
+  `MU300_AT_LOCK_WAIT=1` took 10 s on the device, the panel's 5 s wait 50 s, the 12 s of every collector and lock read
+  two minutes, mobile-data's 90 s a quarter of an hour. rpcd ends a call at 30 s (`rpcd -t 30`) and the browser at 20 s
+  (LuCI's `rpctimeout`), but the client went on waiting, took the lock long after nobody wanted the answer, and sent
+  the command anyway. The wait is now seconds on the clock (`MU300_AT_LOCK_WAIT=0` is one try).
+* **Requests that read the modem inline.** `lock_get` read eight AT commands inside the request whenever there was no
+  cache - after every reboot, since the cache is in `/run`, and the home page asks at once. `signal` ran a collector
+  round inside the request, and a collector waited each command's whole budget (T + 31 s) on each of four channels.
+  rpcd killed the call, never its children: they ran on, held the pool slots and the nr1 lock, and the page started
+  new ones. Now `lock_get` serves the cache and reads in the background (one reader at a time), and a collector round
+  has a deadline (14 s for the page's live read, 12 s and 25 s in the background).
+* **One slow call blanked the page.** LuCI sends the calls a page makes in the same moment as one HTTP request, and
+  uhttpd answers them one after the other: the status snapshot (battery, CPU) waited behind the lock reading, and
+  when the browser gave up at 20 s every call in the request failed together. uhttpd's `max_requests 3` does not apply
+  to `/ubus` (measured: a fourth call was answered at once beside three slow ones). Every panel call now goes on its
+  own (`nobatch`), and the polls back off after failures.
+* **After a reboot** the panel asked for the lock state with no cache, while mobile-data's bring-up and the boot
+  replay of saved locks (an SFUN restart) held the modem; with the ten-fold waits above that is minutes of busy
+  channels, which fits "even after a reboot, then it came back by itself".
+
+Reproduced safely: the nr1, nr6 and nr7 daemons stopped (SIGSTOP; never a restart, see 13b) for 150 s. With the fix,
+`sysinfo` and `status` answered in 0.5 s throughout and the dashboard showed battery and CPU within seconds of a
+reload, the AT terminal said "busy" after 3 s, `lock_get fresh` served the cache after 12 s, `signal` gave up at 14 s,
+at most three collectors were alive at any time, and everything was back by itself once the daemons ran again.
+
+**Also in the fix:** AT commands that take minutes or change the modem beyond the answer need a confirmation in the
+terminal (scans run as a background job of at most three minutes; band, mode and cell locks are said to persist into
+Android, #96); a client holding the AT lock past the deadline it wrote for itself (`lock/until`) is ended. The panel
+keeps a log of its calls - method, time taken, outcome, never a value - in RAM, copied to
+`/etc/unisoc-modem/panel-ops.log` at most every five minutes and at shutdown, with the previous boot's copy beside it
+(Device page, "Recent modem operations"). Two LuCI status pages are put in front of: Channel Analysis scans as soon as
+it opens and on every poll, and a scan takes this driver's access point off its channel (a Mac on the hotspot did not
+rejoin), so with an access point it waits for a click; System Log reads 250 lines every 15 s instead of 1000 every 5 s
+(the ~19 s AT round trips seen with it open were not reproduced: one 1000-line `log read` costs 0.02 s here).
+
+**A second per AT command on OpenWrt (fixed).** OpenWrt's `/bin/sh` refuses a fractional `read -t` too ("read:
+invalid timeout"), so `mu300-atd` drained a whole second before every command: every AT command took about a second
+and the panel's fast collector round seven. The daemon now runs itself again under a shell that takes fractions when
+its own does not: the static busybox next to it (`/opt/mu300/bin/busybox ash`), else bash. On Ubuntu, dash already
+hands over to bash 5, which takes them, so nothing changes there. `mobile-data` and `mu300-nfc` nap through the
+static busybox's `sleep` as well (bash has no `sleep` of its own, and `/bin/sleep` refuses "0.2": `mobile-data`'s lock
+polls waited whole seconds, and `mu300-nfc`'s bare `sleep 0.2` did not wait at all). Measured on the U30 Air, before
+and after a reboot onto the change (`mu300-at -t 2 AT+CSQ`, five in a row on each panel channel; a `cell fast` round):
+
+| | nr1 | nr6 | nr7 | fast collector round |
+|---|---|---|---|---|
+| before (`/bin/sh`) | 1.04 s | 1.04 s | 1.04 s | 7.37 s |
+| after (`busybox ash`) | 0.13 s | 0.13 s | 0.13 s | 1.08 s |
+
+(The first command on each channel after the boot still takes a second: nothing has ended cleanly yet, so the first
+drain is the slow one, by design.)
+
+## Security
+
+### 41. The vendor daemons' own account
+
+Found on an F50 (Ubuntu 24.04, kernel 7.2.9): `/dev/disk/by-partlabel/nr_fixnv1_a` (the modem's calibration NV, which
+nothing can restore) and `persist` were `ubuntu:ubuntu 0660`, so any process of the login user could overwrite them
+without sudo; `/dev/data0_gnss` and `/dev/mali0` were `0666`, and so were `spipe_pm*`, `ion`, `dma_heap/*`, ...
+where the kernel has them. `modem_control` and `refnotify` ran as `ubuntu` too: the login user could ptrace them
+(`modem_control` keeps `CAP_CHOWN` and `CAP_BLOCK_SUSPEND`, `refnotify` `CAP_SYS_TIME`).
+
+* Cause: `gen-ueventd-perms.py` translated Android's ids as numbers. Android's `system` is uid 1000, and uid 1000 is
+  the first human account on a distribution (`ubuntu`; `alarm` on Arch). Modes were taken over as they were, `0666`
+  included.
+* The number is in the binaries. Both daemons begin `main` with `switchUserToSystem`: `setgroups` (1000 1001 2000
+  3010), `prctl(PR_SET_KEEPCAPS)`, `setuid(0x3e8)` (an immediate in the code, `mov w0, #0x3e8`), then `capset` down to
+  what they keep. They never call `setgid` (they ran with gid 0) and nothing else checks the uid (`getuid` is not
+  even imported). A failed `setgroups` or `setuid` is logged (`setgroups failed`, `uidset failed`) and they carry on.
+* Fix: a system account `mu300vnd` (the images: `rootfs/assemble.sh`, `arch/build-rootfs.sh`; a system without it:
+  `android-vendor-start` makes it before anything else uses it). `android-run` starts the two daemons as it with
+  `setpriv`: no other groups, no new privileges, and only the capabilities they keep on Android plus `CAP_SYS_CHROOT`
+  for `chroot`, which their own `capset` drops - their `setuid(1000)` then fails, harmlessly. `android-vendor-start`
+  starts `modem_control` through `android-run` (still an exec, so the task name stays `modem_control`).
+  `cp_diskserver` never switches users on Android either and stays root.
+* `ueventd-perms.sh`: `system` and `radio` become `mu300vnd` (owner `$V`, group `$VG`), `graphics` on a node Android
+  gives everyone (`mali0`, `ion`, `dma_heap/*`, `sprd_dmabuf`, `pvr_sync`: `0666`) the `video` group (`root:video
+  0660`), anywhere else root, as is every other Android id and every id the generator does not know. No node is left
+  with bits for others, nothing is writable by everyone, a node that is root's alone is `0600`. Root's alone: input
+  events, the USB serial console `ttyGS*` (getty and login hand it out as on any Linux: a serial login still works) and
+  `firmware_class`'s path (whoever writes it chooses the firmware the kernel loads) - all three were `ubuntu`'s. The RTC
+  stays root's but is the vendor group's: `refnotify` opens `/dev/rtc0` (`root:root 0660`), which it reached through
+  gid 0 before ("RefNotify open /dev/rtc0 failed, error: Permission denied" until it was). The ids are looked up when
+  the script runs, in `/etc/passwd` and `/etc/group`; without the account (OpenWrt, the initramfs: no account at
+  1000 there) it is uid/gid 1000, which the daemons switch to themselves, and the GPU's group is root.
+* Nobody gains anything: `tests/test_vendor_ids.py` applies the script of v2026.10.18 and the new one to every node
+  they name (a glob as one name) and fails if `ubuntu`, a second login user in the usual groups (`video`, `render`,
+  `input`, `dialout`, ...) or everyone else can do anything with a node they could not before. 333 of 349 nodes
+  changed; the only one more open is the RTC, for the vendor group (it was not touched before).
+* The generator's inputs are in `android-vendor/ueventd/` now (the `/dev` rules of the device's `ueventd.rc` and the
+  `chown`/`chmod` lines of its vendor init `*.rc`), and a test checks the committed script is the generator's.
+* Updates: `mu300-update` takes the new image's `/etc/passwd` and adds the old system's human accounts, so an updated
+  system has the image's `mu300vnd`; the nodes are handed out by name at every boot, so its uid does not matter.
+* Measured on F50-B (Ubuntu 24.04, 7.2.9, no SIM), the three files replaced on a v2026.10.18 system: the account
+  made at boot (`mu300vnd` 999/991); `modem_control` and `refnotify` Uid 999, Gid 991, no groups, NoNewPrivs 1,
+  CapEff `0x1000000001` and `0x2000000` (as on Android); `cp_diskserver` root; the modem booted (`modem@0..2 start
+  over`), `AT` OK, `+CFUN: 1`, `+CPIN` `+CME ERROR: 10` (no SIM, as before), `AT+CGMR` answers; `nr_fixnv1_a` and
+  `persist` `mu300vnd:mu300vnd 0660` and `head` on them as `ubuntu` "Permission denied"; no world-writable node in
+  `/dev` besides the standard ones, nothing in `/dev` or `/sys` owned by uid 1000; `mali0` `root:video 0660` and
+  `cltest` (OpenCL) passes; Wi-Fi client still connected; `ttyGS0`, `input/event0` and the firmware path `root:root
+0600`, and a login on the serial console works (login gives `ttyGS0` to the user, getty takes it back); `timedatectl` reads the RTC; up past the PM watchdog's
+  ~290 s. The vendor log has the same errors as before the change (no `/dev/cp_dump`, no `/proc/bootconfig`, no
+  property service) plus the two logged failed switches. Not measured: the 5.4 kernel, OpenWrt (unchanged there but
+  for the modes), the modem with a SIM.
+
+### 42. No access point on a DFS channel (user report, 2026-10-11)
+
+A user's SC2355 device on OpenWrt 25.12.5, hotspot on channel 60 (5 GHz, 80 MHz, country CN): hostapd logs
+`start_dfs_cac() failed, -1`, `Interface initialization failed`, `AP-DISABLED`, and the hotspot never comes up;
+channel 149 works.
+
+* **Cause.** 52-64 and 100-144 are DFS channels in every regulatory domain (wireless-regdb flags them `DFS`, the
+  kernel `radar detection`; a few countries also have 36-48 or 149-165 so). An access point there must first listen
+  for radar (CAC); hostapd asks the driver through `NL80211_CMD_RADAR_DETECT`, and cfg80211 answers `-EOPNOTSUPP`
+  when the driver has no `start_radar_detection` op. Neither SC2355 driver has one: not `sprd_cfg80211_ops`
+  (`common/cfg80211.c`) nor the sc2355 ops (`sc2355/init.c`) of `upstream/modules/sprd_wlan_combo`, and not the
+  vendor tree the 5.4 module is built from. No interface combination of the wiphy carries `radar_detect_widths`
+  either. The firmware does define the commands - `CMD_RADAR_DETECT` (77) and `EVT_RADAR_DETECTED` (0xA1) are in
+  `sc2355/cmdevt.h` and the API version table - but nothing in the driver sends or handles them. (The vendor tree's
+  `merlion` driver, another chip, implements `start_radar_detection` over the same command number 77, in `11h.c`; a
+  port to the sc2355 would need its CAC and radar events measured against real radar before it could be offered.)
+  Android's SoftAP never uses these channels either: its ACS list is 36-48 and 149-165 (§23).
+* **Decision.** The hotspot never goes onto a DFS channel; nothing tries to make DFS work. Every layer that picks or
+  writes the channel keeps it off them, and a DFS channel is replaced, never refused, so the hotspot does not stay
+  down:
+  * `opt/mu300/lib/wifi-channels.sh` (shared by the tools below): the firmware's channels a country allows without
+    DFS and without NO-IR, from wireless-regdb's `db.txt` - the full 36-48 + 149-165 except in about 70 countries
+    (no 149-165 in TR, JP and much of Europe's neighbourhood; no 36-48 in BD, PK and a few more; no 165 in ID; none
+    at all in the world domain `00` and five countries, which use 2.4 GHz). The default is 36, else 149; the width
+    is 80 MHz where the block of four is allowed (36-48, 149-161), 40 for a pair, 20 for 165.
+  * Ubuntu `hotspot-start`: `CHANNEL=` from `hotspot.conf` goes through it (a DFS channel becomes the default with
+    one line on stderr, in the journal; `auto` is the default); when the kernel's flags (`iw list`) still refuse the
+    channel it tries the country's other channels before falling back to 2.4 GHz (it used to fall back at once).
+  * OpenWrt `openwrt-wifi-config`: the first configuration from `hotspot.conf` writes the resolved channel, the
+    width as `VHT80/40/20`, `channels` (the country's list, hostapd's `chanlist` for ACS) and `acs_exclude_dfs 1`.
+    At every later boot it rewrites a DFS channel set in LuCI to the default (the htmode narrowed to what fits),
+    so LuCI shows the channel the hotspot really uses. `mu300-wifi-band 5` writes the same. The Android import keeps
+    writing `CHANNEL=auto`.
+  * wifi-scripts (`openwrt/patches/wifi-scripts-no-dfs.patch`, applied by `openwrt/build-rootfs.sh` with
+    `--fuzz=0` like the fw4 patches, the build stops if it no longer applies): `hostapd.uc` reads the capability
+    from the driver - no interface combination with `radar_detect_widths` - and for such a driver, on 5 GHz, an
+    explicit channel the kernel flags `radar` becomes 36, else 149, else the first allowed one, with the width
+    narrowed to what the allowed channels hold (160 becomes 80), and a `wifi-scripts: channel 60 is a DFS channel
+    and this driver cannot detect radar ...` line in `logread`; `auto` gets `acs_exclude_dfs=1`. This is what
+    catches a DFS channel chosen in LuCI's Network > Wireless before the next boot. Drivers that can detect radar
+    are untouched.
+* **Not changed.** LuCI's channel list still offers the DFS channels: `luci-mod-network` marks a channel unavailable
+  only when iwinfo reports it restricted (NO-IR without radar), and iwinfo does not report radar at all; hiding them
+  would mean patching LuCI's own (minified) page. The driver is not changed either: the only ways to make cfg80211
+  refuse an AP there (clearing `IEEE80211_CHAN_RADAR` would let an AP start without CAC, which is not allowed;
+  marking the channels disabled would cost the Wi-Fi client its DFS networks) are worse than the user-space guard.
+  The Wi-Fi client (`wifi-client`) still joins networks on DFS channels: radar detection is the access point's job.
+* **Tested** (`tests/test_wifi_channels.py`): the table, the replacement and its one line, `auto`, the widths, under
+  dash, bash and busybox ash; `hotspot-start`'s hostapd configuration with a stub `iw`; `openwrt-wifi-config` and
+  `mu300-wifi-band` with a stub `uci`, and again with the real `uci` and ash of the v2026.10.18 `openwrt-luci`
+  rootfs; and, with `MU300_WRT_IMAGE` naming an OpenWrt 25.12 image, the patch applied to the feed's wifi-scripts
+  (OpenWrt 25.12.5, ImmortalWrt 25.12.2 and the v2026.10.18 rootfs) and the hostapd configuration they generate for
+  a fake wiphy with and without radar detection. Not yet on a device: the hotspot on 36 after LuCI was set to 60,
+  and ACS (`auto` in LuCI) on this driver.
+
+### 43. adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it
+
+`mu300-usb adb on|off` (off by default) puts AOSP's adbd into the USB gadget next to the network function and the
+ACM console: `adb shell`, `push`, `pull`, `forward` from a computer, as with Android.
+
+**Which adbd.** Ubuntu 26.04 (not 24.04) packages Debian's `adbd` 34.0.5, but Debian patches it to require no
+authorisation at all on Linux (`adbd-don-t-require-authorization-on-Linux.patch`) and it listens on TCP 5555 when it
+finds no FunctionFS: a root shell for anyone on the LAN and the hotspot. It is also glibc-only. Alpine's and nmeum's
+`android-tools` build the host tools, not the daemon. So `tools/adbd/build.sh` builds it: the daemon's sources from
+nmeum's `android-tools` 34.0.5 release tarball (AOSP with BoringSSL vendored; SHA-256 pinned), a CMakeLists of its
+own for adbd alone, static against musl in Alpine 3.20: one aarch64 binary of 2.49 MB (stripped) for Ubuntu and
+OpenWrt, built in under two minutes, shipped in the images (`/opt/mu300/bin/adbd`). JDWP, adb over Wi-Fi (pairing)
+and mDNS are stubbed out (`stubs.cpp`), and protobuf with them. `mu300-adbd.patch`:
+
+* `auth_required = true` on Linux, always (ro.adb.secure=1). Keys come from `/etc/mu300/adb_keys` and
+  `/root/.android/adb_keys` only; Android's framework socket, through which the "allow USB debugging?" dialog
+  approves a key, is never taken (it would come from the environment, `ANDROID_SOCKET_adbd`). An unknown key gets
+  `unauthorized` and stays there.
+* USB only: FunctionFS on Linux (Debian's patch), and no TCP or vsock listener whatever the properties or the
+  environment say (`ADBD_PORT`); without FunctionFS adbd exits.
+* umask 022 instead of 0, and pushed files keep the computer's mode without group/other write (Android copies the
+  owner's bits to group and others: a pushed file was `rw-rw-rw-`).
+* `adb shell` without a command starts the user's login shell (bash on Ubuntu, ash on OpenWrt), `TMPDIR=/tmp`.
+* musl: `UsbFfsConnection::StopWorker` waited for `pthread_kill(t, 0)` to say `ESRCH`, which musl does not for a
+  thread that has exited but is not joined; adbd hung for good at the end of the first USB connection (an unbind,
+  a computer that goes away). The worker now says when it is done.
+
+**The gadget.** `ffs.adb` is the third function of `configs/c.1` (`f3`): the network and the console keep their
+interface numbers (macOS' NCM, Windows' RNDIS binding by MS OS descriptor for interface 0). VID/PID stay; adb finds
+the interface by its class (ff/42/01). While adb is in the gadget, bcdDevice is 0x0303 (0x0304 with RNDIS), as
+Windows caches MS OS descriptors per VID/PID/bcdDevice, and the descriptors are on with NCM/ECM too, so that adbd's
+WINUSB compatible ID reaches Windows (not tried on Windows: the Windows host was not reachable).
+
+boot/init makes and binds the gadget before any system runs; adbd comes later, so `mu300-adbd run` (the
+`mu300-adbd` service, systemd and procd) rebinds once: it starts adbd, waits for its descriptors (`ep1` appears),
+unbinds, links `f3`, binds again. FunctionFS needs the descriptors before the bind and refuses a bind without
+them, so a gadget that will not bind with adb is bound without it. Two kernel behaviours shape the rest:
+
+* `ffs_closed()` calls `unregister_gadget_item()` - the whole gadget comes off the UDC - whenever the last file of
+  a bound FunctionFS instance is closed, and adbd closes and reopens its endpoints at the end of every connection.
+  Android's init binds the gadget again (`sys.usb.ffs.ready`); here the loop of `mu300-adbd run` does, after five
+  seconds (mu300-usb-reset and OpenWrt's LAN hook unbind on purpose and bind again themselves), not in the U30 Air's
+  host role.
+* adbd closes and rewrites its descriptors every second while no bind comes (`timed out while waiting for
+  FUNCTIONFS_BIND`); a bind in that gap fails, so binds are retried 0.2 s apart.
+
+Measured on F50-B (Ubuntu 24.04, 7.2.9 with `CONFIG_USB_CONFIGFS_F_FS=y`, macOS host, adb 37.0.1): `adb devices`
+shows `MU300LINUX-324950664950-203d8329` (Android's adb on the same board is `324950664950`); with no key
+authorised and with the key file taken away, `unauthorized` ("adb: device unauthorized"); with the key, `adb shell`
+is root with a login bash on a pty, push 38.7 MB/s and pull 41.9 MB/s (20 MB, checksums equal), `adb forward`
+works. `mu300-usb adb on/off`, three boots with adb on (NCM, RNDIS, NCM) - with RNDIS a Mac has no network but adb
+works, a way in that does not need the network - the gadget unbound by hand (as FunctionFS does it): adb and SSH
+back after 6-8 s; `mu300-usb-reset --ready`: adb stays. `adb off` leaves the gadget as boot/init made it (bcdDevice
+0x0301, no MS OS descriptors, no FunctionFS mount). Not tried: OpenWrt, the vendor 5.4 kernel, a U30 Air being
+unplugged and plugged again, Windows.
+
+**How the hang showed:** `echo disconnect > /sys/class/udc/*/soft_connect` (meant to look like an unplug) ended
+adbd's connection, and adbd hung in it, holding its endpoints: FunctionFS never took the gadget off the controller,
+the loop saw it bound and had nothing to do, and the pulled-down gadget stayed off the bus until the board was
+unplugged (its root port on the Mac cannot be power-cycled). Without adb a soft disconnect stays too, until
+`echo connect`; with the fixed adbd it was not tried again.

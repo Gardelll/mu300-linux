@@ -122,8 +122,8 @@ def generic_ramdisk():
     return _generic['data']
 
 
-ROOTFS_ASSET = {'openwrt': 'mu300-openwrt-rootfs.tar.gz', 'ubuntu-24.04': 'mu300-ubuntu-rootfs.tar.gz',
-                'ubuntu-26.04': 'mu300-ubuntu-26.04-rootfs.tar.gz'}
+ROOTFS_ASSET = {'openwrt': 'mu300-openwrt-rootfs.tar.gz', 'openwrt-luci': 'mu300-openwrt-luci-rootfs.tar.gz',
+                'ubuntu-24.04': 'mu300-ubuntu-rootfs.tar.gz', 'ubuntu-26.04': 'mu300-ubuntu-26.04-rootfs.tar.gz'}
 
 
 class Conf(ShellTest):
@@ -366,7 +366,7 @@ class InstallerCase(ShellTest):
         self.kernel_release = f'{kernel}.0-mu300' if kernel != '5.4' else '5.4.254-mu300'
         kasset = 'mu300-kernel.tar.gz' if kernel == '5.4' else f'mu300-kernel-{kernel}.tar.gz'
         rasset = ROOTFS_ASSET[system]
-        os_, _, ubuntu = system.partition('-')
+        os_, ubuntu = (system, '') if system.startswith('openwrt') else system.split('-')
         kb = tar_gz({'Image': b'\x7fkernel' * 1000, 'ramdisk-generic.lz4': generic_ramdisk(),
                      'modules/mu300-test.ko': b'\x7fELF test module', 'kernel.release': (self.kernel_release + '\n').encode(),
                      'devices': (devices + '\n').encode(), 'features': ''.join(f + '\n' for f in features).encode()})
@@ -807,11 +807,22 @@ class Install(InstallerCase):
         self.assertFalse((self.fake.root / 'sdcard/mu300-linux-password.txt').exists())
         self.assertEqual(self.work_dirs(), [])                                 # proprietary staging gone
 
-    def test_report_names_the_vpn_extra(self):
-        # the zip carries no VPN engines (they are the vpn extra since mu300-extra): the report says how to add them
+    def test_full_install_openwrt_with_the_control_panel(self):
+        # the panel system has a zip of its own: installed under its own name, and the one that boots
+        self.zip(system='openwrt-luci')
         r = self.run_installer()
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        self.assertIn('The VPN (mu300-vpn) needs the vpn extra: Xray and sing-box.', r.stdout)
+        env = (self.fake.root / 'install.env').read_text()
+        for line in ('OSES="openwrt-luci"', 'BOOT_OS=openwrt-luci', 'FORMAT=1'):
+            self.assertIn(line, env)
+        self.assertIn('android/vendor/bin/modem_control', self.linux_image('b'))
+
+    def test_report_names_the_vpn_extra(self):
+        # the zip carries no VPN (the module of dikeckaan/mu300-linux-vpn): the report says how to add it
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('The VPN (mu300-vpn, with Xray and sing-box) is a module of its own: '
+                      'https://github.com/dikeckaan/mu300-linux-vpn.', r.stdout)
         self.assertIn('sudo mu300-extra install vpn', r.stdout)
 
     def test_slot_b_android(self):
