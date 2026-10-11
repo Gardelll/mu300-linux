@@ -40,7 +40,8 @@ settings without their program used to stay active - OpenClash's left the device
 not have (installed from a `.apk` file) cannot come back by itself; its settings stay aside. Services come back
 enabled or disabled as they were (OpenWrt's init scripts, Ubuntu's systemd units).
 
-On Ubuntu the apt sources you added (`/etc/apt/sources.list.d`, a PPA, with the keys they name) are kept, so their
+On Ubuntu the apt sources you added (`/etc/apt/sources.list.d`, a PPA, with the keys they name, and your pinning in
+`/etc/apt/preferences.d`) are kept, so their
 packages can come back; the image's own sources are never replaced. A kept source that makes `apt-get update` fail
 (a PPA of 24.04 after a move to 26.04) is turned off as `NAME.disabled`, and `status` says so.
 
