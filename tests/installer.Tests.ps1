@@ -154,7 +154,7 @@ Check 'env sd: no CR'       ($t.Contains("`r")) $false
 $t = InstallEnvText $inEnv
 Check 'env internal'        ($t -match "(?m)^OFF=27762098176\nSIZE=34776023040\nOFF_S=54222848\nSIZE_S=67921920\nFORMAT=0\n") $true
 Check 'env internal: sd'    ($t -match "(?m)^UPDATE=1\n" -and $t -match "(?m)^SD_MODE=0\nSD_DEV=\nINTERNAL_EXISTS=0\n") $true
-Check 'env internal: adb'   ($t -match ("(?m)^ADB=1\nADB_KEY='QAAAA" + ('A' * 694) + "= me@host'\nPWHASH=")) $true
+Check 'env internal: adb'   ($t -match ("(?m)^ADB=1\nADB_KEY='QAAAA" + ('A' * 694) + "= me@host'\nSYNC_BOOTCHAIN=1\nPWHASH=")) $true
 Check 'env sd: adb off'     ((InstallEnvText $sdEnv) -match "(?m)^ADB=0\nADB_KEY=''\n") $true
 
 # ---- AdbPubKey: the installing computer's adb key, safe inside single quotes --------------------------------------
