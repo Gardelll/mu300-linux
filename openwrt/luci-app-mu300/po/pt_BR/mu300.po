@@ -1242,6 +1242,9 @@ msgstr "Mudar para Economia abaixo de %"
 msgid "Stop charging at"
 msgstr "Parar de carregar em"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % nunca carrega a bateria (o aparelho funciona pelo carregador), 100 % carrega por completo; entre os dois, a carga para nesse nível e recomeça 5 pontos abaixo. Abaixo de 5 % a bateria sempre carrega."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % preservam melhor a bateria de um dispositivo que fica na tomada."
 

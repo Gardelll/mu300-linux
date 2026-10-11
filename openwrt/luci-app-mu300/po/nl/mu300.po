@@ -1242,6 +1242,9 @@ msgstr "Overschakelen naar Zuinig onder %"
 msgid "Stop charging at"
 msgstr "Stop met laden bij"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % laadt de batterij nooit op (het apparaat draait op de lader), 100 % laadt hem volledig op; daartussen stopt het laden op dat niveau en begint het weer 5 punten lager. Onder 5 % wordt de batterij altijd opgeladen."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % spaart de batterij van een apparaat dat aangesloten blijft."
 

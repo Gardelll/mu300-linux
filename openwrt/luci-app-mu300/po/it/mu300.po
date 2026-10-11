@@ -1242,6 +1242,9 @@ msgstr "Passa a Risparmio sotto il %"
 msgid "Stop charging at"
 msgstr "Interrompi la carica al"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % non carica mai la batteria (il dispositivo funziona con il caricatore), 100 % la carica completamente; nel mezzo, la carica si ferma a quel livello e riprende 5 punti più in basso. Sotto il 5 % la batteria si carica sempre."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "L'80 % protegge meglio la batteria di un dispositivo che resta collegato."
 

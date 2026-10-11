@@ -1242,6 +1242,9 @@ msgstr "מעבר לחיסכון מתחת ל-%"
 msgid "Stop charging at"
 msgstr "הפסקת טעינה ב-"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % לעולם לא טוען את הסוללה (המכשיר פועל מהמטען), 100 % טוען אותה במלואה; בין לבין, הטעינה נעצרת ברמה הזו ומתחדשת 5 נקודות מתחתיה. מתחת ל-5 % הסוללה תמיד נטענת."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % שומרים על הסוללה במכשיר שנשאר מחובר לחשמל."
 

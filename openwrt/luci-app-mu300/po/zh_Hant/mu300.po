@@ -1242,6 +1242,9 @@ msgstr "電量低於以下值時切換到省電方案 %"
 msgid "Stop charging at"
 msgstr "充電上限"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % 表示從不為電池充電（裝置由充電器供電），100 % 表示充滿；介於兩者之間時，充到該電量即停止，低於該值 5 個百分點後重新開始。電量低於 5 % 時始終充電。"
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % 可讓長期插著電源的裝置電池更健康。"
 

@@ -1242,6 +1242,9 @@ msgstr "Váltás Takarékosra ez alatt: %"
 msgid "Stop charging at"
 msgstr "Töltés leállítása itt"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "A 0 % soha nem tölti az akkumulátort (az eszköz a töltőről működik), a 100 % teljesen feltölti; a kettő között a töltés ezen a szinten leáll, és 5 ponttal lejjebb újraindul. 5 % alatt az akkumulátor mindig töltődik."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "A 80 % kíméli az akkumulátort egy folyamatosan hálózaton lévő eszközben."
 

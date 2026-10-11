@@ -1242,6 +1242,9 @@ msgstr "Skift til Spar under %"
 msgid "Stop charging at"
 msgstr "Stop opladning ved"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % oplader aldrig batteriet (enheden kører på opladeren), 100 % lader det helt op; ind imellem stopper opladningen ved det niveau og starter igen 5 point lavere. Under 5 % oplades batteriet altid."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % skåner batteriet i en enhed, der bliver siddende i stikket."
 

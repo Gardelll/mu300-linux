@@ -1242,6 +1242,9 @@ msgstr "次の値未満で節電に切り替え %"
 msgid "Stop charging at"
 msgstr "充電を止める残量"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % ではバッテリーを充電しません（本体は充電器で動作します）。100 % では満充電します。その間の値では、その残量で充電を止め、5 ポイント下がると再開します。5 % 未満では常に充電します。"
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % にすると、常時電源につないだままの機器でバッテリーが長持ちします。"
 
