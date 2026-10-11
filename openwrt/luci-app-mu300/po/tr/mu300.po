@@ -1242,6 +1242,9 @@ msgstr "Pil bunun altına düşünce Tasarruf'a geç %"
 msgid "Stop charging at"
 msgstr "Şarjı şurada durdur"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % pili hiç şarj etmez (cihaz şarj aletinden çalışır), 100 % tam doldurur; aradaki değerlerde şarj o seviyede durur ve 5 puan aşağıda yeniden başlar. 5 %'in altında pil her zaman şarj olur."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % sınırı, sürekli fişte duran bir cihazda pili daha sağlıklı tutar."
 

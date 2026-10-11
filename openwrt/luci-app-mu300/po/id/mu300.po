@@ -1242,6 +1242,9 @@ msgstr "Beralih ke Hemat di bawah %"
 msgid "Stop charging at"
 msgstr "Hentikan pengisian pada"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % tidak pernah mengisi baterai (perangkat berjalan dari pengisi daya), 100 % mengisinya penuh; di antaranya, pengisian berhenti di tingkat itu dan mulai lagi 5 poin lebih rendah. Di bawah 5 % baterai selalu diisi."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % menjaga baterai tetap sehat pada perangkat yang terus tercolok."
 

@@ -1242,6 +1242,9 @@ msgstr "التبديل إلى توفير الطاقة عند أقل من %"
 msgid "Stop charging at"
 msgstr "إيقاف الشحن عند"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % لا يشحن البطارية أبدًا (يعمل الجهاز من الشاحن)، و100 % يشحنها بالكامل؛ وبينهما يتوقف الشحن عند تلك النسبة ويُستأنف عند انخفاضها 5 نقاط. تحت 5 % تُشحن البطارية دائمًا."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % تحافظ على صحة البطارية في جهاز يبقى موصولًا بالكهرباء."
 

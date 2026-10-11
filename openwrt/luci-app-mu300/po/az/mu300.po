@@ -1242,6 +1242,9 @@ msgstr "Bundan aşağı olanda Qənaətə keç %"
 msgid "Stop charging at"
 msgstr "Şarjı burada dayandır"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % batareyanı heç vaxt doldurmur (cihaz şarj cihazından işləyir), 100 % tam doldurur; aradakı dəyərlərdə doldurma həmin səviyyədə dayanır və 5 bənd aşağıda yenidən başlayır. Səviyyə 5 % altında olanda batareya həmişə dolur."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % daim şəbəkədə qalan cihazda batareyanı daha sağlam saxlayır."
 

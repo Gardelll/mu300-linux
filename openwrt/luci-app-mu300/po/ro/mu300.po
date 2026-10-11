@@ -1242,6 +1242,9 @@ msgstr "Treci la Economie sub %"
 msgid "Stop charging at"
 msgstr "Oprește încărcarea la"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % nu încarcă niciodată bateria (dispozitivul funcționează de la încărcător), 100 % o încarcă complet; între ele, încărcarea se oprește la acel nivel și reîncepe cu 5 puncte mai jos. Sub 5 % bateria se încarcă întotdeauna."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % protejează mai bine bateria unui dispozitiv care rămâne la priză."
 

@@ -1242,6 +1242,9 @@ msgstr "इससे कम पर बचत में जाएँ %"
 msgid "Stop charging at"
 msgstr "चार्जिंग यहाँ रोकें"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % बैटरी को कभी चार्ज नहीं करता (डिवाइस चार्जर से चलता है), 100 % उसे पूरा चार्ज करता है; बीच के मानों पर चार्जिंग उस स्तर पर रुकती है और 5 अंक नीचे फिर शुरू होती है। 5 % से नीचे बैटरी हमेशा चार्ज होती है।"
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % हमेशा बिजली से जुड़े रहने वाले डिवाइस में बैटरी को स्वस्थ रखता है।"
 

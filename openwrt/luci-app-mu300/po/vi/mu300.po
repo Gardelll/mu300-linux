@@ -1242,6 +1242,9 @@ msgstr "Chuyển sang Tiết kiệm khi dưới %"
 msgid "Stop charging at"
 msgstr "Dừng sạc ở mức"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % không bao giờ sạc pin (thiết bị chạy bằng bộ sạc), 100 % sạc đầy; ở giữa, việc sạc dừng ở mức đó và bắt đầu lại khi thấp hơn 5 điểm. Dưới 5 % pin luôn được sạc."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % giúp pin bền hơn trên thiết bị luôn cắm sạc."
 

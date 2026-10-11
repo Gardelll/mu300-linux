@@ -2610,6 +2610,38 @@ Throughput did not move beyond its spread: phone -> device 537-555 vs 553-571 Mb
 
 ## The second F50
 
+### 33l. The charge limit, a Type-C source's current, and the Wi-Fi phy's address (a community build reviewed)
+
+A community build for the U30 Air, `v2026.10.15-charge2` by oswaldxdd (github.com/oswaldxdd/mu300-linux, tag
+`v2026.10.15-charge2`, commit 321f771: a snapshot of the source under `experimental/u30air-charge2/source`, the
+same files as its release zip), replaced the U30 Air's 7.2 charging with its own stack: a native SGM41511 driver
+with the stock JEITA tables and a kernel-enforced 0-100 % limit, a 1655-line fuel gauge with capacity learning
+(records hashed to the eMMC CID), and Unisoc's whole Type-C/PD/TCPM stack (about 8800 lines of vendor code). Its
+sources are GPL with their headers. What was taken, and how:
+
+- **The charge limit**, as a feature of mu300-power rather than of a second charger driver: `CHARGE_TO` is any
+  whole number 0-100. 1-99 stops charging at N % and starts it again under N-5 (at once when the limit was changed);
+  0 never charges, the device runs on the charger; 100 lets go at once. The build's 0 % held the battery for good,
+  but the SGM41511 still supplements a load its input does not cover from the battery, so on a 500 mA port the
+  battery would drain to the cut-off while plugged in: the guard never holds it under 5 %. The temperature guard
+  keeps the last word. `mu300-power charge-limit [N]`; System > Power has a number field (U30 Air only).
+- **A Type-C source's current.** BC1.2 sees a hub or splitter with a charger behind it as an SDP: 500 mA. The build
+  got the source's offer from the TCPM stack. Only one register of it is needed: the UMP9620's Type-C block (typec@380,
+  no driver here) runs its state machine on its own, and STATUS (+0x1c) holds the state in bits 4:0 (2: attached as
+  a sink) and the source's Rp in bits 7:6 (1: 1.5 A, 2: 3 A). Patch 0012 makes bq256xx take the larger of BC1.2's
+  current and the Rp's (3 A taken as 2 A). On the Mac's USB-C port (an SDP) the status read 0x6082 (sink, 3 A): input
+  2000 mA, the battery charging at 1.6 A instead of 0.36 A. Right after a USB role change the block was still in
+  attach-wait (0x6001) when the VBUS event came, so the read waits up to 1.5 s for the attach.
+- **USB host on outside power.** `mu300-usb host` refused while something powered the port. With a splitter (charger
+  and a USB network adapter on one port) that is the case to support: host with the boost left off.
+- **The Wi-Fi phy's address** (`/sys/class/ieee80211/phy0/macaddress`) was all zeros; it is now the factory address
+  LK passes (the one wlan0 had already), on both boards.
+
+Left out: the native charger and fuel gauge (they replace patches 0006/0009-0011, which are tested, for 7.2 only and
+for every 7.2 kernel - the F50 runs the same one), capacity learning and the 0.1 % display (a full learning cycle
+was not verified by its author), the TCPM stack (PD at 5 V gives nothing over the Rp read), and the build's mu300-usb,
+which drops the boost and with it host mode on battery.
+
 ### 34. LEDs, and the defects from a second board's test
 A second F50 (restored from F50 #1's backup, with its own eMMC and factory Wi-Fi address) was tested from a user's
 point of view; what came out of it, measured on 2026-10-05:
@@ -2785,7 +2817,7 @@ What was built:
   not). It powers the device off only unplugged (no charger online, no extcon `USB=1`, the battery not `Charging`),
   below 5 % for three loops in a row, never on one sample. OpenWrt's early radio warm-up skips a charging boot.
 * **Charge guard**: charging off at battery `temp` above 45.0 C or below 0 C, on again below 40.0 C and above 3.0 C;
-  with `CHARGE_TO=80` off at 80 % and on below 75 %. It writes the bq256xx charger's `charge_type` (`N/A` off,
+  with `CHARGE_TO=N` (0-100, §33l) off at N % and on below N-5. It writes the bq256xx charger's `charge_type` (`N/A` off,
   `Fast` on). bq256xx reads `N/A` whenever it is not charging, so `Fast` is written only when the guard itself turned
   charging off (`/run/mu300/power/charge-off`); the driver resets its switch at probe, so a marker lost with `/run`
   leaves nothing off. It logs only when that marker changes, and a failed write turns the guard off for the boot
