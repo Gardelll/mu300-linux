@@ -78,6 +78,7 @@ what replaced it. The table below gives each section's state.
 | 31m | Hard hangs in the first seconds under 6.18 | open |
 | 31n | Wi-Fi powered off and on at the same time: an Oops in the RX interrupt | current (fixed, PR #41); remaining races open |
 | 31o | KVM, and the module set a router needs | current |
+| 31p | BTF and eBPF for dae, and the tracing that broke boots | current; the writer at ~11.5 s is open |
 | 32 | Old kernels, an idle IPA, and an update that ended in Android | current |
 | 32a | The offset in init, replaced by every boot image update | current |
 | 32b | The Magisk installer on a device | partly superseded by PR #40 (passwords in update mode) |
@@ -2179,6 +2180,63 @@ and SQM (sqm-scripts, luci-app-sqm; cake is built in on mainline and on 5.4, ifb
 the whole set together (65 kmods). xl2tpd starts at boot and listens on UDP 1701, which fw4 closes on WAN. The
 images also carry the 6.18 modules from `upstream/out` (about 20 MiB unpacked, some 6 MB more in the tarball), so
 the switch to 6.18 needs nothing more. Not tried on an OpenWrt device in this round.
+
+### 31p. BTF and eBPF for dae, and the tracing that broke boots
+dae (github.com/daeuniverse/dae, an eBPF transparent proxy; tested v2.1.1, linux-arm64, checksum from its
+release) needs kernel 5.17 or newer, BTF and a list of BPF options. Neither mainline kernel had BTF or the BPF
+JIT, and dae v2.1.1 refused to start on v2026.10.18's 7.2.9: `load eBPF objects: ... program
+tproxy_lan_ingress_l2: load program: invalid argument: callbacks are not allowed in non-JITed programs`. The 5.4
+kernel is too old for dae and was not changed.
+
+Now in `mu300-mainline.config`, for both kernels: `DEBUG_INFO_DWARF5`, `DEBUG_INFO_BTF`, `DEBUG_INFO_BTF_MODULES`,
+`MODULE_ALLOW_BTF_MISMATCH` (a module with bad BTF still loads), `BPF_JIT`, `BPF_STREAM_PARSER`, `NET_INGRESS`,
+`NET_EGRESS` and `NETKIT` (dae's preferred `dae0` pair; it uses a veth pair without it). The DWARF is compressed
+(`DEBUG_INFO_COMPRESSED_ZSTD`): vmlinux is 157 MB instead of 312 MB, and two build trees fit in one docker
+volume again. The build image has `dwarves` (pahole 1.31 on Ubuntu 26.04), and `build-modules.sh` now runs
+`strip --strip-debug` on the out-of-tree modules, which keeps their `.BTF`; without it every vendor module carries
+megabytes of DWARF.
+
+**Not taken: kprobes and tracing.** dae's list also has `KPROBES`, `KPROBE_EVENTS` and `BPF_EVENTS` (with
+`PERF_EVENTS` and `FTRACE` under them). With them, 7.2.9 came up 14 times in a row on F50-B and failed the 15th
+boot, then 21 times and failed the 22nd: 2 failures in 36 reboots. Both times the same thing at the same moment,
+about 11.5 s after start, as the modem's `kbc_start_cp` ran in Trusty and the Wi-Fi card's first PCIe scan
+failed as usual (`Device found, but not active`): page tables and the printk buffer overwritten (`Bad page map`
+with self-referencing PTEs, faults in `vfs_read`, `jbd2_write_access_granted`, `get_data`, and in both boots a
+fault at the same address `ffffffffffad82a0`), a panic, and LK's watchdog dumps until the board fell back to
+Android about 20 minutes later. Without the tracing group, the same kernel came up 47 of 47 times (6.18: 16 of 16); stock
+v2026.10.18 7.2.9 did 100 of 100 the day before. What writes there is not known. The tracing options change where
+early allocations land rather than doing anything at 11.5 s themselves, so this looks like a DMA write (modem or
+Wi-Fi) into memory the kernel owns, which another kernel layout may hit too; a kernel change that moves the early
+allocations needs a reboot loop of 40 or more. What dae loses without them: `dae trace`, the kprobe that accounts
+for its sockmap TCP offload (the fentry variant needs the function tracer), and `bpf_get_current_task` for
+process names in cgroup programs (it logs a warning and uses `bpf_get_current_comm`).
+
+dae on F50-B (Ubuntu 24.04, Wi-Fi client of a home network, `wan_interface: wlan0`, a shadowsocks node on the Mac
+over USB LAN; the oracle-arm test server was not reachable because the Mac's tailnet was logged out): it loads in
+1.2 s, creates the netkit pair `dae0`/`dae0peer` "via netlink API (performance mode)", and holds 14 `SCHED_CLS`, 4
+`CGROUP_SOCK_ADDR` (connect4/6, sendmsg4/6) and 2 `CGROUP_SOCK` programs, 21 maps, tcx links on `wlan0` (ingress,
+egress) and `dae0`, and 6 cgroup links. `curl https://ifconfig.me` answered 200 and the shadowsocks server logged
+`established tcp tunnel ... <-> 34.160.111.145:443` for each request; 50 MB from Cloudflare came at 16.5 MB/s
+through dae and the proxy, 20.0 MB/s direct once dae was stopped (`dae0` removed with it). The same test passed on
+the kernel without tracing, with the warning above.
+
+Measured (Image as built, before `wrap-image.py` adds 1.5 MiB; memory 20 s after boot on F50-B):
+
+| | 6.18.55 v2026.10.18 | 6.18.55 BTF | 7.2.9 v2026.10.18 | 7.2.9 BTF + tracing | 7.2.9 BTF |
+|---|---|---|---|---|---|
+| Image (bytes) | 17 512 456 | 21 649 416 | 18 069 512 | 26 925 064 | 22 337 544 |
+| of it `.BTF` | - | 4 019 543 | - | 4 875 150 | 4 104 758 |
+| modules in the bundle | 20.3 MiB | 23.8 MiB | 21.9 MiB | 34.6 MiB | 25.7 MiB |
+| ramdisk segment (bytes) | 1 776 099 | 1 832 495 | 1 777 340 | 1 836 866 | 1 833 918 |
+| MemTotal (kB) | | 1 501 344 | 1 455 776 | 1 447 840 | 1 451 616 |
+| MemAvailable (kB) | | 1 312 360-1 321 424 | 1 270 356-1 274 324 | 1 249 648-1 264 200 | 1 254 696-1 288 712 |
+| kernel boot (systemd-analyze) | | | 5.25 s | 5.40 s | 5.34 s |
+| reboots on F50-B | 100/100 (10-10) | 16/16 | 100/100 (10-10) | 34/36 | 47/47 |
+
+So BTF costs about 4 MiB of RAM (it is read-only data, in `rodata`: 3028K before, 7060K after) and the boot is
+0.1 s slower; the modules' own BTF is about 4.4 MB on disk. The boot image (header, wrapped 7.2 kernel 23.9 MB,
+F50-B's device ramdisk 6.5 MB, generic segment 1.8 MB) is 32.3 MB: under the 48 MiB where init keeps its
+persistent log in the same partition (64 MiB), with about 18 MB to spare.
 
 ## Updating on the device
 
