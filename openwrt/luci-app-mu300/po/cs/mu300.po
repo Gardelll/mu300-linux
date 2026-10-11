@@ -42,8 +42,26 @@ msgstr "Napájení"
 msgid "CPU"
 msgstr "CPU"
 
-msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "Řídicí centrum MU300: přehled stavu, zámky sítě, terminál AT a SMS"
+msgid "Overview"
+msgstr "Přehled"
+
+msgid "Profiles"
+msgstr "Profily"
+
+msgid "Subscriptions"
+msgstr "Odběry"
+
+msgid "Engines"
+msgstr "Enginy"
+
+msgid "Settings"
+msgstr "Nastavení"
+
+msgid "Logs"
+msgstr "Protokoly"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
+msgstr "Řídicí centrum MU300: stavový přehled, zámky sítě, terminál AT, SMS a VPN"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -114,6 +132,81 @@ msgstr "Neznámé číslo"
 msgid "Select"
 msgstr "Vybrat"
 
+msgid "never"
+msgstr "nikdy"
+
+msgid "just now"
+msgstr "právě teď"
+
+msgid "%s ago"
+msgstr "před %s"
+
+msgid "Failed: %s"
+msgstr "Selhalo: %s"
+
+msgid "Management connection lost"
+msgstr "Spojení pro správu bylo ztraceno"
+
+msgid "Installing the VPN module"
+msgstr "Instaluje se modul VPN"
+
+msgid "Installing the engine"
+msgstr "Instaluje se engine"
+
+msgid "Adding the subscription"
+msgstr "Přidává se odběr"
+
+msgid "Refreshing the subscriptions"
+msgstr "Aktualizují se odběry"
+
+msgid "Testing the latency of every profile"
+msgstr "Měří se latence všech profilů"
+
+msgid "Downloading the config"
+msgstr "Stahuje se konfigurace"
+
+msgid "Working…"
+msgstr "Pracuje se…"
+
+msgid "done"
+msgstr "hotovo"
+
+msgid "failed"
+msgstr "selhalo"
+
+msgid "The VPN module is too old for this panel"
+msgstr "Modul VPN je pro tento panel příliš starý"
+
+msgid "The VPN module is not installed"
+msgstr "Modul VPN není nainstalován"
+
+msgid "This page needs the VPN module with the machine-readable mu300-vpn (module v2 or newer). Updating it keeps the profiles and the settings."
+msgstr "Tato stránka potřebuje modul VPN se strojově čitelným mu300-vpn (modul v2 nebo novější). Aktualizace zachová profily i nastavení."
+
+msgid "The VPN is a module of its own: mu300-vpn with its kill switch and profiles, and one extra per engine (Xray, sing-box, mihomo, dae). It is installed with mu300-extra install vpn."
+msgstr "VPN je samostatný modul: mu300-vpn s kill switchem a profily a jeden doplněk pro každý engine (Xray, sing-box, mihomo, dae). Instaluje se pomocí mu300-extra install vpn."
+
+msgid "The download is a few MB for the module and up to tens of MB per engine: on mobile data it counts towards your plan."
+msgstr "Stažení má pro modul několik MB a pro každý engine až desítky MB: na mobilních datech se počítá do vašeho tarifu."
+
+msgid "Update the VPN module"
+msgstr "Aktualizovat modul VPN"
+
+msgid "Install the VPN module"
+msgstr "Nainstalovat modul VPN"
+
+msgid "Upload the file…"
+msgstr "Nahrát soubor…"
+
+msgid "Upload failed: %s"
+msgstr "Nahrání selhalo: %s"
+
+msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
+msgstr "Offline: nahrajte mu300-linux-vpn-core.tar.gz (nebo balík mu300-linux-vpn.tar.gz) ze stránky vydání modulu VPN."
+
+msgid "VPN"
+msgstr "VPN"
+
 msgid "Basic"
 msgstr "Základní"
 
@@ -150,14 +243,8 @@ msgstr "Požadavek selhal"
 msgid "(empty)"
 msgstr "(prázdné)"
 
-msgid "Failed: %s"
-msgstr "Selhalo: %s"
-
 msgid "Saved"
 msgstr "Uloženo"
-
-msgid "Management connection lost"
-msgstr "Spojení pro správu bylo ztraceno"
 
 msgid "CPU profile unavailable"
 msgstr "CPU profile unavailable"
@@ -918,9 +1005,6 @@ msgstr "Jazykový balíček je nainstalován"
 msgid "The language pack could not be installed"
 msgstr "Jazykový balíček se nepodařilo nainstalovat"
 
-msgid "Upload failed: %s"
-msgstr "Nahrání selhalo: %s"
-
 msgid "Language of the browser"
 msgstr "Jazyk prohlížeče"
 
@@ -941,9 +1025,6 @@ msgstr "Jazykový balíček (mu300-extra-lang.tar.gz, asi 2 MB) přidává LuCI 
 
 msgid "Download from the release"
 msgstr "Stáhnout z vydání"
-
-msgid "Upload the file…"
-msgstr "Nahrát soubor…"
 
 msgid "Release"
 msgstr "Vydání"
@@ -1566,6 +1647,591 @@ msgstr "Vypnout"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "S 64 odchází každý paket jako vlastní provoz zařízení"
 
+msgid "running"
+msgstr "běží"
+
+msgid "(about %s)"
+msgstr "(asi %s)"
+
+msgid "Install %s?"
+msgstr "Nainstalovat %s?"
+
+msgid "It is installed from this system's package feed."
+msgstr "Instaluje se ze zdroje balíčků tohoto systému."
+
+msgid "It is downloaded from the release of the VPN module and checked against its SHA256SUMS."
+msgstr "Stahuje se z vydání modulu VPN a kontroluje se podle jeho SHA256SUMS."
+
+msgid "An engine is tens of MB: on mobile data the download counts towards your plan."
+msgstr "Engine má desítky MB: na mobilních datech se stažení počítá do vašeho tarifu."
+
+msgid "Install"
+msgstr "Nainstalovat"
+
+msgid "Remove %s?"
+msgstr "Odebrat %s?"
+
+msgid "Profiles run on it: %s. They cannot start until it is installed again (the module refuses while the running profile needs it)."
+msgstr "Profily, které na něm běží: %s. Nemohou se spustit, dokud nebude znovu nainstalován (modul odmítne odebrání, dokud ho běžící profil potřebuje)."
+
+msgid "No profile runs on it."
+msgstr "Žádný profil na něm neběží."
+
+msgid "Removed"
+msgstr "Odebráno"
+
+msgid "Check for updates"
+msgstr "Zkontrolovat aktualizace"
+
+msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
+msgstr "Každý engine je samostatný doplněk: instalujte jen ty, které vaše profily potřebují. Xray spouští odkazy vless, vmess, trojan a ss (s hev-socks5-tunnel), sing-box stejné odkazy a vlastní JSON, mihomo odběry Clash, dae hysteria2, tuic a další na novějších jádrech. WireGuard a OpenVPN jsou balíčky systému."
+
+msgid "Downloads are tens of MB per engine: on mobile data they count towards your plan. Offline, upload the engine's tarball from the release page of the VPN module."
+msgstr "Stažení mají desítky MB na engine: na mobilních datech se počítají do vašeho tarifu. Offline nahrajte tarball enginu ze stránky vydání modulu VPN."
+
+msgid "The available versions come from the latest release of the VPN module."
+msgstr "Dostupné verze pocházejí z nejnovějšího vydání modulu VPN."
+
+msgid "Update"
+msgstr "Aktualizovat"
+
+msgid "system package"
+msgstr "systémový balíček"
+
+msgid "in the vpn bundle"
+msgstr "v balíku vpn"
+
+msgid "extra %s"
+msgstr "doplněk %s"
+
+msgid "not installed"
+msgstr "nenainstalováno"
+
+msgid "cannot run here"
+msgstr "zde nemůže běžet"
+
+msgid "update available"
+msgstr "aktualizace k dispozici"
+
+msgid "installed"
+msgstr "nainstalováno"
+
+msgid "Kind"
+msgstr "Druh"
+
+msgid "Version"
+msgstr "Verze"
+
+msgid "Available"
+msgstr "Dostupné"
+
+msgid "not checked"
+msgstr "nezkontrolováno"
+
+msgid "Size"
+msgstr "Velikost"
+
+msgid "Needed by"
+msgstr "Potřebuje"
+
+msgid "no profile"
+msgstr "žádný profil"
+
+msgid "dae needs a kernel with BTF, 5.17 or newer: not the 5.4 vendor kernel (mu300-update kernel 6.18). It can be installed anyway."
+msgstr "dae potřebuje jádro s BTF, 5.17 nebo novější: ne výrobcovo jádro 5.4 (mu300-update kernel 6.18). Nainstalovat ho lze i tak."
+
+msgid "All engines"
+msgstr "Všechny enginy"
+
+msgid "Last %s lines"
+msgstr "Posledních %s řádků"
+
+msgid "VPN service log"
+msgstr "Protokol služby VPN"
+
+msgid "Every 5 s"
+msgstr "Každých 5 s"
+
+msgid "The log is empty."
+msgstr "Protokol je prázdný."
+
+msgid "The VPN is starting"
+msgstr "VPN se spouští"
+
+msgid "The VPN is stopped"
+msgstr "VPN je zastavena"
+
+msgid "The VPN is restarting"
+msgstr "VPN se restartuje"
+
+msgid "With the kill switch on, nothing leaves the device or the LAN outside the tunnel: while the VPN is down, starting or broken, every connection fails instead of going out directly. It stays up until you stop the VPN here (Stop removes it)."
+msgstr "Když je kill switch zapnutý, nic neopustí zařízení ani LAN mimo tunel: dokud je VPN vypnutá, startuje nebo je rozbitá, každé spojení selže, místo aby šlo přímo ven. Zůstává aktivní, dokud VPN zde nezastavíte (Zastavit ho odstraní)."
+
+msgid "Without the kill switch, traffic goes out directly, unprotected, whenever the tunnel is down (while it starts, after a crash, when the engine is missing)."
+msgstr "Bez kill switche jde provoz přímo ven, nechráněný, kdykoli je tunel vypnutý (při startu, po pádu, když engine chybí)."
+
+msgid "Turn the kill switch on?"
+msgstr "Zapnout kill switch?"
+
+msgid "Turn the kill switch off?"
+msgstr "Vypnout kill switch?"
+
+msgid "Turn on"
+msgstr "Zapnout"
+
+msgid "unknown"
+msgstr "neznámé"
+
+msgid "The exit address could not be found (is the tunnel up?)"
+msgstr "Výstupní adresu se nepodařilo zjistit (je tunel nahoře?)"
+
+msgid "Connecting…"
+msgstr "Připojuje se…"
+
+msgid "On, but not running"
+msgstr "Zapnuto, ale neběží"
+
+msgid "Stopped"
+msgstr "Zastaveno"
+
+msgid "Install it"
+msgstr "Nainstalovat"
+
+msgid "The engine of the active profile is not installed: %s"
+msgstr "Engine aktivního profilu není nainstalován: %s"
+
+msgid "The kill switch keeps everything closed until it is there; the service downloads it by itself when it can."
+msgstr "Kill switch drží vše zavřené, dokud tam není; služba si ho sama stáhne, když to jde."
+
+msgid "The VPN cannot start until it is installed."
+msgstr "VPN se nemůže spustit, dokud není nainstalován."
+
+msgid "%s cannot run on this system"
+msgstr "%s nemůže na tomto systému běžet"
+
+msgid "The VPN is on, but no profile is active: choose one below."
+msgstr "VPN je zapnutá, ale žádný profil není aktivní: vyberte některý níže."
+
+msgid "Profile: %s"
+msgstr "Profil: %s"
+
+msgid "No active profile"
+msgstr "Žádný aktivní profil"
+
+msgid "engine %s"
+msgstr "engine %s"
+
+msgid "interface %s"
+msgstr "rozhraní %s"
+
+msgid "Kill switch active"
+msgstr "Kill switch aktivní"
+
+msgid "Kill switch on"
+msgstr "Kill switch zapnutý"
+
+msgid "Kill switch off"
+msgstr "Kill switch vypnutý"
+
+msgid "IPv6 in the tunnel"
+msgstr "IPv6 v tunelu"
+
+msgid "IPv6 blocked"
+msgstr "IPv6 blokováno"
+
+msgid "IPv6 untouched"
+msgstr "IPv6 nedotčeno"
+
+msgid "Module %s"
+msgstr "Modul %s"
+
+msgid "Check"
+msgstr "Zkontrolovat"
+
+msgid "Uptime"
+msgstr "Doba běhu"
+
+msgid "Rate"
+msgstr "Rychlost"
+
+msgid "Exit address"
+msgstr "Výstupní adresa"
+
+msgid "Start"
+msgstr "Spustit"
+
+msgid "Stop"
+msgstr "Zastavit"
+
+msgid "Restart"
+msgstr "Restartovat"
+
+msgid "Stop the VPN?"
+msgstr "Zastavit VPN?"
+
+msgid "Traffic then goes out directly, without the tunnel; the kill switch is taken down with it."
+msgstr "Provoz pak půjde přímo ven bez tunelu; kill switch se s ním odstraní."
+
+msgid "The VPN is on: it starts again by itself after a reboot."
+msgstr "VPN je zapnutá: po restartu se spustí sama znovu."
+
+msgid "The VPN is off."
+msgstr "VPN je vypnutá."
+
+msgid "Kill switch"
+msgstr "Kill switch"
+
+msgid "Setting"
+msgstr "Nastavení"
+
+msgid "Active: only the tunnel can reach the internet"
+msgstr "Aktivní: k internetu se dostane jen tunel"
+
+msgid "Not active"
+msgstr "Neaktivní"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down, so nothing ever leaves without the tunnel. If the tunnel cannot come up (a dead server, an expired account), the device stays offline until you fix the profile or stop the VPN. The panel itself stays reachable from the LAN."
+msgstr "Kill switch blokuje veškerý provoz zařízení i LAN, dokud je VPN vypnutá, takže nic nikdy neodejde bez tunelu. Pokud tunel nejde navázat (mrtvý server, vypršelý účet), zařízení zůstane offline, dokud profil neopravíte nebo VPN nezastavíte. Samotný panel zůstává z LAN dostupný."
+
+msgid "Choose a profile"
+msgstr "Vyberte profil"
+
+msgid "No profiles yet"
+msgstr "Zatím žádné profily"
+
+msgid "engine not installed"
+msgstr "engine není nainstalován"
+
+msgid "Use"
+msgstr "Použít"
+
+msgid "Switched: the VPN restarts on the new profile"
+msgstr "Přepnuto: VPN se restartuje s novým profilem"
+
+msgid "Active profile"
+msgstr "Aktivní profil"
+
+msgid "A running VPN restarts on the profile you choose; the kill switch stays up in between."
+msgstr "Běžící VPN se restartuje s profilem, který vyberete; kill switch mezitím zůstává nahoře."
+
+msgid "Manage the profiles"
+msgstr "Spravovat profily"
+
+msgid "Automatic: through the tunnel where the engine can carry it"
+msgstr "Automaticky: tunelem, kde ho engine unese"
+
+msgid "Ask the engine for IPv6 in the tunnel"
+msgstr "Požádat engine o IPv6 v tunelu"
+
+msgid "Never through the tunnel (blocked while the VPN is up)"
+msgstr "Nikdy tunelem (blokováno, dokud VPN běží)"
+
+msgid "Saved: it applies from the next start (Restart)"
+msgstr "Uloženo: platí od příštího spuštění (Restartovat)"
+
+msgid "IPv6"
+msgstr "IPv6"
+
+msgid "The tunnel carries IPv6"
+msgstr "Tunel přenáší IPv6"
+
+msgid "Yes"
+msgstr "Ano"
+
+msgid "IPv6 guard"
+msgstr "Ochrana IPv6"
+
+msgid "Active: IPv6 outside the tunnel is refused"
+msgstr "Aktivní: IPv6 mimo tunel je odmítáno"
+
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
+msgstr "Dokud VPN běží, IPv6 nikdy neodchází vedle tunelu, který ho nepřenáší: je okamžitě odmítnuto, takže programy a klienti LAN přejdou na IPv4, místo aby unikali nebo čekali. Automaticky: WireGuard používá adresy IPv6 ze své konfigurace, ostatní enginy zůstávají u IPv4."
+
+msgid "%d ms"
+msgstr "%d ms"
+
+msgid "UDP: not testable"
+msgstr "UDP: nelze otestovat"
+
+msgid "blocked by the kill switch"
+msgstr "zablokováno kill switchem"
+
+msgid "A WireGuard or OpenVPN config, a Clash/mihomo YAML, an Xray or sing-box JSON, a dae config"
+msgstr "Konfigurace WireGuard nebo OpenVPN, YAML Clash/mihomo, JSON Xray nebo sing-box, konfigurace dae"
+
+msgid "After OK, choose the file: a WireGuard .conf, an OpenVPN .ovpn, a Clash/mihomo .yaml, an Xray or sing-box .json or a dae config (at most 1 MiB)."
+msgstr "Po OK vyberte soubor: WireGuard .conf, OpenVPN .ovpn, Clash/mihomo .yaml, Xray nebo sing-box .json nebo konfiguraci dae (nejvýše 1 MiB)."
+
+msgid "From the source"
+msgstr "Ze zdroje"
+
+msgid "Detect"
+msgstr "Zjistit"
+
+msgid "The URL may hold a token: it goes to the device on its own, never into a command line or a log."
+msgstr "URL může obsahovat token: na zařízení jde samostatně, nikdy do příkazového řádku ani do protokolu."
+
+msgid "Type"
+msgstr "Typ"
+
+msgid "Share link"
+msgstr "Sdílený odkaz"
+
+msgid "Paste"
+msgstr "Vložit"
+
+msgid "File"
+msgstr "Soubor"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Not a share link this panel takes"
+msgstr "Není to sdílený odkaz, který tento panel přijímá"
+
+msgid "The config is empty"
+msgstr "Konfigurace je prázdná"
+
+msgid "Not an http or https URL"
+msgstr "Není to URL http ani https"
+
+msgid "Invalid name: 1-64 characters, no control characters"
+msgstr "Neplatný název: 1-64 znaků, bez řídicích znaků"
+
+msgid "Add a profile"
+msgstr "Přidat profil"
+
+msgid "Name"
+msgstr "Název"
+
+msgid "Detect: the module tells the kind from the link or the file. Choose the type for a JSON that could be either Xray or sing-box, or for a link that should run on another engine."
+msgstr "Zjistit: modul pozná druh podle odkazu nebo souboru. Typ vyberte u JSONu, který může být Xray i sing-box, nebo u odkazu, který má běžet na jiném enginu."
+
+msgid "The profile is added"
+msgstr "Profil byl přidán"
+
+msgid "Rename the profile"
+msgstr "Přejmenovat profil"
+
+msgid "Delete the profile %s?"
+msgstr "Smazat profil %s?"
+
+msgid "It is the active profile: with the VPN on, the module refuses; stop the VPN or choose another profile first."
+msgstr "Je to aktivní profil: při zapnuté VPN to modul odmítne; nejdřív zastavte VPN nebo vyberte jiný profil."
+
+msgid "Its config and credentials are deleted from the device."
+msgstr "Jeho konfigurace a přihlašovací údaje se ze zařízení smažou."
+
+msgid "Deleted"
+msgstr "Smazáno"
+
+msgid "The profile passes the check"
+msgstr "Profil prošel kontrolou"
+
+msgid "Show the config?"
+msgstr "Zobrazit konfiguraci?"
+
+msgid "The config holds the credentials of the profile (keys, passwords, UUIDs). It is shown on this screen only; anyone who can see the screen can read it."
+msgstr "Konfigurace obsahuje přihlašovací údaje profilu (klíče, hesla, UUID). Zobrazí se jen na této obrazovce; kdokoli, kdo obrazovku vidí, ji může přečíst."
+
+msgid "Show"
+msgstr "Zobrazit"
+
+msgid "Saving checks the config with the engine first (profile edit); a config that does not pass is not saved and the old one stays."
+msgstr "Uložení nejdřív zkontroluje konfiguraci enginem (profile edit); konfigurace, která neprojde, se neuloží a zůstane ta stará."
+
+msgid "This profile comes from a subscription: its next refresh replaces your changes."
+msgstr "Tento profil pochází z odběru: jeho příští obnovení nahradí vaše změny."
+
+msgid "Config of %s"
+msgstr "Konfigurace %s"
+
+msgid "Close"
+msgstr "Zavřít"
+
+msgid "Rename"
+msgstr "Přejmenovat"
+
+msgid "Show / edit the config"
+msgstr "Zobrazit / upravit konfiguraci"
+
+msgid "Test the latency of all"
+msgstr "Změřit latenci všech"
+
+msgid "No profiles yet: add one from a share link, a config file or a subscription."
+msgstr "Zatím žádné profily: přidejte některý ze sdíleného odkazu, konfiguračního souboru nebo odběru."
+
+msgid "Active"
+msgstr "Aktivní"
+
+msgid "This profile is the active one now"
+msgstr "Tento profil je nyní aktivní"
+
+msgid "More"
+msgstr "Více"
+
+msgid "active"
+msgstr "aktivní"
+
+msgid "subscription"
+msgstr "odběr"
+
+msgid "migrated"
+msgstr "převedeno"
+
+msgid "gone from its subscription"
+msgstr "zmizel ze svého odběru"
+
+msgid "Server"
+msgstr "Server"
+
+msgid "Engine"
+msgstr "Engine"
+
+msgid "Latency"
+msgstr "Latence"
+
+msgid "The latency is a TCP connection to the server, through the tunnel when the VPN is up. WireGuard and OpenVPN servers usually speak UDP and cannot be tested this way."
+msgstr "Latence je spojení TCP k serveru, tunelem, když VPN běží. Servery WireGuard a OpenVPN obvykle mluví UDP a takto je otestovat nejde."
+
+msgid "Enter an IPv4 or IPv6 address"
+msgstr "Zadejte adresu IPv4 nebo IPv6"
+
+msgid "On: nothing leaves outside the tunnel"
+msgstr "Zapnuto: nic neodchází mimo tunel"
+
+msgid "Off: traffic goes out directly while the tunnel is down"
+msgstr "Vypnuto: provoz jde přímo ven, dokud je tunel vypnutý"
+
+msgid "Yes: Tailscale's own connections go through the tunnel"
+msgstr "Ano: vlastní spojení Tailscale jdou tunelem"
+
+msgid "No: Tailscale connects directly"
+msgstr "Ne: Tailscale se připojuje přímo"
+
+msgid "Routing"
+msgstr "Směrování"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down."
+msgstr "Kill switch blokuje veškerý provoz zařízení i LAN, dokud je VPN vypnutá."
+
+msgid "Bypass the tunnel"
+msgstr "Obejít tunel"
+
+msgid "Enter address ranges like 192.168.0.0/16, separated by commas"
+msgstr "Zadejte rozsahy adres jako 192.168.0.0/16, oddělené čárkami"
+
+msgid "Address ranges that never go into the tunnel, besides the LAN itself (which never does). Empty: the LAN only."
+msgstr "Rozsahy adres, které nikdy nejdou do tunelu, kromě samotné LAN (ta nikdy nejde). Prázdné: jen LAN."
+
+msgid "Tailscale through the VPN"
+msgstr "Tailscale přes VPN"
+
+msgid "When Tailscale runs on the device, its WireGuard, DERP and control connections go through whichever tunnel runs (dae catches them like any other)."
+msgstr "Když na zařízení běží Tailscale, jeho spojení WireGuard, DERP a řídicí jdou tunelem, který zrovna běží (dae je zachytí jako všechna ostatní)."
+
+msgid "DNS"
+msgstr "DNS"
+
+msgid "DNS through the tunnel"
+msgstr "DNS tunelem"
+
+msgid "The resolver the device's and the LAN's lookups go to, through the tunnel. Nothing goes to the carrier's resolver."
+msgstr "Překladač, na který tunelem míří dotazy zařízení a LAN. Nic nejde na překladač operátora."
+
+msgid "Bootstrap DNS"
+msgstr "Zaváděcí DNS"
+
+msgid "Finds the VPN server's own address before the tunnel is up (directly, on the engine's own connection)."
+msgstr "Zjistí vlastní adresu serveru VPN dřív, než je tunel nahoře (přímo, vlastním spojením enginu)."
+
+msgid "Empty puts a setting back to its default."
+msgstr "Prázdné vrátí nastavení na výchozí hodnotu."
+
+msgid "TUN stack"
+msgstr "Zásobník TUN"
+
+msgid "Default (gvisor)"
+msgstr "Výchozí (gvisor)"
+
+msgid "system (not on the 5.4 kernel)"
+msgstr "system (ne na jádru 5.4)"
+
+msgid "set (unchanged unless you type a new one)"
+msgstr "nastaveno (beze změny, pokud nezadáte nové)"
+
+msgid "not set"
+msgstr "nenastaveno"
+
+msgid "Upstream HTTP proxy"
+msgstr "Nadřazená proxy HTTP"
+
+msgid "TLS certificate pin (SHA-256)"
+msgstr "Připnutí certifikátu TLS (SHA-256)"
+
+msgid "Enter host:port"
+msgstr "Zadejte host:port"
+
+msgid "Enter the SHA-256 in hex"
+msgstr "Zadejte SHA-256 v hexadecimálním tvaru"
+
+msgid "Profile options"
+msgstr "Volby profilu"
+
+msgid "None of the profiles has options of its type."
+msgstr "Žádný z profilů nemá volby svého typu."
+
+msgid "mihomo's mode (rule, global, direct), the engines' log levels, dae's groups and routing are part of each profile's own config: VPN > Profiles, Show / edit the config."
+msgstr "Režim mihomo (rule, global, direct), úrovně protokolu enginů a skupiny a směrování dae jsou součástí vlastní konfigurace každého profilu: VPN > Profily, Zobrazit / upravit konfiguraci."
+
+msgid "Delete the subscription %s?"
+msgstr "Smazat odběr %s?"
+
+msgid "Its profiles can go with it or stay as profiles of their own. The active profile is never removed while the VPN is on."
+msgstr "Jeho profily mohou odejít s ním, nebo zůstat jako samostatné profily. Aktivní profil se nikdy neodebere, dokud je VPN zapnutá."
+
+msgid "Keep the profiles"
+msgstr "Ponechat profily"
+
+msgid "Delete with its profiles"
+msgstr "Smazat i s profily"
+
+msgid "Share links: one profile per link"
+msgstr "Sdílené odkazy: jeden profil na odkaz"
+
+msgid "Clash/mihomo YAML: one mihomo profile"
+msgstr "Clash/mihomo YAML: jeden profil mihomo"
+
+msgid "dae: one profile with every node in one group"
+msgstr "dae: jeden profil se všemi uzly v jedné skupině"
+
+msgid "Add a subscription"
+msgstr "Přidat odběr"
+
+msgid "Format"
+msgstr "Formát"
+
+msgid "The URL usually holds your account token: it is stored on the device readable by root only, and never shown again. The subscription is fetched over the device's own connection: through the tunnel when the VPN is up; with the kill switch up and the tunnel down it cannot be fetched."
+msgstr "URL obvykle obsahuje token vašeho účtu: na zařízení se uloží čitelné jen pro roota a už se nikdy nezobrazí. Odběr se stahuje vlastním spojením zařízení: tunelem, když VPN běží; s kill switchem nahoře a tunelem dole ho stáhnout nelze."
+
+msgid "Refresh all"
+msgstr "Obnovit vše"
+
+msgid "No subscriptions yet."
+msgstr "Zatím žádné odběry."
+
+msgid "Host"
+msgstr "Hostitel"
+
+msgid "Updated"
+msgstr "Aktualizováno"
+
+msgid "Share links"
+msgstr "Sdílené odkazy"
+
+msgid "A refresh keeps the profiles whose name is unchanged, adds the new ones and removes the ones that are gone (the active one stays while the VPN is on, marked as gone). A refresh of the active profile restarts the running VPN."
+msgstr "Obnovení ponechá profily s nezměněným názvem, přidá nové a odebere zmizelé (aktivní zůstane, dokud je VPN zapnutá, označený jako zmizelý). Obnovení aktivního profilu restartuje běžící VPN."
+
 msgid "Dashboard info failed"
 msgstr "Informace přehledu selhaly"
 
@@ -1736,6 +2402,138 @@ msgstr "Běhový adresář není bezpečný; nic nebylo spuštěno"
 
 msgid "No such method"
 msgstr "Žádná taková metoda"
+
+msgid "The VPN module refused the request"
+msgstr "Modul VPN požadavek odmítl"
+
+msgid "Another VPN task is still running"
+msgstr "Jiná úloha VPN stále běží"
+
+msgid "The exit_ip parameter must be 0 or 1"
+msgstr "Parametr exit_ip musí být 0 nebo 1"
+
+msgid "The VPN status could not be read"
+msgstr "Stav VPN se nepodařilo přečíst"
+
+msgid "The profiles could not be read"
+msgstr "Profily se nepodařilo přečíst"
+
+msgid "The check parameter must be 0 or 1"
+msgstr "Parametr check musí být 0 nebo 1"
+
+msgid "The engines could not be read"
+msgstr "Enginy se nepodařilo přečíst"
+
+msgid "The subscriptions could not be read"
+msgstr "Odběry se nepodařilo přečíst"
+
+msgid "The VPN settings could not be read"
+msgstr "Nastavení VPN se nepodařilo přečíst"
+
+msgid "Unknown VPN operation"
+msgstr "Neznámá operace VPN"
+
+msgid "The VPN could not be switched"
+msgstr "VPN se nepodařilo přepnout"
+
+msgid "The kill switch is on or off"
+msgstr "Kill switch je zapnutý nebo vypnutý"
+
+msgid "The kill switch could not be changed"
+msgstr "Kill switch se nepodařilo změnit"
+
+msgid "Invalid profile id"
+msgstr "Neplatné ID profilu"
+
+msgid "The profile could not be made the active one"
+msgstr "Profil se nepodařilo nastavit jako aktivní"
+
+msgid "Unknown profile source"
+msgstr "Neznámý zdroj profilu"
+
+msgid "Unknown profile type"
+msgstr "Neznámý typ profilu"
+
+msgid "The config is empty, too large or holds control characters"
+msgstr "Konfigurace je prázdná, příliš velká nebo obsahuje řídicí znaky"
+
+msgid "Invalid profile request"
+msgstr "Neplatný požadavek na profil"
+
+msgid "A config from a URL takes the type it says"
+msgstr "Konfigurace z URL přebírá typ, který sama uvádí"
+
+msgid "No uploaded file"
+msgstr "Žádný nahraný soubor"
+
+msgid "The file is larger than 1 MiB"
+msgstr "Soubor je větší než 1 MiB"
+
+msgid "The profile could not be added"
+msgstr "Profil se nepodařilo přidat"
+
+msgid "The profile could not be renamed"
+msgstr "Profil se nepodařilo přejmenovat"
+
+msgid "The profile could not be removed"
+msgstr "Profil se nepodařilo odebrat"
+
+msgid "The profile does not pass the check"
+msgstr "Profil neprošel kontrolou"
+
+msgid "Unknown profile option"
+msgstr "Neznámá volba profilu"
+
+msgid "Invalid value for this option"
+msgstr "Neplatná hodnota pro tuto volbu"
+
+msgid "The option could not be set"
+msgstr "Volbu se nepodařilo nastavit"
+
+msgid "The config could not be read"
+msgstr "Konfiguraci se nepodařilo přečíst"
+
+msgid "The config was not saved"
+msgstr "Konfigurace nebyla uložena"
+
+msgid "The latency test failed"
+msgstr "Test latence selhal"
+
+msgid "Unknown subscription type"
+msgstr "Neznámý typ odběru"
+
+msgid "Invalid subscription id"
+msgstr "Neplatné ID odběru"
+
+msgid "The keep parameter must be 0 or 1"
+msgstr "Parametr keep musí být 0 nebo 1"
+
+msgid "The subscription could not be removed"
+msgstr "Odběr se nepodařilo odebrat"
+
+msgid "Unknown engine"
+msgstr "Neznámý engine"
+
+msgid "This engine is a system package: it has no file to upload"
+msgstr "Tento engine je systémový balíček: nemá soubor k nahrání"
+
+msgid "The engine could not be removed"
+msgstr "Engine se nepodařilo odebrat"
+
+msgid "mu300-extra is not on this system"
+msgstr "mu300-extra v tomto systému není"
+
+msgid "Unknown VPN setting"
+msgstr "Neznámé nastavení VPN"
+
+msgid "The setting could not be saved"
+msgstr "Nastavení nelze uložit"
+
+msgid "The number of lines is 1 to 1000"
+msgstr "Počet řádků je 1 až 1000"
+
+msgid "The log could not be read"
+msgstr "Protokol se nepodařilo přečíst"
 
 msgid "Radio did not come up"
 msgstr "Rádio se nespustilo"
@@ -1916,9 +2714,6 @@ msgstr "usage: power get|set KEY VALUE|wake|idle"
 
 msgid "Data usage is not available on this system"
 msgstr "Spotřeba dat není v tomto systému k dispozici"
-
-msgid "The setting could not be saved"
-msgstr "Nastavení nelze uložit"
 
 msgid "Unknown data usage operation"
 msgstr "Neznámá operace spotřeby dat"

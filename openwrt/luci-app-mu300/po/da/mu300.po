@@ -42,8 +42,26 @@ msgstr "Strøm"
 msgid "CPU"
 msgstr "CPU"
 
-msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "MU300-kontrolcenter: statusoversigt, netværkslåse, AT-terminal og SMS"
+msgid "Overview"
+msgstr "Oversigt"
+
+msgid "Profiles"
+msgstr "Profiler"
+
+msgid "Subscriptions"
+msgstr "Abonnementer"
+
+msgid "Engines"
+msgstr "Motorer"
+
+msgid "Settings"
+msgstr "Indstillinger"
+
+msgid "Logs"
+msgstr "Logge"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
+msgstr "MU300-kontrolcenter: statusoversigt, netlåse, AT-terminal, SMS og VPN"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -114,6 +132,81 @@ msgstr "Ukendt nummer"
 msgid "Select"
 msgstr "Vælg"
 
+msgid "never"
+msgstr "aldrig"
+
+msgid "just now"
+msgstr "lige nu"
+
+msgid "%s ago"
+msgstr "%s siden"
+
+msgid "Failed: %s"
+msgstr "Mislykkedes: %s"
+
+msgid "Management connection lost"
+msgstr "Administrationsforbindelsen blev afbrudt"
+
+msgid "Installing the VPN module"
+msgstr "VPN-modulet installeres"
+
+msgid "Installing the engine"
+msgstr "Motoren installeres"
+
+msgid "Adding the subscription"
+msgstr "Abonnementet tilføjes"
+
+msgid "Refreshing the subscriptions"
+msgstr "Abonnementerne opdateres"
+
+msgid "Testing the latency of every profile"
+msgstr "Latenstiden for alle profiler måles"
+
+msgid "Downloading the config"
+msgstr "Konfigurationen downloades"
+
+msgid "Working…"
+msgstr "Arbejder…"
+
+msgid "done"
+msgstr "færdig"
+
+msgid "failed"
+msgstr "mislykkedes"
+
+msgid "The VPN module is too old for this panel"
+msgstr "VPN-modulet er for gammelt til dette panel"
+
+msgid "The VPN module is not installed"
+msgstr "VPN-modulet er ikke installeret"
+
+msgid "This page needs the VPN module with the machine-readable mu300-vpn (module v2 or newer). Updating it keeps the profiles and the settings."
+msgstr "Denne side kræver VPN-modulet med den maskinlæsbare mu300-vpn (modul v2 eller nyere). En opdatering bevarer profiler og indstillinger."
+
+msgid "The VPN is a module of its own: mu300-vpn with its kill switch and profiles, and one extra per engine (Xray, sing-box, mihomo, dae). It is installed with mu300-extra install vpn."
+msgstr "VPN er et modul for sig: mu300-vpn med sin kill switch og sine profiler, og en ekstra pakke pr. motor (Xray, sing-box, mihomo, dae). Det installeres med mu300-extra install vpn."
+
+msgid "The download is a few MB for the module and up to tens of MB per engine: on mobile data it counts towards your plan."
+msgstr "Downloaden er nogle få MB for modulet og op til flere titusinder MB pr. motor: på mobildata tæller den med i dit abonnement."
+
+msgid "Update the VPN module"
+msgstr "Opdater VPN-modulet"
+
+msgid "Install the VPN module"
+msgstr "Installer VPN-modulet"
+
+msgid "Upload the file…"
+msgstr "Upload filen…"
+
+msgid "Upload failed: %s"
+msgstr "Upload mislykkedes: %s"
+
+msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
+msgstr "Offline: upload mu300-linux-vpn-core.tar.gz (eller pakken mu300-linux-vpn.tar.gz) fra VPN-modulets udgivelsesside."
+
+msgid "VPN"
+msgstr "VPN"
+
 msgid "Basic"
 msgstr "Grundlæggende"
 
@@ -150,14 +243,8 @@ msgstr "Anmodning mislykkedes"
 msgid "(empty)"
 msgstr "(tom)"
 
-msgid "Failed: %s"
-msgstr "Mislykkedes: %s"
-
 msgid "Saved"
 msgstr "Gemt"
-
-msgid "Management connection lost"
-msgstr "Administrationsforbindelsen blev afbrudt"
 
 msgid "CPU profile unavailable"
 msgstr "CPU profile unavailable"
@@ -918,9 +1005,6 @@ msgstr "Sprogpakken er installeret"
 msgid "The language pack could not be installed"
 msgstr "Sprogpakken kunne ikke installeres"
 
-msgid "Upload failed: %s"
-msgstr "Upload mislykkedes: %s"
-
 msgid "Language of the browser"
 msgstr "Browserens sprog"
 
@@ -941,9 +1025,6 @@ msgstr "Sprogpakken (mu300-extra-lang.tar.gz, ca. 2 MB) tilføjer LuCI på ca. 4
 
 msgid "Download from the release"
 msgstr "Download fra udgivelsen"
-
-msgid "Upload the file…"
-msgstr "Upload filen…"
 
 msgid "Release"
 msgstr "Udgivelse"
@@ -1566,6 +1647,591 @@ msgstr "Slå fra"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "Med 64 forlader hver pakke enheden som dens egen trafik"
 
+msgid "running"
+msgstr "kører"
+
+msgid "(about %s)"
+msgstr "(ca. %s)"
+
+msgid "Install %s?"
+msgstr "Installer %s?"
+
+msgid "It is installed from this system's package feed."
+msgstr "Den installeres fra dette systems pakkekilde."
+
+msgid "It is downloaded from the release of the VPN module and checked against its SHA256SUMS."
+msgstr "Den downloades fra VPN-modulets udgivelse og kontrolleres mod dens SHA256SUMS."
+
+msgid "An engine is tens of MB: on mobile data the download counts towards your plan."
+msgstr "En motor fylder titusinder MB: på mobildata tæller downloaden med i dit abonnement."
+
+msgid "Install"
+msgstr "Installer"
+
+msgid "Remove %s?"
+msgstr "Fjern %s?"
+
+msgid "Profiles run on it: %s. They cannot start until it is installed again (the module refuses while the running profile needs it)."
+msgstr "Profiler, der kører på den: %s. De kan ikke starte, før den er installeret igen (modulet afviser, mens den kørende profil har brug for den)."
+
+msgid "No profile runs on it."
+msgstr "Ingen profil kører på den."
+
+msgid "Removed"
+msgstr "Fjernet"
+
+msgid "Check for updates"
+msgstr "Søg efter opdateringer"
+
+msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
+msgstr "Hver motor er en ekstra pakke for sig: installer kun dem, dine profiler har brug for. Xray kører vless-, vmess-, trojan- og ss-links (med hev-socks5-tunnel), sing-box de samme links og sin egen JSON, mihomo Clash-abonnementer, dae hysteria2, tuic og resten på nyere kerner. WireGuard og OpenVPN er systempakker."
+
+msgid "Downloads are tens of MB per engine: on mobile data they count towards your plan. Offline, upload the engine's tarball from the release page of the VPN module."
+msgstr "Downloads fylder titusinder MB pr. motor: på mobildata tæller de med i dit abonnement. Offline skal du uploade motorens tarball fra VPN-modulets udgivelsesside."
+
+msgid "The available versions come from the latest release of the VPN module."
+msgstr "De tilgængelige versioner kommer fra VPN-modulets seneste udgivelse."
+
+msgid "Update"
+msgstr "Opdater"
+
+msgid "system package"
+msgstr "systempakke"
+
+msgid "in the vpn bundle"
+msgstr "i vpn-pakken"
+
+msgid "extra %s"
+msgstr "ekstra %s"
+
+msgid "not installed"
+msgstr "ikke installeret"
+
+msgid "cannot run here"
+msgstr "kan ikke køre her"
+
+msgid "update available"
+msgstr "opdatering tilgængelig"
+
+msgid "installed"
+msgstr "installeret"
+
+msgid "Kind"
+msgstr "Type"
+
+msgid "Version"
+msgstr "Version"
+
+msgid "Available"
+msgstr "Tilgængelig"
+
+msgid "not checked"
+msgstr "ikke kontrolleret"
+
+msgid "Size"
+msgstr "Størrelse"
+
+msgid "Needed by"
+msgstr "Bruges af"
+
+msgid "no profile"
+msgstr "ingen profil"
+
+msgid "dae needs a kernel with BTF, 5.17 or newer: not the 5.4 vendor kernel (mu300-update kernel 6.18). It can be installed anyway."
+msgstr "dae kræver en kerne med BTF, 5.17 eller nyere: ikke 5.4-leverandørkernen (mu300-update kernel 6.18). Den kan alligevel installeres."
+
+msgid "All engines"
+msgstr "Alle motorer"
+
+msgid "Last %s lines"
+msgstr "Seneste %s linjer"
+
+msgid "VPN service log"
+msgstr "VPN-tjenestelog"
+
+msgid "Every 5 s"
+msgstr "Hvert 5. s"
+
+msgid "The log is empty."
+msgstr "Loggen er tom."
+
+msgid "The VPN is starting"
+msgstr "VPN starter"
+
+msgid "The VPN is stopped"
+msgstr "VPN er stoppet"
+
+msgid "The VPN is restarting"
+msgstr "VPN genstarter"
+
+msgid "With the kill switch on, nothing leaves the device or the LAN outside the tunnel: while the VPN is down, starting or broken, every connection fails instead of going out directly. It stays up until you stop the VPN here (Stop removes it)."
+msgstr "Når kill switch er slået til, forlader intet enheden eller LAN uden for tunnelen: mens VPN er nede, starter eller er i stykker, mislykkes hver forbindelse i stedet for at gå direkte ud. Den forbliver aktiv, indtil du stopper VPN her (Stop fjerner den)."
+
+msgid "Without the kill switch, traffic goes out directly, unprotected, whenever the tunnel is down (while it starts, after a crash, when the engine is missing)."
+msgstr "Uden kill switch går trafikken direkte ud, ubeskyttet, hver gang tunnelen er nede (mens den starter, efter et nedbrud, når motoren mangler)."
+
+msgid "Turn the kill switch on?"
+msgstr "Slå kill switch til?"
+
+msgid "Turn the kill switch off?"
+msgstr "Slå kill switch fra?"
+
+msgid "Turn on"
+msgstr "Slå til"
+
+msgid "unknown"
+msgstr "ukendt"
+
+msgid "The exit address could not be found (is the tunnel up?)"
+msgstr "Udgangsadressen blev ikke fundet (er tunnelen oppe?)"
+
+msgid "Connecting…"
+msgstr "Forbinder…"
+
+msgid "On, but not running"
+msgstr "Slået til, men kører ikke"
+
+msgid "Stopped"
+msgstr "Stoppet"
+
+msgid "Install it"
+msgstr "Installer den"
+
+msgid "The engine of the active profile is not installed: %s"
+msgstr "Den aktive profils motor er ikke installeret: %s"
+
+msgid "The kill switch keeps everything closed until it is there; the service downloads it by itself when it can."
+msgstr "Kill switch holder alt lukket, indtil den er der; tjenesten downloader den selv, når den kan."
+
+msgid "The VPN cannot start until it is installed."
+msgstr "VPN kan ikke starte, før den er installeret."
+
+msgid "%s cannot run on this system"
+msgstr "%s kan ikke køre på dette system"
+
+msgid "The VPN is on, but no profile is active: choose one below."
+msgstr "VPN er slået til, men ingen profil er aktiv: vælg en nedenfor."
+
+msgid "Profile: %s"
+msgstr "Profil: %s"
+
+msgid "No active profile"
+msgstr "Ingen aktiv profil"
+
+msgid "engine %s"
+msgstr "motor %s"
+
+msgid "interface %s"
+msgstr "grænseflade %s"
+
+msgid "Kill switch active"
+msgstr "Kill switch aktiv"
+
+msgid "Kill switch on"
+msgstr "Kill switch til"
+
+msgid "Kill switch off"
+msgstr "Kill switch fra"
+
+msgid "IPv6 in the tunnel"
+msgstr "IPv6 i tunnelen"
+
+msgid "IPv6 blocked"
+msgstr "IPv6 blokeret"
+
+msgid "IPv6 untouched"
+msgstr "IPv6 urørt"
+
+msgid "Module %s"
+msgstr "Modul %s"
+
+msgid "Check"
+msgstr "Kontrollér"
+
+msgid "Uptime"
+msgstr "Oppetid"
+
+msgid "Rate"
+msgstr "Hastighed"
+
+msgid "Exit address"
+msgstr "Udgangsadresse"
+
+msgid "Start"
+msgstr "Start"
+
+msgid "Stop"
+msgstr "Stop"
+
+msgid "Restart"
+msgstr "Genstart"
+
+msgid "Stop the VPN?"
+msgstr "Stop VPN?"
+
+msgid "Traffic then goes out directly, without the tunnel; the kill switch is taken down with it."
+msgstr "Trafikken går så direkte ud uden tunnel; kill switch tages ned sammen med den."
+
+msgid "The VPN is on: it starts again by itself after a reboot."
+msgstr "VPN er slået til: den starter igen af sig selv efter en genstart."
+
+msgid "The VPN is off."
+msgstr "VPN er slået fra."
+
+msgid "Kill switch"
+msgstr "Kill switch"
+
+msgid "Setting"
+msgstr "Indstilling"
+
+msgid "Active: only the tunnel can reach the internet"
+msgstr "Aktiv: kun tunnelen kan nå internettet"
+
+msgid "Not active"
+msgstr "Ikke aktiv"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down, so nothing ever leaves without the tunnel. If the tunnel cannot come up (a dead server, an expired account), the device stays offline until you fix the profile or stop the VPN. The panel itself stays reachable from the LAN."
+msgstr "Kill switch blokerer al trafik fra enheden og LAN, mens VPN er nede, så intet nogensinde forlader enheden uden tunnelen. Hvis tunnelen ikke kan komme op (en død server, en udløbet konto), forbliver enheden offline, indtil du retter profilen eller stopper VPN. Selve panelet kan stadig nås fra LAN."
+
+msgid "Choose a profile"
+msgstr "Vælg en profil"
+
+msgid "No profiles yet"
+msgstr "Ingen profiler endnu"
+
+msgid "engine not installed"
+msgstr "motor ikke installeret"
+
+msgid "Use"
+msgstr "Brug"
+
+msgid "Switched: the VPN restarts on the new profile"
+msgstr "Skiftet: VPN genstarter på den nye profil"
+
+msgid "Active profile"
+msgstr "Aktiv profil"
+
+msgid "A running VPN restarts on the profile you choose; the kill switch stays up in between."
+msgstr "En kørende VPN genstarter på den profil, du vælger; kill switch forbliver oppe imens."
+
+msgid "Manage the profiles"
+msgstr "Administrer profilerne"
+
+msgid "Automatic: through the tunnel where the engine can carry it"
+msgstr "Automatisk: gennem tunnelen, hvor motoren kan bære det"
+
+msgid "Ask the engine for IPv6 in the tunnel"
+msgstr "Bed motoren om IPv6 i tunnelen"
+
+msgid "Never through the tunnel (blocked while the VPN is up)"
+msgstr "Aldrig gennem tunnelen (blokeret, mens VPN er oppe)"
+
+msgid "Saved: it applies from the next start (Restart)"
+msgstr "Gemt: gælder fra næste start (Genstart)"
+
+msgid "IPv6"
+msgstr "IPv6"
+
+msgid "The tunnel carries IPv6"
+msgstr "Tunnelen bærer IPv6"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "IPv6 guard"
+msgstr "IPv6-vagt"
+
+msgid "Active: IPv6 outside the tunnel is refused"
+msgstr "Aktiv: IPv6 uden for tunnelen afvises"
+
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
+msgstr "Mens VPN er oppe, forlader IPv6 aldrig enheden ved siden af en tunnel, der ikke bærer det: det afvises med det samme, så programmer og LAN-klienter falder tilbage til IPv4 i stedet for at lække eller vente. Automatisk: WireGuard bruger IPv6-adresserne i sin konfiguration, de andre motorer bliver på IPv4."
+
+msgid "%d ms"
+msgstr "%d ms"
+
+msgid "UDP: not testable"
+msgstr "UDP: kan ikke testes"
+
+msgid "blocked by the kill switch"
+msgstr "blokeret af kill switch"
+
+msgid "A WireGuard or OpenVPN config, a Clash/mihomo YAML, an Xray or sing-box JSON, a dae config"
+msgstr "En WireGuard- eller OpenVPN-konfiguration, en Clash/mihomo-YAML, en Xray- eller sing-box-JSON, en dae-konfiguration"
+
+msgid "After OK, choose the file: a WireGuard .conf, an OpenVPN .ovpn, a Clash/mihomo .yaml, an Xray or sing-box .json or a dae config (at most 1 MiB)."
+msgstr "Efter OK vælger du filen: en WireGuard .conf, en OpenVPN .ovpn, en Clash/mihomo .yaml, en Xray- eller sing-box .json eller en dae-konfiguration (højst 1 MiB)."
+
+msgid "From the source"
+msgstr "Fra kilden"
+
+msgid "Detect"
+msgstr "Registrer"
+
+msgid "The URL may hold a token: it goes to the device on its own, never into a command line or a log."
+msgstr "URL'en kan indeholde et token: det sendes til enheden for sig selv, aldrig ind i en kommandolinje eller en log."
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Share link"
+msgstr "Delingslink"
+
+msgid "Paste"
+msgstr "Indsæt"
+
+msgid "File"
+msgstr "Fil"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Not a share link this panel takes"
+msgstr "Ikke et delingslink, som dette panel accepterer"
+
+msgid "The config is empty"
+msgstr "Konfigurationen er tom"
+
+msgid "Not an http or https URL"
+msgstr "Ikke en http- eller https-URL"
+
+msgid "Invalid name: 1-64 characters, no control characters"
+msgstr "Ugyldigt navn: 1-64 tegn, ingen kontroltegn"
+
+msgid "Add a profile"
+msgstr "Tilføj en profil"
+
+msgid "Name"
+msgstr "Navn"
+
+msgid "Detect: the module tells the kind from the link or the file. Choose the type for a JSON that could be either Xray or sing-box, or for a link that should run on another engine."
+msgstr "Registrer: modulet genkender typen ud fra linket eller filen. Vælg typen for en JSON, der kan være både Xray og sing-box, eller for et link, der skal køre på en anden motor."
+
+msgid "The profile is added"
+msgstr "Profilen er tilføjet"
+
+msgid "Rename the profile"
+msgstr "Omdøb profilen"
+
+msgid "Delete the profile %s?"
+msgstr "Slet profilen %s?"
+
+msgid "It is the active profile: with the VPN on, the module refuses; stop the VPN or choose another profile first."
+msgstr "Det er den aktive profil: med VPN slået til afviser modulet; stop VPN eller vælg en anden profil først."
+
+msgid "Its config and credentials are deleted from the device."
+msgstr "Dens konfiguration og legitimationsoplysninger slettes fra enheden."
+
+msgid "Deleted"
+msgstr "Slettet"
+
+msgid "The profile passes the check"
+msgstr "Profilen består kontrollen"
+
+msgid "Show the config?"
+msgstr "Vis konfigurationen?"
+
+msgid "The config holds the credentials of the profile (keys, passwords, UUIDs). It is shown on this screen only; anyone who can see the screen can read it."
+msgstr "Konfigurationen indeholder profilens legitimationsoplysninger (nøgler, adgangskoder, UUID'er). Den vises kun på denne skærm; enhver, der kan se skærmen, kan læse den."
+
+msgid "Show"
+msgstr "Vis"
+
+msgid "Saving checks the config with the engine first (profile edit); a config that does not pass is not saved and the old one stays."
+msgstr "Ved gemning kontrolleres konfigurationen først med motoren (profile edit); en konfiguration, der ikke består, gemmes ikke, og den gamle bliver."
+
+msgid "This profile comes from a subscription: its next refresh replaces your changes."
+msgstr "Denne profil stammer fra et abonnement: dens næste opdatering erstatter dine ændringer."
+
+msgid "Config of %s"
+msgstr "Konfiguration af %s"
+
+msgid "Close"
+msgstr "Luk"
+
+msgid "Rename"
+msgstr "Omdøb"
+
+msgid "Show / edit the config"
+msgstr "Vis / rediger konfigurationen"
+
+msgid "Test the latency of all"
+msgstr "Mål latenstiden for alle"
+
+msgid "No profiles yet: add one from a share link, a config file or a subscription."
+msgstr "Ingen profiler endnu: tilføj en fra et delingslink, en konfigurationsfil eller et abonnement."
+
+msgid "Active"
+msgstr "Aktiv"
+
+msgid "This profile is the active one now"
+msgstr "Denne profil er nu den aktive"
+
+msgid "More"
+msgstr "Mere"
+
+msgid "active"
+msgstr "aktiv"
+
+msgid "subscription"
+msgstr "abonnement"
+
+msgid "migrated"
+msgstr "migreret"
+
+msgid "gone from its subscription"
+msgstr "forsvundet fra sit abonnement"
+
+msgid "Server"
+msgstr "Server"
+
+msgid "Engine"
+msgstr "Motor"
+
+msgid "Latency"
+msgstr "Latenstid"
+
+msgid "The latency is a TCP connection to the server, through the tunnel when the VPN is up. WireGuard and OpenVPN servers usually speak UDP and cannot be tested this way."
+msgstr "Latenstiden er en TCP-forbindelse til serveren, gennem tunnelen, når VPN er oppe. WireGuard- og OpenVPN-servere taler normalt UDP og kan ikke testes på denne måde."
+
+msgid "Enter an IPv4 or IPv6 address"
+msgstr "Angiv en IPv4- eller IPv6-adresse"
+
+msgid "On: nothing leaves outside the tunnel"
+msgstr "Til: intet forlader tunnelen"
+
+msgid "Off: traffic goes out directly while the tunnel is down"
+msgstr "Fra: trafikken går direkte ud, mens tunnelen er nede"
+
+msgid "Yes: Tailscale's own connections go through the tunnel"
+msgstr "Ja: Tailscales egne forbindelser går gennem tunnelen"
+
+msgid "No: Tailscale connects directly"
+msgstr "Nej: Tailscale forbinder direkte"
+
+msgid "Routing"
+msgstr "Routing"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down."
+msgstr "Kill switch blokerer al trafik fra enheden og LAN, mens VPN er nede."
+
+msgid "Bypass the tunnel"
+msgstr "Omgå tunnelen"
+
+msgid "Enter address ranges like 192.168.0.0/16, separated by commas"
+msgstr "Angiv adresseintervaller som 192.168.0.0/16, adskilt af kommaer"
+
+msgid "Address ranges that never go into the tunnel, besides the LAN itself (which never does). Empty: the LAN only."
+msgstr "Adresseintervaller, der aldrig går ind i tunnelen, ud over selve LAN (som aldrig gør det). Tom: kun LAN."
+
+msgid "Tailscale through the VPN"
+msgstr "Tailscale gennem VPN"
+
+msgid "When Tailscale runs on the device, its WireGuard, DERP and control connections go through whichever tunnel runs (dae catches them like any other)."
+msgstr "Når Tailscale kører på enheden, går dets WireGuard-, DERP- og kontrolforbindelser gennem den tunnel, der kører (dae fanger dem som alle andre)."
+
+msgid "DNS"
+msgstr "DNS"
+
+msgid "DNS through the tunnel"
+msgstr "DNS gennem tunnelen"
+
+msgid "The resolver the device's and the LAN's lookups go to, through the tunnel. Nothing goes to the carrier's resolver."
+msgstr "Den resolver, som enhedens og LAN's opslag sendes til gennem tunnelen. Intet går til operatørens resolver."
+
+msgid "Bootstrap DNS"
+msgstr "Bootstrap-DNS"
+
+msgid "Finds the VPN server's own address before the tunnel is up (directly, on the engine's own connection)."
+msgstr "Finder VPN-serverens egen adresse, før tunnelen er oppe (direkte, på motorens egen forbindelse)."
+
+msgid "Empty puts a setting back to its default."
+msgstr "Tom sætter en indstilling tilbage til standarden."
+
+msgid "TUN stack"
+msgstr "TUN-stack"
+
+msgid "Default (gvisor)"
+msgstr "Standard (gvisor)"
+
+msgid "system (not on the 5.4 kernel)"
+msgstr "system (ikke på 5.4-kernen)"
+
+msgid "set (unchanged unless you type a new one)"
+msgstr "sat (uændret, medmindre du skriver en ny)"
+
+msgid "not set"
+msgstr "ikke sat"
+
+msgid "Upstream HTTP proxy"
+msgstr "Upstream HTTP-proxy"
+
+msgid "TLS certificate pin (SHA-256)"
+msgstr "TLS-certifikatpinning (SHA-256)"
+
+msgid "Enter host:port"
+msgstr "Angiv host:port"
+
+msgid "Enter the SHA-256 in hex"
+msgstr "Angiv SHA-256 som hex"
+
+msgid "Profile options"
+msgstr "Profilindstillinger"
+
+msgid "None of the profiles has options of its type."
+msgstr "Ingen af profilerne har indstillinger for deres type."
+
+msgid "mihomo's mode (rule, global, direct), the engines' log levels, dae's groups and routing are part of each profile's own config: VPN > Profiles, Show / edit the config."
+msgstr "mihomos tilstand (rule, global, direct), motorernes logniveauer samt daes grupper og routing er en del af hver profils egen konfiguration: VPN > Profiler, Vis / rediger konfigurationen."
+
+msgid "Delete the subscription %s?"
+msgstr "Slet abonnementet %s?"
+
+msgid "Its profiles can go with it or stay as profiles of their own. The active profile is never removed while the VPN is on."
+msgstr "Dets profiler kan følge med eller blive som egne profiler. Den aktive profil fjernes aldrig, mens VPN er slået til."
+
+msgid "Keep the profiles"
+msgstr "Behold profilerne"
+
+msgid "Delete with its profiles"
+msgstr "Slet med dets profiler"
+
+msgid "Share links: one profile per link"
+msgstr "Delingslinks: én profil pr. link"
+
+msgid "Clash/mihomo YAML: one mihomo profile"
+msgstr "Clash/mihomo-YAML: én mihomo-profil"
+
+msgid "dae: one profile with every node in one group"
+msgstr "dae: én profil med alle noder i én gruppe"
+
+msgid "Add a subscription"
+msgstr "Tilføj et abonnement"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "The URL usually holds your account token: it is stored on the device readable by root only, and never shown again. The subscription is fetched over the device's own connection: through the tunnel when the VPN is up; with the kill switch up and the tunnel down it cannot be fetched."
+msgstr "URL'en indeholder som regel dit kontotoken: det gemmes på enheden, så kun root kan læse det, og vises aldrig igen. Abonnementet hentes over enhedens egen forbindelse: gennem tunnelen, når VPN er oppe; med kill switch oppe og tunnelen nede kan det ikke hentes."
+
+msgid "Refresh all"
+msgstr "Opdater alle"
+
+msgid "No subscriptions yet."
+msgstr "Ingen abonnementer endnu."
+
+msgid "Host"
+msgstr "Vært"
+
+msgid "Updated"
+msgstr "Opdateret"
+
+msgid "Share links"
+msgstr "Delingslinks"
+
+msgid "A refresh keeps the profiles whose name is unchanged, adds the new ones and removes the ones that are gone (the active one stays while the VPN is on, marked as gone). A refresh of the active profile restarts the running VPN."
+msgstr "En opdatering beholder profilerne med uændret navn, tilføjer de nye og fjerner dem, der er væk (den aktive bliver, mens VPN er slået til, markeret som væk). Opdatering af den aktive profil genstarter den kørende VPN."
+
 msgid "Dashboard info failed"
 msgstr "Kunne ikke hente oversigtsdata"
 
@@ -1736,6 +2402,138 @@ msgstr "Kørselsmappen er ikke sikker; intet blev kørt"
 
 msgid "No such method"
 msgstr "Metoden findes ikke"
+
+msgid "The VPN module refused the request"
+msgstr "VPN-modulet afviste anmodningen"
+
+msgid "Another VPN task is still running"
+msgstr "En anden VPN-opgave kører stadig"
+
+msgid "The exit_ip parameter must be 0 or 1"
+msgstr "Parameteren exit_ip skal være 0 eller 1"
+
+msgid "The VPN status could not be read"
+msgstr "VPN-status kunne ikke læses"
+
+msgid "The profiles could not be read"
+msgstr "Profilerne kunne ikke læses"
+
+msgid "The check parameter must be 0 or 1"
+msgstr "Parameteren check skal være 0 eller 1"
+
+msgid "The engines could not be read"
+msgstr "Motorerne kunne ikke læses"
+
+msgid "The subscriptions could not be read"
+msgstr "Abonnementerne kunne ikke læses"
+
+msgid "The VPN settings could not be read"
+msgstr "VPN-indstillingerne kunne ikke læses"
+
+msgid "Unknown VPN operation"
+msgstr "Ukendt VPN-handling"
+
+msgid "The VPN could not be switched"
+msgstr "VPN kunne ikke skiftes"
+
+msgid "The kill switch is on or off"
+msgstr "Kill switch er til eller fra"
+
+msgid "The kill switch could not be changed"
+msgstr "Kill switch kunne ikke ændres"
+
+msgid "Invalid profile id"
+msgstr "Ugyldigt profil-id"
+
+msgid "The profile could not be made the active one"
+msgstr "Profilen kunne ikke gøres aktiv"
+
+msgid "Unknown profile source"
+msgstr "Ukendt profilkilde"
+
+msgid "Unknown profile type"
+msgstr "Ukendt profiltype"
+
+msgid "The config is empty, too large or holds control characters"
+msgstr "Konfigurationen er tom, for stor eller indeholder kontroltegn"
+
+msgid "Invalid profile request"
+msgstr "Ugyldig profilanmodning"
+
+msgid "A config from a URL takes the type it says"
+msgstr "En konfiguration fra en URL får den type, den selv angiver"
+
+msgid "No uploaded file"
+msgstr "Ingen uploadet fil"
+
+msgid "The file is larger than 1 MiB"
+msgstr "Filen er større end 1 MiB"
+
+msgid "The profile could not be added"
+msgstr "Profilen kunne ikke tilføjes"
+
+msgid "The profile could not be renamed"
+msgstr "Profilen kunne ikke omdøbes"
+
+msgid "The profile could not be removed"
+msgstr "Profilen kunne ikke fjernes"
+
+msgid "The profile does not pass the check"
+msgstr "Profilen består ikke kontrollen"
+
+msgid "Unknown profile option"
+msgstr "Ukendt profilindstilling"
+
+msgid "Invalid value for this option"
+msgstr "Ugyldig værdi for denne indstilling"
+
+msgid "The option could not be set"
+msgstr "Indstillingen kunne ikke sættes"
+
+msgid "The config could not be read"
+msgstr "Konfigurationen kunne ikke læses"
+
+msgid "The config was not saved"
+msgstr "Konfigurationen blev ikke gemt"
+
+msgid "The latency test failed"
+msgstr "Latenstesten mislykkedes"
+
+msgid "Unknown subscription type"
+msgstr "Ukendt abonnementstype"
+
+msgid "Invalid subscription id"
+msgstr "Ugyldigt abonnements-id"
+
+msgid "The keep parameter must be 0 or 1"
+msgstr "Parameteren keep skal være 0 eller 1"
+
+msgid "The subscription could not be removed"
+msgstr "Abonnementet kunne ikke fjernes"
+
+msgid "Unknown engine"
+msgstr "Ukendt motor"
+
+msgid "This engine is a system package: it has no file to upload"
+msgstr "Denne motor er en systempakke: den har ingen fil at uploade"
+
+msgid "The engine could not be removed"
+msgstr "Motoren kunne ikke fjernes"
+
+msgid "mu300-extra is not on this system"
+msgstr "mu300-extra findes ikke på dette system"
+
+msgid "Unknown VPN setting"
+msgstr "Ukendt VPN-indstilling"
+
+msgid "The setting could not be saved"
+msgstr "Indstillingen kunne ikke gemmes"
+
+msgid "The number of lines is 1 to 1000"
+msgstr "Antallet af linjer er 1 til 1000"
+
+msgid "The log could not be read"
+msgstr "Loggen kunne ikke læses"
 
 msgid "Radio did not come up"
 msgstr "Radioen startede ikke"
@@ -1916,9 +2714,6 @@ msgstr "usage: power get|set KEY VALUE|wake|idle"
 
 msgid "Data usage is not available on this system"
 msgstr "Dataforbrug er ikke tilgængeligt på dette system"
-
-msgid "The setting could not be saved"
-msgstr "Indstillingen kunne ikke gemmes"
 
 msgid "Unknown data usage operation"
 msgstr "Ukendt handling for dataforbrug"

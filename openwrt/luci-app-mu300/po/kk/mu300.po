@@ -42,8 +42,26 @@ msgstr "Қуат"
 msgid "CPU"
 msgstr "CPU"
 
-msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "MU300 басқару орталығы: күй тақтасы, желіні бекіту, AT терминалы және SMS"
+msgid "Overview"
+msgstr "Шолу"
+
+msgid "Profiles"
+msgstr "Профильдер"
+
+msgid "Subscriptions"
+msgstr "Жазылымдар"
+
+msgid "Engines"
+msgstr "Қозғалтқыштар"
+
+msgid "Settings"
+msgstr "Параметрлер"
+
+msgid "Logs"
+msgstr "Журналдар"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
+msgstr "MU300 басқару орталығы: күй тақтасы, желі құлыптары, AT терминалы, SMS және VPN"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -114,6 +132,81 @@ msgstr "Белгісіз нөмір"
 msgid "Select"
 msgstr "Таңдау"
 
+msgid "never"
+msgstr "ешқашан"
+
+msgid "just now"
+msgstr "дәл қазір"
+
+msgid "%s ago"
+msgstr "%s бұрын"
+
+msgid "Failed: %s"
+msgstr "Сәтсіз: %s"
+
+msgid "Management connection lost"
+msgstr "Басқару байланысы үзілді"
+
+msgid "Installing the VPN module"
+msgstr "VPN модулі орнатылуда"
+
+msgid "Installing the engine"
+msgstr "Қозғалтқыш орнатылуда"
+
+msgid "Adding the subscription"
+msgstr "Жазылым қосылуда"
+
+msgid "Refreshing the subscriptions"
+msgstr "Жазылымдар жаңартылуда"
+
+msgid "Testing the latency of every profile"
+msgstr "Әр профильдің кідірісі өлшенуде"
+
+msgid "Downloading the config"
+msgstr "Конфигурация жүктелуде"
+
+msgid "Working…"
+msgstr "Орындалуда…"
+
+msgid "done"
+msgstr "дайын"
+
+msgid "failed"
+msgstr "сәтсіз"
+
+msgid "The VPN module is too old for this panel"
+msgstr "VPN модулі бұл панель үшін тым ескі"
+
+msgid "The VPN module is not installed"
+msgstr "VPN модулі орнатылмаған"
+
+msgid "This page needs the VPN module with the machine-readable mu300-vpn (module v2 or newer). Updating it keeps the profiles and the settings."
+msgstr "Бұл бетке машина оқи алатын mu300-vpn бар VPN модулі (v2 немесе одан жаңа модуль) қажет. Жаңарту профильдер мен параметрлерді сақтайды."
+
+msgid "The VPN is a module of its own: mu300-vpn with its kill switch and profiles, and one extra per engine (Xray, sing-box, mihomo, dae). It is installed with mu300-extra install vpn."
+msgstr "VPN - бөлек модуль: kill switch пен профильдері бар mu300-vpn және әр қозғалтқышқа бір қосымша (Xray, sing-box, mihomo, dae). Ол mu300-extra install vpn арқылы орнатылады."
+
+msgid "The download is a few MB for the module and up to tens of MB per engine: on mobile data it counts towards your plan."
+msgstr "Жүктеу модуль үшін бірнеше MB, ал әр қозғалтқыш үшін ондаған MB-қа дейін: мобильді деректерде ол тарифіңізден шығындалады."
+
+msgid "Update the VPN module"
+msgstr "VPN модулін жаңарту"
+
+msgid "Install the VPN module"
+msgstr "VPN модулін орнату"
+
+msgid "Upload the file…"
+msgstr "Файлды жүктеп салу…"
+
+msgid "Upload failed: %s"
+msgstr "Жүктеп салу сәтсіз: %s"
+
+msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
+msgstr "Офлайн: VPN модулінің релиз бетінен mu300-linux-vpn-core.tar.gz (немесе mu300-linux-vpn.tar.gz жинағын) жүктеп салыңыз."
+
+msgid "VPN"
+msgstr "VPN"
+
 msgid "Basic"
 msgstr "Негізгі"
 
@@ -150,14 +243,8 @@ msgstr "Сұрау сәтсіз"
 msgid "(empty)"
 msgstr "(бос)"
 
-msgid "Failed: %s"
-msgstr "Сәтсіз: %s"
-
 msgid "Saved"
 msgstr "Сақталды"
-
-msgid "Management connection lost"
-msgstr "Басқару байланысы үзілді"
 
 msgid "CPU profile unavailable"
 msgstr "CPU profile unavailable"
@@ -918,9 +1005,6 @@ msgstr "Тіл бумасы орнатылды"
 msgid "The language pack could not be installed"
 msgstr "Тіл бумасын орнату мүмкін болмады"
 
-msgid "Upload failed: %s"
-msgstr "Жүктеп салу сәтсіз: %s"
-
 msgid "Language of the browser"
 msgstr "Браузер тілі"
 
@@ -941,9 +1025,6 @@ msgstr "Тіл бумасы (mu300-extra-lang.tar.gz, шамамен 2 МБ) LuC
 
 msgid "Download from the release"
 msgstr "Релизден жүктеп алу"
-
-msgid "Upload the file…"
-msgstr "Файлды жүктеп салу…"
 
 msgid "Release"
 msgstr "Релиз"
@@ -1566,6 +1647,591 @@ msgstr "Өшіру"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "64 мәнінде әр пакет құрылғының өз трафигі сияқты шығады"
 
+msgid "running"
+msgstr "жұмыс істеуде"
+
+msgid "(about %s)"
+msgstr "(шамамен %s)"
+
+msgid "Install %s?"
+msgstr "%s орнатылсын ба?"
+
+msgid "It is installed from this system's package feed."
+msgstr "Ол осы жүйенің пакеттер арнасынан орнатылады."
+
+msgid "It is downloaded from the release of the VPN module and checked against its SHA256SUMS."
+msgstr "Ол VPN модулінің релизінен жүктеледі және SHA256SUMS арқылы тексеріледі."
+
+msgid "An engine is tens of MB: on mobile data the download counts towards your plan."
+msgstr "Бір қозғалтқыш - ондаған MB: мобильді деректерде жүктеу тарифіңізден шығындалады."
+
+msgid "Install"
+msgstr "Орнату"
+
+msgid "Remove %s?"
+msgstr "%s жойылсын ба?"
+
+msgid "Profiles run on it: %s. They cannot start until it is installed again (the module refuses while the running profile needs it)."
+msgstr "Онда жұмыс істейтін профильдер: %s. Ол қайта орнатылмайынша олар іске қосыла алмайды (жұмыс істеп тұрған профильге қажет болса, модуль жоюдан бас тартады)."
+
+msgid "No profile runs on it."
+msgstr "Онда ешқандай профиль жұмыс істемейді."
+
+msgid "Removed"
+msgstr "Жойылды"
+
+msgid "Check for updates"
+msgstr "Жаңартуларды тексеру"
+
+msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
+msgstr "Әр қозғалтқыш - бөлек қосымша: профильдеріңізге қажеттерін ғана орнатыңыз. Xray vless, vmess, trojan және ss сілтемелерін (hev-socks5-tunnel арқылы), sing-box сол сілтемелерді және өз JSON-ын, mihomo Clash жазылымдарын, ал dae жаңа ядроларда hysteria2, tuic және басқаларын іске қосады. WireGuard пен OpenVPN - жүйенің пакеттері."
+
+msgid "Downloads are tens of MB per engine: on mobile data they count towards your plan. Offline, upload the engine's tarball from the release page of the VPN module."
+msgstr "Жүктеулер әр қозғалтқышқа ондаған MB: мобильді деректерде олар тарифіңізден шығындалады. Офлайн болса, қозғалтқыштың tarball файлын VPN модулінің релиз бетінен жүктеп салыңыз."
+
+msgid "The available versions come from the latest release of the VPN module."
+msgstr "Қолжетімді нұсқалар VPN модулінің соңғы релизінен алынады."
+
+msgid "Update"
+msgstr "Жаңарту"
+
+msgid "system package"
+msgstr "жүйе пакеті"
+
+msgid "in the vpn bundle"
+msgstr "vpn жинағында"
+
+msgid "extra %s"
+msgstr "%s қосымшасы"
+
+msgid "not installed"
+msgstr "орнатылмаған"
+
+msgid "cannot run here"
+msgstr "мұнда жұмыс істей алмайды"
+
+msgid "update available"
+msgstr "жаңарту бар"
+
+msgid "installed"
+msgstr "орнатылған"
+
+msgid "Kind"
+msgstr "Түрі"
+
+msgid "Version"
+msgstr "Нұсқа"
+
+msgid "Available"
+msgstr "Қолжетімді"
+
+msgid "not checked"
+msgstr "тексерілмеген"
+
+msgid "Size"
+msgstr "Өлшемі"
+
+msgid "Needed by"
+msgstr "Кімге қажет"
+
+msgid "no profile"
+msgstr "профиль жоқ"
+
+msgid "dae needs a kernel with BTF, 5.17 or newer: not the 5.4 vendor kernel (mu300-update kernel 6.18). It can be installed anyway."
+msgstr "dae-ге BTF бар 5.17 немесе одан жаңа ядро қажет: 5.4 өндіруші ядросында жұмыс істемейді (mu300-update kernel 6.18). Соған қарамастан орнатуға болады."
+
+msgid "All engines"
+msgstr "Барлық қозғалтқыштар"
+
+msgid "Last %s lines"
+msgstr "Соңғы %s жол"
+
+msgid "VPN service log"
+msgstr "VPN қызметінің журналы"
+
+msgid "Every 5 s"
+msgstr "5 с сайын"
+
+msgid "The log is empty."
+msgstr "Журнал бос."
+
+msgid "The VPN is starting"
+msgstr "VPN іске қосылуда"
+
+msgid "The VPN is stopped"
+msgstr "VPN тоқтатылды"
+
+msgid "The VPN is restarting"
+msgstr "VPN қайта іске қосылуда"
+
+msgid "With the kill switch on, nothing leaves the device or the LAN outside the tunnel: while the VPN is down, starting or broken, every connection fails instead of going out directly. It stays up until you stop the VPN here (Stop removes it)."
+msgstr "Kill switch қосулы болғанда, VPN істен шыққанда, іске қосылғанда немесе бұзылғанда құрылғыдан немесе LAN-нан туннельден тыс ештеңе шықпайды: әр қосылым тікелей шығудың орнына сәтсіз аяқталады. Ол сіз VPN-ді осы жерден тоқтатқанша қосулы тұрады (Тоқтату оны алып тастайды)."
+
+msgid "Without the kill switch, traffic goes out directly, unprotected, whenever the tunnel is down (while it starts, after a crash, when the engine is missing)."
+msgstr "Kill switch болмаса, туннель істен шыққан кезде (іске қосылғанда, бұзылғаннан кейін, қозғалтқыш жоқ болғанда) трафик қорғаусыз, тікелей шығады."
+
+msgid "Turn the kill switch on?"
+msgstr "Kill switch қосылсын ба?"
+
+msgid "Turn the kill switch off?"
+msgstr "Kill switch өшірілсін бе?"
+
+msgid "Turn on"
+msgstr "Қосу"
+
+msgid "unknown"
+msgstr "белгісіз"
+
+msgid "The exit address could not be found (is the tunnel up?)"
+msgstr "Шығу мекенжайы табылмады (туннель қосулы ма?)"
+
+msgid "Connecting…"
+msgstr "Қосылуда…"
+
+msgid "On, but not running"
+msgstr "Қосулы, бірақ жұмыс істемейді"
+
+msgid "Stopped"
+msgstr "Тоқтатылды"
+
+msgid "Install it"
+msgstr "Орнату"
+
+msgid "The engine of the active profile is not installed: %s"
+msgstr "Белсенді профильдің қозғалтқышы орнатылмаған: %s"
+
+msgid "The kill switch keeps everything closed until it is there; the service downloads it by itself when it can."
+msgstr "Kill switch ол пайда болғанша бәрін жабық ұстайды; қызмет мүмкін болғанда оны өзі жүктейді."
+
+msgid "The VPN cannot start until it is installed."
+msgstr "Орнатылмайынша VPN іске қосыла алмайды."
+
+msgid "%s cannot run on this system"
+msgstr "%s бұл жүйеде жұмыс істей алмайды"
+
+msgid "The VPN is on, but no profile is active: choose one below."
+msgstr "VPN қосулы, бірақ белсенді профиль жоқ: төменнен біреуін таңдаңыз."
+
+msgid "Profile: %s"
+msgstr "Профиль: %s"
+
+msgid "No active profile"
+msgstr "Белсенді профиль жоқ"
+
+msgid "engine %s"
+msgstr "қозғалтқыш %s"
+
+msgid "interface %s"
+msgstr "интерфейс %s"
+
+msgid "Kill switch active"
+msgstr "Kill switch белсенді"
+
+msgid "Kill switch on"
+msgstr "Kill switch қосулы"
+
+msgid "Kill switch off"
+msgstr "Kill switch өшірулі"
+
+msgid "IPv6 in the tunnel"
+msgstr "Туннельдегі IPv6"
+
+msgid "IPv6 blocked"
+msgstr "IPv6 бұғатталған"
+
+msgid "IPv6 untouched"
+msgstr "IPv6 қозғалмаған"
+
+msgid "Module %s"
+msgstr "Модуль %s"
+
+msgid "Check"
+msgstr "Тексеру"
+
+msgid "Uptime"
+msgstr "Жұмыс уақыты"
+
+msgid "Rate"
+msgstr "Жылдамдық"
+
+msgid "Exit address"
+msgstr "Шығу мекенжайы"
+
+msgid "Start"
+msgstr "Іске қосу"
+
+msgid "Stop"
+msgstr "Тоқтату"
+
+msgid "Restart"
+msgstr "Қайта іске қосу"
+
+msgid "Stop the VPN?"
+msgstr "VPN тоқтатылсын ба?"
+
+msgid "Traffic then goes out directly, without the tunnel; the kill switch is taken down with it."
+msgstr "Сонда трафик туннельсіз тікелей шығады; kill switch та онымен бірге алынып тасталады."
+
+msgid "The VPN is on: it starts again by itself after a reboot."
+msgstr "VPN қосулы: қайта жүктелгеннен кейін ол өздігінен қайта іске қосылады."
+
+msgid "The VPN is off."
+msgstr "VPN өшірулі."
+
+msgid "Kill switch"
+msgstr "Kill switch"
+
+msgid "Setting"
+msgstr "Параметр"
+
+msgid "Active: only the tunnel can reach the internet"
+msgstr "Белсенді: интернетке тек туннель жете алады"
+
+msgid "Not active"
+msgstr "Белсенді емес"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down, so nothing ever leaves without the tunnel. If the tunnel cannot come up (a dead server, an expired account), the device stays offline until you fix the profile or stop the VPN. The panel itself stays reachable from the LAN."
+msgstr "Kill switch VPN істен шыққанда құрылғы мен LAN-ның барлық трафигін бұғаттайды, сондықтан туннельсіз ештеңе шықпайды. Туннель көтерілмесе (сервер істен шыққан, аккаунт мерзімі біткен), сіз профильді түзетпейінше немесе VPN-ді тоқтатпайынша құрылғы офлайн күйінде қалады. Панельдің өзіне LAN арқылы кіруге болады."
+
+msgid "Choose a profile"
+msgstr "Профильді таңдаңыз"
+
+msgid "No profiles yet"
+msgstr "Профильдер әлі жоқ"
+
+msgid "engine not installed"
+msgstr "қозғалтқыш орнатылмаған"
+
+msgid "Use"
+msgstr "Қолдану"
+
+msgid "Switched: the VPN restarts on the new profile"
+msgstr "Ауыстырылды: VPN жаңа профильмен қайта іске қосылады"
+
+msgid "Active profile"
+msgstr "Белсенді профиль"
+
+msgid "A running VPN restarts on the profile you choose; the kill switch stays up in between."
+msgstr "Жұмыс істеп тұрған VPN сіз таңдаған профильмен қайта іске қосылады; бұл кезде kill switch қосулы қалады."
+
+msgid "Manage the profiles"
+msgstr "Профильдерді басқару"
+
+msgid "Automatic: through the tunnel where the engine can carry it"
+msgstr "Автоматты: қозғалтқыш тасымалдай алатын жерде туннель арқылы"
+
+msgid "Ask the engine for IPv6 in the tunnel"
+msgstr "Қозғалтқыштан туннельде IPv6 сұрау"
+
+msgid "Never through the tunnel (blocked while the VPN is up)"
+msgstr "Ешқашан туннель арқылы емес (VPN қосулы кезде бұғатталады)"
+
+msgid "Saved: it applies from the next start (Restart)"
+msgstr "Сақталды: келесі іске қосудан бастап қолданылады (Қайта іске қосу)"
+
+msgid "IPv6"
+msgstr "IPv6"
+
+msgid "The tunnel carries IPv6"
+msgstr "Туннель IPv6 тасымалдайды"
+
+msgid "Yes"
+msgstr "Иә"
+
+msgid "IPv6 guard"
+msgstr "IPv6 қорғанысы"
+
+msgid "Active: IPv6 outside the tunnel is refused"
+msgstr "Белсенді: туннельден тыс IPv6 қабылданбайды"
+
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
+msgstr "VPN қосулы кезде IPv6 оны тасымалдамайтын туннельдің жанынан ешқашан шықпайды: ол бірден қабылданбайды, сондықтан бағдарламалар мен LAN клиенттері ағып кетудің немесе күтудің орнына IPv4-ке ауысады. Автоматты: WireGuard өз конфигурациясындағы IPv6 мекенжайларын пайдаланады, басқа қозғалтқыштар IPv4-те қалады."
+
+msgid "%d ms"
+msgstr "%d ms"
+
+msgid "UDP: not testable"
+msgstr "UDP: тексеру мүмкін емес"
+
+msgid "blocked by the kill switch"
+msgstr "kill switch бұғаттады"
+
+msgid "A WireGuard or OpenVPN config, a Clash/mihomo YAML, an Xray or sing-box JSON, a dae config"
+msgstr "WireGuard немесе OpenVPN конфигурациясы, Clash/mihomo YAML, Xray немесе sing-box JSON, dae конфигурациясы"
+
+msgid "After OK, choose the file: a WireGuard .conf, an OpenVPN .ovpn, a Clash/mihomo .yaml, an Xray or sing-box .json or a dae config (at most 1 MiB)."
+msgstr "OK басқаннан кейін файлды таңдаңыз: WireGuard .conf, OpenVPN .ovpn, Clash/mihomo .yaml, Xray немесе sing-box .json не dae конфигурациясы (ең көбі 1 MiB)."
+
+msgid "From the source"
+msgstr "Көзден"
+
+msgid "Detect"
+msgstr "Анықтау"
+
+msgid "The URL may hold a token: it goes to the device on its own, never into a command line or a log."
+msgstr "URL токенді қамтуы мүмкін: ол құрылғыға бөлек жіберіледі, командалық жолға немесе журналға ешқашан түспейді."
+
+msgid "Type"
+msgstr "Түрі"
+
+msgid "Share link"
+msgstr "Бөлісу сілтемесі"
+
+msgid "Paste"
+msgstr "Қою"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Not a share link this panel takes"
+msgstr "Бұл панель қабылдайтын бөлісу сілтемесі емес"
+
+msgid "The config is empty"
+msgstr "Конфигурация бос"
+
+msgid "Not an http or https URL"
+msgstr "http немесе https URL емес"
+
+msgid "Invalid name: 1-64 characters, no control characters"
+msgstr "Жарамсыз атау: 1-64 таңба, басқару таңбаларынсыз"
+
+msgid "Add a profile"
+msgstr "Профиль қосу"
+
+msgid "Name"
+msgstr "Атауы"
+
+msgid "Detect: the module tells the kind from the link or the file. Choose the type for a JSON that could be either Xray or sing-box, or for a link that should run on another engine."
+msgstr "Анықтау: модуль түрін сілтемеден немесе файлдан анықтайды. Xray да, sing-box та болуы мүмкін JSON үшін немесе басқа қозғалтқышта жұмыс істеуі тиіс сілтеме үшін түрін таңдаңыз."
+
+msgid "The profile is added"
+msgstr "Профиль қосылды"
+
+msgid "Rename the profile"
+msgstr "Профильдің атын өзгерту"
+
+msgid "Delete the profile %s?"
+msgstr "%s профилі жойылсын ба?"
+
+msgid "It is the active profile: with the VPN on, the module refuses; stop the VPN or choose another profile first."
+msgstr "Бұл белсенді профиль: VPN қосулы кезде модуль бас тартады; алдымен VPN-ді тоқтатыңыз немесе басқа профильді таңдаңыз."
+
+msgid "Its config and credentials are deleted from the device."
+msgstr "Оның конфигурациясы мен тіркелгі деректері құрылғыдан жойылады."
+
+msgid "Deleted"
+msgstr "Жойылды"
+
+msgid "The profile passes the check"
+msgstr "Профиль тексерістен өтті"
+
+msgid "Show the config?"
+msgstr "Конфигурация көрсетілсін бе?"
+
+msgid "The config holds the credentials of the profile (keys, passwords, UUIDs). It is shown on this screen only; anyone who can see the screen can read it."
+msgstr "Конфигурация профильдің тіркелгі деректерін (кілттер, құпия сөздер, UUID) қамтиды. Ол тек осы экранда көрсетіледі; экранды көре алатын кез келген адам оны оқи алады."
+
+msgid "Show"
+msgstr "Көрсету"
+
+msgid "Saving checks the config with the engine first (profile edit); a config that does not pass is not saved and the old one stays."
+msgstr "Сақтау алдымен конфигурацияны қозғалтқышпен тексереді (profile edit); тексеруден өтпеген конфигурация сақталмайды, ескісі қалады."
+
+msgid "This profile comes from a subscription: its next refresh replaces your changes."
+msgstr "Бұл профиль жазылымнан келеді: оның келесі жаңартуы өзгерістеріңізді алмастырады."
+
+msgid "Config of %s"
+msgstr "%s конфигурациясы"
+
+msgid "Close"
+msgstr "Жабу"
+
+msgid "Rename"
+msgstr "Атын өзгерту"
+
+msgid "Show / edit the config"
+msgstr "Конфигурацияны көрсету / өңдеу"
+
+msgid "Test the latency of all"
+msgstr "Барлығының кідірісін өлшеу"
+
+msgid "No profiles yet: add one from a share link, a config file or a subscription."
+msgstr "Профильдер әлі жоқ: бөлісу сілтемесінен, конфигурация файлынан немесе жазылымнан біреуін қосыңыз."
+
+msgid "Active"
+msgstr "Белсенді"
+
+msgid "This profile is the active one now"
+msgstr "Бұл профиль қазір белсенді"
+
+msgid "More"
+msgstr "Тағы"
+
+msgid "active"
+msgstr "белсенді"
+
+msgid "subscription"
+msgstr "жазылым"
+
+msgid "migrated"
+msgstr "көшірілген"
+
+msgid "gone from its subscription"
+msgstr "жазылымынан жойылған"
+
+msgid "Server"
+msgstr "Сервер"
+
+msgid "Engine"
+msgstr "Қозғалтқыш"
+
+msgid "Latency"
+msgstr "Кідіріс"
+
+msgid "The latency is a TCP connection to the server, through the tunnel when the VPN is up. WireGuard and OpenVPN servers usually speak UDP and cannot be tested this way."
+msgstr "Кідіріс - серверге TCP қосылымы, VPN қосулы кезде туннель арқылы. WireGuard және OpenVPN серверлері әдетте UDP қолданады және олар осылай тексерілмейді."
+
+msgid "Enter an IPv4 or IPv6 address"
+msgstr "IPv4 немесе IPv6 мекенжайын енгізіңіз"
+
+msgid "On: nothing leaves outside the tunnel"
+msgstr "Қосулы: туннельден тыс ештеңе шықпайды"
+
+msgid "Off: traffic goes out directly while the tunnel is down"
+msgstr "Өшірулі: туннель істен шыққанда трафик тікелей шығады"
+
+msgid "Yes: Tailscale's own connections go through the tunnel"
+msgstr "Иә: Tailscale-дің өз қосылымдары туннель арқылы өтеді"
+
+msgid "No: Tailscale connects directly"
+msgstr "Жоқ: Tailscale тікелей қосылады"
+
+msgid "Routing"
+msgstr "Бағыттау"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down."
+msgstr "Kill switch VPN істен шыққанда құрылғы мен LAN-ның барлық трафигін бұғаттайды."
+
+msgid "Bypass the tunnel"
+msgstr "Туннельді айналып өту"
+
+msgid "Enter address ranges like 192.168.0.0/16, separated by commas"
+msgstr "192.168.0.0/16 сияқты мекенжай диапазондарын үтірмен бөліп енгізіңіз"
+
+msgid "Address ranges that never go into the tunnel, besides the LAN itself (which never does). Empty: the LAN only."
+msgstr "LAN-нан басқа (ол ешқашан кірмейді) туннельге ешқашан кірмейтін мекенжай диапазондары. Бос: тек LAN."
+
+msgid "Tailscale through the VPN"
+msgstr "VPN арқылы Tailscale"
+
+msgid "When Tailscale runs on the device, its WireGuard, DERP and control connections go through whichever tunnel runs (dae catches them like any other)."
+msgstr "Құрылғыда Tailscale жұмыс істегенде, оның WireGuard, DERP және басқару қосылымдары қай туннель жұмыс істесе, сол арқылы өтеді (dae оларды басқалар сияқты ұстайды)."
+
+msgid "DNS"
+msgstr "DNS"
+
+msgid "DNS through the tunnel"
+msgstr "Туннель арқылы DNS"
+
+msgid "The resolver the device's and the LAN's lookups go to, through the tunnel. Nothing goes to the carrier's resolver."
+msgstr "Құрылғы мен LAN сұраулары туннель арқылы баратын резолвер. Оператордың резолверіне ештеңе бармайды."
+
+msgid "Bootstrap DNS"
+msgstr "Бастапқы DNS"
+
+msgid "Finds the VPN server's own address before the tunnel is up (directly, on the engine's own connection)."
+msgstr "Туннель көтерілмес бұрын VPN серверінің өз мекенжайын табады (қозғалтқыштың өз қосылымымен тікелей)."
+
+msgid "Empty puts a setting back to its default."
+msgstr "Бос қалдыру параметрді әдепкі мәніне қайтарады."
+
+msgid "TUN stack"
+msgstr "TUN стегі"
+
+msgid "Default (gvisor)"
+msgstr "Әдепкі (gvisor)"
+
+msgid "system (not on the 5.4 kernel)"
+msgstr "system (5.4 ядросында жоқ)"
+
+msgid "set (unchanged unless you type a new one)"
+msgstr "орнатылған (жаңасын теріп енгізбесеңіз, өзгермейді)"
+
+msgid "not set"
+msgstr "орнатылмаған"
+
+msgid "Upstream HTTP proxy"
+msgstr "Жоғарғы HTTP прокси"
+
+msgid "TLS certificate pin (SHA-256)"
+msgstr "TLS сертификат пині (SHA-256)"
+
+msgid "Enter host:port"
+msgstr "host:port енгізіңіз"
+
+msgid "Enter the SHA-256 in hex"
+msgstr "SHA-256 мәнін hex түрінде енгізіңіз"
+
+msgid "Profile options"
+msgstr "Профиль опциялары"
+
+msgid "None of the profiles has options of its type."
+msgstr "Ешбір профильде өз түріне арналған опциялар жоқ."
+
+msgid "mihomo's mode (rule, global, direct), the engines' log levels, dae's groups and routing are part of each profile's own config: VPN > Profiles, Show / edit the config."
+msgstr "mihomo режимі (rule, global, direct), қозғалтқыштардың журнал деңгейлері, dae топтары мен бағыттауы әр профильдің өз конфигурациясының бөлігі: VPN > Профильдер, Конфигурацияны көрсету / өңдеу."
+
+msgid "Delete the subscription %s?"
+msgstr "%s жазылымы жойылсын ба?"
+
+msgid "Its profiles can go with it or stay as profiles of their own. The active profile is never removed while the VPN is on."
+msgstr "Оның профильдері онымен бірге жойылуы немесе жеке профиль ретінде қалуы мүмкін. VPN қосулы кезде белсенді профиль ешқашан жойылмайды."
+
+msgid "Keep the profiles"
+msgstr "Профильдерді сақтау"
+
+msgid "Delete with its profiles"
+msgstr "Профильдерімен бірге жою"
+
+msgid "Share links: one profile per link"
+msgstr "Бөлісу сілтемелері: әр сілтемеге бір профиль"
+
+msgid "Clash/mihomo YAML: one mihomo profile"
+msgstr "Clash/mihomo YAML: бір mihomo профилі"
+
+msgid "dae: one profile with every node in one group"
+msgstr "dae: барлық түйіндері бір топта, бір профиль"
+
+msgid "Add a subscription"
+msgstr "Жазылым қосу"
+
+msgid "Format"
+msgstr "Пішім"
+
+msgid "The URL usually holds your account token: it is stored on the device readable by root only, and never shown again. The subscription is fetched over the device's own connection: through the tunnel when the VPN is up; with the kill switch up and the tunnel down it cannot be fetched."
+msgstr "URL әдетте аккаунт токеніңізді қамтиды: ол құрылғыда тек root оқи алатындай сақталады және қайта көрсетілмейді. Жазылым құрылғының өз қосылымымен алынады: VPN қосулы кезде туннель арқылы; kill switch қосулы және туннель істен шыққанда оны алу мүмкін емес."
+
+msgid "Refresh all"
+msgstr "Барлығын жаңарту"
+
+msgid "No subscriptions yet."
+msgstr "Жазылымдар әлі жоқ."
+
+msgid "Host"
+msgstr "Хост"
+
+msgid "Updated"
+msgstr "Жаңартылды"
+
+msgid "Share links"
+msgstr "Бөлісу сілтемелері"
+
+msgid "A refresh keeps the profiles whose name is unchanged, adds the new ones and removes the ones that are gone (the active one stays while the VPN is on, marked as gone). A refresh of the active profile restarts the running VPN."
+msgstr "Жаңарту аты өзгермеген профильдерді сақтайды, жаңаларын қосады және жойылғандарын алып тастайды (белсенді профиль VPN қосулы кезде қалады, жойылған деп белгіленеді). Белсенді профильді жаңарту жұмыс істеп тұрған VPN-ді қайта іске қосады."
+
 msgid "Dashboard info failed"
 msgstr "Тақта деректерін алу сәтсіз"
 
@@ -1736,6 +2402,138 @@ msgstr "Орындау ортасының каталогы қауіпсіз ем
 
 msgid "No such method"
 msgstr "Мұндай әдіс жоқ"
+
+msgid "The VPN module refused the request"
+msgstr "VPN модулі сұрауды қабылдамады"
+
+msgid "Another VPN task is still running"
+msgstr "Басқа VPN тапсырмасы әлі орындалуда"
+
+msgid "The exit_ip parameter must be 0 or 1"
+msgstr "exit_ip параметрі 0 немесе 1 болуы керек"
+
+msgid "The VPN status could not be read"
+msgstr "VPN күйін оқу мүмкін болмады"
+
+msgid "The profiles could not be read"
+msgstr "Профильдерді оқу мүмкін болмады"
+
+msgid "The check parameter must be 0 or 1"
+msgstr "check параметрі 0 немесе 1 болуы керек"
+
+msgid "The engines could not be read"
+msgstr "Қозғалтқыштарды оқу мүмкін болмады"
+
+msgid "The subscriptions could not be read"
+msgstr "Жазылымдарды оқу мүмкін болмады"
+
+msgid "The VPN settings could not be read"
+msgstr "VPN параметрлерін оқу мүмкін болмады"
+
+msgid "Unknown VPN operation"
+msgstr "Белгісіз VPN әрекеті"
+
+msgid "The VPN could not be switched"
+msgstr "VPN-ді ауыстыру мүмкін болмады"
+
+msgid "The kill switch is on or off"
+msgstr "Kill switch қосулы немесе өшірулі болады"
+
+msgid "The kill switch could not be changed"
+msgstr "Kill switch өзгерту мүмкін болмады"
+
+msgid "Invalid profile id"
+msgstr "Жарамсыз профиль идентификаторы"
+
+msgid "The profile could not be made the active one"
+msgstr "Профильді белсенді ету мүмкін болмады"
+
+msgid "Unknown profile source"
+msgstr "Белгісіз профиль көзі"
+
+msgid "Unknown profile type"
+msgstr "Белгісіз профиль түрі"
+
+msgid "The config is empty, too large or holds control characters"
+msgstr "Конфигурация бос, тым үлкен немесе басқару таңбаларын қамтиды"
+
+msgid "Invalid profile request"
+msgstr "Жарамсыз профиль сұрауы"
+
+msgid "A config from a URL takes the type it says"
+msgstr "URL-дан келген конфигурация өзі көрсеткен түрді алады"
+
+msgid "No uploaded file"
+msgstr "Жүктелген файл жоқ"
+
+msgid "The file is larger than 1 MiB"
+msgstr "Файл 1 MiB-тан үлкен"
+
+msgid "The profile could not be added"
+msgstr "Профильді қосу мүмкін болмады"
+
+msgid "The profile could not be renamed"
+msgstr "Профильдің атын өзгерту мүмкін болмады"
+
+msgid "The profile could not be removed"
+msgstr "Профильді жою мүмкін болмады"
+
+msgid "The profile does not pass the check"
+msgstr "Профиль тексерістен өтпеді"
+
+msgid "Unknown profile option"
+msgstr "Белгісіз профиль опциясы"
+
+msgid "Invalid value for this option"
+msgstr "Бұл опция үшін жарамсыз мән"
+
+msgid "The option could not be set"
+msgstr "Опцияны орнату мүмкін болмады"
+
+msgid "The config could not be read"
+msgstr "Конфигурацияны оқу мүмкін болмады"
+
+msgid "The config was not saved"
+msgstr "Конфигурация сақталмады"
+
+msgid "The latency test failed"
+msgstr "Кідірісті өлшеу сәтсіз аяқталды"
+
+msgid "Unknown subscription type"
+msgstr "Белгісіз жазылым түрі"
+
+msgid "Invalid subscription id"
+msgstr "Жарамсыз жазылым идентификаторы"
+
+msgid "The keep parameter must be 0 or 1"
+msgstr "keep параметрі 0 немесе 1 болуы керек"
+
+msgid "The subscription could not be removed"
+msgstr "Жазылымды жою мүмкін болмады"
+
+msgid "Unknown engine"
+msgstr "Белгісіз қозғалтқыш"
+
+msgid "This engine is a system package: it has no file to upload"
+msgstr "Бұл қозғалтқыш - жүйе пакеті: жүктеп салатын файлы жоқ"
+
+msgid "The engine could not be removed"
+msgstr "Қозғалтқышты жою мүмкін болмады"
+
+msgid "mu300-extra is not on this system"
+msgstr "mu300-extra бұл жүйеде жоқ"
+
+msgid "Unknown VPN setting"
+msgstr "Белгісіз VPN параметрі"
+
+msgid "The setting could not be saved"
+msgstr "Параметрді сақтау мүмкін болмады"
+
+msgid "The number of lines is 1 to 1000"
+msgstr "Жолдар саны 1-ден 1000-ға дейін"
+
+msgid "The log could not be read"
+msgstr "Журналды оқу мүмкін болмады"
 
 msgid "Radio did not come up"
 msgstr "Радио қосылмады"
@@ -1916,9 +2714,6 @@ msgstr "usage: power get|set KEY VALUE|wake|idle"
 
 msgid "Data usage is not available on this system"
 msgstr "Бұл жүйеде деректер шығыны қолжетімсіз"
-
-msgid "The setting could not be saved"
-msgstr "Параметрді сақтау мүмкін болмады"
 
 msgid "Unknown data usage operation"
 msgstr "Белгісіз деректер шығыны әрекеті"
