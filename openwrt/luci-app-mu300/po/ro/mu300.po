@@ -1530,6 +1530,9 @@ msgstr "Acesta este un shell root al dispozitivului: fiecare comandă rulează c
 msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
 msgstr "Este accesibil doar din LAN (USB și hotspot), niciodată din datele mobile, și doar din această pagină autentificată."
 
+msgid "It closes after a minute without activity."
+msgstr "Se închide după un minut fără activitate."
+
 msgid "It closes after %d minutes without activity."
 msgstr "Se închide după %d minute fără activitate."
 

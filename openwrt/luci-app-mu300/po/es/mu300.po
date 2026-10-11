@@ -1530,6 +1530,9 @@ msgstr "Este es un shell de root del dispositivo: cada orden se ejecuta con todo
 msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
 msgstr "Solo es accesible desde la LAN (USB y el punto de acceso), nunca desde los datos móviles, y solo desde esta página con sesión iniciada."
 
+msgid "It closes after a minute without activity."
+msgstr "Se cierra tras un minuto sin actividad."
+
 msgid "It closes after %d minutes without activity."
 msgstr "Se cierra tras %d minutos sin actividad."
 

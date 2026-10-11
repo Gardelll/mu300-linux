@@ -1530,6 +1530,9 @@ msgstr "這是裝置上的 root shell：每個指令都以完整權限執行，�
 msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
 msgstr "只能從區域網路（USB 和熱點）並且只能從這個已登入的頁面存取，行動數據一側永遠無法存取。"
 
+msgid "It closes after a minute without activity."
+msgstr "無操作 1 分鐘後自動關閉。"
+
 msgid "It closes after %d minutes without activity."
 msgstr "無操作 %d 分鐘後自動關閉。"
 
