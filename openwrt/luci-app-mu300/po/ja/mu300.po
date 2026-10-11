@@ -105,6 +105,12 @@ msgstr "OK"
 msgid "Cancel"
 msgstr "キャンセル"
 
+msgid "%d s"
+msgstr "%d 秒"
+
+msgid "%d h"
+msgstr "%d 時間"
+
 msgid "New SMS · %s"
 msgstr "新着 SMS · %s"
 
@@ -113,6 +119,21 @@ msgstr "不明な番号"
 
 msgid "Select"
 msgstr "選択"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "これはネットワークまたは周波数のスキャンです。1～3 分かかり、その間ずっとモデムの AT チャネルを占有し、モバイルデータが一時停止することがあります。バックグラウンドで実行され、終わると応答がここに表示されます。"
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "これはモデムが保存するネットワークモード、バンド、またはセルの設定を変更します。再起動後も有効で、Android でも有効です。そこで設定に合わないネットワークは「圏外」と表示されます。ロックのページでこれらの設定を確認し、リセットできます。"
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "これは無線、データ接続、またはモデム自体を切り替えます。モバイルデータは復旧するまで切断され、このページもしばらく接続を失うことがあります。"
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "これはモデムに保存されたデータプロファイル (APN) を変更します。モバイルデータと Android が使用します。"
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "これは SIM の PIN ロックを変更するか PIN を入力します。誤った PIN を繰り返すと、PUK を入力するまで SIM がロックされます。"
 
 msgid "Basic"
 msgstr "基本"
@@ -141,14 +162,50 @@ msgstr "準備完了。"
 msgid "Session history (click to reuse)"
 msgstr "セッション履歴 (クリックで再利用)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "バックグラウンドで実行中 (最大 %d 秒)。終わると応答がここに表示されます…"
+
+msgid "The modem gave no final answer in time"
+msgstr "モデムが時間内に最終応答を返しませんでした"
+
+msgid "%d s in the background"
+msgstr "バックグラウンドで %d 秒"
+
 msgid "(no output)"
 msgstr "(出力なし)"
+
+msgid "This command changes the modem's state."
+msgstr "このコマンドはモデムの状態を変更します。"
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "まだ送信していません: 確認待ち"
+
+msgid "Send this AT command?"
+msgstr "この AT コマンドを送信しますか？"
+
+msgid "Send anyway"
+msgstr "それでも送信"
+
+msgid "Not sent"
+msgstr "送信しませんでした"
 
 msgid "Request failed"
 msgstr "リクエスト失敗"
 
 msgid "(empty)"
 msgstr "(空)"
+
+msgid "Loading…"
+msgstr "読み込み中…"
+
+msgid "Channel Analysis"
+msgstr "チャネル分析"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "スキャン中は Wi-Fi アクセスポイントが一時的にチャネルを離れます。接続中の端末は切断され、一部 (特に macOS) は自動で再接続しないことがあります。このページは開くとすぐにスキャンし、その後も数秒ごとにスキャンします。アクセスポイントに依存している場合は、先に USB など別の経路でパネルに接続してください。"
+
+msgid "Scan anyway"
+msgstr "それでもスキャン"
 
 msgid "Failed: %s"
 msgstr "失敗: %s"
@@ -273,6 +330,15 @@ msgstr "更新"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "ホストモードでのみ利用できます。更新すると検出された USB アダプタを起動します。LAN に追加するとブリッジ設定を保存し、ネットワークを再読み込みします。"
 
+msgid "Recent modem operations"
+msgstr "最近のモデム操作"
+
+msgid "Show"
+msgstr "表示"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "今回と前回の起動におけるコントロールパネルの最近の呼び出し: いつ、どのページ呼び出しまたは AT コマンドか、所要時間、終わり方 (ok、エラー、ビジー、強制終了)。値、応答、メッセージは保存しません。パネルが固まったときに役立ちます。"
+
 msgid "Unavailable"
 msgstr "利用不可"
 
@@ -326,6 +392,12 @@ msgstr "設定を保存しました"
 
 msgid "Save failed: %s"
 msgstr "保存に失敗しました: %s"
+
+msgid "This boot"
+msgstr "今回の起動"
+
+msgid "Previous boot"
+msgstr "前回の起動"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "まだロールを確認できません。再接続してページを更新してください。"
@@ -798,6 +870,9 @@ msgstr "無線オフ"
 msgid "No response"
 msgstr "応答なし"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "モデムがビジーです: セルラーの値は %s 前のものです"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · 信号 %s %s/10"
 
@@ -863,9 +938,6 @@ msgstr "%s 台"
 
 msgid "Recent DHCP leases"
 msgstr "最近の DHCP リース"
-
-msgid "%d h"
-msgstr "%d 時間"
 
 msgid "Board"
 msgstr "ボード"
@@ -1086,11 +1158,11 @@ msgstr "起動時の適用を有効化"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "モデムから直接読み取っています (最大数秒)…"
 
-msgid "Refreshed"
-msgstr "更新しました"
-
 msgid "Refresh failed"
 msgstr "更新に失敗しました"
+
+msgid "Refreshed"
+msgstr "更新しました"
 
 msgid "NR bands: back to automatic"
 msgstr "NR バンド: 自動に戻しました"
@@ -1356,9 +1428,6 @@ msgstr "SIM から同期"
 msgid "Clear local pool"
 msgstr "ローカルプールをクリア"
 
-msgid "Loading…"
-msgstr "読み込み中…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "左側の会話を選択するか、下に番号を入力して送信してください。"
 
@@ -1590,6 +1659,9 @@ msgstr "無線がビジーです: ダイヤルまたはウォッチドッグが�
 msgid "The action gave no valid reply"
 msgstr "操作から有効な応答がありませんでした"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "confirm パラメーターは 0 または 1 である必要があります"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "AT コマンドは印字可能な ASCII 文字の 1 行で、最大 512 文字です"
 
@@ -1605,6 +1677,12 @@ msgstr "拒否: このコマンドは再起動するまで AT ポートを停止
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "ネットワークロックを適用中: モデムが再起動しています (約 30 秒)。しばらくしてから再試行してください"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "長い AT コマンドがまだバックグラウンドで実行中です。終わってからもう一度お試しください"
+
+msgid "This command needs confirmation"
+msgstr "このコマンドには確認が必要です"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "AT チャネルがビジーです。コマンドは送信されませんでした。再試行してください"
 
@@ -1613,6 +1691,9 @@ msgstr "モデムが時間内に応答しませんでした。コマンドはま
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "fresh パラメータは 0 または 1 である必要があります"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "モデムからロックを読み取っています。数秒後にもう一度お試しください"
 
 msgid "Lock read failed"
 msgstr "ロックの読み取りに失敗しました"
