@@ -117,9 +117,18 @@ static int sdp_hf_channel(void)
 	if (s < 0) return -1;
 	struct sockaddr_l2 a; memset(&a, 0, sizeof a);
 	a.l2_family = AF_BLUETOOTH; a.l2_psm = 1; a.l2_bdaddr = peer;
-	if (connect(s, (struct sockaddr *)&a, sizeof a) < 0) { close(s); return -1; }
+	/* a headset may refuse the first SDP connection right after the ACL link comes up (AirPods Pro: ECONNREFUSED
+	 * once, then fine, as sdptool browse shows too): three tries */
+	int tries = 3;
+	while (connect(s, (struct sockaddr *)&a, sizeof a) < 0) {
+		close(s);
+		if (--tries == 0) return -1;
+		usleep(700000);
+		s = socket(AF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+		if (s < 0) return -1;
+	}
 	static const uint8_t req[] = {
-		0x06, 0x00, 0x01, 0x00, 0x0f,          /* ServiceSearchAttributeRequest, tid 1, 15 bytes */
+		0x06, 0x00, 0x01, 0x00, 0x0d,          /* ServiceSearchAttributeRequest, tid 1, 13 bytes follow */
 		0x35, 0x03, 0x19, 0x11, 0x1e,          /* search pattern: UUID16 Handsfree */
 		0xff, 0xff,                            /* max attribute bytes */
 		0x35, 0x03, 0x09, 0x00, 0x04,          /* attribute: ProtocolDescriptorList */
