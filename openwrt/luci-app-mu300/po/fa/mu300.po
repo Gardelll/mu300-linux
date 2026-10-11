@@ -42,6 +42,12 @@ msgstr "توان"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "ترمینال"
+
+msgid "Terminal settings"
+msgstr "تنظیمات ترمینال"
+
 msgid "Overview"
 msgstr "نمای کلی"
 
@@ -60,14 +66,11 @@ msgstr "تنظیمات"
 msgid "Logs"
 msgstr "گزارش‌ها"
 
+msgid "Packages after an update"
+msgstr "بسته‌ها پس از به‌روزرسانی"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "مرکز کنترل MU300: داشبورد وضعیت، قفل‌های شبکه، ترمینال AT، پیامک و VPN"
-
-msgid "Terminal"
-msgstr "ترمینال"
-
-msgid "Terminal settings"
-msgstr "تنظیمات ترمینال"
 
 msgid "Terminal: a root shell on the device in the browser"
 msgstr "ترمینال: یک پوسته root روی دستگاه در مرورگر"
@@ -1338,6 +1341,60 @@ msgstr "خودکار (%d پشتیبانی‌شده)"
 msgid "%d locked: %s"
 msgstr "%d قفل‌شده: %s"
 
+msgid "Repair DNS?"
+msgstr "DNS ترمیم شود؟"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "این کار ارسال DNS بسته‌ای را که دیگر نصب نیست حذف می‌کند. اگر سرور DNS دیگری نماند، دستگاه از سرورهای DNS اتصال همراه استفاده می‌کند: اپراتور نام‌هایی را که جستجو می‌کنید، بیرون از هر پراکسی یا VPN، می‌بیند."
+
+msgid "Repair DNS"
+msgstr "ترمیم DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "بسته‌هایی که روی دستگاه نصب شده‌اند بخشی از ایمیج نسخه نیستند. به‌روزرسانی آن‌ها را ثبت می‌کند و سیستم جدید در اولین راه‌اندازی، به محض آنلاین شدن، دوباره نصبشان می‌کند. تا بازگشت بسته، تنظیماتش کنار گذاشته می‌شود."
+
+msgid "No packages to install again."
+msgstr "بسته‌ای برای نصب دوباره نیست."
+
+msgid "All back"
+msgstr "همه برگشتند"
+
+msgid "Not installed yet"
+msgstr "هنوز نصب نشده"
+
+msgid "Could not be installed again"
+msgstr "نصب دوباره ممکن نشد"
+
+msgid "Waiting for the internet"
+msgstr "در انتظار اینترنت"
+
+msgid "Given up: no internet at five boots"
+msgstr "رها شد: در پنج راه‌اندازی اینترنت نبود"
+
+msgid "Skipped"
+msgstr "رد شد"
+
+msgid "Written down by the update from %s"
+msgstr "ثبت‌شده توسط به‌روزرسانی از %s"
+
+msgid "Installed again"
+msgstr "دوباره نصب شدند"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "خودتان آن‌ها را از جایی که گرفته‌اید نصب کنید (یک فایل بسته: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "تنظیمات کنار گذاشته در /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS هنوز به بسته‌ای می‌رود که نصب نیست: دستگاه از طریق آن DNS ندارد."
+
+msgid "Try again"
+msgstr "تلاش دوباره"
+
+msgid "Dismiss the note"
+msgstr "بستن یادداشت"
+
 msgid "started"
 msgstr "آغاز شد"
 
@@ -2589,6 +2646,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "آداپتور بسته‌ها پاسخ معتبری نداد"
+
+msgid "Invalid packages operation"
+msgstr "عملیات بسته نامعتبر"
+
 msgid "Request too large"
 msgstr "درخواست بیش از حد بزرگ است"
 
@@ -2915,6 +2978,21 @@ msgstr "حافظهٔ نهان قفل در دسترس نیست"
 
 msgid "No serving cell to lock to"
 msgstr "سلول سرویس‌دهنده‌ای برای قفل کردن نیست"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "نصب دوباره بسته‌ها روی این سیستم در دسترس نیست"
+
+msgid "No packages were written down by an update"
+msgstr "هیچ به‌روزرسانی‌ای بسته‌ای ثبت نکرده است"
+
+msgid "Reinstalling is running already"
+msgstr "نصب دوباره در حال اجراست"
+
+msgid "The note could not be dropped"
+msgstr "یادداشت حذف نشد"
+
+msgid "Unknown packages operation"
+msgstr "عملیات بسته ناشناخته"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

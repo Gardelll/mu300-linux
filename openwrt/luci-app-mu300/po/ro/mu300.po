@@ -42,6 +42,12 @@ msgstr "Alimentare"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Setările terminalului"
+
 msgid "Overview"
 msgstr "Prezentare generală"
 
@@ -60,14 +66,11 @@ msgstr "Setări"
 msgid "Logs"
 msgstr "Jurnale"
 
+msgid "Packages after an update"
+msgstr "Pachete după o actualizare"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "Centru de control MU300: panou de stare, blocări de rețea, terminal AT, SMS și VPN"
-
-msgid "Terminal"
-msgstr "Terminal"
-
-msgid "Terminal settings"
-msgstr "Setările terminalului"
 
 msgid "Terminal: a root shell on the device in the browser"
 msgstr "Terminal: un shell root al dispozitivului în browser"
@@ -1338,6 +1341,60 @@ msgstr "Automat (%d suportate)"
 msgid "%d locked: %s"
 msgstr "%d blocate: %s"
 
+msgid "Repair DNS?"
+msgstr "Repari DNS-ul?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Aceasta elimină redirecționarea DNS a unui pachet care nu mai este instalat. Dacă nu rămâne alt server DNS, dispozitivul folosește serverele DNS ale conexiunii mobile: operatorul vede numele pe care le cauți, în afara oricărui proxy sau VPN."
+
+msgid "Repair DNS"
+msgstr "Repară DNS-ul"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Pachetele instalate pe dispozitiv nu fac parte din imaginea versiunii. O actualizare le notează, iar noul sistem le reinstalează la prima pornire, imediat ce este online. Până când un pachet revine, setările lui sunt puse deoparte."
+
+msgid "No packages to install again."
+msgstr "Niciun pachet de reinstalat."
+
+msgid "All back"
+msgstr "Toate au revenit"
+
+msgid "Not installed yet"
+msgstr "Încă neinstalat"
+
+msgid "Could not be installed again"
+msgstr "Nu a putut fi reinstalat"
+
+msgid "Waiting for the internet"
+msgstr "Se așteaptă internetul"
+
+msgid "Given up: no internet at five boots"
+msgstr "Abandonat: fără internet la cinci porniri"
+
+msgid "Skipped"
+msgstr "Omis"
+
+msgid "Written down by the update from %s"
+msgstr "Notat de actualizarea de la %s"
+
+msgid "Installed again"
+msgstr "Reinstalate"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Instalează-le singur de unde le-ai luat (un fișier de pachet: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Setări puse deoparte în /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS-ul încă merge către un pachet neinstalat: dispozitivul nu are DNS prin el."
+
+msgid "Try again"
+msgstr "Încearcă din nou"
+
+msgid "Dismiss the note"
+msgstr "Închide nota"
+
 msgid "started"
 msgstr "pornit"
 
@@ -2589,6 +2646,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Adaptorul de pachete nu a dat un răspuns valid"
+
+msgid "Invalid packages operation"
+msgstr "Operație pe pachete nevalidă"
+
 msgid "Request too large"
 msgstr "Cerere prea mare"
 
@@ -2915,6 +2978,21 @@ msgstr "Cache-ul blocărilor nu este disponibil"
 
 msgid "No serving cell to lock to"
 msgstr "Nicio celulă de servire pe care să se blocheze"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Reinstalarea pachetelor nu este disponibilă pe acest sistem"
+
+msgid "No packages were written down by an update"
+msgstr "Nicio actualizare nu a notat pachete"
+
+msgid "Reinstalling is running already"
+msgstr "Reinstalarea rulează deja"
+
+msgid "The note could not be dropped"
+msgstr "Nota nu a putut fi eliminată"
+
+msgid "Unknown packages operation"
+msgstr "Operație pe pachete necunoscută"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

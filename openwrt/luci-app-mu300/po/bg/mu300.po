@@ -42,6 +42,12 @@ msgstr "Захранване"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Терминал"
+
+msgid "Terminal settings"
+msgstr "Настройки на терминала"
+
 msgid "Overview"
 msgstr "Общ преглед"
 
@@ -60,14 +66,11 @@ msgstr "Настройки"
 msgid "Logs"
 msgstr "Дневници"
 
+msgid "Packages after an update"
+msgstr "Пакети след обновяване"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "Контролен център на MU300: табло със състоянието, мрежови заключвания, AT терминал, SMS и VPN"
-
-msgid "Terminal"
-msgstr "Терминал"
-
-msgid "Terminal settings"
-msgstr "Настройки на терминала"
 
 msgid "Terminal: a root shell on the device in the browser"
 msgstr "Терминал: root обвивка на устройството в браузъра"
@@ -1338,6 +1341,60 @@ msgstr "Автоматично (%d поддържани)"
 msgid "%d locked: %s"
 msgstr "%d заключени: %s"
 
+msgid "Repair DNS?"
+msgstr "Да се поправи ли DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Това премахва DNS пренасочването на пакет, който вече не е инсталиран. Ако не остане друг DNS сървър, устройството използва DNS сървърите на мобилната връзка: операторът вижда имената, които търсите, извън всеки прокси или VPN."
+
+msgid "Repair DNS"
+msgstr "Поправка на DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Пакетите, инсталирани на устройството, не са част от образа на изданието. Обновяването ги записва и новата система ги инсталира отново при първото си стартиране, щом има интернет. Докато пакетът не се върне, настройките му са оставени настрана."
+
+msgid "No packages to install again."
+msgstr "Няма пакети за повторно инсталиране."
+
+msgid "All back"
+msgstr "Всички са върнати"
+
+msgid "Not installed yet"
+msgstr "Още не е инсталиран"
+
+msgid "Could not be installed again"
+msgstr "Не можа да се инсталира отново"
+
+msgid "Waiting for the internet"
+msgstr "Изчакване на интернет"
+
+msgid "Given up: no internet at five boots"
+msgstr "Прекратено: без интернет при пет стартирания"
+
+msgid "Skipped"
+msgstr "Пропуснато"
+
+msgid "Written down by the update from %s"
+msgstr "Записано от обновяването от %s"
+
+msgid "Installed again"
+msgstr "Инсталирани отново"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Инсталирайте ги сами оттам, откъдето сте ги взели (файл на пакет: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Оставени настрана настройки в /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS все още сочи към неинсталиран пакет: устройството няма DNS през него."
+
+msgid "Try again"
+msgstr "Опитай отново"
+
+msgid "Dismiss the note"
+msgstr "Скрий бележката"
+
 msgid "started"
 msgstr "стартирано"
 
@@ -2589,6 +2646,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Адаптерът за пакети не върна валиден отговор"
+
+msgid "Invalid packages operation"
+msgstr "Невалидна операция с пакети"
+
 msgid "Request too large"
 msgstr "Заявката е твърде голяма"
 
@@ -2915,6 +2978,21 @@ msgstr "Кешът на заключванията е недостъпен"
 
 msgid "No serving cell to lock to"
 msgstr "Няма обслужваща клетка за заключване"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Повторното инсталиране на пакети не е налично в тази система"
+
+msgid "No packages were written down by an update"
+msgstr "Никое обновяване не е записало пакети"
+
+msgid "Reinstalling is running already"
+msgstr "Повторното инсталиране вече работи"
+
+msgid "The note could not be dropped"
+msgstr "Бележката не можа да бъде премахната"
+
+msgid "Unknown packages operation"
+msgstr "Непозната операция с пакети"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

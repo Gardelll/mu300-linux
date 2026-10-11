@@ -42,6 +42,12 @@ msgstr "Energia"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Configurações do terminal"
+
 msgid "Overview"
 msgstr "Visão geral"
 
@@ -60,14 +66,11 @@ msgstr "Configurações"
 msgid "Logs"
 msgstr "Logs"
 
+msgid "Packages after an update"
+msgstr "Pacotes após uma atualização"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "Central de controle do MU300: painel de status, bloqueios de rede, terminal AT, SMS e VPN"
-
-msgid "Terminal"
-msgstr "Terminal"
-
-msgid "Terminal settings"
-msgstr "Configurações do terminal"
 
 msgid "Terminal: a root shell on the device in the browser"
 msgstr "Terminal: um shell root do dispositivo no navegador"
@@ -1338,6 +1341,60 @@ msgstr "Automático (%d suportadas)"
 msgid "%d locked: %s"
 msgstr "%d bloqueadas: %s"
 
+msgid "Repair DNS?"
+msgstr "Reparar o DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Isto remove o encaminhamento DNS de um pacote que não está mais instalado. Se não restar outro servidor DNS, o dispositivo passa a usar os servidores DNS da conexão móvel: a operadora vê os nomes que você consulta, fora de qualquer proxy ou VPN."
+
+msgid "Repair DNS"
+msgstr "Reparar o DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Pacotes instalados no dispositivo não fazem parte da imagem da versão. Uma atualização os anota, e o novo sistema os reinstala na primeira inicialização, assim que estiver online. Até um pacote voltar, suas configurações ficam guardadas à parte."
+
+msgid "No packages to install again."
+msgstr "Nenhum pacote para reinstalar."
+
+msgid "All back"
+msgstr "Todos de volta"
+
+msgid "Not installed yet"
+msgstr "Ainda não instalado"
+
+msgid "Could not be installed again"
+msgstr "Não foi possível reinstalar"
+
+msgid "Waiting for the internet"
+msgstr "Aguardando a internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Desistido: sem internet em cinco inicializações"
+
+msgid "Skipped"
+msgstr "Ignorado"
+
+msgid "Written down by the update from %s"
+msgstr "Anotado pela atualização a partir de %s"
+
+msgid "Installed again"
+msgstr "Reinstalados"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Instale-os você mesmo de onde os obteve (um arquivo de pacote: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Configurações guardadas em /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "O DNS ainda vai para um pacote não instalado: o dispositivo não tem DNS por ele."
+
+msgid "Try again"
+msgstr "Tentar de novo"
+
+msgid "Dismiss the note"
+msgstr "Dispensar o aviso"
+
 msgid "started"
 msgstr "iniciado"
 
@@ -2589,6 +2646,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "O adaptador de pacotes não deu uma resposta válida"
+
+msgid "Invalid packages operation"
+msgstr "Operação de pacotes inválida"
+
 msgid "Request too large"
 msgstr "Solicitação grande demais"
 
@@ -2915,6 +2978,21 @@ msgstr "Cache de bloqueios indisponível"
 
 msgid "No serving cell to lock to"
 msgstr "Sem célula servidora para bloquear"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Reinstalar pacotes não está disponível neste sistema"
+
+msgid "No packages were written down by an update"
+msgstr "Nenhuma atualização anotou pacotes"
+
+msgid "Reinstalling is running already"
+msgstr "A reinstalação já está em andamento"
+
+msgid "The note could not be dropped"
+msgstr "Não foi possível remover o aviso"
+
+msgid "Unknown packages operation"
+msgstr "Operação de pacotes desconhecida"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

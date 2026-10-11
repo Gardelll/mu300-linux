@@ -42,6 +42,12 @@ msgstr "전원"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "터미널"
+
+msgid "Terminal settings"
+msgstr "터미널 설정"
+
 msgid "Overview"
 msgstr "개요"
 
@@ -60,14 +66,11 @@ msgstr "설정"
 msgid "Logs"
 msgstr "로그"
 
+msgid "Packages after an update"
+msgstr "업데이트 후 패키지"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "MU300 제어 센터: 상태 대시보드, 네트워크 잠금, AT 터미널, SMS 및 VPN"
-
-msgid "Terminal"
-msgstr "터미널"
-
-msgid "Terminal settings"
-msgstr "터미널 설정"
 
 msgid "Terminal: a root shell on the device in the browser"
 msgstr "터미널: 브라우저에서 쓰는 기기의 root 셸"
@@ -1338,6 +1341,60 @@ msgstr "자동 (%d개 지원)"
 msgid "%d locked: %s"
 msgstr "%d개 잠김: %s"
 
+msgid "Repair DNS?"
+msgstr "DNS를 복구할까요?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "더 이상 설치되어 있지 않은 패키지의 DNS 전달을 제거합니다. 다른 DNS 서버가 남아 있지 않으면 기기는 모바일 연결의 DNS 서버를 사용합니다. 통신사는 프록시나 VPN을 거치지 않고 조회한 이름을 볼 수 있습니다."
+
+msgid "Repair DNS"
+msgstr "DNS 복구"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "기기에 설치한 패키지는 릴리스 이미지에 포함되지 않습니다. 업데이트가 이를 기록하고, 새 시스템은 첫 부팅 시 온라인이 되면 다시 설치합니다. 패키지가 돌아올 때까지 설정은 따로 보관됩니다."
+
+msgid "No packages to install again."
+msgstr "다시 설치할 패키지가 없습니다."
+
+msgid "All back"
+msgstr "모두 복구됨"
+
+msgid "Not installed yet"
+msgstr "아직 설치되지 않음"
+
+msgid "Could not be installed again"
+msgstr "다시 설치할 수 없음"
+
+msgid "Waiting for the internet"
+msgstr "인터넷 대기 중"
+
+msgid "Given up: no internet at five boots"
+msgstr "포기함: 다섯 번의 부팅 동안 인터넷 없음"
+
+msgid "Skipped"
+msgstr "건너뜀"
+
+msgid "Written down by the update from %s"
+msgstr "%s 업데이트에서 기록됨"
+
+msgid "Installed again"
+msgstr "다시 설치됨"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "받은 곳에서 직접 설치하세요 (패키지 파일: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "/etc/mu300/orphaned-config에 보관된 설정"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS가 여전히 설치되지 않은 패키지로 향합니다: 이를 통한 DNS가 없습니다."
+
+msgid "Try again"
+msgstr "다시 시도"
+
+msgid "Dismiss the note"
+msgstr "알림 닫기"
+
 msgid "started"
 msgstr "시작됨"
 
@@ -2589,6 +2646,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "패키지 어댑터가 유효한 응답을 주지 않았습니다"
+
+msgid "Invalid packages operation"
+msgstr "잘못된 패키지 작업"
+
 msgid "Request too large"
 msgstr "요청이 너무 큽니다"
 
@@ -2915,6 +2978,21 @@ msgstr "잠금 캐시를 사용할 수 없습니다"
 
 msgid "No serving cell to lock to"
 msgstr "잠글 서빙 셀이 없습니다"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "이 시스템에서는 패키지 재설치를 사용할 수 없습니다"
+
+msgid "No packages were written down by an update"
+msgstr "업데이트가 기록한 패키지가 없습니다"
+
+msgid "Reinstalling is running already"
+msgstr "재설치가 이미 실행 중입니다"
+
+msgid "The note could not be dropped"
+msgstr "알림을 삭제할 수 없습니다"
+
+msgid "Unknown packages operation"
+msgstr "알 수 없는 패키지 작업"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

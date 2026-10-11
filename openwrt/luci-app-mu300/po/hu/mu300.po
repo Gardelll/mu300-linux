@@ -42,6 +42,12 @@ msgstr "Energia"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminál"
+
+msgid "Terminal settings"
+msgstr "Terminál beállításai"
+
 msgid "Overview"
 msgstr "Áttekintés"
 
@@ -60,14 +66,11 @@ msgstr "Beállítások"
 msgid "Logs"
 msgstr "Naplók"
 
+msgid "Packages after an update"
+msgstr "Csomagok frissítés után"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "MU300 vezérlőközpont: állapotpanel, hálózati zárak, AT terminál, SMS és VPN"
-
-msgid "Terminal"
-msgstr "Terminál"
-
-msgid "Terminal settings"
-msgstr "Terminál beállításai"
 
 msgid "Terminal: a root shell on the device in the browser"
 msgstr "Terminál: root shell az eszközön, a böngészőben"
@@ -1338,6 +1341,60 @@ msgstr "Automatikus (%d támogatott)"
 msgid "%d locked: %s"
 msgstr "%d zárolva: %s"
 
+msgid "Repair DNS?"
+msgstr "Javítja a DNS-t?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Ez eltávolítja egy már nem telepített csomag DNS-továbbítását. Ha nem marad más DNS-kiszolgáló, az eszköz a mobilkapcsolat DNS-kiszolgálóit használja: a szolgáltató látja a lekérdezett neveket, bármilyen proxyn vagy VPN-en kívül."
+
+msgid "Repair DNS"
+msgstr "DNS javítása"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Az eszközre telepített csomagok nem részei a kiadás képfájljának. A frissítés feljegyzi őket, és az új rendszer az első indításkor újratelepíti őket, amint van internet. Amíg egy csomag vissza nem tér, a beállításai félre vannak téve."
+
+msgid "No packages to install again."
+msgstr "Nincs újratelepítendő csomag."
+
+msgid "All back"
+msgstr "Mind visszakerült"
+
+msgid "Not installed yet"
+msgstr "Még nincs telepítve"
+
+msgid "Could not be installed again"
+msgstr "Nem sikerült újratelepíteni"
+
+msgid "Waiting for the internet"
+msgstr "Várakozás az internetre"
+
+msgid "Given up: no internet at five boots"
+msgstr "Feladva: öt indításnál nem volt internet"
+
+msgid "Skipped"
+msgstr "Kihagyva"
+
+msgid "Written down by the update from %s"
+msgstr "Feljegyezte a(z) %s verzióról történt frissítés"
+
+msgid "Installed again"
+msgstr "Újratelepítve"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Telepítse őket saját maga onnan, ahonnan szerezte (csomagfájl: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Félretett beállítások itt: /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "A DNS még mindig egy nem telepített csomaghoz megy: az eszköznek nincs DNS-e rajta keresztül."
+
+msgid "Try again"
+msgstr "Újra"
+
+msgid "Dismiss the note"
+msgstr "Értesítés elrejtése"
+
 msgid "started"
 msgstr "elindítva"
 
@@ -2589,6 +2646,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "A csomagadapter nem adott érvényes választ"
+
+msgid "Invalid packages operation"
+msgstr "Érvénytelen csomagművelet"
+
 msgid "Request too large"
 msgstr "A kérés túl nagy"
 
@@ -2915,6 +2978,21 @@ msgstr "A zárolási gyorsítótár nem érhető el"
 
 msgid "No serving cell to lock to"
 msgstr "Nincs kiszolgáló cella a zároláshoz"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "A csomagok újratelepítése nem érhető el ezen a rendszeren"
+
+msgid "No packages were written down by an update"
+msgstr "Egy frissítés sem jegyzett fel csomagot"
+
+msgid "Reinstalling is running already"
+msgstr "Az újratelepítés már fut"
+
+msgid "The note could not be dropped"
+msgstr "Az értesítést nem sikerült eltávolítani"
+
+msgid "Unknown packages operation"
+msgstr "Ismeretlen csomagművelet"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

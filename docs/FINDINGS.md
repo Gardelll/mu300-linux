@@ -62,7 +62,7 @@ what replaced it. The table below gives each section's state.
 | 24 | No internal audio hardware | open |
 | 24b | A second board, from a clean install: where the stall actually is | open |
 | 25 | SC2355 Bluetooth on BlueZ | current |
-| 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.55) |
+| 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.56) |
 | 31a | Wi-Fi RX: sync_for_device stopped invalidating | current |
 | 31b | The modem units' ordering cycle | current |
 | 31c | A context that comes back with a new address | current |
@@ -2327,6 +2327,30 @@ a system added beside another, or when `MU300_PASSWORD`/`MU300_PASSWORD_RESET=ye
 refuses a system that would be left with an empty password or the image's default. See
 `android/magisk/installer/mu300-install.sh` and `tools/android-install.sh`. No device test of that change is
 recorded.
+
+### 32c. Packages installed on the device, and the settings they left behind (#116)
+
+An update puts the release's image in place and keeps `/etc/config` (OpenWrt) and `/etc/mu300`. Packages added on
+the device (`apk add`) were gone afterwards and their settings stayed. A user with OpenClash lost the internet: while
+it runs, OpenClash points dnsmasq at itself (`dhcp.@dnsmasq[0].server=127.0.0.1#7874`, `noresolv=1`; its init
+script, `change_dnsmasq`) and reverts that when it stops, but the update had copied `/etc/config/dhcp` while it was
+running. The new system had dnsmasq forwarding to a port nothing listened on: no DNS. Its own `/etc/config/openclash`
+was inert without the program; fw4 skips an include whose path is missing (`openclash`'s is in `/var/etc`). Argon's
+theme entry in `/etc/config/luci` stayed and pointed at files that were gone.
+
+Since then `mu300-update apply` and the installers' update write down what was added (OpenWrt: `/etc/apk/world`;
+Ubuntu: dpkg's packages apt did not pull in) less the image's own list (`/etc/mu300/image-packages`, written at build
+time; older systems: the new image's world and `packages.txt`), move those packages' own `etc/config` files to
+`/etc/mu300/orphaned-config/` (never one the new image has), and `mu300-user-packages` installs them again at the
+first boot and puts the files back. A LuCI theme whose files are not there goes off LuCI's list. The DNS leftover is
+handled fail-closed (DNS privacy first; for some users the internet is only usable through the VPN): after the
+reinstall step, a loopback forwarder is touched only when its port is a value in the set-aside settings of a recorded
+package that is definitively absent (failed in the feeds, given up, skipped), nothing binds it over a window of
+looks, the project's own settings do not name it and the VPN is off - and then only when another server stays. The
+only forwarder is reported (status, the login note) and stays: `mu300-user-packages repair-dns` removes it on request
+and only then lets dnsmasq use the connection's resolvers (the file as it was:
+`orphaned-config/etc/config/dhcp.before-dns-repair`). Tested in a container of the openwrt-luci rootfs with real apk and uci; no device test
+recorded yet.
 
 ## ZTE U30 Air
 

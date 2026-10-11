@@ -42,6 +42,12 @@ msgstr "Güç"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Terminal ayarları"
+
 msgid "Overview"
 msgstr "Genel bakış"
 
@@ -60,14 +66,11 @@ msgstr "Ayarlar"
 msgid "Logs"
 msgstr "Günlükler"
 
+msgid "Packages after an update"
+msgstr "Güncellemeden sonraki paketler"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
 msgstr "MU300 kontrol merkezi: durum paneli, ağ kilitleri, AT terminali, SMS ve VPN"
-
-msgid "Terminal"
-msgstr "Terminal"
-
-msgid "Terminal settings"
-msgstr "Terminal ayarları"
 
 msgid "Terminal: a root shell on the device in the browser"
 msgstr "Terminal: tarayıcıda cihazın root kabuğu"
@@ -1338,6 +1341,60 @@ msgstr "Otomatik (%d destekleniyor)"
 msgid "%d locked: %s"
 msgstr "%d kilitli: %s"
 
+msgid "Repair DNS?"
+msgstr "DNS onarılsın mı?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Bu, artık kurulu olmayan bir paketin DNS yönlendiricisini kaldırır. Başka DNS sunucusu kalmazsa cihaz mobil bağlantının DNS sunucularını kullanır: operatör, aradığınız adları herhangi bir proxy veya VPN dışında görür."
+
+msgid "Repair DNS"
+msgstr "DNS'i onar"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Cihaza kurulan paketler sürüm imajının parçası değildir. Güncelleme onları not eder ve yeni sistem, çevrimiçi olduğunda ilk açılışında onları yeniden kurar. Bir paket geri gelene kadar ayarları kenara alınır."
+
+msgid "No packages to install again."
+msgstr "Yeniden kurulacak paket yok."
+
+msgid "All back"
+msgstr "Hepsi geri geldi"
+
+msgid "Not installed yet"
+msgstr "Henüz kurulmadı"
+
+msgid "Could not be installed again"
+msgstr "Yeniden kurulamadı"
+
+msgid "Waiting for the internet"
+msgstr "İnternet bekleniyor"
+
+msgid "Given up: no internet at five boots"
+msgstr "Vazgeçildi: beş açılışta internet yoktu"
+
+msgid "Skipped"
+msgstr "Atlandı"
+
+msgid "Written down by the update from %s"
+msgstr "%s güncellemesi tarafından not edildi"
+
+msgid "Installed again"
+msgstr "Yeniden kuruldu"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Bunları edindiğiniz yerden kendiniz kurun (bir paket dosyası: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "/etc/mu300/orphaned-config içinde kenara alınan ayarlar"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS hâlâ kurulu olmayan bir pakete gidiyor: cihazın onun üzerinden DNS'i yok."
+
+msgid "Try again"
+msgstr "Yeniden dene"
+
+msgid "Dismiss the note"
+msgstr "Notu kapat"
+
 msgid "started"
 msgstr "başlatıldı"
 
@@ -2589,6 +2646,12 @@ msgstr "İşlemci bağdaştırıcısı geçerli bir yanıt vermedi"
 msgid "Invalid CPU profile"
 msgstr "Geçersiz işlemci profili"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Paket bağdaştırıcısı geçerli bir yanıt vermedi"
+
+msgid "Invalid packages operation"
+msgstr "Geçersiz paket işlemi"
+
 msgid "Request too large"
 msgstr "İstek çok büyük"
 
@@ -2915,6 +2978,21 @@ msgstr "Kilit önbelleği kullanılamıyor"
 
 msgid "No serving cell to lock to"
 msgstr "Kilitlenecek hizmet hücresi yok"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Paketleri yeniden kurma bu sistemde kullanılamıyor"
+
+msgid "No packages were written down by an update"
+msgstr "Bir güncelleme tarafından not edilmiş paket yok"
+
+msgid "Reinstalling is running already"
+msgstr "Yeniden kurma zaten çalışıyor"
+
+msgid "The note could not be dropped"
+msgstr "Not kaldırılamadı"
+
+msgid "Unknown packages operation"
+msgstr "Bilinmeyen paket işlemi"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
