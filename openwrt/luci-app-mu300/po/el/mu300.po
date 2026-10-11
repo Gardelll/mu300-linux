@@ -1242,6 +1242,9 @@ msgstr "Μετάβαση σε Εξοικονόμηση κάτω από %"
 msgid "Stop charging at"
 msgstr "Διακοπή φόρτισης στο"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "Το 0 % δεν φορτίζει ποτέ την μπαταρία (η συσκευή λειτουργεί από τον φορτιστή), το 100 % τη φορτίζει πλήρως· ενδιάμεσα, η φόρτιση σταματά σε εκείνο το επίπεδο και ξεκινά ξανά 5 μονάδες χαμηλότερα. Κάτω από 5 % η μπαταρία φορτίζει πάντα."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "Το 80 % προστατεύει την μπαταρία μιας συσκευής που μένει στην πρίζα."
 

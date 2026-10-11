@@ -1242,6 +1242,9 @@ msgstr "Мынадан төмен болғанда Үнемдеуге ауысу
 msgid "Stop charging at"
 msgstr "Зарядтауды мында тоқтату"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % батареяны ешқашан зарядтамайды (құрылғы зарядтағыштан жұмыс істейді), 100 % толық зарядтайды; аралықта зарядтау сол деңгейде тоқтап, 5 тармақ төменде қайта басталады. Деңгей 5 % төмен болса, батарея әрқашан зарядталады."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % үнемі желіде тұратын құрылғыда батареяны сақтайды."
 

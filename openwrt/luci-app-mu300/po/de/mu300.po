@@ -1242,6 +1242,9 @@ msgstr "Zum Sparmodus wechseln unter %"
 msgid "Stop charging at"
 msgstr "Laden beenden bei"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % lädt den Akku nie (das Gerät läuft am Ladegerät), 100 % lädt ihn voll; dazwischen stoppt das Laden bei diesem Stand und setzt 5 Punkte darunter wieder ein. Unter 5 % wird der Akku immer geladen."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % schonen den Akku bei einem Gerät, das dauerhaft am Netz hängt."
 

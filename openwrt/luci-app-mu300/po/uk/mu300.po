@@ -1242,6 +1242,9 @@ msgstr "Переходити в Економію при заряді нижче 
 msgid "Stop charging at"
 msgstr "Припиняти заряджання на"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % ніколи не заряджає батарею (пристрій працює від зарядного пристрою), 100 % заряджає її повністю; у проміжку заряджання зупиняється на цьому рівні й відновлюється на 5 пунктів нижче. Нижче 5 % батарея заряджається завжди."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % бережуть батарею пристрою, який постійно підключений до мережі."
 

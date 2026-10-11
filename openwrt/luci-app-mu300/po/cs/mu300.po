@@ -1242,6 +1242,9 @@ msgstr "Přepnout na Úsporný pod %"
 msgid "Stop charging at"
 msgstr "Přestat nabíjet na"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % baterii nikdy nenabíjí (zařízení běží z nabíječky), 100 % ji nabije úplně; mezi tím se nabíjení zastaví na dané úrovni a znovu začne o 5 bodů níže. Pod 5 % se baterie nabíjí vždy."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % šetří baterii zařízení, které zůstává připojené k síti."
 
