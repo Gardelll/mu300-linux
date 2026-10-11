@@ -3635,3 +3635,32 @@ adbd's connection, and adbd hung in it, holding its endpoints: FunctionFS never 
 the loop saw it bound and had nothing to do, and the pulled-down gadget stayed off the bus until the board was
 unplugged (its root port on the Mac cannot be power-cycled). Without adb a soft disconnect stays too, until
 `echo connect`; with the fixed adbd it was not tried again.
+
+### 45. The U30 Air's second SIM: the hardware facts behind PR #73 (Snrat)
+What one U30 Air (OpenWrt 25.12.5, Linux 7.2.9, modem firmware `s_modemConfig=7`) showed; `docs/U30AIR-SIM2.md`
+has the sequences and the rules built on them. Not verified on an F50 or a U30 Pro, and on the maintainer's U30
+Air (one SIM) only the SIM1 side could be repeated.
+
+* **Two channel groups.** Slot 0 (SIM1) is nr0 (URCs) / nr1 (commands) / nr2 (data), its CID 1 bearer `sipa_eth0`;
+  slot 1 (SIM2) is nr3 / nr4 / nr5, bearer `sipa_eth8`. nr6/nr7 belong to the SIM1 pool the panel's collectors use.
+* **The second group's ttys exist before they work.** `/dev/stty_nr4` is there early, but `spipe_open` returns
+  `ENODEV` until the sbuf is up; `/dev/sipc_sbuf` (the driver's seqfile) shows `sbuf_5_006, state: 1,` once it
+  is. Opening the tty to probe wedges the channel (13b), so the readiness is read from the seqfile.
+* **Cold start of the chosen card**, through the brokers, under mobile-data's radio lock: `AT+SMMSWAP=0` on nr1
+  (the vendor RIL's first command; `SMMSWAP=1` is not a slot selector), both groups at `CFUN: 0`, then on the
+  card's data channel `AT+SPTESTMODEM=134,134` (the two-argument work mode of this firmware: `buildWorkModeCmd` in
+  mode 7 appends no primary-SIM argument), `AT+SPSWDATA`, `AT+SFUN=4`; CFUN=1 follows within seconds. The CP must
+  have said something on nr0 before any of it (its URC log is the readiness event, as mobile-data's radio-on).
+* **Live switch** (the factory `VendorTelephonyManager.setProtocolStack`): select the card before each SFUN group:
+  `AT+SPACTCARD=<target>;+SFUN=2`, `AT+SFUN=4`, `AT+SPACTCARD=0` on the target's command channel, `AT+SPSWDATA` on
+  its data channel, then `AT+SPACTCARD=<old>;+SFUN=5`, `AT+SFUN=3`, `AT+SPACTCARD=0` on the old one. Both
+  directions worked; the four broker PIDs stayed the same.
+* **`+CME ERROR: 10` is not "no card".** After `SFUN=5/3` an inserted but inactive card answers `AT+CPIN?` with
+  CME ERROR 10, so CPIN is checked only after the card is enabled.
+* **A reopened SIPC channel is a wedged one.** The dual-SIM brokers run without respawn and with
+  `MU300_AT_DISABLE_REOPEN=1`; a dead owner means no switch until the next boot, by design.
+* **One APN for both cards.** WAN's APN/PDP settings are shared: a card of another carrier switches cleanly and
+  never gets a bearer. That is why a switch becomes the boot default only once `wan` has an address.
+* **A failed cold start used to mean no WAN for the whole boot, every boot** (`radio-freeze` plus a missing ready
+  marker, with the choice persisted): hence the one-boot pending marker and the fallback to SIM1 in
+  `init.d/mu300-atd` / `mu300-sim2-warmup`, and no registration gate at boot (CFUN=1 is ready, as for SIM1).

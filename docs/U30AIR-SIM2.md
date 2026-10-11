@@ -2,9 +2,29 @@
 
 This opt-in OpenWrt path provides a LuCI **Cellular > Dual SIM** page and
 `mu300-sim` CLI. Both physical cards can be selected without booting Android
-first. A successful live switch saves the target as the next cold-boot default,
-matching the factory system's selection behavior. Android partitions, firmware
-and subscriber identities are not modified.
+first. A live switch that gets mobile data saves the target as the next
+cold-boot default, matching the factory system's selection behavior. Android
+partitions, firmware and subscriber identities are not modified.
+
+**U30 Air on OpenWrt only.** The cold start and the switch were validated on
+that firmware alone: `mu300-sim` answers `{"ok":0,"supported":0}` on every
+other device and on Ubuntu, the Dual SIM page says so and offers nothing, and
+`init.d/mu300-atd` ignores `/etc/mu300-sim-slot` and `/etc/mu300-sim-hot`
+there and runs the usual SIM1 path. The runtime scripts (`mu300-at`,
+`mobile-data`, `sipa-dele-start`, the netifd protocol, the panel's
+collectors) read this boot's pin `/run/mu300/sim-slot` alone, which only that
+init script writes, so a stray settings file changes nothing elsewhere.
+
+**A failed cold start never costs more than one boot.** The dual-SIM path
+leaves `/etc/mu300-sim-pending` until `mu300-sim2-warmup` confirms the radio
+is up. When the cold start cannot be done (no card, PIN, the modem refusing a
+command, the second group's brokers never coming up) the warm-up puts the
+settings back to SIM1 without live switching and records why in
+`/etc/mu300-sim-fallback` (`cold-start-failed`, `brokers-missing`); if nothing
+was sent to the radio yet, this boot already runs the ordinary SIM1 warm-up.
+A pending marker still there at the next boot (`unconfirmed`: the warm-up
+died) makes that boot a plain SIM1 boot too. The page shows the reason until
+the user chooses again; `mu300-sim status` carries it as `fallback`.
 
 ## Select and switch
 
@@ -19,19 +39,22 @@ without moving the current data session.
 ```sh
 mu300-sim status
 mu300-sim hot 1       # enable; reboot if status.available is 0
-mu300-sim switch 2    # change now AND save SIM2 for subsequent boots
-mu300-sim default 1   # change the NEXT boot only
+mu300-sim switch 2    # change now, and save SIM2 for subsequent boots once it has mobile data
+mu300-sim default 1   # change the NEXT boot only (no radio command, no hot switching needed)
 mu300-sim hot 0       # block live switching
 ```
 
 The CLI and page use physical card numbers 1/2. Internally,
 `/etc/mu300-sim-slot` stores 0/1 and `/etc/mu300-sim-hot` stores 0/1. The active
 slot is recorded separately in `/run/mu300/sim-slot`; only a validated switch
-changes it. These settings are preserved by `mu300-update`. Include both files
-in manual reinstall backups. WAN uses the existing configured APN/PDP type:
-there is no per-card APN editor, so use settings appropriate for the target
-carrier. A card without service can switch successfully but cannot supply
-internet. Live switching interrupts existing cellular connections.
+changes it. These settings (and `/etc/mu300-sim-fallback`) are preserved by
+`mu300-update`. Include them in manual reinstall backups. WAN uses the existing
+configured APN/PDP type: there is no per-card APN editor, so a card of another
+carrier switches but gets no bearer. That is why a switch is saved as the boot
+default only once `wan` is up with an address (60 s, `MU300_SIM_WAN_WAIT`);
+without one the previous card comes back (`result: no_data`) and the saved
+default is untouched. Live switching interrupts existing cellular connections.
+`status` reports `busy: 0` to the process holding the control lock itself.
 
 | Physical card | URC / command / data channel | CID 1 bearer |
 | --- | --- | --- |
@@ -40,11 +63,16 @@ internet. Live switching interrupts existing cellular connections.
 
 ## Native cold start
 
-With SIM2 selected, or hot switching enabled for either selected card, S19 waits
-for `sbuf_5_006, state: 1,` in `/dev/sipc_sbuf`, then starts nr1/nr2/nr4/nr5
-owners and nr0/nr3 URC readers. The data brokers use their own group's URC log
-for liveness. Owner respawn and channel reopening are disabled: repeated SIPC
-opens can wedge the channel.
+With SIM2 selected, or hot switching enabled for either selected card, S19
+starts nr1/nr2/nr4/nr5 owners and nr0/nr3 URC readers. The nr4/nr5 instances
+wait (inside the procd instance, bounded at 240 s, never in `start_service`)
+for `sbuf_5_006, state: 1,` in `/dev/sipc_sbuf`: a character node exists before
+the CP is up and `spipe_open` returns ENODEV until then. The data brokers use
+their own group's URC log for liveness. Owner respawn and channel reopening
+are disabled: repeated SIPC opens can wedge the channel, and the cold start
+and the switch refuse to run without all four owners rather than talk to a
+reopened one (a dead owner means no switch until the next boot). The
+`sbuf_5_006` seqfile text was checked on Linux 7.2.9 only.
 
 Under the shared radio lock, the controller waits for actual CP output, sends
 `AT+SMMSWAP=0` through nr1, and requires both groups to report CFUN=0. It checks
@@ -57,8 +85,10 @@ AT+SFUN=4
 ```
 
 The two-argument work-mode command matches the observed modemConfig=7 firmware.
-`SMMSWAP=1` is not a slot selector. Radio readiness requires CFUN=1; SIM2 also
-retains the original registration gate (CEREG 1 or 5). An optional private
+`SMMSWAP=1` is not a slot selector. Radio readiness is CFUN=1 for either card,
+exactly as the SIM1 path marks it: registration is netifd's to wait for and
+retry (a slow registration used to fail a boot-time gate and leave the whole
+boot without WAN). An optional private
 `/etc/mu300/sim1-iccid` or `sim2-iccid` pins an expected card. Logs omit these
 identifiers. The controller runs at most once per boot. Netifd then owns data
 attachment and retries on `sipa_eth0` or `sipa_eth8`.
@@ -81,18 +111,23 @@ old command broker:    AT+SPACTCARD=<old>;+SFUN=5
 After enabling the target, verify target CFUN=1, old CFUN=0 and target CPIN
 READY. An inactive stack can report `+CME ERROR: 10` for CPIN despite an
 inserted card, so CPIN is deliberately checked after enable. Only after these
-gates does the controller save the default, publish the active slot, clear
-shared signal caches, and ask netifd to dial. The watcher reloads its slot
-without restarting AT owners or the `mu300-post` service.
+gates does the controller publish the active slot, clear shared signal caches,
+and ask netifd to dial. The boot default is saved once `wan` is up with an
+address (`ubus call network.interface.wan status`, 60 s at most); without one
+the controller takes WAN down, runs the same sequence back to the previous
+card, dials it again and reports `no_data`, the saved default untouched. The
+watcher reloads its slot without restarting AT owners or the `mu300-post`
+service.
 
 Kernel flock serializes policy edits and switches; the shared mobile-data
 radio mutex protects stack operations. RPC checks strict argument allow-lists
 and launches the switch outside its 30-second request budget. A whole-operation
-150-second deadline prevents an unbounded controller. On a command failure,
-rollback is tried once only if both command brokers still answer. A successful
-rollback preserves the previous boot preference. Silence or failed rollback
-marks radio state unknown, inhibits automated radio resets, and requires a
-Linux reboot. No blind SFUN reset loops or AT owner reopening are attempted.
+300-second deadline (`MU300_SIM_DEADLINE`) covers the switch, the wait for a
+bearer, one rollback and two dials. On a command failure, rollback is tried
+once only if both command brokers still answer. A successful rollback
+preserves the previous boot preference. Silence or failed rollback marks radio
+state unknown, inhibits automated radio resets, and requires a Linux reboot.
+No blind SFUN reset loops or AT owner reopening are attempted.
 
 ## Validation and limits
 
