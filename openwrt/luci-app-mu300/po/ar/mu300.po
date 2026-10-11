@@ -48,6 +48,9 @@ msgstr "الطرفية"
 msgid "Terminal settings"
 msgstr "إعدادات الطرفية"
 
+msgid "Packages after an update"
+msgstr "الحزم بعد التحديث"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "مركز تحكم MU300: لوحة الحالة، أقفال الشبكة، طرفية AT وSMS"
 
@@ -1245,6 +1248,60 @@ msgstr "تلقائي (%d مدعوم)"
 msgid "%d locked: %s"
 msgstr "%d مقفل: %s"
 
+msgid "Repair DNS?"
+msgstr "إصلاح DNS؟"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "يزيل هذا إعادة توجيه DNS لحزمة لم تعد مثبتة. إذا لم يبقَ خادم DNS آخر، يستخدم الجهاز خوادم DNS الخاصة بالاتصال المحمول: يرى المشغّل الأسماء التي تبحث عنها خارج أي وكيل أو VPN."
+
+msgid "Repair DNS"
+msgstr "إصلاح DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "الحزم المثبتة على الجهاز ليست جزءًا من صورة الإصدار. يسجّلها التحديث، ويعيد النظام الجديد تثبيتها عند أول إقلاع بمجرد اتصاله بالإنترنت. إلى أن تعود الحزمة تُحفظ إعداداتها جانبًا."
+
+msgid "No packages to install again."
+msgstr "لا توجد حزم لإعادة تثبيتها."
+
+msgid "All back"
+msgstr "عادت كلها"
+
+msgid "Not installed yet"
+msgstr "لم تُثبَّت بعد"
+
+msgid "Could not be installed again"
+msgstr "تعذّرت إعادة التثبيت"
+
+msgid "Waiting for the internet"
+msgstr "بانتظار الإنترنت"
+
+msgid "Given up: no internet at five boots"
+msgstr "تم التخلي: لا إنترنت خلال خمس عمليات إقلاع"
+
+msgid "Skipped"
+msgstr "تم التخطي"
+
+msgid "Written down by the update from %s"
+msgstr "سجّلها التحديث من %s"
+
+msgid "Installed again"
+msgstr "أُعيد تثبيتها"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "ثبّتها بنفسك من المصدر الذي حصلت عليها منه (ملف حزمة: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "إعدادات محفوظة جانبًا في /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "لا يزال DNS يتجه إلى حزمة غير مثبتة: لا يوجد DNS للجهاز عبرها."
+
+msgid "Try again"
+msgstr "إعادة المحاولة"
+
+msgid "Dismiss the note"
+msgstr "إخفاء الملاحظة"
+
 msgid "started"
 msgstr "بدأ"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "لم يُرجع محوّل الحزم ردًا صالحًا"
+
+msgid "Invalid packages operation"
+msgstr "عملية حزم غير صالحة"
+
 msgid "Request too large"
 msgstr "الطلب كبير جداً"
 
@@ -2090,6 +2153,21 @@ msgstr "ذاكرة التخزين المؤقت للأقفال غير متاحة"
 
 msgid "No serving cell to lock to"
 msgstr "لا توجد خلية خادمة للقفل عليها"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "إعادة تثبيت الحزم غير متاحة على هذا النظام"
+
+msgid "No packages were written down by an update"
+msgstr "لم يسجّل أي تحديث حزمًا"
+
+msgid "Reinstalling is running already"
+msgstr "إعادة التثبيت قيد التشغيل بالفعل"
+
+msgid "The note could not be dropped"
+msgstr "تعذّرت إزالة الملاحظة"
+
+msgid "Unknown packages operation"
+msgstr "عملية حزم غير معروفة"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

@@ -48,6 +48,9 @@ msgstr "Terminal"
 msgid "Terminal settings"
 msgstr "Cài đặt terminal"
 
+msgid "Packages after an update"
+msgstr "Gói sau khi cập nhật"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Trung tâm điều khiển MU300: bảng trạng thái, khóa mạng, terminal AT và SMS"
 
@@ -1245,6 +1248,60 @@ msgstr "Tự động (hỗ trợ %d)"
 msgid "%d locked: %s"
 msgstr "%d đã khóa: %s"
 
+msgid "Repair DNS?"
+msgstr "Sửa DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Thao tác này xóa chuyển tiếp DNS của một gói không còn được cài đặt. Nếu không còn máy chủ DNS nào khác, thiết bị sẽ dùng máy chủ DNS của kết nối di động: nhà mạng thấy các tên bạn tra cứu, bên ngoài mọi proxy hoặc VPN."
+
+msgid "Repair DNS"
+msgstr "Sửa DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Các gói được cài trên thiết bị không thuộc ảnh phát hành. Bản cập nhật ghi lại chúng, và hệ thống mới cài lại chúng ở lần khởi động đầu tiên, ngay khi có mạng. Cho đến khi gói trở lại, cài đặt của nó được để riêng."
+
+msgid "No packages to install again."
+msgstr "Không có gói nào cần cài lại."
+
+msgid "All back"
+msgstr "Tất cả đã trở lại"
+
+msgid "Not installed yet"
+msgstr "Chưa được cài"
+
+msgid "Could not be installed again"
+msgstr "Không thể cài lại"
+
+msgid "Waiting for the internet"
+msgstr "Đang chờ internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Đã bỏ cuộc: không có internet trong năm lần khởi động"
+
+msgid "Skipped"
+msgstr "Đã bỏ qua"
+
+msgid "Written down by the update from %s"
+msgstr "Được ghi lại bởi bản cập nhật từ %s"
+
+msgid "Installed again"
+msgstr "Đã cài lại"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Hãy tự cài chúng từ nơi bạn đã lấy (tệp gói: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Cài đặt được để riêng trong /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS vẫn trỏ tới một gói chưa được cài: thiết bị không có DNS qua nó."
+
+msgid "Try again"
+msgstr "Thử lại"
+
+msgid "Dismiss the note"
+msgstr "Đóng ghi chú"
+
 msgid "started"
 msgstr "đã khởi động"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Bộ điều hợp gói không trả về phản hồi hợp lệ"
+
+msgid "Invalid packages operation"
+msgstr "Thao tác gói không hợp lệ"
+
 msgid "Request too large"
 msgstr "Yêu cầu quá lớn"
 
@@ -2090,6 +2153,21 @@ msgstr "Bộ đệm khóa không khả dụng"
 
 msgid "No serving cell to lock to"
 msgstr "Không có cell phục vụ để khóa"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Cài lại gói không khả dụng trên hệ thống này"
+
+msgid "No packages were written down by an update"
+msgstr "Không có bản cập nhật nào ghi lại gói"
+
+msgid "Reinstalling is running already"
+msgstr "Việc cài lại đang chạy"
+
+msgid "The note could not be dropped"
+msgstr "Không thể xóa ghi chú"
+
+msgid "Unknown packages operation"
+msgstr "Thao tác gói không xác định"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

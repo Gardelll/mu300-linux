@@ -48,6 +48,9 @@ msgstr "Терминал"
 msgid "Terminal settings"
 msgstr "Терминал баптаулары"
 
+msgid "Packages after an update"
+msgstr "Жаңартудан кейінгі пакеттер"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 басқару орталығы: күй тақтасы, желіні бекіту, AT терминалы және SMS"
 
@@ -1245,6 +1248,60 @@ msgstr "Автоматты (%d қолдау көрсетіледі)"
 msgid "%d locked: %s"
 msgstr "%d бекітілген: %s"
 
+msgid "Repair DNS?"
+msgstr "DNS қалпына келтірілсін бе?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Бұл енді орнатылмаған пакеттің DNS бағыттауын жояды. Басқа DNS сервері қалмаса, құрылғы мобильді қосылымның DNS серверлерін пайдаланады: оператор кез келген прокси немесе VPN-нен тыс сіз іздеген атауларды көреді."
+
+msgid "Repair DNS"
+msgstr "DNS қалпына келтіру"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Құрылғыға орнатылған пакеттер шығарылым бейнесіне кірмейді. Жаңарту оларды жазып алады, ал жаңа жүйе алғашқы іске қосылғанда интернет пайда болысымен оларды қайта орнатады. Пакет қайтып келгенше оның баптаулары бөлек сақталады."
+
+msgid "No packages to install again."
+msgstr "Қайта орнататын пакет жоқ."
+
+msgid "All back"
+msgstr "Барлығы қайтарылды"
+
+msgid "Not installed yet"
+msgstr "Әлі орнатылмаған"
+
+msgid "Could not be installed again"
+msgstr "Қайта орнату мүмкін болмады"
+
+msgid "Waiting for the internet"
+msgstr "Интернет күтілуде"
+
+msgid "Given up: no internet at five boots"
+msgstr "Тоқтатылды: бес іске қосылуда интернет болмады"
+
+msgid "Skipped"
+msgstr "Өткізіп жіберілді"
+
+msgid "Written down by the update from %s"
+msgstr "%s нұсқасынан жаңарту жазып алды"
+
+msgid "Installed again"
+msgstr "Қайта орнатылды"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Оларды өзіңіз алған жерден орнатыңыз (пакет файлы: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "/etc/mu300/orphaned-config ішінде бөлек сақталған баптаулар"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS әлі орнатылмаған пакетке бағытталған: құрылғыда ол арқылы DNS жоқ."
+
+msgid "Try again"
+msgstr "Қайталау"
+
+msgid "Dismiss the note"
+msgstr "Ескертуді жабу"
+
 msgid "started"
 msgstr "іске қосылды"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Пакеттер адаптері жарамды жауап бермеді"
+
+msgid "Invalid packages operation"
+msgstr "Пакеттермен жарамсыз әрекет"
+
 msgid "Request too large"
 msgstr "Сұрау тым үлкен"
 
@@ -2090,6 +2153,21 @@ msgstr "Бекіту кэші қолжетімсіз"
 
 msgid "No serving cell to lock to"
 msgstr "Бекітетін қызмет көрсететін ұяшық жоқ"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Бұл жүйеде пакеттерді қайта орнату қолжетімсіз"
+
+msgid "No packages were written down by an update"
+msgstr "Ешбір жаңарту пакеттерді жазып алмаған"
+
+msgid "Reinstalling is running already"
+msgstr "Қайта орнату қазірдің өзінде жүріп жатыр"
+
+msgid "The note could not be dropped"
+msgstr "Ескертуді алып тастау мүмкін болмады"
+
+msgid "Unknown packages operation"
+msgstr "Пакеттермен белгісіз әрекет"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

@@ -48,6 +48,9 @@ msgstr "Terminál"
 msgid "Terminal settings"
 msgstr "Nastavení terminálu"
 
+msgid "Packages after an update"
+msgstr "Balíčky po aktualizaci"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Řídicí centrum MU300: přehled stavu, zámky sítě, terminál AT a SMS"
 
@@ -1245,6 +1248,60 @@ msgstr "Automaticky (podporováno: %d)"
 msgid "%d locked: %s"
 msgstr "Uzamčeno %d: %s"
 
+msgid "Repair DNS?"
+msgstr "Opravit DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Tím se odstraní přesměrování DNS balíčku, který už není nainstalovaný. Pokud nezůstane jiný server DNS, zařízení použije servery DNS mobilního připojení: operátor uvidí jména, která vyhledáváte, mimo jakoukoli proxy nebo VPN."
+
+msgid "Repair DNS"
+msgstr "Opravit DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Balíčky nainstalované v zařízení nejsou součástí obrazu vydání. Aktualizace si je zapíše a nový systém je při prvním spuštění znovu nainstaluje, jakmile bude online. Dokud se balíček nevrátí, jeho nastavení je odloženo."
+
+msgid "No packages to install again."
+msgstr "Žádné balíčky k opětovné instalaci."
+
+msgid "All back"
+msgstr "Vše zpět"
+
+msgid "Not installed yet"
+msgstr "Zatím nenainstalováno"
+
+msgid "Could not be installed again"
+msgstr "Nelze znovu nainstalovat"
+
+msgid "Waiting for the internet"
+msgstr "Čeká se na internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Vzdáno: bez internetu při pěti spuštěních"
+
+msgid "Skipped"
+msgstr "Přeskočeno"
+
+msgid "Written down by the update from %s"
+msgstr "Zapsáno aktualizací z %s"
+
+msgid "Installed again"
+msgstr "Znovu nainstalováno"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Nainstalujte je sami odtud, odkud je máte (soubor balíčku: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Odložená nastavení v /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS stále směřuje na nenainstalovaný balíček: zařízení přes něj nemá DNS."
+
+msgid "Try again"
+msgstr "Zkusit znovu"
+
+msgid "Dismiss the note"
+msgstr "Zavřít upozornění"
+
 msgid "started"
 msgstr "spuštěno"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Adaptér balíčků nevrátil platnou odpověď"
+
+msgid "Invalid packages operation"
+msgstr "Neplatná operace s balíčky"
+
 msgid "Request too large"
 msgstr "Požadavek je příliš velký"
 
@@ -2090,6 +2153,21 @@ msgstr "Mezipaměť zámků není dostupná"
 
 msgid "No serving cell to lock to"
 msgstr "Žádná obsluhující buňka k uzamčení"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Opětovná instalace balíčků není v tomto systému k dispozici"
+
+msgid "No packages were written down by an update"
+msgstr "Žádná aktualizace nezapsala balíčky"
+
+msgid "Reinstalling is running already"
+msgstr "Opětovná instalace už běží"
+
+msgid "The note could not be dropped"
+msgstr "Upozornění nelze odstranit"
+
+msgid "Unknown packages operation"
+msgstr "Neznámá operace s balíčky"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

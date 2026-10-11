@@ -48,6 +48,9 @@ msgstr "Τερματικό"
 msgid "Terminal settings"
 msgstr "Ρυθμίσεις τερματικού"
 
+msgid "Packages after an update"
+msgstr "Πακέτα μετά από ενημέρωση"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Κέντρο ελέγχου MU300: πίνακας κατάστασης, κλειδώματα δικτύου, τερματικό AT και SMS"
 
@@ -1245,6 +1248,60 @@ msgstr "Αυτόματο (%d υποστηριζόμενες)"
 msgid "%d locked: %s"
 msgstr "%d κλειδωμένες: %s"
 
+msgid "Repair DNS?"
+msgstr "Επισκευή DNS;"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Αυτό αφαιρεί την προώθηση DNS ενός πακέτου που δεν είναι πλέον εγκατεστημένο. Αν δεν μείνει άλλος διακομιστής DNS, η συσκευή χρησιμοποιεί τους διακομιστές DNS της σύνδεσης κινητής: ο πάροχος βλέπει τα ονόματα που αναζητάτε, έξω από κάθε proxy ή VPN."
+
+msgid "Repair DNS"
+msgstr "Επισκευή DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Τα πακέτα που εγκαταστάθηκαν στη συσκευή δεν ανήκουν στην εικόνα της έκδοσης. Μια ενημέρωση τα καταγράφει και το νέο σύστημα τα εγκαθιστά ξανά στην πρώτη εκκίνηση, μόλις είναι συνδεδεμένο. Μέχρι να επιστρέψει ένα πακέτο, οι ρυθμίσεις του φυλάσσονται στην άκρη."
+
+msgid "No packages to install again."
+msgstr "Κανένα πακέτο για επανεγκατάσταση."
+
+msgid "All back"
+msgstr "Όλα επέστρεψαν"
+
+msgid "Not installed yet"
+msgstr "Δεν έχει εγκατασταθεί ακόμα"
+
+msgid "Could not be installed again"
+msgstr "Δεν ήταν δυνατή η επανεγκατάσταση"
+
+msgid "Waiting for the internet"
+msgstr "Αναμονή για internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Εγκαταλείφθηκε: χωρίς internet σε πέντε εκκινήσεις"
+
+msgid "Skipped"
+msgstr "Παραλείφθηκε"
+
+msgid "Written down by the update from %s"
+msgstr "Καταγράφηκε από την ενημέρωση από %s"
+
+msgid "Installed again"
+msgstr "Επανεγκαταστάθηκαν"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Εγκαταστήστε τα μόνοι σας από εκεί που τα πήρατε (αρχείο πακέτου: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Ρυθμίσεις στην άκρη στο /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "Το DNS πηγαίνει ακόμα σε πακέτο που δεν είναι εγκατεστημένο: η συσκευή δεν έχει DNS μέσω αυτού."
+
+msgid "Try again"
+msgstr "Δοκιμή ξανά"
+
+msgid "Dismiss the note"
+msgstr "Απόκρυψη σημείωσης"
+
 msgid "started"
 msgstr "ξεκίνησε"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Ο προσαρμογέας πακέτων δεν έδωσε έγκυρη απάντηση"
+
+msgid "Invalid packages operation"
+msgstr "Μη έγκυρη ενέργεια πακέτων"
+
 msgid "Request too large"
 msgstr "Το αίτημα είναι πολύ μεγάλο"
 
@@ -2090,6 +2153,21 @@ msgstr "Η κρυφή μνήμη κλειδωμάτων δεν είναι δια
 
 msgid "No serving cell to lock to"
 msgstr "Δεν υπάρχει κυψέλη εξυπηρέτησης για κλείδωμα"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Η επανεγκατάσταση πακέτων δεν είναι διαθέσιμη σε αυτό το σύστημα"
+
+msgid "No packages were written down by an update"
+msgstr "Καμία ενημέρωση δεν κατέγραψε πακέτα"
+
+msgid "Reinstalling is running already"
+msgstr "Η επανεγκατάσταση εκτελείται ήδη"
+
+msgid "The note could not be dropped"
+msgstr "Η σημείωση δεν ήταν δυνατό να αφαιρεθεί"
+
+msgid "Unknown packages operation"
+msgstr "Άγνωστη ενέργεια πακέτων"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

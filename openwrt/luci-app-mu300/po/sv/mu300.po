@@ -48,6 +48,9 @@ msgstr "Terminal"
 msgid "Terminal settings"
 msgstr "Terminalinställningar"
 
+msgid "Packages after an update"
+msgstr "Paket efter en uppdatering"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-kontrollcenter: statuspanel, nätverkslås, AT-terminal och SMS"
 
@@ -1245,6 +1248,60 @@ msgstr "Automatiskt (%d stöds)"
 msgid "%d locked: %s"
 msgstr "%d låsta: %s"
 
+msgid "Repair DNS?"
+msgstr "Reparera DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Detta tar bort DNS-vidarebefordran för ett paket som inte längre är installerat. Finns ingen annan DNS-server kvar använder enheten mobilanslutningens DNS-servrar: operatören ser namnen du slår upp, utanför alla proxyer och VPN."
+
+msgid "Repair DNS"
+msgstr "Reparera DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Paket som installerats på enheten ingår inte i versionens avbild. En uppdatering antecknar dem, och det nya systemet installerar dem igen vid första starten, så snart det är online. Tills ett paket är tillbaka läggs dess inställningar åt sidan."
+
+msgid "No packages to install again."
+msgstr "Inga paket att installera igen."
+
+msgid "All back"
+msgstr "Alla tillbaka"
+
+msgid "Not installed yet"
+msgstr "Inte installerat än"
+
+msgid "Could not be installed again"
+msgstr "Kunde inte installeras igen"
+
+msgid "Waiting for the internet"
+msgstr "Väntar på internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Gav upp: inget internet vid fem starter"
+
+msgid "Skipped"
+msgstr "Hoppades över"
+
+msgid "Written down by the update from %s"
+msgstr "Antecknat av uppdateringen från %s"
+
+msgid "Installed again"
+msgstr "Installerade igen"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Installera dem själv från där du fick dem (en paketfil: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Inställningar lagda åt sidan i /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS går fortfarande till ett paket som inte är installerat: enheten har ingen DNS via det."
+
+msgid "Try again"
+msgstr "Försök igen"
+
+msgid "Dismiss the note"
+msgstr "Stäng meddelandet"
+
 msgid "started"
 msgstr "startad"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "Paketadaptern gav inget giltigt svar"
+
+msgid "Invalid packages operation"
+msgstr "Ogiltig paketåtgärd"
+
 msgid "Request too large"
 msgstr "Begäran för stor"
 
@@ -2090,6 +2153,21 @@ msgstr "Låscache inte tillgänglig"
 
 msgid "No serving cell to lock to"
 msgstr "Ingen betjänande cell att låsa till"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Att installera om paket är inte tillgängligt på det här systemet"
+
+msgid "No packages were written down by an update"
+msgstr "Ingen uppdatering har antecknat paket"
+
+msgid "Reinstalling is running already"
+msgstr "Ominstallationen körs redan"
+
+msgid "The note could not be dropped"
+msgstr "Meddelandet kunde inte tas bort"
+
+msgid "Unknown packages operation"
+msgstr "Okänd paketåtgärd"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"

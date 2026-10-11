@@ -48,6 +48,9 @@ msgstr "Terminal"
 msgid "Terminal settings"
 msgstr "Terminalinstellingen"
 
+msgid "Packages after an update"
+msgstr "Pakketten na een update"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-controlecentrum: statusdashboard, netwerkvergrendelingen, AT-terminal en SMS"
 
@@ -1245,6 +1248,60 @@ msgstr "Automatisch (%d ondersteund)"
 msgid "%d locked: %s"
 msgstr "%d vergrendeld: %s"
 
+msgid "Repair DNS?"
+msgstr "DNS herstellen?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Dit verwijdert de DNS-doorverwijzing van een pakket dat niet meer geïnstalleerd is. Blijft er geen andere DNS-server over, dan gebruikt het apparaat de DNS-servers van de mobiele verbinding: de provider ziet de namen die u opzoekt, buiten elke proxy of VPN om."
+
+msgid "Repair DNS"
+msgstr "DNS herstellen"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "Pakketten die op het apparaat zijn geïnstalleerd, horen niet bij de release-image. Een update noteert ze en het nieuwe systeem installeert ze bij de eerste start opnieuw, zodra het online is. Tot een pakket terug is, worden de instellingen apart gezet."
+
+msgid "No packages to install again."
+msgstr "Geen pakketten om opnieuw te installeren."
+
+msgid "All back"
+msgstr "Alles terug"
+
+msgid "Not installed yet"
+msgstr "Nog niet geïnstalleerd"
+
+msgid "Could not be installed again"
+msgstr "Kon niet opnieuw worden geïnstalleerd"
+
+msgid "Waiting for the internet"
+msgstr "Wacht op internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Opgegeven: geen internet bij vijf starts"
+
+msgid "Skipped"
+msgstr "Overgeslagen"
+
+msgid "Written down by the update from %s"
+msgstr "Genoteerd door de update vanaf %s"
+
+msgid "Installed again"
+msgstr "Opnieuw geïnstalleerd"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Installeer ze zelf vanaf waar u ze vandaan hebt (een pakketbestand: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Apart gezette instellingen in /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "DNS gaat nog naar een pakket dat niet geïnstalleerd is: het apparaat heeft daardoor geen DNS."
+
+msgid "Try again"
+msgstr "Opnieuw proberen"
+
+msgid "Dismiss the note"
+msgstr "Melding sluiten"
+
 msgid "started"
 msgstr "gestart"
 
@@ -1908,6 +1965,12 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "The packages adapter gave no valid reply"
+msgstr "De pakketadapter gaf geen geldig antwoord"
+
+msgid "Invalid packages operation"
+msgstr "Ongeldige pakketbewerking"
+
 msgid "Request too large"
 msgstr "Verzoek te groot"
 
@@ -2090,6 +2153,21 @@ msgstr "Vergrendelingscache niet beschikbaar"
 
 msgid "No serving cell to lock to"
 msgstr "Geen serving cell om op te vergrendelen"
+
+msgid "Reinstalling packages is not available on this system"
+msgstr "Pakketten opnieuw installeren is op dit systeem niet beschikbaar"
+
+msgid "No packages were written down by an update"
+msgstr "Geen update heeft pakketten genoteerd"
+
+msgid "Reinstalling is running already"
+msgstr "Opnieuw installeren is al bezig"
+
+msgid "The note could not be dropped"
+msgstr "De melding kon niet worden verwijderd"
+
+msgid "Unknown packages operation"
+msgstr "Onbekende pakketbewerking"
 
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
