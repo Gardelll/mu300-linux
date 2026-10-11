@@ -1338,6 +1338,60 @@ msgstr "Automaattinen (%d tuettu)"
 msgid "%d locked: %s"
 msgstr "%d lukittu: %s"
 
+msgid "started"
+msgstr "käynnistetty"
+
+msgid "asleep now (asked)"
+msgstr "lepotila nyt (pyydetty)"
+
+msgid "woken: power daemon stopping"
+msgstr "herätetty: virtapalvelu pysähtyy"
+
+msgid "woken by a key"
+msgstr "herätetty painikkeella"
+
+msgid "woken by the Wi-Fi key"
+msgstr "herätetty Wi-Fi-painikkeella"
+
+msgid "woken (mu300-power wake)"
+msgstr "herätetty (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "herätetty USB-tietokoneella"
+
+msgid "woken: plugged in"
+msgstr "herätetty: laturi kytketty"
+
+msgid "woken by a Wi-Fi client"
+msgstr "herätetty Wi-Fi-asiakkaalla"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "latauskäynnistys (laturi käynnisti)"
+
+msgid "the hotspot is down"
+msgstr "hotspot on pois päältä"
+
+msgid "the VPN is still stopped"
+msgstr "VPN on yhä pysäytetty"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) on yhä pois epäonnistuneen jatkamisen jälkeen"
+
+msgid "self-check: %s"
+msgstr "itsetarkistus: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "lepotila: ei asiakkaita %d min (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "lepotila: profiili nyt %s"
+
+msgid "woken by the %s key"
+msgstr "herätetty %s-painikkeella"
+
+msgid "the modem is suspended (%s)"
+msgstr "modeemi on keskeytetty (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Anna kokonaisluku väliltä 0–%d"
 

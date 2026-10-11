@@ -1338,6 +1338,60 @@ msgstr "Автоматично (підтримується: %d)"
 msgid "%d locked: %s"
 msgstr "Зафіксовано %d: %s"
 
+msgid "started"
+msgstr "запущено"
+
+msgid "asleep now (asked)"
+msgstr "сон зараз (на запит)"
+
+msgid "woken: power daemon stopping"
+msgstr "пробудження: служба живлення зупиняється"
+
+msgid "woken by a key"
+msgstr "пробудження кнопкою"
+
+msgid "woken by the Wi-Fi key"
+msgstr "пробудження кнопкою Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "пробудження (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "пробудження комп'ютером через USB"
+
+msgid "woken: plugged in"
+msgstr "пробудження: підключено живлення"
+
+msgid "woken by a Wi-Fi client"
+msgstr "пробудження клієнтом Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "зарядне завантаження (увімкнено зарядним пристроєм)"
+
+msgid "the hotspot is down"
+msgstr "точку доступу вимкнено"
+
+msgid "the VPN is still stopped"
+msgstr "VPN досі зупинено"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) досі вимкнено після невдалого відновлення"
+
+msgid "self-check: %s"
+msgstr "самоперевірка: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "сон: немає клієнтів %d хв (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "сон: профіль тепер %s"
+
+msgid "woken by the %s key"
+msgstr "пробудження кнопкою %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "модем призупинено (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Введіть ціле число від 0 до %d"
 

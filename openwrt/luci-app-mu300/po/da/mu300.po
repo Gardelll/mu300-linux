@@ -1338,6 +1338,60 @@ msgstr "Automatisk (%d understøttet)"
 msgid "%d locked: %s"
 msgstr "%d låst: %s"
 
+msgid "started"
+msgstr "startet"
+
+msgid "asleep now (asked)"
+msgstr "dvale nu (anmodet)"
+
+msgid "woken: power daemon stopping"
+msgstr "vækket: strømtjenesten stopper"
+
+msgid "woken by a key"
+msgstr "vækket af en knap"
+
+msgid "woken by the Wi-Fi key"
+msgstr "vækket af Wi-Fi-knappen"
+
+msgid "woken (mu300-power wake)"
+msgstr "vækket (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "vækket af en computer via USB"
+
+msgid "woken: plugged in"
+msgstr "vækket: oplader tilsluttet"
+
+msgid "woken by a Wi-Fi client"
+msgstr "vækket af en Wi-Fi-klient"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "opladerstart (tændt af opladeren)"
+
+msgid "the hotspot is down"
+msgstr "hotspottet er slukket"
+
+msgid "the VPN is still stopped"
+msgstr "VPN er stadig stoppet"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) er stadig slukket efter en mislykket genoptagelse"
+
+msgid "self-check: %s"
+msgstr "selvtest: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "dvale: ingen klient i %d min (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "dvale: profil nu %s"
+
+msgid "woken by the %s key"
+msgstr "vækket af %s-knappen"
+
+msgid "the modem is suspended (%s)"
+msgstr "modemmet er sat på pause (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Angiv et helt tal fra 0 til %d"
 

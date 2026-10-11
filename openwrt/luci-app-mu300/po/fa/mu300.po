@@ -1338,6 +1338,60 @@ msgstr "خودکار (%d پشتیبانی‌شده)"
 msgid "%d locked: %s"
 msgstr "%d قفل‌شده: %s"
 
+msgid "started"
+msgstr "آغاز شد"
+
+msgid "asleep now (asked)"
+msgstr "خواب اکنون (درخواستی)"
+
+msgid "woken: power daemon stopping"
+msgstr "بیدار شد: سرویس انرژی در حال توقف"
+
+msgid "woken by a key"
+msgstr "با یک کلید بیدار شد"
+
+msgid "woken by the Wi-Fi key"
+msgstr "با کلید Wi-Fi بیدار شد"
+
+msgid "woken (mu300-power wake)"
+msgstr "بیدار شد (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "با رایانه از طریق USB بیدار شد"
+
+msgid "woken: plugged in"
+msgstr "بیدار شد: به برق وصل شد"
+
+msgid "woken by a Wi-Fi client"
+msgstr "با یک کلاینت Wi-Fi بیدار شد"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "راه‌اندازی شارژ (با شارژر روشن شد)"
+
+msgid "the hotspot is down"
+msgstr "هات‌اسپات خاموش است"
+
+msgid "the VPN is still stopped"
+msgstr "VPN هنوز متوقف است"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) پس از ازسرگیری ناموفق هنوز خاموش است"
+
+msgid "self-check: %s"
+msgstr "خودآزمایی: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "خواب: %d دقیقه بدون کلاینت (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "خواب: پروفایل اکنون %s"
+
+msgid "woken by the %s key"
+msgstr "با کلید %s بیدار شد"
+
+msgid "the modem is suspended (%s)"
+msgstr "مودم معلق است (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "یک عدد صحیح از 0 تا %d وارد کنید"
 

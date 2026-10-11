@@ -1338,6 +1338,60 @@ msgstr "Automaticky (podporováno: %d)"
 msgid "%d locked: %s"
 msgstr "Uzamčeno %d: %s"
 
+msgid "started"
+msgstr "spuštěno"
+
+msgid "asleep now (asked)"
+msgstr "nyní spát (vyžádáno)"
+
+msgid "woken: power daemon stopping"
+msgstr "probuzeno: služba napájení končí"
+
+msgid "woken by a key"
+msgstr "probuzeno tlačítkem"
+
+msgid "woken by the Wi-Fi key"
+msgstr "probuzeno tlačítkem Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "probuzeno (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "probuzeno počítačem přes USB"
+
+msgid "woken: plugged in"
+msgstr "probuzeno: připojeno napájení"
+
+msgid "woken by a Wi-Fi client"
+msgstr "probuzeno klientem Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "nabíjecí start (zapnuto nabíječkou)"
+
+msgid "the hotspot is down"
+msgstr "hotspot je vypnutý"
+
+msgid "the VPN is still stopped"
+msgstr "VPN je stále zastavená"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) je po neúspěšném obnovení stále vypnuté"
+
+msgid "self-check: %s"
+msgstr "autotest: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "spí: %d min žádný klient (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "spí: profil nyní %s"
+
+msgid "woken by the %s key"
+msgstr "probuzeno tlačítkem %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "modem je pozastaven (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Zadejte celé číslo od 0 do %d"
 

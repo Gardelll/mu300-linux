@@ -1338,6 +1338,60 @@ msgstr "Automatikus (%d támogatott)"
 msgid "%d locked: %s"
 msgstr "%d zárolva: %s"
 
+msgid "started"
+msgstr "elindítva"
+
+msgid "asleep now (asked)"
+msgstr "alvás most (kérésre)"
+
+msgid "woken: power daemon stopping"
+msgstr "felébresztve: az energiaszolgáltatás leáll"
+
+msgid "woken by a key"
+msgstr "gomb ébresztette"
+
+msgid "woken by the Wi-Fi key"
+msgstr "a Wi-Fi gomb ébresztette"
+
+msgid "woken (mu300-power wake)"
+msgstr "felébresztve (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "USB-s számítógép ébresztette"
+
+msgid "woken: plugged in"
+msgstr "felébresztve: töltőre téve"
+
+msgid "woken by a Wi-Fi client"
+msgstr "Wi-Fi kliens ébresztette"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "töltési indítás (a töltő kapcsolta be)"
+
+msgid "the hotspot is down"
+msgstr "a hotspot ki van kapcsolva"
+
+msgid "the VPN is still stopped"
+msgstr "a VPN még mindig leállt"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "az 5G (EN-DC) sikertelen folytatás után is ki van kapcsolva"
+
+msgid "self-check: %s"
+msgstr "önellenőrzés: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "alszik: %d perce nincs kliens (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "alszik: a profil most %s"
+
+msgid "woken by the %s key"
+msgstr "a(z) %s gomb ébresztette"
+
+msgid "the modem is suspended (%s)"
+msgstr "a modem fel van függesztve (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Adjon meg egy egész számot 0 és %d között"
 

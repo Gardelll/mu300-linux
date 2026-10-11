@@ -1338,6 +1338,60 @@ msgstr "Автоматты (%d қолдау көрсетіледі)"
 msgid "%d locked: %s"
 msgstr "%d бекітілген: %s"
 
+msgid "started"
+msgstr "іске қосылды"
+
+msgid "asleep now (asked)"
+msgstr "қазір ұйқы (сұралды)"
+
+msgid "woken: power daemon stopping"
+msgstr "оянды: қуат қызметі тоқтап жатыр"
+
+msgid "woken by a key"
+msgstr "пернемен оянды"
+
+msgid "woken by the Wi-Fi key"
+msgstr "Wi-Fi пернесімен оянды"
+
+msgid "woken (mu300-power wake)"
+msgstr "оянды (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "USB арқылы компьютермен оянды"
+
+msgid "woken: plugged in"
+msgstr "оянды: қуатқа қосылды"
+
+msgid "woken by a Wi-Fi client"
+msgstr "Wi-Fi клиентімен оянды"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "зарядтау жүктелуі (зарядтағыш қосты)"
+
+msgid "the hotspot is down"
+msgstr "хотспот өшірулі"
+
+msgid "the VPN is still stopped"
+msgstr "VPN әлі тоқтаулы"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "сәтсіз жалғастырудан кейін 5G (EN-DC) әлі өшірулі"
+
+msgid "self-check: %s"
+msgstr "өзін-өзі тексеру: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "ұйқы: %d мин клиент жоқ (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "ұйқы: профиль енді %s"
+
+msgid "woken by the %s key"
+msgstr "%s пернесімен оянды"
+
+msgid "the modem is suspended (%s)"
+msgstr "модем тоқтатылған (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "0-ден %d-ге дейінгі бүтін санды енгізіңіз"
 

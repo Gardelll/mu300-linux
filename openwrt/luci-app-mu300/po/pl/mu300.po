@@ -1338,6 +1338,60 @@ msgstr "Automatyczny (obsługiwanych: %d)"
 msgid "%d locked: %s"
 msgstr "Zablokowano %d: %s"
 
+msgid "started"
+msgstr "uruchomiono"
+
+msgid "asleep now (asked)"
+msgstr "uśpienie teraz (na żądanie)"
+
+msgid "woken: power daemon stopping"
+msgstr "wybudzono: usługa zasilania kończy pracę"
+
+msgid "woken by a key"
+msgstr "wybudzono przyciskiem"
+
+msgid "woken by the Wi-Fi key"
+msgstr "wybudzono przyciskiem Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "wybudzono (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "wybudzono przez komputer na USB"
+
+msgid "woken: plugged in"
+msgstr "wybudzono: podłączono zasilanie"
+
+msgid "woken by a Wi-Fi client"
+msgstr "wybudzono przez klienta Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "start ładowania (włączony przez ładowarkę)"
+
+msgid "the hotspot is down"
+msgstr "hotspot jest wyłączony"
+
+msgid "the VPN is still stopped"
+msgstr "VPN jest nadal zatrzymany"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) jest nadal wyłączone po nieudanym wznowieniu"
+
+msgid "self-check: %s"
+msgstr "autotest: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "uśpiony: brak klientów od %d min (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "uśpiony: profil teraz %s"
+
+msgid "woken by the %s key"
+msgstr "wybudzono przyciskiem %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "modem jest wstrzymany (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Wpisz liczbę całkowitą od 0 do %d"
 
