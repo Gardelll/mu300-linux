@@ -99,6 +99,7 @@ what replaced it. The table below gives each section's state.
 | 36 | Power profiles: idle radios, the charging boot, the charge guard | current; power table and device questions open (PR #62) |
 | 37 | System suspend | current (fixes on branch `suspend-drivers`); power not measured |
 | 39 | The SMS pool: durable before the SIM lets go, long messages that never complete, forwarding | current |
+| 40 | The boot chain of the Linux slot: what is loaded per slot, and what the installers copy | current; not yet run on a device whose slots differ |
 | 38 | Three defects from users' reports, 2026-10-07 | current |
 | 38a | A read past the end of the eMMC never returns | current (fixed) |
 | 38b | RNDIS: the port kept the bridge's address | current (fixed) |
@@ -3193,6 +3194,75 @@ came back; the queue file left `/etc` when empty. A fake Telegram token: `HTTP 4
 command line sampled ~45 000 times during deliveries: no token, URL or header. The keyword filter skipped a message
 without the keyword. The page in English and Turkish (save, a refusal translated, the test button, the log). Not
 tested: e-mail (the image has no msmtp), the SMS target (no credit), a real incoming SMS from the network.
+
+### 40. The boot chain of the Linux slot: what is loaded per slot, and what the installers copy
+
+**The problem.** Linux boots from the slot Android does not run from, and LK boots that slot with that slot's own
+bootloader chain. Linux, though, starts Android's modem: `android-vendor-start` rewrites `androidboot.slot_suffix` to
+Android's slot (§5, PR #30), so `modem_control` loads `nr_modem`, `nr_phy` and `pm_sys` of Android's slot and hands
+them to the Trusty TA `kernelbootcp` (`kbc_verify_all_avb2`, `SEC_KBC_START_CP`) - the Trusty of the Linux slot. On a
+device that never took an OTA both slots hold the factory build and nothing differs. After an OTA Android's slot holds
+the new build and the other slot still the factory one (issue #86: on a U30 Air on B18, slot a's `uboot_a`, `sml_a`,
+`vbmeta_a`, `trustos_a` "belong to the factory build"), so a Linux boot runs the factory TEE against the new modem
+images. kano's advice, which the maintainer took: "sync uboot, teecfg, trustos, sml across the A/B slots - copy the
+partitions of Android's slot into the other slot; it solves 99% of the problems."
+
+**What is loaded per slot**, from F50-B's `uboot_log` (16 MiB ring, 108 boots in it, read-only from Linux):
+
+* `uboot`, `sml`, `teecfg`, `trustos`: the secure-boot images. Fastboot downloads of them log
+  `uboot_verify_successful`, `sml_verify_successful`, `teecfg_verify_successful`, `trustos_verify_successful` (each
+  checked against the signature chain before it is written, `download slot: trustos_b`), and at every boot LK finds
+  them already in place (`fdtdec_decode_region: sml-mem@bd000000`, `tos-mem@bd020000`, `zte_tee smc get tos addr`,
+  `uboot_set_root_of_trust succeeded`, `pass_chip_uid_to_tos()`): the SPL loaded the selected slot's set before LK.
+  `stock/README.md` already treats `trustos` as verified together with `sml`, `uboot` and `vbmeta`, one chain per
+  firmware build.
+* `vbmeta`: LK's `avb_slot_verify()` reads `vbmeta_<slot>` and through it `boot`, `dtbo`, `vendor_boot`,
+  `nr_modem`, `nr_phy`, `pm_sys` (`Loading vbmeta struct in footer from partition nr_modem_b`, ...) and the chained
+  `vbmeta_system`, `vbmeta_vendor`, `vbmeta_product`, `vbmeta_odm`, `vbmeta_system_ext` of the booted slot; the
+  device is unlocked (`allow_verification_error is 1`, `Device Status is unlock, skip boot image verify!`), so a
+  mismatch is logged and booted anyway. The root of trust LK hands to Trusty comes from that verification.
+* The SPL itself (`splloader`) is not a by-name partition: it is in the eMMC boot areas, `mmcblk0boot0` and
+  `mmcblk0boot1` byte-identical on F50-B, and LK manages it itself (`slot 1 booted fail, rolling back spl and
+  reboot into normal`, `exchange boot slot!!!`).
+
+**What the installers copy:** `uboot`, `sml`, `teecfg`, `trustos` and `vbmeta` - the four of kano's list and the
+`vbmeta` that is verified with them - from Android's slot to the Linux slot (`tools/android-bootchain.sh`; the copy
+in the switch module is kept identical by a test). Nothing else, by a fixed list that also refuses any NV-like name:
+
+* never the NV and calibration partitions (`nr_fixnv1/2`, `nr_runtimenv1/2`, `nr_deltanv`, `prodnv`, `miscdata`,
+  `persist`, `calinv`, `isedata`, `ztecfg`, `ztepersist`): on F50-B `nr_fixnv1_a` and `nr_fixnv1_b` differ, each
+  slot's NV belongs with that slot;
+* never `boot`, `init_boot`, `vendor_boot`, `dtb`, `dtbo`, `super`, `userdata`, `misc`, and never a partition of
+  Android's slot;
+* not the modem images (`nr_modem`, `nr_phy`, `pm_sys`, `ch_sys`). The evidence does not ask for them: Linux runs
+  Android's slot's copies already (above), and LK only reads the Linux slot's for their AVB footers, which an
+  unlocked device ignores. They also sit beside the per-slot NV. If a device with a synced chain still fails at the
+  handoff, they are the next thing to look at.
+* not `hypervsior`, `ise`, `avbmeta_rs`, `common_rs1/2`, `logo`: nothing in the LK log loads them per slot
+  (`common_rs1_a` and `_b` differ on F50-B; the others are identical there).
+
+**How it is done** (every check before the first write; a refusal changes nothing and stops the installation):
+Android's slot from `ro.boot.slot_suffix` (`_a`/`_b` only); an F50/MU300 or U30 Air by model; `getprop` must
+exist and the running slot's boot partition must not hold a Linux image (never from Linux); misc's
+`bootloader_control` must say Android's slot booted successfully, and the other slot may outrank it only when it
+holds our Linux image (an armed trial), not an OTA waiting for its reboot; both by-name links of each image present,
+two different devices, the same size. Then per image: the same sha256 on both slots - skipped; different - both
+slots' images are copied into the Linux filesystem (`.mu300/bootchain/<date>/<name>_<slot>.img` and `SHA256SUMS`,
+each read back against the partition), then Android's image is written to the Linux slot (`dd conv=fsync`, `sync`,
+`blockdev --flushbufs` and `drop_caches` before the read-back) and its sha256 compared. A mismatch writes every
+image back that was already written, verifies those too, and stops the installation before the boot image is written:
+Linux is not armed, Android is untouched. The host installers also pull the backup into `work/bootchain/<date>`.
+`MU300_SYNC_BOOTCHAIN=0` (`install.ps1 -NoBootchainSync`, `MU300_SYNC_BOOTCHAIN=0` in the Magisk conf) skips it, and
+a device taken as an F50 although its model is not recognised is never synced. Later, from Android:
+`su -c 'mu300-linux bootchain'` (what differs) and `su -c 'mu300-linux bootchain sync'` (backup in
+`/data/adb/mu300-bootchain/<date>`). There is no Linux-side command: from Linux the booted slot is the one to be
+written.
+
+**On the test boards:** F50-B (B09, never updated) has `uboot`, `sml`, `teecfg`, `trustos`, `vbmeta` and every
+`vbmeta_*`, the modem images, `dtb`, `dtbo`, `vendor_boot`, `hypervsior`, `ise`, `logo` identical on both slots (read
+from Linux, 2026-10-11): the installers there say "identical on both slots" and write nothing. Not yet run on a
+device whose slots differ (one that took an OTA); issue #105's power-off at the Trusty/modem handoff was traced to a
+kernel change by its reporter, and this is not claimed as its fix.
 
 ## Users' reports
 

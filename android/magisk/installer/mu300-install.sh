@@ -71,7 +71,7 @@ android_lang() {  # the language of the Android locale: tr, zh or en
 #   untrusted  /sdcard/mu300-install.conf or /sdcard/Download/mu300-install.conf (first found): any app with
 #              storage access can write these, so they choose only what destroys nothing and reveals nothing
 # Trusted values win.
-CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN'
+CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN MU300_SYNC_BOOTCHAIN'
 CONF_SET=
 conf_find() { for _f in "$SDCARD/mu300-install.conf" "$SDCARD/Download/mu300-install.conf"; do [ -f "$_f" ] && { echo "$_f"; return 0; }; done; return 0; }
 # erasing, formatting, overriding the model check and the password: only from a trusted file
@@ -152,6 +152,7 @@ conf_valid() {  # conf_valid KEY VALUE: VALUE is exactly one this installer know
         MU300_DEVICE) case $2 in f50|u30air) return 0 ;; esac ;;
         MU300_LANG) case $2 in en|tr|zh) return 0 ;; esac ;;
         MU300_DRY_RUN) [ "$2" = 1 ] && return 0 ;;
+        MU300_SYNC_BOOTCHAIN) case $2 in 0|1) return 0 ;; esac ;;
         # any characters: it only ever goes to mkpasswd on stdin, never into a path or a command line
         MU300_PASSWORD) [ ${#2} -ge 6 ] && return 0 ;;
     esac
@@ -181,6 +182,7 @@ detect_device() {
         *MU300*|*F50*|*mu300*) DEVICE=f50 ;;
         *) DEVICE= ;;
     esac
+    MODEL_KNOWN=0; [ -z "$DEVICE" ] || MODEL_KNOWN=1
     [ -z "${MU300_DEVICE:-}" ] || DEVICE=$MU300_DEVICE
     [ -n "$DEVICE" ] || die "$(t 'This does not look like a ZTE F50/MU300 or U30 Air. If it is one, put MU300_DEVICE=f50 or u30air into {1}.' "$TRUSTED_CONF")"
 }
@@ -434,6 +436,23 @@ plan_choices() {
     # an if, not an && list: the last command's status is the function's, and set -e would stop main on it
     WIPE_LEGACY=0; if [ "$OS" = ubuntu ] && [ "$FORMAT" = 0 ]; then WIPE_LEGACY=1; fi
 }
+# The Linux slot gets the boot chain of Android's slot - uboot, sml, teecfg, trustos and vbmeta, one firmware build on
+# both slots (issue #86): android-bootchain.sh decides and checks here, android-install.sh copies it before it installs
+# anything, with a backup on the Linux filesystem (.mu300/bootchain). MU300_SYNC_BOOTCHAIN=0 skips that, for experts.
+plan_bootchain() {
+    SYNC_BOOTCHAIN=1; BC_LINE=; BC_REFUSED=
+    if [ "${MU300_SYNC_BOOTCHAIN:-1}" = 0 ]; then
+        SYNC_BOOTCHAIN=0; BC_LINE=$(t 'boot chain:     not synced (MU300_SYNC_BOOTCHAIN=0)'); return 0
+    fi
+    # android-bootchain.sh writes only on a model it knows: one taken from MU300_DEVICE keeps its chain as it is
+    if [ "${MODEL_KNOWN:-1}" = 0 ]; then
+        SYNC_BOOTCHAIN=0; BC_LINE=$(t 'boot chain:     not synced (the model is not recognised)'); return 0
+    fi
+    _bco=$(asw MU300_BY_NAME="$BY" "$ANDROID_SH" "$D/android-bootchain.sh" check 2>&1) || true
+    bootchain_line "$_bco" ||
+        die "$(t 'the boot chain cannot be copied to the Linux slot: {1}' "$BC_REFUSED")
+$(t 'Nothing was changed. Experts can skip this step with MU300_SYNC_BOOTCHAIN=0.')"
+}
 plan_print() {
     echo
     say "$(t 'Plan')"
@@ -458,6 +477,7 @@ plan_print() {
         echo "  $(t 'password:       generated, written to {1}' "$PW_FILE")"
     fi
     echo "  $(t 'writes:         {1}, boot_{2}, 32 bytes of misc (boot_{3}, the partition table and userdata are not touched)' "$([ "$SD_MODE" = 1 ] && echo "$SD_DEV" || t 'the Linux region')" "$LINUX_SLOT" "$ANDROID_SLOT")"
+    echo "  $BC_LINE"
 }
 # Every setting, what it does and the value this run used (or would have: a refused run writes it too, with what
 # was known by then), so nobody has to type it from a README. Any app can write $SDCARD, so it is never opened by
@@ -508,6 +528,8 @@ write_example() {
         echo "#MU300_LANG=${MU300_LANG:-en}"
         echo "# only show what would be done"
         echo "#MU300_DRY_RUN=1"
+        echo "# 0: leave the Linux slot's boot chain (uboot, sml, teecfg, trustos, vbmeta) as it is; experts only"
+        echo "#MU300_SYNC_BOOTCHAIN=1"
     } > "$_new" ) 2>/dev/null &&
         [ -f "$_new" ] && [ ! -L "$_new" ] && rm -f "$_ex" && mv -f "$_new" "$_ex" 2>/dev/null
     rm -f "$_new" 2>/dev/null
@@ -595,7 +617,7 @@ install_env() {
 }
 install_systems() {
     say "$(t 'Installing {1} (this takes a few minutes)' "$OS")"
-    cp "$D/android-install.sh" "$D/android-mount-mu300root.sh" "$W/" || die "$(t 'could not copy the installer files')"
+    cp "$D/android-install.sh" "$D/android-mount-mu300root.sh" "$D/android-bootchain.sh" "$W/" || die "$(t 'could not copy the installer files')"
     install_env
     asw "$ANDROID_SH" "$W/android-install.sh" 2>&1 | tee "$W/device-install.log"
     grep -q MU300-INSTALL-OK "$W/device-install.log" || die "$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")"
@@ -709,6 +731,7 @@ main() {
     plan_storage
     inspect_target
     plan_choices
+    plan_bootchain
     plan_print
     if [ "${MU300_DRY_RUN:-}" = 1 ]; then say "$(t 'Dry run: nothing was written.')"; exit 3; fi
     build_vendor
