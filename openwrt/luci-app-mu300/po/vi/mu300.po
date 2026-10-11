@@ -1245,6 +1245,60 @@ msgstr "Tự động (hỗ trợ %d)"
 msgid "%d locked: %s"
 msgstr "%d đã khóa: %s"
 
+msgid "started"
+msgstr "đã khởi động"
+
+msgid "asleep now (asked)"
+msgstr "ngủ ngay (theo yêu cầu)"
+
+msgid "woken: power daemon stopping"
+msgstr "đã đánh thức: dịch vụ nguồn đang dừng"
+
+msgid "woken by a key"
+msgstr "được đánh thức bằng một phím"
+
+msgid "woken by the Wi-Fi key"
+msgstr "được đánh thức bằng phím Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "đã đánh thức (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "được đánh thức bởi máy tính qua USB"
+
+msgid "woken: plugged in"
+msgstr "đã đánh thức: đã cắm sạc"
+
+msgid "woken by a Wi-Fi client"
+msgstr "được đánh thức bởi máy khách Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "khởi động sạc (bộ sạc bật máy)"
+
+msgid "the hotspot is down"
+msgstr "điểm phát sóng đang tắt"
+
+msgid "the VPN is still stopped"
+msgstr "VPN vẫn đang dừng"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) vẫn tắt sau khi tiếp tục thất bại"
+
+msgid "self-check: %s"
+msgstr "tự kiểm tra: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "đang ngủ: không có máy khách %d phút (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "đang ngủ: cấu hình giờ là %s"
+
+msgid "woken by the %s key"
+msgstr "được đánh thức bằng phím %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "modem đang tạm ngưng (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Nhập số nguyên từ 0 đến %d"
 

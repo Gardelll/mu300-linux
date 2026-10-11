@@ -1245,6 +1245,60 @@ msgstr "Automatisch (%d ondersteund)"
 msgid "%d locked: %s"
 msgstr "%d vergrendeld: %s"
 
+msgid "started"
+msgstr "gestart"
+
+msgid "asleep now (asked)"
+msgstr "nu slapen (gevraagd)"
+
+msgid "woken: power daemon stopping"
+msgstr "gewekt: energiedienst stopt"
+
+msgid "woken by a key"
+msgstr "gewekt door een toets"
+
+msgid "woken by the Wi-Fi key"
+msgstr "gewekt door de wifi-toets"
+
+msgid "woken (mu300-power wake)"
+msgstr "gewekt (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "gewekt door een computer via USB"
+
+msgid "woken: plugged in"
+msgstr "gewekt: aan de lader"
+
+msgid "woken by a Wi-Fi client"
+msgstr "gewekt door een wifi-client"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "laadstart (aangezet door de lader)"
+
+msgid "the hotspot is down"
+msgstr "de hotspot is uit"
+
+msgid "the VPN is still stopped"
+msgstr "de VPN is nog gestopt"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "5G (EN-DC) is nog uit na een mislukte hervatting"
+
+msgid "self-check: %s"
+msgstr "zelftest: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "slaapt: %d min geen client (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "slaapt: profiel nu %s"
+
+msgid "woken by the %s key"
+msgstr "gewekt door de %s-toets"
+
+msgid "the modem is suspended (%s)"
+msgstr "de modem is gepauzeerd (%s)"
+
 msgid "Enter a whole number from 0 to %d"
 msgstr "Voer een geheel getal van 0 tot %d in"
 
