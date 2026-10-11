@@ -2004,8 +2004,8 @@ msgstr "不是此面板支援的分享連結"
 msgid "The config is empty"
 msgstr "設定為空"
 
-msgid "Not an http or https URL"
-msgstr "不是 http 或 https URL"
+msgid "Not an https URL"
+msgstr "不是 https URL"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "名稱無效：1-64 個字元，不含控制字元"
@@ -2207,6 +2207,12 @@ msgstr "保留設定檔"
 
 msgid "Delete with its profiles"
 msgstr "連同設定檔一起刪除"
+
+msgid "Only by hand"
+msgstr "僅手動"
+
+msgid "Every %d h"
+msgstr "每 %d 小時"
 
 msgid "Share links: one profile per link"
 msgstr "分享連結：每個連結一個設定檔"
@@ -2513,6 +2519,9 @@ msgstr "設定未儲存"
 
 msgid "The latency test failed"
 msgstr "延遲測試失敗"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "重新整理間隔為 1 到 999 小時"
 
 msgid "Unknown subscription type"
 msgstr "未知的訂閱類型"

@@ -2004,8 +2004,8 @@ msgstr "Non è un link di condivisione accettato da questo pannello"
 msgid "The config is empty"
 msgstr "La configurazione è vuota"
 
-msgid "Not an http or https URL"
-msgstr "Non è un URL http o https"
+msgid "Not an https URL"
+msgstr "Non è un URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Nome non valido: 1-64 caratteri, senza caratteri di controllo"
@@ -2207,6 +2207,12 @@ msgstr "Mantieni i profili"
 
 msgid "Delete with its profiles"
 msgstr "Elimina con i suoi profili"
+
+msgid "Only by hand"
+msgstr "Solo a mano"
+
+msgid "Every %d h"
+msgstr "Ogni %d h"
 
 msgid "Share links: one profile per link"
 msgstr "Link di condivisione: un profilo per link"
@@ -2513,6 +2519,9 @@ msgstr "La configurazione non è stata salvata"
 
 msgid "The latency test failed"
 msgstr "Test della latenza non riuscito"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "L'intervallo di aggiornamento va da 1 a 999 ore"
 
 msgid "Unknown subscription type"
 msgstr "Tipo di abbonamento sconosciuto"

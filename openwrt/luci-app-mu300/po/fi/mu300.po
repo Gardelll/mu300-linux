@@ -2004,8 +2004,8 @@ msgstr "Ei tämän paneelin hyväksymä jakolinkki"
 msgid "The config is empty"
 msgstr "Asetukset ovat tyhjät"
 
-msgid "Not an http or https URL"
-msgstr "Ei http- tai https-URL"
+msgid "Not an https URL"
+msgstr "Ei https-URL"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Virheellinen nimi: 1-64 merkkiä, ei ohjausmerkkejä"
@@ -2207,6 +2207,12 @@ msgstr "Säilytä profiilit"
 
 msgid "Delete with its profiles"
 msgstr "Poista profiileineen"
+
+msgid "Only by hand"
+msgstr "Vain käsin"
+
+msgid "Every %d h"
+msgstr "%d tunnin välein"
 
 msgid "Share links: one profile per link"
 msgstr "Jakolinkit: yksi profiili linkkiä kohti"
@@ -2513,6 +2519,9 @@ msgstr "Asetuksia ei tallennettu"
 
 msgid "The latency test failed"
 msgstr "Viivetesti epäonnistui"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Päivitysväli on 1–999 tuntia"
 
 msgid "Unknown subscription type"
 msgstr "Tuntematon tilauksen tyyppi"

@@ -2004,8 +2004,8 @@ msgstr "To nie jest link udostępniania akceptowany przez ten panel"
 msgid "The config is empty"
 msgstr "Konfiguracja jest pusta"
 
-msgid "Not an http or https URL"
-msgstr "To nie jest URL http ani https"
+msgid "Not an https URL"
+msgstr "To nie jest adres URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Nieprawidłowa nazwa: 1-64 znaki, bez znaków sterujących"
@@ -2207,6 +2207,12 @@ msgstr "Zachowaj profile"
 
 msgid "Delete with its profiles"
 msgstr "Usuń razem z profilami"
+
+msgid "Only by hand"
+msgstr "Tylko ręcznie"
+
+msgid "Every %d h"
+msgstr "Co %d h"
 
 msgid "Share links: one profile per link"
 msgstr "Linki udostępniania: jeden profil na link"
@@ -2513,6 +2519,9 @@ msgstr "Konfiguracja nie została zapisana"
 
 msgid "The latency test failed"
 msgstr "Test opóźnienia nie powiódł się"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Odstęp odświeżania to od 1 do 999 godzin"
 
 msgid "Unknown subscription type"
 msgstr "Nieznany typ subskrypcji"

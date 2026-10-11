@@ -2004,8 +2004,8 @@ msgstr "Nu este un link de partajare acceptat de acest panou"
 msgid "The config is empty"
 msgstr "Configurația este goală"
 
-msgid "Not an http or https URL"
-msgstr "Nu este un URL http sau https"
+msgid "Not an https URL"
+msgstr "Nu este un URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Nume nevalid: 1-64 de caractere, fără caractere de control"
@@ -2207,6 +2207,12 @@ msgstr "Păstrează profilurile"
 
 msgid "Delete with its profiles"
 msgstr "Șterge împreună cu profilurile"
+
+msgid "Only by hand"
+msgstr "Doar manual"
+
+msgid "Every %d h"
+msgstr "La fiecare %d h"
 
 msgid "Share links: one profile per link"
 msgstr "Linkuri de partajare: un profil pentru fiecare link"
@@ -2513,6 +2519,9 @@ msgstr "Configurația nu a fost salvată"
 
 msgid "The latency test failed"
 msgstr "Testul de latență a eșuat"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Intervalul de reîmprospătare este între 1 și 999 de ore"
 
 msgid "Unknown subscription type"
 msgstr "Tip de abonament necunoscut"

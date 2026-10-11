@@ -2004,8 +2004,8 @@ msgstr "Бұл панель қабылдайтын бөлісу сілтемес
 msgid "The config is empty"
 msgstr "Конфигурация бос"
 
-msgid "Not an http or https URL"
-msgstr "http немесе https URL емес"
+msgid "Not an https URL"
+msgstr "Бұл https URL емес"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Жарамсыз атау: 1-64 таңба, басқару таңбаларынсыз"
@@ -2207,6 +2207,12 @@ msgstr "Профильдерді сақтау"
 
 msgid "Delete with its profiles"
 msgstr "Профильдерімен бірге жою"
+
+msgid "Only by hand"
+msgstr "Тек қолмен"
+
+msgid "Every %d h"
+msgstr "Әр %d сағат сайын"
 
 msgid "Share links: one profile per link"
 msgstr "Бөлісу сілтемелері: әр сілтемеге бір профиль"
@@ -2513,6 +2519,9 @@ msgstr "Конфигурация сақталмады"
 
 msgid "The latency test failed"
 msgstr "Кідірісті өлшеу сәтсіз аяқталды"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Жаңарту аралығы 1-ден 999 сағатқа дейін"
 
 msgid "Unknown subscription type"
 msgstr "Белгісіз жазылым түрі"

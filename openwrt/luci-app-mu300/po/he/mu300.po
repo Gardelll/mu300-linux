@@ -2004,8 +2004,8 @@ msgstr "לא קישור שיתוף שלוח זה מקבל"
 msgid "The config is empty"
 msgstr "התצורה ריקה"
 
-msgid "Not an http or https URL"
-msgstr "לא כתובת URL של http או https"
+msgid "Not an https URL"
+msgstr "זו אינה כתובת URL מסוג https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "שם לא תקין: 1-64 תווים, ללא תווי בקרה"
@@ -2207,6 +2207,12 @@ msgstr "שמירת הפרופילים"
 
 msgid "Delete with its profiles"
 msgstr "מחיקה יחד עם הפרופילים"
+
+msgid "Only by hand"
+msgstr "ידנית בלבד"
+
+msgid "Every %d h"
+msgstr "כל %d שעות"
 
 msgid "Share links: one profile per link"
 msgstr "קישורי שיתוף: פרופיל אחד לכל קישור"
@@ -2513,6 +2519,9 @@ msgstr "התצורה לא נשמרה"
 
 msgid "The latency test failed"
 msgstr "בדיקת ההשהיה נכשלה"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "מרווח הרענון הוא 1 עד 999 שעות"
 
 msgid "Unknown subscription type"
 msgstr "סוג מנוי לא מוכר"

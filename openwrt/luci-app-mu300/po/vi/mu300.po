@@ -2004,8 +2004,8 @@ msgstr "Không phải liên kết chia sẻ mà bảng điều khiển này ch�
 msgid "The config is empty"
 msgstr "Cấu hình trống"
 
-msgid "Not an http or https URL"
-msgstr "Không phải URL http hoặc https"
+msgid "Not an https URL"
+msgstr "Không phải URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Tên không hợp lệ: 1-64 ký tự, không có ký tự điều khiển"
@@ -2207,6 +2207,12 @@ msgstr "Giữ các hồ sơ"
 
 msgid "Delete with its profiles"
 msgstr "Xóa cùng các hồ sơ"
+
+msgid "Only by hand"
+msgstr "Chỉ thủ công"
+
+msgid "Every %d h"
+msgstr "Mỗi %d giờ"
 
 msgid "Share links: one profile per link"
 msgstr "Liên kết chia sẻ: mỗi liên kết một hồ sơ"
@@ -2513,6 +2519,9 @@ msgstr "Cấu hình chưa được lưu"
 
 msgid "The latency test failed"
 msgstr "Kiểm tra độ trễ thất bại"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Khoảng làm mới là từ 1 đến 999 giờ"
 
 msgid "Unknown subscription type"
 msgstr "Loại gói đăng ký không xác định"

@@ -2004,8 +2004,8 @@ msgstr "このパネルが受け付ける共有リンクではありません"
 msgid "The config is empty"
 msgstr "設定が空です"
 
-msgid "Not an http or https URL"
-msgstr "http または https の URL ではありません"
+msgid "Not an https URL"
+msgstr "https の URL ではありません"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "無効な名前: 1〜64 文字、制御文字は不可"
@@ -2207,6 +2207,12 @@ msgstr "プロファイルを残す"
 
 msgid "Delete with its profiles"
 msgstr "プロファイルごと削除"
+
+msgid "Only by hand"
+msgstr "手動のみ"
+
+msgid "Every %d h"
+msgstr "%d 時間ごと"
 
 msgid "Share links: one profile per link"
 msgstr "共有リンク: リンクごとに 1 つのプロファイル"
@@ -2513,6 +2519,9 @@ msgstr "設定は保存されませんでした"
 
 msgid "The latency test failed"
 msgstr "レイテンシーテストに失敗しました"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "更新間隔は 1〜999 時間です"
 
 msgid "Unknown subscription type"
 msgstr "不明なサブスクリプションの種類"

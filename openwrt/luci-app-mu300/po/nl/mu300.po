@@ -2004,8 +2004,8 @@ msgstr "Geen deellink die dit paneel accepteert"
 msgid "The config is empty"
 msgstr "De configuratie is leeg"
 
-msgid "Not an http or https URL"
-msgstr "Geen http- of https-URL"
+msgid "Not an https URL"
+msgstr "Geen https-URL"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Ongeldige naam: 1-64 tekens, geen besturingstekens"
@@ -2207,6 +2207,12 @@ msgstr "Profielen behouden"
 
 msgid "Delete with its profiles"
 msgstr "Verwijderen met profielen"
+
+msgid "Only by hand"
+msgstr "Alleen handmatig"
+
+msgid "Every %d h"
+msgstr "Elke %d u"
 
 msgid "Share links: one profile per link"
 msgstr "Deellinks: één profiel per link"
@@ -2513,6 +2519,9 @@ msgstr "De configuratie is niet opgeslagen"
 
 msgid "The latency test failed"
 msgstr "De latentietest is mislukt"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Het vernieuwingsinterval is 1 tot 999 uur"
 
 msgid "Unknown subscription type"
 msgstr "Onbekend abonnementstype"

@@ -2004,8 +2004,8 @@ msgstr "Bu panelin qəbul etdiyi paylaşım keçidi deyil"
 msgid "The config is empty"
 msgstr "Konfiqurasiya boşdur"
 
-msgid "Not an http or https URL"
-msgstr "http və ya https URL-i deyil"
+msgid "Not an https URL"
+msgstr "https URL deyil"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Yanlış ad: 1-64 simvol, idarəetmə simvolları olmadan"
@@ -2207,6 +2207,12 @@ msgstr "Profilləri saxla"
 
 msgid "Delete with its profiles"
 msgstr "Profilləri ilə birlikdə sil"
+
+msgid "Only by hand"
+msgstr "Yalnız əl ilə"
+
+msgid "Every %d h"
+msgstr "Hər %d saatdan bir"
 
 msgid "Share links: one profile per link"
 msgstr "Paylaşım keçidləri: hər keçid üçün bir profil"
@@ -2513,6 +2519,9 @@ msgstr "Konfiqurasiya yadda saxlanmadı"
 
 msgid "The latency test failed"
 msgstr "Gecikmə testi uğursuz oldu"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Yeniləmə aralığı 1 ilə 999 saat arasındadır"
 
 msgid "Unknown subscription type"
 msgstr "Naməlum abunəlik növü"

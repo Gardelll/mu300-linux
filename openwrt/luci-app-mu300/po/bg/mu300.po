@@ -2004,8 +2004,8 @@ msgstr "Не е връзка за споделяне, която този пан
 msgid "The config is empty"
 msgstr "Конфигурацията е празна"
 
-msgid "Not an http or https URL"
-msgstr "Не е http или https URL"
+msgid "Not an https URL"
+msgstr "Това не е https URL"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Невалидно име: 1-64 знака, без управляващи знаци"
@@ -2207,6 +2207,12 @@ msgstr "Запази профилите"
 
 msgid "Delete with its profiles"
 msgstr "Изтрий заедно с профилите"
+
+msgid "Only by hand"
+msgstr "Само ръчно"
+
+msgid "Every %d h"
+msgstr "На всеки %d ч"
 
 msgid "Share links: one profile per link"
 msgstr "Връзки за споделяне: един профил на връзка"
@@ -2513,6 +2519,9 @@ msgstr "Конфигурацията не беше запазена"
 
 msgid "The latency test failed"
 msgstr "Тестът на латентността не успя"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Интервалът за опресняване е от 1 до 999 часа"
 
 msgid "Unknown subscription type"
 msgstr "Непознат тип абонамент"

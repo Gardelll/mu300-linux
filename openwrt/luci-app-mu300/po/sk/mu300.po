@@ -2004,8 +2004,8 @@ msgstr "Nie je to zdieľaný odkaz, ktorý tento panel prijíma"
 msgid "The config is empty"
 msgstr "Konfigurácia je prázdna"
 
-msgid "Not an http or https URL"
-msgstr "Nie je to URL http ani https"
+msgid "Not an https URL"
+msgstr "Nejde o adresu URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Neplatný názov: 1-64 znakov, bez riadiacich znakov"
@@ -2207,6 +2207,12 @@ msgstr "Ponechať profily"
 
 msgid "Delete with its profiles"
 msgstr "Odstrániť aj s profilmi"
+
+msgid "Only by hand"
+msgstr "Len ručne"
+
+msgid "Every %d h"
+msgstr "Každých %d h"
 
 msgid "Share links: one profile per link"
 msgstr "Zdieľané odkazy: jeden profil na odkaz"
@@ -2513,6 +2519,9 @@ msgstr "Konfigurácia sa neuložila"
 
 msgid "The latency test failed"
 msgstr "Test latencie zlyhal"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Interval obnovenia je 1 až 999 hodín"
 
 msgid "Unknown subscription type"
 msgstr "Neznámy typ odberu"

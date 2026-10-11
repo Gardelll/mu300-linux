@@ -2004,8 +2004,8 @@ msgstr "이 패널이 받는 공유 링크가 아닙니다"
 msgid "The config is empty"
 msgstr "구성이 비어 있습니다"
 
-msgid "Not an http or https URL"
-msgstr "http 또는 https URL이 아닙니다"
+msgid "Not an https URL"
+msgstr "https URL이 아닙니다"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "잘못된 이름: 1-64자, 제어 문자 불가"
@@ -2207,6 +2207,12 @@ msgstr "프로필 유지"
 
 msgid "Delete with its profiles"
 msgstr "프로필과 함께 삭제"
+
+msgid "Only by hand"
+msgstr "수동으로만"
+
+msgid "Every %d h"
+msgstr "%d시간마다"
 
 msgid "Share links: one profile per link"
 msgstr "공유 링크: 링크당 프로필 하나"
@@ -2513,6 +2519,9 @@ msgstr "구성이 저장되지 않았습니다"
 
 msgid "The latency test failed"
 msgstr "지연 시간 측정에 실패했습니다"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "새로 고침 간격은 1~999시간입니다"
 
 msgid "Unknown subscription type"
 msgstr "알 수 없는 구독 유형"

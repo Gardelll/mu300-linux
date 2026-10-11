@@ -2004,8 +2004,8 @@ msgstr "ليس رابط مشاركة تقبله هذه اللوحة"
 msgid "The config is empty"
 msgstr "الإعداد فارغ"
 
-msgid "Not an http or https URL"
-msgstr "ليس URL من نوع http أو https"
+msgid "Not an https URL"
+msgstr "ليس عنوان URL من نوع https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "اسم غير صالح: من 1 إلى 64 حرفًا، دون أحرف تحكم"
@@ -2207,6 +2207,12 @@ msgstr "الإبقاء على الملفات الشخصية"
 
 msgid "Delete with its profiles"
 msgstr "الحذف مع ملفاته الشخصية"
+
+msgid "Only by hand"
+msgstr "يدويًا فقط"
+
+msgid "Every %d h"
+msgstr "كل %d ساعة"
 
 msgid "Share links: one profile per link"
 msgstr "روابط المشاركة: ملف شخصي واحد لكل رابط"
@@ -2513,6 +2519,9 @@ msgstr "لم يُحفظ الإعداد"
 
 msgid "The latency test failed"
 msgstr "فشل اختبار زمن الاستجابة"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "يجب أن تكون فترة التحديث من 1 إلى 999 ساعة"
 
 msgid "Unknown subscription type"
 msgstr "نوع اشتراك غير معروف"

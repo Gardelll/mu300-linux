@@ -2004,8 +2004,8 @@ msgstr "Bukan tautan bagikan yang diterima panel ini"
 msgid "The config is empty"
 msgstr "Konfigurasi kosong"
 
-msgid "Not an http or https URL"
-msgstr "Bukan URL http atau https"
+msgid "Not an https URL"
+msgstr "Bukan URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Nama tidak valid: 1-64 karakter, tanpa karakter kontrol"
@@ -2207,6 +2207,12 @@ msgstr "Pertahankan profil"
 
 msgid "Delete with its profiles"
 msgstr "Hapus beserta profilnya"
+
+msgid "Only by hand"
+msgstr "Hanya manual"
+
+msgid "Every %d h"
+msgstr "Setiap %d jam"
 
 msgid "Share links: one profile per link"
 msgstr "Tautan bagikan: satu profil per tautan"
@@ -2513,6 +2519,9 @@ msgstr "Konfigurasi tidak disimpan"
 
 msgid "The latency test failed"
 msgstr "Pengujian latensi gagal"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Interval penyegaran adalah 1 sampai 999 jam"
 
 msgid "Unknown subscription type"
 msgstr "Jenis langganan tidak dikenal"

@@ -2004,8 +2004,8 @@ msgstr "Δεν είναι σύνδεσμος κοινοποίησης που δ�
 msgid "The config is empty"
 msgstr "Η διαμόρφωση είναι κενή"
 
-msgid "Not an http or https URL"
-msgstr "Δεν είναι URL http ή https"
+msgid "Not an https URL"
+msgstr "Δεν είναι URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Μη έγκυρο όνομα: 1-64 χαρακτήρες, χωρίς χαρακτήρες ελέγχου"
@@ -2207,6 +2207,12 @@ msgstr "Διατήρηση των προφίλ"
 
 msgid "Delete with its profiles"
 msgstr "Διαγραφή μαζί με τα προφίλ"
+
+msgid "Only by hand"
+msgstr "Μόνο χειροκίνητα"
+
+msgid "Every %d h"
+msgstr "Κάθε %d ώρες"
 
 msgid "Share links: one profile per link"
 msgstr "Σύνδεσμοι κοινοποίησης: ένα προφίλ ανά σύνδεσμο"
@@ -2513,6 +2519,9 @@ msgstr "Η διαμόρφωση δεν αποθηκεύτηκε"
 
 msgid "The latency test failed"
 msgstr "Η δοκιμή καθυστέρησης απέτυχε"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Το διάστημα ανανέωσης είναι από 1 έως 999 ώρες"
 
 msgid "Unknown subscription type"
 msgstr "Άγνωστος τύπος συνδρομής"

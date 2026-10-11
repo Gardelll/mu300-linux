@@ -2004,8 +2004,8 @@ msgstr "Ez a panel nem fogad el ilyen megosztási hivatkozást"
 msgid "The config is empty"
 msgstr "A konfiguráció üres"
 
-msgid "Not an http or https URL"
-msgstr "Nem http vagy https URL"
+msgid "Not an https URL"
+msgstr "Nem https URL"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Érvénytelen név: 1-64 karakter, vezérlőkarakterek nélkül"
@@ -2207,6 +2207,12 @@ msgstr "Profilok megtartása"
 
 msgid "Delete with its profiles"
 msgstr "Törlés a profiljaival együtt"
+
+msgid "Only by hand"
+msgstr "Csak kézzel"
+
+msgid "Every %d h"
+msgstr "%d óránként"
 
 msgid "Share links: one profile per link"
 msgstr "Megosztási hivatkozások: hivatkozásonként egy profil"
@@ -2513,6 +2519,9 @@ msgstr "A konfiguráció nem lett mentve"
 
 msgid "The latency test failed"
 msgstr "A késleltetésmérés sikertelen"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "A frissítési időköz 1 és 999 óra között lehet"
 
 msgid "Unknown subscription type"
 msgstr "Ismeretlen előfizetéstípus"

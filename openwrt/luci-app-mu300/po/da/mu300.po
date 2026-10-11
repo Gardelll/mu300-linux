@@ -2004,8 +2004,8 @@ msgstr "Ikke et delingslink, som dette panel accepterer"
 msgid "The config is empty"
 msgstr "Konfigurationen er tom"
 
-msgid "Not an http or https URL"
-msgstr "Ikke en http- eller https-URL"
+msgid "Not an https URL"
+msgstr "Ikke en https-URL"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Ugyldigt navn: 1-64 tegn, ingen kontroltegn"
@@ -2207,6 +2207,12 @@ msgstr "Behold profilerne"
 
 msgid "Delete with its profiles"
 msgstr "Slet med dets profiler"
+
+msgid "Only by hand"
+msgstr "Kun manuelt"
+
+msgid "Every %d h"
+msgstr "Hver %d. time"
 
 msgid "Share links: one profile per link"
 msgstr "Delingslinks: én profil pr. link"
@@ -2513,6 +2519,9 @@ msgstr "Konfigurationen blev ikke gemt"
 
 msgid "The latency test failed"
 msgstr "Latenstesten mislykkedes"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Opdateringsintervallet er 1 til 999 timer"
 
 msgid "Unknown subscription type"
 msgstr "Ukendt abonnementstype"

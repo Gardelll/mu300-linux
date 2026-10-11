@@ -2004,8 +2004,8 @@ msgstr "Bu panelin kabul ettiği bir paylaşım bağlantısı değil"
 msgid "The config is empty"
 msgstr "Yapılandırma boş"
 
-msgid "Not an http or https URL"
-msgstr "http veya https URL'si değil"
+msgid "Not an https URL"
+msgstr "https URL'si değil"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Geçersiz ad: 1-64 karakter, denetim karakteri olmadan"
@@ -2207,6 +2207,12 @@ msgstr "Profilleri koru"
 
 msgid "Delete with its profiles"
 msgstr "Profilleriyle birlikte sil"
+
+msgid "Only by hand"
+msgstr "Yalnızca elle"
+
+msgid "Every %d h"
+msgstr "%d saatte bir"
 
 msgid "Share links: one profile per link"
 msgstr "Paylaşım bağlantıları: her bağlantıya bir profil"
@@ -2513,6 +2519,9 @@ msgstr "Yapılandırma kaydedilmedi"
 
 msgid "The latency test failed"
 msgstr "Gecikme ölçümü başarısız"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Yenileme aralığı 1 ile 999 saat arasında olmalı"
 
 msgid "Unknown subscription type"
 msgstr "Bilinmeyen abonelik türü"

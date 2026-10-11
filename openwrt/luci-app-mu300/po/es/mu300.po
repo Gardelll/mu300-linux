@@ -2004,8 +2004,8 @@ msgstr "No es un enlace para compartir que admita este panel"
 msgid "The config is empty"
 msgstr "La configuración está vacía"
 
-msgid "Not an http or https URL"
-msgstr "No es una URL http o https"
+msgid "Not an https URL"
+msgstr "No es una URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Nombre no válido: de 1 a 64 caracteres, sin caracteres de control"
@@ -2207,6 +2207,12 @@ msgstr "Conservar los perfiles"
 
 msgid "Delete with its profiles"
 msgstr "Eliminar con sus perfiles"
+
+msgid "Only by hand"
+msgstr "Solo a mano"
+
+msgid "Every %d h"
+msgstr "Cada %d h"
 
 msgid "Share links: one profile per link"
 msgstr "Enlaces para compartir: un perfil por enlace"
@@ -2513,6 +2519,9 @@ msgstr "La configuración no se guardó"
 
 msgid "The latency test failed"
 msgstr "Falló la medición de latencia"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "El intervalo de actualización es de 1 a 999 horas"
 
 msgid "Unknown subscription type"
 msgstr "Tipo de suscripción desconocido"

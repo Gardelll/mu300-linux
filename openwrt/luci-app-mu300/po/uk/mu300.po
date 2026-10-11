@@ -2004,8 +2004,8 @@ msgstr "Це не посилання для обміну, яке приймає 
 msgid "The config is empty"
 msgstr "Конфігурація порожня"
 
-msgid "Not an http or https URL"
-msgstr "Це не URL http чи https"
+msgid "Not an https URL"
+msgstr "Це не URL https"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Недійсна назва: 1-64 символи, без керувальних символів"
@@ -2207,6 +2207,12 @@ msgstr "Залишити профілі"
 
 msgid "Delete with its profiles"
 msgstr "Видалити разом із профілями"
+
+msgid "Only by hand"
+msgstr "Лише вручну"
+
+msgid "Every %d h"
+msgstr "Кожні %d год"
 
 msgid "Share links: one profile per link"
 msgstr "Посилання для обміну: один профіль на посилання"
@@ -2513,6 +2519,9 @@ msgstr "Конфігурацію не збережено"
 
 msgid "The latency test failed"
 msgstr "Вимірювання затримки не вдалося"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Інтервал оновлення — від 1 до 999 годин"
 
 msgid "Unknown subscription type"
 msgstr "Невідомий тип підписки"

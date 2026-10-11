@@ -2004,8 +2004,8 @@ msgstr "Inte en delningslänk som den här panelen tar emot"
 msgid "The config is empty"
 msgstr "Konfigurationen är tom"
 
-msgid "Not an http or https URL"
-msgstr "Inte en http- eller https-URL"
+msgid "Not an https URL"
+msgstr "Inte en https-URL"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "Ogiltigt namn: 1-64 tecken, inga styrtecken"
@@ -2207,6 +2207,12 @@ msgstr "Behåll profilerna"
 
 msgid "Delete with its profiles"
 msgstr "Radera med profilerna"
+
+msgid "Only by hand"
+msgstr "Bara manuellt"
+
+msgid "Every %d h"
+msgstr "Var %d:e timme"
 
 msgid "Share links: one profile per link"
 msgstr "Delningslänkar: en profil per länk"
@@ -2513,6 +2519,9 @@ msgstr "Konfigurationen sparades inte"
 
 msgid "The latency test failed"
 msgstr "Latenstestet misslyckades"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "Uppdateringsintervallet är 1 till 999 timmar"
 
 msgid "Unknown subscription type"
 msgstr "Okänd prenumerationstyp"

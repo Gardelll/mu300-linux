@@ -2004,8 +2004,8 @@ msgstr "پیوند اشتراک‌گذاری‌ای نیست که این پنل 
 msgid "The config is empty"
 msgstr "پیکربندی خالی است"
 
-msgid "Not an http or https URL"
-msgstr "URL با http یا https نیست"
+msgid "Not an https URL"
+msgstr "یک URL از نوع https نیست"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "نام نامعتبر: 1 تا 64 نویسه، بدون نویسه کنترلی"
@@ -2207,6 +2207,12 @@ msgstr "نگه داشتن پروفایل‌ها"
 
 msgid "Delete with its profiles"
 msgstr "حذف همراه پروفایل‌ها"
+
+msgid "Only by hand"
+msgstr "فقط دستی"
+
+msgid "Every %d h"
+msgstr "هر %d ساعت"
 
 msgid "Share links: one profile per link"
 msgstr "پیوندهای اشتراک‌گذاری: یک پروفایل برای هر پیوند"
@@ -2513,6 +2519,9 @@ msgstr "پیکربندی ذخیره نشد"
 
 msgid "The latency test failed"
 msgstr "سنجش تأخیر ناموفق بود"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "فاصلهٔ به‌روزرسانی ۱ تا ۹۹۹ ساعت است"
 
 msgid "Unknown subscription type"
 msgstr "نوع اشتراک ناشناخته"

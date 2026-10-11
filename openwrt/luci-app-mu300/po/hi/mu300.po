@@ -2004,8 +2004,8 @@ msgstr "यह इस पैनल द्वारा स्वीकार क�
 msgid "The config is empty"
 msgstr "कॉन्फ़िग खाली है"
 
-msgid "Not an http or https URL"
-msgstr "http या https URL नहीं है"
+msgid "Not an https URL"
+msgstr "यह https URL नहीं है"
 
 msgid "Invalid name: 1-64 characters, no control characters"
 msgstr "अमान्य नाम: 1-64 अक्षर, कोई कंट्रोल कैरेक्टर नहीं"
@@ -2207,6 +2207,12 @@ msgstr "प्रोफ़ाइल रखें"
 
 msgid "Delete with its profiles"
 msgstr "प्रोफ़ाइल सहित हटाएँ"
+
+msgid "Only by hand"
+msgstr "केवल हाथ से"
+
+msgid "Every %d h"
+msgstr "हर %d घंटे"
 
 msgid "Share links: one profile per link"
 msgstr "शेयर लिंक: हर लिंक पर एक प्रोफ़ाइल"
@@ -2513,6 +2519,9 @@ msgstr "कॉन्फ़िग सहेजा नहीं गया"
 
 msgid "The latency test failed"
 msgstr "लेटेंसी जाँच विफल रही"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "रीफ़्रेश अंतराल 1 से 999 घंटे है"
 
 msgid "Unknown subscription type"
 msgstr "अज्ञात सब्सक्रिप्शन प्रकार"
