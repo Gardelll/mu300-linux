@@ -259,7 +259,7 @@ class InstallEnv(ShellTest):
             self.assertEqual(e['PWHASH'], "'$6$salt$hash/x.y'")
             self.assertEqual(list(e), ['OFF', 'SIZE', 'OFF_S', 'SIZE_S', 'FORMAT', 'OSES', 'WIPE_LEGACY', 'UPDATE',
                                        'BOOT_OS', 'DEFAULT_LINUX', 'BOOT_ATTEMPTS', 'IMPORT_HOTSPOT', 'KERNEL',
-                                       'SD_MODE', 'SD_DEV', 'INTERNAL_EXISTS', 'PWHASH'])
+                                       'SD_MODE', 'SD_DEV', 'INTERNAL_EXISTS', 'ADB', 'ADB_KEY', 'PWHASH'])
 
     def test_internal_mode(self):
         for shell in self.each_shell():
@@ -270,6 +270,37 @@ class InstallEnv(ShellTest):
             self.assertEqual((e['OFF'], e['SIZE'], e['OFF_S'], e['SIZE_S']),
                              ('27762098176', '34776023040', '54222848', '67921920'))
             self.assertEqual((e['FORMAT'], e['UPDATE']), ('0', '1'))
+
+    def test_adb(self):
+        key = 'QAAAA' + 'A' * 694 + '='
+        for shell in self.each_shell():
+            e = self.parse(self.write_env(shell, **self.COMMON, SIZE=1, INT_SIZE='', SD_MODE=0, SD_DEV='',
+                                          INTERNAL_EXISTS=0))
+            self.assertEqual((e['ADB'], e['ADB_KEY']), ('0', "''"))      # off when nobody asked
+            e = self.parse(self.write_env(shell, **self.COMMON, SIZE=1, INT_SIZE='', SD_MODE=0, SD_DEV='',
+                                          INTERNAL_EXISTS=0, ADB=1, ADB_KEY=f'{key} me@pc'))
+            self.assertEqual((e['ADB'], e['ADB_KEY']), ('1', f"'{key} me@pc'"))
+
+    def test_adb_pubkey(self):
+        key = 'QAAAA' + 'A' * 694 + '='
+        f = self.tmp / 'adbkey.pub'
+        cases = [(f'{key} me@my-mac.local', f'{key} me@my-mac.local'),     # adbkey.pub: no newline at the end
+                 (f'{key} evil\'$(reboot)`x`\n', f'{key} evilrebootx'),     # a name that could leave the quotes
+                 (key, f'{key} installer'),
+                 ('ssh-rsa AAAAB3NzaC1yc2E me@pc\n', None), (key[1:] + ' x', None), (key[:-1] + 'A', None),
+                 ('QAAAA' + 'A' * 693 + "'=", None), ('', None)]
+        for shell in self.each_shell():
+            for text, want in cases:
+                f.write_text(text)
+                r = self.sh(shell, f'. "{TOP}/tools/storage.sh"; adb_pubkey "{f}"')
+                if want is None:
+                    self.assertEqual(1, r.returncode, text)
+                    self.assertEqual('', r.stdout)
+                else:
+                    self.assertEqual(0, r.returncode, r.stderr)
+                    self.assertEqual(want + '\n', r.stdout)
+            r = self.sh(shell, f'. "{TOP}/tools/storage.sh"; adb_pubkey "{self.tmp}/none"')
+            self.assertEqual(1, r.returncode)
 
     def test_installer_writes_the_env_file_with_it(self):
         src = (TOP / 'install.sh').read_text()

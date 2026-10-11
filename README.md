@@ -343,6 +343,32 @@ the archive once online). `mu300-panel status` says where it is.
 | Save battery: profiles, radios that go idle when nobody is connected, a charge limit | `mu300-power status`, `sudo mu300-power profile battery` (`plugged`, `saver`, `auto`), `sudo mu300-power set battery.WIFI_IDLE 10`, `mu300-power log 5 /tmp/power.csv`; on `openwrt-luci` the page System -> Power. A boot that started from a charger stays a charging boot (LED blinking, hotspot and modem down) until the Wi-Fi key is pressed; see FINDINGS 36 |
 | Language of the web interface (OpenWrt) | System -> System -> Language and Style; more languages: see Languages below |
 | Find out which LED is which | `sudo mu300-led test` |
+| `adb shell`, `adb push`/`pull`, `adb forward` to Linux from a computer, as with Android | `sudo mu300-usb adb key adbkey.pub` (the computer's `~/.android/adbkey.pub`), then `sudo mu300-usb adb on`; see [adb to Linux](#adb-to-linux) |
+
+### adb to Linux
+
+Linux can offer adb over the USB cable, next to the USB network and the serial console, as Android does: `adb shell`
+(a root login shell), `adb push`/`pull`, `adb forward`/`reverse`. It is **off by default**. adb has no password:
+**anyone whose adb key is authorised gets a root shell**, so authorise only your own computers.
+
+```sh
+# on the computer: the key adb made for itself (adb keygen makes one where there is none)
+scp ~/.android/adbkey.pub ubuntu@192.168.77.1:      # root@ on OpenWrt; 192.168.78.1 on a U30 Air
+# on the device
+sudo mu300-usb adb key ~/adbkey.pub    # authorise it (/etc/mu300/adb_keys)
+sudo mu300-usb adb on                  # the USB connection drops for a moment and comes back with adb
+sudo mu300-usb adb keys                # the authorised keys; delete a line of /etc/mu300/adb_keys to take one back
+sudo mu300-usb adb off
+```
+
+The installers ask whether to turn it on for the computer they run on (`install.sh`, `install.ps1`). The device shows
+up in `adb devices` as `MU300LINUX-...`; a device in Android has another serial number. A computer whose key is not
+authorised sees it as `unauthorized` and gets nothing: there is no prompt to accept a key on the device, no TCP port
+(adb over Wi-Fi is left out) and no setting that turns the check off. Like Android's, the adb interface asks Windows
+for its WinUSB driver (MS OS descriptors; not tried on Windows yet - without it, Google's USB driver serves). The
+setting stays across reboots and updates; it needs a kernel with FunctionFS (5.4, and the mainline kernels from this
+release on). The daemon is AOSP's adbd (platform-tools 34.0.5), built static for both systems by
+`tools/adbd/build.sh`; see FINDINGS 43.
 
 
 ### Installing from Android with a Magisk zip

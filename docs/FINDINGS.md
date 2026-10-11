@@ -104,6 +104,9 @@ what replaced it. The table below gives each section's state.
 | 38b | RNDIS: the port kept the bridge's address | current (fixed) |
 | 38c | fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails | current (fixed at boot; a reload by hand still needs the flowtable deleted first) |
 | 40 | One stuck AT command wedged the control panel; a second per AT command on OpenWrt | current (fixed) |
+| 41 | The vendor daemons' own account | current |
+| 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
+| 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 
 ## Hardware and firmware facts
 
@@ -3500,3 +3503,65 @@ channel 149 works.
   (OpenWrt 25.12.5, ImmortalWrt 25.12.2 and the v2026.10.18 rootfs) and the hostapd configuration they generate for
   a fake wiphy with and without radar detection. Not yet on a device: the hotspot on 36 after LuCI was set to 60,
   and ACS (`auto` in LuCI) on this driver.
+
+### 43. adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it
+
+`mu300-usb adb on|off` (off by default) puts AOSP's adbd into the USB gadget next to the network function and the
+ACM console: `adb shell`, `push`, `pull`, `forward` from a computer, as with Android.
+
+**Which adbd.** Ubuntu 26.04 (not 24.04) packages Debian's `adbd` 34.0.5, but Debian patches it to require no
+authorisation at all on Linux (`adbd-don-t-require-authorization-on-Linux.patch`) and it listens on TCP 5555 when it
+finds no FunctionFS: a root shell for anyone on the LAN and the hotspot. It is also glibc-only. Alpine's and nmeum's
+`android-tools` build the host tools, not the daemon. So `tools/adbd/build.sh` builds it: the daemon's sources from
+nmeum's `android-tools` 34.0.5 release tarball (AOSP with BoringSSL vendored; SHA-256 pinned), a CMakeLists of its
+own for adbd alone, static against musl in Alpine 3.20: one aarch64 binary of 2.49 MB (stripped) for Ubuntu and
+OpenWrt, built in under two minutes, shipped in the images (`/opt/mu300/bin/adbd`). JDWP, adb over Wi-Fi (pairing)
+and mDNS are stubbed out (`stubs.cpp`), and protobuf with them. `mu300-adbd.patch`:
+
+* `auth_required = true` on Linux, always (ro.adb.secure=1). Keys come from `/etc/mu300/adb_keys` and
+  `/root/.android/adb_keys` only; Android's framework socket, through which the "allow USB debugging?" dialog
+  approves a key, is never taken (it would come from the environment, `ANDROID_SOCKET_adbd`). An unknown key gets
+  `unauthorized` and stays there.
+* USB only: FunctionFS on Linux (Debian's patch), and no TCP or vsock listener whatever the properties or the
+  environment say (`ADBD_PORT`); without FunctionFS adbd exits.
+* umask 022 instead of 0, and pushed files keep the computer's mode without group/other write (Android copies the
+  owner's bits to group and others: a pushed file was `rw-rw-rw-`).
+* `adb shell` without a command starts the user's login shell (bash on Ubuntu, ash on OpenWrt), `TMPDIR=/tmp`.
+* musl: `UsbFfsConnection::StopWorker` waited for `pthread_kill(t, 0)` to say `ESRCH`, which musl does not for a
+  thread that has exited but is not joined; adbd hung for good at the end of the first USB connection (an unbind,
+  a computer that goes away). The worker now says when it is done.
+
+**The gadget.** `ffs.adb` is the third function of `configs/c.1` (`f3`): the network and the console keep their
+interface numbers (macOS' NCM, Windows' RNDIS binding by MS OS descriptor for interface 0). VID/PID stay; adb finds
+the interface by its class (ff/42/01). While adb is in the gadget, bcdDevice is 0x0303 (0x0304 with RNDIS), as
+Windows caches MS OS descriptors per VID/PID/bcdDevice, and the descriptors are on with NCM/ECM too, so that adbd's
+WINUSB compatible ID reaches Windows (not tried on Windows: the Windows host was not reachable).
+
+boot/init makes and binds the gadget before any system runs; adbd comes later, so `mu300-adbd run` (the
+`mu300-adbd` service, systemd and procd) rebinds once: it starts adbd, waits for its descriptors (`ep1` appears),
+unbinds, links `f3`, binds again. FunctionFS needs the descriptors before the bind and refuses a bind without
+them, so a gadget that will not bind with adb is bound without it. Two kernel behaviours shape the rest:
+
+* `ffs_closed()` calls `unregister_gadget_item()` - the whole gadget comes off the UDC - whenever the last file of
+  a bound FunctionFS instance is closed, and adbd closes and reopens its endpoints at the end of every connection.
+  Android's init binds the gadget again (`sys.usb.ffs.ready`); here the loop of `mu300-adbd run` does, after five
+  seconds (mu300-usb-reset and OpenWrt's LAN hook unbind on purpose and bind again themselves), not in the U30 Air's
+  host role.
+* adbd closes and rewrites its descriptors every second while no bind comes (`timed out while waiting for
+  FUNCTIONFS_BIND`); a bind in that gap fails, so binds are retried 0.2 s apart.
+
+Measured on F50-B (Ubuntu 24.04, 7.2.9 with `CONFIG_USB_CONFIGFS_F_FS=y`, macOS host, adb 37.0.1): `adb devices`
+shows `MU300LINUX-324950664950-203d8329` (Android's adb on the same board is `324950664950`); with no key
+authorised and with the key file taken away, `unauthorized` ("adb: device unauthorized"); with the key, `adb shell`
+is root with a login bash on a pty, push 38.7 MB/s and pull 41.9 MB/s (20 MB, checksums equal), `adb forward`
+works. `mu300-usb adb on/off`, three boots with adb on (NCM, RNDIS, NCM) - with RNDIS a Mac has no network but adb
+works, a way in that does not need the network - the gadget unbound by hand (as FunctionFS does it): adb and SSH
+back after 6-8 s; `mu300-usb-reset --ready`: adb stays. `adb off` leaves the gadget as boot/init made it (bcdDevice
+0x0301, no MS OS descriptors, no FunctionFS mount). Not tried: OpenWrt, the vendor 5.4 kernel, a U30 Air being
+unplugged and plugged again, Windows.
+
+**How the hang showed:** `echo disconnect > /sys/class/udc/*/soft_connect` (meant to look like an unplug) ended
+adbd's connection, and adbd hung in it, holding its endpoints: FunctionFS never took the gadget off the controller,
+the loop saw it bound and had nothing to do, and the pulled-down gadget stayed off the bus until the board was
+unplugged (its root port on the Mac cannot be power-cycled). Without adb a soft disconnect stays too, until
+`echo connect`; with the fixed adbd it was not tried again.

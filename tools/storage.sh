@@ -11,6 +11,7 @@
 #   sd_kernel_ok     a card installation refuses a kernel bundle that cannot read the card
 #   sd_erase         uninstall.sh: overwrite the start of the card's mu300sd filesystem (nothing else, ever)
 #   write_install_env  install.sh: the text of mu300-install.env (install.ps1's InstallEnvText writes the same)
+#   adb_pubkey FILE  install.sh: the adb public key in FILE (adbkey.pub) as one safe line, "BASE64 name"
 
 SD_MIN=$((700 * 1024 * 1024))
 
@@ -117,13 +118,25 @@ sd_erase() {
     [ "$(sd_existing)" = no ] || die "the SD card still shows a mu300sd filesystem"
 }
 
+# The first line of an adb public key file (~/.android/adbkey.pub: "BASE64 user@host", no newline at the end), as it
+# goes into mu300-install.env inside single quotes: an Android RSA-2048 key (700 base64 characters, "QAAAA" first) and
+# a name of [A-Za-z0-9@._:-] only. Status 1 when FILE holds no such key.
+adb_pubkey() {
+    _k= _c=
+    IFS=' ' read -r _k _c < "$1" 2>/dev/null || [ -n "$_k" ] || return 1
+    [ ${#_k} -eq 700 ] && [ "${_k%=}" != "$_k" ] || return 1
+    case ${_k%=} in QAAAA*[!A-Za-z0-9+/]*) return 1 ;; QAAAA*) ;; *) return 1 ;; esac
+    _c=$(printf '%s' "$_c" | tr -cd 'A-Za-z0-9@._:-' | cut -c1-64)
+    echo "$_k ${_c:-installer}"
+}
+
 # mu300-install.env, what android-install.sh is told. OFF/SIZE (and their sectors) are always the internal region:
 # in SD mode SIZE is the card's by now and INT_SIZE keeps the region's, which the root-on-sd marker needs; the card's
 # own size is read on the device.
 write_install_env() {
     _rs=$SIZE; [ "$SD_MODE" = 1 ] && _rs=$INT_SIZE
-    printf 'OFF=%s\nSIZE=%s\nOFF_S=%s\nSIZE_S=%s\nFORMAT=%s\nOSES="%s"\nWIPE_LEGACY=%s\nUPDATE=%s\nBOOT_OS=%s\nDEFAULT_LINUX=%s\nBOOT_ATTEMPTS=%s\nIMPORT_HOTSPOT=%s\nKERNEL=%s\nSD_MODE=%s\nSD_DEV=%s\nINTERNAL_EXISTS=%s\nPWHASH='"'"'%s'"'"'\n' \
-      "$OFF" "$_rs" "$((OFF / 512))" "$((_rs / 512))" "$FORMAT" "$OSES" "$WIPE_LEGACY" "$UPDATE" "$BOOT_OS" "$DEFAULT_LINUX" "$BOOT_ATTEMPTS" "$IMPORT_HOTSPOT" "$KERNEL" "$SD_MODE" "$SD_DEV" "$INTERNAL_EXISTS" "$PWHASH"
+    printf 'OFF=%s\nSIZE=%s\nOFF_S=%s\nSIZE_S=%s\nFORMAT=%s\nOSES="%s"\nWIPE_LEGACY=%s\nUPDATE=%s\nBOOT_OS=%s\nDEFAULT_LINUX=%s\nBOOT_ATTEMPTS=%s\nIMPORT_HOTSPOT=%s\nKERNEL=%s\nSD_MODE=%s\nSD_DEV=%s\nINTERNAL_EXISTS=%s\nADB=%s\nADB_KEY='"'"'%s'"'"'\nPWHASH='"'"'%s'"'"'\n' \
+      "$OFF" "$_rs" "$((OFF / 512))" "$((_rs / 512))" "$FORMAT" "$OSES" "$WIPE_LEGACY" "$UPDATE" "$BOOT_OS" "$DEFAULT_LINUX" "$BOOT_ATTEMPTS" "$IMPORT_HOTSPOT" "$KERNEL" "$SD_MODE" "$SD_DEV" "$INTERNAL_EXISTS" "${ADB:-0}" "${ADB_KEY:-}" "$PWHASH"
 }
 
 # The free eMMC region: from the first 2 MiB boundary after the last partition to the last one before the backup

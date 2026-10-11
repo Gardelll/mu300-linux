@@ -17,6 +17,8 @@
 #                      UPDATE=1: the accounts and passwords of the previous installation stay as they are
 #   IMPORT_HOTSPOT=0|1 copy Android's hotspot SSID/passphrase into each system
 #   KERNEL=5.4|6.18|7.2  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel)
+#   ADB=0|1 ADB_KEY    adb over USB to each system on (etc/mu300/adb), for the adb public key ADB_KEY ("BASE64 name",
+#                      etc/mu300/adb_keys)
 # Extras pushed as $T/mu300-extra-<name>.tar.gz (the work directory, see below) go to extra/<name> on the Linux partition
 # (the VPN module, github.com/dikeckaan/mu300-linux-vpn, as mu300-extra-vpn.tar.gz; each system links it into itself
 # at its first boot: mu300-extra link runs the module's hooks/link).
@@ -649,6 +651,16 @@ for os in $OSES; do
         umask 022
     fi
     if [ "$DEFAULT_LINUX" = 1 ]; then echo linux > $R/etc/mu300/default-boot; else rm -f $R/etc/mu300/default-boot; fi
+    # adb over USB to Linux, for the installing computer's key (whoever holds it gets a root shell); ADB=0 changes
+    # nothing (an update keeps etc/mu300 and with it the setting and the keys)
+    if [ "${ADB:-0}" = 1 ] && [ -n "${ADB_KEY:-}" ]; then
+        echo on > $R/etc/mu300/adb
+        umask 077
+        grep -qF "${ADB_KEY%% *}" $R/etc/mu300/adb_keys 2>/dev/null || echo "$ADB_KEY" >> $R/etc/mu300/adb_keys
+        umask 022
+        chmod 600 $R/etc/mu300/adb_keys
+        say "$os: adb over USB on, for ${ADB_KEY#* }"
+    fi
     rm -f $tarball
 done
 mkdir -p $M/.mu300
