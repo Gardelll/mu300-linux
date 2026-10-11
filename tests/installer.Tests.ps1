@@ -13,7 +13,7 @@ function Check($name, $got, $want) {
 
 # the functions under test, straight from install.ps1
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $Top "install.ps1"), [ref]$null, [ref]$null)
-$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'BootchainLine', 'BootchainRefused'
+$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused'
 $defs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $want -contains $n.Name }, $true)
 foreach ($d in $defs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in 'LoadLanguage', 'T', 'NormalizeAnswer') {
@@ -143,6 +143,7 @@ $sdEnv = $common.Clone(); $sdEnv.SIZE = [int64]31914967040; $sdEnv.INT_SIZE = [i
 $sdEnv.SD_DEV = '/dev/block/mmcblk1p1'; $sdEnv.INTERNAL_EXISTS = 1
 $inEnv = $common.Clone(); $inEnv.SIZE = [int64]34776023040; $inEnv.INT_SIZE = [int64]0; $inEnv.SD_MODE = 0
 $inEnv.SD_DEV = ''; $inEnv.INTERNAL_EXISTS = 0; $inEnv.FORMAT = 0; $inEnv.UPDATE = 1
+$inEnv.ADB = 1; $inEnv.ADB_KEY = ('QAAAA' + ('A' * 694) + '= me@host')
 $t = InstallEnvText $sdEnv
 Check 'env sd: region'      ($t -match "(?m)^OFF=27762098176\nSIZE=34776023040\nOFF_S=54222848\nSIZE_S=67921920\n") $true
 Check 'env sd: card'        ($t -match "(?m)^SD_MODE=1\nSD_DEV=/dev/block/mmcblk1p1\nINTERNAL_EXISTS=1\n") $true
@@ -153,6 +154,25 @@ Check 'env sd: no CR'       ($t.Contains("`r")) $false
 $t = InstallEnvText $inEnv
 Check 'env internal'        ($t -match "(?m)^OFF=27762098176\nSIZE=34776023040\nOFF_S=54222848\nSIZE_S=67921920\nFORMAT=0\n") $true
 Check 'env internal: sd'    ($t -match "(?m)^UPDATE=1\n" -and $t -match "(?m)^SD_MODE=0\nSD_DEV=\nINTERNAL_EXISTS=0\n") $true
+Check 'env internal: adb'   ($t -match ("(?m)^ADB=1\nADB_KEY='QAAAA" + ('A' * 694) + "= me@host'\nPWHASH=")) $true
+Check 'env sd: adb off'     ((InstallEnvText $sdEnv) -match "(?m)^ADB=0\nADB_KEY=''\n") $true
+
+# ---- AdbPubKey: the installing computer's adb key, safe inside single quotes --------------------------------------
+$key = 'QAAAA' + ('A' * 694) + '='
+$kf = Join-Path ([IO.Path]::GetTempPath()) "mu300-adbkey-$PID.pub"
+[IO.File]::WriteAllText($kf, "$key me@my-pc")
+Check 'adbkey: plain'       (AdbPubKey $kf) "$key me@my-pc"
+[IO.File]::WriteAllText($kf, "$key evil'`$(reboot) `n")
+Check 'adbkey: name cleaned' (AdbPubKey $kf) "$key evilreboot"
+[IO.File]::WriteAllText($kf, $key)
+Check 'adbkey: no name'     (AdbPubKey $kf) "$key installer"
+[IO.File]::WriteAllText($kf, "ssh-rsa AAAAB3NzaC1yc2E me@my-pc")
+Check 'adbkey: not adb'     (AdbPubKey $kf) ''
+[IO.File]::WriteAllText($kf, ($key.Substring(1)) + ' x')
+Check 'adbkey: short'       (AdbPubKey $kf) ''
+Remove-Item $kf
+Check 'adbkey: missing'     (AdbPubKey $kf) ''
+
 if (Get-Command sh -CommandType Application -ErrorAction SilentlyContinue) {
     foreach ($e in $sdEnv, $inEnv) {
         $vars = (($e.Keys | Sort-Object | ForEach-Object { "$_='$(@($e[$_]) -join ' ')'" }) -join '; ')
