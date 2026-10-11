@@ -1729,7 +1729,7 @@ msgid "installed"
 msgstr "kurulu"
 
 msgid "Kind"
-msgstr "Tür"
+msgstr "Paket türü"
 
 msgid "Version"
 msgstr "Sürüm"
@@ -1744,7 +1744,7 @@ msgid "Size"
 msgstr "Boyut"
 
 msgid "Needed by"
-msgstr "Kullanan"
+msgstr "Kullanan profiller"
 
 msgid "no profile"
 msgstr "profil yok"
@@ -1852,7 +1852,7 @@ msgid "IPv6 blocked"
 msgstr "IPv6 engelli"
 
 msgid "IPv6 untouched"
-msgstr "IPv6 dokunulmadı"
+msgstr "IPv6 olduğu gibi"
 
 msgid "Module %s"
 msgstr "Modül %s"
@@ -1978,7 +1978,7 @@ msgid "From the source"
 msgstr "Kaynaktan"
 
 msgid "Detect"
-msgstr "Algıla"
+msgstr "Otomatik algıla"
 
 msgid "The URL may hold a token: it goes to the device on its own, never into a command line or a log."
 msgstr "URL bir belirteç içerebilir: cihaza ayrı olarak gider, asla bir komut satırına veya günlüğe yazılmaz."
@@ -2128,7 +2128,7 @@ msgid "The kill switch blocks all traffic of the device and of the LAN while the
 msgstr "Kill switch, VPN kapalıyken cihazın ve LAN'ın tüm trafiğini engeller."
 
 msgid "Bypass the tunnel"
-msgstr "Tüneli atla"
+msgstr "Tünel dışında kalsın"
 
 msgid "Enter address ranges like 192.168.0.0/16, separated by commas"
 msgstr "192.168.0.0/16 gibi adres aralıklarını virgülle ayırarak girin"
@@ -2152,7 +2152,7 @@ msgid "The resolver the device's and the LAN's lookups go to, through the tunnel
 msgstr "Cihazın ve LAN'ın sorgularının tünel üzerinden gittiği çözümleyici. Operatörün çözümleyicisine hiçbir şey gitmez."
 
 msgid "Bootstrap DNS"
-msgstr "Önyükleme DNS'i"
+msgstr "Başlangıç DNS'i"
 
 msgid "Finds the VPN server's own address before the tunnel is up (directly, on the engine's own connection)."
 msgstr "Tünel kurulmadan önce VPN sunucusunun adresini bulur (doğrudan, motorun kendi bağlantısıyla)."
@@ -2236,7 +2236,7 @@ msgid "Host"
 msgstr "Sunucu adı"
 
 msgid "Updated"
-msgstr "Güncellendi"
+msgstr "Güncelleme"
 
 msgid "Share links"
 msgstr "Paylaşım bağlantıları"

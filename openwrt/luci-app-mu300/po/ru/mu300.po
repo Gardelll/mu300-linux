@@ -199,7 +199,7 @@ msgid "This page needs the VPN module with the machine-readable mu300-vpn (modul
 msgstr "Этой странице нужен модуль VPN с машиночитаемым mu300-vpn (модуль v2 или новее). Обновление сохраняет профили и настройки."
 
 msgid "The VPN is a module of its own: mu300-vpn with its kill switch and profiles, and one extra per engine (Xray, sing-box, mihomo, dae). It is installed with mu300-extra install vpn."
-msgstr "VPN — это отдельный модуль: mu300-vpn с kill switch и профилями, плюс по одному дополнению на каждый движок (Xray, sing-box, mihomo, dae). Устанавливается командой mu300-extra install vpn."
+msgstr "VPN — это отдельный модуль: mu300-vpn с Kill Switch и профилями, плюс по одному дополнению на каждый движок (Xray, sing-box, mihomo, dae). Устанавливается командой mu300-extra install vpn."
 
 msgid "The download is a few MB for the module and up to tens of MB per engine: on mobile data it counts towards your plan."
 msgstr "Загрузка занимает несколько МБ для модуля и до десятков МБ на каждый движок: при мобильном интернете это расходует ваш трафик."
@@ -1777,16 +1777,16 @@ msgid "The VPN is restarting"
 msgstr "VPN перезапускается"
 
 msgid "With the kill switch on, nothing leaves the device or the LAN outside the tunnel: while the VPN is down, starting or broken, every connection fails instead of going out directly. It stays up until you stop the VPN here (Stop removes it)."
-msgstr "При включённом kill switch ничто не покидает устройство или LAN вне туннеля: пока VPN выключен, запускается или неисправен, любое соединение завершается ошибкой вместо прямого выхода. Он остаётся включённым, пока вы не остановите VPN здесь (Остановить его снимает)."
+msgstr "При включённом Kill Switch ничто не покидает устройство или LAN вне туннеля: пока VPN выключен, запускается или неисправен, любое соединение завершается ошибкой вместо прямого выхода. Он остаётся включённым, пока вы не остановите VPN здесь (Остановить его снимает)."
 
 msgid "Without the kill switch, traffic goes out directly, unprotected, whenever the tunnel is down (while it starts, after a crash, when the engine is missing)."
-msgstr "Без kill switch трафик выходит напрямую, без защиты, всякий раз когда туннель не работает (при запуске, после сбоя, когда нет движка)."
+msgstr "Без Kill Switch трафик выходит напрямую, без защиты, всякий раз когда туннель не работает (при запуске, после сбоя, когда нет движка)."
 
 msgid "Turn the kill switch on?"
-msgstr "Включить kill switch?"
+msgstr "Включить Kill Switch?"
 
 msgid "Turn the kill switch off?"
-msgstr "Выключить kill switch?"
+msgstr "Выключить Kill Switch?"
 
 msgid "Turn on"
 msgstr "Включить"
@@ -1813,7 +1813,7 @@ msgid "The engine of the active profile is not installed: %s"
 msgstr "Движок активного профиля не установлен: %s"
 
 msgid "The kill switch keeps everything closed until it is there; the service downloads it by itself when it can."
-msgstr "Kill switch держит всё закрытым, пока его нет; служба загружает его сама, когда может."
+msgstr "Kill Switch держит всё закрытым, пока его нет; служба загружает его сама, когда может."
 
 msgid "The VPN cannot start until it is installed."
 msgstr "VPN не может запуститься, пока он не установлен."
@@ -1837,13 +1837,13 @@ msgid "interface %s"
 msgstr "интерфейс %s"
 
 msgid "Kill switch active"
-msgstr "Kill switch действует"
+msgstr "Kill Switch действует"
 
 msgid "Kill switch on"
-msgstr "Kill switch включён"
+msgstr "Kill Switch включён"
 
 msgid "Kill switch off"
-msgstr "Kill switch выключен"
+msgstr "Kill Switch выключен"
 
 msgid "IPv6 in the tunnel"
 msgstr "IPv6 в туннеле"
@@ -1882,7 +1882,7 @@ msgid "Stop the VPN?"
 msgstr "Остановить VPN?"
 
 msgid "Traffic then goes out directly, without the tunnel; the kill switch is taken down with it."
-msgstr "Тогда трафик пойдёт напрямую, без туннеля; kill switch будет снят вместе с ним."
+msgstr "Тогда трафик пойдёт напрямую, без туннеля; Kill Switch будет снят вместе с ним."
 
 msgid "The VPN is on: it starts again by itself after a reboot."
 msgstr "VPN включён: после перезагрузки он запустится снова сам."
@@ -1891,7 +1891,7 @@ msgid "The VPN is off."
 msgstr "VPN выключен."
 
 msgid "Kill switch"
-msgstr "Kill switch"
+msgstr "Kill Switch"
 
 msgid "Setting"
 msgstr "Параметр"
@@ -1903,7 +1903,7 @@ msgid "Not active"
 msgstr "Не действует"
 
 msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down, so nothing ever leaves without the tunnel. If the tunnel cannot come up (a dead server, an expired account), the device stays offline until you fix the profile or stop the VPN. The panel itself stays reachable from the LAN."
-msgstr "Kill switch блокирует весь трафик устройства и LAN, пока VPN не работает, поэтому ничто не выходит без туннеля. Если туннель не поднимается (сервер не отвечает, истёк аккаунт), устройство остаётся офлайн, пока вы не исправите профиль или не остановите VPN. Сама панель остаётся доступной из LAN."
+msgstr "Kill Switch блокирует весь трафик устройства и LAN, пока VPN не работает, поэтому ничто не выходит без туннеля. Если туннель не поднимается (сервер не отвечает, истёк аккаунт), устройство остаётся офлайн, пока вы не исправите профиль или не остановите VPN. Сама панель остаётся доступной из LAN."
 
 msgid "Choose a profile"
 msgstr "Выберите профиль"
@@ -1924,7 +1924,7 @@ msgid "Active profile"
 msgstr "Активный профиль"
 
 msgid "A running VPN restarts on the profile you choose; the kill switch stays up in between."
-msgstr "Работающий VPN перезапускается с выбранным профилем; kill switch остаётся включённым на это время."
+msgstr "Работающий VPN перезапускается с выбранным профилем; Kill Switch остаётся включённым на это время."
 
 msgid "Manage the profiles"
 msgstr "Управление профилями"
@@ -1960,13 +1960,13 @@ msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carr
 msgstr "Пока VPN включён, IPv6 никогда не выходит мимо туннеля, который его не передаёт: он сразу отклоняется, поэтому программы и клиенты LAN переходят на IPv4 вместо утечки или ожидания. Автоматически: WireGuard использует IPv6-адреса из своей конфигурации, остальные движки остаются на IPv4."
 
 msgid "%d ms"
-msgstr "%d ms"
+msgstr "%d мс"
 
 msgid "UDP: not testable"
 msgstr "UDP: проверить нельзя"
 
 msgid "blocked by the kill switch"
-msgstr "заблокировано kill switch"
+msgstr "заблокировано Kill Switch"
 
 msgid "A WireGuard or OpenVPN config, a Clash/mihomo YAML, an Xray or sing-box JSON, a dae config"
 msgstr "Конфигурация WireGuard или OpenVPN, YAML Clash/mihomo, JSON Xray или sing-box, конфигурация dae"
@@ -2125,7 +2125,7 @@ msgid "Routing"
 msgstr "Маршрутизация"
 
 msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down."
-msgstr "Kill switch блокирует весь трафик устройства и LAN, пока VPN не работает."
+msgstr "Kill Switch блокирует весь трафик устройства и LAN, пока VPN не работает."
 
 msgid "Bypass the tunnel"
 msgstr "Обход туннеля"
@@ -2224,7 +2224,7 @@ msgid "Format"
 msgstr "Формат"
 
 msgid "The URL usually holds your account token: it is stored on the device readable by root only, and never shown again. The subscription is fetched over the device's own connection: through the tunnel when the VPN is up; with the kill switch up and the tunnel down it cannot be fetched."
-msgstr "URL обычно содержит токен вашей учётной записи: он хранится на устройстве и доступен для чтения только root, больше он не показывается. Подписка загружается по собственному соединению устройства: через туннель, если VPN включён; при действующем kill switch и неработающем туннеле её загрузить нельзя."
+msgstr "URL обычно содержит токен вашей учётной записи: он хранится на устройстве и доступен для чтения только root, больше он не показывается. Подписка загружается по собственному соединению устройства: через туннель, если VPN включён; при действующем Kill Switch и неработающем туннеле её загрузить нельзя."
 
 msgid "Refresh all"
 msgstr "Обновить все"
@@ -2452,10 +2452,10 @@ msgid "The VPN could not be switched"
 msgstr "Не удалось переключить VPN"
 
 msgid "The kill switch is on or off"
-msgstr "Kill switch либо включён, либо выключен"
+msgstr "Kill Switch либо включён, либо выключен"
 
 msgid "The kill switch could not be changed"
-msgstr "Не удалось изменить kill switch"
+msgstr "Не удалось изменить Kill Switch"
 
 msgid "Invalid profile id"
 msgstr "Недопустимый идентификатор профиля"
