@@ -15,6 +15,9 @@ msgstr "Blocchi di rete"
 msgid "SMS"
 msgstr "SMS"
 
+msgid "SMS forwarding"
+msgstr "Inoltro SMS"
+
 msgid "AT terminal"
 msgstr "Terminale AT"
 
@@ -23,6 +26,9 @@ msgstr "Impostazioni adattatore"
 
 msgid "TTL"
 msgstr "TTL"
+
+msgid "Data usage"
+msgstr "Consumo dati"
 
 msgid "Device management"
 msgstr "Gestione dispositivo"
@@ -33,8 +39,41 @@ msgstr "Lingue"
 msgid "Power"
 msgstr "Alimentazione"
 
-msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
-msgstr "Centro di controllo MU300: pannello di stato, blocchi di rete, terminale AT e SMS"
+msgid "CPU"
+msgstr "CPU"
+
+msgid "Terminal"
+msgstr "Terminale"
+
+msgid "Terminal settings"
+msgstr "Impostazioni del terminale"
+
+msgid "Overview"
+msgstr "Panoramica"
+
+msgid "Profiles"
+msgstr "Profili"
+
+msgid "Subscriptions"
+msgstr "Abbonamenti"
+
+msgid "Engines"
+msgstr "Motori"
+
+msgid "Settings"
+msgstr "Impostazioni"
+
+msgid "Logs"
+msgstr "Log"
+
+msgid "Packages after an update"
+msgstr "Pacchetti dopo un aggiornamento"
+
+msgid "MU300 control center: status dashboard, network locks, AT terminal, SMS and VPN"
+msgstr "Centro di controllo MU300: dashboard di stato, blocchi di rete, terminale AT, SMS e VPN"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminale: una shell root del dispositivo nel browser"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -96,6 +135,12 @@ msgstr "OK"
 msgid "Cancel"
 msgstr "Annulla"
 
+msgid "%d s"
+msgstr "%d s"
+
+msgid "%d h"
+msgstr "%d h"
+
 msgid "New SMS · %s"
 msgstr "Nuovo SMS · %s"
 
@@ -104,6 +149,108 @@ msgstr "Numero sconosciuto"
 
 msgid "Select"
 msgstr "Seleziona"
+
+msgid "never"
+msgstr "mai"
+
+msgid "just now"
+msgstr "proprio ora"
+
+msgid "%s ago"
+msgstr "%s fa"
+
+msgid "Failed: %s"
+msgstr "Non riuscito: %s"
+
+msgid "Management connection lost"
+msgstr "Connessione di gestione persa"
+
+msgid "Installing the VPN module"
+msgstr "Installazione del modulo VPN"
+
+msgid "Installing the engine"
+msgstr "Installazione del motore"
+
+msgid "Adding the subscription"
+msgstr "Aggiunta dell'abbonamento"
+
+msgid "Refreshing the subscriptions"
+msgstr "Aggiornamento degli abbonamenti"
+
+msgid "Testing the latency of every profile"
+msgstr "Test della latenza di ogni profilo"
+
+msgid "Downloading the config"
+msgstr "Download della configurazione"
+
+msgid "Working…"
+msgstr "In corso…"
+
+msgid "done"
+msgstr "fatto"
+
+msgid "failed"
+msgstr "non riuscito"
+
+msgid "Verify the uploaded file"
+msgstr "Verifica il file caricato"
+
+msgid "The uploaded file is checked against the SHA256SUMS of the VPN module's latest release, downloaded over HTTPS. When that is not possible (offline, an older release), it is installed only if you allow an unverified file: it then runs as root with no check."
+msgstr "Il file caricato viene confrontato con il SHA256SUMS dell'ultima versione del modulo VPN, scaricato via HTTPS. Se non è possibile (offline, una versione precedente), viene installato solo se consenti un file non verificato: verrà eseguito come root senza alcun controllo."
+
+msgid "Install it even if it cannot be verified"
+msgstr "Installalo anche se non può essere verificato"
+
+msgid "Install only a verified file"
+msgstr "Installa solo un file verificato"
+
+msgid "Upload failed: %s"
+msgstr "Caricamento non riuscito: %s"
+
+msgid "The VPN module is too old for this panel"
+msgstr "Il modulo VPN è troppo vecchio per questo pannello"
+
+msgid "The VPN module is not installed"
+msgstr "Il modulo VPN non è installato"
+
+msgid "This page needs the VPN module with the machine-readable mu300-vpn (module v2 or newer). Updating it keeps the profiles and the settings."
+msgstr "Questa pagina richiede il modulo VPN con mu300-vpn leggibile dalle macchine (modulo v2 o più recente). Aggiornarlo mantiene profili e impostazioni."
+
+msgid "The VPN is a module of its own: mu300-vpn with its kill switch and profiles, and one extra per engine (Xray, sing-box, mihomo, dae). It is installed with mu300-extra install vpn."
+msgstr "La VPN è un modulo a sé: mu300-vpn con il suo kill switch e i profili, più un extra per ogni motore (Xray, sing-box, mihomo, dae). Si installa con mu300-extra install vpn."
+
+msgid "The download is a few MB for the module and up to tens of MB per engine: on mobile data it counts towards your plan."
+msgstr "Il download pesa qualche MB per il modulo e fino a decine di MB per motore: con i dati mobili incide sul tuo piano."
+
+msgid "Update the VPN module"
+msgstr "Aggiorna il modulo VPN"
+
+msgid "Install the VPN module"
+msgstr "Installa il modulo VPN"
+
+msgid "Upload the file…"
+msgstr "Carica il file…"
+
+msgid "Offline: upload mu300-linux-vpn-core.tar.gz (or the bundle mu300-linux-vpn.tar.gz) from the release page of the VPN module."
+msgstr "Offline: carica mu300-linux-vpn-core.tar.gz (o il bundle mu300-linux-vpn.tar.gz) dalla pagina delle release del modulo VPN."
+
+msgid "VPN"
+msgstr "VPN"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Questa è una scansione di reti o frequenze: richiede da uno a tre minuti, occupa per tutto il tempo il canale AT del modem e nel frattempo i dati mobili possono interrompersi. Viene eseguita in background; la risposta compare qui al termine."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Questo modifica una modalità di rete, una banda o un'impostazione di cella che il modem memorizza: resta in vigore dopo un riavvio, e anche in Android, dove una rete che non corrisponde appare come Nessun servizio. La pagina Blocchi mostra queste impostazioni e le reimposta."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Questo commuta la radio, la connessione dati o il modem stesso: i dati mobili si interrompono finché non vengono ripristinati e questa pagina può perdere la connessione per un po'."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Questo modifica i profili dati (APN) memorizzati nel modem, usati dai dati mobili e da Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Questo modifica il blocco PIN della SIM o inserisce un PIN: PIN errati bloccano la SIM finché non si inserisce il suo PUK."
 
 msgid "Basic"
 msgstr "Base"
@@ -132,14 +279,110 @@ msgstr "Pronto."
 msgid "Session history (click to reuse)"
 msgstr "Cronologia della sessione (clic per riutilizzare)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "In esecuzione in background (al massimo %d s); la risposta compare qui al termine…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Il modem non ha dato una risposta finale in tempo"
+
+msgid "%d s in the background"
+msgstr "%d s in background"
+
 msgid "(no output)"
 msgstr "(nessun output)"
+
+msgid "This command changes the modem's state."
+msgstr "Questo comando modifica lo stato del modem."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Non ancora inviato: in attesa di conferma"
+
+msgid "Send this AT command?"
+msgstr "Inviare questo comando AT?"
+
+msgid "Send anyway"
+msgstr "Invia comunque"
+
+msgid "Not sent"
+msgstr "Non inviato"
 
 msgid "Request failed"
 msgstr "Richiesta non riuscita"
 
 msgid "(empty)"
 msgstr "(vuoto)"
+
+msgid "Loading…"
+msgstr "Caricamento…"
+
+msgid "Channel Analysis"
+msgstr "Analisi dei canali"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Una scansione porta per un momento l'hotspot Wi-Fi fuori dal suo canale: i dispositivi connessi si disconnettono e alcuni (macOS in particolare) potrebbero non riconnettersi da soli. Questa pagina esegue la scansione appena si apre e poi ogni pochi secondi. Se dipendi dall'hotspot, raggiungi prima il pannello via USB o in un altro modo."
+
+msgid "Scan anyway"
+msgstr "Scansiona comunque"
+
+msgid "Saved"
+msgstr "Salvato"
+
+msgid "CPU profile unavailable"
+msgstr "CPU profile unavailable"
+
+msgid "Power saving"
+msgstr "Power saving"
+
+msgid "Balanced"
+msgstr "Balanced"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Cores capped at about 60 %% of their maximum (cooler, less power)."
+msgstr "Cores capped at about 60 %% of their maximum (cooler, less power)."
+
+msgid "Schedutil across the full hardware range (the stock behaviour)."
+msgstr "Schedutil across the full hardware range (the stock behaviour)."
+
+msgid "Every cluster pinned at its hardware maximum."
+msgstr "Every cluster pinned at its hardware maximum."
+
+msgid "CPU profile"
+msgstr "CPU profile"
+
+msgid "A profile sets the CPU governor and the per-cluster frequency limits. It stays within the hardware frequency table and never changes the voltage, so it cannot overclock this SoC. The kernel keeps throttling at its thermal limit in every profile."
+msgstr "A profile sets the CPU governor and the per-cluster frequency limits. It stays within the hardware frequency table and never changes the voltage, so it cannot overclock this SoC. The kernel keeps throttling at its thermal limit in every profile."
+
+msgid "Saved profile: %s"
+msgstr "Saved profile: %s"
+
+msgid "Thermal throttling is active right now: the frequencies below are below the profile ceiling."
+msgstr "Thermal throttling is active right now: the frequencies below are below the profile ceiling."
+
+msgid "Clusters"
+msgstr "Clusters"
+
+msgid "Cores"
+msgstr "Cores"
+
+msgid "Governor"
+msgstr "Governor"
+
+msgid "Now"
+msgstr "Now"
+
+msgid "Min"
+msgstr "Min"
+
+msgid "Max"
+msgstr "Max"
+
+msgid "Hardware max"
+msgstr "Hardware max"
+
+msgid "Frequencies in MHz."
+msgstr "Frequencies in MHz."
 
 msgid "USB role"
 msgstr "Ruolo USB"
@@ -198,6 +441,15 @@ msgstr "Aggiorna"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Disponibile solo in modalità host. «Aggiorna» attiva gli adattatori USB rilevati; l'aggiunta alla LAN salva il bridge e ricarica la rete."
 
+msgid "Recent modem operations"
+msgstr "Operazioni recenti del modem"
+
+msgid "Show"
+msgstr "Mostra"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Le chiamate recenti del pannello di controllo, di questo avvio e del precedente: quando, quale chiamata di pagina o comando AT, quanto è durata e come è terminata (ok, errore, occupato, interrotta). Non vengono conservati valori, risposte o messaggi. Utile quando il pannello si è bloccato."
+
 msgid "Unavailable"
 msgstr "Non disponibile"
 
@@ -252,6 +504,12 @@ msgstr "Impostazioni salvate"
 msgid "Save failed: %s"
 msgstr "Salvataggio non riuscito: %s"
 
+msgid "This boot"
+msgstr "Questo avvio"
+
+msgid "Previous boot"
+msgstr "Avvio precedente"
+
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Impossibile confermare il ruolo per ora; riconnettersi e aggiornare la pagina."
 
@@ -291,6 +549,177 @@ msgstr "Aggiunta dell'adattatore USB…"
 msgid "Add failed: %s"
 msgstr "Aggiunta non riuscita: %s"
 
+msgid "Leave empty to keep the saved value"
+msgstr "Lascia vuoto per mantenere il valore salvato"
+
+msgid "Saved: %s"
+msgstr "Salvato: %s"
+
+msgid "Remove the saved value"
+msgstr "Rimuovi il valore salvato"
+
+msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "I messaggi ricevuti vengono inoltrati appena arrivano nel pool SMS. Un invio non riuscito viene ritentato dopo 30 s, poi ogni volta dopo il doppio del tempo (al massimo un'ora), dieci volte in tutto."
+
+msgid "Forward received messages"
+msgstr "Inoltra i messaggi ricevuti"
+
+msgid "Message template"
+msgstr "Modello del messaggio"
+
+msgid "Placeholders: {sender}, {time}, {text}, {device}"
+msgstr "Segnaposto: {sender}, {time}, {text}, {device}"
+
+msgid "Only these senders"
+msgstr "Solo questi mittenti"
+
+msgid "One per line; empty: every sender. A * at the end matches the start of a sender."
+msgstr "Uno per riga; vuoto: tutti i mittenti. Un * alla fine corrisponde all'inizio di un mittente."
+
+msgid "Never these senders"
+msgstr "Mai questi mittenti"
+
+msgid "Only messages containing one of these words"
+msgstr "Solo messaggi che contengono una di queste parole"
+
+msgid "One per line; empty: every message."
+msgstr "Una per riga; vuoto: tutti i messaggi."
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "Enabled"
+msgstr "Abilitata"
+
+msgid "Address (http:// or https://)"
+msgstr "Indirizzo (http:// o https://)"
+
+msgid "Body"
+msgstr "Corpo"
+
+msgid "Form (URL-encoded)"
+msgstr "Modulo (codificato URL)"
+
+msgid "Fields: sender, time, text, device, message (the template filled in)"
+msgstr "Campi: sender, time, text, device, message (il modello compilato)"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Intestazioni aggiuntive (un \"Nome: valore\" per riga)"
+
+msgid "Bot token"
+msgstr "Token del bot"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "ID della chat (un numero o @canale)"
+
+msgid "E-mail"
+msgstr "E-mail"
+
+msgid "E-mail needs msmtp, which this image does not have"
+msgstr "L'e-mail richiede msmtp, che questa immagine non ha"
+
+msgid "Mail server"
+msgstr "Server di posta"
+
+msgid "Port"
+msgstr "Porta"
+
+msgid "Security"
+msgstr "Sicurezza"
+
+msgid "None"
+msgstr "Nessuna"
+
+msgid "User name"
+msgstr "Nome utente"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "From"
+msgstr "Da"
+
+msgid "To"
+msgstr "A"
+
+msgid "SMS to another phone"
+msgstr "SMS a un altro telefono"
+
+msgid "Phone number"
+msgstr "Numero di telefono"
+
+msgid "Sent as one SMS: a longer message is cut short."
+msgstr "Inviato come un solo SMS: un messaggio più lungo viene troncato."
+
+msgid "Send test"
+msgstr "Invia test"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again."
+msgstr "Token, password e indirizzo e intestazioni del webhook restano sul dispositivo e non vengono più mostrati."
+
+msgid "Delivered"
+msgstr "Consegnato"
+
+msgid "Will retry"
+msgstr "Verrà ritentato"
+
+msgid "Failed"
+msgstr "Non riuscito"
+
+msgid "Filtered out"
+msgstr "Filtrato"
+
+msgid "Dropped"
+msgstr "Scartato"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Delivery log"
+msgstr "Registro degli invii"
+
+msgid "Waiting to be delivered"
+msgstr "In attesa di invio"
+
+msgid "Time"
+msgstr "Ora"
+
+msgid "Message"
+msgstr "Messaggio"
+
+msgid "Target"
+msgstr "Destinazione"
+
+msgid "Result"
+msgstr "Risultato"
+
+msgid "Detail"
+msgstr "Dettaglio"
+
+msgid "No deliveries yet"
+msgstr "Ancora nessun invio"
+
+msgid "Test started with the saved settings; the result appears in the delivery log."
+msgstr "Test avviato con le impostazioni salvate; il risultato compare nel registro degli invii."
+
+msgid "4G only"
+msgstr "Solo 4G"
+
+msgid "Network mode: %s"
+msgstr "Modalità di rete: %s"
+
+msgid "EN-DC off"
+msgstr "EN-DC disattivato"
+
+msgid "NR band lock: %s"
+msgstr "Blocco bande NR: %s"
+
+msgid "LTE band lock: %s"
+msgstr "Blocco bande LTE: %s"
+
+msgid "Cell lock: %s"
+msgstr "Blocco cella: %s"
+
 msgid "Modulation DL/UL"
 msgstr "Modulazione DL/UL"
 
@@ -302,6 +731,18 @@ msgstr "MCS DL/UL"
 
 msgid "BLER DL/UL"
 msgstr "BLER DL/UL"
+
+msgid "%s of %s"
+msgstr "%s di %s"
+
+msgid "The monthly cap is reached"
+msgstr "Il limite mensile è stato raggiunto"
+
+msgid "%d%% of the monthly cap is used"
+msgstr "Usato il %d%% del limite mensile"
+
+msgid "This billing cycle"
+msgstr "Questo ciclo di fatturazione"
 
 msgid "Link & traffic"
 msgstr "Collegamento e traffico"
@@ -317,6 +758,9 @@ msgstr "Totale ricevuto"
 
 msgid "Total sent"
 msgstr "Totale inviato"
+
+msgid "Used today"
+msgstr "Usato oggi"
 
 msgid "Session duration"
 msgstr "Durata della sessione"
@@ -417,6 +861,9 @@ msgstr "Riavvia dispositivo"
 msgid "Switch to Android"
 msgstr "Passa ad Android"
 
+msgid "Lock Linux"
+msgstr "Blocca Linux"
+
 msgid "Neighbor cells"
 msgstr "Celle vicine"
 
@@ -434,9 +881,6 @@ msgstr "Avviato in background: %s"
 
 msgid "Done: %s"
 msgstr "Completato: %s"
-
-msgid "Failed: %s"
-msgstr "Non riuscito: %s"
 
 msgid "Disconnecting data…"
 msgstr "Disconnessione dati…"
@@ -474,11 +918,35 @@ msgstr "Per tornare a OpenWrt, eseguire mu300-next-boot linux in Android e riavv
 msgid "Or do nothing: after five boots that do not finish, it falls back automatically."
 msgstr "Oppure non fare nulla: dopo cinque avvii non completati, il ritorno avviene automaticamente."
 
+msgid "Preparing Android boot and rebooting…"
+msgstr "Preparazione dell'avvio di Android e riavvio…"
+
 msgid "Switch and reboot"
 msgstr "Passa e riavvia"
 
-msgid "Preparing Android boot and rebooting…"
-msgstr "Preparazione dell'avvio di Android e riavvio…"
+msgid "Not automatic: %s. The network mode and band locks are stored in the modem and stay in force in Android too; if the network does not match them, Android shows No Service."
+msgstr "Non automatico: %s. La modalità di rete e i blocchi di banda sono salvati nel modem e restano attivi anche in Android; se la rete non corrisponde, Android mostra «Nessun servizio»."
+
+msgid "Reset locks and switch"
+msgstr "Ripristina i blocchi e passa"
+
+msgid "Unlock Linux"
+msgstr "Sblocca Linux"
+
+msgid "After five boots in a row that do not finish, the device falls back to Android again."
+msgstr "Dopo cinque avvii consecutivi non completati, il dispositivo torna di nuovo ad Android."
+
+msgid "Unlock"
+msgstr "Sblocca"
+
+msgid "The device will never switch to Android by itself, not even after failed boots: Android only from this page (Switch to Android) or with mu300-next-boot android."
+msgstr "Il dispositivo non passerà mai ad Android da solo, nemmeno dopo avvii falliti: ad Android solo da questa pagina (Passa ad Android) o con mu300-next-boot android."
+
+msgid "A new kernel from an update still gets its first boots on trial, and locks again once one of them succeeds."
+msgstr "Un nuovo kernel da un aggiornamento esegue comunque i primi avvii in prova e si blocca di nuovo appena uno riesce."
+
+msgid "If the system itself no longer starts, the device waits on USB (telnet) instead of going to Android."
+msgstr "Se il sistema stesso non si avvia più, il dispositivo attende via USB (telnet) invece di passare ad Android."
 
 msgid "Hide SIM identifiers"
 msgstr "Nascondi identificativi SIM"
@@ -498,6 +966,12 @@ msgstr "%s bloccata in background; lo stato verrà aggiornato a breve"
 msgid "Lock failed: %s"
 msgstr "Blocco non riuscito: %s"
 
+msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
+msgstr "Ripristino dei blocchi di rete su automatico (riavvio SFUN, circa 30 secondi)…"
+
+msgid "The lock reset was not confirmed in time; switching anyway."
+msgstr "Il ripristino dei blocchi non è stato confermato in tempo; si passa comunque."
+
 msgid "Uptime %s"
 msgstr "Uptime %s"
 
@@ -506,6 +980,9 @@ msgstr "Radio spenta"
 
 msgid "No response"
 msgstr "Nessuna risposta"
+
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Modem occupato: letture cellulari di %s fa"
 
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Segnale %s %s/10"
@@ -573,9 +1050,6 @@ msgstr "%s client"
 msgid "Recent DHCP leases"
 msgstr "Lease DHCP recenti"
 
-msgid "%d h"
-msgstr "%d h"
-
 msgid "Board"
 msgstr "Scheda"
 
@@ -615,11 +1089,8 @@ msgstr "Online"
 msgid "AT adapter unavailable"
 msgstr "Adattatore AT non disponibile"
 
-msgid "Saved"
-msgstr "Salvato"
-
-msgid "Management connection lost"
-msgstr "Connessione di gestione persa"
+msgid "Linux locked"
+msgstr "Linux bloccato"
 
 msgid "Installing the language pack…"
 msgstr "Installazione del pacchetto lingue…"
@@ -629,9 +1100,6 @@ msgstr "Il pacchetto lingue è installato"
 
 msgid "The language pack could not be installed"
 msgstr "Impossibile installare il pacchetto lingue"
-
-msgid "Upload failed: %s"
-msgstr "Caricamento non riuscito: %s"
 
 msgid "Language of the browser"
 msgstr "Lingua del browser"
@@ -653,9 +1121,6 @@ msgstr "Il pacchetto lingue (mu300-extra-lang.tar.gz, circa 2 MB) aggiunge LuCI 
 
 msgid "Download from the release"
 msgstr "Scarica dalla release"
-
-msgid "Upload the file…"
-msgstr "Carica il file…"
 
 msgid "Release"
 msgstr "Release"
@@ -690,9 +1155,6 @@ msgstr "LuCI e questo pannello"
 msgid "LuCI only"
 msgstr "Solo LuCI"
 
-msgid "Enabled"
-msgstr "Abilitata"
-
 msgid "Disabled"
 msgstr "Disabilitata"
 
@@ -713,9 +1175,6 @@ msgstr "Le traduzioni di LuCI provengono da OpenWrt. Le traduzioni di questo pan
 
 msgid "Automatic"
 msgstr "Automatico"
-
-msgid "4G only"
-msgstr "Solo 4G"
 
 msgid "Serving network"
 msgstr "Rete di servizio"
@@ -759,6 +1218,15 @@ msgstr "Sblocca cella"
 msgid "Applying restarts the radio stack (SFUN) and briefly interrupts cellular service. Settings are saved and replayed by the plugin after AT is ready when Apply at startup is enabled. A platform pre-radio hook can replay without a restart. Apply with no bands selected to restore automatic mode."
 msgstr "L'applicazione riavvia lo stack radio (SFUN) e interrompe brevemente il servizio cellulare. Le impostazioni vengono salvate e riapplicate dal plugin quando AT è pronto, se «Applica all'avvio» è abilitato. Un hook della piattaforma eseguito prima della radio può riapplicarle senza riavvio. Applicare senza bande selezionate per ripristinare la modalità automatica."
 
+msgid "Back to automatic"
+msgstr "Torna ad automatico"
+
+msgid "The network mode and band locks are stored in the modem and stay in force in Android too. If you are not sure, reset them before switching to Android."
+msgstr "La modalità di rete e i blocchi di banda sono salvati nel modem e restano attivi anche in Android. Se non sei sicuro, ripristinali prima di passare ad Android."
+
+msgid "Reset all to automatic"
+msgstr "Ripristina tutto su automatico"
+
 msgid "Apply “%s”?"
 msgstr "Applicare «%s»?"
 
@@ -780,9 +1248,6 @@ msgstr "Conferma dell'applicazione all'avvio…"
 msgid "Started in background: %s (SFUN restart, about 30 seconds); reading the status back…"
 msgstr "Avviato in background: %s (riavvio SFUN, circa 30 secondi); rilettura dello stato…"
 
-msgid "Network mode: %s"
-msgstr "Modalità di rete: %s"
-
 msgid "Disable EN-DC (NSA anchor)"
 msgstr "Disabilita EN-DC (ancora NSA)"
 
@@ -798,23 +1263,23 @@ msgstr "Abilita applicazione all'avvio"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Lettura diretta dal modem (al massimo pochi secondi)…"
 
-msgid "Refreshed"
-msgstr "Aggiornato"
-
 msgid "Refresh failed"
 msgstr "Aggiornamento non riuscito"
+
+msgid "Refreshed"
+msgstr "Aggiornato"
 
 msgid "NR bands: back to automatic"
 msgstr "Bande NR: di nuovo automatiche"
 
-msgid "NR band lock: %s"
-msgstr "Blocco bande NR: %s"
-
 msgid "LTE bands: back to automatic"
 msgstr "Bande LTE: di nuovo automatiche"
 
-msgid "LTE band lock: %s"
-msgstr "Blocco bande LTE: %s"
+msgid "Network mode automatic, EN-DC on, all LTE and NR bands, no cell lock. The saved lock settings are cleared, so nothing is replayed at startup."
+msgstr "Modalità di rete automatica, EN-DC attivo, tutte le bande LTE e NR, nessun blocco cella. Le impostazioni salvate vengono cancellate: all'avvio non viene riapplicato nulla."
+
+msgid "Reset"
+msgstr "Ripristina"
 
 msgid "Remove the %s cell lock"
 msgstr "Rimuovi il blocco della cella %s"
@@ -875,6 +1340,114 @@ msgstr "Automatico (%d supportate)"
 
 msgid "%d locked: %s"
 msgstr "%d bloccate: %s"
+
+msgid "Repair DNS?"
+msgstr "Riparare il DNS?"
+
+msgid "This removes the DNS forwarder of a package that is no longer installed. If no other DNS server is left, the device then uses the DNS servers of the mobile connection: the carrier sees the names you look up, outside any proxy or VPN."
+msgstr "Questo rimuove l'inoltro DNS di un pacchetto non più installato. Se non resta nessun altro server DNS, il dispositivo usa i server DNS della connessione mobile: l'operatore vede i nomi che cerchi, fuori da qualsiasi proxy o VPN."
+
+msgid "Repair DNS"
+msgstr "Ripara il DNS"
+
+msgid "Packages installed on the device are not part of a release image. An update writes them down, and the new system installs them again at its first boot, once it is online. Until a package is back its settings are set aside."
+msgstr "I pacchetti installati sul dispositivo non fanno parte dell'immagine di rilascio. Un aggiornamento li annota e il nuovo sistema li reinstalla al primo avvio, appena è online. Finché un pacchetto non torna, le sue impostazioni vengono messe da parte."
+
+msgid "No packages to install again."
+msgstr "Nessun pacchetto da reinstallare."
+
+msgid "All back"
+msgstr "Tutti di nuovo presenti"
+
+msgid "Not installed yet"
+msgstr "Non ancora installato"
+
+msgid "Could not be installed again"
+msgstr "Impossibile reinstallare"
+
+msgid "Waiting for the internet"
+msgstr "In attesa di Internet"
+
+msgid "Given up: no internet at five boots"
+msgstr "Rinunciato: nessuna connessione Internet in cinque avvii"
+
+msgid "Skipped"
+msgstr "Saltato"
+
+msgid "Written down by the update from %s"
+msgstr "Annotato dall'aggiornamento da %s"
+
+msgid "Installed again"
+msgstr "Reinstallati"
+
+msgid "Install them yourself from where you got them (a package file: apk add --allow-untrusted FILE.apk)."
+msgstr "Installali tu dalla fonte da cui li hai presi (un file di pacchetto: apk add --allow-untrusted FILE.apk)."
+
+msgid "Settings set aside in /etc/mu300/orphaned-config"
+msgstr "Impostazioni messe da parte in /etc/mu300/orphaned-config"
+
+msgid "DNS still goes to a package that is not installed: the device has no DNS through it."
+msgstr "Il DNS va ancora a un pacchetto non installato: il dispositivo non ha DNS tramite esso."
+
+msgid "Try again"
+msgstr "Riprova"
+
+msgid "Dismiss the note"
+msgstr "Chiudi l'avviso"
+
+msgid "started"
+msgstr "avviato"
+
+msgid "asleep now (asked)"
+msgstr "in sospensione ora (richiesto)"
+
+msgid "woken: power daemon stopping"
+msgstr "risvegliato: il servizio energia si arresta"
+
+msgid "woken by a key"
+msgstr "risvegliato da un tasto"
+
+msgid "woken by the Wi-Fi key"
+msgstr "risvegliato dal tasto Wi-Fi"
+
+msgid "woken (mu300-power wake)"
+msgstr "risvegliato (mu300-power wake)"
+
+msgid "woken by a computer on USB"
+msgstr "risvegliato da un computer via USB"
+
+msgid "woken: plugged in"
+msgstr "risvegliato: collegato all'alimentazione"
+
+msgid "woken by a Wi-Fi client"
+msgstr "risvegliato da un client Wi-Fi"
+
+msgid "charging boot (powered on by the charger)"
+msgstr "avvio in carica (acceso dal caricatore)"
+
+msgid "the hotspot is down"
+msgstr "l'hotspot è spento"
+
+msgid "the VPN is still stopped"
+msgstr "la VPN è ancora ferma"
+
+msgid "5G (EN-DC) is still off after a failed resume"
+msgstr "il 5G (EN-DC) è ancora spento dopo una ripresa non riuscita"
+
+msgid "self-check: %s"
+msgstr "autoverifica: %s"
+
+msgid "asleep: no client for %d min (%s)"
+msgstr "in sospensione: nessun client da %d min (%s)"
+
+msgid "asleep: profile now %s"
+msgstr "in sospensione: profilo ora %s"
+
+msgid "woken by the %s key"
+msgstr "risvegliato dal tasto %s"
+
+msgid "the modem is suspended (%s)"
+msgstr "il modem è sospeso (%s)"
 
 msgid "Enter a whole number from 0 to %d"
 msgstr "Inserisci un numero intero da 0 a %d"
@@ -954,6 +1527,9 @@ msgstr "Passa a Risparmio sotto il %"
 msgid "Stop charging at"
 msgstr "Interrompi la carica al"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % non carica mai la batteria (il dispositivo funziona con il caricatore), 100 % la carica completamente; nel mezzo, la carica si ferma a quel livello e riprende 5 punti più in basso. Sotto il 5 % la batteria si carica sempre."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "L'80 % protegge meglio la batteria di un dispositivo che resta collegato."
 
@@ -983,9 +1559,6 @@ msgstr "Modem in inattività"
 
 msgid "LEDs when idle"
 msgstr "LED in inattività"
-
-msgid "CPU"
-msgstr "CPU"
 
 msgid "Ignored lines in power.conf: %s"
 msgstr "Righe ignorate in power.conf: %s"
@@ -1068,9 +1641,6 @@ msgstr "Sincronizza dalla SIM"
 msgid "Clear local pool"
 msgstr "Svuota archivio locale"
 
-msgid "Loading…"
-msgstr "Caricamento…"
-
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Selezionare una conversazione a sinistra oppure inserire un numero qui sotto per inviare."
 
@@ -1140,8 +1710,143 @@ msgstr "L'archivio è vuoto. I messaggi ricevuti e inviati compaiono qui, oppure
 msgid "Me: %s"
 msgstr "Io: %s"
 
+msgid "Incomplete: %d of %d parts arrived"
+msgstr "Incompleto: arrivate %d parti su %d"
+
 msgid "Delete"
 msgstr "Elimina"
+
+msgid "ttyd is not installed."
+msgstr "ttyd non è installato."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Il terminale è disattivato (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Si stanno aprendo troppi terminali contemporaneamente. Riprova tra un minuto."
+
+msgid "The terminal is not available."
+msgstr "Il terminale non è disponibile."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Questa è una shell root del dispositivo: ogni comando viene eseguito con tutti i privilegi, e un errore può impedire l’avvio del dispositivo."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "È raggiungibile solo dalla LAN (USB e hotspot), mai dai dati mobili, e solo da questa pagina con accesso effettuato."
+
+msgid "It closes after a minute without activity."
+msgstr "Si chiude dopo un minuto di inattività."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Si chiude dopo %d minuti di inattività."
+
+msgid "Reconnect"
+msgstr "Riconnetti"
+
+msgid "Open in a new tab"
+msgstr "Apri in una nuova scheda"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Questa pagina è stata aperta in HTTPS e il terminale è servito in HTTP sulla LAN: si apre in una scheda a parte."
+
+msgid "The data usage could not be read"
+msgstr "Impossibile leggere il consumo dati"
+
+msgid "Today"
+msgstr "Oggi"
+
+msgid "Days left in this cycle"
+msgstr "Giorni rimasti in questo ciclo"
+
+msgid "Received"
+msgstr "Ricevuti"
+
+msgid "Sent"
+msgstr "Inviati"
+
+msgid "Corrected by"
+msgstr "Corretto di"
+
+msgid "Monthly cap"
+msgstr "Limite mensile"
+
+msgid "%s, warning at %d%%"
+msgstr "%s, avviso al %d%%"
+
+msgid "The monthly cap is reached: mobile data was turned off. It comes back on when the next cycle starts."
+msgstr "Il limite mensile è stato raggiunto: i dati mobili sono stati spenti. Si riaccendono all'inizio del prossimo ciclo."
+
+msgid "%s waits for the clock: it has not been set over the network yet. It already counts towards this cycle and goes to its day once the clock is set."
+msgstr "%s attende l'orologio: non è ancora stato impostato dalla rete. Conta già per questo ciclo e andrà al suo giorno quando l'orologio sarà impostato."
+
+msgid "The interface %s is not there right now: nothing is counted until it comes back."
+msgstr "L'interfaccia %s ora non c'è: non si conta nulla finché non torna."
+
+msgid "Counted on %s, both ways, as the operator counts it (a VPN's overhead included)."
+msgstr "Contato su %s, in entrambe le direzioni, come lo conta l'operatore (incluso il sovraccarico di una VPN)."
+
+msgid "The count is kept in memory and written to the disk every 30 minutes and at shutdown: a power cut loses at most the last half hour."
+msgstr "Il conteggio è tenuto in memoria e scritto sul disco ogni 30 minuti e allo spegnimento: un'interruzione di corrente perde al massimo l'ultima mezz'ora."
+
+msgid "Counting since %s."
+msgstr "Conteggio dal %s."
+
+msgid "Per day"
+msgstr "Per giorno"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Total"
+msgstr "Totale"
+
+msgid "Per billing cycle"
+msgstr "Per ciclo di fatturazione"
+
+msgid "Billing cycle"
+msgstr "Ciclo di fatturazione"
+
+msgid "Enter a size in GB, for example 50 or 2.5"
+msgstr "Inserisci una dimensione in GB, ad esempio 50 o 2.5"
+
+msgid "Enter a percentage from 1 to 100"
+msgstr "Inserisci una percentuale da 1 a 100"
+
+msgid "Turn mobile data off at the cap"
+msgstr "Spegni i dati mobili al limite"
+
+msgid "When this cycle reaches the cap, mobile data is turned off: no internet through the operator until the next cycle starts, the cap is raised or this is turned off again. Turning mobile data back on by hand keeps it on until the next reboot."
+msgstr "Quando questo ciclo raggiunge il limite, i dati mobili vengono spenti: niente internet tramite l'operatore finché non inizia il prossimo ciclo, il limite viene alzato o questa opzione viene disattivata. Riaccendendo i dati mobili a mano restano accesi fino al prossimo riavvio."
+
+msgid "Set"
+msgstr "Imposta"
+
+msgid "Clear the count"
+msgstr "Azzera il conteggio"
+
+msgid "Every day and billing cycle counted so far is forgotten. Counting goes on from now."
+msgstr "Tutti i giorni e i cicli contati finora vengono dimenticati. Il conteggio continua da adesso."
+
+msgid "Billing cycle and cap"
+msgstr "Ciclo di fatturazione e limite"
+
+msgid "A billing cycle starts on day"
+msgstr "Un ciclo di fatturazione inizia il giorno"
+
+msgid "31: on the last day of each month"
+msgstr "31: l'ultimo giorno di ogni mese"
+
+msgid "Monthly cap (GB, 0: none)"
+msgstr "Limite mensile (GB, 0: nessuno)"
+
+msgid "Warning at this percentage of the cap"
+msgstr "Avvisa a questa percentuale del limite"
+
+msgid "Used so far in this cycle (GB)"
+msgstr "Usato finora in questo ciclo (GB)"
+
+msgid "What the operator shows for this cycle (for example when counting started in the middle of it); the count is corrected to it."
+msgstr "Ciò che l'operatore mostra per questo ciclo (ad esempio se il conteggio è iniziato a metà); il conteggio viene corretto su questo valore."
 
 msgid "Current setting"
 msgstr "Impostazione attuale"
@@ -1170,9 +1875,6 @@ msgstr "Su questo kernel il percorso rapido del firewall è disattivato finché 
 msgid "Set %d"
 msgstr "Imposta %d"
 
-msgid "Set"
-msgstr "Imposta"
-
 msgid "Enter a number from 1 to 255"
 msgstr "Inserisci un numero da 1 a 255"
 
@@ -1181,6 +1883,594 @@ msgstr "Disattiva"
 
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "Con 64 ogni pacchetto esce come il traffico del dispositivo stesso"
+
+msgid "running"
+msgstr "in esecuzione"
+
+msgid "(about %s)"
+msgstr "(circa %s)"
+
+msgid "Install %s?"
+msgstr "Installare %s?"
+
+msgid "It is installed from this system's package feed."
+msgstr "Viene installato dal feed dei pacchetti di questo sistema."
+
+msgid "It is downloaded from the release of the VPN module and checked against its SHA256SUMS."
+msgstr "Viene scaricato dalla release del modulo VPN e verificato con il suo SHA256SUMS."
+
+msgid "An engine is tens of MB: on mobile data the download counts towards your plan."
+msgstr "Un motore pesa decine di MB: con i dati mobili il download incide sul tuo piano."
+
+msgid "Install"
+msgstr "Installa"
+
+msgid "Remove %s?"
+msgstr "Rimuovere %s?"
+
+msgid "Profiles run on it: %s. They cannot start until it is installed again (the module refuses while the running profile needs it)."
+msgstr "Profili che lo usano: %s. Non possono avviarsi finché non viene reinstallato (il modulo rifiuta la rimozione se il profilo in esecuzione ne ha bisogno)."
+
+msgid "No profile runs on it."
+msgstr "Nessun profilo lo usa."
+
+msgid "Removed"
+msgstr "Rimosso"
+
+msgid "Check for updates"
+msgstr "Controlla aggiornamenti"
+
+msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
+msgstr "Ogni motore è un extra a sé: installa solo quelli che servono ai tuoi profili. Xray esegue link vless, vmess, trojan e ss (con hev-socks5-tunnel), sing-box gli stessi link e il proprio JSON, mihomo gli abbonamenti Clash, dae hysteria2, tuic e il resto sui kernel più recenti. WireGuard e OpenVPN sono pacchetti del sistema."
+
+msgid "Downloads are tens of MB per engine: on mobile data they count towards your plan. Offline, upload the engine's tarball from the release page of the VPN module."
+msgstr "I download pesano decine di MB per motore: con i dati mobili incidono sul tuo piano. Offline, carica il tarball del motore dalla pagina delle release del modulo VPN."
+
+msgid "The available versions come from the latest release of the VPN module."
+msgstr "Le versioni disponibili provengono dall'ultima release del modulo VPN."
+
+msgid "Update"
+msgstr "Aggiorna"
+
+msgid "system package"
+msgstr "pacchetto di sistema"
+
+msgid "in the vpn bundle"
+msgstr "nel bundle vpn"
+
+msgid "extra %s"
+msgstr "extra %s"
+
+msgid "not installed"
+msgstr "non installato"
+
+msgid "cannot run here"
+msgstr "non può funzionare qui"
+
+msgid "update available"
+msgstr "aggiornamento disponibile"
+
+msgid "installed"
+msgstr "installato"
+
+msgid "Kind"
+msgstr "Tipo"
+
+msgid "Version"
+msgstr "Versione"
+
+msgid "Available"
+msgstr "Disponibile"
+
+msgid "not checked"
+msgstr "non controllato"
+
+msgid "Size"
+msgstr "Dimensione"
+
+msgid "Needed by"
+msgstr "Richiesto da"
+
+msgid "no profile"
+msgstr "nessun profilo"
+
+msgid "dae needs a kernel with BTF, 5.17 or newer: not the 5.4 vendor kernel (mu300-update kernel 6.18). It can be installed anyway."
+msgstr "dae richiede un kernel con BTF, 5.17 o più recente: non il kernel vendor 5.4 (mu300-update kernel 6.18). Si può installare comunque."
+
+msgid "All engines"
+msgstr "Tutti i motori"
+
+msgid "Last %s lines"
+msgstr "Ultime %s righe"
+
+msgid "VPN service log"
+msgstr "Log del servizio VPN"
+
+msgid "Every 5 s"
+msgstr "Ogni 5 s"
+
+msgid "The log is empty."
+msgstr "Il log è vuoto."
+
+msgid "The VPN is starting"
+msgstr "La VPN si sta avviando"
+
+msgid "The VPN is stopped"
+msgstr "La VPN è ferma"
+
+msgid "The VPN is restarting"
+msgstr "La VPN si sta riavviando"
+
+msgid "With the kill switch on, nothing leaves the device or the LAN outside the tunnel: while the VPN is down, starting or broken, every connection fails instead of going out directly. It stays up until you stop the VPN here (Stop removes it)."
+msgstr "Con il kill switch attivo, nulla esce dal dispositivo o dalla LAN al di fuori del tunnel: finché la VPN è inattiva, si sta avviando o è guasta, ogni connessione fallisce invece di uscire direttamente. Resta attivo finché non fermi la VPN da qui (Ferma lo rimuove)."
+
+msgid "Without the kill switch, traffic goes out directly, unprotected, whenever the tunnel is down (while it starts, after a crash, when the engine is missing)."
+msgstr "Senza il kill switch, il traffico esce direttamente, non protetto, ogni volta che il tunnel è inattivo (all'avvio, dopo un crash, se manca il motore)."
+
+msgid "Turn the kill switch on?"
+msgstr "Attivare il kill switch?"
+
+msgid "Turn the kill switch off?"
+msgstr "Disattivare il kill switch?"
+
+msgid "Turn on"
+msgstr "Attiva"
+
+msgid "unknown"
+msgstr "sconosciuto"
+
+msgid "The exit address could not be found (is the tunnel up?)"
+msgstr "Impossibile trovare l'indirizzo di uscita (il tunnel è attivo?)"
+
+msgid "Connecting…"
+msgstr "Connessione…"
+
+msgid "On, but not running"
+msgstr "Attivo, ma non in esecuzione"
+
+msgid "Stopped"
+msgstr "Fermato"
+
+msgid "Install it"
+msgstr "Installa"
+
+msgid "The engine of the active profile is not installed: %s"
+msgstr "Il motore del profilo attivo non è installato: %s"
+
+msgid "The kill switch keeps everything closed until it is there; the service downloads it by itself when it can."
+msgstr "Il kill switch tiene tutto chiuso finché non c'è; il servizio lo scarica da solo quando può."
+
+msgid "The VPN cannot start until it is installed."
+msgstr "La VPN non può avviarsi finché non è installato."
+
+msgid "%s cannot run on this system"
+msgstr "%s non può funzionare su questo sistema"
+
+msgid "The VPN is on, but no profile is active: choose one below."
+msgstr "La VPN è attiva, ma nessun profilo è attivo: scegline uno qui sotto."
+
+msgid "Profile: %s"
+msgstr "Profilo: %s"
+
+msgid "No active profile"
+msgstr "Nessun profilo attivo"
+
+msgid "engine %s"
+msgstr "motore %s"
+
+msgid "interface %s"
+msgstr "interfaccia %s"
+
+msgid "Kill switch active"
+msgstr "Kill switch attivo"
+
+msgid "Kill switch on"
+msgstr "Kill switch on"
+
+msgid "Kill switch off"
+msgstr "Kill switch off"
+
+msgid "IPv6 in the tunnel"
+msgstr "IPv6 nel tunnel"
+
+msgid "IPv6 blocked"
+msgstr "IPv6 bloccato"
+
+msgid "IPv6 untouched"
+msgstr "IPv6 non toccato"
+
+msgid "Module %s"
+msgstr "Modulo %s"
+
+msgid "Check"
+msgstr "Verifica"
+
+msgid "Uptime"
+msgstr "Uptime"
+
+msgid "Rate"
+msgstr "Velocità"
+
+msgid "Exit address"
+msgstr "Indirizzo di uscita"
+
+msgid "Start"
+msgstr "Avvia"
+
+msgid "Stop"
+msgstr "Ferma"
+
+msgid "Restart"
+msgstr "Riavvia"
+
+msgid "Stop the VPN?"
+msgstr "Fermare la VPN?"
+
+msgid "Traffic then goes out directly, without the tunnel; the kill switch is taken down with it."
+msgstr "Il traffico esce poi direttamente, senza il tunnel; anche il kill switch viene tolto."
+
+msgid "The VPN is on: it starts again by itself after a reboot."
+msgstr "La VPN è attiva: riparte da sola dopo un riavvio."
+
+msgid "The VPN is off."
+msgstr "La VPN è spenta."
+
+msgid "Kill switch"
+msgstr "Kill switch"
+
+msgid "Setting"
+msgstr "Impostazione"
+
+msgid "Active: only the tunnel can reach the internet"
+msgstr "Attivo: solo il tunnel può raggiungere internet"
+
+msgid "Not active"
+msgstr "Non attivo"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down, so nothing ever leaves without the tunnel. If the tunnel cannot come up (a dead server, an expired account), the device stays offline until you fix the profile or stop the VPN. The panel itself stays reachable from the LAN."
+msgstr "Il kill switch blocca tutto il traffico del dispositivo e della LAN mentre la VPN è inattiva, così nulla esce senza il tunnel. Se il tunnel non riesce a salire (server morto, account scaduto), il dispositivo resta offline finché non correggi il profilo o fermi la VPN. Il pannello stesso resta raggiungibile dalla LAN."
+
+msgid "Choose a profile"
+msgstr "Scegli un profilo"
+
+msgid "No profiles yet"
+msgstr "Ancora nessun profilo"
+
+msgid "engine not installed"
+msgstr "motore non installato"
+
+msgid "Use"
+msgstr "Usa"
+
+msgid "Switched: the VPN restarts on the new profile"
+msgstr "Cambiato: la VPN si riavvia con il nuovo profilo"
+
+msgid "Active profile"
+msgstr "Profilo attivo"
+
+msgid "A running VPN restarts on the profile you choose; the kill switch stays up in between."
+msgstr "Una VPN in esecuzione si riavvia con il profilo scelto; nel frattempo il kill switch resta attivo."
+
+msgid "Manage the profiles"
+msgstr "Gestisci i profili"
+
+msgid "Automatic: through the tunnel where the engine can carry it"
+msgstr "Automatico: nel tunnel dove il motore può trasportarlo"
+
+msgid "Ask the engine for IPv6 in the tunnel"
+msgstr "Chiedi al motore IPv6 nel tunnel"
+
+msgid "Never through the tunnel (blocked while the VPN is up)"
+msgstr "Mai nel tunnel (bloccato mentre la VPN è attiva)"
+
+msgid "Saved: it applies from the next start (Restart)"
+msgstr "Salvato: si applica dal prossimo avvio (Riavvia)"
+
+msgid "IPv6"
+msgstr "IPv6"
+
+msgid "The tunnel carries IPv6"
+msgstr "Il tunnel trasporta IPv6"
+
+msgid "Yes"
+msgstr "Sì"
+
+msgid "IPv6 guard"
+msgstr "Protezione IPv6"
+
+msgid "Active: IPv6 outside the tunnel is refused"
+msgstr "Attiva: l'IPv6 fuori dal tunnel è rifiutato"
+
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
+msgstr "Mentre la VPN è attiva, l'IPv6 non esce mai accanto a un tunnel che non lo trasporta: viene rifiutato subito, così programmi e client LAN passano a IPv4 invece di perdere dati o restare in attesa. Automatico: WireGuard usa gli indirizzi IPv6 della sua configurazione, gli altri motori restano su IPv4."
+
+msgid "%d ms"
+msgstr "%d ms"
+
+msgid "UDP: not testable"
+msgstr "UDP: non testabile"
+
+msgid "blocked by the kill switch"
+msgstr "bloccato dal kill switch"
+
+msgid "A WireGuard or OpenVPN config, a Clash/mihomo YAML, an Xray or sing-box JSON, a dae config"
+msgstr "Una configurazione WireGuard o OpenVPN, un YAML Clash/mihomo, un JSON Xray o sing-box, una configurazione dae"
+
+msgid "After OK, choose the file: a WireGuard .conf, an OpenVPN .ovpn, a Clash/mihomo .yaml, an Xray or sing-box .json or a dae config (at most 1 MiB)."
+msgstr "Dopo OK, scegli il file: un .conf WireGuard, un .ovpn OpenVPN, un .yaml Clash/mihomo, un .json Xray o sing-box o una configurazione dae (al massimo 1 MiB)."
+
+msgid "From the source"
+msgstr "Da sorgente"
+
+msgid "Detect"
+msgstr "Rileva"
+
+msgid "The URL may hold a token: it goes to the device on its own, never into a command line or a log."
+msgstr "L'URL può contenere un token: arriva al dispositivo separatamente, mai in una riga di comando o in un log."
+
+msgid "Type"
+msgstr "Tipo"
+
+msgid "Share link"
+msgstr "Link di condivisione"
+
+msgid "Paste"
+msgstr "Incolla"
+
+msgid "File"
+msgstr "File"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Not a share link this panel takes"
+msgstr "Non è un link di condivisione accettato da questo pannello"
+
+msgid "The config is empty"
+msgstr "La configurazione è vuota"
+
+msgid "Not an https URL"
+msgstr "Non è un URL https"
+
+msgid "Invalid name: 1-64 characters, no control characters"
+msgstr "Nome non valido: 1-64 caratteri, senza caratteri di controllo"
+
+msgid "Add a profile"
+msgstr "Aggiungi un profilo"
+
+msgid "Name"
+msgstr "Nome"
+
+msgid "Detect: the module tells the kind from the link or the file. Choose the type for a JSON that could be either Xray or sing-box, or for a link that should run on another engine."
+msgstr "Rileva: il modulo riconosce il tipo dal link o dal file. Scegli il tipo per un JSON che potrebbe essere Xray o sing-box, o per un link che dovrebbe funzionare su un altro motore."
+
+msgid "The profile is added"
+msgstr "Il profilo è stato aggiunto"
+
+msgid "Rename the profile"
+msgstr "Rinomina il profilo"
+
+msgid "Delete the profile %s?"
+msgstr "Eliminare il profilo %s?"
+
+msgid "It is the active profile: with the VPN on, the module refuses; stop the VPN or choose another profile first."
+msgstr "È il profilo attivo: con la VPN attiva il modulo rifiuta; ferma prima la VPN o scegli un altro profilo."
+
+msgid "Its config and credentials are deleted from the device."
+msgstr "La sua configurazione e le credenziali vengono eliminate dal dispositivo."
+
+msgid "Deleted"
+msgstr "Eliminato"
+
+msgid "The profile passes the check"
+msgstr "Il profilo supera il controllo"
+
+msgid "Show the config?"
+msgstr "Mostrare la configurazione?"
+
+msgid "The config holds the credentials of the profile (keys, passwords, UUIDs). It is shown on this screen only; anyone who can see the screen can read it."
+msgstr "La configurazione contiene le credenziali del profilo (chiavi, password, UUID). Viene mostrata solo su questa schermata; chiunque veda lo schermo può leggerla."
+
+msgid "Saving checks the config with the engine first (profile edit); a config that does not pass is not saved and the old one stays."
+msgstr "Il salvataggio controlla prima la configurazione con il motore (profile edit); una configurazione che non supera il controllo non viene salvata e resta la vecchia."
+
+msgid "This profile comes from a subscription: its next refresh replaces your changes."
+msgstr "Questo profilo proviene da un abbonamento: il prossimo aggiornamento sostituisce le tue modifiche."
+
+msgid "Config of %s"
+msgstr "Configurazione di %s"
+
+msgid "Close"
+msgstr "Chiudi"
+
+msgid "Rename"
+msgstr "Rinomina"
+
+msgid "Show / edit the config"
+msgstr "Mostra / modifica la configurazione"
+
+msgid "Test the latency of all"
+msgstr "Testa la latenza di tutti"
+
+msgid "No profiles yet: add one from a share link, a config file or a subscription."
+msgstr "Ancora nessun profilo: aggiungine uno da un link di condivisione, un file di configurazione o un abbonamento."
+
+msgid "Active"
+msgstr "Attivo"
+
+msgid "This profile is the active one now"
+msgstr "Questo profilo ora è quello attivo"
+
+msgid "More"
+msgstr "Altro"
+
+msgid "active"
+msgstr "attivo"
+
+msgid "subscription"
+msgstr "abbonamento"
+
+msgid "migrated"
+msgstr "migrato"
+
+msgid "gone from its subscription"
+msgstr "non più nel suo abbonamento"
+
+msgid "Server"
+msgstr "Server"
+
+msgid "Engine"
+msgstr "Motore"
+
+msgid "Latency"
+msgstr "Latenza"
+
+msgid "The latency is a TCP connection to the server, through the tunnel when the VPN is up. WireGuard and OpenVPN servers usually speak UDP and cannot be tested this way."
+msgstr "La latenza è una connessione TCP al server, attraverso il tunnel quando la VPN è attiva. I server WireGuard e OpenVPN di solito parlano UDP e non si possono testare così."
+
+msgid "Enter an IPv4 or IPv6 address"
+msgstr "Inserisci un indirizzo IPv4 o IPv6"
+
+msgid "On: nothing leaves outside the tunnel"
+msgstr "Attivo: nulla esce fuori dal tunnel"
+
+msgid "Off: traffic goes out directly while the tunnel is down"
+msgstr "Disattivo: il traffico esce direttamente mentre il tunnel è inattivo"
+
+msgid "Yes: Tailscale's own connections go through the tunnel"
+msgstr "Sì: le connessioni di Tailscale passano dal tunnel"
+
+msgid "No: Tailscale connects directly"
+msgstr "No: Tailscale si connette direttamente"
+
+msgid "Routing"
+msgstr "Instradamento"
+
+msgid "The kill switch blocks all traffic of the device and of the LAN while the VPN is down."
+msgstr "Il kill switch blocca tutto il traffico del dispositivo e della LAN mentre la VPN è inattiva."
+
+msgid "Bypass the tunnel"
+msgstr "Escludi dal tunnel"
+
+msgid "Enter address ranges like 192.168.0.0/16, separated by commas"
+msgstr "Inserisci intervalli di indirizzi come 192.168.0.0/16, separati da virgole"
+
+msgid "Address ranges that never go into the tunnel, besides the LAN itself (which never does). Empty: the LAN only."
+msgstr "Intervalli di indirizzi che non entrano mai nel tunnel, oltre alla LAN stessa (che non entra mai). Vuoto: solo la LAN."
+
+msgid "Tailscale through the VPN"
+msgstr "Tailscale tramite la VPN"
+
+msgid "When Tailscale runs on the device, its WireGuard, DERP and control connections go through whichever tunnel runs (dae catches them like any other)."
+msgstr "Quando Tailscale è in esecuzione sul dispositivo, le sue connessioni WireGuard, DERP e di controllo passano dal tunnel in funzione (dae le intercetta come tutte le altre)."
+
+msgid "DNS"
+msgstr "DNS"
+
+msgid "DNS through the tunnel"
+msgstr "DNS tramite il tunnel"
+
+msgid "The resolver the device's and the LAN's lookups go to, through the tunnel. Nothing goes to the carrier's resolver."
+msgstr "Il resolver a cui vanno, attraverso il tunnel, le query del dispositivo e della LAN. Nulla va al resolver dell'operatore."
+
+msgid "Bootstrap DNS"
+msgstr "DNS di bootstrap"
+
+msgid "Finds the VPN server's own address before the tunnel is up (directly, on the engine's own connection)."
+msgstr "Trova l'indirizzo del server VPN prima che il tunnel sia attivo (direttamente, sulla connessione del motore)."
+
+msgid "Empty puts a setting back to its default."
+msgstr "Vuoto riporta l'impostazione al valore predefinito."
+
+msgid "TUN stack"
+msgstr "Stack TUN"
+
+msgid "Default (gvisor)"
+msgstr "Predefinito (gvisor)"
+
+msgid "system (not on the 5.4 kernel)"
+msgstr "system (non sul kernel 5.4)"
+
+msgid "set (unchanged unless you type a new one)"
+msgstr "impostato (invariato a meno che non ne digiti uno nuovo)"
+
+msgid "not set"
+msgstr "non impostato"
+
+msgid "Upstream HTTP proxy"
+msgstr "Proxy HTTP upstream"
+
+msgid "TLS certificate pin (SHA-256)"
+msgstr "Pin del certificato TLS (SHA-256)"
+
+msgid "Enter host:port"
+msgstr "Inserisci host:port"
+
+msgid "Enter the SHA-256 in hex"
+msgstr "Inserisci lo SHA-256 in esadecimale"
+
+msgid "Profile options"
+msgstr "Opzioni del profilo"
+
+msgid "None of the profiles has options of its type."
+msgstr "Nessun profilo ha opzioni del proprio tipo."
+
+msgid "mihomo's mode (rule, global, direct), the engines' log levels, dae's groups and routing are part of each profile's own config: VPN > Profiles, Show / edit the config."
+msgstr "La modalità di mihomo (rule, global, direct), i livelli di log dei motori, i gruppi e l'instradamento di dae fanno parte della configurazione di ogni profilo: VPN > Profili, Mostra / modifica la configurazione."
+
+msgid "Delete the subscription %s?"
+msgstr "Eliminare l'abbonamento %s?"
+
+msgid "Its profiles can go with it or stay as profiles of their own. The active profile is never removed while the VPN is on."
+msgstr "I suoi profili possono andare con lui o restare come profili a sé. Il profilo attivo non viene mai rimosso mentre la VPN è attiva."
+
+msgid "Keep the profiles"
+msgstr "Mantieni i profili"
+
+msgid "Delete with its profiles"
+msgstr "Elimina con i suoi profili"
+
+msgid "Only by hand"
+msgstr "Solo a mano"
+
+msgid "Every %d h"
+msgstr "Ogni %d h"
+
+msgid "Share links: one profile per link"
+msgstr "Link di condivisione: un profilo per link"
+
+msgid "Clash/mihomo YAML: one mihomo profile"
+msgstr "YAML Clash/mihomo: un profilo mihomo"
+
+msgid "dae: one profile with every node in one group"
+msgstr "dae: un profilo con ogni nodo in un gruppo"
+
+msgid "Add a subscription"
+msgstr "Aggiungi un abbonamento"
+
+msgid "Format"
+msgstr "Formato"
+
+msgid "The URL usually holds your account token: it is stored on the device readable by root only, and never shown again. The subscription is fetched over the device's own connection: through the tunnel when the VPN is up; with the kill switch up and the tunnel down it cannot be fetched."
+msgstr "L'URL di solito contiene il token del tuo account: viene salvato sul dispositivo leggibile solo da root e non viene più mostrato. L'abbonamento è scaricato con la connessione del dispositivo: attraverso il tunnel quando la VPN è attiva; con il kill switch attivo e il tunnel inattivo non può essere scaricato."
+
+msgid "Refresh all"
+msgstr "Aggiorna tutti"
+
+msgid "No subscriptions yet."
+msgstr "Ancora nessun abbonamento."
+
+msgid "Host"
+msgstr "Host"
+
+msgid "Updated"
+msgstr "Aggiornato"
+
+msgid "Share links"
+msgstr "Link di condivisione"
+
+msgid "A refresh keeps the profiles whose name is unchanged, adds the new ones and removes the ones that are gone (the active one stays while the VPN is on, marked as gone). A refresh of the active profile restarts the running VPN."
+msgstr "Un aggiornamento mantiene i profili con nome invariato, aggiunge i nuovi e rimuove quelli scomparsi (quello attivo resta mentre la VPN è attiva, segnato come scomparso). L'aggiornamento del profilo attivo riavvia la VPN in esecuzione."
 
 msgid "Dashboard info failed"
 msgstr "Informazioni del pannello non riuscite"
@@ -1203,6 +2493,9 @@ msgstr "La radio è occupata: il dialer o il watchdog la sta commutando, riprova
 msgid "The action gave no valid reply"
 msgstr "L'azione non ha restituito una risposta valida"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Il parametro confirm deve essere 0 o 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "Un comando AT è una riga di ASCII stampabile di al massimo 512 caratteri"
 
@@ -1218,6 +2511,12 @@ msgstr "Negato: questo comando blocca la porta AT fino al riavvio"
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Applicazione dei blocchi di rete: il modem si sta riavviando (circa mezzo minuto), riprovare tra poco"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Un comando AT lungo è ancora in esecuzione in background; riprova quando è terminato"
+
+msgid "This command needs confirmation"
+msgstr "Questo comando richiede una conferma"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "Il canale AT è occupato; il comando non è stato inviato, riprovare"
 
@@ -1226,6 +2525,9 @@ msgstr "Il modem non ha risposto in tempo; il comando potrebbe essere ancora in 
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Il parametro fresh deve essere 0 o 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Lettura dei blocchi dal modem in corso; riprova tra qualche secondo"
 
 msgid "Lock read failed"
 msgstr "Lettura dei blocchi non riuscita"
@@ -1326,6 +2628,30 @@ msgstr "L'adattatore TTL non ha dato una risposta valida"
 msgid "Invalid TTL"
 msgstr "TTL non valido"
 
+msgid "The data usage adapter gave no valid reply"
+msgstr "L'adattatore del consumo dati non ha dato una risposta valida"
+
+msgid "Unknown data usage setting"
+msgstr "Impostazione del consumo dati sconosciuta"
+
+msgid "Invalid value for this setting"
+msgstr "Valore non valido per questa impostazione"
+
+msgid "The forwarding adapter gave no valid reply"
+msgstr "L'adattatore di inoltro non ha dato una risposta valida"
+
+msgid "The CPU adapter gave no valid reply"
+msgstr "The CPU adapter gave no valid reply"
+
+msgid "Invalid CPU profile"
+msgstr "Invalid CPU profile"
+
+msgid "The packages adapter gave no valid reply"
+msgstr "L'adattatore dei pacchetti non ha dato una risposta valida"
+
+msgid "Invalid packages operation"
+msgstr "Operazione sui pacchetti non valida"
+
 msgid "Request too large"
 msgstr "Richiesta troppo grande"
 
@@ -1334,6 +2660,150 @@ msgstr "La directory di runtime non è sicura; non è stato eseguito nulla"
 
 msgid "No such method"
 msgstr "Metodo inesistente"
+
+msgid "The VPN module refused the request"
+msgstr "Il modulo VPN ha rifiutato la richiesta"
+
+msgid "The VPN panel is busy, try again"
+msgstr "Il pannello VPN è occupato, riprova"
+
+msgid "Another VPN task is still running"
+msgstr "Un'altra attività VPN è ancora in corso"
+
+msgid "The exit_ip parameter must be 0 or 1"
+msgstr "Il parametro exit_ip deve essere 0 o 1"
+
+msgid "The VPN status could not be read"
+msgstr "Impossibile leggere lo stato della VPN"
+
+msgid "The profiles could not be read"
+msgstr "Impossibile leggere i profili"
+
+msgid "The check parameter must be 0 or 1"
+msgstr "Il parametro check deve essere 0 o 1"
+
+msgid "The engines could not be read"
+msgstr "Impossibile leggere i motori"
+
+msgid "The subscriptions could not be read"
+msgstr "Impossibile leggere gli abbonamenti"
+
+msgid "The VPN settings could not be read"
+msgstr "Impossibile leggere le impostazioni della VPN"
+
+msgid "Unknown VPN operation"
+msgstr "Operazione VPN sconosciuta"
+
+msgid "The VPN could not be switched"
+msgstr "Impossibile commutare la VPN"
+
+msgid "The kill switch is on or off"
+msgstr "Il kill switch è attivo o disattivo"
+
+msgid "The kill switch could not be changed"
+msgstr "Impossibile modificare il kill switch"
+
+msgid "Invalid profile id"
+msgstr "ID profilo non valido"
+
+msgid "The profile could not be made the active one"
+msgstr "Impossibile rendere attivo il profilo"
+
+msgid "Unknown profile source"
+msgstr "Origine del profilo sconosciuta"
+
+msgid "Unknown profile type"
+msgstr "Tipo di profilo sconosciuto"
+
+msgid "The config is empty, too large or holds control characters"
+msgstr "La configurazione è vuota, troppo grande o contiene caratteri di controllo"
+
+msgid "Invalid profile request"
+msgstr "Richiesta di profilo non valida"
+
+msgid "A config from a URL takes the type it says"
+msgstr "Una configurazione da un URL assume il tipo che dichiara"
+
+msgid "No uploaded file"
+msgstr "Nessun file caricato"
+
+msgid "The file is larger than 1 MiB"
+msgstr "Il file è più grande di 1 MiB"
+
+msgid "The profile could not be added"
+msgstr "Impossibile aggiungere il profilo"
+
+msgid "The profile could not be renamed"
+msgstr "Impossibile rinominare il profilo"
+
+msgid "The profile could not be removed"
+msgstr "Impossibile rimuovere il profilo"
+
+msgid "The profile does not pass the check"
+msgstr "Il profilo non supera il controllo"
+
+msgid "Unknown profile option"
+msgstr "Opzione del profilo sconosciuta"
+
+msgid "Invalid value for this option"
+msgstr "Valore non valido per questa opzione"
+
+msgid "The option could not be set"
+msgstr "Impossibile impostare l'opzione"
+
+msgid "The config could not be read"
+msgstr "Impossibile leggere la configurazione"
+
+msgid "The config was not saved"
+msgstr "La configurazione non è stata salvata"
+
+msgid "The latency test failed"
+msgstr "Test della latenza non riuscito"
+
+msgid "The refresh interval is 1 to 999 hours"
+msgstr "L'intervallo di aggiornamento va da 1 a 999 ore"
+
+msgid "Unknown subscription type"
+msgstr "Tipo di abbonamento sconosciuto"
+
+msgid "Invalid subscription id"
+msgstr "ID abbonamento non valido"
+
+msgid "The keep parameter must be 0 or 1"
+msgstr "Il parametro keep deve essere 0 o 1"
+
+msgid "The subscription could not be removed"
+msgstr "Impossibile rimuovere l'abbonamento"
+
+msgid "The file is too large"
+msgstr "Il file è troppo grande"
+
+msgid "Unknown engine"
+msgstr "Motore sconosciuto"
+
+msgid "The unverified parameter must be 0 or 1"
+msgstr "Il parametro unverified deve essere 0 o 1"
+
+msgid "This engine is a system package: it has no file to upload"
+msgstr "Questo motore è un pacchetto di sistema: non ha un file da caricare"
+
+msgid "The engine could not be removed"
+msgstr "Impossibile rimuovere il motore"
+
+msgid "mu300-extra is not on this system"
+msgstr "mu300-extra non è presente su questo sistema"
+
+msgid "Unknown VPN setting"
+msgstr "Impostazione VPN sconosciuta"
+
+msgid "The setting could not be saved"
+msgstr "Impossibile salvare l'impostazione"
+
+msgid "The number of lines is 1 to 1000"
+msgstr "Il numero di righe va da 1 a 1000"
+
+msgid "The log could not be read"
+msgstr "Impossibile leggere il log"
 
 msgid "Radio did not come up"
 msgstr "La radio non si è attivata"
@@ -1352,6 +2822,15 @@ msgstr "mu300-next-boot non riuscito"
 
 msgid "AT backend did not answer (radio off, modem restarting, or adapter unavailable)"
 msgstr "Il backend AT non ha risposto (radio spenta, modem in riavvio o adattatore non disponibile)"
+
+msgid "The CPU profile could not be read"
+msgstr "The CPU profile could not be read"
+
+msgid "The CPU profile could not be set"
+msgstr "The CPU profile could not be set"
+
+msgid "Unknown CPU operation"
+msgstr "Unknown CPU operation"
 
 msgid "USB role adapter is not executable"
 msgstr "L'adattatore del ruolo USB non è eseguibile"
@@ -1428,6 +2907,51 @@ msgstr "Ricaricamento della rete non riuscito"
 msgid "Cannot attach USB interface to LAN bridge"
 msgstr "Impossibile collegare l'interfaccia USB al bridge LAN"
 
+msgid "Invalid forwarding setting"
+msgstr "Impostazione di inoltro non valida"
+
+msgid "The message template is too long or contains a control character"
+msgstr "Il modello del messaggio è troppo lungo o contiene un carattere di controllo"
+
+msgid "Invalid filter list (at most 50 lines)"
+msgstr "Elenco di filtri non valido (al massimo 50 righe)"
+
+msgid "The webhook address must be an http:// or https:// URL"
+msgstr "L'indirizzo del webhook deve essere un URL http:// o https://"
+
+msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
+msgstr "Intestazione non valida (un \"Nome: valore\" per riga; Host, Content-Type, Content-Length, Transfer-Encoding e Connection li imposta il dispositivo)"
+
+msgid "Invalid Telegram bot token"
+msgstr "Token del bot Telegram non valido"
+
+msgid "Invalid Telegram chat (a number, or @channel)"
+msgstr "Chat Telegram non valida (un numero o @canale)"
+
+msgid "Invalid e-mail setting"
+msgstr "Impostazione e-mail non valida"
+
+msgid "The webhook needs an address"
+msgstr "Il webhook richiede un indirizzo"
+
+msgid "Telegram needs a bot token and a chat"
+msgstr "Telegram richiede un token del bot e una chat"
+
+msgid "E-mail needs a server, a sender and a recipient"
+msgstr "L'e-mail richiede un server, un mittente e un destinatario"
+
+msgid "SMS forwarding needs a phone number"
+msgstr "L'inoltro via SMS richiede un numero di telefono"
+
+msgid "The forwarding settings could not be saved"
+msgstr "Impossibile salvare le impostazioni di inoltro"
+
+msgid "SMS forwarding is not installed"
+msgstr "L'inoltro SMS non è installato"
+
+msgid "Unknown forwarding operation"
+msgstr "Operazione di inoltro sconosciuta"
+
 msgid "The language pack is not installed"
 msgstr "Il pacchetto lingue non è installato"
 
@@ -1455,8 +2979,29 @@ msgstr "Cache dei blocchi non disponibile"
 msgid "No serving cell to lock to"
 msgstr "Nessuna cella di servizio da bloccare"
 
+msgid "Reinstalling packages is not available on this system"
+msgstr "La reinstallazione dei pacchetti non è disponibile su questo sistema"
+
+msgid "No packages were written down by an update"
+msgstr "Nessun aggiornamento ha annotato pacchetti"
+
+msgid "Reinstalling is running already"
+msgstr "La reinstallazione è già in corso"
+
+msgid "The note could not be dropped"
+msgstr "Impossibile rimuovere l'avviso"
+
+msgid "Unknown packages operation"
+msgstr "Operazione sui pacchetti sconosciuta"
+
 msgid "usage: power get|set KEY VALUE|wake|idle"
 msgstr "usage: power get|set KEY VALUE|wake|idle"
+
+msgid "Data usage is not available on this system"
+msgstr "Il consumo dati non è disponibile su questo sistema"
+
+msgid "Unknown data usage operation"
+msgstr "Operazione del consumo dati sconosciuta"
 
 msgid "The TTL setting could not be read"
 msgstr "Impossibile leggere l'impostazione del TTL"

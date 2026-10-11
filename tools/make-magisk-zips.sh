@@ -20,7 +20,7 @@ case $TAG in *[!0-9A-Za-z._-]*|*..*) tag_ok= ;; esac
 [ -n "$tag_ok" ] || { echo "the tag '$TAG' is not one the installer accepts: v[0-9] and then letters, digits, . _ - (no ..)" >&2; exit 1; }
 sha() { (sha256sum "$1" 2>/dev/null || shasum -a 256 "$1") | cut -d' ' -f1; }
 for f in mu300-kernel.tar.gz mu300-kernel-6.18.tar.gz mu300-kernel-7.2.tar.gz mu300-openwrt-rootfs.tar.gz \
-         mu300-ubuntu-rootfs.tar.gz mu300-ubuntu-26.04-rootfs.tar.gz; do
+         mu300-openwrt-luci-rootfs.tar.gz mu300-ubuntu-rootfs.tar.gz mu300-ubuntu-26.04-rootfs.tar.gz; do
     want=$(awk -v f="$f" '$2 == f || $2 == "*" f {print $1}' "$R/SHA256SUMS")
     [ -n "$want" ] && [ -f "$R/$f" ] && [ "$(sha "$R/$f")" = "$want" ] ||
         { echo "$f is missing from $R or does not match its SHA256SUMS" >&2; exit 1; }
@@ -34,8 +34,8 @@ tar -xzOf "$R/mu300-kernel.tar.gz" ./busybox > "$W/busybox"
 
 # what every zip holds besides its payload, by name (the audit below compares against this)
 COMMON='META-INF/com/google/android/update-binary META-INF/com/google/android/updater-script module.prop customize.sh
-action.sh switch.sh system/bin/mu300-linux mu300/install.sh mu300/android-boot-image.sh mu300/mu300-update
-mu300/android-install.sh mu300/android-mount-mu300root.sh mu300/storage.sh mu300/i18n.sh mu300/i18n/tr.tsv
+action.sh switch.sh bootchain.sh system/bin/mu300-linux mu300/install.sh mu300/android-boot-image.sh mu300/mu300-update
+mu300/android-install.sh mu300/android-bootchain.sh mu300/android-mount-mu300root.sh mu300/storage.sh mu300/i18n.sh mu300/i18n/tr.tsv
 mu300/i18n/zh.tsv mu300/subset-files.txt mu300/gpu-files.txt mu300/busybox mu300/manifest'
 stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     S=$1
@@ -43,10 +43,10 @@ stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     I=$TOP/android/magisk/installer; M=$TOP/android/magisk/mu300-linux-switch
     cp "$I/update-binary" "$I/updater-script" "$S/META-INF/com/google/android/"
     sed -e "s/@TAG@/$TAG/" -e "s/@CODE@/$code/" -e "s/@SYSTEM@/$2/" -e "s/@KERNEL@/$3/" "$I/module.prop.in" > "$S/module.prop"
-    cp "$I/customize.sh" "$M/action.sh" "$M/switch.sh" "$S/"
+    cp "$I/customize.sh" "$M/action.sh" "$M/switch.sh" "$M/bootchain.sh" "$S/"
     cp "$M/system/bin/mu300-linux" "$S/system/bin/"
     cp "$I/mu300-install.sh" "$S/mu300/install.sh"
-    cp "$TOP/tools/android-boot-image.sh" "$TOP/tools/android-install.sh" "$TOP/tools/android-mount-mu300root.sh" \
+    cp "$TOP/tools/android-boot-image.sh" "$TOP/tools/android-install.sh" "$TOP/tools/android-bootchain.sh" "$TOP/tools/android-mount-mu300root.sh" \
        "$TOP/tools/storage.sh" "$TOP/tools/i18n.sh" "$S/mu300/"
     # the checkout's (in CI the tag's, so the release's own): the installer needs bootimg_from_stock, which an older
     # release's mu300-update does not have when zips are built locally from one
@@ -66,6 +66,7 @@ audit() {  # audit ZIP ROOTFS_ASSET KERNEL_ASSET: exactly the names it should ho
 }
 : > "$O/SHA256SUMS-magisk"
 for s in openwrt:mu300-openwrt-rootfs.tar.gz:openwrt: \
+         openwrt-luci:mu300-openwrt-luci-rootfs.tar.gz:openwrt-luci: \
          ubuntu-24.04:mu300-ubuntu-rootfs.tar.gz:ubuntu:24.04 \
          ubuntu-26.04:mu300-ubuntu-26.04-rootfs.tar.gz:ubuntu:26.04; do
     name=${s%%:*}; rest=${s#*:}; rootfs=${rest%%:*}; rest=${rest#*:}; os=${rest%%:*}; ubuntu=${rest#*:}

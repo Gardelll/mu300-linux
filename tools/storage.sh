@@ -11,6 +11,8 @@
 #   sd_kernel_ok     a card installation refuses a kernel bundle that cannot read the card
 #   sd_erase         uninstall.sh: overwrite the start of the card's mu300sd filesystem (nothing else, ever)
 #   write_install_env  install.sh: the text of mu300-install.env (install.ps1's InstallEnvText writes the same)
+#   adb_pubkey FILE  install.sh: the adb public key in FILE (adbkey.pub) as one safe line, "BASE64 name"
+#   bootchain_line   install.sh and the Magisk installer: the plan's line from android-bootchain.sh check
 
 SD_MIN=$((700 * 1024 * 1024))
 
@@ -117,13 +119,60 @@ sd_erase() {
     [ "$(sd_existing)" = no ] || die "the SD card still shows a mu300sd filesystem"
 }
 
+# The first line of an adb public key file (~/.android/adbkey.pub: "BASE64 user@host", no newline at the end), as it
+# goes into mu300-install.env inside single quotes: an Android RSA-2048 key (700 base64 characters, "QAAAA" first) and
+# a name of [A-Za-z0-9@._:-] only. Status 1 when FILE holds no such key.
+adb_pubkey() {
+    _k= _c=
+    IFS=' ' read -r _k _c < "$1" 2>/dev/null || [ -n "$_k" ] || return 1
+    [ ${#_k} -eq 700 ] && [ "${_k%=}" != "$_k" ] || return 1
+    case ${_k%=} in QAAAA*[!A-Za-z0-9+/]*) return 1 ;; QAAAA*) ;; *) return 1 ;; esac
+    _c=$(printf '%s' "$_c" | tr -cd 'A-Za-z0-9@._:-' | cut -c1-64)
+    echo "$_k ${_c:-installer}"
+}
+
 # mu300-install.env, what android-install.sh is told. OFF/SIZE (and their sectors) are always the internal region:
 # in SD mode SIZE is the card's by now and INT_SIZE keeps the region's, which the root-on-sd marker needs; the card's
 # own size is read on the device.
+bootchain_line() {  # bootchain_line OUTPUT: BC_LINE for the plan from the device's BOOTCHAIN-PLAN line, else 1 and
+    # BC_REFUSED, the reason
+    _p=$(printf '%s\n' "$1" | sed -n 's/^BOOTCHAIN-PLAN //p' | head -n1)
+    if [ -z "$_p" ]; then
+        BC_REFUSED=$(printf '%s\n' "$1" | sed -n 's/^BOOTCHAIN-REFUSED: //p' | head -n1)
+        [ -n "$BC_REFUSED" ] || BC_REFUSED=$(t 'no answer from the device')
+        return 1
+    fi
+    set -- $_p
+    _a=$1; _l=$2; shift 2
+    if [ $# = 0 ]; then BC_LINE=$(t 'boot chain:     identical on both slots')
+    else BC_LINE=$(t "boot chain:     {1} differ between the slots; Android's slot {2} is copied to slot {3} (backed up first)" "$(echo "$*" | sed 's/ /, /g')" "$_a" "$_l")
+    fi
+}
+
 write_install_env() {
     _rs=$SIZE; [ "$SD_MODE" = 1 ] && _rs=$INT_SIZE
-    printf 'OFF=%s\nSIZE=%s\nOFF_S=%s\nSIZE_S=%s\nFORMAT=%s\nOSES="%s"\nWIPE_LEGACY=%s\nUPDATE=%s\nBOOT_OS=%s\nDEFAULT_LINUX=%s\nBOOT_ATTEMPTS=%s\nIMPORT_HOTSPOT=%s\nKERNEL=%s\nSD_MODE=%s\nSD_DEV=%s\nINTERNAL_EXISTS=%s\nPWHASH='"'"'%s'"'"'\n' \
-      "$OFF" "$_rs" "$((OFF / 512))" "$((_rs / 512))" "$FORMAT" "$OSES" "$WIPE_LEGACY" "$UPDATE" "$BOOT_OS" "$DEFAULT_LINUX" "$BOOT_ATTEMPTS" "$IMPORT_HOTSPOT" "$KERNEL" "$SD_MODE" "$SD_DEV" "$INTERNAL_EXISTS" "$PWHASH"
+    printf 'OFF=%s
+SIZE=%s
+OFF_S=%s
+SIZE_S=%s
+FORMAT=%s
+OSES="%s"
+WIPE_LEGACY=%s
+UPDATE=%s
+BOOT_OS=%s
+DEFAULT_LINUX=%s
+BOOT_ATTEMPTS=%s
+IMPORT_HOTSPOT=%s
+KERNEL=%s
+SD_MODE=%s
+SD_DEV=%s
+INTERNAL_EXISTS=%s
+ADB=%s
+ADB_KEY='"'"'%s'"'"'
+SYNC_BOOTCHAIN=%s
+PWHASH='"'"'%s'"'"'
+' \
+      "$OFF" "$_rs" "$((OFF / 512))" "$((_rs / 512))" "$FORMAT" "$OSES" "$WIPE_LEGACY" "$UPDATE" "$BOOT_OS" "$DEFAULT_LINUX" "$BOOT_ATTEMPTS" "$IMPORT_HOTSPOT" "$KERNEL" "$SD_MODE" "$SD_DEV" "$INTERNAL_EXISTS" "${ADB:-0}" "${ADB_KEY:-}" "${SYNC_BOOTCHAIN:-0}" "$PWHASH"
 }
 
 # The free eMMC region: from the first 2 MiB boundary after the last partition to the last one before the backup
@@ -134,14 +183,25 @@ region_probe() {
     last_end=$1; disk=$2
     start=$(( (last_end / 4096 + 1) * 4096 ))
     end=$(( ((disk - 34) / 4096 - 1) * 4096 ))
+    # A partition table that ends at the end of the eMMC (one alignment block or less behind the last partition,
+    # issue #65): the two boundaries cross, and a negative size is not a region. It is an empty one - the callers
+    # then offer the card or make room - and its start is not read (region_find_existing).
+    [ $end -gt $start ] || end=$start
     OFF=$((start * 512)); SIZE=$(( (end - start) * 512 ))
 }
+
+# region_on_disk BYTES: whether the ext4 superblock of a region at BYTES (its second KiB) lies on the eMMC. A read
+# past the end of the disk never returns on this device: the dd spins on one core, survives kill -9 and heats the
+# SoC until a reboot (issues #43, #52, #65 - a 32 GB eMMC whose table ends at its end puts the region's start at the
+# disk's end, and the fixed offset of the first releases lies beyond a 32 GB eMMC altogether).
+region_on_disk() { [ $(( ($1 + 2048) / 512 )) -le "${disk:?region_probe first}" ]; }
 
 # an existing installation defines the region (it may have been created with a slightly different size, or at the
 # fixed offset of the first releases)
 region_find_existing() {
     existing=no
     for cand in $OFF 27762098176; do
+        region_on_disk "$cand" || continue
         m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' ')
         l=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | LC_ALL=C tr -d '\000')
         if [ "$m" = 53ef ] && [ "$l" = mu300root ]; then
@@ -159,4 +219,18 @@ region_dirty() {
     probe=""; i=0
     while [ $i -lt 16 ]; do probe="$probe $(( OFF / 1048576 + i * step ))"; i=$((i + 1)); done
     DIRTY=$(su_do "n=0; for s in $probe; do c=\$(dd if=/dev/block/mmcblk0 bs=1048576 skip=\$s count=1 2>/dev/null | tr -d \"\\000\\377\" | wc -c); [ \$c -gt 0 ] && n=\$((n + 1)); done; echo \$n")
+}
+
+# vpn_on_systems "OS...": the systems among OS... of the Linux filesystem already on the device whose VPN is on
+# (ENABLE=1 in etc/mu300/vpn.conf), one per line, as "OS:ks" when its kill switch is on too (the images'
+# lib/vpn-orphan.sh decides, pushed along and sourced on the device - it reads with sed, never sources a setting).
+# Read through a read-only mount (android-mount-mu300root.sh with MU300_RO=1: not even the journal is replayed),
+# taken down again at once. Nothing there, or nothing that mounts: nothing printed. The VPN is a module the new
+# systems do not carry: the installer then offers it by default, and with the kill switch on it is needed.
+vpn_on_systems() {
+    [ "$existing" = yes ] || return 0
+    _env="MU300_OFF=$OFF MU300_SIZE=$SIZE"
+    [ "$SD_MODE" = 1 ] && _env="MU300_SD_DEV=$SD_DEV"
+    adb push "$TOP/tools/android-mount-mu300root.sh" "$TOP/rootfs/overlay/opt/mu300/lib/vpn-orphan.sh" $T/ >/dev/null 2>&1 || return 0
+    su_do "$_env MU300_RO=1 sh $T/android-mount-mu300root.sh $T/mu300probe >/dev/null 2>&1 && { . $T/vpn-orphan.sh; for o in $1; do if vpn_killswitch_wanted $T/mu300probe/\$o; then echo \$o:ks; elif [ \"\$(vpn_conf_value $T/mu300probe/\$o/etc/mu300/vpn.conf ENABLE)\" = 1 ]; then echo \$o; fi; done; sh $T/android-mount-mu300root.sh -u $T/mu300probe >/dev/null 2>&1; }; true"
 }

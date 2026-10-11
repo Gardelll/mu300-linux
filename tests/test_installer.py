@@ -1,8 +1,13 @@
 """tools/linux-mode.sh: which adb device install.sh and uninstall.sh work on. With a phone or tablet attached next to
 the device the installer must ask, never pick one by itself."""
+import hashlib
+import json
 import re
 import struct
+import subprocess
+import sys
 import unittest
+import zlib
 
 from helpers import TOP, ShellTest
 
@@ -226,7 +231,8 @@ class InstallEnv(ShellTest):
     """mu300-install.env, what android-install.sh is told: tools/storage.sh's write_install_env (install.sh) and
     install.ps1's InstallEnvText write the same text (tests/installer.Tests.ps1 compares the two)."""
     COMMON = dict(OFF=27762098176, FORMAT=1, OSES='ubuntu openwrt', WIPE_LEGACY=0, UPDATE=0, BOOT_OS='openwrt',
-                  DEFAULT_LINUX=1, BOOT_ATTEMPTS=5, IMPORT_HOTSPOT=1, KERNEL='6.18', PWHASH='$6$salt$hash/x.y')
+                  DEFAULT_LINUX=1, BOOT_ATTEMPTS=5, IMPORT_HOTSPOT=1, KERNEL='6.18', SYNC_BOOTCHAIN=1,
+                  PWHASH='$6$salt$hash/x.y')
 
     def write_env(self, shell, **v):
         code = ''.join(f"{k}='{val}'; " for k, val in v.items())
@@ -254,7 +260,9 @@ class InstallEnv(ShellTest):
             self.assertEqual(e['PWHASH'], "'$6$salt$hash/x.y'")
             self.assertEqual(list(e), ['OFF', 'SIZE', 'OFF_S', 'SIZE_S', 'FORMAT', 'OSES', 'WIPE_LEGACY', 'UPDATE',
                                        'BOOT_OS', 'DEFAULT_LINUX', 'BOOT_ATTEMPTS', 'IMPORT_HOTSPOT', 'KERNEL',
-                                       'SD_MODE', 'SD_DEV', 'INTERNAL_EXISTS', 'PWHASH'])
+                                       'SD_MODE', 'SD_DEV', 'INTERNAL_EXISTS', 'ADB', 'ADB_KEY', 'SYNC_BOOTCHAIN',
+                                       'PWHASH'])
+            self.assertEqual(e['SYNC_BOOTCHAIN'], '1')
 
     def test_internal_mode(self):
         for shell in self.each_shell():
@@ -265,6 +273,43 @@ class InstallEnv(ShellTest):
             self.assertEqual((e['OFF'], e['SIZE'], e['OFF_S'], e['SIZE_S']),
                              ('27762098176', '34776023040', '54222848', '67921920'))
             self.assertEqual((e['FORMAT'], e['UPDATE']), ('0', '1'))
+
+    def test_bootchain_sync_is_off_unless_set(self):
+        for shell in self.each_shell():
+            common = {k: v for k, v in self.COMMON.items() if k != 'SYNC_BOOTCHAIN'}
+            e = self.parse(self.write_env(shell, **common, SIZE=1, INT_SIZE='', SD_MODE=0, SD_DEV='', INTERNAL_EXISTS=0))
+            self.assertEqual(e['SYNC_BOOTCHAIN'], '0')
+
+    def test_adb(self):
+        key = 'QAAAA' + 'A' * 694 + '='
+        for shell in self.each_shell():
+            e = self.parse(self.write_env(shell, **self.COMMON, SIZE=1, INT_SIZE='', SD_MODE=0, SD_DEV='',
+                                          INTERNAL_EXISTS=0))
+            self.assertEqual((e['ADB'], e['ADB_KEY']), ('0', "''"))      # off when nobody asked
+            e = self.parse(self.write_env(shell, **self.COMMON, SIZE=1, INT_SIZE='', SD_MODE=0, SD_DEV='',
+                                          INTERNAL_EXISTS=0, ADB=1, ADB_KEY=f'{key} me@pc'))
+            self.assertEqual((e['ADB'], e['ADB_KEY']), ('1', f"'{key} me@pc'"))
+
+    def test_adb_pubkey(self):
+        key = 'QAAAA' + 'A' * 694 + '='
+        f = self.tmp / 'adbkey.pub'
+        cases = [(f'{key} me@my-mac.local', f'{key} me@my-mac.local'),     # adbkey.pub: no newline at the end
+                 (f'{key} evil\'$(reboot)`x`\n', f'{key} evilrebootx'),     # a name that could leave the quotes
+                 (key, f'{key} installer'),
+                 ('ssh-rsa AAAAB3NzaC1yc2E me@pc\n', None), (key[1:] + ' x', None), (key[:-1] + 'A', None),
+                 ('QAAAA' + 'A' * 693 + "'=", None), ('', None)]
+        for shell in self.each_shell():
+            for text, want in cases:
+                f.write_text(text)
+                r = self.sh(shell, f'. "{TOP}/tools/storage.sh"; adb_pubkey "{f}"')
+                if want is None:
+                    self.assertEqual(1, r.returncode, text)
+                    self.assertEqual('', r.stdout)
+                else:
+                    self.assertEqual(0, r.returncode, r.stderr)
+                    self.assertEqual(want + '\n', r.stdout)
+            r = self.sh(shell, f'. "{TOP}/tools/storage.sh"; adb_pubkey "{self.tmp}/none"')
+            self.assertEqual(1, r.returncode)
 
     def test_installer_writes_the_env_file_with_it(self):
         src = (TOP / 'install.sh').read_text()
@@ -466,11 +511,12 @@ class SdErase(ShellTest):
 class Region(ShellTest):
     """storage.sh's region functions, with su_do running the device commands against a fake sysfs and eMMC file."""
 
-    def fake(self, ext4_at=None):
+    def fake(self, ext4_at=None, full=False):
         sysfs = self.tmp / 'sys/block/mmcblk0'
         (sysfs / 'mmcblk0p1').mkdir(parents=True, exist_ok=True)
         (sysfs / 'mmcblk0p1/start').write_text('2048\n')
-        (sysfs / 'mmcblk0p1/size').write_text(f'{4 << 21}\n')          # ends at 8 GiB + 1 MiB
+        # ends at 8 GiB + 1 MiB; full: 2 MiB before the end of the disk, the layout of issue #65
+        (sysfs / 'mmcblk0p1/size').write_text(f'{((16 << 21) - 4096) if full else (4 << 21)}\n')
         (sysfs / 'size').write_text(f'{16 << 21}\n')                   # a 16 GiB eMMC
         emmc = self.tmp / 'mmcblk0'
         with open(emmc, 'wb') as f:
@@ -482,7 +528,8 @@ class Region(ShellTest):
         return emmc
 
     def run_region(self, shell, call):
-        su = (f'su_do() {{ sh -c "$(printf "%s" "$1" | sed -e "s|/sys/block|{self.tmp}/sys/block|g" '
+        su = (f'su_do() {{ printf "%s\\n" "$1" >> "{self.tmp}/su.log"; '
+              f'sh -c "$(printf "%s" "$1" | sed -e "s|/sys/block|{self.tmp}/sys/block|g" '
               f'-e "s|/dev/block/mmcblk0|{self.tmp}/mmcblk0|g")"; }}\n')
         return self.sh(shell, su + f'. "{TOP}/tools/storage.sh"\n{call}\n'
                        'echo "rc=$? OFF=$OFF SIZE=$SIZE existing=${existing:-} DIRTY=${DIRTY:-}"')
@@ -507,6 +554,241 @@ class Region(ShellTest):
         for shell in self.each_shell():
             out = self.run_region(shell, 'region_probe; region_find_existing; region_dirty').stdout
             self.assertIn('existing=no DIRTY=1', out)
+
+
+    def test_a_table_that_ends_at_the_end_of_the_disk_is_an_empty_region_and_is_never_read(self):
+        """Issue #65 (and #43, #52): the last partition ends 2 MiB before the end of the eMMC. The first boundary
+        behind it is the end of the disk and the last one before the backup GPT lies before it: a negative size,
+        and a probe of the region's superblock 2 bytes past the last sector - a dd that never returns on the
+        device. The region is empty, and nothing past the disk's last sector is read; the fixed offset of the
+        first releases (27762098176) lies beyond this 16 GiB disk and is not read either."""
+        self.fake(full=True)
+        disk = 16 << 21
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; region_find_existing').stdout
+            self.assertIn(f'rc=0 OFF={disk * 512} SIZE=0 existing=no', out)
+            for cmd in (self.tmp / 'su.log').read_text().splitlines():
+                m = re.search(r'dd if=/dev/block/mmcblk0 bs=1 skip=(\d+) count=(\d+)', cmd)
+                if m:
+                    self.assertLessEqual(int(m.group(1)) + int(m.group(2)), disk * 512, cmd)
+            (self.tmp / 'su.log').unlink()
+
+    def test_the_legacy_offset_is_read_only_on_a_disk_that_holds_it(self):
+        start = ((2048 + (4 << 21)) // 4096 + 1) * 4096 * 512
+        self.fake(ext4_at=start)
+        for shell in self.each_shell():
+            self.run_region(shell, 'region_probe; region_find_existing')
+            log = (self.tmp / 'su.log').read_text()
+            self.assertIn(f'skip={start + 1080}', log)
+            self.assertNotIn('skip=27762099256', log, 'the legacy offset lies beyond a 16 GiB disk')
+            (self.tmp / 'su.log').unlink()
+
+
+def bc_block(suffix, a, b):
+    """A bootloader_control block of misc (AOSP layout) with these slot_info bytes for a and b."""
+    x = bytearray(bytes.fromhex('5f61000042434142010200009f001e000000000000000000000000000be17146'))
+    x[0:4] = suffix
+    x[12] = a
+    x[14] = b
+    x[28:32] = struct.pack('<I', zlib.crc32(bytes(x[:28])))
+    return bytes(x)
+
+
+class InstallSlot(ShellTest):
+    """install.sh's slot block, cut out between its markers (issue #86): Linux goes on the slot Android is not on,
+    boot_<that slot> is written with the image built for it and misc gets that slot's trial block - and the boot
+    partition Android runs from is never written. su_do runs the device commands against files: by-name/boot_a,
+    boot_b and misc, and /data/local/tmp; getprop answers the next line of the file slots on every call."""
+    SRC = (TOP / 'install.sh').read_text()
+    PS1 = (TOP / 'install.ps1').read_text()
+
+    def setUp(self):
+        super().setUp()
+        self.byname = self.tmp / 'byname'
+        self.byname.mkdir()
+        (self.tmp / 't').mkdir()
+        # adb push SRC DST: DST in the fake /data/local/tmp
+        self.stub('adb', '[ "$1" = push ] && cp "$2" "$STUBLOG/t/$(basename "$3")"; exit 0')
+
+    def device(self, *slots, same=False):
+        for f in self.byname.iterdir():
+            f.unlink()
+        for f in (self.tmp / 't').iterdir():
+            f.unlink()
+        (self.byname / 'boot_a').write_bytes(b'A' * 65536)
+        if same:
+            (self.byname / 'boot_b').symlink_to(self.byname / 'boot_a')
+        else:
+            (self.byname / 'boot_b').write_bytes(b'B' * 65536)
+        self.misc0 = bytes(2048) + bc_block(b'_a\0\0', 0x9f, 0x1e) + bytes(4096 - 2080)
+        (self.byname / 'misc').write_bytes(self.misc0)
+        (self.tmp / 'slots').write_text(''.join(s + '\n' for s in slots))
+        (self.tmp / 'n').unlink(missing_ok=True)
+        (self.tmp / 'su.log').write_text('')
+
+    def image(self, built_for, block):
+        """A boot image as build-boot-image.py leaves it: IMG, its .json and the trial block of its slot."""
+        img = self.tmp / f'boot-linux-slot{built_for}.img'
+        data = bytes(range(256)) * 128
+        img.write_bytes(data)
+        img.with_suffix('.json').write_text(json.dumps({'sha256': hashlib.sha256(data).hexdigest(),
+                                                        'linux_slot': built_for}))
+        img.with_suffix(f'.misc-slot-{built_for}-trial.bin').write_bytes(block)
+        return img, data
+
+    def run_slot(self, shell, tail):
+        m = re.search(r'# --- slot begin\n(.*?)# --- slot end', self.SRC, re.S)
+        self.assertIsNotNone(m, 'install.sh has no slot block')
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; T=/data/local/tmp; '
+                'say() { echo "SAY $*"; }; die() { echo "DIE $*"; exit 1; }; '
+                'su_do() { printf "%s\\n" "$1" >> "$STUBLOG/su.log"; case $1 in '
+                '"getprop ro.boot.slot_suffix") n=$(( $(cat "$STUBLOG/n" 2>/dev/null || echo 0) + 1 )); '
+                'echo $n > "$STUBLOG/n"; l=$(sed -n "${n}p" "$STUBLOG/slots"); '
+                '[ $n -le $(wc -l < "$STUBLOG/slots") ] || l=$(tail -n 1 "$STUBLOG/slots"); printf "%s\\n" "$l" ;; '
+                '*) sh -c "$(printf "%s" "$1" | sed -e "s|/dev/block/by-name|$STUBLOG/byname|g" '
+                '-e "s|/data/local/tmp|$STUBLOG/t|g")" ;; esac; }\n'
+                + m.group(1) + tail)
+        return self.sh(shell, code).stdout
+
+    def boots(self):
+        return (self.byname / 'boot_a').read_bytes(), (self.byname / 'boot_b').read_bytes()
+
+    def written(self):
+        """The partitions su_do wrote with dd (of=...)."""
+        return re.findall(r'of=/dev/block/by-name/(\w+)', (self.tmp / 'su.log').read_text())
+
+    def test_android_on_a_puts_linux_on_b(self):
+        block = bc_block(b'_b\0\0', 0x9e, 0x2f)
+        for shell in self.each_shell():
+            self.device('_a')
+            img, data = self.image('b', block)
+            out = self.run_slot(shell, f'slot_setup; echo "A=$ANDROID_SLOT L=$LINUX_SLOT"; write_linux_boot "{img}"; echo DONE')
+            self.assertIn('A=a L=b', out)
+            self.assertIn('Linux goes to slot b (boot_b)', out)
+            self.assertIn('DONE', out, out)
+            self.assertEqual(self.boots(), (b'A' * 65536, data))
+            self.assertEqual((self.byname / 'misc').read_bytes()[2048:2080], block)
+            self.assertEqual(self.written(), ['boot_b', 'misc'])
+
+    def test_android_on_b_puts_linux_on_a_and_never_touches_boot_b(self):
+        block = bc_block(b'_a\0\0', 0x2f, 0x9e)
+        for shell in self.each_shell():
+            self.device('_b')
+            img, data = self.image('a', block)
+            out = self.run_slot(shell, f'slot_setup; echo "A=$ANDROID_SLOT L=$LINUX_SLOT"; write_linux_boot "{img}"; echo DONE')
+            self.assertIn('A=b L=a', out)
+            self.assertIn('Linux goes to slot a (boot_a)', out)
+            self.assertIn('DONE', out, out)
+            self.assertEqual(self.boots(), (data, b'B' * 65536))           # Android's boot_b as it was
+            self.assertEqual((self.byname / 'misc').read_bytes()[2048:2080], block)
+            self.assertEqual(self.written(), ['boot_a', 'misc'])
+            self.assertNotIn('boot_b', ' '.join(l for l in (self.tmp / 'su.log').read_text().splitlines()
+                                                 if 'readlink' not in l))
+
+    def test_unknown_slot_is_refused(self):
+        for shell in self.each_shell():
+            for suffix in ('', '_c', 'a', '_a_b'):
+                self.device(suffix)
+                out = self.run_slot(shell, 'slot_setup; echo SURVIVED')
+                self.assertIn('DIE cannot tell which slot Android runs from', out, suffix)
+                self.assertNotIn('SURVIVED', out)
+                self.assertEqual(self.written(), [])
+
+    def test_slot_read_again_before_writing(self):
+        # Android ran from b when the image was built for a, and from a when it is written: a would be Android's
+        for shell in self.each_shell():
+            self.device('_b', '_a')
+            img, _ = self.image('a', bc_block(b'_a\0\0', 0x2f, 0x9e))
+            out = self.run_slot(shell, f'slot_setup; write_linux_boot "{img}"; echo SURVIVED')
+            self.assertIn('DIE Android no longer runs from slot b; boot_a and misc were not changed', out)
+            self.assertNotIn('SURVIVED', out)
+            self.assertEqual(self.boots(), (b'A' * 65536, b'B' * 65536))
+            self.assertEqual((self.byname / 'misc').read_bytes(), self.misc0)
+
+    def test_image_for_the_other_slot_is_refused(self):
+        # an image (and trial block) built for b next to an Android on b would arm Android's own slot
+        for shell in self.each_shell():
+            self.device('_b')
+            img, _ = self.image('b', bc_block(b'_b\0\0', 0x9e, 0x2f))
+            out = self.run_slot(shell, f'slot_setup; write_linux_boot "{img}"; echo SURVIVED')
+            self.assertIn('DIE the boot image was not built for slot a', out)
+            self.assertEqual(self.written(), [])
+            self.assertEqual(self.boots(), (b'A' * 65536, b'B' * 65536))
+
+    def test_boot_a_and_boot_b_the_same_partition(self):
+        for shell in self.each_shell():
+            self.device('_b', same=True)
+            out = self.run_slot(shell, 'slot_setup; echo SURVIVED')
+            self.assertIn('DIE boot_a and boot_b are the same partition', out)
+            self.assertNotIn('SURVIVED', out)
+
+    def test_release_check_only_for_linux_on_a(self):
+        for shell in self.each_shell():
+            for slot, rel, ok in (('a', 'v2026.10.09', False), ('a', 'v2026.09.28', False), ('a', 'v2026.10.10', True),
+                                  ('a', 'v2026.10.14', True), ('a', 'v2027.01.01', True), ('a', 'custom', True),
+                                  ('b', 'v2026.09.28', True)):
+                out = self.run_slot(shell, f'LINUX_SLOT={slot}; slot_release_ok {rel}; echo SURVIVED')
+                self.assertEqual('SURVIVED' in out, ok, (slot, rel, out))
+                if not ok:
+                    self.assertIn('use v2026.10.10 or newer', out)
+
+    def test_installer_builds_for_the_linux_slot_from_androids_boot(self):
+        src = self.SRC
+        build = src[src.index('python3 "$TOP/boot/build-boot-image.py"'):]
+        build = build[:build.index('>/dev/null')]
+        self.assertIn('--stock-boot "$WORK/dumps/boot_$ANDROID_SLOT.img"', build)
+        self.assertIn('--linux-slot "$LINUX_SLOT"', build)
+        self.assertIn('--out "$WORK/boot-linux-slot$LINUX_SLOT.img"', build)
+        self.assertIn('dev_pull /dev/block/by-name/boot_$ANDROID_SLOT "$WORK/dumps/boot_$ANDROID_SLOT.img"', src)
+        self.assertIn('write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"', src)
+        self.assertLess(src.index('\nslot_setup\n'), src.index('dev_pull /dev/block/by-name/boot_'))
+        self.assertLess(src.index('slot_release_ok "$RELEASE"'), src.index("say \"$(t 'Downloading release {1}'"))
+        # no slot is named by hand outside the slot block any more
+        rest = src.replace(re.search(r'# --- slot begin\n.*?# --- slot end', src, re.S).group(0), '')
+        for fixed in ('by-name/boot_a', 'by-name/boot_b', 'misc-slot-b-trial', 'boot-linux-slotb', "= _a ]"):
+            self.assertNotIn(fixed, rest)
+
+    def test_windows_installer_does_the_same(self):
+        ps = self.PS1
+        self.assertIn("'_b' { $ANDROID_SLOT = 'b'; $LINUX_SLOT = 'a' }", ps)
+        self.assertIn("'_a' { $ANDROID_SLOT = 'a'; $LINUX_SLOT = 'b' }", ps)
+        self.assertIn("'--linux-slot', $LINUX_SLOT", ps)
+        self.assertIn("'--stock-boot', \"$Work\\dumps\\boot_$ANDROID_SLOT.img\"", ps)
+        self.assertIn('of=/dev/block/by-name/boot_$LINUX_SLOT', ps)
+        self.assertIn('misc-slot-$LINUX_SLOT-trial.bin', ps)
+        for fixed in ('by-name/boot_b bs', 'of=/dev/block/by-name/boot_b', 'misc-slot-b-trial', 'boot-linux-slotb',
+                      "-ne '_a'"):
+            self.assertNotIn(fixed, ps)
+        # the slot is read again right before boot_<Linux slot> is written
+        self.assertLess(ps.index('Android no longer runs from slot {1}'), ps.index('of=/dev/block/by-name/boot_$LINUX_SLOT'))
+
+
+class UninstallSlot(ShellTest):
+    """uninstall.sh puts misc back to the slot Android runs from and copies Android's boot over the Linux slot's."""
+    SRC = (TOP / 'uninstall.sh').read_text()
+
+    def test_the_block_for_androids_slot(self):
+        py = re.search(r"<<'PY'\n(.*?)\nPY\n", self.SRC, re.S).group(1)
+        misc = self.tmp / 'misc'
+        # misc as Linux left it: armed for its trial on the other slot
+        for slot, live, want in (('a', bc_block(b'_b\0\0', 0x9e, 0x2f), bc_block(b'_a\0\0', 0x9f, 0x1e)),
+                                 ('b', bc_block(b'_a\0\0', 0x2f, 0x9e), bc_block(b'_b\0\0', 0x1e, 0x9f))):
+            misc.write_bytes(bytes(2048) + live + bytes(4096 - 2080))
+            r = subprocess.run([sys.executable, '-', str(misc), slot], input=py, capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(r.stdout.strip(), want.hex(), slot)
+
+    def test_slot_follows_android(self):
+        src = self.SRC
+        self.assertIn('_b) ANDROID_SLOT=b; LINUX_SLOT=a ;;', src)
+        self.assertIn('of=/dev/block/by-name/boot_$LINUX_SLOT', src)
+        self.assertIn('if=/dev/block/by-name/boot_$ANDROID_SLOT', src)
+        self.assertNotIn('of=/dev/block/by-name/boot_b', src)
+        self.assertNotIn("= _a ]", src)
+        ps = (TOP / 'uninstall.ps1').read_text()
+        self.assertIn('of=/dev/block/by-name/boot_$LINUX_SLOT', ps)
+        self.assertIn('Python $pyFile $miscTmp $ANDROID_SLOT', ps)
+        self.assertNotIn("-ne '_a'", ps)
 
 
 class ChooseSystems(ShellTest):
@@ -579,3 +861,147 @@ class ChooseSystems(ShellTest):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class VpnModule(ShellTest):
+    """install.sh's fetch_vpn_module: the VPN module's latest release (dikeckaan/mu300-linux-vpn), checked against its
+    SHA256SUMS, or a copy on the computer (MU300_VPN_MODULE)"""
+
+    def setUp(self):
+        super().setUp()
+        src = (TOP / 'install.sh').read_text()
+        m = re.search(r'\nfetch_vpn_module\(\) \{\n.*?\n\}\n', src, re.S)
+        self.assertIsNotNone(m, 'install.sh has no fetch_vpn_module')
+        self.fn = m.group(0)
+        self.server = self.tmp / 'server'
+        self.server.mkdir()
+        (self.server / 'mu300-linux-vpn.tar.gz').write_bytes(b'module v1')
+        self.sums()
+        # curl [-fsSL] -o OUT URL: from the server directory, by the URL's last part
+        self.stub('curl', 'out=; url=; while [ $# -gt 0 ]; do case $1 in -o) out=$2; shift ;; -*) ;; *) url=$1 ;; esac; '
+                          'shift; done; echo "$url" >> "$STUBLOG/urls"; '
+                          f'src="{self.server}/${{url##*/}}"; [ -f "$src" ] || exit 22; cat "$src" > "$out"')
+
+    def sums(self, data=None):
+        import hashlib
+        h = hashlib.sha256(data if data is not None else (self.server / 'mu300-linux-vpn.tar.gz').read_bytes()).hexdigest()
+        (self.server / 'SHA256SUMS').write_text(f'{h}  mu300-linux-vpn.tar.gz\n')
+
+    def run_fetch(self, shell, **env):
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; WORK="{self.tmp}/work"; '
+                'say() { :; }; die() { echo "DIE $*"; exit 1; }; '
+                'fetch() { curl -fL -o "$2" "$1"; }\n' + self.fn + '\nfetch_vpn_module; echo "rc=$? EXTRA_VPN=$EXTRA_VPN"')
+        return self.sh(shell, code, **env)
+
+    def test_downloads_and_verifies_the_latest_release(self):
+        for shell in self.each_shell():
+            (self.tmp / 'urls').unlink(missing_ok=True)
+            out = self.run_fetch(shell).stdout
+            self.assertIn(f'EXTRA_VPN={self.tmp}/work/vpn-module/mu300-linux-vpn.tar.gz', out)
+            self.assertEqual((self.tmp / 'work/vpn-module/mu300-linux-vpn.tar.gz').read_bytes(), b'module v1')
+            self.assertIn('https://github.com/dikeckaan/mu300-linux-vpn/releases/latest/download/SHA256SUMS',
+                          (self.tmp / 'urls').read_text())
+            out = self.run_fetch(shell, MU300_VPN_URL='http://10.0.0.2/m').stdout
+            self.assertIn('rc=0', out)
+            self.assertIn('http://10.0.0.2/m/SHA256SUMS', (self.tmp / 'urls').read_text())
+
+    def test_a_bad_checksum_dies(self):
+        self.sums(b'something else')
+        for shell in self.each_shell():
+            out = self.run_fetch(shell).stdout
+            self.assertIn('DIE', out)
+            self.assertIn('checksum mismatch', out)
+
+    def test_a_copy_on_the_computer(self):
+        copy = self.tmp / 'copy'
+        copy.mkdir()
+        (copy / 'mu300-linux-vpn.tar.gz').write_bytes(b'module v1')
+        for shell in self.each_shell():
+            (self.tmp / 'urls').unlink(missing_ok=True)
+            out = self.run_fetch(shell, MU300_VPN_MODULE=copy / 'mu300-linux-vpn.tar.gz').stdout
+            self.assertIn(f'EXTRA_VPN={copy}/mu300-linux-vpn.tar.gz', out)
+            self.assertFalse((self.tmp / 'urls').exists())
+            # checked against a SHA256SUMS next to it
+            (copy / 'SHA256SUMS').write_text('0' * 64 + '  mu300-linux-vpn.tar.gz\n')
+            self.assertIn('DIE', self.run_fetch(shell, MU300_VPN_MODULE=copy / 'mu300-linux-vpn.tar.gz').stdout)
+            (copy / 'SHA256SUMS').unlink()
+            self.assertIn('DIE', self.run_fetch(shell, MU300_VPN_MODULE=copy / 'nosuch.tar.gz').stdout)
+
+
+class VpnOnInTheReplacedSystem(ShellTest):
+    """install.sh over an installation whose VPN is on: tools/storage.sh's vpn_on_systems finds it through a read-only
+    mount (":ks" when its kill switch is on too), the VPN question's default becomes yes (no otherwise), and "no" with
+    the kill switch on is refused before anything is written"""
+
+    def run_probe(self, shell, existing='yes', on=('ubuntu',), ks=(), sd_mode=0, oses='ubuntu openwrt'):
+        # su_do: the device side - its command line is recorded, and run against a fake mounted filesystem with the
+        # images' lib/vpn-orphan.sh (pushed to /data/local/tmp/ on the device)
+        root = self.tmp / 'probe'
+        for o in ('ubuntu', 'openwrt'):
+            (root / o / 'etc/mu300').mkdir(parents=True, exist_ok=True)
+            (root / o / 'etc/mu300/vpn.conf').write_text(f'ENABLE={1 if o in on else 0}\nKILL_SWITCH={1 if o in ks else 0}\n')
+        lib = TOP / 'rootfs/overlay/opt/mu300/lib/vpn-orphan.sh'
+        self.stub('adb', 'echo "adb $*" >> "$STUBLOG/calls"')
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; T=/data/local/tmp; '
+                'say() { :; }; die() { echo "DIE $*"; exit 1; }; '
+                f'su_do() {{ echo "$1" > "{self.tmp}/su"; '
+                f'eval "$(printf "%s" "$1" | sed "s|^.*&& {{|{{|; s|/data/local/tmp/vpn-orphan.sh|{lib}|; '
+                f's|/data/local/tmp/mu300probe|{root}|g; s|sh /data/local/tmp/android-mount-mu300root.sh -u [^;]*;||")"; }}; '
+                f'existing={existing}; OFF=123; SIZE=456; SD_MODE={sd_mode}; SD_DEV=/dev/block/mmcblk1p1; OSES="{oses}"; '
+                '. "$TOP/tools/storage.sh"; echo "probe=[$(vpn_on_systems "$OSES" | tr "\\n" " ")]"')
+        return self.sh(shell, code)
+
+    def test_the_probe(self):
+        for shell in self.each_shell():
+            for on, ks, want in ((('ubuntu',), (), 'probe=[ubuntu ]'), ((), (), 'probe=[]'),
+                                 (('ubuntu', 'openwrt'), ('openwrt',), 'probe=[ubuntu openwrt:ks ]')):
+                r = self.run_probe(shell, on=on, ks=ks)
+                self.assertIn(want, r.stdout, (on, ks, r.stderr))
+                su = (self.tmp / 'su').read_text()
+                self.assertIn('MU300_OFF=123 MU300_SIZE=456 MU300_RO=1 sh /data/local/tmp/android-mount-mu300root.sh', su)
+                self.assertIn('. /data/local/tmp/vpn-orphan.sh', su)
+                self.assertIn('android-mount-mu300root.sh -u /data/local/tmp/mu300probe', su)
+                self.assertNotIn("'", su)                       # su_do wraps the command in single quotes
+            self.assertIn('vpn-orphan.sh', (self.tmp / 'calls').read_text())     # pushed along
+            # only the systems being installed count
+            self.assertIn('probe=[]', self.run_probe(shell, on=('openwrt',), oses='ubuntu').stdout)
+
+    def test_the_card_and_no_installation(self):
+        for shell in self.each_shell():
+            self.run_probe(shell, sd_mode=1)
+            self.assertIn('MU300_SD_DEV=/dev/block/mmcblk1p1 MU300_RO=1', (self.tmp / 'su').read_text())
+            (self.tmp / 'su').unlink()
+            self.assertIn('probe=[]', self.run_probe(shell, existing='no').stdout)
+            self.assertFalse((self.tmp / 'su').exists())          # nothing to look at: nothing mounted
+
+    def question(self, shell, probe, answer):
+        src = (TOP / 'install.sh').read_text()
+        block = src[src.index('vx_default=no\n'):src.index('\nKERNEL=5.4\n')]
+        block = block[:block.index('\nEXTRA_VPN=')]
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; OSES="ubuntu openwrt"; '
+                'die() { echo "DIE $*"; exit 1; }; '
+                f'vpn_on_systems() {{ printf "%s" "{probe}" | tr " " "\\n"; }}; '
+                'ask() { printf "ASKED[%s] " "$3"; read -r _a; [ -n "$_a" ] || _a=$3; eval "$1=\\$_a"; }\n'
+                + block + '\necho "vx=$vx"')
+        return self.sh(shell, code, stdin=answer + '\n').stdout
+
+    def test_both_defaults(self):
+        for shell in self.each_shell():
+            out = self.question(shell, '', '')
+            self.assertIn('ASKED[no]', out)
+            self.assertIn('vx=no', out)
+            self.assertNotIn('The VPN is on', out)
+            out = self.question(shell, 'ubuntu', '')
+            self.assertIn('The VPN is on in the system being replaced (ubuntu)', out)
+            self.assertIn('ASKED[yes]', out)
+            self.assertIn('vx=yes', out)
+            # kill switch off: "no" stays possible
+            self.assertIn('vx=no', self.question(shell, 'ubuntu', 'no'))
+
+    def test_no_with_the_kill_switch_on_is_refused(self):
+        for shell in self.each_shell():
+            out = self.question(shell, 'ubuntu openwrt:ks', 'no')
+            self.assertIn('The VPN is on in the system being replaced (ubuntu openwrt)', out)
+            self.assertIn('DIE The VPN is on with its kill switch in openwrt', out)
+            self.assertNotIn('vx=', out)
+            self.assertIn('vx=yes', self.question(shell, 'openwrt:ks', ''))

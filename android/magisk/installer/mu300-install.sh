@@ -71,7 +71,7 @@ android_lang() {  # the language of the Android locale: tr, zh or en
 #   untrusted  /sdcard/mu300-install.conf or /sdcard/Download/mu300-install.conf (first found): any app with
 #              storage access can write these, so they choose only what destroys nothing and reveals nothing
 # Trusted values win.
-CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN'
+CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN MU300_SYNC_BOOTCHAIN'
 CONF_SET=
 conf_find() { for _f in "$SDCARD/mu300-install.conf" "$SDCARD/Download/mu300-install.conf"; do [ -f "$_f" ] && { echo "$_f"; return 0; }; done; return 0; }
 # erasing, formatting, overriding the model check and the password: only from a trusted file
@@ -152,6 +152,7 @@ conf_valid() {  # conf_valid KEY VALUE: VALUE is exactly one this installer know
         MU300_DEVICE) case $2 in f50|u30air) return 0 ;; esac ;;
         MU300_LANG) case $2 in en|tr|zh) return 0 ;; esac ;;
         MU300_DRY_RUN) [ "$2" = 1 ] && return 0 ;;
+        MU300_SYNC_BOOTCHAIN) case $2 in 0|1) return 0 ;; esac ;;
         # any characters: it only ever goes to mkpasswd on stdin, never into a path or a command line
         MU300_PASSWORD) [ ${#2} -ge 6 ] && return 0 ;;
     esac
@@ -181,6 +182,7 @@ detect_device() {
         *MU300*|*F50*|*mu300*) DEVICE=f50 ;;
         *) DEVICE= ;;
     esac
+    MODEL_KNOWN=0; [ -z "$DEVICE" ] || MODEL_KNOWN=1
     [ -z "${MU300_DEVICE:-}" ] || DEVICE=$MU300_DEVICE
     [ -n "$DEVICE" ] || die "$(t 'This does not look like a ZTE F50/MU300 or U30 Air. If it is one, put MU300_DEVICE=f50 or u30air into {1}.' "$TRUSTED_CONF")"
 }
@@ -211,6 +213,7 @@ manifest_load() {  # the zip's manifest, read like the conf file: only these key
     case $TAG in *[!0-9A-Za-z._-]*|*..*) _ok= ;; esac
     case $SYSTEM:$OS:$UBUNTU:$ROOTFS_ASSET in
         openwrt:openwrt::mu300-openwrt-rootfs.tar.gz) ;;
+        openwrt-luci:openwrt-luci::mu300-openwrt-luci-rootfs.tar.gz) ;;
         ubuntu-24.04:ubuntu:24.04:mu300-ubuntu-rootfs.tar.gz) ;;
         ubuntu-26.04:ubuntu:26.04:mu300-ubuntu-26.04-rootfs.tar.gz) ;;
         *) _ok= ;;
@@ -295,7 +298,7 @@ mount_target() {  # mount_target DIR [ro]: the Linux filesystem of the plan, wit
 # MOUNTED is cleared only after the helper said it unmounted; under set -e a bare failing call would end the
 # function before that line
 umount_target() { asw "$ANDROID_SH" "$W/android-mount-mu300root.sh" -u "$1" >/dev/null 2>&1 || return 1; MOUNTED=; }
-need_for() { case $1 in openwrt) echo $NEED_OPENWRT ;; ubuntu) echo $NEED_UBUNTU ;; *) echo $NEED_BOTH ;; esac; }
+need_for() { case $1 in openwrt|openwrt-luci) echo $NEED_OPENWRT ;; ubuntu) echo $NEED_UBUNTU ;; *) echo $NEED_BOTH ;; esac; }
 no_room_inside() {  # the refusal when Linux does not fit inside, with the way out this device has
     if [ -n "$SD_DEV" ] && [ "$sd_ex" = foreign ]; then
         die "$(t 'There is too little free space inside for Linux, and the SD card ({1}) holds another Linux (ext4) filesystem, which the installer never formats. Copy off what you need and format the card elsewhere, or use another card.' "$SD_DEV")"
@@ -433,6 +436,23 @@ plan_choices() {
     # an if, not an && list: the last command's status is the function's, and set -e would stop main on it
     WIPE_LEGACY=0; if [ "$OS" = ubuntu ] && [ "$FORMAT" = 0 ]; then WIPE_LEGACY=1; fi
 }
+# The Linux slot gets the boot chain of Android's slot - uboot, sml, teecfg, trustos and vbmeta, one firmware build on
+# both slots (issue #86): android-bootchain.sh decides and checks here, android-install.sh copies it before it installs
+# anything, with a backup on the Linux filesystem (.mu300/bootchain). MU300_SYNC_BOOTCHAIN=0 skips that, for experts.
+plan_bootchain() {
+    SYNC_BOOTCHAIN=1; BC_LINE=; BC_REFUSED=
+    if [ "${MU300_SYNC_BOOTCHAIN:-1}" = 0 ]; then
+        SYNC_BOOTCHAIN=0; BC_LINE=$(t 'boot chain:     not synced (MU300_SYNC_BOOTCHAIN=0)'); return 0
+    fi
+    # android-bootchain.sh writes only on a model it knows: one taken from MU300_DEVICE keeps its chain as it is
+    if [ "${MODEL_KNOWN:-1}" = 0 ]; then
+        SYNC_BOOTCHAIN=0; BC_LINE=$(t 'boot chain:     not synced (the model is not recognised)'); return 0
+    fi
+    _bco=$(asw MU300_BY_NAME="$BY" "$ANDROID_SH" "$D/android-bootchain.sh" check 2>&1) || true
+    bootchain_line "$_bco" ||
+        die "$(t 'the boot chain cannot be copied to the Linux slot: {1}' "$BC_REFUSED")
+$(t 'Nothing was changed. Experts can skip this step with MU300_SYNC_BOOTCHAIN=0.')"
+}
 plan_print() {
     echo
     say "$(t 'Plan')"
@@ -457,6 +477,7 @@ plan_print() {
         echo "  $(t 'password:       generated, written to {1}' "$PW_FILE")"
     fi
     echo "  $(t 'writes:         {1}, boot_{2}, 32 bytes of misc (boot_{3}, the partition table and userdata are not touched)' "$([ "$SD_MODE" = 1 ] && echo "$SD_DEV" || t 'the Linux region')" "$LINUX_SLOT" "$ANDROID_SLOT")"
+    echo "  $BC_LINE"
 }
 # Every setting, what it does and the value this run used (or would have: a refused run writes it too, with what
 # was known by then), so nobody has to type it from a README. Any app can write $SDCARD, so it is never opened by
@@ -507,6 +528,8 @@ write_example() {
         echo "#MU300_LANG=${MU300_LANG:-en}"
         echo "# only show what would be done"
         echo "#MU300_DRY_RUN=1"
+        echo "# 0: leave the Linux slot's boot chain (uboot, sml, teecfg, trustos, vbmeta) as it is; experts only"
+        echo "#MU300_SYNC_BOOTCHAIN=1"
     } > "$_new" ) 2>/dev/null &&
         [ -f "$_new" ] && [ ! -L "$_new" ] && rm -f "$_ex" && mv -f "$_new" "$_ex" 2>/dev/null
     rm -f "$_new" 2>/dev/null
@@ -594,7 +617,7 @@ install_env() {
 }
 install_systems() {
     say "$(t 'Installing {1} (this takes a few minutes)' "$OS")"
-    cp "$D/android-install.sh" "$D/android-mount-mu300root.sh" "$W/" || die "$(t 'could not copy the installer files')"
+    cp "$D/android-install.sh" "$D/android-mount-mu300root.sh" "$D/android-bootchain.sh" "$W/" || die "$(t 'could not copy the installer files')"
     install_env
     asw "$ANDROID_SH" "$W/android-install.sh" 2>&1 | tee "$W/device-install.log"
     grep -q MU300-INSTALL-OK "$W/device-install.log" || die "$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")"
@@ -634,7 +657,7 @@ pw_text() {
     # from the file this one replaces), or the first zip's password would be lost with its output. Not after a
     # wipe (HAVE_SYSTEMS is empty then), and never a block of this run's user.
     case $OS in ubuntu) _ou=root _os=openwrt ;; *) _ou=ubuntu _os=ubuntu ;; esac
-    case " $HAVE_SYSTEMS " in *" $_os "*) ;; *) return 0 ;; esac
+    case " $HAVE_SYSTEMS " in *" $_os "*|*" $_os-luci "*) ;; *) return 0 ;; esac
     [ -f "$PW_FILE" ] && [ ! -L "$PW_FILE" ] || return 0
     awk -v u="user: $_ou" '
         /^MU300 Linux / { if (keep) printf "\n%s", b; b = ""; keep = 0 }
@@ -685,9 +708,9 @@ report() {
     echo "  $(t 'USB network: {1}   SSH: {2}' "$_ip" "$_users@$_ip")"
     echo "  $(t 'switch systems: mu300-os {1}   back to Android: mu300-next-boot android' "$(echo $_after | tr ' ' '|')")"
     echo "  $(t 'If Linux does not start, the device returns to Android by itself.')"
-    # the zip holds the release's systems and kernel only: the VPN engines are the vpn extra (mu300-extra), a
-    # download of its own (a reinstall over a system that uses the VPN keeps that system's engines: android-install.sh)
-    echo "  $(t 'The VPN (mu300-vpn) needs the vpn extra: Xray and sing-box. It can also be added later on the device:')"
+    # the zip holds the release's systems and kernel only: the VPN is the module of its own repository, which
+    # mu300-extra downloads on the device (one already on the Linux partition stays, and each system links it at boot)
+    echo "  $(t 'The VPN (mu300-vpn, with Xray and sing-box) is a module of its own: {1}. It can also be added later on the device:' https://github.com/dikeckaan/mu300-linux-vpn)"
     echo "    sudo mu300-extra install vpn"
 }
 
@@ -708,6 +731,7 @@ main() {
     plan_storage
     inspect_target
     plan_choices
+    plan_bootchain
     plan_print
     if [ "${MU300_DRY_RUN:-}" = 1 ]; then say "$(t 'Dry run: nothing was written.')"; exit 3; fi
     build_vendor

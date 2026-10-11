@@ -17,7 +17,15 @@ MODULES_REV=4381465ccaf87fcf3215b9cd42f4a685df40e5e0
 docker build -q -t mu300-kbuild "$TOP/kernel" >/dev/null
 docker volume create "$VOL" >/dev/null
 W=$(mktemp -d)
-trap 'rm -rf "$W"' EXIT
+# on a Linux docker the container writes as root: the outputs are handed to the user below, and a cleanup that
+# still cannot remove something does not fail the build that has already copied them out. The config merge logs and
+# the rejected fragment options go with the scratch copy, unless MU300_KBUILD_LOGS names a directory to keep them in
+# (the release workflow does, for a failed build).
+cleanup() {
+    [ -z "${MU300_KBUILD_LOGS:-}" ] || { mkdir -p "$MU300_KBUILD_LOGS" && cp "$W"/*.log "$W"/fragment-rejected.txt "$MU300_KBUILD_LOGS/"; } 2>/dev/null || true
+    rm -rf "$W" 2>/dev/null || true
+}
+trap cleanup EXIT
 # build-linux.sh writes its logs next to the config: give it a scratch copy of kernel/
 cp -R "$TOP/kernel/." "$W/"
 cp "$TOP/kernel/f50-stock-B09.config" "$W/device.config"
@@ -45,7 +53,7 @@ echo "==> sources"
 fetch /src/zte-u30air "$KERNEL_REPO" "$KERNEL_REV"
 cd /src/zte-u30air
 # the tree is the pinned commit plus exactly these patches: reapply from a clean checkout whenever they change
-KPATCHES="bluetooth-marlin3-link-policy of-reserved-mem-skip of-reserved-mem-add regdb-wens-certificate sipa-delegate-einprogress wcn-pcie-scan-timeout sipc-base-addr-attr sipa-delegate-pm-runtime sipc-debug-once sprdwcn-mbuf-pool-deinit-null"
+KPATCHES="bluetooth-marlin3-link-policy of-reserved-mem-skip of-reserved-mem-add regdb-wens-certificate sipa-delegate-einprogress wcn-pcie-scan-timeout sipc-base-addr-attr sipa-delegate-pm-runtime sipc-debug-once sprdwcn-mbuf-pool-deinit-null logspam-quiet"
 sum=$(cd /work/patches && cat $(for p in $KPATCHES; do echo $p.patch; done) | sha256sum | cut -d" " -f1)
 if [ "$(cat .mu300-patches 2>/dev/null)" != "$sum" ]; then
     git checkout -q -f "$KERNEL_REV" && git clean -q -fdx -e .mu300-patches
@@ -87,6 +95,7 @@ echo "$(ls /work/out/modules | wc -l) modules, $(strings /work/out/Image | grep 
 echo "==> ZTE U30 Air modules"
 bash /work/build-u30air.sh
 '
+docker run --rm -v "$W":/work mu300-kbuild chown -R "$(id -u):$(id -g)" /work/out
 mkdir -p "$OUT"
 rm -rf "$OUT/modules" "$OUT/modules-u30air"
 cp -R "$W/out/." "$OUT/"

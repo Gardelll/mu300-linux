@@ -28,6 +28,7 @@ MU300_FILES = {
     'mu300/mu300-update': 'rootfs/overlay/opt/mu300/bin/mu300-update',
     'mu300/android-install.sh': 'tools/android-install.sh',
     'mu300/android-mount-mu300root.sh': 'tools/android-mount-mu300root.sh',
+    'mu300/android-bootchain.sh': 'tools/android-bootchain.sh',
     'mu300/storage.sh': 'tools/storage.sh',
     'mu300/i18n.sh': 'tools/i18n.sh',
     'mu300/i18n/tr.tsv': 'i18n/tr.tsv',
@@ -122,8 +123,8 @@ def generic_ramdisk():
     return _generic['data']
 
 
-ROOTFS_ASSET = {'openwrt': 'mu300-openwrt-rootfs.tar.gz', 'ubuntu-24.04': 'mu300-ubuntu-rootfs.tar.gz',
-                'ubuntu-26.04': 'mu300-ubuntu-26.04-rootfs.tar.gz'}
+ROOTFS_ASSET = {'openwrt': 'mu300-openwrt-rootfs.tar.gz', 'openwrt-luci': 'mu300-openwrt-luci-rootfs.tar.gz',
+                'ubuntu-24.04': 'mu300-ubuntu-rootfs.tar.gz', 'ubuntu-26.04': 'mu300-ubuntu-26.04-rootfs.tar.gz'}
 
 
 class Conf(ShellTest):
@@ -233,7 +234,7 @@ class Conf(ShellTest):
             ex = (sd / 'mu300-install.conf.example').read_text()
             lines = ex.splitlines()
             keys = [l for l in lines if re.match(r'#MU300_[A-Z_]+=', l)]
-            self.assertEqual(len(keys), 15, ex)
+            self.assertEqual(len(keys), 16, ex)
             for line in keys:
                 i = lines.index(line)
                 self.assertTrue(lines[i - 1].startswith('# '), line)          # its explanation, on a line of its own
@@ -366,7 +367,7 @@ class InstallerCase(ShellTest):
         self.kernel_release = f'{kernel}.0-mu300' if kernel != '5.4' else '5.4.254-mu300'
         kasset = 'mu300-kernel.tar.gz' if kernel == '5.4' else f'mu300-kernel-{kernel}.tar.gz'
         rasset = ROOTFS_ASSET[system]
-        os_, _, ubuntu = system.partition('-')
+        os_, ubuntu = (system, '') if system.startswith('openwrt') else system.split('-')
         kb = tar_gz({'Image': b'\x7fkernel' * 1000, 'ramdisk-generic.lz4': generic_ramdisk(),
                      'modules/mu300-test.ko': b'\x7fELF test module', 'kernel.release': (self.kernel_release + '\n').encode(),
                      'devices': (devices + '\n').encode(), 'features': ''.join(f + '\n' for f in features).encode()})
@@ -807,11 +808,22 @@ class Install(InstallerCase):
         self.assertFalse((self.fake.root / 'sdcard/mu300-linux-password.txt').exists())
         self.assertEqual(self.work_dirs(), [])                                 # proprietary staging gone
 
-    def test_report_names_the_vpn_extra(self):
-        # the zip carries no VPN engines (they are the vpn extra since mu300-extra): the report says how to add them
+    def test_full_install_openwrt_with_the_control_panel(self):
+        # the panel system has a zip of its own: installed under its own name, and the one that boots
+        self.zip(system='openwrt-luci')
         r = self.run_installer()
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        self.assertIn('The VPN (mu300-vpn) needs the vpn extra: Xray and sing-box.', r.stdout)
+        env = (self.fake.root / 'install.env').read_text()
+        for line in ('OSES="openwrt-luci"', 'BOOT_OS=openwrt-luci', 'FORMAT=1'):
+            self.assertIn(line, env)
+        self.assertIn('android/vendor/bin/modem_control', self.linux_image('b'))
+
+    def test_report_names_the_vpn_extra(self):
+        # the zip carries no VPN (the module of dikeckaan/mu300-linux-vpn): the report says how to add it
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('The VPN (mu300-vpn, with Xray and sing-box) is a module of its own: '
+                      'https://github.com/dikeckaan/mu300-linux-vpn.', r.stdout)
         self.assertIn('sudo mu300-extra install vpn', r.stdout)
 
     def test_slot_b_android(self):
@@ -1172,6 +1184,59 @@ class Install(InstallerCase):
         self.assertEqual((self.fake.root / 'fs/home/precious').read_text(), 'a user file')
         self.assertEqual((self.fake.root / 'mounts').read_text(), '')                 # unmounted again
         self.assertEqual(self.work_dirs(), [])
+
+
+class Bootchain(InstallerCase):
+    """the boot chain of Android's slot for the Linux slot (tools/android-bootchain.sh, tests/test_bootchain.py): the
+    plan says what happens, a refusal stops the installation before anything is written, and android-install.sh is
+    told whether to sync"""
+
+    def chain(self, name, slot, data):
+        (self.fake.root / 'dev/block/by-name' / f'{name}_{slot}').write_bytes(data)
+
+    def test_identical(self):
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn('  boot chain:     identical on both slots', r.stdout)
+        self.assertTrue(self.nothing_written())
+
+    def test_differing_images_are_named(self):
+        # the same size, another build
+        self.chain('trustos', 'a', b'TRUSTOS' * 1024)
+        self.chain('vbmeta', 'a', b'VBMETA' * 1024)
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn("  boot chain:     trustos, vbmeta differ between the slots; Android's slot a is copied to slot b "
+                      '(backed up first)', r.stdout)
+        self.assertTrue(self.nothing_written())
+
+    def test_refusal_stops_before_anything(self):
+        (self.fake.root / 'dev/block/by-name/teecfg_b').unlink()
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn('the boot chain cannot be copied to the Linux slot: teecfg_a or teecfg_b is missing', r.stdout)
+        self.assertIn('MU300_SYNC_BOOTCHAIN=0', r.stdout)
+        self.assertFalse((self.fake.root / 'install.env').exists())
+        self.assertTrue(self.nothing_written())
+
+    def test_install_tells_android_install_to_sync(self):
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('SYNC_BOOTCHAIN=1', (self.fake.root / 'install.env').read_text())
+
+    def test_skip_setting(self):
+        (self.fake.root / 'dev/block/by-name/teecfg_b').unlink()
+        r = self.run_installer(conf='MU300_SYNC_BOOTCHAIN=0\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('boot chain:     not synced (MU300_SYNC_BOOTCHAIN=0)', r.stdout)
+        self.assertIn('SYNC_BOOTCHAIN=0', (self.fake.root / 'install.env').read_text())
+
+    def test_unrecognised_model_is_not_synced(self):
+        self.device(model='Generic Phone')
+        r = self.run_installer(trusted='MU300_DEVICE=f50\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('boot chain:     not synced (the model is not recognised)', r.stdout)
+        self.assertIn('SYNC_BOOTCHAIN=0', (self.fake.root / 'install.env').read_text())
 
 
 class Password(ShellTest):

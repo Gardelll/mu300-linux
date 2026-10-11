@@ -33,7 +33,21 @@ One step, from the pinned public sources (kernel tree, realme Wi-Fi/Bluetooth/Ma
 kernel/build-all.sh    # -> out/Image, out/modules/*.ko, out/modules.builtin*  (about 10 minutes on Apple silicon)
 ```
 Maintainers publish the prebuilt images with `tools/make-release.sh TAG --publish` (it refuses to publish if an image
-contains firmware, Android files, host keys or local settings). The manual steps behind `build-all.sh`:
+contains firmware, Android files, host keys or local settings).
+
+**Releasing from GitHub Actions.** The same release, built on a GitHub arm64 runner: Actions > Release > Run workflow,
+with the ref `main` (the job refuses any other ref, and a tag or release that already exists), the tag, and prerelease
+left on. It builds the 5.4 kernel, the mainline 6.18 and 7.2 kernels and their modules (about an hour the first time;
+about five minutes while the kernel outputs are still in the Actions cache, which they are until `kernel/`, `upstream/`
+or the newest kernel.org version changes), runs `tools/make-release.sh --publish --prerelease` and dispatches the Magisk
+zips. Then try the prerelease on a device, edit its notes, and promote it with
+`gh release edit TAG --prerelease=false --latest`: only then do the installers and `mu300-update` offer it. A release the
+workflow made has no `tools/gpu/cltest` (it is built locally against Android's libraries and is not in the repository;
+`make-release.sh` includes it only when it is there), so `mu300-toolkit`'s GPU stress item is absent on such a release;
+a release made by hand on a machine with the binary has it. A hand-run `tools/make-release.sh TAG --publish` still works
+as before and does not start the workflow, which only runs when asked for.
+
+The manual steps behind `build-all.sh`:
 ```sh
 git clone https://github.com/dikeckaan/zte-ums9620-kernel-5.4.254   # or the Enceka U30 Air repo
 docker build -t mu300-kbuild kernel/
@@ -62,6 +76,9 @@ and the vendor-init tool: `docker run --rm -v "$PWD/tools/bt-init":/w mu300-kbui
 ```sh
 android-vendor/extract-subset.sh android-subset
 python3 android-vendor/gen-ueventd-perms.py android-subset/vendor/etc/ueventd.rc <vendor init *.rc> > android-vendor/ueventd-perms.sh
+# the F50's inputs are kept in android-vendor/ueventd/: regenerate after changing the generator with
+# python3 android-vendor/gen-ueventd-perms.py android-vendor/ueventd/ueventd.rc android-vendor/ueventd/init-perms.rc > android-vendor/ueventd-perms.sh
+# (and copy it to rootfs/overlay/opt/mu300/bin/ueventd-perms.sh; tests/test_vendor_ids.py checks both)
 ```
 
 ### 3. Boot image
@@ -81,12 +98,14 @@ python3 boot/build-boot-image.py --stock-boot dumps/boot_a.img --misc-head dumps
 3. Assemble and deploy:
 ```sh
 cid=$(docker create mu300-ubuntu:24.04); docker export $cid > rootfs/base.tar; docker rm $cid
-tools/make-extra.sh vpn mu300-extra-vpn.tar.gz   # optional: the VPN engines as the vpn extra, not part of the image
-                          # (xray, hev-socks5-tunnel, sing-box, pinned and sha256-checked; on the device:
-                          # sudo MU300_EXTRA_FILE=mu300-extra-vpn.tar.gz mu300-extra install vpn)
+# the VPN is not part of the image: it is the module of github.com/dikeckaan/mu300-linux-vpn (built there with
+# tools/make-module.sh); on the device: sudo mu300-extra install vpn [--from mu300-linux-vpn.tar.gz]
+# adbd (adb over USB to Linux, mu300-usb adb on): static aarch64, a couple of minutes; optional
+sh tools/adbd/build.sh tools/adbd/adbd
 docker run --rm -v "$PWD/rootfs":/w -v "$PWD/out/modules":/kmods:ro -v "$PWD/out":/kout:ro \
   -v "$PWD/firmware":/firmware:ro -v "$PWD/android-subset":/android-subset:ro -v "$PWD/tools/logdw/logdw":/logdw:ro \
-  -v "$PWD/tools/bt-init/mu300-bt-init":/bt-init:ro mu300-ubuntu:24.04 bash /w/assemble.sh
+  -v "$PWD/tools/bt-init/mu300-bt-init":/bt-init:ro -v "$PWD/tools/adbd/adbd":/adbd:ro \
+  mu300-ubuntu:24.04 bash /w/assemble.sh
 ```
 Push `mu300-ubuntu-24.04-rootfs.tar.gz` to the device and extract it with `tools/android-mount-mu300root.sh`.
 `firmware/` holds `wcnmodem.bin`, `gnssmodem.bin` and `wifi_board_config*.ini` from the device's `/odm/firmware`, plus
