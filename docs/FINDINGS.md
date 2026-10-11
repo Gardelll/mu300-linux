@@ -102,6 +102,7 @@ what replaced it. The table below gives each section's state.
 | 38a | A read past the end of the eMMC never returns | current (fixed) |
 | 38b | RNDIS: the port kept the bridge's address | current (fixed) |
 | 38c | fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails | current (fixed at boot; a reload by hand still needs the flowtable deleted first) |
+| 40 | One stuck AT command wedged the control panel; a second per AT command on OpenWrt | current (fixed) |
 
 ## Hardware and firmware facts
 
@@ -178,7 +179,8 @@ The UDC only appears when the whole chain probes, in this order:
   libraries. Requirements that were each discovered by failure:
   1. Copy `/dev/__properties__` from a running Android so property reads work.
   2. Create `/dev/block/by-name` links and apply Android's node ownership (`ueventd.rc` plus `chown`/`chmod`
-     from vendor `init*.rc`), because `modem_control` drops to uid `system` (1000).
+     from vendor `init*.rc`), because `modem_control` drops to uid `system` (1000). (On a distribution it starts as
+     the account `mu300vnd` instead and the nodes are that account's: 41.)
   3. Bind-mount a copy of `/proc/cmdline` with `androidboot.slot_suffix=_a` so it loads the `_a` modem images
      (LK passes `_b` when booting the trial slot).
   4. **Exec the binary directly.** `sprd_modem_loader` rejects every ioctl/write unless `current->comm` is
@@ -781,7 +783,8 @@ buffers to the bus and leave when there is no tx context yet.
 * `docker export` leaves an empty `/etc/resolv.conf`: `resolvectl query` works but glibc programs cannot resolve names.
   Link it to `../run/systemd/resolve/stub-resolv.conf`.
 * busybox/toybox tar drop xattrs, so `ping` loses `cap_net_raw`; `mu300-fixups.service` restores it.
-* Android's uid `system` (1000) is also Ubuntu's first user, so modem device nodes show up as owned by `ubuntu`.
+* Android's uid `system` (1000) is also Ubuntu's first user, so modem device nodes showed up as owned by `ubuntu` -
+  writable by it, the modem's calibration among them. Fixed in 41: they are the vendor account's (`mu300vnd`) now.
 
 ### 26b. The tunnel needs sing-box's gvisor stack on this kernel
 **2026-10-09: the VPN moved to its own repository.** `mu300-vpn`, its drivers and engines are the module of
@@ -2610,6 +2613,38 @@ Throughput did not move beyond its spread: phone -> device 537-555 vs 553-571 Mb
 
 ## The second F50
 
+### 33l. The charge limit, a Type-C source's current, and the Wi-Fi phy's address (a community build reviewed)
+
+A community build for the U30 Air, `v2026.10.15-charge2` by oswaldxdd (github.com/oswaldxdd/mu300-linux, tag
+`v2026.10.15-charge2`, commit 321f771: a snapshot of the source under `experimental/u30air-charge2/source`, the
+same files as its release zip), replaced the U30 Air's 7.2 charging with its own stack: a native SGM41511 driver
+with the stock JEITA tables and a kernel-enforced 0-100 % limit, a 1655-line fuel gauge with capacity learning
+(records hashed to the eMMC CID), and Unisoc's whole Type-C/PD/TCPM stack (about 8800 lines of vendor code). Its
+sources are GPL with their headers. What was taken, and how:
+
+- **The charge limit**, as a feature of mu300-power rather than of a second charger driver: `CHARGE_TO` is any
+  whole number 0-100. 1-99 stops charging at N % and starts it again under N-5 (at once when the limit was changed);
+  0 never charges, the device runs on the charger; 100 lets go at once. The build's 0 % held the battery for good,
+  but the SGM41511 still supplements a load its input does not cover from the battery, so on a 500 mA port the
+  battery would drain to the cut-off while plugged in: the guard never holds it under 5 %. The temperature guard
+  keeps the last word. `mu300-power charge-limit [N]`; System > Power has a number field (U30 Air only).
+- **A Type-C source's current.** BC1.2 sees a hub or splitter with a charger behind it as an SDP: 500 mA. The build
+  got the source's offer from the TCPM stack. Only one register of it is needed: the UMP9620's Type-C block (typec@380,
+  no driver here) runs its state machine on its own, and STATUS (+0x1c) holds the state in bits 4:0 (2: attached as
+  a sink) and the source's Rp in bits 7:6 (1: 1.5 A, 2: 3 A). Patch 0012 makes bq256xx take the larger of BC1.2's
+  current and the Rp's (3 A taken as 2 A). On the Mac's USB-C port (an SDP) the status read 0x6082 (sink, 3 A): input
+  2000 mA, the battery charging at 1.6 A instead of 0.36 A. Right after a USB role change the block was still in
+  attach-wait (0x6001) when the VBUS event came, so the read waits up to 1.5 s for the attach.
+- **USB host on outside power.** `mu300-usb host` refused while something powered the port. With a splitter (charger
+  and a USB network adapter on one port) that is the case to support: host with the boost left off.
+- **The Wi-Fi phy's address** (`/sys/class/ieee80211/phy0/macaddress`) was all zeros; it is now the factory address
+  LK passes (the one wlan0 had already), on both boards.
+
+Left out: the native charger and fuel gauge (they replace patches 0006/0009-0011, which are tested, for 7.2 only and
+for every 7.2 kernel - the F50 runs the same one), capacity learning and the 0.1 % display (a full learning cycle
+was not verified by its author), the TCPM stack (PD at 5 V gives nothing over the Rp read), and the build's mu300-usb,
+which drops the boost and with it host mode on battery.
+
 ### 34. LEDs, and the defects from a second board's test
 A second F50 (restored from F50 #1's backup, with its own eMMC and factory Wi-Fi address) was tested from a user's
 point of view; what came out of it, measured on 2026-10-05:
@@ -2785,7 +2820,7 @@ What was built:
   not). It powers the device off only unplugged (no charger online, no extcon `USB=1`, the battery not `Charging`),
   below 5 % for three loops in a row, never on one sample. OpenWrt's early radio warm-up skips a charging boot.
 * **Charge guard**: charging off at battery `temp` above 45.0 C or below 0 C, on again below 40.0 C and above 3.0 C;
-  with `CHARGE_TO=80` off at 80 % and on below 75 %. It writes the bq256xx charger's `charge_type` (`N/A` off,
+  with `CHARGE_TO=N` (0-100, §33l) off at N % and on below N-5. It writes the bq256xx charger's `charge_type` (`N/A` off,
   `Fast` on). bq256xx reads `N/A` whenever it is not charging, so `Fast` is written only when the guard itself turned
   charging off (`/run/mu300/power/charge-off`); the driver resets its switch at probe, so a marker lost with `/run`
   leaves nothing off. It logs only when that marker changes, and a failed write turns the guard off for the boot
@@ -3215,7 +3250,121 @@ brings it back for a while. Read in the code, not measured on a device:
   that got the same /64 back withdrew nothing. Not measured: a real carrier renumber (the carrier here kept its /64
   across WAN restarts), and a second relay behind the device, which forwards the RA like any other.
 
-### 40. No access point on a DFS channel (user report, 2026-10-11)
+### 40. One stuck AT command wedged the control panel
+
+**Report (U30 Air, openwrt-luci, v2026.10.18):** an AT command hung on one of the panel's pages; after that the whole
+panel was useless, also after a reboot, and later it came back by itself. The dashboard's battery tile, which needs no
+AT at all, stayed empty. The logs of that boot were in RAM and gone.
+
+**What could do that, measured on the U30 Air (2026-10-11):**
+
+* **`mu300-at`'s lock wait was ten times longer than asked.** It counted 0.1 s naps with `sleep 0.1 || sleep 1`, and
+  OpenWrt's `/bin/sleep` refuses a fraction (`sleep: invalid number '0.1'`), so every nap was a second:
+  `MU300_AT_LOCK_WAIT=1` took 10 s on the device, the panel's 5 s wait 50 s, the 12 s of every collector and lock read
+  two minutes, mobile-data's 90 s a quarter of an hour. rpcd ends a call at 30 s (`rpcd -t 30`) and the browser at 20 s
+  (LuCI's `rpctimeout`), but the client went on waiting, took the lock long after nobody wanted the answer, and sent
+  the command anyway. The wait is now seconds on the clock (`MU300_AT_LOCK_WAIT=0` is one try).
+* **Requests that read the modem inline.** `lock_get` read eight AT commands inside the request whenever there was no
+  cache - after every reboot, since the cache is in `/run`, and the home page asks at once. `signal` ran a collector
+  round inside the request, and a collector waited each command's whole budget (T + 31 s) on each of four channels.
+  rpcd killed the call, never its children: they ran on, held the pool slots and the nr1 lock, and the page started
+  new ones. Now `lock_get` serves the cache and reads in the background (one reader at a time), and a collector round
+  has a deadline (14 s for the page's live read, 12 s and 25 s in the background).
+* **One slow call blanked the page.** LuCI sends the calls a page makes in the same moment as one HTTP request, and
+  uhttpd answers them one after the other: the status snapshot (battery, CPU) waited behind the lock reading, and
+  when the browser gave up at 20 s every call in the request failed together. uhttpd's `max_requests 3` does not apply
+  to `/ubus` (measured: a fourth call was answered at once beside three slow ones). Every panel call now goes on its
+  own (`nobatch`), and the polls back off after failures.
+* **After a reboot** the panel asked for the lock state with no cache, while mobile-data's bring-up and the boot
+  replay of saved locks (an SFUN restart) held the modem; with the ten-fold waits above that is minutes of busy
+  channels, which fits "even after a reboot, then it came back by itself".
+
+Reproduced safely: the nr1, nr6 and nr7 daemons stopped (SIGSTOP; never a restart, see 13b) for 150 s. With the fix,
+`sysinfo` and `status` answered in 0.5 s throughout and the dashboard showed battery and CPU within seconds of a
+reload, the AT terminal said "busy" after 3 s, `lock_get fresh` served the cache after 12 s, `signal` gave up at 14 s,
+at most three collectors were alive at any time, and everything was back by itself once the daemons ran again.
+
+**Also in the fix:** AT commands that take minutes or change the modem beyond the answer need a confirmation in the
+terminal (scans run as a background job of at most three minutes; band, mode and cell locks are said to persist into
+Android, #96); a client holding the AT lock past the deadline it wrote for itself (`lock/until`) is ended. The panel
+keeps a log of its calls - method, time taken, outcome, never a value - in RAM, copied to
+`/etc/unisoc-modem/panel-ops.log` at most every five minutes and at shutdown, with the previous boot's copy beside it
+(Device page, "Recent modem operations"). Two LuCI status pages are put in front of: Channel Analysis scans as soon as
+it opens and on every poll, and a scan takes this driver's access point off its channel (a Mac on the hotspot did not
+rejoin), so with an access point it waits for a click; System Log reads 250 lines every 15 s instead of 1000 every 5 s
+(the ~19 s AT round trips seen with it open were not reproduced: one 1000-line `log read` costs 0.02 s here).
+
+**A second per AT command on OpenWrt (fixed).** OpenWrt's `/bin/sh` refuses a fractional `read -t` too ("read:
+invalid timeout"), so `mu300-atd` drained a whole second before every command: every AT command took about a second
+and the panel's fast collector round seven. The daemon now runs itself again under a shell that takes fractions when
+its own does not: the static busybox next to it (`/opt/mu300/bin/busybox ash`), else bash. On Ubuntu, dash already
+hands over to bash 5, which takes them, so nothing changes there. `mobile-data` and `mu300-nfc` nap through the
+static busybox's `sleep` as well (bash has no `sleep` of its own, and `/bin/sleep` refuses "0.2": `mobile-data`'s lock
+polls waited whole seconds, and `mu300-nfc`'s bare `sleep 0.2` did not wait at all). Measured on the U30 Air, before
+and after a reboot onto the change (`mu300-at -t 2 AT+CSQ`, five in a row on each panel channel; a `cell fast` round):
+
+| | nr1 | nr6 | nr7 | fast collector round |
+|---|---|---|---|---|
+| before (`/bin/sh`) | 1.04 s | 1.04 s | 1.04 s | 7.37 s |
+| after (`busybox ash`) | 0.13 s | 0.13 s | 0.13 s | 1.08 s |
+
+(The first command on each channel after the boot still takes a second: nothing has ended cleanly yet, so the first
+drain is the slow one, by design.)
+
+## Security
+
+### 41. The vendor daemons' own account
+
+Found on an F50 (Ubuntu 24.04, kernel 7.2.9): `/dev/disk/by-partlabel/nr_fixnv1_a` (the modem's calibration NV, which
+nothing can restore) and `persist` were `ubuntu:ubuntu 0660`, so any process of the login user could overwrite them
+without sudo; `/dev/data0_gnss` and `/dev/mali0` were `0666`, and so were `spipe_pm*`, `ion`, `dma_heap/*`, ...
+where the kernel has them. `modem_control` and `refnotify` ran as `ubuntu` too: the login user could ptrace them
+(`modem_control` keeps `CAP_CHOWN` and `CAP_BLOCK_SUSPEND`, `refnotify` `CAP_SYS_TIME`).
+
+* Cause: `gen-ueventd-perms.py` translated Android's ids as numbers. Android's `system` is uid 1000, and uid 1000 is
+  the first human account on a distribution (`ubuntu`; `alarm` on Arch). Modes were taken over as they were, `0666`
+  included.
+* The number is in the binaries. Both daemons begin `main` with `switchUserToSystem`: `setgroups` (1000 1001 2000
+  3010), `prctl(PR_SET_KEEPCAPS)`, `setuid(0x3e8)` (an immediate in the code, `mov w0, #0x3e8`), then `capset` down to
+  what they keep. They never call `setgid` (they ran with gid 0) and nothing else checks the uid (`getuid` is not
+  even imported). A failed `setgroups` or `setuid` is logged (`setgroups failed`, `uidset failed`) and they carry on.
+* Fix: a system account `mu300vnd` (the images: `rootfs/assemble.sh`, `arch/build-rootfs.sh`; a system without it:
+  `android-vendor-start` makes it before anything else uses it). `android-run` starts the two daemons as it with
+  `setpriv`: no other groups, no new privileges, and only the capabilities they keep on Android plus `CAP_SYS_CHROOT`
+  for `chroot`, which their own `capset` drops - their `setuid(1000)` then fails, harmlessly. `android-vendor-start`
+  starts `modem_control` through `android-run` (still an exec, so the task name stays `modem_control`).
+  `cp_diskserver` never switches users on Android either and stays root.
+* `ueventd-perms.sh`: `system` and `radio` become `mu300vnd` (owner `$V`, group `$VG`), `graphics` on a node Android
+  gives everyone (`mali0`, `ion`, `dma_heap/*`, `sprd_dmabuf`, `pvr_sync`: `0666`) the `video` group (`root:video
+  0660`), anywhere else root, as is every other Android id and every id the generator does not know. No node is left
+  with bits for others, nothing is writable by everyone, a node that is root's alone is `0600`. Root's alone: input
+  events, the USB serial console `ttyGS*` (getty and login hand it out as on any Linux: a serial login still works) and
+  `firmware_class`'s path (whoever writes it chooses the firmware the kernel loads) - all three were `ubuntu`'s. The RTC
+  stays root's but is the vendor group's: `refnotify` opens `/dev/rtc0` (`root:root 0660`), which it reached through
+  gid 0 before ("RefNotify open /dev/rtc0 failed, error: Permission denied" until it was). The ids are looked up when
+  the script runs, in `/etc/passwd` and `/etc/group`; without the account (OpenWrt, the initramfs: no account at
+  1000 there) it is uid/gid 1000, which the daemons switch to themselves, and the GPU's group is root.
+* Nobody gains anything: `tests/test_vendor_ids.py` applies the script of v2026.10.18 and the new one to every node
+  they name (a glob as one name) and fails if `ubuntu`, a second login user in the usual groups (`video`, `render`,
+  `input`, `dialout`, ...) or everyone else can do anything with a node they could not before. 333 of 349 nodes
+  changed; the only one more open is the RTC, for the vendor group (it was not touched before).
+* The generator's inputs are in `android-vendor/ueventd/` now (the `/dev` rules of the device's `ueventd.rc` and the
+  `chown`/`chmod` lines of its vendor init `*.rc`), and a test checks the committed script is the generator's.
+* Updates: `mu300-update` takes the new image's `/etc/passwd` and adds the old system's human accounts, so an updated
+  system has the image's `mu300vnd`; the nodes are handed out by name at every boot, so its uid does not matter.
+* Measured on F50-B (Ubuntu 24.04, 7.2.9, no SIM), the three files replaced on a v2026.10.18 system: the account
+  made at boot (`mu300vnd` 999/991); `modem_control` and `refnotify` Uid 999, Gid 991, no groups, NoNewPrivs 1,
+  CapEff `0x1000000001` and `0x2000000` (as on Android); `cp_diskserver` root; the modem booted (`modem@0..2 start
+  over`), `AT` OK, `+CFUN: 1`, `+CPIN` `+CME ERROR: 10` (no SIM, as before), `AT+CGMR` answers; `nr_fixnv1_a` and
+  `persist` `mu300vnd:mu300vnd 0660` and `head` on them as `ubuntu` "Permission denied"; no world-writable node in
+  `/dev` besides the standard ones, nothing in `/dev` or `/sys` owned by uid 1000; `mali0` `root:video 0660` and
+  `cltest` (OpenCL) passes; Wi-Fi client still connected; `ttyGS0`, `input/event0` and the firmware path `root:root
+0600`, and a login on the serial console works (login gives `ttyGS0` to the user, getty takes it back); `timedatectl` reads the RTC; up past the PM watchdog's
+  ~290 s. The vendor log has the same errors as before the change (no `/dev/cp_dump`, no `/proc/bootconfig`, no
+  property service) plus the two logged failed switches. Not measured: the 5.4 kernel, OpenWrt (unchanged there but
+  for the modes), the modem with a SIM.
+
+### 42. No access point on a DFS channel (user report, 2026-10-11)
 
 A user's SC2355 device on OpenWrt 25.12.5, hotspot on channel 60 (5 GHz, 80 MHz, country CN): hostapd logs
 `start_dfs_cac() failed, -1`, `Interface initialization failed`, `AP-DISABLED`, and the hotspot never comes up;

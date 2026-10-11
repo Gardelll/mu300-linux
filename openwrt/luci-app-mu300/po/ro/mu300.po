@@ -105,6 +105,12 @@ msgstr "OK"
 msgid "Cancel"
 msgstr "Anulare"
 
+msgid "%d s"
+msgstr "%d s"
+
+msgid "%d h"
+msgstr "%d h"
+
 msgid "New SMS · %s"
 msgstr "SMS nou · %s"
 
@@ -113,6 +119,21 @@ msgstr "Număr necunoscut"
 
 msgid "Select"
 msgstr "Selectare"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Aceasta este o scanare a rețelelor sau a frecvențelor: durează între unu și trei minute, ține ocupat canalul AT al modemului tot acest timp, iar datele mobile se pot întrerupe între timp. Rulează în fundal; răspunsul apare aici când se termină."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Aceasta schimbă un mod de rețea, o bandă sau o setare de celulă pe care modemul o păstrează: rămâne în vigoare după repornire, și în Android de asemenea, unde o rețea care nu se potrivește apare ca Fără serviciu. Pagina Blocări arată aceste setări și le resetează."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Aceasta comută radioul, conexiunea de date sau modemul însuși: datele mobile se întrerup până la restabilire, iar această pagină poate pierde conexiunea o vreme."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Aceasta schimbă profilurile de date (APN) stocate în modem, folosite de datele mobile și de Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Aceasta schimbă blocarea cu PIN a cartelei SIM sau introduce un PIN: PIN-urile greșite blochează cartela SIM până la introducerea codului PUK."
 
 msgid "Basic"
 msgstr "De bază"
@@ -141,14 +162,50 @@ msgstr "Pregătit."
 msgid "Session history (click to reuse)"
 msgstr "Istoricul sesiunii (clic pentru reutilizare)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "Rulează în fundal (cel mult %d s); răspunsul apare aici când se termină…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Modemul nu a dat la timp un răspuns final"
+
+msgid "%d s in the background"
+msgstr "%d s în fundal"
+
 msgid "(no output)"
 msgstr "(fără ieșire)"
+
+msgid "This command changes the modem's state."
+msgstr "Această comandă schimbă starea modemului."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Încă netrimisă: se așteaptă confirmarea"
+
+msgid "Send this AT command?"
+msgstr "Trimiteți această comandă AT?"
+
+msgid "Send anyway"
+msgstr "Trimite oricum"
+
+msgid "Not sent"
+msgstr "Netrimisă"
 
 msgid "Request failed"
 msgstr "Cererea a eșuat"
 
 msgid "(empty)"
 msgstr "(gol)"
+
+msgid "Loading…"
+msgstr "Se încarcă…"
+
+msgid "Channel Analysis"
+msgstr "Analiza canalelor"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "O scanare scoate pentru o clipă punctul de acces Wi-Fi de pe canalul său: dispozitivele conectate se deconectează, iar unele (în special macOS) s-ar putea să nu se reconecteze singure. Această pagină scanează imediat ce se deschide și apoi la fiecare câteva secunde. Dacă depindeți de punctul de acces, accesați întâi panoul prin USB sau pe altă cale."
+
+msgid "Scan anyway"
+msgstr "Scanează oricum"
 
 msgid "Failed: %s"
 msgstr "Eșuat: %s"
@@ -273,6 +330,15 @@ msgstr "Reîmprospătare"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Disponibil doar în modul gazdă. Reîmprospătarea activează adaptoarele USB găsite; adăugarea la LAN salvează puntea și reîncarcă rețeaua."
 
+msgid "Recent modem operations"
+msgstr "Operații recente ale modemului"
+
+msgid "Show"
+msgstr "Afișează"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Apelurile recente ale panoului de control, din această pornire și din cea dinainte: când, ce apel de pagină sau comandă AT, cât a durat și cum s-a încheiat (ok, eroare, ocupat, întrerupt). Nu se păstrează valori, răspunsuri sau mesaje. Util când panoul s-a blocat."
+
 msgid "Unavailable"
 msgstr "Indisponibil"
 
@@ -326,6 +392,12 @@ msgstr "Setări salvate"
 
 msgid "Save failed: %s"
 msgstr "Salvarea a eșuat: %s"
+
+msgid "This boot"
+msgstr "Această pornire"
+
+msgid "Previous boot"
+msgstr "Pornirea anterioară"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Rolul nu poate fi confirmat încă; reconectați-vă și reîmprospătați pagina."
@@ -798,6 +870,9 @@ msgstr "Radio oprit"
 msgid "No response"
 msgstr "Niciun răspuns"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Modem ocupat: valori celulare de acum %s"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Semnal %s %s/10"
 
@@ -863,9 +938,6 @@ msgstr "%s clienți"
 
 msgid "Recent DHCP leases"
 msgstr "Alocări DHCP recente"
-
-msgid "%d h"
-msgstr "%d h"
 
 msgid "Board"
 msgstr "Placă"
@@ -1086,11 +1158,11 @@ msgstr "Activare aplicare la pornire"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Se citește direct modemul (cel mult câteva secunde)…"
 
-msgid "Refreshed"
-msgstr "Reîmprospătat"
-
 msgid "Refresh failed"
 msgstr "Reîmprospătarea a eșuat"
+
+msgid "Refreshed"
+msgstr "Reîmprospătat"
 
 msgid "NR bands: back to automatic"
 msgstr "Benzi NR: înapoi la automat"
@@ -1242,6 +1314,9 @@ msgstr "Treci la Economie sub %"
 msgid "Stop charging at"
 msgstr "Oprește încărcarea la"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % nu încarcă niciodată bateria (dispozitivul funcționează de la încărcător), 100 % o încarcă complet; între ele, încărcarea se oprește la acel nivel și reîncepe cu 5 puncte mai jos. Sub 5 % bateria se încarcă întotdeauna."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % protejează mai bine bateria unui dispozitiv care rămâne la priză."
 
@@ -1352,9 +1427,6 @@ msgstr "Sincronizare din SIM"
 
 msgid "Clear local pool"
 msgstr "Golire pool local"
-
-msgid "Loading…"
-msgstr "Se încarcă…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Selectați o conversație din stânga sau introduceți un număr mai jos pentru a trimite."
@@ -1587,6 +1659,9 @@ msgstr "Radioul este ocupat: apelarea sau watchdog-ul îl comută, reîncercați
 msgid "The action gave no valid reply"
 msgstr "Acțiunea nu a dat un răspuns valid"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Parametrul confirm trebuie să fie 0 sau 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "O comandă AT este un singur rând de ASCII imprimabil, cel mult 512 caractere"
 
@@ -1602,6 +1677,12 @@ msgstr "Refuzat: această comandă blochează portul AT până la o repornire"
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Se aplică blocările de rețea: modemul repornește (aproximativ jumătate de minut), reîncercați în curând"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "O comandă AT lungă încă rulează în fundal; încercați din nou când se termină"
+
+msgid "This command needs confirmation"
+msgstr "Această comandă necesită confirmare"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "Canalul AT este ocupat; comanda nu a fost trimisă, reîncercați"
 
@@ -1610,6 +1691,9 @@ msgstr "Modemul nu a răspuns la timp; comanda poate încă rula, verificați î
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Parametrul fresh trebuie să fie 0 sau 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Se citesc blocările din modem; încercați din nou peste câteva secunde"
 
 msgid "Lock read failed"
 msgstr "Citirea blocărilor a eșuat"
