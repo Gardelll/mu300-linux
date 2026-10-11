@@ -31,13 +31,13 @@
  * mSBC and VBC_SRC_BT_DAC/ADC stay at 8000. */
 #include <errno.h>
 #include <fcntl.h>
-#include <glob.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -273,27 +273,67 @@ static void feed(char *acc, size_t *len, size_t cap, const char *in, ssize_t n, 
 
 static void on_term(int s) { (void)s; sco_close(); _exit(0); }
 
-/* BlueZ keeps a bonded device's link key in /var/lib/bluetooth/<adapter>/<ADDRESS>/info, section [LinkKey].
- * Read directly (no shell): main() ignores SIGCHLD, under which system() can never collect its child's status
- * and always reports failure - the first board test ended in "not bonded" with the key in the store. */
+/* the adapter's own address, as BlueZ names its directory: HCIGETDEVINFO on hci0 (sysfs has no address file);
+ * MU300_BT_ADAPTER_FILE names a file with it instead, for tests */
+#define BTPROTO_HCI 1
+#define HCIGETDEVINFO _IOR('H', 211, int)
+struct hci_dev_info_min {
+	uint16_t dev_id; char name[8]; bdaddr_t bdaddr; uint32_t flags; uint8_t type; uint8_t features[8];
+	uint32_t pkt_type, link_policy, link_mode; uint16_t acl_mtu, acl_pkts, sco_mtu, sco_pkts; uint32_t stat[10];
+};
+static int adapter_address(char out[18])
+{
+	const char *tf = getenv("MU300_BT_ADAPTER_FILE");
+	if (tf) {
+		FILE *f = fopen(tf, "r");
+		if (!f || !fgets(out, 18, f)) { if (f) fclose(f); return 0; }
+		fclose(f);
+	} else {
+		struct hci_dev_info_min di; memset(&di, 0, sizeof di);
+		int h = socket(AF_BLUETOOTH, SOCK_RAW, BTPROTO_HCI);
+		if (h < 0) return 0;
+		if (ioctl(h, HCIGETDEVINFO, &di) < 0) { close(h); return 0; }
+		close(h);
+		snprintf(out, 18, "%02X:%02X:%02X:%02X:%02X:%02X", di.bdaddr.b[5], di.bdaddr.b[4], di.bdaddr.b[3],
+		         di.bdaddr.b[2], di.bdaddr.b[1], di.bdaddr.b[0]);
+	}
+	out[17] = 0;
+	for (size_t i = 0; i < 17; i++) {
+		if (out[i] >= 'a' && out[i] <= 'f') out[i] -= 32;
+		if (i % 3 == 2 ? out[i] != ':' : !((out[i] >= '0' && out[i] <= '9') || (out[i] >= 'A' && out[i] <= 'F')))
+			return 0;
+	}
+	return 1;
+}
+
+/* BlueZ keeps a bonded device's link key in /var/lib/bluetooth/<adapter>/<ADDRESS>/info, section [LinkKey],
+ * Key=<32 hex>. Only the adapter in use counts (its address from /sys/class/bluetooth/hci0/address: this
+ * controller gets a new one at every boot, so the store holds stale directories whose keys the kernel would never
+ * use), and only a section that carries a key. Read directly, no shell: main() ignores SIGCHLD, under which
+ * system() can never collect its child's status - the first board test ended in "not bonded" with the key there.
+ * The kernel enforces the security level on the RFCOMM socket either way; this is the early, clear answer. */
 static int bonded(const char *addr, const char *store)
 {
-	char up[18], pat[200], line[256];
-	size_t i, g;
-	glob_t gl;
-	int found = 0;
+	char up[18], adapter[18], path[256], line[256];
+	size_t i;
+	FILE *f;
+	int in_key = 0, found = 0;
 	for (i = 0; i < 17 && addr[i]; i++) up[i] = (addr[i] >= 'a' && addr[i] <= 'f') ? addr[i] - 32 : addr[i];
 	up[i] = 0;
-	snprintf(pat, sizeof pat, "%s/*/%s/info", store, up);
-	if (glob(pat, 0, NULL, &gl) != 0) return 0;
-	for (g = 0; g < gl.gl_pathc && !found; g++) {
-		FILE *f = fopen(gl.gl_pathv[g], "r");
-		if (!f) continue;
-		while (fgets(line, sizeof line, f))
-			if (!strncmp(line, "[LinkKey]", 9)) { found = 1; break; }
-		fclose(f);
+	if (strlen(up) != 17) return 0;
+	if (!adapter_address(adapter)) return 0;
+	snprintf(path, sizeof path, "%s/%s/%s/info", store, adapter, up);
+	f = fopen(path, "r");
+	if (!f) return 0;
+	while (fgets(line, sizeof line, f)) {
+		if (line[0] == '[') { in_key = !strncmp(line, "[LinkKey]", 9); continue; }
+		if (in_key && !strncmp(line, "Key=", 4)) {
+			for (i = 4; i < 36 && line[i]; i++)
+				if (!((line[i] >= '0' && line[i] <= '9') || (line[i] >= 'A' && line[i] <= 'F') || (line[i] >= 'a' && line[i] <= 'f'))) break;
+			if (i == 36) { found = 1; break; }
+		}
 	}
-	globfree(&gl);
+	fclose(f);
 	return found;
 }
 
