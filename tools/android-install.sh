@@ -480,6 +480,16 @@ upk_record() {
     done < "$_ud/files"
     rm -rf "$_ut"
 }
+# stale_config_clean NEW: what the images of v2026.10.18 left in etc/config and an update then copied onto every
+# device (the config files of the image are added to the kept ones): attendedsysupgrade, of a package the images
+# remove on purpose, and the .apk-new copies apk leaves beside a changed config. Gone from NEW's etc/config unless
+# the package is installed there (attendedsysupgrade stays with attendedsysupgrade-common or its LuCI app).
+stale_config_clean() {
+    for _uf in "$1"/etc/config/*.apk-new; do [ ! -e "$_uf" ] || rm -f "$_uf"; done
+    [ -e "$1/etc/config/attendedsysupgrade" ] || return 0
+    upk_installed "$1" openwrt | grep -qx 'attendedsysupgrade-common\|luci-app-attendedsysupgrade' && return 0
+    rm -f "$1/etc/config/attendedsysupgrade"
+}
 # --- user-packages end
 # --- install-os begin
 # Accounts are settings too, and etc/shadow is not in keep: an update carries them over the way mu300-update does,
@@ -564,6 +574,8 @@ for os in $OSES; do
                     [ -e "$M/$os.new/$k/${f##*/}" ] || [ -L "$M/$os.new/$k/${f##*/}" ] || cp -a "$f" "$M/$os.new/$k/"
                 done
                 rm -rf "$M/$os.new/$k.image"
+                # the stray files of v2026.10.18 (the old system's, or that image's own) do not stay
+                stale_config_clean "$M/$os.new"
             fi
         done
         # services the user enabled or disabled themselves: copy the extra symlinks over, but only when the unit

@@ -42,11 +42,20 @@ msgstr "צריכת חשמל"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "מסוף"
+
+msgid "Terminal settings"
+msgstr "הגדרות המסוף"
+
 msgid "Packages after an update"
 msgstr "חבילות אחרי עדכון"
 
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "מרכז הבקרה של MU300: לוח מצב, נעילות רשת, מסוף AT ו-SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "מסוף: מעטפת root של המכשיר בדפדפן"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1559,6 +1568,39 @@ msgstr "לא שלמה: הגיעו %d מתוך %d חלקים"
 
 msgid "Delete"
 msgstr "מחיקה"
+
+msgid "ttyd is not installed."
+msgstr "ttyd אינו מותקן."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "המסוף כבוי (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "יותר מדי מסופים נפתחים בבת אחת. נסו שוב בעוד דקה."
+
+msgid "The terminal is not available."
+msgstr "המסוף אינו זמין."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "זוהי מעטפת root של המכשיר: כל פקודה רצה עם הרשאות מלאות, וטעות אחת עלולה למנוע מהמכשיר לאתחל."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "הוא נגיש רק מה-LAN (USB ונקודת הגישה), לעולם לא מנתוני הסלולר, ורק מהדף המחובר הזה."
+
+msgid "It closes after a minute without activity."
+msgstr "הוא נסגר לאחר דקה ללא פעילות."
+
+msgid "It closes after %d minutes without activity."
+msgstr "הוא נסגר לאחר %d דקות ללא פעילות."
+
+msgid "Reconnect"
+msgstr "התחבר מחדש"
+
+msgid "Open in a new tab"
+msgstr "פתח בכרטיסייה חדשה"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "הדף הזה נפתח ב-HTTPS, והמסוף מוגש ב-HTTP ברשת המקומית: הוא נפתח בכרטיסייה משלו."
 
 msgid "The data usage could not be read"
 msgstr "לא ניתן לקרוא את השימוש בנתונים"

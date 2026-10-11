@@ -78,6 +78,7 @@ what replaced it. The table below gives each section's state.
 | 31m | Hard hangs in the first seconds under 6.18 | open |
 | 31n | Wi-Fi powered off and on at the same time: an Oops in the RX interrupt | current (fixed, PR #41); remaining races open |
 | 31o | KVM, and the module set a router needs | current |
+| 31p | BTF and eBPF for dae, and the tracing that broke boots | current; the writer at ~11.5 s is open |
 | 32 | Old kernels, an idle IPA, and an update that ended in Android | current |
 | 32a | The offset in init, replaced by every boot image update | current |
 | 32b | The Magisk installer on a device | partly superseded by PR #40 (passwords in update mode) |
@@ -179,7 +180,8 @@ The UDC only appears when the whole chain probes, in this order:
   libraries. Requirements that were each discovered by failure:
   1. Copy `/dev/__properties__` from a running Android so property reads work.
   2. Create `/dev/block/by-name` links and apply Android's node ownership (`ueventd.rc` plus `chown`/`chmod`
-     from vendor `init*.rc`), because `modem_control` drops to uid `system` (1000).
+     from vendor `init*.rc`), because `modem_control` drops to uid `system` (1000). (On a distribution it starts as
+     the account `mu300vnd` instead and the nodes are that account's: 41.)
   3. Bind-mount a copy of `/proc/cmdline` with `androidboot.slot_suffix=_a` so it loads the `_a` modem images
      (LK passes `_b` when booting the trial slot).
   4. **Exec the binary directly.** `sprd_modem_loader` rejects every ioctl/write unless `current->comm` is
@@ -782,7 +784,8 @@ buffers to the bus and leave when there is no tx context yet.
 * `docker export` leaves an empty `/etc/resolv.conf`: `resolvectl query` works but glibc programs cannot resolve names.
   Link it to `../run/systemd/resolve/stub-resolv.conf`.
 * busybox/toybox tar drop xattrs, so `ping` loses `cap_net_raw`; `mu300-fixups.service` restores it.
-* Android's uid `system` (1000) is also Ubuntu's first user, so modem device nodes show up as owned by `ubuntu`.
+* Android's uid `system` (1000) is also Ubuntu's first user, so modem device nodes showed up as owned by `ubuntu` -
+  writable by it, the modem's calibration among them. Fixed in 41: they are the vendor account's (`mu300vnd`) now.
 
 ### 26b. The tunnel needs sing-box's gvisor stack on this kernel
 **2026-10-09: the VPN moved to its own repository.** `mu300-vpn`, its drivers and engines are the module of
@@ -2181,6 +2184,63 @@ the whole set together (65 kmods). xl2tpd starts at boot and listens on UDP 1701
 images also carry the 6.18 modules from `upstream/out` (about 20 MiB unpacked, some 6 MB more in the tarball), so
 the switch to 6.18 needs nothing more. Not tried on an OpenWrt device in this round.
 
+### 31p. BTF and eBPF for dae, and the tracing that broke boots
+dae (github.com/daeuniverse/dae, an eBPF transparent proxy; tested v2.1.1, linux-arm64, checksum from its
+release) needs kernel 5.17 or newer, BTF and a list of BPF options. Neither mainline kernel had BTF or the BPF
+JIT, and dae v2.1.1 refused to start on v2026.10.18's 7.2.9: `load eBPF objects: ... program
+tproxy_lan_ingress_l2: load program: invalid argument: callbacks are not allowed in non-JITed programs`. The 5.4
+kernel is too old for dae and was not changed.
+
+Now in `mu300-mainline.config`, for both kernels: `DEBUG_INFO_DWARF5`, `DEBUG_INFO_BTF`, `DEBUG_INFO_BTF_MODULES`,
+`MODULE_ALLOW_BTF_MISMATCH` (a module with bad BTF still loads), `BPF_JIT`, `BPF_STREAM_PARSER`, `NET_INGRESS`,
+`NET_EGRESS` and `NETKIT` (dae's preferred `dae0` pair; it uses a veth pair without it). The DWARF is compressed
+(`DEBUG_INFO_COMPRESSED_ZSTD`): vmlinux is 157 MB instead of 312 MB, and two build trees fit in one docker
+volume again. The build image has `dwarves` (pahole 1.31 on Ubuntu 26.04), and `build-modules.sh` now runs
+`strip --strip-debug` on the out-of-tree modules, which keeps their `.BTF`; without it every vendor module carries
+megabytes of DWARF.
+
+**Not taken: kprobes and tracing.** dae's list also has `KPROBES`, `KPROBE_EVENTS` and `BPF_EVENTS` (with
+`PERF_EVENTS` and `FTRACE` under them). With them, 7.2.9 came up 14 times in a row on F50-B and failed the 15th
+boot, then 21 times and failed the 22nd: 2 failures in 36 reboots. Both times the same thing at the same moment,
+about 11.5 s after start, as the modem's `kbc_start_cp` ran in Trusty and the Wi-Fi card's first PCIe scan
+failed as usual (`Device found, but not active`): page tables and the printk buffer overwritten (`Bad page map`
+with self-referencing PTEs, faults in `vfs_read`, `jbd2_write_access_granted`, `get_data`, and in both boots a
+fault at the same address `ffffffffffad82a0`), a panic, and LK's watchdog dumps until the board fell back to
+Android about 20 minutes later. Without the tracing group, the same kernel came up 47 of 47 times (6.18: 16 of 16); stock
+v2026.10.18 7.2.9 did 100 of 100 the day before. What writes there is not known. The tracing options change where
+early allocations land rather than doing anything at 11.5 s themselves, so this looks like a DMA write (modem or
+Wi-Fi) into memory the kernel owns, which another kernel layout may hit too; a kernel change that moves the early
+allocations needs a reboot loop of 40 or more. What dae loses without them: `dae trace`, the kprobe that accounts
+for its sockmap TCP offload (the fentry variant needs the function tracer), and `bpf_get_current_task` for
+process names in cgroup programs (it logs a warning and uses `bpf_get_current_comm`).
+
+dae on F50-B (Ubuntu 24.04, Wi-Fi client of a home network, `wan_interface: wlan0`, a shadowsocks node on the Mac
+over USB LAN; the oracle-arm test server was not reachable because the Mac's tailnet was logged out): it loads in
+1.2 s, creates the netkit pair `dae0`/`dae0peer` "via netlink API (performance mode)", and holds 14 `SCHED_CLS`, 4
+`CGROUP_SOCK_ADDR` (connect4/6, sendmsg4/6) and 2 `CGROUP_SOCK` programs, 21 maps, tcx links on `wlan0` (ingress,
+egress) and `dae0`, and 6 cgroup links. `curl https://ifconfig.me` answered 200 and the shadowsocks server logged
+`established tcp tunnel ... <-> 34.160.111.145:443` for each request; 50 MB from Cloudflare came at 16.5 MB/s
+through dae and the proxy, 20.0 MB/s direct once dae was stopped (`dae0` removed with it). The same test passed on
+the kernel without tracing, with the warning above.
+
+Measured (Image as built, before `wrap-image.py` adds 1.5 MiB; memory 20 s after boot on F50-B):
+
+| | 6.18.55 v2026.10.18 | 6.18.55 BTF | 7.2.9 v2026.10.18 | 7.2.9 BTF + tracing | 7.2.9 BTF |
+|---|---|---|---|---|---|
+| Image (bytes) | 17 512 456 | 21 649 416 | 18 069 512 | 26 925 064 | 22 337 544 |
+| of it `.BTF` | - | 4 019 543 | - | 4 875 150 | 4 104 758 |
+| modules in the bundle | 20.3 MiB | 23.8 MiB | 21.9 MiB | 34.6 MiB | 25.7 MiB |
+| ramdisk segment (bytes) | 1 776 099 | 1 832 495 | 1 777 340 | 1 836 866 | 1 833 918 |
+| MemTotal (kB) | | 1 501 344 | 1 455 776 | 1 447 840 | 1 451 616 |
+| MemAvailable (kB) | | 1 312 360-1 321 424 | 1 270 356-1 274 324 | 1 249 648-1 264 200 | 1 254 696-1 288 712 |
+| kernel boot (systemd-analyze) | | | 5.25 s | 5.40 s | 5.34 s |
+| reboots on F50-B | 100/100 (10-10) | 16/16 | 100/100 (10-10) | 34/36 | 47/47 |
+
+So BTF costs about 4 MiB of RAM (it is read-only data, in `rodata`: 3028K before, 7060K after) and the boot is
+0.1 s slower; the modules' own BTF is about 4.4 MB on disk. The boot image (header, wrapped 7.2 kernel 23.9 MB,
+F50-B's device ramdisk 6.5 MB, generic segment 1.8 MB) is 32.3 MB: under the 48 MiB where init keeps its
+persistent log in the same partition (64 MiB), with about 18 MB to spare.
+
 ## Updating on the device
 
 ### 32. Old kernels, an idle IPA, and an update that ended in Android
@@ -3332,3 +3392,56 @@ and after a reboot onto the change (`mu300-at -t 2 AT+CSQ`, five in a row on eac
 
 (The first command on each channel after the boot still takes a second: nothing has ended cleanly yet, so the first
 drain is the slow one, by design.)
+
+## Security
+
+### 41. The vendor daemons' own account
+
+Found on an F50 (Ubuntu 24.04, kernel 7.2.9): `/dev/disk/by-partlabel/nr_fixnv1_a` (the modem's calibration NV, which
+nothing can restore) and `persist` were `ubuntu:ubuntu 0660`, so any process of the login user could overwrite them
+without sudo; `/dev/data0_gnss` and `/dev/mali0` were `0666`, and so were `spipe_pm*`, `ion`, `dma_heap/*`, ...
+where the kernel has them. `modem_control` and `refnotify` ran as `ubuntu` too: the login user could ptrace them
+(`modem_control` keeps `CAP_CHOWN` and `CAP_BLOCK_SUSPEND`, `refnotify` `CAP_SYS_TIME`).
+
+* Cause: `gen-ueventd-perms.py` translated Android's ids as numbers. Android's `system` is uid 1000, and uid 1000 is
+  the first human account on a distribution (`ubuntu`; `alarm` on Arch). Modes were taken over as they were, `0666`
+  included.
+* The number is in the binaries. Both daemons begin `main` with `switchUserToSystem`: `setgroups` (1000 1001 2000
+  3010), `prctl(PR_SET_KEEPCAPS)`, `setuid(0x3e8)` (an immediate in the code, `mov w0, #0x3e8`), then `capset` down to
+  what they keep. They never call `setgid` (they ran with gid 0) and nothing else checks the uid (`getuid` is not
+  even imported). A failed `setgroups` or `setuid` is logged (`setgroups failed`, `uidset failed`) and they carry on.
+* Fix: a system account `mu300vnd` (the images: `rootfs/assemble.sh`, `arch/build-rootfs.sh`; a system without it:
+  `android-vendor-start` makes it before anything else uses it). `android-run` starts the two daemons as it with
+  `setpriv`: no other groups, no new privileges, and only the capabilities they keep on Android plus `CAP_SYS_CHROOT`
+  for `chroot`, which their own `capset` drops - their `setuid(1000)` then fails, harmlessly. `android-vendor-start`
+  starts `modem_control` through `android-run` (still an exec, so the task name stays `modem_control`).
+  `cp_diskserver` never switches users on Android either and stays root.
+* `ueventd-perms.sh`: `system` and `radio` become `mu300vnd` (owner `$V`, group `$VG`), `graphics` on a node Android
+  gives everyone (`mali0`, `ion`, `dma_heap/*`, `sprd_dmabuf`, `pvr_sync`: `0666`) the `video` group (`root:video
+  0660`), anywhere else root, as is every other Android id and every id the generator does not know. No node is left
+  with bits for others, nothing is writable by everyone, a node that is root's alone is `0600`. Root's alone: input
+  events, the USB serial console `ttyGS*` (getty and login hand it out as on any Linux: a serial login still works) and
+  `firmware_class`'s path (whoever writes it chooses the firmware the kernel loads) - all three were `ubuntu`'s. The RTC
+  stays root's but is the vendor group's: `refnotify` opens `/dev/rtc0` (`root:root 0660`), which it reached through
+  gid 0 before ("RefNotify open /dev/rtc0 failed, error: Permission denied" until it was). The ids are looked up when
+  the script runs, in `/etc/passwd` and `/etc/group`; without the account (OpenWrt, the initramfs: no account at
+  1000 there) it is uid/gid 1000, which the daemons switch to themselves, and the GPU's group is root.
+* Nobody gains anything: `tests/test_vendor_ids.py` applies the script of v2026.10.18 and the new one to every node
+  they name (a glob as one name) and fails if `ubuntu`, a second login user in the usual groups (`video`, `render`,
+  `input`, `dialout`, ...) or everyone else can do anything with a node they could not before. 333 of 349 nodes
+  changed; the only one more open is the RTC, for the vendor group (it was not touched before).
+* The generator's inputs are in `android-vendor/ueventd/` now (the `/dev` rules of the device's `ueventd.rc` and the
+  `chown`/`chmod` lines of its vendor init `*.rc`), and a test checks the committed script is the generator's.
+* Updates: `mu300-update` takes the new image's `/etc/passwd` and adds the old system's human accounts, so an updated
+  system has the image's `mu300vnd`; the nodes are handed out by name at every boot, so its uid does not matter.
+* Measured on F50-B (Ubuntu 24.04, 7.2.9, no SIM), the three files replaced on a v2026.10.18 system: the account
+  made at boot (`mu300vnd` 999/991); `modem_control` and `refnotify` Uid 999, Gid 991, no groups, NoNewPrivs 1,
+  CapEff `0x1000000001` and `0x2000000` (as on Android); `cp_diskserver` root; the modem booted (`modem@0..2 start
+  over`), `AT` OK, `+CFUN: 1`, `+CPIN` `+CME ERROR: 10` (no SIM, as before), `AT+CGMR` answers; `nr_fixnv1_a` and
+  `persist` `mu300vnd:mu300vnd 0660` and `head` on them as `ubuntu` "Permission denied"; no world-writable node in
+  `/dev` besides the standard ones, nothing in `/dev` or `/sys` owned by uid 1000; `mali0` `root:video 0660` and
+  `cltest` (OpenCL) passes; Wi-Fi client still connected; `ttyGS0`, `input/event0` and the firmware path `root:root
+0600`, and a login on the serial console works (login gives `ttyGS0` to the user, getty takes it back); `timedatectl` reads the RTC; up past the PM watchdog's
+  ~290 s. The vendor log has the same errors as before the change (no `/dev/cp_dump`, no `/proc/bootconfig`, no
+  property service) plus the two logged failed switches. Not measured: the 5.4 kernel, OpenWrt (unchanged there but
+  for the modes), the modem with a SIM.

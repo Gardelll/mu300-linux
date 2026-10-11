@@ -42,11 +42,20 @@ msgstr "पावर"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "टर्मिनल"
+
+msgid "Terminal settings"
+msgstr "टर्मिनल सेटिंग्स"
+
 msgid "Packages after an update"
 msgstr "अपडेट के बाद पैकेज"
 
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300 नियंत्रण केंद्र: स्थिति डैशबोर्ड, नेटवर्क लॉक, AT टर्मिनल और SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "टर्मिनल: ब्राउज़र में डिवाइस का root शेल"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1559,6 +1568,39 @@ msgstr "अधूरा: %d / %d भाग पहुँचे"
 
 msgid "Delete"
 msgstr "हटाएँ"
+
+msgid "ttyd is not installed."
+msgstr "ttyd इंस्टॉल नहीं है।"
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "टर्मिनल बंद है (/etc/config/ttyd)।"
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "एक साथ बहुत सारे टर्मिनल खुल रहे हैं। एक मिनट बाद फिर कोशिश करें।"
+
+msgid "The terminal is not available."
+msgstr "टर्मिनल उपलब्ध नहीं है।"
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "यह डिवाइस का root शेल है: हर कमांड पूरे अधिकारों के साथ चलती है, और एक गलती डिवाइस को बूट होने से रोक सकती है।"
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "यह केवल LAN (USB और हॉटस्पॉट) से पहुँच योग्य है, मोबाइल डेटा से कभी नहीं, और केवल इसी लॉग-इन पेज से।"
+
+msgid "It closes after a minute without activity."
+msgstr "एक मिनट तक कोई गतिविधि न होने पर यह बंद हो जाता है।"
+
+msgid "It closes after %d minutes without activity."
+msgstr "%d मिनट तक कोई गतिविधि न होने पर यह बंद हो जाता है।"
+
+msgid "Reconnect"
+msgstr "फिर से कनेक्ट करें"
+
+msgid "Open in a new tab"
+msgstr "नए टैब में खोलें"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "यह पेज HTTPS से खोला गया है, और टर्मिनल LAN पर HTTP से चलता है: इसलिए यह अपने अलग टैब में खुलता है।"
 
 msgid "The data usage could not be read"
 msgstr "डेटा उपयोग पढ़ा नहीं जा सका"

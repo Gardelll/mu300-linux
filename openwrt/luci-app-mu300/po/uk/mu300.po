@@ -42,11 +42,20 @@ msgstr "Живлення"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Термінал"
+
+msgid "Terminal settings"
+msgstr "Налаштування термінала"
+
 msgid "Packages after an update"
 msgstr "Пакети після оновлення"
 
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Центр керування MU300: панель стану, фіксація мережі, AT-термінал і SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Термінал: оболонка root на пристрої в браузері"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1559,6 +1568,39 @@ msgstr "Неповне: отримано частин %d з %d"
 
 msgid "Delete"
 msgstr "Видалити"
+
+msgid "ttyd is not installed."
+msgstr "ttyd не встановлено."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Термінал вимкнено (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Забагато терміналів відкривається одночасно. Спробуйте ще раз за хвилину."
+
+msgid "The terminal is not available."
+msgstr "Термінал недоступний."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Це оболонка root на пристрої: кожна команда виконується з повними правами, і помилка може зробити пристрій незавантажуваним."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Він доступний лише з LAN (USB і точка доступу), ніколи з мобільних даних, і лише з цієї сторінки після входу."
+
+msgid "It closes after a minute without activity."
+msgstr "Він закривається після хвилини бездіяльності."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Він закривається після %d хвилин бездіяльності."
+
+msgid "Reconnect"
+msgstr "Перепідключитися"
+
+msgid "Open in a new tab"
+msgstr "Відкрити в новій вкладці"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Цю сторінку відкрито через HTTPS, а термінал працює в LAN через HTTP: він відкривається в окремій вкладці."
 
 msgid "The data usage could not be read"
 msgstr "Не вдалося прочитати використання даних"
