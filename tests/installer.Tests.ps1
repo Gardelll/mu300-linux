@@ -13,7 +13,7 @@ function Check($name, $got, $want) {
 
 # the functions under test, straight from install.ps1
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $Top "install.ps1"), [ref]$null, [ref]$null)
-$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt'
+$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'BootchainLine', 'BootchainRefused'
 $defs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $want -contains $n.Name }, $true)
 foreach ($d in $defs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in 'LoadLanguage', 'T', 'NormalizeAnswer') {
@@ -137,7 +137,8 @@ Check 'sd kernel check after unpack' ($iUnpack -ge 0 -and $iCheck -gt $iUnpack) 
 
 # ---- InstallEnvText: mu300-install.env, the same text tools/storage.sh's write_install_env writes ------------------
 $common = @{ OFF = [int64]27762098176; FORMAT = 1; OSES = @('ubuntu', 'openwrt'); WIPE_LEGACY = 0; UPDATE = 0
-    BOOT_OS = 'openwrt'; DEFAULT_LINUX = 1; BOOT_ATTEMPTS = 5; IMPORT_HOTSPOT = 1; KERNEL = '6.18'; PWHASH = '$6$salt$hash/x.y' }
+    BOOT_OS = 'openwrt'; DEFAULT_LINUX = 1; BOOT_ATTEMPTS = 5; IMPORT_HOTSPOT = 1; KERNEL = '6.18'; SYNC_BOOTCHAIN = 1
+    PWHASH = '$6$salt$hash/x.y' }
 $sdEnv = $common.Clone(); $sdEnv.SIZE = [int64]31914967040; $sdEnv.INT_SIZE = [int64]34776023040; $sdEnv.SD_MODE = 1
 $sdEnv.SD_DEV = '/dev/block/mmcblk1p1'; $sdEnv.INTERNAL_EXISTS = 1
 $inEnv = $common.Clone(); $inEnv.SIZE = [int64]34776023040; $inEnv.INT_SIZE = [int64]0; $inEnv.SD_MODE = 0
@@ -147,7 +148,7 @@ Check 'env sd: region'      ($t -match "(?m)^OFF=27762098176\nSIZE=34776023040\n
 Check 'env sd: card'        ($t -match "(?m)^SD_MODE=1\nSD_DEV=/dev/block/mmcblk1p1\nINTERNAL_EXISTS=1\n") $true
 Check 'env sd: format'      ($t -match "(?m)^FORMAT=1\n" -and $t -match "(?m)^UPDATE=0\n") $true
 Check 'env sd: oses'        ($t -match '(?m)^OSES="ubuntu openwrt"\n') $true
-Check 'env sd: hash'        ($t.EndsWith("PWHASH='`$6`$salt`$hash/x.y'`n")) $true
+Check 'env sd: hash'        ($t.EndsWith("SYNC_BOOTCHAIN=1`nPWHASH='`$6`$salt`$hash/x.y'`n")) $true
 Check 'env sd: no CR'       ($t.Contains("`r")) $false
 $t = InstallEnvText $inEnv
 Check 'env internal'        ($t -match "(?m)^OFF=27762098176\nSIZE=34776023040\nOFF_S=54222848\nSIZE_S=67921920\nFORMAT=0\n") $true
@@ -160,6 +161,13 @@ if (Get-Command sh -CommandType Application -ErrorAction SilentlyContinue) {
         Check "env = storage.sh (SD_MODE=$($e.SD_MODE))" (InstallEnvText $e) $shText
     }
 }
+
+# ---- BootchainLine / BootchainRefused: the plan's line from android-bootchain.sh check (storage.sh's bootchain_line) --
+Check 'bootchain identical' (BootchainLine "BOOTCHAIN-PLAN a b`r`nboot chain: identical on both slots") 'boot chain:     identical on both slots'
+Check 'bootchain differ'    (BootchainLine "BOOTCHAIN-PLAN b a sml trustos`nx") "boot chain:     sml, trustos differ between the slots; Android's slot b is copied to slot a (backed up first)"
+Check 'bootchain refused'   (BootchainLine 'BOOTCHAIN-REFUSED: uboot_a and uboot_b differ in size (1 and 2 bytes)') ''
+Check 'bootchain reason'    (BootchainRefused "x`nBOOTCHAIN-REFUSED: uboot_a and uboot_b differ in size (1 and 2 bytes)") 'uboot_a and uboot_b differ in size (1 and 2 bytes)'
+Check 'bootchain no answer' (BootchainRefused '') 'no answer from the device'
 
 # ---- uninstall.ps1: what is on the card, and the command that erases it -----------------------------------------
 $uast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $Top "uninstall.ps1"), [ref]$null, [ref]$null)

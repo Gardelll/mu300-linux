@@ -8,6 +8,8 @@
 # Android, so take a full backup with tools/backup-device.sh first.
 #   ./install.sh                 install Ubuntu, OpenWrt or both from the prebuilt release images
 #   ./install.sh --build         build kernel outputs/root filesystems locally instead (see README "Build and run")
+# The Linux slot gets the boot chain of Android's slot (uboot, sml, teecfg, trustos, vbmeta; backed up first):
+# MU300_SYNC_BOOTCHAIN=0 skips that.
 # It first brings this copy of the project up to date with GitHub (MU300_NO_SELF_UPDATE=1 skips that), and asks for
 # the language (MU300_LANG=en|tr|zh skips that).
 #
@@ -33,7 +35,7 @@ for a in "$@"; do
         --check) CHECK_ONLY=1 ;;
         --build) MODE=build ;;
         --prebuilt) MODE=prebuilt ;;
-        -h|--help) sed -n '2,13s/^# \{0,1\}//p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,15s/^# \{0,1\}//p' "$0"; exit 0 ;;
         *) echo "unknown option $a (see --help)" >&2; exit 2 ;;
     esac
 done
@@ -152,7 +154,7 @@ case "$model" in
     *U30Air*|*U30_Air*|*"U30 Air"*) DEVICE=u30air ;;
     *MU300*|*F50*|*mu300*) DEVICE=f50 ;;
     *) ask go "$(t 'This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)')" no; [ "$go" = yes ] || exit 1
-       DEVICE=f50 ;;
+       DEVICE=f50; MODEL_KNOWN=0 ;;
 esac
 # --- slot begin
 # Linux goes on the slot Android is not on: b next to an Android on a, a next to an Android on b (after an OTA the
@@ -202,6 +204,41 @@ write_linux_boot() {
 }
 # --- slot end
 slot_setup
+# --- bootchain begin
+# The Linux slot gets the boot chain of Android's slot - uboot, sml, teecfg, trustos and vbmeta, one firmware build on
+# both slots (issue #86; tools/android-bootchain.sh decides and checks, android-install.sh copies it before it installs
+# anything, with a backup). MU300_SYNC_BOOTCHAIN=0 skips that, for experts.
+bootchain_plan() {
+    SYNC_BOOTCHAIN=1; BC_LINE=; BC_REFUSED=
+    if [ "${MU300_SYNC_BOOTCHAIN:-1}" = 0 ]; then
+        SYNC_BOOTCHAIN=0; BC_LINE=$(t 'boot chain:     not synced (MU300_SYNC_BOOTCHAIN=0)'); return 0
+    fi
+    # android-bootchain.sh writes only on a model it knows: a device taken as an F50 anyway keeps its chain as it is
+    if [ "${MODEL_KNOWN:-1}" = 0 ]; then
+        SYNC_BOOTCHAIN=0; BC_LINE=$(t 'boot chain:     not synced (the model is not recognised)'); return 0
+    fi
+    adb push "$TOP/tools/android-bootchain.sh" $T/android-bootchain.sh >/dev/null 2>&1 || BC_REFUSED=$(t 'no answer from the device')
+    bootchain_line "$(su_do "sh $T/android-bootchain.sh check")" && return 0
+    if [ $CHECK_ONLY = 1 ]; then BC_LINE="$(t 'boot chain:     cannot be synced: {1}' "$BC_REFUSED")"; return 0; fi
+    die "$(t 'the boot chain cannot be copied to the Linux slot: {1}' "$BC_REFUSED")
+$(t 'Nothing was changed. Experts can skip this step with MU300_SYNC_BOOTCHAIN=0.')"
+}
+bootchain_pull() {  # the backup android-install.sh made, into the work directory
+    [ "$SYNC_BOOTCHAIN" = 1 ] || return 0
+    [ "$(su_do "[ -d $T/mu300-bootchain-backup ] && echo y")" = y ] || return 0
+    _d=$WORK/bootchain/$(date +%Y%m%d-%H%M%S)
+    mkdir -p "$WORK/bootchain"
+    adb pull $T/mu300-bootchain-backup "$_d" >/dev/null 2>&1 || true
+    su_do "rm -rf $T/mu300-bootchain-backup" >/dev/null
+    if [ -s "$_d/SHA256SUMS" ] && (cd "$_d" && { shasum -a 256 -c SHA256SUMS >/dev/null 2>&1 || sha256sum -c SHA256SUMS >/dev/null 2>&1; }); then
+        echo "  $(t 'boot chain backup: {1}' "$_d")"
+    else
+        echo "  $(t 'the boot chain backup could not be copied to this computer; it is on the Linux filesystem (.mu300/bootchain)')"
+    fi
+}
+# --- bootchain end
+bootchain_plan
+echo "$BC_LINE"
 
 
 # ---------------------------------------------------------------- making room on a small eMMC (EXPERIMENTAL)
@@ -698,11 +735,12 @@ if [ $SD_MODE = 1 ]; then
 else
     echo "  $(t 'writes:         Linux region at offset {1}, boot_{2}, 32 bytes of misc (boot_{3}, GPT and userdata are not touched)' "$OFF" "$LINUX_SLOT" "$ANDROID_SLOT")"
 fi
+echo "  $BC_LINE"
 ask confirm "$(t 'Type INSTALL to continue')" no
 [ "$confirm" = INSTALL ] || die "$(t 'cancelled')"
 
 say "$(t 'Copying to the device')"
-adb push "$TOP/tools/android-mount-mu300root.sh" "$TOP/tools/android-install.sh" $T/ >/dev/null
+adb push "$TOP/tools/android-mount-mu300root.sh" "$TOP/tools/android-install.sh" "$TOP/tools/android-bootchain.sh" $T/ >/dev/null
 for os in $OSES; do
     if [ $MODE = prebuilt ]; then
         adb push "$REL/$(rootfs_file $os)" $T/mu300-$os.tar.gz >/dev/null
@@ -719,6 +757,7 @@ write_install_env > "$env"
 adb push "$env" $T/mu300-install.env >/dev/null; rm -f "$env"
 su_do "sh $T/android-install.sh" | tee "$WORK/device-install.log"
 grep -q MU300-INSTALL-OK "$WORK/device-install.log" || die "$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")"
+bootchain_pull
 
 write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"
 

@@ -223,6 +223,16 @@ Before it writes anything it shows what it is about to do and waits for `INSTALL
 
 ![The summary before installing, and the end of the install](docs/images/installer/installer-3-summary.png)
 
+**The boot chain of the Linux slot.** Linux boots with the bootloader chain of its own slot, but runs Android's modem.
+After an Android update (OTA) the two slots hold different firmware builds, and the Linux slot's chain is still the
+factory one (issue #86). So the installer copies `uboot`, `sml`, `teecfg`, `trustos` and `vbmeta` of Android's slot to
+the Linux slot whenever they differ - and only those five, never the NV or calibration partitions or anything of
+Android's slot. The images the Linux slot held are backed up first, to the Linux filesystem (`.mu300/bootchain/`) and
+to `work/bootchain/` on the computer; each written image is read back, and a mismatch puts the old ones back and stops
+before Linux is armed. The summary says what it will do ("boot chain: identical on both slots" on a device that never
+took an update). Experts can skip it: `MU300_SYNC_BOOTCHAIN=0 ./install.sh`, `.\install.ps1 -NoBootchainSync`.
+Details: [FINDINGS 40](docs/FINDINGS.md). Thanks to kano for the advice.
+
 If Linux is already installed it asks whether to **update** or **wipe**:
 
 * **update** — reinstalls the systems but keeps your settings and data: `/etc/mu300` (hotspot, VPN, toolkit), user
@@ -368,9 +378,12 @@ boots). Beyond that:
 
 * the boot partition of the slot Android is **not** on (`boot_b` when Android runs from slot a, `boot_a` when it runs
   from slot b), checked after writing;
+* the bootloader chain of the Linux slot (`uboot`, `sml`, `teecfg`, `trustos`, `vbmeta`), only where it differs from
+  Android's slot, backed up first to `.mu300/bootchain/` on the Linux filesystem and checked after writing
+  (`MU300_SYNC_BOOTCHAIN=0` keeps it as it is; see [Install](#install));
 * 32 bytes of `misc`, written last, only when everything before succeeded.
 
-Android's own boot partition, `vbmeta`, the partition table and `userdata` are never written. If the install stops
+Android's own boot partition, Android's slot of every partition, the partition table and `userdata` are never written. If the install stops
 before the last step, `misc` is as it was and Android boots. If `misc` itself does not read back right after the last
 step, the installer writes back the block it held before and says whether that worked.
 
@@ -444,6 +457,7 @@ update - would wipe or erase again. For another erase, put the line back.
 | `MU300_DEVICE` | `f50`, `u30air` | `/data/adb` only | Detected; needed only for a model name the installer does not know |
 | `MU300_LANG` | `en`, `tr`, `zh` | either | The language of the Android locale |
 | `MU300_DRY_RUN` | `1` | either | Not set |
+| `MU300_SYNC_BOOTCHAIN` | `0`, `1` | either | `1`: the Linux slot gets the boot chain of Android's slot where it differs (backed up first). `0`: left as it is, for experts |
 
 Examples. Install to the card, formatting it (everything on it is erased), with a password of your own, from
 `adb shell` as root:
@@ -472,7 +486,9 @@ comment in that file after a successful install.
 the zips above are this module plus the installer). Once it is installed, the Magisk app gets an **Action**
 button that reboots the device into Linux, and `su -c mu300-linux` does the same from a terminal
 (`su -c 'mu300-linux status'` just shows which system is on which slot). It writes only the same 32 bytes of
-`misc` that the installer does. See [android/magisk/README.md](android/magisk/README.md).
+`misc` that the installer does. `su -c 'mu300-linux bootchain'` shows whether the boot chain differs between the
+slots, and `su -c 'mu300-linux bootchain sync'` copies Android's to the Linux slot as the installer does (after an
+Android update, say), with the backup in `/data/adb/mu300-bootchain/`. See [android/magisk/README.md](android/magisk/README.md).
 
 ### VPN
 
