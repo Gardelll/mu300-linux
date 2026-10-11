@@ -114,6 +114,12 @@ msgstr "OK"
 msgid "Cancel"
 msgstr "Отмена"
 
+msgid "%d s"
+msgstr "%d с"
+
+msgid "%d h"
+msgstr "%d ч"
+
 msgid "New SMS · %s"
 msgstr "Новое SMS · %s"
 
@@ -122,6 +128,21 @@ msgstr "Неизвестный номер"
 
 msgid "Select"
 msgstr "Выбрать"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Это сканирование сетей или частот: оно занимает от одной до трёх минут, всё это время держит AT-канал модема, и мобильные данные могут приостановиться. Оно выполняется в фоне; ответ появится здесь по завершении."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Это меняет режим сети, диапазон или настройку соты, которые модем хранит у себя: они остаются в силе после перезагрузки и в Android тоже, где не подходящая под них сеть показывается как «Нет сети». Страница «Блокировки» показывает эти настройки и сбрасывает их."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Это переключает радио, подключение для передачи данных или сам модем: мобильные данные пропадут до восстановления, и эта страница может на время потерять связь."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Это меняет хранящиеся в модеме профили данных (APN), которые используют мобильные данные и Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Это меняет блокировку SIM-карты PIN-кодом или вводит PIN: неверные PIN-коды блокируют SIM-карту до ввода PUK."
 
 msgid "Basic"
 msgstr "Основное"
@@ -150,14 +171,50 @@ msgstr "Готово."
 msgid "Session history (click to reuse)"
 msgstr "История сеанса (нажмите для повтора)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "Выполняется в фоне (не более %d с); ответ появится здесь по завершении…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Модем не дал окончательного ответа вовремя"
+
+msgid "%d s in the background"
+msgstr "%d с в фоне"
+
 msgid "(no output)"
 msgstr "(нет вывода)"
+
+msgid "This command changes the modem's state."
+msgstr "Эта команда меняет состояние модема."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Ещё не отправлено: ожидание подтверждения"
+
+msgid "Send this AT command?"
+msgstr "Отправить эту AT-команду?"
+
+msgid "Send anyway"
+msgstr "Всё равно отправить"
+
+msgid "Not sent"
+msgstr "Не отправлено"
 
 msgid "Request failed"
 msgstr "Ошибка запроса"
 
 msgid "(empty)"
 msgstr "(пусто)"
+
+msgid "Loading…"
+msgstr "Загрузка…"
+
+msgid "Channel Analysis"
+msgstr "Анализ каналов"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Сканирование ненадолго уводит точку доступа Wi-Fi с её канала: подключённые устройства отключаются, а некоторые (особенно macOS) могут не переподключиться сами. Эта страница сканирует сразу при открытии и затем каждые несколько секунд. Если вы зависите от точки доступа, сначала зайдите в панель по USB или другим путём."
+
+msgid "Scan anyway"
+msgstr "Всё равно сканировать"
 
 msgid "Failed: %s"
 msgstr "Ошибка: %s"
@@ -282,6 +339,15 @@ msgstr "Обновить"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Доступно только в режиме хоста. «Обновить» поднимает найденные USB-адаптеры; добавление в LAN сохраняет мост и перезагружает сеть."
 
+msgid "Recent modem operations"
+msgstr "Последние операции модема"
+
+msgid "Show"
+msgstr "Показать"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Последние вызовы панели управления в этой и предыдущей загрузке: когда, какой вызов страницы или AT-команда, сколько это заняло и чем закончилось (ok, ошибка, занято, прервано). Значения, ответы и сообщения не сохраняются. Полезно, когда панель зависла."
+
 msgid "Unavailable"
 msgstr "Недоступно"
 
@@ -335,6 +401,12 @@ msgstr "Настройки сохранены"
 
 msgid "Save failed: %s"
 msgstr "Ошибка сохранения: %s"
+
+msgid "This boot"
+msgstr "Эта загрузка"
+
+msgid "Previous boot"
+msgstr "Предыдущая загрузка"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Пока не удаётся подтвердить роль; переподключитесь и обновите страницу."
@@ -807,6 +879,9 @@ msgstr "Радио выключено"
 msgid "No response"
 msgstr "Нет ответа"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Модем занят: данные сотовой сети %s назад"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Сигнал %s %s/10"
 
@@ -872,9 +947,6 @@ msgstr "Клиентов: %s"
 
 msgid "Recent DHCP leases"
 msgstr "Последние аренды DHCP"
-
-msgid "%d h"
-msgstr "%d ч"
 
 msgid "Board"
 msgstr "Плата"
@@ -1095,11 +1167,11 @@ msgstr "Включить применение при запуске"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Прямое чтение модема (не более нескольких секунд)…"
 
-msgid "Refreshed"
-msgstr "Обновлено"
-
 msgid "Refresh failed"
 msgstr "Ошибка обновления"
+
+msgid "Refreshed"
+msgstr "Обновлено"
 
 msgid "NR bands: back to automatic"
 msgstr "Диапазоны NR: снова автоматически"
@@ -1251,6 +1323,9 @@ msgstr "Переходить в Экономию при заряде ниже %"
 msgid "Stop charging at"
 msgstr "Прекращать зарядку на"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % никогда не заряжает батарею (устройство работает от зарядного устройства), 100 % заряжает её полностью; в промежутке зарядка останавливается на этом уровне и возобновляется на 5 пунктов ниже. Ниже 5 % батарея заряжается всегда."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % берегут батарею устройства, которое постоянно включено в сеть."
 
@@ -1361,9 +1436,6 @@ msgstr "Синхронизировать с SIM"
 
 msgid "Clear local pool"
 msgstr "Очистить локальное хранилище"
-
-msgid "Loading…"
-msgstr "Загрузка…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Выберите диалог слева или введите номер ниже для отправки."
@@ -1626,6 +1698,9 @@ msgstr "Радиомодуль занят: его переключает доз�
 msgid "The action gave no valid reply"
 msgstr "Действие не вернуло корректный ответ"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Параметр confirm должен быть 0 или 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "AT-команда — это одна строка печатных символов ASCII длиной не более 512 символов"
 
@@ -1641,6 +1716,12 @@ msgstr "Запрещено: эта команда блокирует AT-порт
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Применяется фиксация сети: модем перезапускается (около полуминуты), повторите чуть позже"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Длинная AT-команда ещё выполняется в фоне; повторите, когда она завершится"
+
+msgid "This command needs confirmation"
+msgstr "Эта команда требует подтверждения"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "AT-канал занят; команда не отправлена, повторите"
 
@@ -1649,6 +1730,9 @@ msgstr "Модем не ответил вовремя; команда может
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Параметр fresh должен быть 0 или 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Блокировки считываются из модема; повторите через несколько секунд"
 
 msgid "Lock read failed"
 msgstr "Ошибка чтения фиксации"

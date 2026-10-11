@@ -272,7 +272,7 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   adapters in host mode that can join the LAN bridge.
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom AT adapter).
 * **System > Languages:** the language of the interface, and the lang extra: download it, or upload the file.
-* **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (100 or 80 %).
+* **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (0-100 %, U30 Air; also `mu300-power charge-limit N`).
 * **System > Terminal:** a root shell in the browser ([ttyd](https://github.com/tsl0922/ttyd)). It listens on the LAN
   address only (port 7681; the cellular side never reaches it), and opens a shell only for a one-time token the page
   gets for a logged-in panel session: there is no second password to guess. It closes after 15 minutes without

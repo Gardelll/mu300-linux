@@ -114,6 +114,12 @@ msgstr "OK"
 msgid "Cancel"
 msgstr "Annulla"
 
+msgid "%d s"
+msgstr "%d s"
+
+msgid "%d h"
+msgstr "%d h"
+
 msgid "New SMS · %s"
 msgstr "Nuovo SMS · %s"
 
@@ -122,6 +128,21 @@ msgstr "Numero sconosciuto"
 
 msgid "Select"
 msgstr "Seleziona"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "Questa è una scansione di reti o frequenze: richiede da uno a tre minuti, occupa per tutto il tempo il canale AT del modem e nel frattempo i dati mobili possono interrompersi. Viene eseguita in background; la risposta compare qui al termine."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "Questo modifica una modalità di rete, una banda o un'impostazione di cella che il modem memorizza: resta in vigore dopo un riavvio, e anche in Android, dove una rete che non corrisponde appare come Nessun servizio. La pagina Blocchi mostra queste impostazioni e le reimposta."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "Questo commuta la radio, la connessione dati o il modem stesso: i dati mobili si interrompono finché non vengono ripristinati e questa pagina può perdere la connessione per un po'."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "Questo modifica i profili dati (APN) memorizzati nel modem, usati dai dati mobili e da Android."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "Questo modifica il blocco PIN della SIM o inserisce un PIN: PIN errati bloccano la SIM finché non si inserisce il suo PUK."
 
 msgid "Basic"
 msgstr "Base"
@@ -150,14 +171,50 @@ msgstr "Pronto."
 msgid "Session history (click to reuse)"
 msgstr "Cronologia della sessione (clic per riutilizzare)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "In esecuzione in background (al massimo %d s); la risposta compare qui al termine…"
+
+msgid "The modem gave no final answer in time"
+msgstr "Il modem non ha dato una risposta finale in tempo"
+
+msgid "%d s in the background"
+msgstr "%d s in background"
+
 msgid "(no output)"
 msgstr "(nessun output)"
+
+msgid "This command changes the modem's state."
+msgstr "Questo comando modifica lo stato del modem."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "Non ancora inviato: in attesa di conferma"
+
+msgid "Send this AT command?"
+msgstr "Inviare questo comando AT?"
+
+msgid "Send anyway"
+msgstr "Invia comunque"
+
+msgid "Not sent"
+msgstr "Non inviato"
 
 msgid "Request failed"
 msgstr "Richiesta non riuscita"
 
 msgid "(empty)"
 msgstr "(vuoto)"
+
+msgid "Loading…"
+msgstr "Caricamento…"
+
+msgid "Channel Analysis"
+msgstr "Analisi dei canali"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "Una scansione porta per un momento l'hotspot Wi-Fi fuori dal suo canale: i dispositivi connessi si disconnettono e alcuni (macOS in particolare) potrebbero non riconnettersi da soli. Questa pagina esegue la scansione appena si apre e poi ogni pochi secondi. Se dipendi dall'hotspot, raggiungi prima il pannello via USB o in un altro modo."
+
+msgid "Scan anyway"
+msgstr "Scansiona comunque"
 
 msgid "Failed: %s"
 msgstr "Non riuscito: %s"
@@ -282,6 +339,15 @@ msgstr "Aggiorna"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "Disponibile solo in modalità host. «Aggiorna» attiva gli adattatori USB rilevati; l'aggiunta alla LAN salva il bridge e ricarica la rete."
 
+msgid "Recent modem operations"
+msgstr "Operazioni recenti del modem"
+
+msgid "Show"
+msgstr "Mostra"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "Le chiamate recenti del pannello di controllo, di questo avvio e del precedente: quando, quale chiamata di pagina o comando AT, quanto è durata e come è terminata (ok, errore, occupato, interrotta). Non vengono conservati valori, risposte o messaggi. Utile quando il pannello si è bloccato."
+
 msgid "Unavailable"
 msgstr "Non disponibile"
 
@@ -335,6 +401,12 @@ msgstr "Impostazioni salvate"
 
 msgid "Save failed: %s"
 msgstr "Salvataggio non riuscito: %s"
+
+msgid "This boot"
+msgstr "Questo avvio"
+
+msgid "Previous boot"
+msgstr "Avvio precedente"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "Impossibile confermare il ruolo per ora; riconnettersi e aggiornare la pagina."
@@ -807,6 +879,9 @@ msgstr "Radio spenta"
 msgid "No response"
 msgstr "Nessuna risposta"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "Modem occupato: letture cellulari di %s fa"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · Segnale %s %s/10"
 
@@ -872,9 +947,6 @@ msgstr "%s client"
 
 msgid "Recent DHCP leases"
 msgstr "Lease DHCP recenti"
-
-msgid "%d h"
-msgstr "%d h"
 
 msgid "Board"
 msgstr "Scheda"
@@ -1095,11 +1167,11 @@ msgstr "Abilita applicazione all'avvio"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "Lettura diretta dal modem (al massimo pochi secondi)…"
 
-msgid "Refreshed"
-msgstr "Aggiornato"
-
 msgid "Refresh failed"
 msgstr "Aggiornamento non riuscito"
+
+msgid "Refreshed"
+msgstr "Aggiornato"
 
 msgid "NR bands: back to automatic"
 msgstr "Bande NR: di nuovo automatiche"
@@ -1251,6 +1323,9 @@ msgstr "Passa a Risparmio sotto il %"
 msgid "Stop charging at"
 msgstr "Interrompi la carica al"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % non carica mai la batteria (il dispositivo funziona con il caricatore), 100 % la carica completamente; nel mezzo, la carica si ferma a quel livello e riprende 5 punti più in basso. Sotto il 5 % la batteria si carica sempre."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "L'80 % protegge meglio la batteria di un dispositivo che resta collegato."
 
@@ -1361,9 +1436,6 @@ msgstr "Sincronizza dalla SIM"
 
 msgid "Clear local pool"
 msgstr "Svuota archivio locale"
-
-msgid "Loading…"
-msgstr "Caricamento…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "Selezionare una conversazione a sinistra oppure inserire un numero qui sotto per inviare."
@@ -1626,6 +1698,9 @@ msgstr "La radio è occupata: il dialer o il watchdog la sta commutando, riprova
 msgid "The action gave no valid reply"
 msgstr "L'azione non ha restituito una risposta valida"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "Il parametro confirm deve essere 0 o 1"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "Un comando AT è una riga di ASCII stampabile di al massimo 512 caratteri"
 
@@ -1641,6 +1716,12 @@ msgstr "Negato: questo comando blocca la porta AT fino al riavvio"
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "Applicazione dei blocchi di rete: il modem si sta riavviando (circa mezzo minuto), riprovare tra poco"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "Un comando AT lungo è ancora in esecuzione in background; riprova quando è terminato"
+
+msgid "This command needs confirmation"
+msgstr "Questo comando richiede una conferma"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "Il canale AT è occupato; il comando non è stato inviato, riprovare"
 
@@ -1649,6 +1730,9 @@ msgstr "Il modem non ha risposto in tempo; il comando potrebbe essere ancora in 
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "Il parametro fresh deve essere 0 o 1"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "Lettura dei blocchi dal modem in corso; riprova tra qualche secondo"
 
 msgid "Lock read failed"
 msgstr "Lettura dei blocchi non riuscita"

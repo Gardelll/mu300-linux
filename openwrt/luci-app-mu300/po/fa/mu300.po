@@ -114,6 +114,12 @@ msgstr "باشه"
 msgid "Cancel"
 msgstr "لغو"
 
+msgid "%d s"
+msgstr "%d ث"
+
+msgid "%d h"
+msgstr "%d ساعت"
+
 msgid "New SMS · %s"
 msgstr "SMS جدید · %s"
 
@@ -122,6 +128,21 @@ msgstr "شمارهٔ نامشخص"
 
 msgid "Select"
 msgstr "انتخاب"
+
+msgid "This is a network or frequency scan: it takes one to three minutes, holds the modem's AT channel all that time, and mobile data may pause meanwhile. It runs in the background; the reply appears here when it is done."
+msgstr "این یک جست‌وجوی شبکه یا فرکانس است: یک تا سه دقیقه طول می‌کشد، در تمام این مدت کانال AT مودم را اشغال می‌کند و ممکن است داده تلفن همراه در این فاصله متوقف شود. در پس‌زمینه اجرا می‌شود؛ پاسخ پس از پایان اینجا نمایش داده می‌شود."
+
+msgid "This changes a network mode, band or cell setting the modem stores: it stays in force after a reboot, and in Android too, where a network that does not match it shows as No Service. The Locks page shows these settings and resets them."
+msgstr "این، حالت شبکه، باند یا تنظیم سلولی را که مودم ذخیره می‌کند تغییر می‌دهد: پس از راه‌اندازی دوباره هم برقرار می‌ماند، و در Android هم، جایی که شبکه‌ای که با آن جور نیست «بدون سرویس» نشان داده می‌شود. صفحه قفل‌ها این تنظیمات را نشان می‌دهد و بازنشانی می‌کند."
+
+msgid "This switches the radio, the data connection or the modem itself: mobile data drops until it is restored, and this page may lose its connection for a while."
+msgstr "این، رادیو، اتصال داده یا خود مودم را تغییر وضعیت می‌دهد: داده تلفن همراه تا بازگشت قطع می‌شود و این صفحه ممکن است مدتی اتصالش را از دست بدهد."
+
+msgid "This changes the data profiles (APNs) stored in the modem, which mobile data and Android use."
+msgstr "این، نمایه‌های داده (APN) ذخیره‌شده در مودم را که داده تلفن همراه و Android از آن‌ها استفاده می‌کنند تغییر می‌دهد."
+
+msgid "This changes the SIM's PIN lock or enters a PIN: wrong PINs block the SIM until its PUK is entered."
+msgstr "این، قفل PIN سیم‌کارت را تغییر می‌دهد یا یک PIN وارد می‌کند: PINهای نادرست سیم‌کارت را تا وارد کردن PUK آن مسدود می‌کنند."
 
 msgid "Basic"
 msgstr "پایه"
@@ -150,14 +171,50 @@ msgstr "آماده."
 msgid "Session history (click to reuse)"
 msgstr "تاریخچهٔ نشست (برای استفادهٔ دوباره کلیک کنید)"
 
+msgid "Running in the background (at most %d s); the reply appears here when it is done…"
+msgstr "در حال اجرا در پس‌زمینه (حداکثر %d ث)؛ پاسخ پس از پایان اینجا نمایش داده می‌شود…"
+
+msgid "The modem gave no final answer in time"
+msgstr "مودم به‌موقع پاسخ نهایی نداد"
+
+msgid "%d s in the background"
+msgstr "%d ث در پس‌زمینه"
+
 msgid "(no output)"
 msgstr "(بدون خروجی)"
+
+msgid "This command changes the modem's state."
+msgstr "این فرمان وضعیت مودم را تغییر می‌دهد."
+
+msgid "Not sent yet: waiting for confirmation"
+msgstr "هنوز ارسال نشده: در انتظار تأیید"
+
+msgid "Send this AT command?"
+msgstr "این فرمان AT ارسال شود؟"
+
+msgid "Send anyway"
+msgstr "به‌هر‌حال ارسال شود"
+
+msgid "Not sent"
+msgstr "ارسال نشد"
 
 msgid "Request failed"
 msgstr "درخواست ناموفق بود"
 
 msgid "(empty)"
 msgstr "(خالی)"
+
+msgid "Loading…"
+msgstr "در حال بارگذاری…"
+
+msgid "Channel Analysis"
+msgstr "تحلیل کانال"
+
+msgid "A scan takes the Wi-Fi hotspot off its channel for a moment: connected devices drop, and some (macOS in particular) may not reconnect by themselves. This page scans as soon as it opens and again every few seconds. Reach the panel over USB or another way first if you depend on the hotspot."
+msgstr "جست‌وجو نقطه دسترسی Wi-Fi را برای لحظه‌ای از کانالش خارج می‌کند: دستگاه‌های متصل قطع می‌شوند و برخی (به‌ویژه macOS) ممکن است خودبه‌خود دوباره وصل نشوند. این صفحه به‌محض باز شدن و سپس هر چند ثانیه جست‌وجو می‌کند. اگر به نقطه دسترسی وابسته‌اید، ابتدا از راه USB یا راه دیگری به پنل دسترسی پیدا کنید."
+
+msgid "Scan anyway"
+msgstr "به‌هر‌حال جست‌وجو شود"
 
 msgid "Failed: %s"
 msgstr "ناموفق: %s"
@@ -282,6 +339,15 @@ msgstr "تازه‌سازی"
 msgid "Available only in host mode. Refresh brings discovered USB adapters up; adding to LAN saves the bridge and reloads networking."
 msgstr "فقط در حالت میزبان در دسترس است. «تازه‌سازی» آداپتورهای USB شناسایی‌شده را فعال می‌کند؛ افزودن به LAN پل را ذخیره و شبکه را دوباره بارگذاری می‌کند."
 
+msgid "Recent modem operations"
+msgstr "عملیات اخیر مودم"
+
+msgid "Show"
+msgstr "نمایش"
+
+msgid "The control panel's recent calls, of this boot and the one before: when, which page call or AT command, how long it took and how it ended (ok, error, busy, killed). No values, replies or messages are kept. Useful when the panel was stuck."
+msgstr "فراخوانی‌های اخیر پنل کنترل، در این راه‌اندازی و راه‌اندازی قبلی: چه زمانی، کدام فراخوانی صفحه یا فرمان AT، چقدر طول کشید و چگونه پایان یافت (ok، خطا، مشغول، متوقف‌شده). هیچ مقدار، پاسخ یا پیامی نگه داشته نمی‌شود. وقتی پنل گیر کرده بود سودمند است."
+
 msgid "Unavailable"
 msgstr "در دسترس نیست"
 
@@ -335,6 +401,12 @@ msgstr "تنظیمات ذخیره شد"
 
 msgid "Save failed: %s"
 msgstr "ذخیره ناموفق بود: %s"
+
+msgid "This boot"
+msgstr "این راه‌اندازی"
+
+msgid "Previous boot"
+msgstr "راه‌اندازی قبلی"
 
 msgid "Unable to confirm the role yet; reconnect and refresh the page."
 msgstr "هنوز امکان تأیید نقش نیست؛ دوباره وصل شوید و صفحه را تازه کنید."
@@ -807,6 +879,9 @@ msgstr "رادیو خاموش"
 msgid "No response"
 msgstr "بدون پاسخ"
 
+msgid "Modem busy: cellular readings from %s ago"
+msgstr "مودم مشغول است: داده‌های شبکه همراه مربوط به %s پیش"
+
 msgid "%s · Signal %s %s/10"
 msgstr "%s · سیگنال %s %s/10"
 
@@ -872,9 +947,6 @@ msgstr "%s کلاینت"
 
 msgid "Recent DHCP leases"
 msgstr "اجاره‌های اخیر DHCP"
-
-msgid "%d h"
-msgstr "%d ساعت"
 
 msgid "Board"
 msgstr "برد"
@@ -1095,11 +1167,11 @@ msgstr "فعال‌سازی اعمال هنگام راه‌اندازی"
 msgid "Reading the modem directly (a few seconds at most)…"
 msgstr "در حال خواندن مستقیم از مودم (حداکثر چند ثانیه)…"
 
-msgid "Refreshed"
-msgstr "تازه شد"
-
 msgid "Refresh failed"
 msgstr "تازه‌سازی ناموفق بود"
+
+msgid "Refreshed"
+msgstr "تازه شد"
 
 msgid "NR bands: back to automatic"
 msgstr "باندهای NR: بازگشت به خودکار"
@@ -1251,6 +1323,9 @@ msgstr "رفتن به صرفه‌جویی زیر %"
 msgid "Stop charging at"
 msgstr "توقف شارژ در"
 
+msgid "0 % never charges the battery (the device runs on the charger), 100 % charges it full; in between, charging stops at that level and starts again 5 points lower. Under 5 % the battery always charges."
+msgstr "0 % هرگز باتری را شارژ نمی‌کند (دستگاه با شارژر کار می‌کند)، 100 % آن را کامل شارژ می‌کند؛ در میانه، شارژ در همان سطح متوقف می‌شود و 5 واحد پایین‌تر دوباره شروع می‌شود. زیر 5 % باتری همیشه شارژ می‌شود."
+
 msgid "80 % keeps the battery healthier on a device that stays plugged in."
 msgstr "80 % سلامت باتری را در دستگاهی که همیشه به برق وصل است بهتر حفظ می‌کند."
 
@@ -1361,9 +1436,6 @@ msgstr "همگام‌سازی از SIM"
 
 msgid "Clear local pool"
 msgstr "پاک کردن مخزن محلی"
-
-msgid "Loading…"
-msgstr "در حال بارگذاری…"
 
 msgid "Select a conversation on the left, or enter a number below to send."
 msgstr "گفت‌وگویی را از فهرست انتخاب کنید یا برای ارسال، شماره‌ای را در پایین وارد کنید."
@@ -1626,6 +1698,9 @@ msgstr "رادیو مشغول است: شماره‌گیر یا watchdog در ح�
 msgid "The action gave no valid reply"
 msgstr "عملیات پاسخ معتبری نداد"
 
+msgid "The confirm parameter must be 0 or 1"
+msgstr "پارامتر confirm باید 0 یا 1 باشد"
+
 msgid "An AT command is one line of printable ASCII, at most 512 characters"
 msgstr "دستور AT یک خط از نویسه‌های چاپی ASCII است، حداکثر 512 نویسه"
 
@@ -1641,6 +1716,12 @@ msgstr "رد شد: این دستور پورت AT را تا راه‌اندازی
 msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
 msgstr "در حال اعمال قفل‌های شبکه: مودم در حال راه‌اندازی مجدد است (حدود نیم دقیقه)، کمی بعد دوباره تلاش کنید"
 
+msgid "A long AT command is still running in the background; try again when it has finished"
+msgstr "یک فرمان AT طولانی هنوز در پس‌زمینه در حال اجراست؛ پس از پایان آن دوباره تلاش کنید"
+
+msgid "This command needs confirmation"
+msgstr "این فرمان به تأیید نیاز دارد"
+
 msgid "The AT channel is busy; the command was not sent, try again"
 msgstr "کانال AT مشغول است؛ دستور ارسال نشد، دوباره تلاش کنید"
 
@@ -1649,6 +1730,9 @@ msgstr "مودم به‌موقع پاسخ نداد؛ ممکن است دستور 
 
 msgid "The fresh parameter must be 0 or 1"
 msgstr "پارامتر fresh باید 0 یا 1 باشد"
+
+msgid "Reading the locks from the modem; try again in a few seconds"
+msgstr "قفل‌ها از مودم خوانده می‌شوند؛ چند ثانیه دیگر دوباره تلاش کنید"
 
 msgid "Lock read failed"
 msgstr "خواندن قفل ناموفق بود"
