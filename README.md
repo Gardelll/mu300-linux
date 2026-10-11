@@ -542,21 +542,24 @@ security model): the images carry none of it, and mu300-linux keeps the kernel s
 and the places that work with it (mobile data, the Wi-Fi client, power saving, the toolkit, the panel).
 
 ```sh
-sudo mu300-extra install vpn                                # online: the module's latest release, checked against its SHA256SUMS
-sudo mu300-extra install vpn --from mu300-linux-vpn.tar.gz  # offline: a copy brought onto the device (USB, scp)
-sudo mu300-extra install vpn --from /mnt/usb/               # offline, verified: a directory with the tarball and its SHA256SUMS
-sudo mu300-extra install vpn-mihomo                         # mihomo, for Clash/mihomo profiles
+sudo mu300-extra install vpn                                # online: the core and the engines its profiles need (first time: xray)
+sudo mu300-vpn engine install sing-box                      # each engine is an extra: xray, sing-box, mihomo, dae (= mu300-extra install vpn-singbox ...)
+sudo mu300-extra install vpn --from /mnt/usb/               # offline, verified: a directory with the tarballs and their SHA256SUMS
+sudo mu300-extra remove vpn-mihomo                          # an engine; refused while the VPN runs on it
 sudo mu300-extra remove vpn                                 # turn the VPN off first
 ```
 
-The installer asks for it too. The module lives on the Linux partition (`/mnt/mu300-disk/extra/vpn`), so Ubuntu and
-OpenWrt share one copy; installing it links it into every installed system, and each system links it again at boot.
-`mu300-update apply` brings it to its latest release, and a device that uses the VPN is never updated without it:
-offline, the update stops before it changes anything and says how to stage the module
-(`mu300-linux-vpn.tar.gz` and its `SHA256SUMS` in `/mnt/mu300-disk/.mu300-update/vpn/`, or
-`MU300_VPN_MODULE=FILE mu300-update apply`). An older vpn extra (the engines alone) is replaced by the module. A
+The installer asks for it too. The module lives on the Linux partition (`/mnt/mu300-disk/extra/vpn`, the engines in
+`extra/vpn-xray`, `vpn-singbox`, `vpn-mihomo`, `vpn-dae`), so Ubuntu and OpenWrt share one copy; installing it links
+it into every installed system, and each system links it again at boot. `mu300-update apply` brings the core and every
+engine the device has or a profile needs to their latest release, as one set (engines first, the core last), and a
+device that uses the VPN is never updated without them: offline, the update stops before it changes anything and says
+how to stage the module (`mu300-linux-vpn-core.tar.gz` with the engine tarballs, or `mu300-linux-vpn.tar.gz` - the
+core with xray and sing-box - and `SHA256SUMS`, in `/mnt/mu300-disk/.mu300-update/vpn/`, or `MU300_VPN_MODULE=DIR
+mu300-update apply`). Module v1 (the engines inside the vpn extra) keeps both its engines when it is upgraded. A
 system whose VPN is on with its kill switch and has lost the module fails closed: mobile data and the Wi-Fi client stay
-down until it is installed again (`mu300-extra install vpn`) or the VPN is turned off.
+down until it is installed again (`mu300-extra install vpn`) or the VPN is turned off. A missing engine fails closed
+too, behind the kill switch, while the service fetches it again; mu300-toolkit says which one.
 
 ### Languages
 
