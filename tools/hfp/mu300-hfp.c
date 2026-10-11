@@ -20,6 +20,13 @@
  * The headset's buttons come back as commands: ATA runs ANSWER_CMD, AT+CHUP runs HANGUP_CMD (both through
  * /bin/sh -c, in the background). Status goes to stdout, one line per event.
  *
+ * Security. It never listens: it only connects out, to the one address it is given, and only if BlueZ holds a
+ * link key for that address (a bonded device, /var/lib/bluetooth/<adapter>/<address>/info with [LinkKey]). The
+ * RFCOMM link is opened at BT_SECURITY_MEDIUM - authenticated with that key and encrypted - and the peer address is
+ * checked again after the connect. What the headset sends is matched against a strict allow-list (at_classify);
+ * nothing from it ever reaches the modem: ATA and AT+CHUP run the two fixed commands given on the command line,
+ * dialling (ATD, AT+BLDN) and voice dial are refused, anything unknown gets ERROR. The control FIFO is 0600.
+ *
  * Only CVSD (8 kHz narrowband) is offered: no codec negotiation is advertised, so a headset never switches to
  * mSBC and VBC_SRC_BT_DAC/ADC stay at 8000. */
 #include <errno.h>
@@ -46,6 +53,9 @@
 #define SOL_BLUETOOTH 274
 #define BT_VOICE 11
 #define BT_VOICE_CVSD_16BIT 0x0060
+#define BT_SECURITY 4
+#define BT_SECURITY_MEDIUM 2     /* authenticated (bonded) and encrypted link */
+struct bt_security { uint8_t level; uint8_t key_size; };
 typedef struct { uint8_t b[6]; } __attribute__((packed)) bdaddr_t;
 struct sockaddr_l2 { sa_family_t l2_family; uint16_t l2_psm; bdaddr_t l2_bdaddr; uint16_t l2_cid; uint8_t l2_bdaddr_type; };
 struct sockaddr_rc { sa_family_t rc_family; bdaddr_t rc_bdaddr; uint8_t rc_channel; };
@@ -151,49 +161,81 @@ static void sco_close(void)
 	say("sco down%s", "");
 }
 
+/* The headset's AT commands this gateway takes, and nothing else. */
+enum at_action { AT_ERROR, AT_OK, AT_BRSF, AT_CIND_TEST, AT_CIND_READ, AT_CMER, AT_CHLD_TEST, AT_CLIP, AT_ANSWER,
+	AT_HANGUP, AT_COPS_READ, AT_CLCC };
+
+/* s is all of [0-9,] and at most n characters, and not empty */
+static int numeric(const char *s, size_t n)
+{
+	size_t i = 0;
+	for (; s[i]; i++) if (i >= n || !((s[i] >= '0' && s[i] <= '9') || s[i] == ',')) return 0;
+	return i > 0;
+}
+
+static enum at_action at_classify(const char *l)
+{
+	if (!strncmp(l, "AT+BRSF=", 8)) return numeric(l + 8, 10) ? AT_BRSF : AT_ERROR;
+	if (!strcmp(l, "AT+CIND=?")) return AT_CIND_TEST;
+	if (!strcmp(l, "AT+CIND?")) return AT_CIND_READ;
+	if (!strncmp(l, "AT+CMER=", 8)) return numeric(l + 8, 16) ? AT_CMER : AT_ERROR;
+	if (!strcmp(l, "AT+CHLD=?")) return AT_CHLD_TEST;
+	if (!strcmp(l, "AT+CLIP=0") || !strcmp(l, "AT+CLIP=1")) return AT_CLIP;
+	if (!strcmp(l, "ATA")) return AT_ANSWER;
+	if (!strcmp(l, "AT+CHUP")) return AT_HANGUP;
+	if (!strcmp(l, "AT+COPS?")) return AT_COPS_READ;
+	if (!strcmp(l, "AT+CLCC")) return AT_CLCC;
+	/* settings the gateway acknowledges and ignores: gains, echo cancelling, error format, indicators */
+	if (!strncmp(l, "AT+VGS=", 7) || !strncmp(l, "AT+VGM=", 7)) return numeric(l + 7, 2) ? AT_OK : AT_ERROR;
+	if (!strncmp(l, "AT+NREC=", 8) || !strncmp(l, "AT+CMEE=", 8) || !strncmp(l, "AT+CCWA=", 8))
+		return numeric(l + 8, 1) ? AT_OK : AT_ERROR;
+	if (!strncmp(l, "AT+BIA=", 7)) return numeric(l + 7, 32) ? AT_OK : AT_ERROR;
+	if (!strcmp(l, "AT+COPS=3,0")) return AT_OK;
+	/* ATD..., AT+BLDN, AT+BVRA, AT+CHLD=n, AT+VTS, AT+BTRH, anything else */
+	return AT_ERROR;
+}
+
 /* one AT command from the headset */
 static void handle_at(char *l)
 {
 	char b[160];
-	say("< %s", l);
-	if (!strncmp(l, "AT+BRSF=", 8)) {
-		snprintf(b, sizeof b, "+BRSF: %d", AG_FEATURES); send_at(b); send_at("OK");
-	} else if (!strcmp(l, "AT+CIND=?")) {
+	enum at_action act = at_classify(l);
+	/* refused lines are not logged verbatim: a dial attempt would put a number in the log */
+	if (act == AT_ERROR) printf("< refused (%zu bytes)\n", strlen(l)); else say("< %s", l);
+	fflush(stdout);
+	switch (act) {
+	case AT_BRSF:
+		snprintf(b, sizeof b, "+BRSF: %d", AG_FEATURES); send_at(b); send_at("OK"); break;
+	case AT_CIND_TEST:
 		send_at("+CIND: (\"call\",(0,1)),(\"callsetup\",(0-3)),(\"service\",(0,1)),(\"signal\",(0-5)),"
 			"(\"roam\",(0,1)),(\"battchg\",(0-5)),(\"callheld\",(0-2))");
-		send_at("OK");
-	} else if (!strcmp(l, "AT+CIND?")) {
+		send_at("OK"); break;
+	case AT_CIND_READ:
 		snprintf(b, sizeof b, "+CIND: %d,%d,%d,%d,%d,%d,%d", ind_call, ind_setup, ind_service, ind_signal,
 			 ind_roam, ind_batt, ind_held);
-		send_at(b); send_at("OK");
-	} else if (!strncmp(l, "AT+CMER=", 8)) {
+		send_at(b); send_at("OK"); break;
+	case AT_CMER: {
 		/* AT+CMER=3,0,0,1: the fourth field switches indicator events on - and ends the SLC setup */
-		char *p = strrchr(l, ',');
+		const char *p = strrchr(l, ',');
 		cmer = p && p[1] == '1';
 		send_at("OK");
 		say("service level connection up%s", "");
-	} else if (!strcmp(l, "AT+CHLD=?")) {
-		send_at("+CHLD: (0,1,2,3)"); send_at("OK");
-	} else if (!strncmp(l, "AT+CLIP=", 8)) {
-		clip = l[8] == '1'; send_at("OK");
-	} else if (!strcmp(l, "ATA")) {
-		send_at("OK"); say("headset: answer%s", ""); run_bg(answer_cmd);
-	} else if (!strcmp(l, "AT+CHUP")) {
-		send_at("OK"); say("headset: hang up%s", ""); run_bg(hangup_cmd);
-	} else if (!strcmp(l, "AT+COPS?")) {
-		send_at("+COPS: 0,0,\"\""); send_at("OK");
-	} else if (!strcmp(l, "AT+CLCC")) {
-		send_at("OK");
-	} else if (!strncmp(l, "AT+BLDN", 7) || !strncmp(l, "ATD", 3) || !strncmp(l, "AT+BVRA", 7)) {
-		send_at("ERROR");     /* dialling from the headset is not offered */
-	} else {
-		send_at("OK");        /* AT+VGS, AT+VGM, AT+NREC, AT+CMEE, AT+BIA, AT+CCWA, AT+COPS=3,0 ... */
+		break;
+	}
+	case AT_CHLD_TEST: send_at("+CHLD: (0,1,2,3)"); send_at("OK"); break;
+	case AT_CLIP: clip = l[8] == '1'; send_at("OK"); break;
+	case AT_ANSWER: send_at("OK"); say("headset: answer%s", ""); run_bg(answer_cmd); break;
+	case AT_HANGUP: send_at("OK"); say("headset: hang up%s", ""); run_bg(hangup_cmd); break;
+	case AT_COPS_READ: send_at("+COPS: 0,0,\"\""); send_at("OK"); break;
+	case AT_CLCC: case AT_OK: send_at("OK"); break;
+	case AT_ERROR: default: send_at("ERROR"); break;
 	}
 }
 
 static void handle_ctl(char *l)
 {
-	say("ctl: %s", l);
+	/* "ring NUMBER" carries the caller's number: log the command only */
+	say("ctl: %s", strncmp(l, "ring", 4) ? l : "ring");
 	if (!strcmp(l, "sco on")) sco_open();
 	else if (!strcmp(l, "sco off")) sco_close();
 	else if (!strncmp(l, "call ", 5)) { int v = atoi(l + 5) ? 1 : 0; if (v != ind_call) { ind_call = v; ciev(1, v); } }
@@ -201,7 +243,7 @@ static void handle_ctl(char *l)
 		if (v != ind_setup) { ind_setup = v; ciev(2, v); } }
 	else if (!strncmp(l, "ring", 4)) {
 		send_at("RING");
-		if (clip && l[4] == ' ' && l[5]) {
+		if (clip && l[4] == ' ' && l[5] && strspn(l + 5, "+0123456789*#") == strlen(l + 5)) {
 			char b[96]; snprintf(b, sizeof b, "+CLIP: \"%.40s\",%d", l + 5, l[5] == '+' ? 145 : 129);
 			send_at(b);
 		}
@@ -220,6 +262,19 @@ static void feed(char *acc, size_t *len, size_t cap, const char *in, ssize_t n, 
 }
 
 static void on_term(int s) { (void)s; sco_close(); _exit(0); }
+
+/* BlueZ keeps a bonded device's link key in /var/lib/bluetooth/<adapter>/<ADDRESS>/info, section [LinkKey] */
+static int bonded(const char *addr, const char *store)
+{
+	char up[18], cmd[160];
+	size_t i;
+	for (i = 0; i < 17 && addr[i]; i++) up[i] = (addr[i] >= 'a' && addr[i] <= 'f') ? addr[i] - 32 : addr[i];
+	up[i] = 0;
+	snprintf(cmd, sizeof cmd, "grep -qs '^\\[LinkKey\\]' %s/*/%s/info", store, up);
+	return system(cmd) == 0;
+}
+
+#ifndef MU300_HFP_TEST
 
 int main(int argc, char **argv)
 {
@@ -240,18 +295,34 @@ usage:
 	}
 	signal(SIGTERM, on_term); signal(SIGINT, on_term); signal(SIGCHLD, SIG_IGN); signal(SIGPIPE, SIG_IGN);
 
+	if (!bonded(argv[optind], getenv("MU300_BT_STORE") ? getenv("MU300_BT_STORE") : "/var/lib/bluetooth")) {
+		say("%s is not bonded (no link key in BlueZ's store): pair it first with bluetoothctl", argv[optind]);
+		return 1;
+	}
 	if (!ch) ch = sdp_hf_channel();
 	if (ch <= 0) { say("no Hands-Free service found on %s (is it on, paired and in range?)", argv[optind]); return 1; }
 	rc = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
 	struct sockaddr_rc a; memset(&a, 0, sizeof a);
 	a.rc_family = AF_BLUETOOTH; a.rc_bdaddr = peer; a.rc_channel = ch;
-	if (rc < 0 || connect(rc, (struct sockaddr *)&a, sizeof a) < 0) {
+	/* authenticated with the bond's key and encrypted, or no connection at all */
+	struct bt_security sec = { BT_SECURITY_MEDIUM, 0 };
+	if (rc < 0 || setsockopt(rc, SOL_BLUETOOTH, BT_SECURITY, &sec, sizeof sec) < 0) {
+		say("cannot require link security: %s", strerror(errno)); return 1;
+	}
+	if (connect(rc, (struct sockaddr *)&a, sizeof a) < 0) {
 		say("RFCOMM connect failed: %s", strerror(errno)); return 1;
+	}
+	struct sockaddr_rc got; socklen_t gl = sizeof got;
+	socklen_t sl = sizeof sec;
+	if (getpeername(rc, (struct sockaddr *)&got, &gl) < 0 || memcmp(&got.rc_bdaddr, &peer, sizeof peer) ||
+	    getsockopt(rc, SOL_BLUETOOTH, BT_SECURITY, &sec, &sl) < 0 || sec.level < BT_SECURITY_MEDIUM) {
+		say("the link to %s is not the authenticated one asked for; closing", argv[optind]);
+		close(rc); return 1;
 	}
 	printf("connected to %s, Hands-Free channel %d\n", argv[optind], ch); fflush(stdout);
 
 	unlink(fifo);
-	if (mkfifo(fifo, 0620) < 0) { say("mkfifo: %s", strerror(errno)); return 1; }
+	if (mkfifo(fifo, 0600) < 0) { say("mkfifo: %s", strerror(errno)); return 1; }
 	int ctl = open(fifo, O_RDWR | O_NONBLOCK);   /* O_RDWR: no EOF when a writer closes */
 	char rbuf[512], cbuf[256], tmp[256];
 	size_t rlen = 0, clen = 0;
@@ -277,3 +348,30 @@ usage:
 	close(rc); close(ctl); unlink(fifo);
 	return 0;
 }
+#else
+/* the allow-list, checked on the build host: cc -DMU300_HFP_TEST tools/hfp/mu300-hfp.c && ./a.out */
+int main(void)
+{
+	static const struct { const char *l; enum at_action a; } t[] = {
+		{ "AT+BRSF=959", AT_BRSF }, { "AT+BRSF=", AT_ERROR }, { "AT+BRSF=1;ATD123;", AT_ERROR },
+		{ "AT+CIND=?", AT_CIND_TEST }, { "AT+CIND?", AT_CIND_READ },
+		{ "AT+CMER=3,0,0,1", AT_CMER }, { "AT+CMER=3,0,0,1;+CHUP", AT_ERROR },
+		{ "AT+CHLD=?", AT_CHLD_TEST }, { "AT+CHLD=1", AT_ERROR },
+		{ "AT+CLIP=1", AT_CLIP }, { "AT+CLIP=1x", AT_ERROR },
+		{ "ATA", AT_ANSWER }, { "ATA;", AT_ERROR }, { "AT+CHUP", AT_HANGUP }, { "AT+CHUP;D112", AT_ERROR },
+		{ "ATD112;", AT_ERROR }, { "ATD>1;", AT_ERROR }, { "AT+BLDN", AT_ERROR }, { "AT+BVRA=1", AT_ERROR },
+		{ "AT+CFUN=0", AT_ERROR }, { "AT+CMGS=\"1\"", AT_ERROR }, { "AT", AT_ERROR }, { "", AT_ERROR },
+		{ "AT+VGS=15", AT_OK }, { "AT+VGS=150", AT_ERROR }, { "AT+VGM=7", AT_OK },
+		{ "AT+NREC=0", AT_OK }, { "AT+NREC=0;+CHUP", AT_ERROR }, { "AT+CMEE=1", AT_OK }, { "AT+CCWA=1", AT_OK },
+		{ "AT+BIA=0,0,0,1,1,1,0", AT_OK }, { "AT+COPS=3,0", AT_OK }, { "AT+COPS?", AT_COPS_READ },
+		{ "AT+CLCC", AT_CLCC }, { "at+chup", AT_ERROR },
+	};
+	int bad = 0;
+	for (size_t i = 0; i < sizeof t / sizeof t[0]; i++)
+		if (at_classify(t[i].l) != t[i].a) { printf("FAIL %s -> %d, want %d\n", t[i].l, at_classify(t[i].l), t[i].a); bad++; }
+	struct bt_security sec = { BT_SECURITY_MEDIUM, 0 };
+	if (sec.level != 2 || BT_SECURITY != 4 || sizeof sec != 2) { puts("FAIL BT_SECURITY ABI"); bad++; }
+	printf("%zu allow-list cases, %d failed\n", sizeof t / sizeof t[0], bad);
+	return bad != 0;
+}
+#endif
