@@ -273,6 +273,12 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom AT adapter).
 * **System > Languages:** the language of the interface, and the lang extra: download it, or upload the file.
 * **System > Power:** the active power profile and why, the battery and the power source, the idle knobs of the three profiles (Wi-Fi idle minutes, radio idle keep/lte/off, LEDs, CPU), the saver threshold and the charge limit (100 or 80 %).
+* **System > Terminal:** a root shell in the browser ([ttyd](https://github.com/tsl0922/ttyd)). It listens on the LAN
+  address only (port 7681; the cellular side never reaches it), and opens a shell only for a one-time token the page
+  gets for a logged-in panel session: there is no second password to guess. It closes after 15 minutes without
+  activity (`uci set ttyd.mu300.idle=<seconds>`, 0 never). A panel opened over https opens it in a tab of its own
+  (ttyd serves HTTP: its websocket over TLS fails in Chrome). **Terminal settings** is ttyd's own page; turning the
+  instance off (`enable`) removes the terminal.
 
 IPv6 on this system is relayed from the carrier (router advertisements and NAT66) instead of the prefix extension
 plain OpenWrt uses. Aurora is the default theme, Bootstrap stays installed. Its boot timings, measured on an F50

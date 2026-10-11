@@ -42,8 +42,17 @@ msgstr "Питание"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Терминал"
+
+msgid "Terminal settings"
+msgstr "Настройки терминала"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Центр управления MU300: панель состояния, фиксация сети, AT-терминал и SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Терминал: оболочка root на устройстве в браузере"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1430,6 +1439,36 @@ msgstr "Неполное: получено частей %d из %d"
 
 msgid "Delete"
 msgstr "Удалить"
+
+msgid "ttyd is not installed."
+msgstr "ttyd не установлен."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Терминал выключен (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Слишком много терминалов открывается одновременно. Повторите попытку через минуту."
+
+msgid "The terminal is not available."
+msgstr "Терминал недоступен."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Это оболочка root на устройстве: каждая команда выполняется с полными правами, и ошибка может сделать устройство незагружаемым."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Он доступен только из LAN (USB и точка доступа), никогда из мобильной сети, и только с этой страницы после входа."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Он закрывается после %d минут бездействия."
+
+msgid "Reconnect"
+msgstr "Переподключиться"
+
+msgid "Open in a new tab"
+msgstr "Открыть в новой вкладке"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Эта страница открыта по HTTPS, а терминал работает в LAN по HTTP: он открывается в отдельной вкладке."
 
 msgid "The data usage could not be read"
 msgstr "Не удалось прочитать расход трафика"

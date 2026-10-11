@@ -42,8 +42,17 @@ msgstr "Energía"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Ajustes del terminal"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Centro de control MU300: panel de estado, bloqueos de red, terminal AT y SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: un shell de root del dispositivo en el navegador"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1430,6 +1439,36 @@ msgstr "Incompleto: llegaron %d de %d partes"
 
 msgid "Delete"
 msgstr "Eliminar"
+
+msgid "ttyd is not installed."
+msgstr "ttyd no está instalado."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "El terminal está desactivado (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Se están abriendo demasiados terminales a la vez. Inténtelo de nuevo en un minuto."
+
+msgid "The terminal is not available."
+msgstr "El terminal no está disponible."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Este es un shell de root del dispositivo: cada orden se ejecuta con todos los permisos, y un error puede impedir que el dispositivo arranque."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Solo es accesible desde la LAN (USB y el punto de acceso), nunca desde los datos móviles, y solo desde esta página con sesión iniciada."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Se cierra tras %d minutos sin actividad."
+
+msgid "Reconnect"
+msgstr "Reconectar"
+
+msgid "Open in a new tab"
+msgstr "Abrir en una pestaña nueva"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Esta página se abrió por HTTPS y el terminal se sirve por HTTP en la LAN: se abre en una pestaña propia."
 
 msgid "The data usage could not be read"
 msgstr "No se pudo leer el uso de datos"

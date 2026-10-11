@@ -42,8 +42,17 @@ msgstr "Zasilanie"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminal"
+
+msgid "Terminal settings"
+msgstr "Ustawienia terminala"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Centrum sterowania MU300: panel stanu, blokady sieci, terminal AT i SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminal: powłoka root urządzenia w przeglądarce"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1430,6 +1439,36 @@ msgstr "Niekompletna: dotarło %d z %d części"
 
 msgid "Delete"
 msgstr "Usuń"
+
+msgid "ttyd is not installed."
+msgstr "ttyd nie jest zainstalowany."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminal jest wyłączony (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Zbyt wiele terminali otwiera się jednocześnie. Spróbuj ponownie za minutę."
+
+msgid "The terminal is not available."
+msgstr "Terminal jest niedostępny."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "To jest powłoka root urządzenia: każde polecenie działa z pełnymi uprawnieniami, a błąd może sprawić, że urządzenie się nie uruchomi."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Jest dostępny tylko z sieci LAN (USB i hotspot), nigdy z danych komórkowych, i tylko z tej zalogowanej strony."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Zamyka się po %d minutach bezczynności."
+
+msgid "Reconnect"
+msgstr "Połącz ponownie"
+
+msgid "Open in a new tab"
+msgstr "Otwórz w nowej karcie"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Ta strona została otwarta przez HTTPS, a terminal działa w sieci LAN przez HTTP: otwiera się w osobnej karcie."
 
 msgid "The data usage could not be read"
 msgstr "Nie udało się odczytać zużycia danych"

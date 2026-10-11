@@ -42,8 +42,17 @@ msgstr "Virta"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Pääte"
+
+msgid "Terminal settings"
+msgstr "Päätteen asetukset"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "MU300-ohjauskeskus: tilan yleiskatsaus, verkkolukitukset, AT-pääte ja SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Pääte: laitteen root-komentotulkki selaimessa"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1430,6 +1439,36 @@ msgstr "Puutteellinen: %d / %d osaa saapui"
 
 msgid "Delete"
 msgstr "Poista"
+
+msgid "ttyd is not installed."
+msgstr "ttyd ei ole asennettu."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Pääte on pois päältä (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Liian monta päätettä avataan yhtä aikaa. Yritä uudelleen minuutin kuluttua."
+
+msgid "The terminal is not available."
+msgstr "Pääte ei ole käytettävissä."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Tämä on laitteen root-komentotulkki: jokainen komento suoritetaan täysin oikeuksin, ja virhe voi estää laitetta käynnistymästä."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Se on käytettävissä vain lähiverkosta (USB ja hotspot), ei koskaan mobiilidatan kautta, ja vain tältä kirjautuneelta sivulta."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Se suljetaan %d minuutin toimettomuuden jälkeen."
+
+msgid "Reconnect"
+msgstr "Yhdistä uudelleen"
+
+msgid "Open in a new tab"
+msgstr "Avaa uudessa välilehdessä"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Tämä sivu avattiin HTTPS:n kautta, ja pääte toimii lähiverkossa HTTP:n kautta: se avautuu omaan välilehteensä."
 
 msgid "The data usage could not be read"
 msgstr "Datan käyttöä ei voitu lukea"

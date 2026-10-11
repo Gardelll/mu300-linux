@@ -42,8 +42,17 @@ msgstr "Alimentazione"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminale"
+
+msgid "Terminal settings"
+msgstr "Impostazioni del terminale"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Centro di controllo MU300: pannello di stato, blocchi di rete, terminale AT e SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminale: una shell root del dispositivo nel browser"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1430,6 +1439,36 @@ msgstr "Incompleto: arrivate %d parti su %d"
 
 msgid "Delete"
 msgstr "Elimina"
+
+msgid "ttyd is not installed."
+msgstr "ttyd non è installato."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Il terminale è disattivato (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Si stanno aprendo troppi terminali contemporaneamente. Riprova tra un minuto."
+
+msgid "The terminal is not available."
+msgstr "Il terminale non è disponibile."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Questa è una shell root del dispositivo: ogni comando viene eseguito con tutti i privilegi, e un errore può impedire l’avvio del dispositivo."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "È raggiungibile solo dalla LAN (USB e hotspot), mai dai dati mobili, e solo da questa pagina con accesso effettuato."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Si chiude dopo %d minuti di inattività."
+
+msgid "Reconnect"
+msgstr "Riconnetti"
+
+msgid "Open in a new tab"
+msgstr "Apri in una nuova scheda"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Questa pagina è stata aperta in HTTPS e il terminale è servito in HTTP sulla LAN: si apre in una scheda a parte."
 
 msgid "The data usage could not be read"
 msgstr "Impossibile leggere il consumo dati"

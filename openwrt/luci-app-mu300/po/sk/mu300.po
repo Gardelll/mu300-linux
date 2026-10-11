@@ -42,8 +42,17 @@ msgstr "Napájanie"
 msgid "CPU"
 msgstr "CPU"
 
+msgid "Terminal"
+msgstr "Terminál"
+
+msgid "Terminal settings"
+msgstr "Nastavenia terminálu"
+
 msgid "MU300 control center: status dashboard, network locks, AT terminal and SMS"
 msgstr "Riadiace centrum MU300: prehľad stavu, zámky siete, terminál AT a SMS"
+
+msgid "Terminal: a root shell on the device in the browser"
+msgstr "Terminál: root shell zariadenia v prehliadači"
 
 msgid "China Mobile"
 msgstr "China Mobile"
@@ -1430,6 +1439,36 @@ msgstr "Neúplná: prišlo %d z %d častí"
 
 msgid "Delete"
 msgstr "Odstrániť"
+
+msgid "ttyd is not installed."
+msgstr "ttyd nie je nainštalovaný."
+
+msgid "The terminal is turned off (/etc/config/ttyd)."
+msgstr "Terminál je vypnutý (/etc/config/ttyd)."
+
+msgid "Too many terminals are opening at once. Try again in a minute."
+msgstr "Otvára sa príliš veľa terminálov naraz. Skúste to znova o minútu."
+
+msgid "The terminal is not available."
+msgstr "Terminál nie je k dispozícii."
+
+msgid "This is a root shell on the device: every command runs with full rights, and a mistake can make the device unbootable."
+msgstr "Toto je root shell zariadenia: každý príkaz beží s plnými právami a chyba môže spôsobiť, že zariadenie nenaštartuje."
+
+msgid "It is reachable from the LAN only (USB and the hotspot), never from mobile data, and only from this logged-in page."
+msgstr "Je dostupný iba z LAN (USB a hotspot), nikdy z mobilných dát, a len z tejto prihlásenej stránky."
+
+msgid "It closes after %d minutes without activity."
+msgstr "Zatvorí sa po %d minútach bez aktivity."
+
+msgid "Reconnect"
+msgstr "Znova pripojiť"
+
+msgid "Open in a new tab"
+msgstr "Otvoriť na novej karte"
+
+msgid "This page was opened over HTTPS, and the terminal is served over HTTP on the LAN: it opens in a tab of its own."
+msgstr "Táto stránka bola otvorená cez HTTPS a terminál beží v LAN cez HTTP: otvorí sa preto na vlastnej karte."
 
 msgid "The data usage could not be read"
 msgstr "Spotrebu dát nemožno načítať"
