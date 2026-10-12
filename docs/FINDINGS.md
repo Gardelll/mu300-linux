@@ -999,6 +999,18 @@ stayed in Linux with `stage=boot-locked (no backstop)`.
   from 5, then from 4 - two unconfirmed boots in a row stayed in Linux - and the next good boot re-armed 6. Not
   run to exhaustion; the rollback at `tries = 1` is the LK behaviour above.
 
+**Update 2026-10-12: "Reboot to start the updated openwrt-luci" when a reboot starts Android.** A U30 Air with
+Linux on slot a (Android on b) was updated v2026.10.17 -> v2026.10.20 from a Linux boot, and the reboot went to
+Android. The image was fine: `/etc/mu300/default-boot` said `android` (the device had been switched to Android by
+hand earlier), so that boot was itself a one-shot trial armed from Android, and the init log of it says exactly
+that - `stage=misc-restored` (init writing Android's slot block back, §1) and no `stage=default-boot-linux`, with
+`.mu300/boot-tries` at 0 (no backstop ever fired; the updated kernel had come up in 4.9 s). `mu300-update`'s
+`--trial` is a quiet no-op in that state (`mu300-next-boot` answers "default boot is not linux, nothing to do" and
+exits 0), and its last line still promised a reboot. Now `mu300-next-boot --trial` exits 3 when there is nothing to
+arm and 1 when it can only write the initramfs' one-shot block (one boot, not N, §32); `mu300-update` says both, and
+what it prints last after a boot image, a system or a kernel changed is how to start Linux by hand (`mu300-linux`)
+instead of a reboot that goes the other way.
+
 **Boot-ok used to wait for every service.** It was ordered `After=multi-user.target`, so one service that never
 finished - `mobile-data` stuck on a busy AT channel in an older Ubuntu image - kept the boot unconfirmed however
 usable it was, and the next reboot counted it as failed. It now follows only the USB network and SSH: a boot you
