@@ -1660,8 +1660,8 @@ msgstr "SIM değiştirildi ve başlatma varsayılanı olarak kaydedildi"
 msgid "Switch failed; previous SIM restored"
 msgstr "Geçiş başarısız; önceki SIM geri yüklendi"
 
-msgid "The other SIM got no mobile data within a minute; the previous SIM is back and stays the default"
-msgstr "Diğer SIM bir dakika içinde mobil veri alamadı; önceki SIM geri geldi ve varsayılan olarak kalıyor"
+msgid "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
+msgstr "Hedef SIM mobil veri alamadı; önceki SIM geri yüklendi ve kayıtlı açılış tercihi değişmedi."
 
 # Dual SIM controls.
 msgid "Radio state unknown; reboot required"
@@ -1679,8 +1679,8 @@ msgstr "İkinci SIM'in modem kanalları son açılışta gelmedi."
 msgid "The last dual-SIM boot never confirmed itself."
 msgstr "Son çift SIM açılışı kendini hiç doğrulamadı."
 
-msgid "A switch saves that SIM as the next cold-boot default only once it has mobile data; without data within a minute the previous SIM comes back and stays the default. Both SIMs share the one APN of the WAN interface."
-msgstr "Bir geçiş, o SIM'i ancak mobil veri aldığında bir sonraki soğuk açılışın varsayılanı olarak kaydeder; bir dakika içinde veri gelmezse önceki SIM geri gelir ve varsayılan olarak kalır. İki SIM de WAN arayüzünün tek APN'sini paylaşır."
+msgid "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
+msgstr "Canlı geçiş, hedef SIM mobil veri aldıktan sonra onu sonraki açılış için kaydeder. Veri yoksa önceki SIM geri yüklenir ve kayıtlı açılış tercihi değişmez. Her SIM, WAN ayarlarındaki kendi APN/PDP profilini kullanır."
 
 # Dual SIM controls.
 msgid "Active SIM"
@@ -1700,6 +1700,9 @@ msgstr "Cihaz canlı geçiş kapalı olarak SIM1'e döndü; yeniden denemek içi
 # Dual SIM controls.
 msgid "Enable hot switching"
 msgstr "Canlı SIM geçişini etkinleştir"
+
+msgid "This device supports next-boot SIM selection only; live switching is unavailable."
+msgstr "Bu cihaz yalnızca sonraki açılışın SIM seçimini destekler; canlı geçiş kullanılamaz."
 
 # Dual SIM controls.
 msgid "Reboot after enabling hot switching to prepare both SIM channels."

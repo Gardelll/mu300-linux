@@ -1660,8 +1660,8 @@ msgstr "已切換，同時設為預設啟動卡"
 msgid "Switch failed; previous SIM restored"
 msgstr "切換失敗，已恢復原卡"
 
-msgid "The other SIM got no mobile data within a minute; the previous SIM is back and stays the default"
-msgstr "另一張 SIM 卡在一分鐘內沒有取得行動數據；已切回原來的 SIM 卡，並保持為預設"
+msgid "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
+msgstr "目標 SIM 卡未取得行動網路；已恢復原活動卡，儲存的啟動選擇保持不變。"
 
 # Dual SIM controls.
 msgid "Radio state unknown; reboot required"
@@ -1679,8 +1679,8 @@ msgstr "上次開機時第二張 SIM 卡的數據機通道沒有就緒。"
 msgid "The last dual-SIM boot never confirmed itself."
 msgstr "上一次雙卡開機未能確認完成。"
 
-msgid "A switch saves that SIM as the next cold-boot default only once it has mobile data; without data within a minute the previous SIM comes back and stays the default. Both SIMs share the one APN of the WAN interface."
-msgstr "只有當切換後的 SIM 卡取得行動數據，才會把它儲存為下次冷開機的預設卡；一分鐘內沒有數據則切回原來的 SIM 卡並保持預設。兩張 SIM 卡共用 WAN 介面的同一個 APN。"
+msgid "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
+msgstr "熱切換只有在目標卡取得行動網路後才將其儲存為下次啟動卡。沒有網路時會恢復原活動卡，已儲存的啟動選擇保持不變。每張卡使用 WAN 設定中各自的 APN/PDP 設定。"
 
 # Dual SIM controls.
 msgid "Active SIM"
@@ -1700,6 +1700,9 @@ msgstr "裝置已回到 SIM1 且關閉了熱切換；在下方重新選擇即可
 # Dual SIM controls.
 msgid "Enable hot switching"
 msgstr "啟用熱切換"
+
+msgid "This device supports next-boot SIM selection only; live switching is unavailable."
+msgstr "此裝置僅支援選擇下次啟動的 SIM 卡，不支援熱切換。"
 
 # Dual SIM controls.
 msgid "Reboot after enabling hot switching to prepare both SIM channels."

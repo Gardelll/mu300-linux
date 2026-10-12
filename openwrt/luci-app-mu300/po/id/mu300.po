@@ -1660,9 +1660,8 @@ msgstr "SIM switched; saved as boot default"
 msgid "Switch failed; previous SIM restored"
 msgstr "Switch failed; previous SIM restored"
 
-# Source-language fallback for untranslated new controls.
-msgid "The other SIM got no mobile data within a minute; the previous SIM is back and stays the default"
-msgstr "The other SIM got no mobile data within a minute; the previous SIM is back and stays the default"
+msgid "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
+msgstr "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
 
 # Source-language fallback for untranslated new controls.
 msgid "Radio state unknown; reboot required"
@@ -1684,9 +1683,8 @@ msgstr "The second SIM's modem channels did not come up at the last boot."
 msgid "The last dual-SIM boot never confirmed itself."
 msgstr "The last dual-SIM boot never confirmed itself."
 
-# Source-language fallback for untranslated new controls.
-msgid "A switch saves that SIM as the next cold-boot default only once it has mobile data; without data within a minute the previous SIM comes back and stays the default. Both SIMs share the one APN of the WAN interface."
-msgstr "A switch saves that SIM as the next cold-boot default only once it has mobile data; without data within a minute the previous SIM comes back and stays the default. Both SIMs share the one APN of the WAN interface."
+msgid "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
+msgstr "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
 
 # Source-language fallback for untranslated new controls.
 msgid "Active SIM"
@@ -1707,6 +1705,9 @@ msgstr "The device is back on SIM1 without live switching; choose again below to
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching"
 msgstr "Enable hot switching"
+
+msgid "This device supports next-boot SIM selection only; live switching is unavailable."
+msgstr "This device supports next-boot SIM selection only; live switching is unavailable."
 
 # Source-language fallback for untranslated new controls.
 msgid "Reboot after enabling hot switching to prepare both SIM channels."
