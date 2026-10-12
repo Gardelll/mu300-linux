@@ -119,6 +119,7 @@ what replaced it. The table below gives each section's state.
 | 52 | The lock reset deleted the saved locks whether or not the modem took them: a verified reset | current (fixed) |
 | 53 | A carrier name shown as hex: UCS2 from a modem whose character set is not UCS2 (#174) | current (fixed; unit tests and a user's report, not measured on our boards) |
 | 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
+| 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
 
 ## Hardware and firmware facts
 
@@ -4346,3 +4347,96 @@ Open, from the same issue: a service that answers HTTP 200 with its own error in
 `code`) is logged as delivered - the HTTP helper passes on the status and nothing of the reply's body
 (`sms-forward-http.uc`), so that no reply reaches a log; and the delivery log (RAM, the last 100 lines) has no clear
 button. Section 53 is PR #195's (the carrier name); this branch does not have it.
+
+### 55. Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170)
+
+Three users' F50s (China Telecom SIMs, OpenWrt on an SD card, mainline 6.18 and 7.2) had no modem: `mu300-atd`
+restarted every 10 s with `can't create /dev/stty_nr1: No such device`, `radio.log` repeated `no valid answer to the
+RIL handshake (AT+SMMSWAP=0)`, `/sys/kernel/debug/modem/modem` said `run_state: 255`, `modem_base: 0x0`. Two of them
+found the five imported trees under `/opt/mu300/android` (`dev-properties`, `vendor`, `system`, `apex`,
+`linkerconfig`) `0700 root:root`, files and directories alike, and got a modem by `chmod`. PR #143 (v2026.10.20) had
+changed the account the daemons run as and the device nodes, not these files; #127's reporter measured v2026.10.20
+and it still failed.
+
+**Why the modes matter.** `modem_control` and `refnotify` do not stay root: `mu300vnd` through `setpriv` where the
+system has the account (§41), else their own `setuid(1000)`. They keep `CAP_CHOWN`/`CAP_BLOCK_SUSPEND` and
+`CAP_SYS_TIME`, nothing that reads past a mode. `cp_diskserver` stays root and does not care.
+
+**Where 0700 came from.** `install.sh` on macOS with its folder on FAT or exFAT. Measured on this Mac (an exFAT
+image, `android-vendor/extract-subset.sh` from the F50-B, then `tools/vendor-overlay.py`): the volume shows every
+file and directory as `rwx------` owned by the user, the empty `ld.config.txt` made by `: >` included; `gettarinfo`
+stored that, the tool sets the owner to root, and the overlay's 390 entries were 375 `-rwx------ root`, 14
+`drwx------ root` and the link. A time before 1980 is clamped there too: `linker64` (1970 on the device) came out as
+`Jan  1  1980`, local time. #127's listing has the property files at `Dec 31  1979` - that moment seen in UTC from a
+host east of it, as UTC+8 would be - where a system installed from an ordinary folder has `Jan  1  1970`. The
+initramfs copy is not affected: `boot/build-boot-image.py` decides 0755/0644 by `os.access`, which is why such a
+device still boots and only the installed system's copy is wrong. Windows (the subset comes from the device's own
+archive there) and a folder on a file system that keeps modes were never affected.
+
+**What each state looks like** (F50-B, baseband `5G_MODEM_V2_22C_W25.39.4` - the same as #170's device - release
+v2026.10.22, the trees changed by hand and the board rebooted):
+
+| imported files | system, kernel | modem_control | Trusty lines in dmesg | result |
+|---|---|---|---|---|
+| all five trees 0700 | openwrt-luci, 7.2.10 | runs as uid 1000 | none | `run_state: 255`, `modem_base: 0x0` (#127) |
+| all five trees 0700 | Ubuntu 24.04, 7.2.10 | `chroot: failed to run command '/vendor/bin/modem_control': Permission denied`, the service restarts every 4 s | none | the same |
+| `vendor/etc` alone 0700 | Ubuntu 24.04 and openwrt-luci, 7.2.10 | (Ubuntu's log) `Failed to access xml, error /vendor/etc/modem_cp_info.xml: Permission denied` (and `_sp_`, `_ch_`), `modem_head_correct_load_info: can't get modem img!`, then `open /dev/spipe_nr2 failed, error: No such device` every second | `enter SEC_KBC_GET_TEECFG_FLAG`, `g_wifionly_flag = 0`, `enter SEC_KBC_STOP_CP`, `SEC_KBC_STOP_CP() ret = 0`, `SEC_FIREWALL_UNLOCK_CP_DDR() ret = 0`, `kbc_send_response rc = 4`, `enter SEC_KBC_GET_LOAD_MODEM_FLAG` - and nothing after it | `run_state: 255` (#170's dmesg, line for line) |
+| `vendor/etc` alone 0700 | openwrt-luci, **5.4.254** | - (no vendor log, see below) | the same lines, and nothing after them | the same: the kernel makes no difference |
+| as installed | each of the above on 7.2.10 | - | ... `GET_LOAD_MODEM_FLAG`, one second of image loading, `kbc_verify_all_avb2() ret = 0`, `SEC_KBC_START_CP() ret = 0`, `modem run = 1!` three times | data up 31-35 s after power-on |
+
+With the property area unreadable the daemons end earlier (`Access denied finding property
+"ro.vendor.radio.modemtype"`, `can't get modem type!`: #127's log) and never call Trusty. A `dump_table() len = 0`
+under `SEC_KBC_STOP_CP` is printed on a good start too; the sign is what follows `GET_LOAD_MODEM_FLAG`.
+
+#170 reads "mainline never starts the CP, 5.4 does, same installation". Its dmesg is the third row. The F50-B, with
+the same baseband, starts the CP on 7.2.10 from that release's own Magisk zip (below), and with the files unreadable
+5.4 fails exactly as 7.2 does. So the kernel is not what differed between that device's boots; what did is not
+known (asked in the issue: the modes of the trees, the vendor log, and how each kernel was put on - a Magisk zip
+imports the files again, `mu300-update kernel` does not).
+
+**The Magisk zip's import** was measured for that reason (`magisk --install-module
+mu300-magisk-v2026.10.22-openwrt-luci-k7.2.zip` on the F50-B, Magisk 30.6): the modem started (run = 1 at 14 s, data
+at 32 s), so that path does not make 0700 here - but what it installed was wrong the other way. Under `magisk
+--install-module` the umask is 000, and `collect_subset` names only files, so tar made the directories itself: 16
+directories `0777`, `linkerconfig/ld.config.txt` `0666`. And tar keeps Android's owners: 32 libraries (bionic, the
+VNDK) owned by uid 1000, six programs, `linker64` and one directory by gid 2000. Uid 1000 is the first login
+account on Ubuntu, and root's `cp_diskserver` loads that libc: a login user could become root through it. (An
+install started in the Magisk app goes through the zip's `update-binary`, which sets 022; not measured. The owners
+do not depend on it.) Under a umask of 077 the same code makes `vendor/etc` 0700 - the third row.
+
+**The fix.**
+
+* `android-vendor-start`, before anything else (block `modes`): one `find` over the five trees for anything not
+  root's, a directory that is not 0755 (0711, Android's mode for the property area, is left), a file in a `bin`
+  directory that is not 0755, a property file that is not 0444, any other file that is not 0644. Nothing found: no
+  write, 6 ms. Else five `find ... -exec` set owner and modes (links untouched, `-xdev`), the check runs again, and
+  one line says how many entries and the first - to stderr and to `/dev/kmsg`, because OpenWrt starts this service
+  before its log daemon - with a `vendor-modes-repaired` (or `vendor-modes-wrong`) mark in the boot timeline. This
+  is the part that repairs an installed system: `mu300-update` carries the vendor files over as they are.
+* `tools/vendor-overlay.py`: `host_free_mode` - the mode of an entry from where it goes (the same rule), never
+  from the host. The same exFAT volume now gives `drwxr-xr-x`, `-rwxr-xr-x` in `bin`, `-r--r--r--` properties,
+  `-rw-r--r--` for the rest.
+* `tools/android-boot-image.sh`: `collect_subset`, `collect_gpu`, `collect_firmware` and `vendor_overlay` run under
+  umask 022 whatever the caller has (the caller's is not changed), and the overlay is `chown -hR 0:0` before it is
+  packed. `mu300-install.sh` and `android-install.sh` set umask 022 at the top. On the F50-B under Magisk's busybox,
+  with the caller's umask 000 and 077: 334 `-r--r--r--`, 73 `-rw-r--r--`, 7 `-rwxr-xr-x`, 19 `drwxr-xr-x`, the
+  property directory `drwx--x--x`, all `root/root`.
+* `android-vendor-start` makes `/var/log` before it starts `logdw`. On OpenWrt the service is S09 and `/var/log`
+  is made by `boot` at S10; procd starts the script at once, and when it reached the line first the redirection
+  failed and `logdw` never ran: no `/var/log/android-logcat.txt` on three of four boots here. #135 reported the
+  same after a reboot ("logdw did not start"), #170 shows no vendor log at all, and #127 had one because the
+  service had been restarted by hand.
+
+**Measured on F50-B with the new script** (release v2026.10.22 otherwise):
+
+- openwrt-luci, 7.2.10, all five trees 0700 and the mixed owners an earlier zip install had left: repaired at boot,
+  `kbc_verify_all_avb2` at 13.8 s, `up on sipa_eth0` at 31.7 s, daemons uid 1000, `android-logcat.txt` written.
+- openwrt-luci as the v2026.10.22 zip had just installed it: `[   12.053529] android-vendor-start: 57 imported
+  Android files and directories had an owner or a mode the vendor daemons cannot work with (the first:
+  /opt/mu300/android/vendor); now root's, 0755/0644/0444`; marks `vendor-start` 11.98, `vendor-modes-repaired`
+  12.07; afterwards nothing world-writable, nothing not root's; `run = 1` at 14.0 s, data at 31.9 s.
+- Ubuntu 24.04, 7.2.10, all five trees 0700: 427 entries repaired between 9.16 s and 9.23 s, `run = 1` at 11.5 s,
+  data at 34.8 s, daemons `mu300vnd`. The boot after it: no line, no mark, the modes unchanged.
+
+Not measured: a Magisk zip built from this branch and installed end to end (its import functions were run on the
+device; the zip was not rebuilt), 6.18, the U30 Air.
