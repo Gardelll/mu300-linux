@@ -831,6 +831,9 @@ msgstr "מודם"
 msgid "Carrier"
 msgstr "ספק"
 
+msgid "Own number"
+msgstr "המספר שלי"
+
 msgid "Module"
 msgstr "מודול"
 
@@ -1650,6 +1653,15 @@ msgstr "הודעה (Enter לשליחה, Shift+Enter לשורה חדשה)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "השליחה משתמשת ב-AT+CMGS (מצב PDU); יש לנסות שוב אם הערוץ תפוס. למחיקת הודעה בודדת, יש להשתמש בסמל הפח שעל הבועה שלה."
 
+msgid "Sending…"
+msgstr "שולח…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "נשלח; הרשימה תתרענן בקרוב."
+
+msgid "Sending failed"
+msgstr "השליחה נכשלה"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "מסנכרן מה-SIM ברקע (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "נמחק (מקומי בלבד)"
 
 msgid "Enter both a number and a message."
 msgstr "יש להזין גם מספר וגם הודעה."
-
-msgid "Sending…"
-msgstr "שולח…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "נשלח; הרשימה תתרענן בקרוב."
-
-msgid "Sending failed"
-msgstr "השליחה נכשלה"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d הודעות, %d שלא נקראו · %d שיחות"

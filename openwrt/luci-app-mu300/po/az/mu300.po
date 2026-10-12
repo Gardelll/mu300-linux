@@ -831,6 +831,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Operator"
 
+msgid "Own number"
+msgstr "Öz nömrə"
+
 msgid "Module"
 msgstr "Modul"
 
@@ -1650,6 +1653,15 @@ msgstr "Mesaj (göndərmək üçün Enter, yeni sətir üçün Shift+Enter)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Göndərmə AT+CMGS (PDU rejimi) istifadə edir; kanal məşğuldursa, yenidən cəhd edin. Bir mesajı silmək üçün onun balonundakı zibil qutusu nişanından istifadə edin."
 
+msgid "Sending…"
+msgstr "Göndərilir…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Göndərildi; siyahı tezliklə yenilənəcək."
+
+msgid "Sending failed"
+msgstr "Göndərmə uğursuz oldu"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Arxa planda SIM-dən sinxronlaşdırılır (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Silindi (yalnız yerli)"
 
 msgid "Enter both a number and a message."
 msgstr "Həm nömrəni, həm də mesajı daxil edin."
-
-msgid "Sending…"
-msgstr "Göndərilir…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Göndərildi; siyahı tezliklə yenilənəcək."
-
-msgid "Sending failed"
-msgstr "Göndərmə uğursuz oldu"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mesaj, %d oxunmamış · %d söhbət"

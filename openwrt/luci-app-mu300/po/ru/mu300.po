@@ -831,6 +831,9 @@ msgstr "Модем"
 msgid "Carrier"
 msgstr "Оператор"
 
+msgid "Own number"
+msgstr "Свой номер"
+
 msgid "Module"
 msgstr "Модуль"
 
@@ -1650,6 +1653,15 @@ msgstr "Сообщение (Enter — отправить, Shift+Enter — нов
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Отправка использует AT+CMGS (режим PDU); при занятом канале повторите. Чтобы удалить одно сообщение, нажмите значок корзины на его облачке."
 
+msgid "Sending…"
+msgstr "Отправка…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Отправлено; список скоро обновится."
+
+msgid "Sending failed"
+msgstr "Ошибка отправки"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронизация с SIM в фоне (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Удалено (только локально)"
 
 msgid "Enter both a number and a message."
 msgstr "Введите номер и сообщение."
-
-msgid "Sending…"
-msgstr "Отправка…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Отправлено; список скоро обновится."
-
-msgid "Sending failed"
-msgstr "Ошибка отправки"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· сообщений: %d, непрочитанных: %d · диалогов: %d"

@@ -831,6 +831,9 @@ msgstr "Modeemi"
 msgid "Carrier"
 msgstr "Operaattori"
 
+msgid "Own number"
+msgstr "Oma numero"
+
 msgid "Module"
 msgstr "Moduuli"
 
@@ -1650,6 +1653,15 @@ msgstr "Viesti (Enter lähettää, Shift+Enter uusi rivi)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Lähetys käyttää AT+CMGS-komentoa (PDU-tila); yritä uudelleen, jos kanava on varattu. Poista yksittäinen viesti sen kuplan roskakorikuvakkeella."
 
+msgid "Sending…"
+msgstr "Lähetetään…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Lähetetty; luettelo päivittyy pian."
+
+msgid "Sending failed"
+msgstr "Lähetys epäonnistui"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synkronoidaan SIM-kortilta taustalla (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Poistettu (vain paikallinen)"
 
 msgid "Enter both a number and a message."
 msgstr "Anna sekä numero että viesti."
-
-msgid "Sending…"
-msgstr "Lähetetään…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Lähetetty; luettelo päivittyy pian."
-
-msgid "Sending failed"
-msgstr "Lähetys epäonnistui"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d viestiä, %d lukematonta · %d keskustelua"

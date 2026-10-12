@@ -831,6 +831,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Provider"
 
+msgid "Own number"
+msgstr "Eigen nummer"
+
 msgid "Module"
 msgstr "Module"
 
@@ -1650,6 +1653,15 @@ msgstr "Bericht (Enter om te verzenden, Shift+Enter voor nieuwe regel)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Verzenden gebruikt AT+CMGS (PDU-modus); probeer opnieuw als het kanaal bezet is. Gebruik het prullenbakpictogram op de ballon om één bericht te verwijderen."
 
+msgid "Sending…"
+msgstr "Verzenden…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Verzonden; de lijst wordt zo vernieuwd."
+
+msgid "Sending failed"
+msgstr "Verzenden mislukt"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchroniseren vanaf de SIM op de achtergrond (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Verwijderd (alleen lokaal)"
 
 msgid "Enter both a number and a message."
 msgstr "Voer zowel een nummer als een bericht in."
-
-msgid "Sending…"
-msgstr "Verzenden…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Verzonden; de lijst wordt zo vernieuwd."
-
-msgid "Sending failed"
-msgstr "Verzenden mislukt"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d berichten, %d ongelezen · %d gesprekken"

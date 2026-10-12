@@ -831,6 +831,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Operatör"
 
+msgid "Own number"
+msgstr "Eget nummer"
+
 msgid "Module"
 msgstr "Modul"
 
@@ -1650,6 +1653,15 @@ msgstr "Meddelande (Enter för att skicka, Skift+Enter för ny rad)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Sändning använder AT+CMGS (PDU-läge); försök igen om kanalen är upptagen. Använd papperskorgsikonen på bubblan för att radera ett enskilt meddelande."
 
+msgid "Sending…"
+msgstr "Skickar…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Skickat; listan uppdateras strax."
+
+msgid "Sending failed"
+msgstr "Sändningen misslyckades"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synkroniserar från SIM i bakgrunden (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Raderat (endast lokalt)"
 
 msgid "Enter both a number and a message."
 msgstr "Ange både ett nummer och ett meddelande."
-
-msgid "Sending…"
-msgstr "Skickar…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Skickat; listan uppdateras strax."
-
-msgid "Sending failed"
-msgstr "Sändningen misslyckades"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d meddelanden, %d olästa · %d konversationer"

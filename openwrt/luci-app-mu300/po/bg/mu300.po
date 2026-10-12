@@ -831,6 +831,9 @@ msgstr "Модем"
 msgid "Carrier"
 msgstr "Оператор"
 
+msgid "Own number"
+msgstr "Собствен номер"
+
 msgid "Module"
 msgstr "Модул"
 
@@ -1650,6 +1653,15 @@ msgstr "Съобщение (Enter за изпращане, Shift+Enter за но
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Изпращането използва AT+CMGS (PDU режим); опитайте отново, ако каналът е зает. За изтриване на едно съобщение използвайте иконата с кошче в неговия балон."
 
+msgid "Sending…"
+msgstr "Изпращане…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Изпратено; списъкът ще се опресни скоро."
+
+msgid "Sending failed"
+msgstr "Изпращането е неуспешно"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронизиране от SIM във фонов режим (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Изтрито (само локално)"
 
 msgid "Enter both a number and a message."
 msgstr "Въведете номер и съобщение."
-
-msgid "Sending…"
-msgstr "Изпращане…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Изпратено; списъкът ще се опресни скоро."
-
-msgid "Sending failed"
-msgstr "Изпращането е неуспешно"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d съобщения, %d непрочетени · %d разговора"

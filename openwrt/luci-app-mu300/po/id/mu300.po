@@ -831,6 +831,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Operator"
 
+msgid "Own number"
+msgstr "Nomor sendiri"
+
 msgid "Module"
 msgstr "Modul"
 
@@ -1650,6 +1653,15 @@ msgstr "Pesan (Enter untuk mengirim, Shift+Enter untuk baris baru)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Pengiriman menggunakan AT+CMGS (mode PDU); coba lagi jika kanal sibuk. Untuk menghapus satu pesan, gunakan ikon tempat sampah pada gelembungnya."
 
+msgid "Sending…"
+msgstr "Mengirim…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Terkirim; daftar akan segera disegarkan."
+
+msgid "Sending failed"
+msgstr "Gagal mengirim"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Menyinkronkan dari SIM di latar belakang (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Dihapus (hanya lokal)"
 
 msgid "Enter both a number and a message."
 msgstr "Masukkan nomor dan pesan."
-
-msgid "Sending…"
-msgstr "Mengirim…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Terkirim; daftar akan segera disegarkan."
-
-msgid "Sending failed"
-msgstr "Gagal mengirim"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d pesan, %d belum dibaca · %d percakapan"

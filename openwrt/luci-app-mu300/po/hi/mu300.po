@@ -831,6 +831,9 @@ msgstr "मॉडेम"
 msgid "Carrier"
 msgstr "ऑपरेटर"
 
+msgid "Own number"
+msgstr "अपना नंबर"
+
 msgid "Module"
 msgstr "मॉड्यूल"
 
@@ -1650,6 +1653,15 @@ msgstr "संदेश (भेजने के लिए Enter, नई पं�
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "भेजने के लिए AT+CMGS (PDU मोड) का उपयोग होता है; चैनल व्यस्त होने पर फिर से प्रयास करें। किसी एक संदेश को हटाने के लिए उसके बबल पर बने कूड़ेदान आइकन का उपयोग करें।"
 
+msgid "Sending…"
+msgstr "भेजा जा रहा है…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "भेजा गया; सूची जल्द ही रीफ़्रेश होगी।"
+
+msgid "Sending failed"
+msgstr "भेजना विफल"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "पृष्ठभूमि में SIM से सिंक किया जा रहा है (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "हटाया गया (केवल स्थानीय)"
 
 msgid "Enter both a number and a message."
 msgstr "नंबर और संदेश दोनों दर्ज करें।"
-
-msgid "Sending…"
-msgstr "भेजा जा रहा है…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "भेजा गया; सूची जल्द ही रीफ़्रेश होगी।"
-
-msgid "Sending failed"
-msgstr "भेजना विफल"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d संदेश, %d अपठित · %d बातचीत"

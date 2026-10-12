@@ -831,6 +831,9 @@ msgstr "مودم"
 msgid "Carrier"
 msgstr "اپراتور"
 
+msgid "Own number"
+msgstr "شماره خود"
+
 msgid "Module"
 msgstr "ماژول"
 
@@ -1650,6 +1653,15 @@ msgstr "پیام (Enter برای ارسال، Shift+Enter برای خط جدید
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "ارسال از AT+CMGS (حالت PDU) استفاده می‌کند؛ اگر کانال مشغول است دوباره تلاش کنید. برای حذف یک پیام، از نماد سطل زباله روی حباب آن استفاده کنید."
 
+msgid "Sending…"
+msgstr "در حال ارسال…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "ارسال شد؛ فهرست به‌زودی تازه می‌شود."
+
+msgid "Sending failed"
+msgstr "ارسال ناموفق بود"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "در حال همگام‌سازی از SIM در پس‌زمینه (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "حذف شد (فقط محلی)"
 
 msgid "Enter both a number and a message."
 msgstr "هم شماره و هم پیام را وارد کنید."
-
-msgid "Sending…"
-msgstr "در حال ارسال…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "ارسال شد؛ فهرست به‌زودی تازه می‌شود."
-
-msgid "Sending failed"
-msgstr "ارسال ناموفق بود"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d پیام، %d خوانده‌نشده · %d گفت‌وگو"

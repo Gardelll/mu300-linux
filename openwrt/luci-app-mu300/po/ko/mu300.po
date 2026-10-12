@@ -831,6 +831,9 @@ msgstr "모뎀"
 msgid "Carrier"
 msgstr "통신사"
 
+msgid "Own number"
+msgstr "내 번호"
+
 msgid "Module"
 msgstr "모듈"
 
@@ -1650,6 +1653,15 @@ msgstr "메시지 (Enter로 전송, Shift+Enter로 줄바꿈)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "전송에는 AT+CMGS(PDU 모드)를 사용합니다. 채널이 사용 중이면 다시 시도하십시오. 메시지 하나를 삭제하려면 말풍선의 휴지통 아이콘을 사용하십시오."
 
+msgid "Sending…"
+msgstr "전송 중…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "전송됨. 곧 목록이 새로 고쳐집니다."
+
+msgid "Sending failed"
+msgstr "전송 실패"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "백그라운드에서 SIM 동기화 중 (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "삭제됨 (로컬만)"
 
 msgid "Enter both a number and a message."
 msgstr "번호와 메시지를 모두 입력하십시오."
-
-msgid "Sending…"
-msgstr "전송 중…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "전송됨. 곧 목록이 새로 고쳐집니다."
-
-msgid "Sending failed"
-msgstr "전송 실패"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· 메시지 %d개, 읽지 않음 %d개 · 대화 %d개"

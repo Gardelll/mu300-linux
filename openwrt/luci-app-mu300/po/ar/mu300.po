@@ -831,6 +831,9 @@ msgstr "المودم"
 msgid "Carrier"
 msgstr "المشغّل"
 
+msgid "Own number"
+msgstr "الرقم الخاص"
+
 msgid "Module"
 msgstr "الوحدة"
 
@@ -1650,6 +1653,15 @@ msgstr "الرسالة (Enter للإرسال، Shift+Enter لسطر جديد)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "يستخدم الإرسال AT+CMGS (وضع PDU)؛ أعد المحاولة إذا كانت القناة مشغولة. لحذف رسالة واحدة، استخدم أيقونة سلة المهملات على فقاعتها."
 
+msgid "Sending…"
+msgstr "جارٍ الإرسال…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "تم الإرسال؛ ستُحدَّث القائمة قريباً."
+
+msgid "Sending failed"
+msgstr "فشل الإرسال"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "جارٍ المزامنة من SIM في الخلفية (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "تم الحذف (محلياً فقط)"
 
 msgid "Enter both a number and a message."
 msgstr "أدخل رقماً ورسالة معاً."
-
-msgid "Sending…"
-msgstr "جارٍ الإرسال…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "تم الإرسال؛ ستُحدَّث القائمة قريباً."
-
-msgid "Sending failed"
-msgstr "فشل الإرسال"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d رسالة، %d غير مقروءة · %d محادثة"

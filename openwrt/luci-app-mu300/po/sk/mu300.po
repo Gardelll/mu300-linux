@@ -831,6 +831,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Operátor"
 
+msgid "Own number"
+msgstr "Vlastné číslo"
+
 msgid "Module"
 msgstr "Modul"
 
@@ -1650,6 +1653,15 @@ msgstr "Správa (Enter odošle, Shift+Enter nový riadok)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Odosielanie používa AT+CMGS (režim PDU); ak je kanál obsadený, skúste to znova. Jednotlivú správu odstránite ikonou koša na jej bubline."
 
+msgid "Sending…"
+msgstr "Odosielanie…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Odoslané; zoznam sa čoskoro obnoví."
+
+msgid "Sending failed"
+msgstr "Odoslanie zlyhalo"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronizácia zo SIM na pozadí (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Odstránené (iba lokálne)"
 
 msgid "Enter both a number and a message."
 msgstr "Zadajte číslo aj správu."
-
-msgid "Sending…"
-msgstr "Odosielanie…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Odoslané; zoznam sa čoskoro obnoví."
-
-msgid "Sending failed"
-msgstr "Odoslanie zlyhalo"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· správ: %d, neprečítaných: %d · konverzácií: %d"

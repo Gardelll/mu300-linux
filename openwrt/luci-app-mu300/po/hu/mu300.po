@@ -831,6 +831,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Szolgáltató"
 
+msgid "Own number"
+msgstr "Saját szám"
+
 msgid "Module"
 msgstr "Modul"
 
@@ -1650,6 +1653,15 @@ msgstr "Üzenet (Enter a küldéshez, Shift+Enter új sorhoz)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "A küldés AT+CMGS-t használ (PDU mód); ha a csatorna foglalt, próbálja újra. Egy üzenet törléséhez használja a buborékján lévő kuka ikont."
 
+msgid "Sending…"
+msgstr "Küldés…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Elküldve; a lista hamarosan frissül."
+
+msgid "Sending failed"
+msgstr "A küldés sikertelen"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Szinkronizálás a SIM-ről a háttérben (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Törölve (csak helyi)"
 
 msgid "Enter both a number and a message."
 msgstr "Adjon meg számot és üzenetet is."
-
-msgid "Sending…"
-msgstr "Küldés…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Elküldve; a lista hamarosan frissül."
-
-msgid "Sending failed"
-msgstr "A küldés sikertelen"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d üzenet, %d olvasatlan · %d beszélgetés"

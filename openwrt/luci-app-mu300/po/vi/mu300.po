@@ -831,6 +831,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Nhà mạng"
 
+msgid "Own number"
+msgstr "Số của mình"
+
 msgid "Module"
 msgstr "Mô-đun"
 
@@ -1650,6 +1653,15 @@ msgstr "Tin nhắn (Enter để gửi, Shift+Enter để xuống dòng)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Gửi dùng AT+CMGS (chế độ PDU); thử lại nếu kênh bận. Để xóa một tin nhắn, dùng biểu tượng thùng rác trên bong bóng của tin đó."
 
+msgid "Sending…"
+msgstr "Đang gửi…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Đã gửi; danh sách sẽ sớm làm mới."
+
+msgid "Sending failed"
+msgstr "Gửi thất bại"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Đang đồng bộ từ SIM trong nền (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Đã xóa (chỉ cục bộ)"
 
 msgid "Enter both a number and a message."
 msgstr "Hãy nhập cả số và tin nhắn."
-
-msgid "Sending…"
-msgstr "Đang gửi…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Đã gửi; danh sách sẽ sớm làm mới."
-
-msgid "Sending failed"
-msgstr "Gửi thất bại"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d tin nhắn, %d chưa đọc · %d hội thoại"

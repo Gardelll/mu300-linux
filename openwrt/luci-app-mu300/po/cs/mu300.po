@@ -831,6 +831,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Operátor"
 
+msgid "Own number"
+msgstr "Vlastní číslo"
+
 msgid "Module"
 msgstr "Modul"
 
@@ -1650,6 +1653,15 @@ msgstr "Zpráva (Enter odešle, Shift+Enter nový řádek)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Odesílání používá AT+CMGS (režim PDU); pokud je kanál obsazen, zkuste to znovu. Jednotlivou zprávu smažete ikonou koše na její bublině."
 
+msgid "Sending…"
+msgstr "Odesílání…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Odesláno; seznam se brzy obnoví."
+
+msgid "Sending failed"
+msgstr "Odeslání selhalo"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronizace ze SIM na pozadí (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Smazáno (pouze místně)"
 
 msgid "Enter both a number and a message."
 msgstr "Zadejte číslo i zprávu."
-
-msgid "Sending…"
-msgstr "Odesílání…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Odesláno; seznam se brzy obnoví."
-
-msgid "Sending failed"
-msgstr "Odeslání selhalo"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· zpráv: %d, nepřečtených: %d · konverzací: %d"

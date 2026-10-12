@@ -831,6 +831,9 @@ msgstr "Μόντεμ"
 msgid "Carrier"
 msgstr "Πάροχος"
 
+msgid "Own number"
+msgstr "Δικός αριθμός"
+
 msgid "Module"
 msgstr "Μονάδα"
 
@@ -1650,6 +1653,15 @@ msgstr "Μήνυμα (Enter για αποστολή, Shift+Enter για νέα �
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Η αποστολή χρησιμοποιεί AT+CMGS (λειτουργία PDU)· δοκιμάστε ξανά αν το κανάλι είναι απασχολημένο. Για διαγραφή ενός μηνύματος, χρησιμοποιήστε το εικονίδιο κάδου στο συννεφάκι του."
 
+msgid "Sending…"
+msgstr "Αποστολή…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Εστάλη· η λίστα ανανεώνεται σύντομα."
+
+msgid "Sending failed"
+msgstr "Η αποστολή απέτυχε"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Συγχρονισμός από τη SIM στο παρασκήνιο (AT+CMGL)…"
 
@@ -1688,15 +1700,6 @@ msgstr "Διαγράφηκε (μόνο τοπικά)"
 
 msgid "Enter both a number and a message."
 msgstr "Εισαγάγετε αριθμό και μήνυμα."
-
-msgid "Sending…"
-msgstr "Αποστολή…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Εστάλη· η λίστα ανανεώνεται σύντομα."
-
-msgid "Sending failed"
-msgstr "Η αποστολή απέτυχε"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d μηνύματα, %d μη αναγνωσμένα · %d συνομιλίες"
