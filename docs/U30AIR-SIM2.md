@@ -190,16 +190,60 @@ paths. Read-only SIM2 dashboard queries share nr4. Voice/USSD and portions of
 the IPv6 relay helpers still assume SIM1; use IPv4 WAN until they are adapted.
 A modem crash needs a Linux reboot; automatic CP reload is outside this patch.
 
-Upstream PR #72 independently proposes an F50 internal/external SIM selector
-with overlapping channel mapping. Configuration and broker interfaces need to
-be reconciled before either patch is described as universal dual-SIM support.
+## Current review follow-up (2026-10-12)
 
-## Current review follow-up
+The branch preserves the maintainer's #166 fixes and merges main `c47e2c9`,
+including merged #72's shared F50 foundation. Shared configuration, boot-only
+selection and the version-1 JSON interface are reconciled with that path;
+the positively gated U30 backend is the only live-switch implementation.
+F50 coverage is simulated here, in addition to the maintainer's independent
+F50 results on #72. M3 is not enabled without its own validation.
 
-The branch retains the maintainer's #166 review fixes and merges main
-`c47e2c9`, including #72's shared F50 foundation. The UCI/dispatch integration
-has not yet been installed or hardware-validated. Older U30 radio-sequence
-results establish the previous sequences, not this new integration. In
-particular, the cold-start and live/data-rollback cases still require the
-matching scripts on the two-SIM device; F50 regression coverage here is
-simulated unless noted as the maintainer's earlier independent test.
+The matching integration scripts were installed on the same two-SIM U30 Air
+(OpenWrt 25.12.5, Linux 7.2.9) using USB management and offline script/config
+backups. Android was not entered between these Linux boots. The existing
+Linux-first boot policy with five failed boots before Android was retained.
+
+- With SIM2/WAN up on `sipa_eth8`, hot mode was disabled and `default 1`
+  saved SIM1 without changing active SIM2 or interrupting WAN. Default SIM2
+  and hot mode were restored before the first boot trial.
+- Two initial boot trials exposed real startup defects: an empty optional
+  shell expansion generated `until [ -c /dev/stty_nr1 ]}` (and nr2), and after
+  that fix the first group's owners opened before CP's shared buffer was
+  ready and exited, leaving stale FIFOs. No in-boot reopen was attempted.
+  The failed initialization recorded `cold-start-failed` and selected the
+  SIM1 fallback. All four native owner instances now wait for
+  `sbuf_5_006, state: 1,`; the warm-up requires a living owner as well as its
+  FIFO. Regression tests execute the generated commands, including the
+  empty-condition case, and exercise a dead owner with a stale FIFO.
+- A fresh Linux boot then initialized SIM2 and confirmed `CFUN=1` at about
+  21 seconds. All four owners remained available; WAN came up on `sipa_eth8`
+  and there was no pending/fallback marker.
+- Normal `switch 1` reached SIM1 RF readiness but no data service. After the
+  bounded WAN wait, one rollback restored SIM2/WAN, returned `no_data`, and
+  kept saved default SIM2. All four owner PIDs remained unchanged.
+- Successful `switch 2` from that offline SIM1 boot restored WAN on
+  `sipa_eth8`, returned `switched`, and saved default SIM2 without changing
+  any of the four owner PIDs. A subsequent Linux reboot again initialized
+  SIM2 at about 21 seconds, retained active/default SIM2 and restored WAN
+  without pending/fallback markers. A certificate-verified TLS 1.2 HTTPS request
+  from a USB LAN client returned 200. The PC retained its home Wi-Fi
+  default routes and DNS; only a temporary test-destination route used USB.
+- Manual `default 1` followed by a Linux reboot initialized SIM1 at about
+  22 seconds. At 65 seconds, RF was ready, WAN was down, active/default were
+  both SIM1 and pending/fallback were absent. rpcd `sim_get` returned the
+  same version-1 JSON state. Lack of data did not invalidate the boot.
+
+The earlier validation record describes older revisions; the cases above
+apply to this integration. A physical power-disconnect cycle, a fresh rootfs
+assembly, an empty SIM slot and a PIN-locked card remain untested on this
+hardware. Synthetic tests cover those failure paths. No registration value
+is invented when it was not observed (`registered: null`).
+
+Local targeted checks: selector 16, cold/startup 28, hot switching 17, netifd
+37, rpcd 56, dashboard startup 4, i18n 32, updater 44, static 47. The broader
+device-script run passed 150 tests before the final native-startup edits.
+The updater's two Linux lock-fixture failures also reproduced on untouched
+main: its final `sleep` could replace the test shell and erase the updater
+cmdline. Keeping the shell alive with a child plus `wait` fixes that fixture;
+all 44 updater tests now pass. These are local results, not a GitHub CI pass.
