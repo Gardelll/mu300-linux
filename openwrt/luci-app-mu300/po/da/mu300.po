@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Termisk"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Kernens termiske zoner, skrivebeskyttet. En zone med tærskelpunkter drosler de køleenheder, der er bundet til den, ved sit passive tærskelpunkt; køletilstand 0 betyder ingen drosling."
+
+msgid "Zone"
+msgstr "Zone"
+
+msgid "Temperature"
+msgstr "Temperatur"
+
+msgid "Trip points"
+msgstr "Tærskelpunkter"
+
+msgid "Cooling devices"
+msgstr "Køleenheder"
+
 msgid "USB role"
 msgstr "USB-rolle"
 
@@ -830,6 +848,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operatør"
+
+msgid "Own number"
+msgstr "Eget nummer"
 
 msgid "Module"
 msgstr "Modul"
@@ -1650,6 +1671,15 @@ msgstr "Besked (Enter for at sende, Shift+Enter for ny linje)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Afsendelse bruger AT+CMGS (PDU-tilstand); prøv igen, hvis kanalen er optaget. Brug skraldespandsikonet på en beskedboble for at slette beskeden."
 
+msgid "Sending…"
+msgstr "Sender…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Sendt; listen opdateres om lidt."
+
+msgid "Sending failed"
+msgstr "Afsendelse mislykkedes"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synkroniserer fra SIM i baggrunden (AT+CMGL)…"
 
@@ -1688,15 +1718,6 @@ msgstr "Slettet (kun lokalt)"
 
 msgid "Enter both a number and a message."
 msgstr "Indtast både et nummer og en besked."
-
-msgid "Sending…"
-msgstr "Sender…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Sendt; listen opdateres om lidt."
-
-msgid "Sending failed"
-msgstr "Afsendelse mislykkedes"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d beskeder, %d ulæste · %d samtaler"

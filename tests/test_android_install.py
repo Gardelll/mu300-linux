@@ -629,7 +629,7 @@ class Systems(ShellTest):
 
 
 class Stages(ShellTest):
-    """The bounded stages of an SD-card installation (FINDINGS 48): a stage runs in a process group of its own and is
+    """The bounded stages of an SD-card installation (FINDINGS 50): a stage runs in a process group of its own and is
     ended at its deadline, or after STAGE_STALL seconds without I/O progress on the card (its completion counters in
     /sys/class/block/DISK/stat); a timeout stops the group, writes nothing more (no sync, no unmount) and leaves a
     lock keyed by Android's boot id, which refuses every run until Android has rebooted; a clean run leaves none."""

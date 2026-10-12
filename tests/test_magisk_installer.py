@@ -891,7 +891,7 @@ class Install(InstallerCase):
 
     def test_failed_device_install_keeps_its_log(self):
         # the work directory goes with the run: the device script's output is kept where root can read it, and the
-        # message says where (a timed-out SD-card stage names itself there, FINDINGS 48)
+        # message says where (a timed-out SD-card stage names itself there, FINDINGS 50)
         r = self.run_installer(extra_env={'FAKE_INSTALL_FAILS': '1'})
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         log = self.fake.root / 'data/adb/mu300-device-install.log'

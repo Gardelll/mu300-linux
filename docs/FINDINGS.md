@@ -109,10 +109,12 @@ what replaced it. The table below gives each section's state.
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
+| 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
+| 49 | The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only | current (U30 Air, Vodafone TR: CNUM answers) |
 | 45 | `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146) | current (fixed) |
 | 46 | SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176) | current (fixed) |
 | 47 | A system the Magisk zip added beside another had a password nobody saw (#167) | current (fixed) |
-| 48 | Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot | current; the timeout path not yet seen on a device |
+| 50 | Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot | current; the timeout path not yet seen on a device |
 
 ## Hardware and firmware facts
 
@@ -3892,7 +3894,159 @@ Device test: a zip install of `openwrt` on a board that has Ubuntu must end with
 must note it under `user: root`, and `ssh root@192.168.77.1` into the booted OpenWrt must log in with no password;
 LuCI's login on openwrt-luci likewise, and `passwd` there must take.
 
-### 48. Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot
+### 48. The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel
+
+Under 6.18 and 7.2 nothing in the kernel throttled the CPUs: the mainline port registers the 19 on-die sensors
+(`sprd_thermal_r5p0`, §31) and the cpufreq cooling devices (`CONFIG_CPU_THERMAL`), but no thermal zone had a trip
+point, so the two never met and `thermal-guard` capped `scaling_max_freq` from userspace (85 °C a step down, 75 °C a
+step up, 105 °C power-off). kanoqwq's fork (clean-tf-7.2, 5c8c2f9) brought the kernel's own throttling back with an
+out-of-tree module; the review of 2026-10-11 deferred it for coordination with the guard and a device test. This is
+that work.
+
+**What the stock device tree says** (the F50's live DTB, decompiled; mainline boots the vendor DTB unchanged, §31):
+
+* The 19 physical zones (`lit0-3`, `mid4-6`, `big7`, `apcpu0/1`, `gpu`, `ai0/1`, `ank0-5`, …) have `polling-delay = 0`
+  and no `trips`; so have the four board NTC zones (`chg`, `nr`, `pa`, `board`).
+* One zone has trips: `soc-thmzone`, `polling-delay 1000` ms, `polling-delay-passive 100` ms, `sustainable-power
+  3000`. Trips: `trip-point@0` passive 70 000 mC (hysteresis 1 000), `trip-point@1` passive 85 000 (hysteresis
+  1 000), `soc_crit` critical 110 000 (hysteresis 2 000). Cooling maps, all on the 85 °C trip: `cpu@0` (contribution
+  1024), `cpu@400` (410), `cpu@700` (410), and five vendor nodes under `/cooling-devices` (`cluster0/1/2-cooling`
+  `sprd,cluster-cooling`; `gpu-cooling0` `sprd,mali-power-model`; `npu-cooling0` `sprd,npu-power-model`) that no mainline
+  driver registers.
+* Its sensor is `/virtual-sensor@0`, `compatible = "virtual-thermal"`, `#thermal-sensor-cells = 1`, with
+  `thmzone-cells` naming eleven of the physical **zones** (not sensors): `lit0`-`lit3`, `mid4`-`mid6`, `big7`, `gpu`,
+  `ai0`, `ai1`. The vendor kernel's `sprd_soc_thm` ("virtual-thermal") reports the hottest of them; that is the zone
+  `sprd_cpu_cooling` binds the clusters to on 5.4 (§18).
+
+**(a) an out-of-tree module, or (b) the device tree and the kernel config?** Mainline has nothing for (b): neither
+6.18.56 nor 7.2.10 has a driver matching `virtual-thermal` or any aggregating ("hottest of") thermal sensor
+(`grep -rl 'virtual-thermal\|aggregat' drivers/thermal/` is empty in both trees), and the trips cannot be moved onto a
+physical zone, because the kernel boots the vendor DTB as LK hands it over (a custom DTB hung in `setup_machine_fdt`,
+`upstream/README.md`). What is needed is a driver for that one sensor node; it can live in `upstream/port/` (built in,
+a new `Image`) or in `upstream/modules/` (loaded from the rootfs like the vendor modules). **Chosen: the module**,
+`upstream/modules/mu300_thermal` (after kanoqwq's, GPL-2.0, rewritten with the DT facts above and a probe that defers
+only while a physical zone is not registered yet and fails on a wrong tree): it needs no kernel image change, so no
+untested boot image on anyone's board; `build-modules.sh` builds it for both kernels and the bundles carry it; it is
+tested with `insmod`/`rmmod` on the release kernel; and the seconds between boot and `extra-modules` are covered by
+`thermal-guard` as before. The same source can become a built-in `port/` driver later if that ever matters. The
+module is 90 lines: it looks the eleven zones up by name (`thermal_of` names a zone after its node, so the node name
+is the zone type), registers itself with `devm_thermal_of_zone_register(dev, 0, ...)` and returns the hottest of the
+zones that read; a zone that fails to read is left out of that round (one flaky sensor must not silence the zone
+with the cooling maps bound to it), and only when none reads does `get_temp` fail - then the core logs it once,
+skips the update (no trip is evaluated, the cooling devices keep their state) and the zone's sysfs `temp` read fails
+too, which `thermal-guard` takes as "cap it myself" (below). Never is an unreadable sensor reported as cold. The
+thermal core does the rest: the zone
+with its trips, the cooling maps (the five vendor cooling nodes are ignored, `thermal_of_should_bind` only matches a
+registered cooling device's node), `step_wise` on the passive trips, and `thermal_zone_device_critical` at 110 °C
+(`hw_protection_action` defaults to shutdown in both kernels).
+
+**How the kernel's cap and ours compose.** `cpufreq_cooling` lowers a cluster through a frequency QoS request
+(`FREQ_QOS_MAX`); `scaling_max_freq` *shows* the resolved `policy->max` (the lowest of all requests) and *writing*
+it sets only the user request. So a profile's ceiling (`mu300-cpu`, `/run/mu300/cpu-ceiling`, PR #111) holds under
+the kernel's throttling without any help - the lower of the two wins, and when the kernel lifts its cap the ceiling
+is what is left - while `mu300-cpu status` reads the throttled value and reports `throttling` from the cooling
+devices' `cur_state`, as before. What must not happen is two controllers on one knob: `thermal-guard` stepping
+`scaling_max_freq` down at 85 °C while `step_wise` lowers the QoS at the same temperature, and later lifting a cap
+(ours) while the kernel still holds its own. Hence the handoff, in `thermal-guard`:
+
+* The kernel is told by its release: every 5.x we ship is the vendor kernel, which throttles and protects itself, so
+  there the guard only runs the LED alarm (as before). "A zone has trip points" no longer means "vendor": with the
+  module the mainline zone has them too, and on mainline the guard's 105 °C power-off must stay.
+* On mainline, every round: when an **enabled** zone with a **passive trip at or below HOT** (85 °C) has **every**
+  `cpufreq-*` cooling device bound to it (`thermal_zoneN/cdevK` links against `cooling_deviceM`, compared with `test
+  -ef`) and its `temp` **reads a number within 15 °C of the hottest reading** of the round (a zone whose sensors
+  all fail reads nothing; a stale or zero value sits far below the die, and a kernel that sees no heat would not
+  throttle), the kernel throttles and the guard only watches. On that transition it lifts the caps it set itself (a
+  marker, `/run/mu300/thermal-capped`, set at HOT and cleared when nothing is below the ceiling; it outlives a
+  restart, so a cap from before the module loaded does not stick for ever) back to the profile's ceiling, and leaves
+  `scaling_max_freq` alone from then on. A cap that is not ours (eco's 1.5 GHz, a profile's) is left. With the zone
+  gone (`rmmod`), a cluster left out of the maps, the zone disabled or its reading not to be trusted, it caps again,
+  with a log line on each transition. Bindings alone are not trusted: the handoff would otherwise fail open.
+* The 105 °C power-off stays on mainline in both states; the kernel's own 110 °C critical trip is the second line.
+  The LED alarm is unchanged on every kernel.
+
+`extra-modules` loads the module right after the PMIC watchdog: `modprobe mu300_thermal`, else `insmod` from the
+bundle's directory (`/lib/modules/<release>/mu300_thermal.ko` on OpenWrt, `extra/` on Ubuntu, where depmod may not
+have indexed a bundle yet); the vendor 5.4 kernel has no such file and nothing is tried. Tests
+(`tests/test_device_scripts.py`, `ThermalGuard` and `SipaDele`): the vendor kernel by release (LED only), mainline
+without the zone (caps, powers off), the handoff with the bound zone (no step at 90 °C, power-off at 105 °C still),
+a zone whose `temp` is missing, not a number, stale (40 °C against 90 °C sensors) or whose passive trips lie above
+HOT (all cap), a cluster left out, a disabled zone, no cooling device at all, the marker lifted on the handoff and
+after a restart, capping again when the zone is gone, and the loader's
+`modprobe`/`insmod`/already-loaded/failed paths; under dash, bash and (`test -ef`, `grep -qsx` on an unmatched glob
+checked separately) busybox ash.
+
+Built against the release trees: `mu300_thermal.ko` for 6.18.56 (`vermagic=6.18.56 SMP mod_unload aarch64`, 9 000
+bytes with BTF) and 7.2.10 (`vermagic=7.2.10 SMP preempt mod_unload aarch64`), no warning.
+
+**The panel.** System > CPU has a read-only "Thermal" card from standard thermal sysfs (`mu300-cpu status --json`'s
+new `thermal` array: every zone's type, temperature, trip points and the cooling devices bound to it with their
+states; zones with trips first). It writes nothing: the trips stay the device tree's (the fork's trip editor was not
+taken).
+
+**Device test (F50-B, Ubuntu 24.04, v2026.10.22, kernel 7.2.10, 2026-10-12).** The board had been up 5 minutes
+on the release kernel; the test copies of `thermal-guard` and `mu300-cpu` were put in place (the release ones kept
+and restored at the end) and `mu300_thermal.ko` (the 7.2.10 build) inserted by hand - nothing of the boot image or
+kernel changed.
+
+* Before: 19 zones, none with a trip point; cooling devices `cpufreq-cpu0` 0/9, `cpufreq-cpu4` 0/9, `cpufreq-cpu7`
+  0/10, `devfreq-23140000.gpu` 0/2; hottest 39.2 °C.
+* `insmod`: `mu300-virtual-thermal virtual-sensor@0: soc-thmzone: the hottest of 11 zones`; `thermal_zone19`
+  `type=soc-thmzone mode=enabled policy=step_wise`, trips `0 passive 70000 hyst 1000`, `1 passive 85000 hyst 1000`,
+  `2 critical 110000 hyst 2000`; `cdev0 -> cooling_device2 (cpufreq-cpu7) trip 1 weight 410`, `cdev1 -> cooling_device1
+  (cpufreq-cpu4) trip 1 weight 410`, `cdev2 -> cooling_device0 (cpufreq-cpu0) trip 1 weight 1024` - the three maps of
+  the 85 °C trip, with the DT's contributions; the five vendor cooling nodes left out, as expected. Three seconds
+  later `thermal-guard: kernel thermal zone soc-thmzone throttles the CPUs: watching only, power-off at 105000 mC
+  stays`. `mu300-cpu status --json` listed 20 zones; the soc entry: three trips, three cooling devices at state 0.
+* Load, `yes >/dev/null` on all 8 cores: 38.7 → 64.1 °C in 5 s, 78.0 at 30 s, 84.4 at 50 s, 85.3 °C at 65 s; then
+  the kernel throttled: cooling states `cpu0=1 cpu4=1 cpu7=1` and `scaling_max_freq` **read** 1846/2171/2041 MHz
+  against the user values 2002/2301/2210 (the QoS cap shows through `policy->max`), the temperature held at
+  84.4-85.3 °C, the states flapping between 0 and 1 around the trip (100 ms passive polling, 1 °C hysteresis).
+  `thermal-guard` wrote nothing (its only line in that time: `too hot (SoC 85327 mC): LED alarm on`) and `mu300-cpu
+  status` said `thermal throttling: active` from the cooling states. Writing `cpuinfo_max_freq` into
+  `policy7/scaling_max_freq` under the cap read back 2210000 with the state at 1 a moment later - inconclusive, the
+  states were flapping at that second; the cool-down sample right after showed the cap again (`policy7 cur 1703 /
+  max 2041`, state 1).
+* Load off: 85.3 → 60.1 °C in 5 s, states 0/0/0 and `scaling_max_freq` back to 2002/2301/2210 by itself (the user
+  request was never changed), `cooled down (SoC 64103 mC): LED alarm off`.
+* `rmmod`: `kernel thermal zone soc-thmzone gone: capping cpufreq again` within 5 s, no zone with trips left. The
+  loader path: the `.ko` copied to `/lib/modules/7.2.10/extra/` and the new `extra-modules` run - `loaded
+  mu300_thermal` (`modprobe` had no index, `insmod` by path took it), the zone back, `thermal-guard` handed over again
+  5 s later. The guard alone, with the service stopped and HOT set 2 °C under the current temperature for two rounds:
+  `scaling_max_freq` 2002000 2301000 2210000 → 1703000 2054000 1872000 (two steps each) and the marker
+  `/run/mu300/thermal-capped` present; a cool run lifted them back to 2002000 2301000 2210000.
+* End state: the release `thermal-guard` and `mu300-cpu` restored (same md5 as the backup), the service active, the
+  module not loaded and no `mu300_thermal.ko` under `/lib/modules`, `/run/mu300` without thermal markers, `uname -r`
+  7.2.10 - the release kernel, which was never replaced (no `mu300-update kernel`, so no `rollback-boot` needed).
+
+Open: the U30 Air (same SoC, its own DTB) is untested; its `thmzone-cells` may name other zones, which the module
+reads from the tree. Not taken, as the review decided: the fork's CPU voltage-offset driver.
+### 49. The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only
+
+The panel showed IMEI, IMSI and ICCID but not the SIM's own number (MSISDN). Ported from kanoqwq's fork
+(0d93695, reviewed in `docs/superpowers/reviews/2026-10-11-kano-clean-tf-7.2.md`: "CNUM on full rounds only, never
+in the fast tier"), measured so far on this machine only (unit tests; the device checks are in the PR).
+
+* **Two sources.** `AT+CNUM` reads the number the SIM carries (`+CNUM: "","+905551234567",145`; type 145 is
+  international, a "+" is put in front when the SIM left it out). Many SIMs carry none - the answer is `OK` alone or
+  an empty string - and the number then comes from the IMS public identity the operator provisions, `AT+SPPAURI?`
+  (what the stock RIL's `getPAU` reads): a `tel:` URI first, else a `sip:`/`sips:` URI whose user part is an
+  international number. A bare numeric SIP user part is the IMSI on many networks and is **not** taken as a number.
+  3 to 15 digits (E.164), nothing else, or nothing at all - the panel never guesses.
+* **Where in the tiers.** The IMS identity exists only once IMS is registered, later than the SIM is read at boot, so
+  the number cannot live in the 6 h identity cache (`sim.json`) the way IMEI/IMSI/ICCID do: a miss at boot would
+  stay a miss for hours (kano's own regression). It is asked on **full rounds only** (`cell`, every ~5 s while the
+  page is open): an empty answer is asked again on the next full round (two commands, about 0.3 s at the measured
+  0.13 s per command, §40), a number found is kept in `/var/run/unisoc-modem/own-number` for the boot and not asked
+  again (a SIM change goes through a reboot, the same assumption the identity cache makes). The fast tier (1.5 s)
+  never sends either command, and neither does `mu300dash`'s live `signal` read.
+* **Personal data.** The number reaches the browser in `status`'s `cell.msisdn` / `cell.msisdn_src` (`sim` or
+  `ims`), a read-only method of the existing ACL; the home page shows it under ICCID, masked like the IMSI
+  (`+905****567`) until "Show SIM identifiers", and the row is not there at all when neither source has one. It is
+  never written to flash: `sim.json` stays IMEI/IMSI/ICCID, the runtime files are root's only (`umask 077`), the
+  collector prints nothing, and the panel's operations log keeps its rule (method, time, outcome - no IMSI or
+  numbers). Translations: `Own number` in all 31 catalogs (`tools/luci-i18n.py update`).
+### 50. Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot
 
 What #52 looked like from the outside (§38a): the Magisk installer, OpenWrt to the card, silent for good, a `dd` at
 100 % of one core that `kill -9` did not end, and every retry adding another one until the board was rebooted. §38a

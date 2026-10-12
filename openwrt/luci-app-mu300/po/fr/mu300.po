@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Thermique"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Les zones thermiques du noyau, en lecture seule. Une zone avec des points de déclenchement limite les dispositifs de refroidissement qui lui sont liés à son point passif ; un état de refroidissement 0 signifie aucune limitation."
+
+msgid "Zone"
+msgstr "Zone"
+
+msgid "Temperature"
+msgstr "Température"
+
+msgid "Trip points"
+msgstr "Points de déclenchement"
+
+msgid "Cooling devices"
+msgstr "Dispositifs de refroidissement"
+
 msgid "USB role"
 msgstr "Rôle USB"
 
@@ -830,6 +848,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Opérateur"
+
+msgid "Own number"
+msgstr "Numéro propre"
 
 msgid "Module"
 msgstr "Module"
@@ -1650,6 +1671,15 @@ msgstr "Message (Entrée pour envoyer, Maj+Entrée pour un saut de ligne)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "L'envoi utilise AT+CMGS (mode PDU) ; réessayez si le canal est occupé. Pour supprimer un message, utilisez l'icône de corbeille sur sa bulle."
 
+msgid "Sending…"
+msgstr "Envoi…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Envoyé ; la liste sera bientôt actualisée."
+
+msgid "Sending failed"
+msgstr "Échec de l'envoi"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronisation depuis la SIM en arrière-plan (AT+CMGL)…"
 
@@ -1688,15 +1718,6 @@ msgstr "Supprimé (local uniquement)"
 
 msgid "Enter both a number and a message."
 msgstr "Saisissez un numéro et un message."
-
-msgid "Sending…"
-msgstr "Envoi…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Envoyé ; la liste sera bientôt actualisée."
-
-msgid "Sending failed"
-msgstr "Échec de l'envoi"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d messages, %d non lus · %d conversations"

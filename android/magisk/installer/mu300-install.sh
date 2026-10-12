@@ -53,7 +53,7 @@ die() { echo "! $*"; exit 1; }
 gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 # Android's own shell and toolbox, never Magisk's standalone busybox: its mke2fs makes ext2 only and its losetup has
 # no -S. su -c sh gives install.sh exactly this environment. MU300_DEVICE_WORK tells android-install.sh where its files are.
-# MU300_LOCK_DIR: the lock of a timed-out SD-card stage (android-install.sh, FINDINGS 48) outlives this run's W.
+# MU300_LOCK_DIR: the lock of a timed-out SD-card stage (android-install.sh, FINDINGS 50) outlives this run's W.
 asw() { env -u ASH_STANDALONE PATH="$APATH" MU300_DEVICE_WORK="${W:-}" MU300_LOCK_DIR="$WORK_PARENT" "$@"; }
 su_do() { asw "$DEVSH" -c "$1"; }            # storage.sh's way to run a command on the device: here it is local
 
@@ -169,7 +169,7 @@ conf_check() {  # every answer, from a file or the environment, has a value this
 }
 src_of() { eval "_s=\${SRC_$1:-}"; if [ -n "$_s" ]; then echo "$_s"; else t 'default'; fi; }   # where a value came from
 
-# ---- a run that timed out on the SD card in this Android boot (FINDINGS 48): android-install.sh left its lock, keyed
+# ---- a run that timed out on the SD card in this Android boot (FINDINGS 50): android-install.sh left its lock, keyed
 # by the boot id, in WORK_PARENT (its own work directory was that run's and went with it). The request it waited on is
 # still stuck in the kernel, and another run would only add one: refused before anything is built or written. A lock
 # of an earlier boot is stale and goes.
@@ -644,7 +644,7 @@ install_systems() {
     _keep=$WORK_PARENT/mu300-device-install.log
     if ! grep -q MU300-INSTALL-OK "$W/device-install.log"; then
         # W goes with this run: the device script's output is kept where root can read it (a timed-out SD-card stage
-        # names itself there, FINDINGS 48)
+        # names itself there, FINDINGS 50)
         _msg=$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")
         if ( umask 077; cp "$W/device-install.log" "$_keep" ) 2>/dev/null && chmod 600 "$_keep" 2>/dev/null; then
             _msg="$_msg
@@ -665,7 +665,7 @@ $(t 'the device log was kept at {1}' "$_keep")"
 # partition's last 64 bytes - read back from the medium into files of their own, in whole 4096-byte blocks, by one dd
 # each whose status counts (a pipeline would turn a read error into a short hash and say no more), after the page
 # cache is dropped, and compared by sha256 with what was written. write_boot has its own check (mu300-update's,
-# through a pipeline); this is the installer's last word before misc is armed (FINDINGS 48). Prints why it failed.
+# through a pipeline); this is the installer's last word before misc is armed (FINDINGS 50). Prints why it failed.
 boot_readback() {
     _bl=$(fsize "$W/boot/written"); _bn=$(( (_bl + 4095) / 4096 )); _ps=$(part_size "$1")
     rm -f "$W/boot/readback" "$W/boot/readback.tail"

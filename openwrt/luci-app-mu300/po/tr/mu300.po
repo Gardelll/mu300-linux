@@ -384,6 +384,24 @@ msgstr "Donanım azamisi"
 msgid "Frequencies in MHz."
 msgstr "Frekanslar MHz cinsinden."
 
+msgid "Thermal"
+msgstr "Sıcaklık"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Çekirdeğin sıcaklık bölgeleri, salt okunur. Eşik noktaları olan bir bölge, pasif eşiğinde kendisine bağlı soğutma aygıtlarını kısar; soğutma durumu 0, kısma yok demektir."
+
+msgid "Zone"
+msgstr "Bölge"
+
+msgid "Temperature"
+msgstr "Sıcaklık"
+
+msgid "Trip points"
+msgstr "Eşik noktaları"
+
+msgid "Cooling devices"
+msgstr "Soğutma aygıtları"
+
 msgid "USB role"
 msgstr "USB rolü"
 
@@ -830,6 +848,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operatör"
+
+msgid "Own number"
+msgstr "Kendi numarası"
 
 msgid "Module"
 msgstr "Modül"
@@ -1650,6 +1671,15 @@ msgstr "Mesaj (göndermek için Enter, yeni satır için Shift+Enter)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Gönderme AT+CMGS (PDU modu) kullanır; kanal meşgulse yeniden deneyin. Bir mesajı silmek için balonundaki çöp kutusu simgesini kullanın."
 
+msgid "Sending…"
+msgstr "Gönderiliyor…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Gönderildi; liste birazdan yenilenecek."
+
+msgid "Sending failed"
+msgstr "Gönderme başarısız"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "SIM’den arka planda eşitleniyor (AT+CMGL)…"
 
@@ -1688,15 +1718,6 @@ msgstr "Silindi (yalnızca yerel)"
 
 msgid "Enter both a number and a message."
 msgstr "Numara ve mesaj girin."
-
-msgid "Sending…"
-msgstr "Gönderiliyor…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Gönderildi; liste birazdan yenilenecek."
-
-msgid "Sending failed"
-msgstr "Gönderme başarısız"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mesaj, %d okunmamış · %d görüşme"

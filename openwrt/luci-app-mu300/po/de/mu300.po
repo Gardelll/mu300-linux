@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Thermisch"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Die Thermal-Zonen des Kernels, nur lesend. Eine Zone mit Trip-Points drosselt die an sie gebundenen Kühlgeräte an ihrem passiven Trip-Point; Kühlzustand 0 heißt keine Drosselung."
+
+msgid "Zone"
+msgstr "Zone"
+
+msgid "Temperature"
+msgstr "Temperatur"
+
+msgid "Trip points"
+msgstr "Trip-Points"
+
+msgid "Cooling devices"
+msgstr "Kühlgeräte"
+
 msgid "USB role"
 msgstr "USB-Rolle"
 
@@ -830,6 +848,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Netzbetreiber"
+
+msgid "Own number"
+msgstr "Eigene Rufnummer"
 
 msgid "Module"
 msgstr "Modul"
@@ -1650,6 +1671,15 @@ msgstr "Nachricht (Enter zum Senden, Umschalt+Enter für neue Zeile)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Das Senden nutzt AT+CMGS (PDU-Modus); bei belegtem Kanal erneut versuchen. Um eine einzelne Nachricht zu löschen, das Papierkorbsymbol an ihrer Sprechblase verwenden."
 
+msgid "Sending…"
+msgstr "Wird gesendet…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Gesendet; die Liste wird gleich aktualisiert."
+
+msgid "Sending failed"
+msgstr "Senden fehlgeschlagen"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronisierung von der SIM im Hintergrund (AT+CMGL)…"
 
@@ -1688,15 +1718,6 @@ msgstr "Gelöscht (nur lokal)"
 
 msgid "Enter both a number and a message."
 msgstr "Bitte Nummer und Nachricht eingeben."
-
-msgid "Sending…"
-msgstr "Wird gesendet…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Gesendet; die Liste wird gleich aktualisiert."
-
-msgid "Sending failed"
-msgstr "Senden fehlgeschlagen"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d Nachrichten, %d ungelesen · %d Unterhaltungen"

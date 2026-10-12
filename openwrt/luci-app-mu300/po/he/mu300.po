@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "תרמי"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "אזורי החום של הליבה, לקריאה בלבד. אזור עם נקודות סף מצמצם את התקני הקירור הקשורים אליו בנקודת הסף הפסיבית שלו; מצב קירור 0 פירושו ללא צמצום."
+
+msgid "Zone"
+msgstr "אזור"
+
+msgid "Temperature"
+msgstr "טמפרטורה"
+
+msgid "Trip points"
+msgstr "נקודות סף"
+
+msgid "Cooling devices"
+msgstr "התקני קירור"
+
 msgid "USB role"
 msgstr "תפקיד USB"
 
@@ -830,6 +848,9 @@ msgstr "מודם"
 
 msgid "Carrier"
 msgstr "ספק"
+
+msgid "Own number"
+msgstr "המספר שלי"
 
 msgid "Module"
 msgstr "מודול"
@@ -1650,6 +1671,15 @@ msgstr "הודעה (Enter לשליחה, Shift+Enter לשורה חדשה)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "השליחה משתמשת ב-AT+CMGS (מצב PDU); יש לנסות שוב אם הערוץ תפוס. למחיקת הודעה בודדת, יש להשתמש בסמל הפח שעל הבועה שלה."
 
+msgid "Sending…"
+msgstr "שולח…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "נשלח; הרשימה תתרענן בקרוב."
+
+msgid "Sending failed"
+msgstr "השליחה נכשלה"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "מסנכרן מה-SIM ברקע (AT+CMGL)…"
 
@@ -1688,15 +1718,6 @@ msgstr "נמחק (מקומי בלבד)"
 
 msgid "Enter both a number and a message."
 msgstr "יש להזין גם מספר וגם הודעה."
-
-msgid "Sending…"
-msgstr "שולח…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "נשלח; הרשימה תתרענן בקרוב."
-
-msgid "Sending failed"
-msgstr "השליחה נכשלה"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d הודעות, %d שלא נקראו · %d שיחות"

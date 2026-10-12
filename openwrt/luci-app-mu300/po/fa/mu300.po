@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "حرارتی"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "ناحیه‌های حرارتی هسته، فقط خواندنی. ناحیه‌ای که نقاط آستانه دارد، دستگاه‌های خنک‌کننده متصل به خود را در آستانه غیرفعال محدود می‌کند؛ وضعیت خنک‌کنندگی 0 یعنی بدون محدودسازی."
+
+msgid "Zone"
+msgstr "ناحیه"
+
+msgid "Temperature"
+msgstr "دما"
+
+msgid "Trip points"
+msgstr "نقاط آستانه"
+
+msgid "Cooling devices"
+msgstr "دستگاه‌های خنک‌کننده"
+
 msgid "USB role"
 msgstr "نقش USB"
 
@@ -830,6 +848,9 @@ msgstr "مودم"
 
 msgid "Carrier"
 msgstr "اپراتور"
+
+msgid "Own number"
+msgstr "شماره خود"
 
 msgid "Module"
 msgstr "ماژول"
@@ -1650,6 +1671,15 @@ msgstr "پیام (Enter برای ارسال، Shift+Enter برای خط جدید
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "ارسال از AT+CMGS (حالت PDU) استفاده می‌کند؛ اگر کانال مشغول است دوباره تلاش کنید. برای حذف یک پیام، از نماد سطل زباله روی حباب آن استفاده کنید."
 
+msgid "Sending…"
+msgstr "در حال ارسال…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "ارسال شد؛ فهرست به‌زودی تازه می‌شود."
+
+msgid "Sending failed"
+msgstr "ارسال ناموفق بود"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "در حال همگام‌سازی از SIM در پس‌زمینه (AT+CMGL)…"
 
@@ -1688,15 +1718,6 @@ msgstr "حذف شد (فقط محلی)"
 
 msgid "Enter both a number and a message."
 msgstr "هم شماره و هم پیام را وارد کنید."
-
-msgid "Sending…"
-msgstr "در حال ارسال…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "ارسال شد؛ فهرست به‌زودی تازه می‌شود."
-
-msgid "Sending failed"
-msgstr "ارسال ناموفق بود"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d پیام، %d خوانده‌نشده · %d گفت‌وگو"

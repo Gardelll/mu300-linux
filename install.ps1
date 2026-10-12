@@ -1062,7 +1062,7 @@ WriteUnix $envFile (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_
 Remove-Item $envFile
 $log = SuDo "sh $T/android-install.sh"
 Write-Host $log
-# kept as install.sh keeps it: a timed-out SD-card stage (FINDINGS 48) names itself there, with the way out
+# kept as install.sh keeps it: a timed-out SD-card stage (FINDINGS 50) names itself there, with the way out
 $devLog = "$Work\device-install.log"
 Set-Content -Path $devLog -Value $log
 if ($log -notmatch 'MU300-INSTALL-OK') {
@@ -1102,7 +1102,7 @@ $EXP = $bootJson.sha256
 if ((SuDo "sha256sum $T/mu300-boot.img").Split(' ')[0] -ne $EXP) { Die (T 'pushed boot image hash mismatch') }
 SuDo "dd if=$T/mu300-boot.img of=/dev/block/by-name/boot_$LINUX_SLOT bs=4M && sync" | Out-Null
 # read back from the medium (the page cache dropped first): exactly the image's length in whole 4096-byte blocks,
-# into a file, by one dd whose status counts (FINDINGS 48; install.sh's write_linux_boot does the same). A mismatch
+# into a file, by one dd whose status counts (FINDINGS 50; install.sh's write_linux_boot does the same). A mismatch
 # stops here: misc is not written, Android keeps booting.
 $imgLen = (Get-Item "$Work\boot-linux-slot$LINUX_SLOT.img").Length
 $imgBlocks = [int][math]::Ceiling($imgLen / 4096)

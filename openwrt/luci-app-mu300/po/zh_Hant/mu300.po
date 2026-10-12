@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "溫控"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "核心的溫區，唯讀。帶有觸發點的溫區會在其被動觸發點限制與之綁定的冷卻裝置；冷卻狀態 0 表示未限頻。"
+
+msgid "Zone"
+msgstr "溫區"
+
+msgid "Temperature"
+msgstr "溫度"
+
+msgid "Trip points"
+msgstr "觸發點"
+
+msgid "Cooling devices"
+msgstr "冷卻裝置"
+
 msgid "USB role"
 msgstr "USB 角色"
 
@@ -830,6 +848,9 @@ msgstr "數據機"
 
 msgid "Carrier"
 msgstr "電信業者"
+
+msgid "Own number"
+msgstr "本機號碼"
 
 msgid "Module"
 msgstr "模組"
@@ -1650,6 +1671,15 @@ msgstr "訊息（Enter 送出，Shift+Enter 換行）"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "傳送使用 AT+CMGS（PDU 模式）；通道忙碌時請重試。若要刪除單則訊息，請按其對話泡泡上的垃圾桶圖示。"
 
+msgid "Sending…"
+msgstr "傳送中…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "已傳送，清單稍後會更新。"
+
+msgid "Sending failed"
+msgstr "傳送失敗"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "正在背景從 SIM 同步（AT+CMGL）…"
 
@@ -1688,15 +1718,6 @@ msgstr "已刪除（僅本機）"
 
 msgid "Enter both a number and a message."
 msgstr "請同時輸入號碼與訊息。"
-
-msgid "Sending…"
-msgstr "傳送中…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "已傳送，清單稍後會更新。"
-
-msgid "Sending failed"
-msgstr "傳送失敗"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d 則，%d 則未讀 · %d 個對話"

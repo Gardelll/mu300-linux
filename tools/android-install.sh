@@ -35,7 +35,7 @@ T=${MU300_DEVICE_WORK:-/data/local/tmp}
 M=$T/mu300root
 say() { echo "[device] $*"; }
 # --- stage begin
-# The long stages on an SD card run bounded (FINDINGS 48). A card, or the SD host, that stops answering leaves a
+# The long stages on an SD card run bounded (FINDINGS 50). A card, or the SD host, that stops answering leaves a
 # request in the kernel that never completes: the command sits in D state, kill -9 does nothing, and every retry adds
 # another one (38a's dd past the end of the eMMC did the same, one core at 100 % until a reboot). So in SD mode each
 # long stage - the format, the unpack of every system, the flush at the end - runs in a session of its own (setsid:
