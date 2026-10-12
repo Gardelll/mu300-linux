@@ -1,10 +1,10 @@
 # U30 Air SC2355 firmware SAE offload (opt-in, experimental)
 
-**What is in the images, and what is not.** The published images carry only
+**What a normal build from this branch includes.** Normal image builds include only
 the driver side of this work: `sprd_wlan_combo` no longer prints passphrases,
 station PSKs or raw command/event payloads (the same removals exist as
 `kernel/patches/wlan_combo-sae-private-logs.patch` for the vendor kernel).
-The hostapd patch is **not** in any published image: it exists as a build
+The hostapd patch is **not** included by a normal image build: it exists as a build
 recipe (`openwrt/build-u30-sae.sh`, `MU300_SAE_APK_DIR` for `build-rootfs.sh`)
 and does nothing until `u30_sae_offload=1` is set on a BSS. Nothing changes for
 a device that does not opt in on both counts.
@@ -77,6 +77,35 @@ The helper now checks this before sending the firmware password request and
 reports the unsupported configuration. Removing the offload option restores
 the normal configuration path.
 
+This experiment supports **one enabled AP BSS per radio**. Do not add a
+second SAE test SSID next to a WPA2 hotspot. The driver interface-combination
+table permits one ordinary STA/AP interface and maps all ordinary APs to
+`SPRD_MODE_AP`; this suggests a concurrency limitation, but is not proof of
+the cause of the maintainer's outage. r9 rejects a multi-BSS configuration with
+the option on, before hostapd starts AP interfaces, and checks the static SAE
+requirements there too. It does not add multi-BSS support or guarantee that
+netifd preserves an existing hotspot after rejecting the new configuration.
+
+Enable, disable or change this mode only over USB/another independent management
+path, using a full restart. Keep the existing SSID configuration backed up and
+change the single AP in place:
+
+```sh
+wifi down
+/etc/init.d/wpad stop
+# Apply the intended configuration while the AP is down.
+/etc/init.d/wpad start
+wifi up
+```
+
+Do not use `wifi reload` to add a BSS or change the SAE mode/passphrase. In the
+maintainer's r8 test, adding a second SAE BSS by reload stopped both hotspots
+for at least 25 minutes. That device could only be reached over Wi-Fi, so its
+logs were not available and the cause is still unconfirmed. The configuration
+check is a support boundary, not a demonstrated repair of that outage. With
+automatic channel selection, wait for AP-ENABLED before testing a client; the
+local single-BSS restart took approximately 33 seconds.
+
 For source review/builds only while the key-provenance finding is open:
 use a dedicated [official OpenWrt 25.12.5 armsr/armv8 SDK](https://downloads.openwrt.org/releases/25.12.5/targets/armsr/armv8/).
 Verify its checksum before extracting. Use an ASCII-only SDK path: the SDK's
@@ -93,20 +122,23 @@ The package recipe must have source
 `ca266cc24d8705eb1a2a0857ad326e48b1408b20`, revision 1 (the official SDK's
 pinned feed) or 5 (the previously recorded release feed). Other sources and
 revisions are refused. The helper finds the SDK feed recipe, applies the patch
-after OpenWrt's existing patches, bumps revision to 8, replaces the dedicated
+after OpenWrt's existing patches, bumps revision to 9, replaces the dedicated
 SDK's `.config`, and builds the OpenSSL variant with its normal dependencies:
 
 ```sh
 sh openwrt/build-u30-sae.sh /absolute/path/to/sdk /absolute/path/to/u30-sae-apks
 ```
 
-The output must contain a matching revision 8 `hostapd-common` and
+Under amd64 emulation, the maintainer saw a Lua jobserver failure with a
+parallel build. Use `MU300_JOBS=1` if that occurs; a serial build completed.
+
+The output must contain a matching revision 9 `hostapd-common` and
 `wpad-basic-openssl` pair. Start with a clean dedicated SDK; the helper refuses
-an older local r6/r7 patch rather than silently overwriting it. Revision 8
-includes the marker-length hardening added after the r7 build: every complete
+an older local r6/r7/r8 patch rather than silently overwriting it. Revision 9
+includes early single-BSS/configuration checks and the marker-length hardening: every complete
 private OUI/type marker counts towards duplicate rejection, regardless of its
 element length. This does not establish PMK provenance. The helper only exports
-r8 package files, so stale r6/r7 artifacts in the SDK are not included.
+r9 package files, so stale r6/r7/r8 artifacts in the SDK are not included.
 The image builder accepts that directory on the tested release:
 
 ```sh
@@ -159,12 +191,20 @@ the trial fails. No Android firmware/partition change is needed.
 
 A plain reload after changing from OWE once left the tested firmware timing
 out the four-way handshake (reason 15); a complete wpad restart restored it.
-Same-configuration `wifi reload` passed with the final packages. Switching
-between security modes and changing passwords through hot reconfiguration
-have not been exhaustively validated; use a complete Wi-Fi/wpad restart for
-those operations. APK replacement after a later upgrade needs revalidation.
+Same-configuration `wifi reload` passed with the final packages. This does not validate adding
+a second BSS or changing security mode/password by reload; those operations
+require the full restart described above. APK replacement after a later upgrade needs revalidation.
 
 ## Validation and limits
+
+The 2026-10-12 follow-up retains the maintainer's #165 commits and merges
+main `c47e2c9`. r9 adds a configuration-stage single-BSS restriction and static
+SAE requirements, with 16 SAE/parser/SDK/privacy tests passing (required UBSan)
+and 47 static checks passing. The matching r9 pair builds through the official
+SDK (`MU300_JOBS=1`). This revision has not been installed or hardware-tested;
+it does not establish why adding the second r8 BSS stopped the maintainer's
+radio or prove a successful recovery from that case. The PMK trust finding
+remains open. Existing r8 device results below apply to r8, not r9.
 
 The latest follow-up is rebased onto main `7a044d5`. The marker-length
 hardening is packaged as r8 rather than reusing r7 for different source. The
