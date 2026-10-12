@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Nhiệt"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Các vùng nhiệt của nhân, chỉ đọc. Vùng có điểm ngưỡng sẽ hạn chế các thiết bị làm mát gắn với nó tại ngưỡng thụ động; trạng thái làm mát 0 nghĩa là không hạn chế."
+
+msgid "Zone"
+msgstr "Vùng"
+
+msgid "Temperature"
+msgstr "Nhiệt độ"
+
+msgid "Trip points"
+msgstr "Điểm ngưỡng"
+
+msgid "Cooling devices"
+msgstr "Thiết bị làm mát"
+
 msgid "USB role"
 msgstr "Vai trò USB"
 
@@ -1650,6 +1668,15 @@ msgstr "Tin nhắn (Enter để gửi, Shift+Enter để xuống dòng)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Gửi dùng AT+CMGS (chế độ PDU); thử lại nếu kênh bận. Để xóa một tin nhắn, dùng biểu tượng thùng rác trên bong bóng của tin đó."
 
+msgid "Sending…"
+msgstr "Đang gửi…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Đã gửi; danh sách sẽ sớm làm mới."
+
+msgid "Sending failed"
+msgstr "Gửi thất bại"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Đang đồng bộ từ SIM trong nền (AT+CMGL)…"
 
@@ -1688,15 +1715,6 @@ msgstr "Đã xóa (chỉ cục bộ)"
 
 msgid "Enter both a number and a message."
 msgstr "Hãy nhập cả số và tin nhắn."
-
-msgid "Sending…"
-msgstr "Đang gửi…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Đã gửi; danh sách sẽ sớm làm mới."
-
-msgid "Sending failed"
-msgstr "Gửi thất bại"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d tin nhắn, %d chưa đọc · %d hội thoại"

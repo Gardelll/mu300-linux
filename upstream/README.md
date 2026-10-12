@@ -199,8 +199,11 @@ Fixes needed on top of the port:
 - cpufreq: vendor `sprd_sip_svc` + `sprd-cpufreq-v2`; ATF does the DVFS, the kernel asks through SIP SMC calls
   (3 policies: 4 little / 3 mid / 1 big, schedutil). PSCI cpuidle (WFI, core sleep, cluster power-down).
   Idle temperature dropped from ~54 C to ~48 C.
-- The stock DT has trip points only on the vendor virtual zone, so `/opt/mu300/bin/thermal-guard` caps cpufreq
-  above 85 C and powers off above 105 C on kernels without SoC trip points.
+- The stock DT has trip points only on the vendor virtual zone (`soc-thmzone`: passive 70/85 C, critical 110 C,
+  cooling maps to the three clusters), whose sensor driver mainline lacks: `modules/mu300_thermal` brings it back
+  (the hottest of the eleven zones the DT names), so the kernel's `step_wise` throttles at 85 C. `extra-modules`
+  loads it; `/opt/mu300/bin/thermal-guard` then only watches (and keeps its 105 C power-off), and caps cpufreq
+  itself only while the zone is absent (FINDINGS 48).
 
 - Watchdog: the UMP9620 PMIC watchdog that LK arms is taken over (`ump9620-pmic-wdt`), 60 s, pinged by the
   core until procd/systemd opens it; a hard hang resets the board back to Android.

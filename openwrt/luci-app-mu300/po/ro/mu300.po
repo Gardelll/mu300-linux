@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Termic"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Zonele termice ale kernelului, doar citire. O zonă cu puncte de prag limitează dispozitivele de răcire legate de ea la pragul său pasiv; o stare de răcire 0 înseamnă fără limitare."
+
+msgid "Zone"
+msgstr "Zonă"
+
+msgid "Temperature"
+msgstr "Temperatură"
+
+msgid "Trip points"
+msgstr "Puncte de prag"
+
+msgid "Cooling devices"
+msgstr "Dispozitive de răcire"
+
 msgid "USB role"
 msgstr "Rol USB"
 
@@ -1650,6 +1668,15 @@ msgstr "Mesaj (Enter pentru trimitere, Shift+Enter pentru rând nou)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Trimiterea folosește AT+CMGS (mod PDU); reîncercați dacă canalul este ocupat. Pentru a șterge un mesaj, folosiți pictograma coș de pe bula acestuia."
 
+msgid "Sending…"
+msgstr "Se trimite…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Trimis; lista se reîmprospătează în curând."
+
+msgid "Sending failed"
+msgstr "Trimiterea a eșuat"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Se sincronizează din SIM în fundal (AT+CMGL)…"
 
@@ -1688,15 +1715,6 @@ msgstr "Șters (doar local)"
 
 msgid "Enter both a number and a message."
 msgstr "Introduceți atât un număr, cât și un mesaj."
-
-msgid "Sending…"
-msgstr "Se trimite…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Trimis; lista se reîmprospătează în curând."
-
-msgid "Sending failed"
-msgstr "Trimiterea a eșuat"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mesaje, %d necitite · %d conversații"
