@@ -340,6 +340,16 @@ class DeviceSide(ShellTest):
         g = self.tmp / 'gpu'
         (g / 'vendor/lib64/egl').mkdir(parents=True)
         (g / 'vendor/lib64/egl/libGLES_mali.so').write_bytes(b'mali')
+        # the device's own modes, whatever umask the tests run under: what is asserted below is what the import
+        # adds to them
+        for top in (root, g):
+            for f in top.rglob('*'):
+                if not f.is_symlink():
+                    f.chmod(0o755 if f.is_dir() or f.name == 'modem_control' else 0o644)
+        if os.getuid() == 0:
+            # as on Android: bionic is system's, the programs are group shell's (only root can set that up)
+            os.chown(root / 'apex/com.android.runtime/lib64/bionic/libc.so', 1000, 1000)
+            os.chown(root / 'vendor/bin/modem_control', 0, 2000)
         out = self.tmp / 'v.tar.gz'
         for shell in self.each_shell():
             r = self.lib(shell, f'umask 077; collect_subset "{TOP}/android-vendor/subset-files.txt" "{self.tmp}/s" && '
@@ -354,6 +364,9 @@ class DeviceSide(ShellTest):
             self.assertEqual(stat.S_IMODE((self.tmp / 's/linkerconfig/ld.config.txt').stat().st_mode), 0o644, shell)
             with tarfile.open(out) as t:
                 modes = {m.name.lstrip('./').rstrip('/'): m.mode & 0o7777 for m in t.getmembers() if not m.issym()}
+                owners = {(m.uid, m.gid) for m in t.getmembers()}
+            if os.getuid() == 0:
+                self.assertEqual(owners, {(0, 0)}, shell)
             dirs = {n: m for n, m in modes.items() if n in (
                 'opt/mu300/android', 'opt/mu300/android/vendor', 'opt/mu300/android/vendor/etc',
                 'opt/mu300/android/vendor/lib64/egl', 'opt/mu300/android/linkerconfig', 'lib/firmware')}
