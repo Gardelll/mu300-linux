@@ -640,7 +640,16 @@ for os in $OSES; do
         rm -rf "$M/$os.new/.mu300-image"
         if [ -f "$M/$os/etc/shadow" ]; then
             merge_accounts "$M/$os" "$M/$os.new" || { say "could not carry the accounts of $os over; nothing was replaced"; exit 1; }
-            say "kept the accounts and passwords of the previous $os"
+            # the log line says what the shadow will hold: with a hash, or PW_SET=1 (the Magisk installer's
+            # MU300_PASSWORD_RESET=yes, or a system that still had the images' accounts), the system's own account
+            # gets PWHASH below, and only the other accounts keep their passwords
+            if [ -n "$PWHASH" ]; then
+                say "kept the other accounts of the previous $os; $pwu's password is the one the installer chose (the images' own, or MU300_PASSWORD)"
+            elif [ "${PW_SET:-0}" = 1 ]; then
+                say "kept the other accounts of the previous $os; $pwu's password is the images' own again: none, until one is set"
+            else
+                say "kept the accounts and passwords of the previous $os"
+            fi
         fi
         extra_keep_vpn $M $M/$os
         [ -n "$extra" ] && say "kept enabled services:$extra"
