@@ -201,9 +201,21 @@ The 2026-10-12 follow-up retains the maintainer's #165 commits and merges
 main `c47e2c9`. r9 adds a configuration-stage single-BSS restriction and static
 SAE requirements, with 16 SAE/parser/SDK/privacy tests passing (required UBSan)
 and 47 static checks passing. The matching r9 pair builds through the official
-SDK (`MU300_JOBS=1`). This revision has not been installed or hardware-tested;
-it does not establish why adding the second r8 BSS stopped the maintainer's
-radio or prove a successful recovery from that case. The PMK trust finding
+SDK (`MU300_JOBS=1`). r9 was subsequently installed on the local U30 Air (OpenWrt 25.12.5,
+kernel 7.2.9) with offline r8 rollback packages retained. The actual hostapd
+binary rejected three synthetic configurations at configuration load: the
+first or second BSS opting in on a two-BSS radio, and a single WPA2 BSS opting
+in. Each exited with its explicit U30 configuration error before driver
+initialization; the running single-BSS configuration stayed unchanged.
+
+An independent Linux Wi-Fi interface completed pure SAE with required PMF,
+DHCP and router HTTP (200). A complete wpad/Wi-Fi restart and a fresh client
+connection also passed. Certificate-verified TLS 1.2 HTTPS to the same site
+returned 200 over Wi-Fi and USB. The wireless configuration and both module
+files were unchanged. This validates r9 with the previously installed modules;
+it is not a new-module test or a live second-BSS reload reproduction. It does
+not establish why the second r8 BSS stopped the maintainer's radio or prove
+recovery from that case. The PMK trust finding
 remains open. Existing r8 device results below apply to r8, not r9.
 
 The latest follow-up is rebased onto main `7a044d5`. The marker-length
