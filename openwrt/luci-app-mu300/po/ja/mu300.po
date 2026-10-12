@@ -618,8 +618,17 @@ msgstr "本文"
 msgid "Form (URL-encoded)"
 msgstr "フォーム（URL エンコード）"
 
+msgid "Plain text"
+msgstr "プレーンテキスト"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "フィールド: sender, time, text, device, message（埋め込み済みテンプレート）"
+
+msgid "Custom body"
+msgstr "カスタム本文"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "空欄: 標準のフィールド（プレーンテキスト: メッセージ）。プレースホルダー: {sender}、{time}、{text}、{device}、{message}。各値は選択した形式に合わせてエスケープされます。この本文はここに再表示されます。秘密情報はアドレスかヘッダーに入れてください。"
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "追加ヘッダー（1 行に 1 つの \"Name: value\"）"
@@ -2945,6 +2954,9 @@ msgstr "無効なフィルター一覧（最大 50 行）"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhook のアドレスは http:// または https:// の URL である必要があります"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhook の本文が長すぎるか、制御文字を含んでいます"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "無効なヘッダー（1 行に 1 つの \"Name: value\"。Host、Content-Type、Content-Length、Transfer-Encoding、Connection はデバイスが設定します）"

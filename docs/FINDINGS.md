@@ -118,6 +118,7 @@ what replaced it. The table below gives each section's state.
 | 51 | SMS delivered directly (+CMT), acknowledged only once the pool has it; the SIM path stays as the fallback | current |
 | 52 | The lock reset deleted the saved locks whether or not the modem took them: a verified reset | current (fixed) |
 | 53 | A carrier name shown as hex: UCS2 from a modem whose character set is not UCS2 (#174) | current (fixed; unit tests and a user's report, not measured on our boards) |
+| 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
 
 ## Hardware and firmware facts
 
@@ -4303,3 +4304,45 @@ alphabet): the report, the code and unit tests.
 
 Open: a name of two or more code units that are all decimal digits (U+8054 U+9010 would be `80549010`) stays hex
 under a character set other than UCS2 - the price of leaving digit names alone. Not seen in a report.
+### 54. A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171)
+
+The webhook of §39 sent one of two fixed bodies (JSON or a form with `sender`, `time`, `text`, `device`,
+`message`), which no chat service accepts as it is (issue #171: Lark/Feishu, DingTalk, WeCom, Slack, Discord, Bark,
+ntfy). Measured on this machine only (unit tests against the stub HTTP helper: dash and bash on macOS, busybox ash
+and dash with busybox 1.37 as awk in a Debian container); not sent from a device to a real service.
+
+* **A backslash in a template was stored bare (found here, older than the body).** The adapter wrote a template to
+  its one line with `gsub(/\\/, "\\\\")`. What that replacement means differs between awks: macOS's awk writes two
+  backslashes, busybox awk - the device's - writes one. So on the device a template's `\n` (two characters) was
+  stored as it was and read back as a line break, and `\"` lost its backslash. Nobody reported it for the message
+  template, but a JSON body is made of exactly those. `esc_tpl` now doubles backslashes with `index()` and a
+  concatenation, with no replacement string; the test that pins it fails with the old code only where awk is
+  busybox, which is why the macOS run never saw it.
+
+* **What was added.** A body template of the user's own (`webhook_body` in `/etc/mu300/sms-forward.conf`, stored on
+  one line like the message template) with `{sender}`, `{time}`, `{text}`, `{device}` and `{message}` (the message
+  template filled in), and a third type, plain text. The type is the `Content-Type` - which stays the device's to
+  set, never a header of the user's - and decides how a value is written into the body: JSON as the inside of a
+  string (quote, backslash and every control character escaped; the quotes are the template's), form
+  percent-encoded, text as it is. An empty body is the standard one, byte for byte what it was; for plain text that
+  is the message alone.
+* **Why a message cannot break out of the body.** One awk function (`fill` in `mu300-sms-forward`, which the message
+  template now uses too) gets the template and the values in its environment and only copies them: no shell, no
+  `eval`, no `awk -v` (which reads escapes), and one pass - a `{sender}` that arrives inside an SMS is text. The
+  tests send a sender and a text made of quotes, backslashes, `","admin":true`, `$(...)`, backticks, `&d=e` and
+  control characters through each type and parse what comes out.
+* **Limits.** The panel takes 2000 bytes of template and no control character but newline and tab; the forwarder
+  refuses a filled-in body over 64 KiB (`the webhook body is too large` in the log, not retried), so a template that
+  repeats `{text}` cannot grow without bound.
+* **Not a secret.** The address and the headers never come back to the page (§39); the body does, because a
+  template that cannot be read cannot be edited, and an empty field has to mean "the standard body", not "keep".
+  The page says so and tells the user to keep keys in the address or a header. A service that wants a key inside
+  the body is the case this does not serve well.
+* **Not validated.** A JSON body is not checked when it is saved: the device has no JSON parser the tests can run,
+  and a check that wrongly refused a valid body would be worse than none. "Send test" sends the saved body and the
+  log shows the server's status.
+
+Open, from the same issue: a service that answers HTTP 200 with its own error inside (DingTalk `errcode`, Feishu
+`code`) is logged as delivered - the HTTP helper passes on the status and nothing of the reply's body
+(`sms-forward-http.uc`), so that no reply reaches a log; and the delivery log (RAM, the last 100 lines) has no clear
+button. Section 53 is PR #195's (the carrier name); this branch does not have it.

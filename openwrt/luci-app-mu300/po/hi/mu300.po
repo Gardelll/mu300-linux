@@ -618,8 +618,17 @@ msgstr "बॉडी"
 msgid "Form (URL-encoded)"
 msgstr "फ़ॉर्म (URL-एन्कोडेड)"
 
+msgid "Plain text"
+msgstr "सादा पाठ"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "फ़ील्ड: sender, time, text, device, message (भरा हुआ टेम्पलेट)"
+
+msgid "Custom body"
+msgstr "कस्टम बॉडी"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "खाली: मानक फ़ील्ड (सादा पाठ: संदेश)। प्लेसहोल्डर: {sender}, {time}, {text}, {device}, {message}। हर मान चुने गए प्रकार के अनुसार एस्केप किया जाता है। यह बॉडी यहाँ फिर दिखाई जाती है: गोपनीय जानकारी पते या किसी हेडर में रखें।"
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "अतिरिक्त हेडर (प्रति पंक्ति एक \"Name: value\")"
@@ -2945,6 +2954,9 @@ msgstr "अमान्य फ़िल्टर सूची (अधिकत�
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "वेबहुक का पता http:// या https:// URL होना चाहिए"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "वेबहुक बॉडी बहुत लंबी है या उसमें कोई नियंत्रण वर्ण है"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "अमान्य हेडर (प्रति पंक्ति एक \"Name: value\"; Host, Content-Type, Content-Length, Transfer-Encoding और Connection डिवाइस सेट करता है)"

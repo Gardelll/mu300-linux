@@ -618,8 +618,17 @@ msgstr "Telo"
 msgid "Form (URL-encoded)"
 msgstr "Formulár (kódovanie URL)"
 
+msgid "Plain text"
+msgstr "Obyčajný text"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Polia: sender, time, text, device, message (vyplnená šablóna)"
+
+msgid "Custom body"
+msgstr "Vlastné telo"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Prázdne: štandardné polia (obyčajný text: správa). Zástupné symboly: {sender}, {time}, {text}, {device}, {message}. Každá hodnota sa escapuje podľa zvoleného typu. Toto telo sa tu znova zobrazí: tajné údaje dajte do adresy alebo do hlavičky."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Ďalšie hlavičky (jedna \"Názov: hodnota\" na riadok)"
@@ -2945,6 +2954,9 @@ msgstr "Neplatný zoznam filtrov (najviac 50 riadkov)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Adresa webhooku musí byť URL http:// alebo https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Telo webhooku je príliš dlhé alebo obsahuje riadiaci znak"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Neplatná hlavička (jedna \"Názov: hodnota\" na riadok; Host, Content-Type, Content-Length, Transfer-Encoding a Connection nastavuje zariadenie)"

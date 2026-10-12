@@ -618,8 +618,17 @@ msgstr "Тяло"
 msgid "Form (URL-encoded)"
 msgstr "Формуляр (URL кодиран)"
 
+msgid "Plain text"
+msgstr "Обикновен текст"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Полета: sender, time, text, device, message (попълненият шаблон)"
+
+msgid "Custom body"
+msgstr "Собствено тяло"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Празно: стандартните полета (обикновен текст: съобщението). Заместители: {sender}, {time}, {text}, {device}, {message}. Всяка стойност се екранира според избрания тип. Това тяло се показва тук отново: дръжте тайните в адреса или в заглавка."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Допълнителни заглавки (по една \"Име: стойност\" на ред)"
@@ -2945,6 +2954,9 @@ msgstr "Невалиден списък с филтри (най-много 50 р
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Адресът на уебкуката трябва да е URL с http:// или https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Тялото на webhook е твърде дълго или съдържа управляващ знак"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Невалидна заглавка (по една \"Име: стойност\" на ред; Host, Content-Type, Content-Length, Transfer-Encoding и Connection се задават от устройството)"

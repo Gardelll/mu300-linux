@@ -618,8 +618,17 @@ msgstr "Treść"
 msgid "Form (URL-encoded)"
 msgstr "Formularz (kodowanie URL)"
 
+msgid "Plain text"
+msgstr "Zwykły tekst"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Pola: sender, time, text, device, message (wypełniony szablon)"
+
+msgid "Custom body"
+msgstr "Własna treść"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Puste: pola standardowe (zwykły tekst: wiadomość). Symbole zastępcze: {sender}, {time}, {text}, {device}, {message}. Każda wartość jest poddawana escapowaniu zgodnie z wybranym typem. Ta treść jest tu ponownie wyświetlana: sekrety umieszczaj w adresie lub w nagłówku."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Dodatkowe nagłówki (jeden \"Nazwa: wartość\" w wierszu)"
@@ -2945,6 +2954,9 @@ msgstr "Nieprawidłowa lista filtrów (najwyżej 50 wierszy)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Adres webhooka musi być adresem URL http:// lub https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Treść webhooka jest zbyt długa lub zawiera znak sterujący"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Nieprawidłowy nagłówek (jeden \"Nazwa: wartość\" w wierszu; Host, Content-Type, Content-Length, Transfer-Encoding i Connection ustawia urządzenie)"
