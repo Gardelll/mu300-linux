@@ -2744,6 +2744,46 @@ for every 7.2 kernel - the F50 runs the same one), capacity learning and the 0.1
 was not verified by its author), the TCPM stack (PD at 5 V gives nothing over the Rp read), and the build's mu300-usb,
 which drops the boost and with it host mode on battery.
 
+### 33m. The ABSSV U30 Air's charger bus under mainline, and a pin controller (issue #102)
+
+A second U30 Air firmware variant, `U30Air_ABSSV1.0.0B14` (chip id `UMS9620-AB`; ours is `SSV1.0.0B14`): under
+6.18/7.2 the charger never binds (`bq256xx-charger 6-006b: error -19: no charger: -5`, an I2C NACK on the first
+register read), the battery discharges on the cable, and under Android and the project's 5.4 kernel the same unit
+charges. Bus 2 (the NFC tag) works in the same boot, so the I2C subsystem is fine; bus 6 is dead to every device on
+it. One trap the reporter found: `i2cget -y 6` fails on *every* kernel of this unit, Android included, while the
+in-kernel charger driver works - and `i2cdetect -y 6` wedges the controller until a reboot - so userspace SMBus
+reads prove nothing about this bus; only the driver's bind does.
+
+What the two stacks do with the bus-6 pads (SCL6/SDA6, pins 188/189 of the pin controller at 0x642e0000):
+
+- Mainline boots with the vendor DTB unchanged (upstream/README.md), so the DT the kernel sees is Unisoc's: the pin
+  controller `/soc/aon/pinctrl@2e0000` (`sprd,qogirn6pro-pinctrl`) with the board's groups, and `i2c@22a0000`
+  without `pinctrl-names`/`pinctrl-0`. No group names SCL6/SDA6 at all (42 groups: audio, eMMC, SIM, keypad), and
+  the board's own states on the controller are hogs named `gpio_4` ... `gpio_124`, not `default`, so the vendor
+  kernel applies none of them at probe either. On every kernel the pads are as LK left them.
+- Mainline had no pin controller driver for this SoC (only the SC9860's), so `/sys/kernel/debug/pinctrl` was empty
+  and nothing could set or even read a pad.
+
+Patch 0013 ports Unisoc's `pinctrl-sprd-qogirn6pro.c` (GPL-2.0, 511 pins) onto mainline's pinctrl-sprd core: the
+core takes the common/misc register offsets from the SoC driver (0x44/0x444 here, 0x20/0x4020 on the SC9860) and
+the pin encoding grows to Unisoc's (5-bit register index). It binds to the vendor DTB's node as it is. For the
+charger bus it does what a DT group would: it logs both pads' registers (the bootloader's state) and puts them on
+func1 (the pad's own function, the I2C) when they are not - `pinctrl_sprd_qogirn6pro.i2c6_fixup=0` only logs.
+Whether the ABSSV LK really leaves the pads elsewhere is the open question: the same LK boots 5.4 and mainline, and
+5.4 does not touch them either, so the first boot of the patched kernel on that unit decides (the log line
+`QOGIRN6PRO_SCL6: ctl 0x... (funcN) misc 0x..., iic_inf6_sel N`). The register addresses, for a `devmem` comparison
+between 7.2 and 5.4 on the same unit: IIC_INF6_SYS_SEL = bits 27:24 of 0x642e0020 (which AP controller drives pad
+pair 6; 6 on the reporter's unit under Android), SCL6/SDA6 control 0x642e0228/0x642e022c (function select in bits
+5:4: 0 = func1), their misc registers 0x642e0628/0x642e062c, and the i2c6 controller at 0x222a0000.
+
+What else differs between 5.4 and mainline on that bus, should the pads turn out identical: the vendor i2c driver
+sets `I2C_NACK_EN | I2C_TRANS_EN` in I2C_CTL where mainline sets `I2C_EN | I2C_INT_EN` only, and it has a soft reset
+(`RESET_AP_AHB_I2C6_SOFT_RST`) on a transfer timeout; both drivers take the same clocks (`CLK_I2C6_EB`,
+`CLK_AP_I2C6` from `ext_26m`) from the same DTB.
+
+On our (SSV) unit the pin controller must change nothing: the log shows the pads' state, and the fixup only writes
+when the function select is not func1.
+
 ### 34. LEDs, and the defects from a second board's test
 A second F50 (restored from F50 #1's backup, with its own eMMC and factory Wi-Fi address) was tested from a user's
 point of view; what came out of it, measured on 2026-10-05:
