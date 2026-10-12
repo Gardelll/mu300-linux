@@ -30,15 +30,12 @@ release)
         [ "$age" -gt 600 ] || { echo "published just now: the 'published' event announces it"; exit 0; }
         kind="Now the latest release"
         lead="Tested on the boards and promoted. Devices on an earlier release take it with <code>mu300-update apply</code>; the installer and the Magisk installers ship it from now on."
-        tr="Testleri geçti, son sürüm oldu. Cihazda güncelleme: <code>mu300-update apply</code>"
     elif [ "$pre" = true ]; then
         kind="Pre-release"
         lead="Under test on the boards; it becomes the latest release once it passes. To try it now: <code>MU300_RELEASE=$(printf '%s' "$TAG" | esc) mu300-update apply</code>"
-        tr="Ön sürüm, cihazlarda test ediliyor; geçince son sürüm olur."
     else
         kind="New release"
         lead="Devices update with <code>mu300-update apply</code>. New installations: the installer and images on the release page; the Magisk installers follow shortly."
-        tr="Yeni sürüm. Cihazda güncelleme: <code>mu300-update apply</code>"
     fi
     # the "New in TAG" list of the wiki Home on main (the docs usually land after the tag): one line per bullet
     # (wrapped lines joined, long ones shortened), bold kept, links to the wiki's own pages dropped, other links
@@ -63,9 +60,7 @@ $lead"
 $new"
     text="$text
 
-<a href=\"$URL\">Release page</a> ($nassets files: images, kernels 5.4 / 6.18 / 7.2, installer) · <a href=\"https://github.com/$REPO/wiki/Home\">Wiki</a> · <a href=\"https://kaandikec.com/mu300-linux/\">Site</a>
-
-🇹🇷 $tr"
+<a href=\"$URL\">Release page</a> ($nassets files: images, kernels 5.4 / 6.18 / 7.2, installer) · <a href=\"https://github.com/$REPO/wiki/Home\">Wiki</a> · <a href=\"https://kaandikec.com/mu300-linux/\">Site</a>"
     ;;
 zips)
     text="<b>MU300 Linux $(printf '%s' "$TAG" | esc)</b>
@@ -73,9 +68,7 @@ Magisk installers attached
 
 $nzips zips on the release page: Ubuntu 24.04 and 26.04, OpenWrt, OpenWrt with the control panel — each with kernel 5.4, 6.18 or 7.2. Install from Magisk › Modules on the device; no computer needed.
 
-<a href=\"$URL\">Release page</a> · <a href=\"https://github.com/$REPO/wiki/Installation\">Installation guide</a>
-
-🇹🇷 Magisk zip'leri hazır: cihazda Magisk › Modüller'den, bilgisayarsız kurulum."
+<a href=\"$URL\">Release page</a> · <a href=\"https://github.com/$REPO/wiki/Installation\">Installation guide</a>"
     ;;
 *) echo "usage: $0 release|zips TAG [published|released]" >&2; exit 2 ;;
 esac

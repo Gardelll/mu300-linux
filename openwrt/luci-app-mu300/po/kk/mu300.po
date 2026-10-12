@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Жылу"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Ядроның жылу аймақтары, тек оқу үшін. Шекті нүктелері бар аймақ өзіне байланған салқындату құрылғыларын пассивті шегінде шектейді; салқындату күйі 0 — шектеу жоқ."
+
+msgid "Zone"
+msgstr "Аймақ"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Шекті нүктелер"
+
+msgid "Cooling devices"
+msgstr "Салқындату құрылғылары"
+
 msgid "USB role"
 msgstr "USB рөлі"
 
@@ -830,6 +848,9 @@ msgstr "Модем"
 
 msgid "Carrier"
 msgstr "Оператор"
+
+msgid "Own number"
+msgstr "Өз нөмірі"
 
 msgid "Module"
 msgstr "Модуль"

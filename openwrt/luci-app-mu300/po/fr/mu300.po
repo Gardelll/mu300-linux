@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Thermique"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Les zones thermiques du noyau, en lecture seule. Une zone avec des points de déclenchement limite les dispositifs de refroidissement qui lui sont liés à son point passif ; un état de refroidissement 0 signifie aucune limitation."
+
+msgid "Zone"
+msgstr "Zone"
+
+msgid "Temperature"
+msgstr "Température"
+
+msgid "Trip points"
+msgstr "Points de déclenchement"
+
+msgid "Cooling devices"
+msgstr "Dispositifs de refroidissement"
+
 msgid "USB role"
 msgstr "Rôle USB"
 
@@ -830,6 +848,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Opérateur"
+
+msgid "Own number"
+msgstr "Numéro propre"
 
 msgid "Module"
 msgstr "Module"

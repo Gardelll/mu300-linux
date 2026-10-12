@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "열 관리"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "커널의 열 영역(읽기 전용)입니다. 트립 포인트가 있는 영역은 패시브 트립에서 연결된 냉각 장치를 제한합니다. 냉각 상태 0은 제한이 없음을 뜻합니다."
+
+msgid "Zone"
+msgstr "영역"
+
+msgid "Temperature"
+msgstr "온도"
+
+msgid "Trip points"
+msgstr "트립 포인트"
+
+msgid "Cooling devices"
+msgstr "냉각 장치"
+
 msgid "USB role"
 msgstr "USB 역할"
 
@@ -830,6 +848,9 @@ msgstr "모뎀"
 
 msgid "Carrier"
 msgstr "통신사"
+
+msgid "Own number"
+msgstr "내 번호"
 
 msgid "Module"
 msgstr "모듈"
