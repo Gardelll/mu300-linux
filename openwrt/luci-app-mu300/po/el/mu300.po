@@ -618,8 +618,17 @@ msgstr "Σώμα"
 msgid "Form (URL-encoded)"
 msgstr "Φόρμα (κωδικοποίηση URL)"
 
+msgid "Plain text"
+msgstr "Απλό κείμενο"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Πεδία: sender, time, text, device, message (το συμπληρωμένο πρότυπο)"
+
+msgid "Custom body"
+msgstr "Προσαρμοσμένο σώμα"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Κενό: τα τυπικά πεδία (απλό κείμενο: το μήνυμα). Σύμβολα κράτησης θέσης: {sender}, {time}, {text}, {device}, {message}. Κάθε τιμή διαφεύγεται ανάλογα με τον επιλεγμένο τύπο. Αυτό το σώμα εμφανίζεται ξανά εδώ: κρατήστε τα μυστικά στη διεύθυνση ή σε κεφαλίδα."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Επιπλέον κεφαλίδες (μία \"Όνομα: τιμή\" ανά γραμμή)"
@@ -2945,6 +2954,9 @@ msgstr "Μη έγκυρη λίστα φίλτρων (έως 50 γραμμές)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Η διεύθυνση του webhook πρέπει να είναι URL http:// ή https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Το σώμα του webhook είναι πολύ μεγάλο ή περιέχει χαρακτήρα ελέγχου"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Μη έγκυρη κεφαλίδα (μία \"Όνομα: τιμή\" ανά γραμμή· τα Host, Content-Type, Content-Length, Transfer-Encoding και Connection τα ορίζει η συσκευή)"

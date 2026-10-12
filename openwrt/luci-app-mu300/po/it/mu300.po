@@ -618,8 +618,17 @@ msgstr "Corpo"
 msgid "Form (URL-encoded)"
 msgstr "Modulo (codificato URL)"
 
+msgid "Plain text"
+msgstr "Testo semplice"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Campi: sender, time, text, device, message (il modello compilato)"
+
+msgid "Custom body"
+msgstr "Corpo personalizzato"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Vuoto: i campi standard (testo semplice: il messaggio). Segnaposto: {sender}, {time}, {text}, {device}, {message}. Ogni valore viene sottoposto a escape secondo il tipo scelto. Questo corpo viene mostrato di nuovo qui: tenere i segreti nell'indirizzo o in un'intestazione."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Intestazioni aggiuntive (un \"Nome: valore\" per riga)"
@@ -2945,6 +2954,9 @@ msgstr "Elenco di filtri non valido (al massimo 50 righe)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "L'indirizzo del webhook deve essere un URL http:// o https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Il corpo del webhook è troppo lungo o contiene un carattere di controllo"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Intestazione non valida (un \"Nome: valore\" per riga; Host, Content-Type, Content-Length, Transfer-Encoding e Connection li imposta il dispositivo)"
