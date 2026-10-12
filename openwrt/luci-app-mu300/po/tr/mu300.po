@@ -780,6 +780,9 @@ msgstr "Toplam gönderilen"
 msgid "Used today"
 msgstr "Bugün kullanılan"
 
+msgid "SIM source"
+msgstr "SIM kaynağı"
+
 msgid "Session duration"
 msgstr "Oturum süresi"
 
@@ -995,6 +998,12 @@ msgstr "Sıfırlama başarısız: %s. Kaydedilen kilit ayarları korundu."
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Kilit sıfırlaması zamanında doğrulanamadı; yine de geçiliyor."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Dahili SIM seçildi: yeniden başlatmadan sonra kullanılır"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Dahili SIM seçildi, ancak bu cihazda desteklenmiyor: harici SIM kullanılıyor"
 
 msgid "Uptime %s"
 msgstr "Çalışma süresi %s"

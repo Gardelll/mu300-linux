@@ -780,6 +780,9 @@ msgstr "Sendt i alt"
 msgid "Used today"
 msgstr "Brugt i dag"
 
+msgid "SIM source"
+msgstr "SIM-kilde"
+
 msgid "Session duration"
 msgstr "Sessionsvarighed"
 
@@ -995,6 +998,12 @@ msgstr "Nulstilling mislykkedes: %s. De gemte låseindstillinger blev beholdt."
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Nulstillingen af låsene blev ikke bekræftet i tide; skifter alligevel."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Intern SIM valgt: bruges efter en genstart"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Intern SIM valgt, men understøttes ikke på denne enhed: den eksterne SIM er i brug"
 
 msgid "Uptime %s"
 msgstr "Oppetid %s"

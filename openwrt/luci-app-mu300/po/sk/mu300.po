@@ -780,6 +780,9 @@ msgstr "Celkom odoslané"
 msgid "Used today"
 msgstr "Dnes spotrebované"
 
+msgid "SIM source"
+msgstr "Zdroj SIM"
+
 msgid "Session duration"
 msgstr "Trvanie relácie"
 
@@ -995,6 +998,12 @@ msgstr "Reset zlyhal: %s. Uložené nastavenia zámkov boli zachované."
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Obnovenie zámkov nebolo včas potvrdené; prepína sa aj tak."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Vybraná interná SIM: použije sa po reštarte"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Vybraná interná SIM, ale toto zariadenie ju nepodporuje: používa sa externá SIM"
 
 msgid "Uptime %s"
 msgstr "Doba prevádzky %s"

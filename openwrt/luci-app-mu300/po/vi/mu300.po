@@ -780,6 +780,9 @@ msgstr "Tổng đã gửi"
 msgid "Used today"
 msgstr "Đã dùng hôm nay"
 
+msgid "SIM source"
+msgstr "Nguồn SIM"
+
 msgid "Session duration"
 msgstr "Thời lượng phiên"
 
@@ -995,6 +998,12 @@ msgstr "Đặt lại thất bại: %s. Các thiết lập khóa đã lưu đư�
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Không xác nhận kịp việc đặt lại khóa; vẫn chuyển."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Đã chọn SIM trong máy: được dùng sau khi khởi động lại"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Đã chọn SIM trong máy, nhưng thiết bị này không hỗ trợ: SIM ngoài đang được dùng"
 
 msgid "Uptime %s"
 msgstr "Thời gian hoạt động %s"

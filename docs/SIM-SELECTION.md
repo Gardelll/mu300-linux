@@ -48,6 +48,28 @@ On systemd installations, `mu300-sim select` stores the choice in
 `/etc/mu300/sim-slot`; configure the selected carrier in the existing
 `/etc/mu300/mobile-data.conf`. The two-profile LuCI editor is OpenWrt-specific.
 
+## Devices without slot 1 (the U30 Air)
+
+Slot 1 was validated on the F50 only, and `mu300-sim` accepts it there only: on any other detected device
+`mu300-sim select internal` refuses, `mu300-sim status --json` says `slot1_supported: 0`, and a saved
+`network.wan.sim_slot=1` is ignored for the boot (`mu300-sim: ignoring unsupported slot 1; using external slot 0`),
+so every reader - the WAN, the AT daemons, the dashboard - stays on the external card.
+
+The pages say so (issue #194; they offered the internal SIM on every device, and a U30 Air then showed the external
+card's operator with no hint why):
+
+- `dashboard-info` (the panel's local snapshot, `mu300dash sysinfo`/`status`) carries `"sim": {"slot": 0|1,
+  "wanted": 0|1, "slot1_supported": 0|1}` from `mu300-sim status --json` (`null` without the selector).
+- Network → Interfaces → WAN (`protocol/mu300cell.js`) reads it and does not offer **Internal SIM** where
+  `slot1_supported` is 0. If the configuration already has slot 1, the entry stays as "Internal SIM (slot 1): not
+  supported on this device", so the page shows what is saved; choosing the external SIM and saving puts it right.
+  Without the panel, or when the call fails, both sources are offered as before.
+- The home page's connection card gets a **SIM source** row only when the card asked for is not the one in use:
+  "not supported on this device: the external SIM is in use", or on the F50 "in use after a reboot".
+
+The U30 Air's second SIM is a different piece of work (its own channel layout and a live switch), in progress as
+PR #166; nothing above enables it.
+
 ## Why the data-route command is needed
 
 On the tested F50, the internal card registered, received a PDP address, and

@@ -780,6 +780,9 @@ msgstr "Totaal verzonden"
 msgid "Used today"
 msgstr "Vandaag gebruikt"
 
+msgid "SIM source"
+msgstr "SIM-bron"
+
 msgid "Session duration"
 msgstr "Sessieduur"
 
@@ -995,6 +998,12 @@ msgstr "Reset mislukt: %s. De opgeslagen vergrendelingsinstellingen zijn behoude
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Het resetten van de vergrendelingen is niet op tijd bevestigd; er wordt toch gewisseld."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Interne SIM gekozen: in gebruik na een herstart"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Interne SIM gekozen, maar niet ondersteund op dit apparaat: de externe SIM is in gebruik"
 
 msgid "Uptime %s"
 msgstr "Uptime %s"

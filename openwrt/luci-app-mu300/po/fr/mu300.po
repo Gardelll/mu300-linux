@@ -780,6 +780,9 @@ msgstr "Total envoyé"
 msgid "Used today"
 msgstr "Utilisé aujourd'hui"
 
+msgid "SIM source"
+msgstr "Source SIM"
+
 msgid "Session duration"
 msgstr "Durée de la session"
 
@@ -995,6 +998,12 @@ msgstr "Échec de la réinitialisation : %s. Les réglages de verrouillage enreg
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "La réinitialisation des verrouillages n'a pas été confirmée à temps ; bascule quand même."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "SIM interne sélectionnée : utilisée après un redémarrage"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "SIM interne sélectionnée, mais non prise en charge sur cet appareil : la SIM externe est utilisée"
 
 msgid "Uptime %s"
 msgstr "Disponibilité %s"

@@ -780,6 +780,9 @@ msgstr "Összes küldött"
 msgid "Used today"
 msgstr "Ma felhasznált"
 
+msgid "SIM source"
+msgstr "SIM-forrás"
+
 msgid "Session duration"
 msgstr "Munkamenet időtartama"
 
@@ -995,6 +998,12 @@ msgstr "A visszaállítás nem sikerült: %s. A mentett zárolási beállításo
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "A zárak visszaállítása nem erősítődött meg időben; a váltás így is megtörténik."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Belső SIM kiválasztva: újraindítás után lesz használatban"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Belső SIM kiválasztva, de ez az eszköz nem támogatja: a külső SIM van használatban"
 
 msgid "Uptime %s"
 msgstr "Üzemidő: %s"

@@ -780,6 +780,9 @@ msgstr "送信合計"
 msgid "Used today"
 msgstr "今日の使用量"
 
+msgid "SIM source"
+msgstr "SIM の選択"
+
 msgid "Session duration"
 msgstr "セッション時間"
 
@@ -995,6 +998,12 @@ msgstr "リセットに失敗しました: %s。保存されたロック設定�
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "ロックのリセットを時間内に確認できませんでした。そのまま切り替えます。"
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "内蔵 SIM を選択済み: 再起動後に使用されます"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "内蔵 SIM を選択済みですが、このデバイスでは対応していません: 外部 SIM を使用中です"
 
 msgid "Uptime %s"
 msgstr "稼働時間 %s"

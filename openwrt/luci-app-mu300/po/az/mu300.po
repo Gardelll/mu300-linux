@@ -780,6 +780,9 @@ msgstr "Cəmi göndərilən"
 msgid "Used today"
 msgstr "Bu gün istifadə edilən"
 
+msgid "SIM source"
+msgstr "SIM mənbəyi"
+
 msgid "Session duration"
 msgstr "Sessiya müddəti"
 
@@ -995,6 +998,12 @@ msgstr "Sıfırlama alınmadı: %s. Saxlanmış kilid ayarları saxlanıldı."
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Kilidlərin sıfırlanması vaxtında təsdiqlənmədi; yenə də keçilir."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Daxili SIM seçilib: yenidən başladıldıqdan sonra istifadə olunacaq"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Daxili SIM seçilib, lakin bu cihazda dəstəklənmir: xarici SIM istifadə olunur"
 
 msgid "Uptime %s"
 msgstr "İş müddəti %s"

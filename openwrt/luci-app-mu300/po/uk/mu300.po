@@ -780,6 +780,9 @@ msgstr "Усього надіслано"
 msgid "Used today"
 msgstr "Використано сьогодні"
 
+msgid "SIM source"
+msgstr "Джерело SIM"
+
 msgid "Session duration"
 msgstr "Тривалість сеансу"
 
@@ -995,6 +998,12 @@ msgstr "Скидання не вдалося: %s. Збережені налаш�
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Скидання блокувань не підтвердилося вчасно; перемикання все одно виконується."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Вибрано вбудовану SIM: використовуватиметься після перезавантаження"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Вибрано вбудовану SIM, але на цьому пристрої вона не підтримується: використовується зовнішня SIM"
 
 msgid "Uptime %s"
 msgstr "Час роботи %s"
