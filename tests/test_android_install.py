@@ -537,17 +537,23 @@ class Systems(ShellTest):
             self.assertIn('ubuntu:$6$new$hash:', shadow)
             self.assertNotIn('kaan', shadow)
 
-    def test_never_a_default_or_empty_password(self):
-        # fail closed: without a new hash a system is installed only when its account keeps a real hash of its own;
-        # otherwise the old system stays as it was and the install stops (the boot image is never armed)
-        cases = (  # name, os, the old system's shadow (None: no old system / no shadow file), image shadow
-            ('fresh, no hash given', 'ubuntu', None, None),
-            ('old system without a shadow', 'ubuntu', '', None),
-            ('OpenWrt root with an empty password', 'openwrt', 'root::19000:0:99999:7:::\n', None),
-            ('locked account', 'ubuntu', 'root:*:1::\nubuntu:!:19000::::::\n', None),
-            ('no entry for the account', 'ubuntu', 'root:$6$a$b:1::\n', None),
-            ('the image default carried over', 'ubuntu', 'root:*:1::\nubuntu:$6$image$ubuntu:19000::::::\n', None))
-        for name, os_, old, _ in cases:
+    def test_the_images_accounts_stand_without_a_hash(self):
+        # issue #167: the images' passwords are the well-known ones (ubuntu/ubuntu, OpenWrt's root without one), and
+        # a system is never refused for having them. Without a hash a new system keeps the image's shadow, an update
+        # the accounts carried over (whatever they hold), and the mark that has mu300-update carry some <os>.old's
+        # accounts over at boot never stays. PW_SET=1 puts PWHASH in even when it is empty: OpenWrt's root without a
+        # password, also over one an update would carry over (MU300_PASSWORD_RESET=yes).
+        cases = (  # name, os, the old system's shadow (None: no old system; '': no shadow file), PW_SET, what root/ubuntu keeps
+            ('fresh, no hash given', 'ubuntu', None, '0', 'ubuntu:$6$image$ubuntu:'),
+            ('fresh, the Magisk zip', 'ubuntu', None, '1', 'ubuntu::'),           # the installer sends a hash for Ubuntu; empty is empty
+            ('fresh OpenWrt, the Magisk zip', 'openwrt', None, '1', 'root::'),
+            ('old system without a shadow', 'ubuntu', '', '0', 'ubuntu:$6$image$ubuntu:'),
+            ('OpenWrt root with an empty password', 'openwrt', 'root::19000:0:99999:7:::\n', '0', 'root::'),
+            ('OpenWrt root reset to none', 'openwrt', 'root:$6$old$root:19000:0:99999:7:::\n', '1', 'root::'),
+            ('locked account', 'ubuntu', 'root:*:1::\nubuntu:!:19000::::::\n', '0', 'ubuntu:!:'),
+            ('no entry for the account', 'ubuntu', 'root:$6$a$b:1::\n', '0', 'ubuntu:$6$image$ubuntu:'),
+            ('the image default carried over', 'ubuntu', 'root:*:1::\nubuntu:$6$image$ubuntu:19000::::::\n', '0', 'ubuntu:$6$image$ubuntu:'))
+        for name, os_, old, pw_set, keeps in cases:
             with self.subTest(name):
                 for shell in self.each_shell():
                     shutil.rmtree(self.M / os_, ignore_errors=True)
@@ -560,14 +566,12 @@ class Systems(ShellTest):
                         (self.M / os_ / 'etc' / 'precious').write_text('old\n')
                         if old:
                             (self.M / os_ / 'etc' / 'shadow').write_text(old)
-                    r = self.run_install(shell, fails=True, OSES=os_, BOOT_OS=os_, UPDATE='1' if old is not None else '0')
-                    self.assertIn('would keep no password of its own', r.stdout)
+                    self.run_install(shell, OSES=os_, BOOT_OS=os_, UPDATE='1' if old is not None else '0', PW_SET=pw_set)
                     self.assertFalse((self.M / f'{os_}.new').exists())
-                    if old is not None:
-                        self.assertEqual((self.M / os_ / 'etc' / 'precious').read_text(), 'old\n')
-                    else:
-                        self.assertFalse((self.M / os_).exists())
-        # the same with a new hash: installed, the hash in place
+                    self.assertIn(keeps, (self.M / os_ / 'etc' / 'shadow').read_text())
+                    self.assertFalse((self.M / os_ / 'etc' / '.mu300-accounts-from-image').exists())
+                    self.assertFalse((self.M / os_ / 'etc' / 'precious').exists())
+        # with a new hash: installed, the hash in place
         for shell in self.each_shell():
             shutil.rmtree(self.M / 'openwrt', ignore_errors=True)
             self.tarball('openwrt', {'etc/shadow': 'root::19000:0:99999:7:::\n'})

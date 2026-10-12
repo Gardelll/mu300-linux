@@ -3820,3 +3820,40 @@ Device test (a U30 Air whose line answers `mu300-sms send 7000 KALAN` with a two
 `/opt/mu300/bin/mu300-sms send 7000 KALAN` must show `AT+CSCA?` and the same-value `AT+CSCA=` in the daemon's answer
 files, `/run/mu300-at/lock` gone afterwards, and the reply pooled; through the panel's SMS page the toast must go
 "Sending…" and then "Sent" with the operations log carrying `sms_send ... ok` and `sms_send result ... ok`.
+
+### 47. A system the Magisk zip added beside another had a password nobody saw (#167)
+
+Reported as "cannot log in to openwrt-luci / openwrt" on a board that had Ubuntu first and the two OpenWrt systems
+added later with zips (F50-B). The one-boot image's `root:::` was the first suspect and a red herring: the installer
+always replaces that line. Found by mounting the board's Linux disk from Android and looking at the hashes without
+reading them: each added system's `root` had a proper SHA-512 hash - of a **random 12-character password** that
+`mu300-install.sh`'s `build_password` made because the install was a new system (`KEEP_PW=0`) and
+`mu300-install.conf` had no `MU300_PASSWORD`. That password was written only to `/data/adb/mu300-linux-password.txt`,
+a root-only file, and shown once in Magisk's output; every later zip replaced the file, so the second added system's
+password was in no file at all. The `ubuntu` account still had the password the user knew, and the panel's
+`mu300-os <os>` switch booted a system nobody could log in to. (`dropbear`/`rpcd` refusing *empty* passwords was not
+it.) The board was recovered with `tools/reset-password.sh openwrt-luci` from Android, which works for an added
+system too.
+
+Decision (the project owner's): the zip's password for a system it installs is **fixed and well known, like the
+images'** - Ubuntu's user `ubuntu` has the password `ubuntu`; OpenWrt's and openwrt-luci's `root` has no password
+(the empty field stock OpenWrt ships with: dropbear and LuCI let root in until one is set with `passwd` or in LuCI,
+System > Administration). No random password any more, neither for a first install nor for an added system. A
+`MU300_PASSWORD` in `/data/adb/mu300-install.conf` still wins when given (hashed with the bundled busybox's
+`mkpasswd` as before, for every system it installs); it is never shown or written down. An update of a system that
+has accounts of its own keeps carrying them over (`KEEP_PW`), as before; an empty OpenWrt root or an Ubuntu `ubuntu`
+that is still `ubuntu` counts as the images' default, not as a password to keep, so an update of such a system gets
+the default again (the same thing). `MU300_PASSWORD_RESET=yes` now means "the images' own password again".
+
+How: `build_password` hashes `ubuntu` for Ubuntu (a fresh salt each time) and leaves the hash empty for OpenWrt;
+`mu300-install.env` gets one more line, `PW_SET=1`, which tells `android-install.sh` to put `PWHASH` into the
+system's own account even when it is empty (OpenWrt's root without a password) - `PW_SET=0` is the update that keeps
+the accounts, and the computer installer, which never writes the key, behaves as before. `android-install.sh` no
+longer refuses a system whose account would be "empty or the image's default": those are the intended accounts now,
+and the mark that has `mu300-update` carry some `<os>.old`'s accounts over at boot is removed whatever the path. The
+plan, the closing message and the note in `/data/adb/mu300-linux-password.txt` say which account and password work
+(`password for root: none yet - set one with passwd, or in LuCI (System > Administration)`; `password for ubuntu:
+"ubuntu"`), in the three languages; the file keeps the other system's block as before, and holds no secret any more.
+Device test: a zip install of `openwrt` on a board that has Ubuntu must end with the `root: none yet` line, the file
+must note it under `user: root`, and `ssh root@192.168.77.1` into the booted OpenWrt must log in with no password;
+LuCI's login on openwrt-luci likewise, and `passwd` there must take.

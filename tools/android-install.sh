@@ -15,6 +15,8 @@
 #   BOOT_ATTEMPTS=1-6  with DEFAULT_LINUX=1: failed boots in a row before Android (.mu300/boot-attempts)
 #   PWHASH             SHA-512 crypt hash for the "ubuntu" (Ubuntu) and "root" (OpenWrt) accounts; empty with
 #                      UPDATE=1: the accounts and passwords of the previous installation stay as they are
+#   PW_SET=0|1         the Magisk installer: 1 puts PWHASH into that account even when it is empty (OpenWrt's root
+#                      without a password, as the image ships it); 0 or not set (install.sh): as above
 #   IMPORT_HOTSPOT=0|1 copy Android's hotspot SSID/passphrase into each system
 #   KERNEL=5.4|6.18|7.2  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel)
 #   ADB=0|1 ADB_KEY    adb over USB to each system on (etc/mu300/adb), for the adb public key ADB_KEY ("BASE64 name",
@@ -564,10 +566,8 @@ for os in $OSES; do
     say "installing $os"
     rm -rf $M/$os.new && mkdir $M/$os.new
     tar -xzpf $tarball -C $M/$os.new
-    # the account the installer gives a password (ubuntu, OpenWrt's root) and its hash in the image
+    # the account the installer gives a password (ubuntu, OpenWrt's root)
     case $os in ubuntu) pwu=ubuntu ;; *) pwu=root ;; esac
-    carried=0
-    imghash=$(sed -n "s/^$pwu:\([^:]*\):.*/\1/p" $M/$os.new/etc/shadow 2>/dev/null | head -n1) || imghash=
     # prebuilt images: firmware and Android userspace pulled from this device by install.sh (tools/vendor-overlay.py)
     if [ -f $T/mu300-vendor-$os.tar.gz ]; then
         tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new
@@ -640,27 +640,19 @@ for os in $OSES; do
         rm -rf "$M/$os.new/.mu300-image"
         if [ -f "$M/$os/etc/shadow" ]; then
             merge_accounts "$M/$os" "$M/$os.new" || { say "could not carry the accounts of $os over; nothing was replaced"; exit 1; }
-            carried=1
             say "kept the accounts and passwords of the previous $os"
         fi
         extra_keep_vpn $M $M/$os
         [ -n "$extra" ] && say "kept enabled services:$extra"
     fi
-    # The password, before the new system replaces the old one: the hash just chosen, or (an update without one) the
-    # one carried over. Fail closed: a system whose account would be left with no hash, an empty one, the image's
-    # default or the image's accounts is not installed, and the old one stays.
-    if [ -n "$PWHASH" ]; then
-        rm -f $M/$os.new$ACCOUNTS_MARK   # the password is the one just chosen, not one to carry over
+    # The password, before the new system replaces the old one: the hash just chosen (PWHASH; with PW_SET=1 also an
+    # empty one, OpenWrt's root without a password), else the accounts carried over, else the image's own (Ubuntu's
+    # ubuntu/ubuntu, OpenWrt's root without a password: the well-known ones, issue #167). The accounts are this
+    # system's now, whichever they are: never the mark that has mu300-update carry some <os>.old's over at boot.
+    if [ -n "$PWHASH" ] || [ "${PW_SET:-0}" = 1 ]; then
         sed -i "s|^$pwu:[^:]*:|$pwu:$PWHASH:|" $M/$os.new/etc/shadow
     fi
-    h=$(sed -n "s/^$pwu:\([^:]*\):.*/\1/p" $M/$os.new/etc/shadow 2>/dev/null | head -n1) || h=
-    case $h in '$'?*) ;; *) h= ;; esac
-    if [ -z "$h" ] || [ -e $M/$os.new$ACCOUNTS_MARK ] ||
-        { [ -z "$PWHASH" ] && { [ "$carried" != 1 ] || [ "$h" = "$imghash" ]; }; }; then
-        rm -rf $M/$os.new
-        say "$os: $pwu would keep no password of its own (empty, the image's default, or none to carry over); $os was not replaced. Install again with MU300_PASSWORD_RESET=yes in /data/adb/mu300-install.conf (or choose a password in install.sh)"
-        exit 1
-    fi
+    rm -f $M/$os.new$ACCOUNTS_MARK
     rm -rf $M/$os && mv $M/$os.new $M/$os
     R=$M/$os
     if [ "${SD_MODE:-0}" = 1 ]; then sd_fstab $R; fi
