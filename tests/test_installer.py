@@ -231,7 +231,8 @@ class InstallEnv(ShellTest):
     """mu300-install.env, what android-install.sh is told: tools/storage.sh's write_install_env (install.sh) and
     install.ps1's InstallEnvText write the same text (tests/installer.Tests.ps1 compares the two)."""
     COMMON = dict(OFF=27762098176, FORMAT=1, OSES='ubuntu openwrt', WIPE_LEGACY=0, UPDATE=0, BOOT_OS='openwrt',
-                  DEFAULT_LINUX=1, BOOT_ATTEMPTS=5, IMPORT_HOTSPOT=1, KERNEL='6.18', PWHASH='$6$salt$hash/x.y')
+                  DEFAULT_LINUX=1, BOOT_ATTEMPTS=5, IMPORT_HOTSPOT=1, KERNEL='6.18', SYNC_BOOTCHAIN=1,
+                  PWHASH='$6$salt$hash/x.y')
 
     def write_env(self, shell, **v):
         code = ''.join(f"{k}='{val}'; " for k, val in v.items())
@@ -259,7 +260,9 @@ class InstallEnv(ShellTest):
             self.assertEqual(e['PWHASH'], "'$6$salt$hash/x.y'")
             self.assertEqual(list(e), ['OFF', 'SIZE', 'OFF_S', 'SIZE_S', 'FORMAT', 'OSES', 'WIPE_LEGACY', 'UPDATE',
                                        'BOOT_OS', 'DEFAULT_LINUX', 'BOOT_ATTEMPTS', 'IMPORT_HOTSPOT', 'KERNEL',
-                                       'SD_MODE', 'SD_DEV', 'INTERNAL_EXISTS', 'ADB', 'ADB_KEY', 'PWHASH'])
+                                       'SD_MODE', 'SD_DEV', 'INTERNAL_EXISTS', 'ADB', 'ADB_KEY', 'SYNC_BOOTCHAIN',
+                                       'PWHASH'])
+            self.assertEqual(e['SYNC_BOOTCHAIN'], '1')
 
     def test_internal_mode(self):
         for shell in self.each_shell():
@@ -270,6 +273,12 @@ class InstallEnv(ShellTest):
             self.assertEqual((e['OFF'], e['SIZE'], e['OFF_S'], e['SIZE_S']),
                              ('27762098176', '34776023040', '54222848', '67921920'))
             self.assertEqual((e['FORMAT'], e['UPDATE']), ('0', '1'))
+
+    def test_bootchain_sync_is_off_unless_set(self):
+        for shell in self.each_shell():
+            common = {k: v for k, v in self.COMMON.items() if k != 'SYNC_BOOTCHAIN'}
+            e = self.parse(self.write_env(shell, **common, SIZE=1, INT_SIZE='', SD_MODE=0, SD_DEV='', INTERNAL_EXISTS=0))
+            self.assertEqual(e['SYNC_BOOTCHAIN'], '0')
 
     def test_adb(self):
         key = 'QAAAA' + 'A' * 694 + '='
