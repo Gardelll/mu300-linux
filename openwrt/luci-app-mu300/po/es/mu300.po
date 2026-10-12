@@ -969,6 +969,9 @@ msgstr "Error al bloquear: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Restableciendo los bloqueos de red a automático (reinicio SFUN, unos 30 segundos)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "El restablecimiento falló: %s. Los ajustes de bloqueo guardados se conservaron."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "El restablecimiento de los bloqueos no se confirmó a tiempo; se cambia de todos modos."
 
@@ -1314,6 +1317,9 @@ msgstr "Estado confirmado"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Se agotó el tiempo de lectura; seleccione «Actualizar estado de bloqueos»"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Restablecimiento verificado: modo de red automático, EN-DC activado, todas las bandas, sin bloqueo de celda; los ajustes de bloqueo guardados se han borrado"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Aplicado (EN-DC no requiere reiniciar la pila de radio)"
 
@@ -1650,6 +1656,15 @@ msgstr "Mensaje (Intro para enviar, Mayús+Intro para nueva línea)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "El envío usa AT+CMGS (modo PDU); reintente si el canal está ocupado. Para eliminar un mensaje, use el icono de papelera de su burbuja."
 
+msgid "Sending…"
+msgstr "Enviando…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Enviado; la lista se actualizará en breve."
+
+msgid "Sending failed"
+msgstr "Error al enviar"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Sincronizando desde la SIM en segundo plano (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "Eliminado (solo local)"
 
 msgid "Enter both a number and a message."
 msgstr "Introduzca un número y un mensaje."
-
-msgid "Sending…"
-msgstr "Enviando…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Enviado; la lista se actualizará en breve."
-
-msgid "Sending failed"
-msgstr "Error al enviar"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mensajes, %d sin leer · %d conversaciones"
@@ -2976,8 +2982,26 @@ msgstr "No se pudo eliminar el paquete de idiomas"
 msgid "Lock cache unavailable"
 msgstr "Caché de bloqueos no disponible"
 
+msgid "The saved locks could not be cleared"
+msgstr "No se pudieron borrar los bloqueos guardados"
+
 msgid "No serving cell to lock to"
 msgstr "No hay celda de servicio que bloquear"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "El módem no respondió a la consulta de modo; no se envió nada"
+
+msgid "The modem refused a write"
+msgstr "El módem rechazó una escritura"
+
+msgid "The read-back does not match the automatic values"
+msgstr "La relectura no coincide con los valores automáticos"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "La relectura tras el reinicio de la pila no coincide con los valores automáticos"
+
+msgid "The reset was interrupted"
+msgstr "El restablecimiento se interrumpió"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Reinstalar paquetes no está disponible en este sistema"

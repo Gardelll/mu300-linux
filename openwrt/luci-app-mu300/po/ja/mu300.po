@@ -969,6 +969,9 @@ msgstr "ロックに失敗しました: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "ネットワークロックを自動にリセットしています（SFUN 再起動、約 30 秒）…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "リセットに失敗しました: %s。保存されたロック設定は保持されました。"
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "ロックのリセットを時間内に確認できませんでした。そのまま切り替えます。"
 
@@ -1314,6 +1317,9 @@ msgstr "ステータスを確認しました"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "読み戻しがタイムアウトしました。「ロック状態を更新」を選択してください"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "リセットを確認しました: ネットワークモード自動、EN-DC オン、全バンド、セルロックなし。保存されたロック設定は消去されました"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "適用しました (EN-DC は無線スタックの再起動を必要としません)"
 
@@ -1650,6 +1656,15 @@ msgstr "メッセージ (Enter で送信、Shift+Enter で改行)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "送信には AT+CMGS (PDU モード) を使用します。チャネルがビジーの場合は再試行してください。1 件だけ削除するには、吹き出しのゴミ箱アイコンを使用します。"
 
+msgid "Sending…"
+msgstr "送信中…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "送信しました。まもなく一覧が更新されます。"
+
+msgid "Sending failed"
+msgstr "送信に失敗しました"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "バックグラウンドで SIM から同期しています (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "削除しました (ローカルのみ)"
 
 msgid "Enter both a number and a message."
 msgstr "番号とメッセージの両方を入力してください。"
-
-msgid "Sending…"
-msgstr "送信中…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "送信しました。まもなく一覧が更新されます。"
-
-msgid "Sending failed"
-msgstr "送信に失敗しました"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d 件、未読 %d 件 · 会話 %d 件"
@@ -2976,8 +2982,26 @@ msgstr "言語パックを削除できませんでした"
 msgid "Lock cache unavailable"
 msgstr "ロックキャッシュを利用できません"
 
+msgid "The saved locks could not be cleared"
+msgstr "保存されたロックを消去できませんでした"
+
 msgid "No serving cell to lock to"
 msgstr "ロックできるサービングセルがありません"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "モデムがモード照会に応答しませんでした。何も送信されていません"
+
+msgid "The modem refused a write"
+msgstr "モデムが書き込みを拒否しました"
+
+msgid "The read-back does not match the automatic values"
+msgstr "読み戻し値が自動の値と一致しません"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "スタック再起動後の読み戻し値が自動の値と一致しません"
+
+msgid "The reset was interrupted"
+msgstr "リセットが中断されました"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "このシステムではパッケージの再インストールを利用できません"

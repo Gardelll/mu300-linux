@@ -969,6 +969,9 @@ msgstr "Uzamčení selhalo: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Obnovují se automatická nastavení sítě (restart SFUN, asi 30 sekund)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Reset se nezdařil: %s. Uložená nastavení zámků byla zachována."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Obnovení zámků nebylo včas potvrzeno; přepíná se i tak."
 
@@ -1314,6 +1317,9 @@ msgstr "Stav ověřen"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Časový limit zpětného čtení vypršel; zvolte „Obnovit stav zámků“"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Reset ověřen: síťový režim automatický, EN-DC zapnuto, všechna pásma, bez zámku buňky; uložená nastavení zámků byla vymazána"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Použito (EN-DC nevyžaduje restart rádiového stacku)"
 
@@ -1650,6 +1656,15 @@ msgstr "Zpráva (Enter odešle, Shift+Enter nový řádek)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Odesílání používá AT+CMGS (režim PDU); pokud je kanál obsazen, zkuste to znovu. Jednotlivou zprávu smažete ikonou koše na její bublině."
 
+msgid "Sending…"
+msgstr "Odesílání…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Odesláno; seznam se brzy obnoví."
+
+msgid "Sending failed"
+msgstr "Odeslání selhalo"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronizace ze SIM na pozadí (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "Smazáno (pouze místně)"
 
 msgid "Enter both a number and a message."
 msgstr "Zadejte číslo i zprávu."
-
-msgid "Sending…"
-msgstr "Odesílání…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Odesláno; seznam se brzy obnoví."
-
-msgid "Sending failed"
-msgstr "Odeslání selhalo"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· zpráv: %d, nepřečtených: %d · konverzací: %d"
@@ -2976,8 +2982,26 @@ msgstr "Jazykový balíček se nepodařilo odebrat"
 msgid "Lock cache unavailable"
 msgstr "Mezipaměť zámků není dostupná"
 
+msgid "The saved locks could not be cleared"
+msgstr "Uložené zámky se nepodařilo vymazat"
+
 msgid "No serving cell to lock to"
 msgstr "Žádná obsluhující buňka k uzamčení"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem neodpověděl na dotaz na režim; nic nebylo odesláno"
+
+msgid "The modem refused a write"
+msgstr "Modem odmítl zápis"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Zpětné čtení neodpovídá automatickým hodnotám"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Zpětné čtení po restartu zásobníku neodpovídá automatickým hodnotám"
+
+msgid "The reset was interrupted"
+msgstr "Reset byl přerušen"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Opětovná instalace balíčků není v tomto systému k dispozici"

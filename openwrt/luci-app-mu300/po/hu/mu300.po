@@ -969,6 +969,9 @@ msgstr "A zárolás sikertelen: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "A hálózati zárak visszaállítása automatikusra (SFUN újraindítás, kb. 30 másodperc)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "A visszaállítás nem sikerült: %s. A mentett zárolási beállítások megmaradtak."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "A zárak visszaállítása nem erősítődött meg időben; a váltás így is megtörténik."
 
@@ -1314,6 +1317,9 @@ msgstr "Állapot megerősítve"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "A visszaolvasás időtúllépés miatt megszakadt; válassza a „Zárolási állapot frissítése” lehetőséget"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Visszaállítás ellenőrizve: hálózati mód automatikus, EN-DC be, minden sáv, nincs cellazárolás; a mentett zárolási beállítások törölve"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Alkalmazva (az EN-DC-hez nem kell újraindítani a rádióvermet)"
 
@@ -1650,6 +1656,15 @@ msgstr "Üzenet (Enter a küldéshez, Shift+Enter új sorhoz)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "A küldés AT+CMGS-t használ (PDU mód); ha a csatorna foglalt, próbálja újra. Egy üzenet törléséhez használja a buborékján lévő kuka ikont."
 
+msgid "Sending…"
+msgstr "Küldés…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Elküldve; a lista hamarosan frissül."
+
+msgid "Sending failed"
+msgstr "A küldés sikertelen"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Szinkronizálás a SIM-ről a háttérben (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "Törölve (csak helyi)"
 
 msgid "Enter both a number and a message."
 msgstr "Adjon meg számot és üzenetet is."
-
-msgid "Sending…"
-msgstr "Küldés…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Elküldve; a lista hamarosan frissül."
-
-msgid "Sending failed"
-msgstr "A küldés sikertelen"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d üzenet, %d olvasatlan · %d beszélgetés"
@@ -2976,8 +2982,26 @@ msgstr "A nyelvi csomagot nem sikerült eltávolítani"
 msgid "Lock cache unavailable"
 msgstr "A zárolási gyorsítótár nem érhető el"
 
+msgid "The saved locks could not be cleared"
+msgstr "A mentett zárolásokat nem sikerült törölni"
+
 msgid "No serving cell to lock to"
 msgstr "Nincs kiszolgáló cella a zároláshoz"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "A modem nem válaszolt a mód lekérdezésére; semmi nem lett elküldve"
+
+msgid "The modem refused a write"
+msgstr "A modem elutasított egy írást"
+
+msgid "The read-back does not match the automatic values"
+msgstr "A visszaolvasás nem egyezik az automatikus értékekkel"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "A verem újraindítása utáni visszaolvasás nem egyezik az automatikus értékekkel"
+
+msgid "The reset was interrupted"
+msgstr "A visszaállítás megszakadt"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "A csomagok újratelepítése nem érhető el ezen a rendszeren"

@@ -969,6 +969,9 @@ msgstr "Заключването е неуспешно: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Мрежовите заключвания се връщат на автоматично (рестарт на SFUN, около 30 секунди)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Нулирането не успя: %s. Запазените настройки за заключване са запазени."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Нулирането на заключванията не се потвърди навреме; превключва се въпреки това."
 
@@ -1314,6 +1317,9 @@ msgstr "Състоянието е потвърдено"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Времето за прочитане изтече; изберете „Опресняване на състоянието на заключването“"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Нулирането е потвърдено: мрежов режим автоматичен, EN-DC включен, всички ленти, без заключване на клетка; запазените настройки за заключване са изчистени"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Приложено (EN-DC не изисква рестартиране на радио стека)"
 
@@ -1650,6 +1656,15 @@ msgstr "Съобщение (Enter за изпращане, Shift+Enter за но
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Изпращането използва AT+CMGS (PDU режим); опитайте отново, ако каналът е зает. За изтриване на едно съобщение използвайте иконата с кошче в неговия балон."
 
+msgid "Sending…"
+msgstr "Изпращане…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Изпратено; списъкът ще се опресни скоро."
+
+msgid "Sending failed"
+msgstr "Изпращането е неуспешно"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронизиране от SIM във фонов режим (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "Изтрито (само локално)"
 
 msgid "Enter both a number and a message."
 msgstr "Въведете номер и съобщение."
-
-msgid "Sending…"
-msgstr "Изпращане…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Изпратено; списъкът ще се опресни скоро."
-
-msgid "Sending failed"
-msgstr "Изпращането е неуспешно"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d съобщения, %d непрочетени · %d разговора"
@@ -2976,8 +2982,26 @@ msgstr "Езиковият пакет не можа да бъде премахн
 msgid "Lock cache unavailable"
 msgstr "Кешът на заключванията е недостъпен"
 
+msgid "The saved locks could not be cleared"
+msgstr "Запазените заключвания не можаха да бъдат изчистени"
+
 msgid "No serving cell to lock to"
 msgstr "Няма обслужваща клетка за заключване"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Модемът не отговори на заявката за режим; нищо не беше изпратено"
+
+msgid "The modem refused a write"
+msgstr "Модемът отказа запис"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Обратното четене не съвпада с автоматичните стойности"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Обратното четене след рестарта на стека не съвпада с автоматичните стойности"
+
+msgid "The reset was interrupted"
+msgstr "Нулирането беше прекъснато"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Повторното инсталиране на пакети не е налично в тази система"

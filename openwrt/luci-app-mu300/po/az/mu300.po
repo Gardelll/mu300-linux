@@ -969,6 +969,9 @@ msgstr "Kilidləmə uğursuz oldu: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Şəbəkə kilidləri avtomatikə qaytarılır (SFUN yenidən başlatma, təxminən 30 saniyə)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Sıfırlama alınmadı: %s. Saxlanmış kilid ayarları saxlanıldı."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Kilidlərin sıfırlanması vaxtında təsdiqlənmədi; yenə də keçilir."
 
@@ -1314,6 +1317,9 @@ msgstr "Status təsdiqləndi"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Geri oxuma vaxtı bitdi; “Kilid statusunu yenilə” seçin"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Sıfırlama təsdiqləndi: şəbəkə rejimi avtomatik, EN-DC açıq, bütün zolaqlar, hüceyrə kilidi yoxdur; saxlanmış kilid ayarları silindi"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Tətbiq edildi (EN-DC radio stekinin yenidən başladılmasını tələb etmir)"
 
@@ -1650,6 +1656,15 @@ msgstr "Mesaj (göndərmək üçün Enter, yeni sətir üçün Shift+Enter)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Göndərmə AT+CMGS (PDU rejimi) istifadə edir; kanal məşğuldursa, yenidən cəhd edin. Bir mesajı silmək üçün onun balonundakı zibil qutusu nişanından istifadə edin."
 
+msgid "Sending…"
+msgstr "Göndərilir…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Göndərildi; siyahı tezliklə yenilənəcək."
+
+msgid "Sending failed"
+msgstr "Göndərmə uğursuz oldu"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Arxa planda SIM-dən sinxronlaşdırılır (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "Silindi (yalnız yerli)"
 
 msgid "Enter both a number and a message."
 msgstr "Həm nömrəni, həm də mesajı daxil edin."
-
-msgid "Sending…"
-msgstr "Göndərilir…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Göndərildi; siyahı tezliklə yenilənəcək."
-
-msgid "Sending failed"
-msgstr "Göndərmə uğursuz oldu"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mesaj, %d oxunmamış · %d söhbət"
@@ -2976,8 +2982,26 @@ msgstr "Dil paketini silmək mümkün olmadı"
 msgid "Lock cache unavailable"
 msgstr "Kilid keşi əlçatan deyil"
 
+msgid "The saved locks could not be cleared"
+msgstr "Saxlanmış kilidlər silinə bilmədi"
+
 msgid "No serving cell to lock to"
 msgstr "Kilidlənəcək xidmət edən hüceyrə yoxdur"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem rejim sorğusuna cavab vermədi; heç nə göndərilmədi"
+
+msgid "The modem refused a write"
+msgstr "Modem yazmağı rədd etdi"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Geri oxunma avtomatik dəyərlərlə uyğun gəlmir"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Stekin yenidən başladılmasından sonra geri oxunma avtomatik dəyərlərlə uyğun gəlmir"
+
+msgid "The reset was interrupted"
+msgstr "Sıfırlama yarımçıq qaldı"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Paketlərin yenidən quraşdırılması bu sistemdə mövcud deyil"

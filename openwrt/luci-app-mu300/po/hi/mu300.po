@@ -969,6 +969,9 @@ msgstr "लॉक विफल: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "नेटवर्क लॉक स्वचालित पर रीसेट हो रहे हैं (SFUN रीस्टार्ट, लगभग 30 सेकंड)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "रीसेट विफल: %s. सहेजी गई लॉक सेटिंग्स रखी गईं।"
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "लॉक रीसेट समय पर पुष्ट नहीं हुआ; फिर भी स्विच किया जा रहा है।"
 
@@ -1314,6 +1317,9 @@ msgstr "स्थिति की पुष्टि हुई"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "वापस पढ़ने का समय समाप्त; “लॉक स्थिति रीफ़्रेश करें” चुनें"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "रीसेट सत्यापित: नेटवर्क मोड स्वचालित, EN-DC चालू, सभी बैंड, कोई सेल लॉक नहीं; सहेजी गई लॉक सेटिंग्स साफ़ कर दी गईं"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "लागू किया गया (EN-DC के लिए रेडियो स्टैक पुनः आरंभ की ज़रूरत नहीं)"
 
@@ -1650,6 +1656,15 @@ msgstr "संदेश (भेजने के लिए Enter, नई पं�
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "भेजने के लिए AT+CMGS (PDU मोड) का उपयोग होता है; चैनल व्यस्त होने पर फिर से प्रयास करें। किसी एक संदेश को हटाने के लिए उसके बबल पर बने कूड़ेदान आइकन का उपयोग करें।"
 
+msgid "Sending…"
+msgstr "भेजा जा रहा है…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "भेजा गया; सूची जल्द ही रीफ़्रेश होगी।"
+
+msgid "Sending failed"
+msgstr "भेजना विफल"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "पृष्ठभूमि में SIM से सिंक किया जा रहा है (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "हटाया गया (केवल स्थानीय)"
 
 msgid "Enter both a number and a message."
 msgstr "नंबर और संदेश दोनों दर्ज करें।"
-
-msgid "Sending…"
-msgstr "भेजा जा रहा है…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "भेजा गया; सूची जल्द ही रीफ़्रेश होगी।"
-
-msgid "Sending failed"
-msgstr "भेजना विफल"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d संदेश, %d अपठित · %d बातचीत"
@@ -2976,8 +2982,26 @@ msgstr "भाषा पैक हटाया नहीं जा सका"
 msgid "Lock cache unavailable"
 msgstr "लॉक कैश उपलब्ध नहीं"
 
+msgid "The saved locks could not be cleared"
+msgstr "सहेजे गए लॉक साफ़ नहीं किए जा सके"
+
 msgid "No serving cell to lock to"
 msgstr "लॉक करने के लिए कोई सर्विंग सेल नहीं"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "मोडेम ने मोड क्वेरी का उत्तर नहीं दिया; कुछ भी नहीं भेजा गया"
+
+msgid "The modem refused a write"
+msgstr "मोडेम ने एक लेखन अस्वीकार कर दिया"
+
+msgid "The read-back does not match the automatic values"
+msgstr "रीड-बैक स्वचालित मानों से मेल नहीं खाता"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "स्टैक पुनरारंभ के बाद रीड-बैक स्वचालित मानों से मेल नहीं खाता"
+
+msgid "The reset was interrupted"
+msgstr "रीसेट बाधित हो गया"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "इस सिस्टम पर पैकेज फिर से इंस्टॉल करना उपलब्ध नहीं है"

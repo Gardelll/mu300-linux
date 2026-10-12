@@ -969,6 +969,9 @@ msgstr "Khóa thất bại: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Đang đặt lại khóa mạng về tự động (khởi động lại SFUN, khoảng 30 giây)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Đặt lại thất bại: %s. Các thiết lập khóa đã lưu được giữ lại."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Không xác nhận kịp việc đặt lại khóa; vẫn chuyển."
 
@@ -1314,6 +1317,9 @@ msgstr "Đã xác nhận trạng thái"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Hết thời gian đọc lại; hãy chọn “Làm mới trạng thái khóa”"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Đặt lại đã được xác minh: chế độ mạng tự động, EN-DC bật, tất cả các băng tần, không khóa ô; các thiết lập khóa đã lưu đã được xóa"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Đã áp dụng (EN-DC không cần khởi động lại ngăn xếp radio)"
 
@@ -1650,6 +1656,15 @@ msgstr "Tin nhắn (Enter để gửi, Shift+Enter để xuống dòng)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Gửi dùng AT+CMGS (chế độ PDU); thử lại nếu kênh bận. Để xóa một tin nhắn, dùng biểu tượng thùng rác trên bong bóng của tin đó."
 
+msgid "Sending…"
+msgstr "Đang gửi…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Đã gửi; danh sách sẽ sớm làm mới."
+
+msgid "Sending failed"
+msgstr "Gửi thất bại"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Đang đồng bộ từ SIM trong nền (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "Đã xóa (chỉ cục bộ)"
 
 msgid "Enter both a number and a message."
 msgstr "Hãy nhập cả số và tin nhắn."
-
-msgid "Sending…"
-msgstr "Đang gửi…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Đã gửi; danh sách sẽ sớm làm mới."
-
-msgid "Sending failed"
-msgstr "Gửi thất bại"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d tin nhắn, %d chưa đọc · %d hội thoại"
@@ -2976,8 +2982,26 @@ msgstr "Không thể gỡ gói ngôn ngữ"
 msgid "Lock cache unavailable"
 msgstr "Bộ đệm khóa không khả dụng"
 
+msgid "The saved locks could not be cleared"
+msgstr "Không thể xóa các khóa đã lưu"
+
 msgid "No serving cell to lock to"
 msgstr "Không có cell phục vụ để khóa"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem không trả lời truy vấn chế độ; không có gì được gửi"
+
+msgid "The modem refused a write"
+msgstr "Modem đã từ chối một lệnh ghi"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Giá trị đọc lại không khớp với các giá trị tự động"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Giá trị đọc lại sau khi khởi động lại ngăn xếp không khớp với các giá trị tự động"
+
+msgid "The reset was interrupted"
+msgstr "Việc đặt lại đã bị gián đoạn"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Cài lại gói không khả dụng trên hệ thống này"

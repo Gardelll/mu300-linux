@@ -969,6 +969,9 @@ msgstr "Gagal mengunci: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Mengembalikan kunci jaringan ke otomatis (restart SFUN, sekitar 30 detik)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Pengaturan ulang gagal: %s. Pengaturan kunci yang tersimpan dipertahankan."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Reset kunci tidak terkonfirmasi tepat waktu; tetap beralih."
 
@@ -1314,6 +1317,9 @@ msgstr "Status dipastikan"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Waktu pembacaan habis; pilih “Segarkan status kunci”"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Pengaturan ulang terverifikasi: mode jaringan otomatis, EN-DC aktif, semua band, tanpa kunci sel; pengaturan kunci yang tersimpan dihapus"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Diterapkan (EN-DC tidak memerlukan mulai ulang stack radio)"
 
@@ -1650,6 +1656,15 @@ msgstr "Pesan (Enter untuk mengirim, Shift+Enter untuk baris baru)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Pengiriman menggunakan AT+CMGS (mode PDU); coba lagi jika kanal sibuk. Untuk menghapus satu pesan, gunakan ikon tempat sampah pada gelembungnya."
 
+msgid "Sending…"
+msgstr "Mengirim…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Terkirim; daftar akan segera disegarkan."
+
+msgid "Sending failed"
+msgstr "Gagal mengirim"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Menyinkronkan dari SIM di latar belakang (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "Dihapus (hanya lokal)"
 
 msgid "Enter both a number and a message."
 msgstr "Masukkan nomor dan pesan."
-
-msgid "Sending…"
-msgstr "Mengirim…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Terkirim; daftar akan segera disegarkan."
-
-msgid "Sending failed"
-msgstr "Gagal mengirim"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d pesan, %d belum dibaca · %d percakapan"
@@ -2976,8 +2982,26 @@ msgstr "Paket bahasa tidak dapat dihapus"
 msgid "Lock cache unavailable"
 msgstr "Cache kunci tidak tersedia"
 
+msgid "The saved locks could not be cleared"
+msgstr "Kunci yang tersimpan tidak dapat dihapus"
+
 msgid "No serving cell to lock to"
 msgstr "Tidak ada sel layanan untuk dikunci"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem tidak menjawab kueri mode; tidak ada yang dikirim"
+
+msgid "The modem refused a write"
+msgstr "Modem menolak sebuah penulisan"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Pembacaan ulang tidak cocok dengan nilai otomatis"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Pembacaan ulang setelah tumpukan dimulai ulang tidak cocok dengan nilai otomatis"
+
+msgid "The reset was interrupted"
+msgstr "Pengaturan ulang terputus"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Pemasangan ulang paket tidak tersedia di sistem ini"

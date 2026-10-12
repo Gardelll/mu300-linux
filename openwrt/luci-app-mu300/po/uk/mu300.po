@@ -969,6 +969,9 @@ msgstr "Помилка фіксації: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Скидання мережевих блокувань на автоматичний режим (перезапуск SFUN, близько 30 секунд)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Скидання не вдалося: %s. Збережені налаштування блокувань залишено."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Скидання блокувань не підтвердилося вчасно; перемикання все одно виконується."
 
@@ -1314,6 +1317,9 @@ msgstr "Стан підтверджено"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Час зчитування минув; натисніть «Оновити стан фіксації»"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Скидання підтверджено: режим мережі автоматичний, EN-DC увімкнено, усі діапазони, без блокування соти; збережені налаштування блокувань видалено"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Застосовано (EN-DC не потребує перезапуску радіостека)"
 
@@ -1650,6 +1656,15 @@ msgstr "Повідомлення (Enter — надіслати, Shift+Enter — 
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Надсилання використовує AT+CMGS (режим PDU); якщо канал зайнятий, повторіть. Щоб видалити одне повідомлення, натисніть значок кошика на його бульбашці."
 
+msgid "Sending…"
+msgstr "Надсилання…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Надіслано; список незабаром оновиться."
+
+msgid "Sending failed"
+msgstr "Помилка надсилання"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронізація із SIM у фоні (AT+CMGL)…"
 
@@ -1688,15 +1703,6 @@ msgstr "Видалено (лише локально)"
 
 msgid "Enter both a number and a message."
 msgstr "Введіть номер і повідомлення."
-
-msgid "Sending…"
-msgstr "Надсилання…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Надіслано; список незабаром оновиться."
-
-msgid "Sending failed"
-msgstr "Помилка надсилання"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· повідомлень: %d, непрочитаних: %d · розмов: %d"
@@ -2976,8 +2982,26 @@ msgstr "Не вдалося видалити мовний пакет"
 msgid "Lock cache unavailable"
 msgstr "Кеш фіксації недоступний"
 
+msgid "The saved locks could not be cleared"
+msgstr "Не вдалося видалити збережені блокування"
+
 msgid "No serving cell to lock to"
 msgstr "Немає обслуговуючої соти для фіксації"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Модем не відповів на запит режиму; нічого не надіслано"
+
+msgid "The modem refused a write"
+msgstr "Модем відхилив запис"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Зворотне читання не збігається з автоматичними значеннями"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Зворотне читання після перезапуску стеку не збігається з автоматичними значеннями"
+
+msgid "The reset was interrupted"
+msgstr "Скидання було перервано"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Повторне встановлення пакетів недоступне в цій системі"
