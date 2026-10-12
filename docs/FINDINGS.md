@@ -115,9 +115,6 @@ what replaced it. The table below gives each section's state.
 | 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
 | 49 | The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only | current (U30 Air, Vodafone TR: CNUM answers) |
 | 50 | Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot | current; the timeout path not yet seen on a device |
-| 45 | `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146) | current |
-| 46 | SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176) | current (fixed) |
-| 47 | A system the Magisk zip added beside another had a password nobody saw (#167) | current (fixed) |
 | 51 | SMS delivered directly (+CMT), acknowledged only once the pool has it; the SIM path stays as the fallback | current |
 
 ## Hardware and firmware facts
