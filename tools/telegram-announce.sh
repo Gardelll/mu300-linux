@@ -28,19 +28,21 @@ release)
     if [ "$ACTION" = released ]; then
         age=$(( $(date +%s) - $(date -d "$(printf '%s' "$rel" | jq -r .publishedAt)" +%s 2>/dev/null || echo 0) ))
         [ "$age" -gt 600 ] || { echo "published just now: the 'published' event announces it"; exit 0; }
-        head="✅ <b>MU300 Linux $(printf '%s' "$TAG" | esc)</b> is now the <b>latest release</b> — artık <b>son sürüm</b>."
-        body="Tested on the boards; <code>mu300-update apply</code> on a device takes it, the installer and the Magisk zips ship it.
-Cihazda <code>mu300-update apply</code> ile gelir; kurulum aracı ve Magisk zip'leri de bu sürümü kurar."
+        kind="Now the latest release"
+        lead="Tested on the boards and promoted. Devices on an earlier release take it with <code>mu300-update apply</code>; the installer and the Magisk installers ship it from now on."
+        tr="Testleri geçti, son sürüm oldu. Cihazda güncelleme: <code>mu300-update apply</code>"
     elif [ "$pre" = true ]; then
-        head="🧪 <b>MU300 Linux $(printf '%s' "$TAG" | esc)</b> — pre-release / ön sürüm"
-        body="Being tested on the boards; becomes the latest release when it passes. <code>MU300_RELEASE=$(printf '%s' "$TAG" | esc) mu300-update apply</code> tries it now.
-Cihazlarda deneniyor; geçerse son sürüm olur."
+        kind="Pre-release"
+        lead="Under test on the boards; it becomes the latest release once it passes. To try it now: <code>MU300_RELEASE=$(printf '%s' "$TAG" | esc) mu300-update apply</code>"
+        tr="Ön sürüm, cihazlarda test ediliyor; geçince son sürüm olur."
     else
-        head="🚀 <b>MU300 Linux $(printf '%s' "$TAG" | esc)</b> — new release / yeni sürüm"
-        body="<code>mu300-update apply</code> on a device takes it. Cihazda <code>mu300-update apply</code> ile gelir."
+        kind="New release"
+        lead="Devices update with <code>mu300-update apply</code>. New installations: the installer and images on the release page; the Magisk installers follow shortly."
+        tr="Yeni sürüm. Cihazda güncelleme: <code>mu300-update apply</code>"
     fi
     # the "New in TAG" list of the wiki Home on main (the docs usually land after the tag): one line per bullet
-    # (wrapped lines joined), bold kept, links to the wiki's own pages dropped, other links reduced to their text
+    # (wrapped lines joined, long ones shortened), bold kept, links to the wiki's own pages dropped, other links
+    # reduced to their text
     new=$(gh api "repos/$REPO/contents/wiki/Home.md" --jq .content 2>/dev/null | base64 -d 2>/dev/null |
         awk -v t="$TAG" '
             $0 ~ "^## New in " t { on=1; next }
@@ -48,23 +50,32 @@ Cihazlarda deneniyor; geçerse son sürüm olur."
             on && /^\* / { if (b != "") print b; b = $0; next }
             on && /^  +[^ ]/ && b != "" { sub(/^ +/, " "); b = b $0 }
             END { if (b != "") print b }' |
-        sed -E 's/ *\[([^]]*)\]\([A-Za-z0-9_-]+\)//g; s/\[([^]]*)\]\([^)]*\)/\1/g; s/`//g; s/ +$//' | esc |
+        sed -E 's/ *\[([^]]*)\]\([A-Za-z0-9_-]+\)//g; s/\[([^]]*)\]\([^)]*\)/\1/g; s/`//g; s/ +$//; s/ *\.\.\.$//' |
+        awk '{ if (length($0) > 170) { s = substr($0, 1, 170); sub(/ [^ ]*$/, "", s); print s "…" } else print }' | esc |
         sed -E 's/\*\*([^*]+)\*\*/<b>\1<\/b>/g; s/^\* /• /' | head -n 8) || new=
-    text="$head
-$body"
+    text="<b>MU300 Linux $(printf '%s' "$TAG" | esc)</b>
+$kind
+
+$lead"
     [ -z "$new" ] || text="$text
 
-<b>New in this release / Bu sürümde yeni:</b>
+<b>What's new</b>
 $new"
     text="$text
 
-$nassets files: images, kernels 5.4 / 6.18 / 7.2, mu300-update. $URL
-Wiki: https://github.com/$REPO/wiki/Home"
+<a href=\"$URL\">Release page</a> ($nassets files: images, kernels 5.4 / 6.18 / 7.2, installer) · <a href=\"https://github.com/$REPO/wiki/Home\">Wiki</a> · <a href=\"https://kaandikec.com/mu300-linux/\">Site</a>
+
+🇹🇷 $tr"
     ;;
 zips)
-    text="📦 <b>Magisk zips for MU300 Linux $(printf '%s' "$TAG" | esc)</b> are attached — Magisk zip'leri hazır: $nzips files (Ubuntu 24.04 / 26.04, OpenWrt, OpenWrt + panel; kernels 5.4 / 6.18 / 7.2).
-Install from Magisk > Modules on the device, no computer needed. Cihazda Magisk > Modüller'den, bilgisayarsız.
-$URL"
+    text="<b>MU300 Linux $(printf '%s' "$TAG" | esc)</b>
+Magisk installers attached
+
+$nzips zips on the release page: Ubuntu 24.04 and 26.04, OpenWrt, OpenWrt with the control panel — each with kernel 5.4, 6.18 or 7.2. Install from Magisk › Modules on the device; no computer needed.
+
+<a href=\"$URL\">Release page</a> · <a href=\"https://github.com/$REPO/wiki/Installation\">Installation guide</a>
+
+🇹🇷 Magisk zip'leri hazır: cihazda Magisk › Modüller'den, bilgisayarsız kurulum."
     ;;
 *) echo "usage: $0 release|zips TAG [published|released]" >&2; exit 2 ;;
 esac
