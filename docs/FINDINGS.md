@@ -120,6 +120,7 @@ what replaced it. The table below gives each section's state.
 | 53 | A carrier name shown as hex: UCS2 from a modem whose character set is not UCS2 (#174) | current (fixed; unit tests and a user's report, not measured on our boards) |
 | 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
 | 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
+| 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
 
 ## Hardware and firmware facts
 
@@ -4440,3 +4441,40 @@ do not depend on it.) Under a umask of 077 the same code makes `vendor/etc` 0700
 
 Not measured: a Magisk zip built from this branch and installed end to end (its import functions were run on the
 device; the zip was not rebuilt), 6.18, the U30 Air.
+
+### 56. The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m
+
+"There is a problem in the VPN part, mihomo and the like" (no details, no issue): the non-default engines were run
+end to end on the U30 Air (OpenWrt openwrt-luci v2026.10.22, kernel 7.2.10, VPN module v2.0.0), from the command line
+and through the page's own calls (`ubus call mu300vpn ...`). What was broken is in the module, and written up there
+([mu300-linux-vpn FINDINGS 26i-26m](https://github.com/dikeckaan/mu300-linux-vpn/blob/main/docs/FINDINGS.md)): on a SIM
+whose carrier lets DNS through to its own resolvers only, sing-box, mihomo and dae never found their server
+(`BOOTSTRAP_DNS` 1.1.1.1 did not answer); a mihomo config with GEOSITE/GEOIP rules could not start, and switching to
+it took the working tunnel down; dae was stopped every 40 s by a start check that cannot pass on kernels from 6.6 on;
+a raw sing-box config that says nothing about DNS left the device and the router's DNS without names; `logs
+ENGINE` hid the engines' own errors, `latency` said "unreachable" for every server, and `profile check ID`, which
+the page calls, did not exist.
+
+Two defects were the page's own. Its check asked for `profile check ID`, the spec's name for a command the module
+only has as `check ID`: the backend now calls `check ID`, which every module version answers (the module gets the
+other name too). And `mu300-vpn` ends a refused import, edit or switch with a line that says only that
+nothing was done, after the line that says why:
+
+    the mihomo config has no proxies or proxy-providers at the top level
+    profile not added
+
+`mu300vpn`'s `cli` took the last line of stderr as the message, so every refused config read "The profile could not
+be added - profile not added" (and "The config was not saved - profile t-mh not changed"), whatever was wrong with
+it: a YAML without proxies, a link dae cannot take, a config mihomo rejects. `cli_message` now takes the line before
+such a closing line (`profile [ID] not added|changed`, `subscription [ID] not added|refreshed`, `profile ID does not
+check: ...`, `profile ID cannot run on this system: ...`), never one of the CLI's `note:` lines, and the closing line
+itself when it stands alone. Measured on the device with the backend in place: the same three requests now answer
+with "the mihomo config has no proxies or proxy-providers at the top level", "the link turns the server's
+certificate check off (allowInsecure), and dae cannot pin the certificate ...", and "mihomo rejects the config as
+this driver rebuilds it (at rules[1], as mihomo counts) ..." (the last with the module's fix).
+
+Through the page's calls, on the fixed module: `profile_add` (a mihomo YAML as text, an ss link as dae, a vless link
+as sing-box), `profile_check`, `use`, `status` with the exit address, `logs` per engine, `killswitch` on and off,
+`sub_refresh` (one, due) with `job`, `latency` (one, all), `engine_remove` refused while in use, `profile_remove`:
+all as the page expects. `sub_add` takes https only, which could not be served on the test link (the CLI's
+`--insecure` did the subscriptions there). Not looked at in a browser: the pages themselves.
