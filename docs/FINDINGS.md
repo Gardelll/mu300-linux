@@ -3717,3 +3717,54 @@ Fix (`upstream/modules/sprd_wlan_combo`):
   `timer_shutdown_sync` pass after the lock is dropped waits for it).
 
 Built for 6.18.56 and 7.2.10 (modules only). Device test: see the PR for #146.
+
+### 46. SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176)
+
+Reported on openwrt-luci v2026.10.20, China Broadnet (PLMN 46015), U30-class board (UMS9620): every send from the
+panel to the carrier's service number failed, incoming messages worked. The modem's URC log had
+`+SPIMSREASON: 1,512,"SMS FAILED: CODE:600 REASON:Busy Everywhere"` (the IMS stack's SIP 600 on the submission),
+and the panel's operations log `sms_send - killed`. The reporter's one-shot test through the same mu300-atd, with two
+changes made together, succeeded at once (`+CMGS: 1`, `OK`, and the service answered within seconds):
+
+- `AT+CSCA?` answered `"2B38...",145` (the modem's CSCS is `"HEX"`, so the address reads as hexadecimal: `+86...`),
+  and that exact string and type were written back with `AT+CSCA="2B...",145` - the same value, not another SMSC, and
+  CSCS left alone. What this puts right inside the modem is not known; SMSC state after the IMS registration is the
+  guess. Only `OK` counted.
+- the whole send (CSCA, `AT+CMGF=0`, `AT+CMGS`) ran under one acquisition of mu300-at's client mutex
+  (`/run/mu300-at/lock`). mu300-sms took it once per command, so between its commands any other client (the panel's
+  collectors, mu300-smsd's sync) could run, and the modem's state between PDU mode and the submission was never
+  guaranteed to be what the previous command left.
+
+The two were changed together, so which one was decisive is not known. Both are now in mu300-sms's send:
+
+- `at_lock`: mu300-sms takes `$ATDIR/lock` itself, the way mu300-at does (a holder that is gone is taken over, the
+  wait is `MU300_AT_LOCK_WAIT` seconds of the clock, `mu300-at: busy` when it gives up, so the panel's verdict is
+  unchanged), and tells the mu300-at calls under it with `MU300_AT_LOCK_HELD=<pid>`. mu300-at borrows the lock only
+  when `lock/pid` names that live process; anything else and it takes the lock as before. The lock is released after
+  the submission, before the pool lock (a path holding the pool lock makes no AT call, so send and sync never wait
+  for each other - that rule stands).
+- `smsc_refresh`: `AT+CSCA?`, the address and type parsed strictly (`"[+0-9A-Fa-f]+",[0-9]{1,3}`), written back
+  unchanged. A query that fails or answers something else skips the refresh (logged on stderr), and a write the modem
+  refuses is logged and the send goes on: the SMSC in use is the same either way, and the submission's own answer
+  says what is wrong. Nothing ever picks another SMSC or touches CSCS.
+
+The submission stays one write, `AT+CMGS=N<CR><PDU><Ctrl-Z>`, as before. Waiting for the modem's `> ` prompt first
+would need a byte-wise read in mu300-atd (the prompt has no newline, so the daemon's line reads never see it; it is
+collected with the reply), and what `read -t` leaves in its variable when it times out on a partial line is not the
+same under every shell the daemon runs under (bash, busybox ash) and has not been measured on the device - in the one
+process that owns the channel, where a modem left waiting at the prompt for a PDU that never comes is a wedged
+channel. The reporter's successful send used the combined write too, as every send on the U30 Air has.
+
+The panel: `mu300dash sms_send` ran mu300-sms inside the rpcd call, which rpcd ends at 30 s, while mu300-sms waits
+up to 40 s for `+CMGS` (and its whole transaction longer). A slow send was killed with the call - the message gone out
+or not, with no result anywhere but a `killed` line. `sms_send` now validates and starts the send detached
+(`setsid mu300dash sms-job`, the at_job pattern), answering `started`; `sms_job` says `running` and then the verdict
+`sms_send` used to give (`ok`/`busy`/`Sending failed` with the modem's last line) with `done:1`; the page asks every
+second. A second send while one runs is `busy` (the AT channel is in use), never a second submission; a job that
+died without a result says so and is not resent. The job logs how the send went in the operations log (`sms_send
+result 2.31s ok`), which is what the report was missing.
+
+Device test (a U30 Air whose line answers `mu300-sms send 7000 KALAN` with a two-part reply): the send through
+`/opt/mu300/bin/mu300-sms send 7000 KALAN` must show `AT+CSCA?` and the same-value `AT+CSCA=` in the daemon's answer
+files, `/run/mu300-at/lock` gone afterwards, and the reply pooled; through the panel's SMS page the toast must go
+"Sending…" and then "Sent" with the operations log carrying `sms_send ... ok` and `sms_send result ... ok`.
