@@ -618,8 +618,17 @@ msgstr "Тіло"
 msgid "Form (URL-encoded)"
 msgstr "Форма (URL-кодування)"
 
+msgid "Plain text"
+msgstr "Простий текст"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Поля: sender, time, text, device, message (заповнений шаблон)"
+
+msgid "Custom body"
+msgstr "Власне тіло запиту"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Порожньо: стандартні поля (простий текст: повідомлення). Підстановки: {sender}, {time}, {text}, {device}, {message}. Кожне значення екранується відповідно до вибраного типу. Це тіло знову показується тут: секрети тримайте в адресі або в заголовку."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Додаткові заголовки (по одному \"Ім'я: значення\" в рядку)"
@@ -2954,6 +2963,9 @@ msgstr "Неправильний список фільтрів (не більш�
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Адреса вебхука має бути URL http:// або https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Тіло webhook надто довге або містить керівний символ"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Неправильний заголовок (по одному \"Ім'я: значення\" в рядку; Host, Content-Type, Content-Length, Transfer-Encoding і Connection задає пристрій)"

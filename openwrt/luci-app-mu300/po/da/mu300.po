@@ -618,8 +618,17 @@ msgstr "Indhold"
 msgid "Form (URL-encoded)"
 msgstr "Formular (URL-kodet)"
 
+msgid "Plain text"
+msgstr "Almindelig tekst"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Felter: sender, time, text, device, message (den udfyldte skabelon)"
+
+msgid "Custom body"
+msgstr "Brugerdefineret indhold"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Tom: standardfelterne (almindelig tekst: beskeden). Pladsholdere: {sender}, {time}, {text}, {device}, {message}. Hver værdi escapes efter den valgte type. Dette indhold vises her igen: læg hemmeligheder i adressen eller i en header."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Ekstra headere (én \"Navn: værdi\" pr. linje)"
@@ -2954,6 +2963,9 @@ msgstr "Ugyldig filterliste (højst 50 linjer)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhookens adresse skal være en http://- eller https://-URL"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhookens indhold er for langt eller indeholder et kontroltegn"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Ugyldig header (én \"Navn: værdi\" pr. linje; Host, Content-Type, Content-Length, Transfer-Encoding og Connection sættes af enheden)"

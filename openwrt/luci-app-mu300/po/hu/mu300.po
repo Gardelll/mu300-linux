@@ -618,8 +618,17 @@ msgstr "Törzs"
 msgid "Form (URL-encoded)"
 msgstr "Űrlap (URL-kódolt)"
 
+msgid "Plain text"
+msgstr "Egyszerű szöveg"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Mezők: sender, time, text, device, message (a kitöltött sablon)"
+
+msgid "Custom body"
+msgstr "Egyéni törzs"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Üres: a szabványos mezők (egyszerű szöveg: az üzenet). Helyőrzők: {sender}, {time}, {text}, {device}, {message}. Minden érték a választott típusnak megfelelően kap escape-elést. Ez a törzs itt újra megjelenik: a titkokat a címben vagy egy fejlécben tartsa."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "További fejlécek (soronként egy \"Név: érték\")"
@@ -2954,6 +2963,9 @@ msgstr "Érvénytelen szűrőlista (legfeljebb 50 sor)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "A webhook címének http:// vagy https:// URL-nek kell lennie"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "A webhook törzse túl hosszú, vagy vezérlőkaraktert tartalmaz"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Érvénytelen fejléc (soronként egy \"Név: érték\"; a Host, Content-Type, Content-Length, Transfer-Encoding és Connection fejlécet az eszköz állítja be)"

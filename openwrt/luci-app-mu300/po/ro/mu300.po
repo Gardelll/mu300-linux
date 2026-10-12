@@ -618,8 +618,17 @@ msgstr "Corp"
 msgid "Form (URL-encoded)"
 msgstr "Formular (codificat URL)"
 
+msgid "Plain text"
+msgstr "Text simplu"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Câmpuri: sender, time, text, device, message (șablonul completat)"
+
+msgid "Custom body"
+msgstr "Corp personalizat"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Gol: câmpurile standard (text simplu: mesajul). Substituenți: {sender}, {time}, {text}, {device}, {message}. Fiecare valoare este escapată potrivit tipului ales. Acest corp este afișat din nou aici: păstrați secretele în adresă sau într-un antet."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Antete suplimentare (un \"Nume: valoare\" pe linie)"
@@ -2954,6 +2963,9 @@ msgstr "Listă de filtre nevalidă (cel mult 50 de linii)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Adresa webhookului trebuie să fie un URL http:// sau https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Corpul webhook-ului este prea lung sau conține un caracter de control"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Antet nevalid (un \"Nume: valoare\" pe linie; Host, Content-Type, Content-Length, Transfer-Encoding și Connection sunt setate de dispozitiv)"

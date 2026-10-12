@@ -275,8 +275,9 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   `sms delete read` on this system. A message leaves the SIM only once the pool's copy is on the disk (an fsync of
   that file and its directory, never a global sync). A long message whose other parts never come is shown after an
   hour with what did arrive, marked incomplete.
-* **Cellular > SMS forwarding:** off until turned on. Received messages go on to a webhook (JSON or form, extra
-  headers), a Telegram chat, an e-mail address (only when the image has `msmtp`) and/or another phone by SMS, through a
+* **Cellular > SMS forwarding:** off until turned on. Received messages go on to a webhook (JSON, form or plain text,
+  extra headers; the standard fields or a body of your own with `{sender}`, `{time}`, `{text}`, `{device}`,
+  `{message}`, each value escaped for the type), a Telegram chat, an e-mail address (only when the image has `msmtp`) and/or another phone by SMS, through a
   template (`{sender}`, `{time}`, `{text}`, `{device}`), with sender allow/deny lists and keywords. Failed deliveries
   are retried (30 s, doubling, an hour at most, ten times); a delivery log and a "Send test" button. Tokens, passwords
   and the webhook address and headers stay in `/etc/mu300/sms-forward.conf` (root only) and are never shown again.

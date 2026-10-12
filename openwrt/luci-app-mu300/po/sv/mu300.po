@@ -618,8 +618,17 @@ msgstr "Innehåll"
 msgid "Form (URL-encoded)"
 msgstr "Formulär (URL-kodat)"
 
+msgid "Plain text"
+msgstr "Oformaterad text"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Fält: sender, time, text, device, message (den ifyllda mallen)"
+
+msgid "Custom body"
+msgstr "Egen kropp"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Tomt: standardfälten (oformaterad text: meddelandet). Platshållare: {sender}, {time}, {text}, {device}, {message}. Varje värde escapas enligt den valda typen. Den här kroppen visas här igen: lägg hemligheter i adressen eller i en header."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Extra rubriker (en \"Namn: värde\" per rad)"
@@ -2954,6 +2963,9 @@ msgstr "Ogiltig filterlista (högst 50 rader)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhookens adress måste vara en http://- eller https://-URL"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhookens kropp är för lång eller innehåller ett styrtecken"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Ogiltig rubrik (en \"Namn: värde\" per rad; Host, Content-Type, Content-Length, Transfer-Encoding och Connection sätts av enheten)"

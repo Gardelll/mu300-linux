@@ -618,8 +618,17 @@ msgstr "Inhoud"
 msgid "Form (URL-encoded)"
 msgstr "Formulier (URL-gecodeerd)"
 
+msgid "Plain text"
+msgstr "Platte tekst"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Velden: sender, time, text, device, message (het ingevulde sjabloon)"
+
+msgid "Custom body"
+msgstr "Aangepaste body"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Leeg: de standaardvelden (platte tekst: het bericht). Plaatshouders: {sender}, {time}, {text}, {device}, {message}. Elke waarde wordt ge-escapet voor het gekozen type. Deze body wordt hier opnieuw getoond: zet geheimen in het adres of in een header."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Extra headers (één \"Naam: waarde\" per regel)"
@@ -2954,6 +2963,9 @@ msgstr "Ongeldige filterlijst (hooguit 50 regels)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Het webhookadres moet een http://- of https://-URL zijn"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "De webhook-body is te lang of bevat een stuurteken"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Ongeldige header (één \"Naam: waarde\" per regel; Host, Content-Type, Content-Length, Transfer-Encoding en Connection stelt het apparaat in)"

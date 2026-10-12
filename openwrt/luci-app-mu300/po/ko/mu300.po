@@ -618,8 +618,17 @@ msgstr "본문"
 msgid "Form (URL-encoded)"
 msgstr "양식(URL 인코딩)"
 
+msgid "Plain text"
+msgstr "일반 텍스트"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "필드: sender, time, text, device, message(채워진 템플릿)"
+
+msgid "Custom body"
+msgstr "사용자 지정 본문"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "비어 있음: 표준 필드(일반 텍스트: 메시지). 자리 표시자: {sender}, {time}, {text}, {device}, {message}. 각 값은 선택한 형식에 맞게 이스케이프됩니다. 이 본문은 여기에 다시 표시됩니다. 비밀 값은 주소나 헤더에 넣으십시오."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "추가 헤더(한 줄에 하나의 \"Name: value\")"
@@ -2954,6 +2963,9 @@ msgstr "잘못된 필터 목록(최대 50줄)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "웹훅 주소는 http:// 또는 https:// URL이어야 합니다"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "웹훅 본문이 너무 길거나 제어 문자를 포함하고 있습니다"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "잘못된 헤더(한 줄에 하나의 \"Name: value\"; Host, Content-Type, Content-Length, Transfer-Encoding, Connection은 기기가 설정합니다)"

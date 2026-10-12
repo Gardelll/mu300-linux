@@ -618,8 +618,17 @@ msgstr "Gövde"
 msgid "Form (URL-encoded)"
 msgstr "Form (URL kodlu)"
 
+msgid "Plain text"
+msgstr "Düz metin"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Alanlar: sender, time, text, device, message (doldurulmuş şablon)"
+
+msgid "Custom body"
+msgstr "Özel gövde"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Boş: standart alanlar (düz metin: ileti). Yer tutucular: {sender}, {time}, {text}, {device}, {message}. Her değer seçilen türe göre kaçışlanır. Bu gövde burada yeniden gösterilir: gizli bilgileri adreste veya bir başlıkta tutun."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Ek başlıklar (satır başına bir \"Ad: değer\")"
@@ -2954,6 +2963,9 @@ msgstr "Geçersiz filtre listesi (en fazla 50 satır)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhook adresi http:// veya https:// ile başlayan bir URL olmalı"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhook gövdesi çok uzun veya bir denetim karakteri içeriyor"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Geçersiz başlık (satır başına bir \"Ad: değer\"; Host, Content-Type, Content-Length, Transfer-Encoding ve Connection cihaz tarafından ayarlanır)"

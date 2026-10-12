@@ -618,8 +618,17 @@ msgstr "Sisältö"
 msgid "Form (URL-encoded)"
 msgstr "Lomake (URL-koodattu)"
 
+msgid "Plain text"
+msgstr "Pelkkä teksti"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Kentät: sender, time, text, device, message (täytetty pohja)"
+
+msgid "Custom body"
+msgstr "Mukautettu runko"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Tyhjä: vakiokentät (pelkkä teksti: viesti). Paikkamerkit: {sender}, {time}, {text}, {device}, {message}. Jokainen arvo suojataan valitun tyypin mukaan. Tämä runko näytetään tässä uudelleen: pidä salaisuudet osoitteessa tai otsakkeessa."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Lisäotsakkeet (yksi \"Nimi: arvo\" riviä kohden)"
@@ -2954,6 +2963,9 @@ msgstr "Virheellinen suodatinluettelo (enintään 50 riviä)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhookin osoitteen on oltava http://- tai https://-URL"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhookin runko on liian pitkä tai sisältää ohjausmerkin"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Virheellinen otsake (yksi \"Nimi: arvo\" riviä kohden; laite asettaa Host-, Content-Type-, Content-Length-, Transfer-Encoding- ja Connection-otsakkeet)"

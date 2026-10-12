@@ -618,8 +618,17 @@ msgstr "Мазмұны"
 msgid "Form (URL-encoded)"
 msgstr "Пішін (URL кодталған)"
 
+msgid "Plain text"
+msgstr "Қарапайым мәтін"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Өрістер: sender, time, text, device, message (толтырылған үлгі)"
+
+msgid "Custom body"
+msgstr "Өзіндік дене"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Бос: стандартты өрістер (қарапайым мәтін: хабарлама). Толтырғыштар: {sender}, {time}, {text}, {device}, {message}. Әр мән таңдалған түрге сай экрандалады. Бұл дене осында қайта көрсетіледі: құпияларды мекенжайда немесе тақырыпта сақтаңыз."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Қосымша тақырыптар (әр жолда бір \"Аты: мәні\")"
@@ -2954,6 +2963,9 @@ msgstr "Сүзгілер тізімі жарамсыз (ең көбі 50 жол)
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Вебхук мекенжайы http:// немесе https:// URL болуы керек"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhook денесі тым ұзын немесе басқару таңбасын қамтиды"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Жарамсыз тақырып (әр жолда бір \"Аты: мәні\"; Host, Content-Type, Content-Length, Transfer-Encoding және Connection құрылғымен орнатылады)"
