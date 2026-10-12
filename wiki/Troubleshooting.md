@@ -135,6 +135,20 @@ fractions), and some pages read the modem inside the request. **Fixed from v2026
 their last readings and say how old they are. On an older release wait it out, or restart `rpcd` and `mu300-atd`.
 [FINDINGS 40](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md)
 
+## Sending an SMS fails with `SMS FAILED: CODE:600`, or the panel's operations log says `sms_send - killed`
+
+Up to v2026.10.21, on some networks (China Broadnet, issue #176) the modem's IMS stack refused every submission
+(`+SPIMSREASON: 1,512,"SMS FAILED: CODE:600 REASON:Busy Everywhere"` in the URC log) while incoming messages
+arrived; and on `openwrt-luci` a send that took longer than 30 s was killed together with the panel's request, leaving
+`sms_send - killed` in the operations log and no word on whether the message went out. **Fixed from v2026.10.22 on**:
+a send is one AT transaction (the channel is held from the setup to the submission, so no other client gets in
+between) and the SMSC the modem reports is written back to it unchanged before each one, in `mu300-sms` and the panel
+on OpenWrt and in `sms` on Ubuntu; the panel starts the send in the background and follows it, also after a reload.
+On an older release write the SMSC back yourself (`mu300-at 'AT+CSCA?'`, then `mu300-at 'AT+CSCA="<the value it
+showed>",<the type>'`, with `sudo` on Ubuntu) and send from the shell while the panel is idle (`mu300-sms send NUMBER
+TEXT` on OpenWrt, `sudo sms send NUMBER TEXT` on Ubuntu).
+[FINDINGS 46](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md)
+
 ## The device restarts on kernel 5.4 when a container stops
 
 Up to v2026.10.20, on 5.4, when two network namespaces were alive at once and one went away (Docker containers, a
@@ -156,6 +170,18 @@ level, every six seconds or so in `dmesg` and `logread` (releases up to v2026.10
 routine work, not faults (issue #140). **From v2026.10.21 on** they are debug lines, shown only when you ask for them:
 `echo 'module sprd_wlan_combo +p' > /sys/kernel/debug/dynamic_debug/control`. The real errors next to them are still
 logged.
+
+## The log is full of `mmc1` register dumps on the F50 (6.18, 7.2)
+
+`mmc1: Got command interrupt 0x00000001 even though no command operation was in progress`, followed by a 16-line
+`SDHCI REGISTER DUMP`, every few seconds to minutes in `dmesg -l err` on an F50 with nothing in the SD slot, on 6.18
+and 7.2 up to v2026.10.21 (issue #181). Mainline's EIC driver mapped only three of the controller's six banks, so the
+slot's card-detect line could not be found and the slot was polled instead: every second a card that is not there was
+initialised, and the host's late answer to a command nothing replied to was logged with the dump. **Fixed from
+v2026.10.22 on**: the six banks are mapped, the slot has real card detect (an interrupt), and an empty slot is left
+alone until a card goes in. The dumps are noise, not a fault; on an older release put a card in the slot (with a card
+there are none) or use 5.4, which never had them. The U30 Air has no slot.
+[FINDINGS 31j](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md)
 
 ## The U30 Air charges slowly on a strong USB-C port
 
