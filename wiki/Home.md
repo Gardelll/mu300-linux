@@ -56,6 +56,29 @@ kernels to choose from; 5G/LTE internet shared over Wi-Fi and USB; SSH, and `adb
 SMS and USSD; an optional VPN module; a web panel on Ubuntu too (Cockpit with an MU300 page, optional); a
 `raspi-config`-like menu called `mu300-toolkit`; automatic fallback to Android; updates on the device.
 
+## New in v2026.10.23
+
+The release of 2026-10-23 (a prerelease first, promoted once a board has run it). What it changes, and where to read
+on:
+
+* **The modem on mainline after a Magisk install** (issues #127, #170): Android files the installer imported could
+  end up readable by root only, and the modem's processor was then never loaded. The installers write them with the
+  right modes now, and every boot repairs an import that is already there. [Troubleshooting](Troubleshooting)
+* **A thermal zone on 6.18 and 7.2:** the board's temperature is a kernel thermal zone (`mu300_thermal`), and
+  `thermal-guard` hands over to it. [Kernels](Kernels)
+* **SMS arrive at once on OpenWrt:** the modem delivers a message as it comes in (`+CMT`) instead of waiting for the
+  next poll, and forwarding to a webhook can have a body of your own (issue #171). [SMS](SMS)
+* **The panel** shows the SIM's own number, shows a carrier name the modem sends as hex as text (issue #174), hides
+  a SIM slot the board does not have, and a band or cell lock reset is checked after it is made.
+* **The VPN page says why a config was refused** instead of "profile not added", and its check works. The engines'
+  own fixes are in VPN module v2.0.1 (`mu300-extra install vpn` again): sing-box, mihomo and dae find their server
+  on carriers that only let DNS through to their own resolvers, mihomo configs with GEOSITE/GEOIP rules start (the
+  geodata comes with the extra), dae stays up on 6.18 and 7.2, and switching to a profile that cannot run leaves the
+  working tunnel alone. [VPN](VPN)
+* **Installers:** a stalled write to the SD card or the internal storage is noticed and reported, and the boot image
+  is read back after it is written. [Installation](Installation)
+* **Kernels:** 5.4 rebuilt with `NFT_QUEUE`; 6.18.56 and 7.2.10 with the thermal module. [Kernels](Kernels)
+
 ## New in v2026.10.22
 
 The release of 2026-10-22 (a prerelease first, promoted once a board has run it). Fixes again. What it changes, and
