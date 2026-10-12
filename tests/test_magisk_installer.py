@@ -886,7 +886,91 @@ class Install(InstallerCase):
         self.assertEqual(r.returncode, 1)
         self.assertIn('boot_b and misc were not changed', r.stdout)
         (self.fake.root / 'data/adb/mu300-linux-password.txt').unlink()      # saved first (the next test)
+        (self.fake.root / 'data/adb/mu300-device-install.log').unlink()      # kept for a look (the test below)
         self.assertTrue(self.nothing_written(except_fs=True))
+
+    def test_failed_device_install_keeps_its_log(self):
+        # the work directory goes with the run: the device script's output is kept where root can read it, and the
+        # message says where (a timed-out SD-card stage names itself there, FINDINGS 48)
+        r = self.run_installer(extra_env={'FAKE_INSTALL_FAILS': '1'})
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        log = self.fake.root / 'data/adb/mu300-device-install.log'
+        self.assertIn('[device] failing as asked', log.read_text())
+        self.assertIn(f'the device log was kept at {log}', r.stdout)
+        self.assertEqual(log.stat().st_mode & 0o777, 0o600)
+        # a run that goes through leaves no log of a failure behind
+        self.device()
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertFalse(log.exists())
+
+    def test_android_install_gets_the_lock_directory(self):
+        # the lock of a timed-out SD-card stage must outlive the work directory of this run: it goes to /data/adb
+        self.assertEqual(self.run_installer().returncode, 0)
+        lines = [l for l in (self.fake.root / 'android-sh.log').read_text().splitlines() if 'android-install.sh' in l]
+        self.assertTrue(lines)
+        for l in lines:
+            self.assertIn(f'MU300_LOCK_DIR={self.fake.root}/data/adb', l)
+
+    def test_a_timed_out_run_in_this_boot_is_refused(self):
+        # android-install.sh left the lock of this Android boot (an SD-card stage timed out, its request still stuck
+        # in the kernel): refused before anything is built or written, with the stage and the way out
+        lock = self.fake.root / 'data/adb/mu300-install.stalled'
+        lock.write_text('11111111-2222-3333-4444-555555555555\nstage unpack openwrt, 2026-10-12 13:00: no I/O progress on mmcblk1 for 120 s\n')
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn('An earlier run of this installer timed out in this Android boot (stage unpack openwrt, 2026-10-12 13:00: '
+                      'no I/O progress on mmcblk1 for 120 s)', r.stdout)
+        self.assertIn('Reboot Android, then install the zip again', r.stdout)
+        self.assertIn(str(lock), r.stdout)
+        self.assertNotIn('Installing', r.stdout)
+        self.assertNotIn('Plan', r.stdout)
+        self.assertFalse((self.fake.root / 'install.env').exists())
+        self.assertTrue(lock.exists())
+        self.assertTrue(self.nothing_written())
+        # Android has rebooted since (another boot id): the lock is stale, the installation goes through, the lock goes
+        lock.write_text('99999999-0000-0000-0000-000000000000\nstage format\n')
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertFalse(lock.exists())
+
+    def test_boot_readback_mismatch_is_not_armed(self):
+        # the image is read back from the partition into a file (whole 4096-byte blocks, one dd whose status counts)
+        # and compared by sha256: a difference refuses to arm Linux - misc stays, Android keeps booting
+        real = shutil.which('dd')
+        self.stub('dd', f'rb=; for a in "$@"; do case $a in of=*/boot/readback) rb=${{a#of=}} ;; esac; done\n'
+                        f'"{real}" "$@" || exit $?\n'
+                        f'[ -z "$rb" ] || printf X | "{real}" of="$rb" bs=1 seek=4100 conv=notrunc 2>/dev/null')
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn('boot_b read back from the eMMC is not the image that was written (sha256 differs); '
+                      'Linux was not armed: misc was not changed, so Android keeps booting', r.stdout)
+        by = self.fake.root / 'dev/block/by-name'
+        self.assertEqual(sha(by / 'misc'), self.before['misc'])
+        self.assertEqual(sha(by / 'boot_a'), self.before['boot_a'])
+        self.assertNotEqual(sha(by / 'boot_b'), self.before['boot_b'])        # written, verified wrong, never armed
+        self.assertNotIn('Done. Reboot', r.stdout)
+        self.assertEqual(self.work_dirs(), [])
+        # a read that fails outright is the same refusal, with the reason
+        self.device()
+        self.stub('dd', f'for a in "$@"; do case $a in of=*/boot/readback) exit 1 ;; esac; done\nexec "{real}" "$@"')
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn('is not the image that was written (dd failed)', r.stdout)
+        self.assertEqual(sha(by / 'misc'), self.before['misc'])
+
+    def test_boot_readback_is_a_file_of_whole_blocks(self):
+        # the shape of the read-back: exactly the image's length in 4096-byte blocks, into a file, no pipeline on the
+        # partition; mu300-update's write_boot (its own check) is called first
+        s = (TOP / 'android/magisk/installer/mu300-install.sh').read_text()
+        fn = re.search(r'^boot_readback\(\) \{.*?^\}\n', s, re.S | re.M).group(0)
+        self.assertIn('dd if="$1" of="$W/boot/readback" bs=4096 count="$_bn"', fn)
+        self.assertNotRegex(fn, r'dd if="\$1"[^\n]*[^|]\|[^|]')          # a |, never a ||
+        self.assertIn('echo 3 > /proc/sys/vm/drop_caches', fn)
+        ib = re.search(r'^install_boot\(\) \{.*?^\}\n', s, re.S | re.M).group(0)
+        self.assertLess(ib.index('write_boot '), ib.index('boot_readback '))
+        main = s[s.index('main() {'):]
+        self.assertLess(main.index('install_boot'), main.index('arm_linux'))
 
     def test_password_is_saved_before_anything_is_written(self):
         # android-install.sh puts the password into the systems: a run that fails or is killed after that must not
