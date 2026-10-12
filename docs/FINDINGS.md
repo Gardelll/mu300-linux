@@ -109,7 +109,7 @@ what replaced it. The table below gives each section's state.
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
-| 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current; U30 Air untested |
+| 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
 
 ## Hardware and firmware facts
 
@@ -3979,7 +3979,40 @@ new `thermal` array: every zone's type, temperature, trip points and the cooling
 states; zones with trips first). It writes nothing: the trips stay the device tree's (the fork's trip editor was not
 taken).
 
-**Device test (F50-B, Ubuntu 24.04, v2026.10.22, 7.2.10).** _pending: filled in below once the board is free._
+**Device test (F50-B, Ubuntu 24.04, v2026.10.22, kernel 7.2.10, 2026-10-12).** The board had been up 5 minutes
+on the release kernel; the test copies of `thermal-guard` and `mu300-cpu` were put in place (the release ones kept
+and restored at the end) and `mu300_thermal.ko` (the 7.2.10 build) inserted by hand - nothing of the boot image or
+kernel changed.
+
+* Before: 19 zones, none with a trip point; cooling devices `cpufreq-cpu0` 0/9, `cpufreq-cpu4` 0/9, `cpufreq-cpu7`
+  0/10, `devfreq-23140000.gpu` 0/2; hottest 39.2 °C.
+* `insmod`: `mu300-virtual-thermal virtual-sensor@0: soc-thmzone: the hottest of 11 zones`; `thermal_zone19`
+  `type=soc-thmzone mode=enabled policy=step_wise`, trips `0 passive 70000 hyst 1000`, `1 passive 85000 hyst 1000`,
+  `2 critical 110000 hyst 2000`; `cdev0 -> cooling_device2 (cpufreq-cpu7) trip 1 weight 410`, `cdev1 -> cooling_device1
+  (cpufreq-cpu4) trip 1 weight 410`, `cdev2 -> cooling_device0 (cpufreq-cpu0) trip 1 weight 1024` - the three maps of
+  the 85 °C trip, with the DT's contributions; the five vendor cooling nodes left out, as expected. Three seconds
+  later `thermal-guard: kernel thermal zone soc-thmzone throttles the CPUs: watching only, power-off at 105000 mC
+  stays`. `mu300-cpu status --json` listed 20 zones; the soc entry: three trips, three cooling devices at state 0.
+* Load, `yes >/dev/null` on all 8 cores: 38.7 → 64.1 °C in 5 s, 78.0 at 30 s, 84.4 at 50 s, 85.3 °C at 65 s; then
+  the kernel throttled: cooling states `cpu0=1 cpu4=1 cpu7=1` and `scaling_max_freq` **read** 1846/2171/2041 MHz
+  against the user values 2002/2301/2210 (the QoS cap shows through `policy->max`), the temperature held at
+  84.4-85.3 °C, the states flapping between 0 and 1 around the trip (100 ms passive polling, 1 °C hysteresis).
+  `thermal-guard` wrote nothing (its only line in that time: `too hot (SoC 85327 mC): LED alarm on`) and `mu300-cpu
+  status` said `thermal throttling: active` from the cooling states. Writing `cpuinfo_max_freq` into
+  `policy7/scaling_max_freq` under the cap read back 2210000 with the state at 1 a moment later - inconclusive, the
+  states were flapping at that second; the cool-down sample right after showed the cap again (`policy7 cur 1703 /
+  max 2041`, state 1).
+* Load off: 85.3 → 60.1 °C in 5 s, states 0/0/0 and `scaling_max_freq` back to 2002/2301/2210 by itself (the user
+  request was never changed), `cooled down (SoC 64103 mC): LED alarm off`.
+* `rmmod`: `kernel thermal zone soc-thmzone gone: capping cpufreq again` within 5 s, no zone with trips left. The
+  loader path: the `.ko` copied to `/lib/modules/7.2.10/extra/` and the new `extra-modules` run - `loaded
+  mu300_thermal` (`modprobe` had no index, `insmod` by path took it), the zone back, `thermal-guard` handed over again
+  5 s later. The guard alone, with the service stopped and HOT set 2 °C under the current temperature for two rounds:
+  `scaling_max_freq` 2002000 2301000 2210000 → 1703000 2054000 1872000 (two steps each) and the marker
+  `/run/mu300/thermal-capped` present; a cool run lifted them back to 2002000 2301000 2210000.
+* End state: the release `thermal-guard` and `mu300-cpu` restored (same md5 as the backup), the service active, the
+  module not loaded and no `mu300_thermal.ko` under `/lib/modules`, `/run/mu300` without thermal markers, `uname -r`
+  7.2.10 - the release kernel, which was never replaced (no `mu300-update kernel`, so no `rollback-boot` needed).
 
 Open: the U30 Air (same SoC, its own DTB) is untested; its `thmzone-cells` may name other zones, which the module
 reads from the tree. Not taken, as the review decided: the fork's CPU voltage-offset driver.
