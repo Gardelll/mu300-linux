@@ -115,6 +115,7 @@ what replaced it. The table below gives each section's state.
 | 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
 | 49 | The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only | current (U30 Air, Vodafone TR: CNUM answers) |
 | 50 | Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot | current; the timeout path not yet seen on a device |
+| 51 | SMS delivered directly (+CMT), acknowledged only once the pool has it; the SIM path stays as the fallback | current |
 
 ## Hardware and firmware facts
 
@@ -4121,3 +4122,86 @@ not move for a healthy card, the rule would end a working stage: the field numbe
 limits (900 s, 3600 s); (e) `setsid` present in Android's `/system/bin` (toybox), and the zip's `busybox` not in the
 device script's PATH; (f) the boot image read-back on both installers: `dd` into the file, then the hash, visible
 in `strace` or by the file's existence while it runs.
+### 51. SMS delivered directly (+CMT), acknowledged only once the pool has it; the SIM path stays as the fallback
+
+Until v2026.10.22 the panel's SMS pool (openwrt-luci: mu300-smsd, mu300-sms, §46) learned of a new message the
+roundabout way: the modem stored it on the SIM and said `+CMTI: "SM",n` on nr0, mu300-smsd saw the line in
+mu300-atd's URC log and ran `mu300-sms sync` (`AT+CMGL=4`, decode, pool, `AT+CMGD` per slot). Two writes to the SIM
+per message, a listing of the whole store, and the SIM as the only safe copy until the pool had it. kanoqwq's fork
+delivers directly instead (GSM 27.005 `+CNMI` with mt=2: the modem forwards the SMS-DELIVER as a `+CMT:` frame and
+waits for `AT+CNMA`); this is that mechanism, ported into this tree's layout.
+
+**Mechanism.** mu300-smsd starts as before: `AT+CNMI=2,1,0,0,0`, a first `sync` (what the SIM holds), then
+`AT+CMGF=0`, `AT+CSMS=1`, `AT+CNMI=3,2,2,0,1`. If any of the three is not `OK` (or `MU300_SMS_DIRECT=0` says not to
+ask), `AT+CNMI=2,1,0,0,0` is asked again and only the +CMTI path runs, exactly as before. With direct delivery on
+(`/run/mu300-smsd.direct` exists) every new message comes as two lines on nr0, where +CMTI came too: `+CMT: ,<length>`
+and the PDU. mu300-atd's nr0 drainer (and its drain and collect on the command channel, should a frame come there)
+hands both lines to `mu300-cmt-spool` on its **stdin** - never argv, which is public - and that writes the PDU as
+`$POOL/incoming/cmt-<epoch>.<random>.ready` via mktemp and rename, fsyncing the file and the directory (busybox
+`fsync`, or coreutils `sync FILE`; never a global sync). The URC log gets one fixed word, `+CMT (PDU spooled)` or
+`+CMT (not spooled)`: not the header, which in text mode would carry the sender, and never the second line. A frame
+inside a reply is taken out of it (a client parsing `AT+CMGL` would read the PDU line as one of its own). Every 5 s
+mu300-smsd pools each `*.ready` with `mu300-sms import-pdu FILE` and **only then** sends `AT+CNMA=1`; an import or an
+acknowledgement that fails ends the round and is retried, three failed rounds in a row set the files aside as
+`*.failed` and fall back to the SIM path. `import-pdu` refuses anything the codec makes no message of, then parks the
+PDU in `$POOL/parts` (mktemp, rename, fsync) and absorbs the parked parts with the same decoding and grouping a SIM
+listing goes through, so a long message's parts wait for each other there as they did on the SIM, with the same
+`MU300_SMS_PARTIAL_WAIT`; the periodic sync lists the SIM and the parked parts together, so a part whose siblings
+never come is pooled after the hour, and the parts of one message join across the SIM (a class 2 part) and the air.
+The pool's dedupe (fingerprint, tombstones) applies: a message the modem delivers again after a lost acknowledgement
+is not pooled twice, and one deleted from the pool stays deleted. The daemon exports `MU300_AT_LOCK_WAIT=8`, so a
+client stuck on the AT channel cannot hold the receiver behind mu300-at's 90 s default. Everything that writes as root
+into the pool (`import-pdu`, the spooler, the daemon's spool loop) refuses symbolic links and directories that are not
+ours (`own_dir`/`own_file`, mu300-update's lock rule) and makes the directories mode 700.
+
+**What the modem does (U30 Air, Vodafone TR).** `AT+CNMI=?` gives `(0-3),(0-3),(0-3),(0-2),(0-1)`, `AT+CSMS=?`
+`(0-1)`. It answers `OK` to `AT+CNMI=3,2,2,0,1` and then reports `+CNMI: 3,2,1,0,1` - it keeps a bm of its own, so
+the daemon's periodic check (every full sync, after which it re-applies the setting) looks at mt alone. ds=0 rather
+than the fork's ds=1 on purpose: nothing here asks for status reports (no SRR bit), and a report routed to the TE
+would need an acknowledgement of its own, which is the one thing that makes the modem drop the routing by itself
+(27.005: no CNMA in time, mt and ds back to 0). A two-part reply from 7000 came as two frames (`+CMT: ,157` then
+`+CMT: ,75`, three seconds apart), the second only after the first was acknowledged; the SIM/ME store stayed at
+`"ME",0,0`. The modem held an unacknowledged message for two minutes without dropping the routing (measured by
+accident: the daemon was stopped between the frame and its import, the spool kept both PDUs, the restarted daemon
+imported and acknowledged them and `+CNMI?` still said `3,2,1,0,1`).
+
+**Device test** (`mu300-sms send 7000 KALAN`, the line answers within seconds):
+
+```
+daemon.info mu300-smsd[9008]: sync: 0 new, 0 on the SIM, 42 in the pool, 0 moved off the SIM
+daemon.err  mu300-smsd[9008]: mu300-smsd: direct delivery is on (+CMT frames into /etc/mu300/sms-pool/incoming)
+daemon.info mu300-smsd[9008]: import: 0 new, 43 in the pool, 1 waiting for its other parts
+daemon.err  mu300-smsd[9008]: mu300-smsd: pooled and acknowledged cmt-1791808049.ePLCmA.ready
+daemon.info mu300-smsd[9008]: new: 000049 from 7000 2026-10-12 15:27:29
+daemon.info mu300-smsd[9008]: import: 1 new, 44 in the pool
+daemon.err  mu300-smsd[9008]: mu300-smsd: pooled and acknowledged cmt-1791808053.iFAgce.ready
+# /run/mu300-at/urc/stty_nr0.log:   +CMT (PDU spooled)  (twice; no PDU, no header fields)
+# AT+CPMS? -> +CPMS: "ME",0,0,"ME",0,0,"ME",0,0        AT+CNMI? -> +CNMI: 3,2,1,0,1
+# mu300-sms show 49 -> sim index:   not on the SIM; ubus call mu300dash sms_list lists 000049 (the panel's page)
+```
+
+The fallback, forced with `MU300_SMS_DIRECT=0`: `the modem did not take direct delivery (or MU300_SMS_DIRECT=0); new
+messages are stored on the SIM and announced (+CMTI)`, `+CNMI: 2,1,0,0,0`, and the same send answered through the old
+path - `+CMTI: "SM",2` in the URC log, `new: 000053 from 7000`, `sync: 1 new, 1 on the SIM, 48 in the pool, 2 moved
+off the SIM`, `sim index: 1,2`, the SIM empty again afterwards. The service restarted went back to direct delivery.
+
+**Tests** (`tests/test_sms_pool.py`, `tests/test_device_scripts.py Atd`): `import-pdu` pools a message with no AT
+command, is idempotent, honours tombstones, joins parts and leaves the waiting ones parked, pools a stale part by a
+sync, joins a SIM part with an air part, refuses non-hex/odd/undecodable/overlong PDUs and every link (a spool entry,
+the parts directory, the pool), fsyncs the parked part before the pool is touched; the spooler writes mode 600 into a
+700 directory with the two fsyncs and nothing else, refuses bad frames and linked directories; the daemon (Linux
+only: it tells a live holder by `/proc`) asks for direct delivery after the first sync, acknowledges after the import
+and in spool order, falls back on each refusal and on `MU300_SMS_DIRECT=0` with +CMTI still working, never
+acknowledges a failed import, gives up after three rounds, keeps the file when the ack is refused, puts the routing
+back when `+CNMI?` says the modem dropped it, sets a linked spool entry aside; mu300-atd on a pty spools a frame from
+nr0, from inside a reply (kept out of the answer), from a drain, logs the fixed word only, drops a text-mode frame
+(sender and text reach nothing), and goes on without the spooler.
+
+**Ubuntu.** mu300-atd and the spooler are on every system, so a `+CMT` frame there is spooled too and never logged -
+but nothing on Ubuntu asks for direct delivery, and that is deliberate: the system's SMS tool, `sms`, has no daemon
+and no pool; `sms watch` polls the store (`AT+CPMS?`/`AT+CMGL`), which cannot miss a message, and `sms list`/`read`
+read the SIM. A message routed to the TE needs something running to acknowledge it, or the modem drops the routing
+and stores the next ones unannounced; a daemon with a pool is what openwrt-luci has and Ubuntu does not. So on Ubuntu
+the modem stays in its storage mode (the fork's smsd is openwrt-luci only here as well), and a PDU that ever lands in
+`/etc/mu300/sms-pool/incoming` there (someone set `AT+CNMI` mt=2 by hand) is kept, unacknowledged, for an
+`mu300-sms import-pdu` that does not exist on that system - documented rather than half-built.
