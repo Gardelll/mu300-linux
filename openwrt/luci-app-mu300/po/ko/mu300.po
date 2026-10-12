@@ -849,6 +849,9 @@ msgstr "모뎀"
 msgid "Carrier"
 msgstr "통신사"
 
+msgid "Own number"
+msgstr "내 번호"
+
 msgid "Module"
 msgstr "모듈"
 

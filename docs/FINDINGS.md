@@ -110,6 +110,7 @@ what replaced it. The table below gives each section's state.
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
 | 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
+| 49 | The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only | current (U30 Air, Vodafone TR: CNUM answers) |
 
 ## Hardware and firmware facts
 
@@ -4016,3 +4017,28 @@ kernel changed.
 
 Open: the U30 Air (same SoC, its own DTB) is untested; its `thmzone-cells` may name other zones, which the module
 reads from the tree. Not taken, as the review decided: the fork's CPU voltage-offset driver.
+### 49. The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only
+
+The panel showed IMEI, IMSI and ICCID but not the SIM's own number (MSISDN). Ported from kanoqwq's fork
+(0d93695, reviewed in `docs/superpowers/reviews/2026-10-11-kano-clean-tf-7.2.md`: "CNUM on full rounds only, never
+in the fast tier"), measured so far on this machine only (unit tests; the device checks are in the PR).
+
+* **Two sources.** `AT+CNUM` reads the number the SIM carries (`+CNUM: "","+905551234567",145`; type 145 is
+  international, a "+" is put in front when the SIM left it out). Many SIMs carry none - the answer is `OK` alone or
+  an empty string - and the number then comes from the IMS public identity the operator provisions, `AT+SPPAURI?`
+  (what the stock RIL's `getPAU` reads): a `tel:` URI first, else a `sip:`/`sips:` URI whose user part is an
+  international number. A bare numeric SIP user part is the IMSI on many networks and is **not** taken as a number.
+  3 to 15 digits (E.164), nothing else, or nothing at all - the panel never guesses.
+* **Where in the tiers.** The IMS identity exists only once IMS is registered, later than the SIM is read at boot, so
+  the number cannot live in the 6 h identity cache (`sim.json`) the way IMEI/IMSI/ICCID do: a miss at boot would
+  stay a miss for hours (kano's own regression). It is asked on **full rounds only** (`cell`, every ~5 s while the
+  page is open): an empty answer is asked again on the next full round (two commands, about 0.3 s at the measured
+  0.13 s per command, §40), a number found is kept in `/var/run/unisoc-modem/own-number` for the boot and not asked
+  again (a SIM change goes through a reboot, the same assumption the identity cache makes). The fast tier (1.5 s)
+  never sends either command, and neither does `mu300dash`'s live `signal` read.
+* **Personal data.** The number reaches the browser in `status`'s `cell.msisdn` / `cell.msisdn_src` (`sim` or
+  `ims`), a read-only method of the existing ACL; the home page shows it under ICCID, masked like the IMSI
+  (`+905****567`) until "Show SIM identifiers", and the row is not there at all when neither source has one. It is
+  never written to flash: `sim.json` stays IMEI/IMSI/ICCID, the runtime files are root's only (`umask 077`), the
+  collector prints nothing, and the panel's operations log keeps its rule (method, time, outcome - no IMSI or
+  numbers). Translations: `Own number` in all 31 catalogs (`tools/luci-i18n.py update`).

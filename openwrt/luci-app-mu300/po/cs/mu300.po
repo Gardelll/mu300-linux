@@ -849,6 +849,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Operátor"
 
+msgid "Own number"
+msgstr "Vlastní číslo"
+
 msgid "Module"
 msgstr "Modul"
 

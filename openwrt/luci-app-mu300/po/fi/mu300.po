@@ -849,6 +849,9 @@ msgstr "Modeemi"
 msgid "Carrier"
 msgstr "Operaattori"
 
+msgid "Own number"
+msgstr "Oma numero"
+
 msgid "Module"
 msgstr "Moduuli"
 

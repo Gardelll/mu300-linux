@@ -849,6 +849,9 @@ msgstr "Μόντεμ"
 msgid "Carrier"
 msgstr "Πάροχος"
 
+msgid "Own number"
+msgstr "Δικός αριθμός"
+
 msgid "Module"
 msgstr "Μονάδα"
 

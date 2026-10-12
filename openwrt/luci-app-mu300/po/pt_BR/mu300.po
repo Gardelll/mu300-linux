@@ -849,6 +849,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Operadora"
 
+msgid "Own number"
+msgstr "Número próprio"
+
 msgid "Module"
 msgstr "Módulo"
 

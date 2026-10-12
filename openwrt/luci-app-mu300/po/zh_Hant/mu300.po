@@ -849,6 +849,9 @@ msgstr "數據機"
 msgid "Carrier"
 msgstr "電信業者"
 
+msgid "Own number"
+msgstr "本機號碼"
+
 msgid "Module"
 msgstr "模組"
 

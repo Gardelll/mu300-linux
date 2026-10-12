@@ -849,6 +849,9 @@ msgstr "Модем"
 msgid "Carrier"
 msgstr "Оператор"
 
+msgid "Own number"
+msgstr "Өз нөмірі"
+
 msgid "Module"
 msgstr "Модуль"
 

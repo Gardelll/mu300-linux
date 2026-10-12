@@ -849,6 +849,9 @@ msgstr "モデム"
 msgid "Carrier"
 msgstr "キャリア"
 
+msgid "Own number"
+msgstr "自分の番号"
+
 msgid "Module"
 msgstr "モジュール"
 

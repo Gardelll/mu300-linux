@@ -849,6 +849,9 @@ msgstr "מודם"
 msgid "Carrier"
 msgstr "ספק"
 
+msgid "Own number"
+msgstr "המספר שלי"
+
 msgid "Module"
 msgstr "מודול"
 

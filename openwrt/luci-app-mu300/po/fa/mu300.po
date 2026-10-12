@@ -849,6 +849,9 @@ msgstr "مودم"
 msgid "Carrier"
 msgstr "اپراتور"
 
+msgid "Own number"
+msgstr "شماره خود"
+
 msgid "Module"
 msgstr "ماژول"
 

@@ -849,6 +849,9 @@ msgstr "Modem"
 msgid "Carrier"
 msgstr "Nhà mạng"
 
+msgid "Own number"
+msgstr "Số của mình"
+
 msgid "Module"
 msgstr "Mô-đun"
 
