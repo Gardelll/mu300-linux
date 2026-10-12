@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Температура"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Теплові зони ядра, лише читання. Зона з пороговими точками обмежує прив'язані до неї пристрої охолодження на своєму пасивному порозі; стан охолодження 0 означає відсутність обмеження."
+
+msgid "Zone"
+msgstr "Зона"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Порогові точки"
+
+msgid "Cooling devices"
+msgstr "Пристрої охолодження"
+
 msgid "USB role"
 msgstr "Роль USB"
 
@@ -830,6 +848,9 @@ msgstr "Модем"
 
 msgid "Carrier"
 msgstr "Оператор"
+
+msgid "Own number"
+msgstr "Власний номер"
 
 msgid "Module"
 msgstr "Модуль"
@@ -1650,6 +1671,15 @@ msgstr "Повідомлення (Enter — надіслати, Shift+Enter — 
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Надсилання використовує AT+CMGS (режим PDU); якщо канал зайнятий, повторіть. Щоб видалити одне повідомлення, натисніть значок кошика на його бульбашці."
 
+msgid "Sending…"
+msgstr "Надсилання…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Надіслано; список незабаром оновиться."
+
+msgid "Sending failed"
+msgstr "Помилка надсилання"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронізація із SIM у фоні (AT+CMGL)…"
 
@@ -1688,15 +1718,6 @@ msgstr "Видалено (лише локально)"
 
 msgid "Enter both a number and a message."
 msgstr "Введіть номер і повідомлення."
-
-msgid "Sending…"
-msgstr "Надсилання…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Надіслано; список незабаром оновиться."
-
-msgid "Sending failed"
-msgstr "Помилка надсилання"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· повідомлень: %d, непрочитаних: %d · розмов: %d"

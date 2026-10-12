@@ -1062,7 +1062,12 @@ WriteUnix $envFile (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_
 Remove-Item $envFile
 $log = SuDo "sh $T/android-install.sh"
 Write-Host $log
-if ($log -notmatch 'MU300-INSTALL-OK') { Die (T 'installation on the device failed; boot_{1} and misc were not changed' $LINUX_SLOT) }
+# kept as install.sh keeps it: a timed-out SD-card stage (FINDINGS 50) names itself there, with the way out
+$devLog = "$Work\device-install.log"
+Set-Content -Path $devLog -Value $log
+if ($log -notmatch 'MU300-INSTALL-OK') {
+    Die ((T 'installation on the device failed; boot_{1} and misc were not changed' $LINUX_SLOT) + "`n" + (T 'the device log was kept at {1}' $devLog))
+}
 # the boot chain backup android-install.sh made, into the work directory (install.sh's bootchain_pull)
 if ($SYNC_BOOTCHAIN -eq 1 -and (SuDo "[ -d $T/mu300-bootchain-backup ] && echo y") -eq 'y') {
     $bcDir = Join-Path $Work ('bootchain\' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
@@ -1096,10 +1101,16 @@ $EXP = $bootJson.sha256
 & adb push $bcFile "$T/mu300-bc.bin" | Out-Null
 if ((SuDo "sha256sum $T/mu300-boot.img").Split(' ')[0] -ne $EXP) { Die (T 'pushed boot image hash mismatch') }
 SuDo "dd if=$T/mu300-boot.img of=/dev/block/by-name/boot_$LINUX_SLOT bs=4M && sync" | Out-Null
-if ((SuDo "sha256sum /dev/block/by-name/boot_$LINUX_SLOT").Split(' ')[0] -ne $EXP) {
+# read back from the medium (the page cache dropped first): exactly the image's length in whole 4096-byte blocks,
+# into a file, by one dd whose status counts (FINDINGS 50; install.sh's write_linux_boot does the same). A mismatch
+# stops here: misc is not written, Android keeps booting.
+$imgLen = (Get-Item "$Work\boot-linux-slot$LINUX_SLOT.img").Length
+$imgBlocks = [int][math]::Ceiling($imgLen / 4096)
+$readBack = SuDo "echo 3 > /proc/sys/vm/drop_caches; dd if=/dev/block/by-name/boot_$LINUX_SLOT of=$T/mu300-boot.rb bs=4096 count=$imgBlocks 2>/dev/null && head -c $imgLen $T/mu300-boot.rb | sha256sum"
+if ("$readBack".Split(' ')[0] -ne $EXP) {
     Die (T 'boot_{1} verify failed (slot {2} still active, Android keeps booting)' $LINUX_SLOT $ANDROID_SLOT)
 }
-SuDo "dd if=$T/mu300-bc.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc.bin" | Out-Null
+SuDo "dd if=$T/mu300-bc.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc.bin $T/mu300-boot.rb" | Out-Null
 
 # on-device switch for later: one command in Android instead of plugging into a computer (needs Magisk)
 Say (T 'Installing the on-device switch (Magisk module)')

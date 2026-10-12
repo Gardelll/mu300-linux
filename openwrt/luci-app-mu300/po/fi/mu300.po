@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Lämpötila"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Ytimen lämpöalueet, vain luku. Alue, jolla on raja-arvopisteitä, rajoittaa siihen sidottuja jäähdytyslaitteita passiivisessa raja-arvossaan; jäähdytystila 0 tarkoittaa, ettei rajoitusta ole."
+
+msgid "Zone"
+msgstr "Alue"
+
+msgid "Temperature"
+msgstr "Lämpötila"
+
+msgid "Trip points"
+msgstr "Raja-arvopisteet"
+
+msgid "Cooling devices"
+msgstr "Jäähdytyslaitteet"
+
 msgid "USB role"
 msgstr "USB-rooli"
 
@@ -830,6 +848,9 @@ msgstr "Modeemi"
 
 msgid "Carrier"
 msgstr "Operaattori"
+
+msgid "Own number"
+msgstr "Oma numero"
 
 msgid "Module"
 msgstr "Moduuli"
@@ -1650,6 +1671,15 @@ msgstr "Viesti (Enter lähettää, Shift+Enter uusi rivi)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Lähetys käyttää AT+CMGS-komentoa (PDU-tila); yritä uudelleen, jos kanava on varattu. Poista yksittäinen viesti sen kuplan roskakorikuvakkeella."
 
+msgid "Sending…"
+msgstr "Lähetetään…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Lähetetty; luettelo päivittyy pian."
+
+msgid "Sending failed"
+msgstr "Lähetys epäonnistui"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synkronoidaan SIM-kortilta taustalla (AT+CMGL)…"
 
@@ -1688,15 +1718,6 @@ msgstr "Poistettu (vain paikallinen)"
 
 msgid "Enter both a number and a message."
 msgstr "Anna sekä numero että viesti."
-
-msgid "Sending…"
-msgstr "Lähetetään…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Lähetetty; luettelo päivittyy pian."
-
-msgid "Sending failed"
-msgstr "Lähetys epäonnistui"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d viestiä, %d lukematonta · %d keskustelua"
