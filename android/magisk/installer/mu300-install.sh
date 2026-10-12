@@ -53,7 +53,8 @@ die() { echo "! $*"; exit 1; }
 gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 # Android's own shell and toolbox, never Magisk's standalone busybox: its mke2fs makes ext2 only and its losetup has
 # no -S. su -c sh gives install.sh exactly this environment. MU300_DEVICE_WORK tells android-install.sh where its files are.
-asw() { env -u ASH_STANDALONE PATH="$APATH" MU300_DEVICE_WORK="${W:-}" "$@"; }
+# MU300_LOCK_DIR: the lock of a timed-out SD-card stage (android-install.sh, FINDINGS 50) outlives this run's W.
+asw() { env -u ASH_STANDALONE PATH="$APATH" MU300_DEVICE_WORK="${W:-}" MU300_LOCK_DIR="$WORK_PARENT" "$@"; }
 su_do() { asw "$DEVSH" -c "$1"; }            # storage.sh's way to run a command on the device: here it is local
 
 android_lang() {  # the language of the Android locale: tr, zh or en
@@ -167,6 +168,18 @@ conf_check() {  # every answer, from a file or the environment, has a value this
     done
 }
 src_of() { eval "_s=\${SRC_$1:-}"; if [ -n "$_s" ]; then echo "$_s"; else t 'default'; fi; }   # where a value came from
+
+# ---- a run that timed out on the SD card in this Android boot (FINDINGS 50): android-install.sh left its lock, keyed
+# by the boot id, in WORK_PARENT (its own work directory was that run's and went with it). The request it waited on is
+# still stuck in the kernel, and another run would only add one: refused before anything is built or written. A lock
+# of an earlier boot is stale and goes.
+STALL_LOCK=$WORK_PARENT/mu300-install.stalled
+stall_check() {
+    [ -f "$STALL_LOCK" ] || return 0
+    _bi=$(cat "${MU300_BOOT_ID:-/proc/sys/kernel/random/boot_id}" 2>/dev/null | tr -d ' \n')
+    if [ "$(sed -n 1p "$STALL_LOCK" 2>/dev/null)" != "${_bi:-unknown}" ]; then rm -f "$STALL_LOCK"; return 0; fi
+    die "$(t 'An earlier run of this installer timed out in this Android boot ({1}); the SD card request it waited on is still stuck in the kernel. Reboot Android, then install the zip again. Nothing was changed; the lock is {2}.' "$(sed -n 2p "$STALL_LOCK")" "$STALL_LOCK")"
+}
 
 # ---- the device, its slots and the zip
 env_check() {
@@ -628,7 +641,18 @@ install_systems() {
     cp "$D/android-install.sh" "$D/android-mount-mu300root.sh" "$D/android-bootchain.sh" "$W/" || die "$(t 'could not copy the installer files')"
     install_env
     asw "$ANDROID_SH" "$W/android-install.sh" 2>&1 | tee "$W/device-install.log"
-    grep -q MU300-INSTALL-OK "$W/device-install.log" || die "$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")"
+    _keep=$WORK_PARENT/mu300-device-install.log
+    if ! grep -q MU300-INSTALL-OK "$W/device-install.log"; then
+        # W goes with this run: the device script's output is kept where root can read it (a timed-out SD-card stage
+        # names itself there, FINDINGS 50)
+        _msg=$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")
+        if ( umask 077; cp "$W/device-install.log" "$_keep" ) 2>/dev/null && chmod 600 "$_keep" 2>/dev/null; then
+            _msg="$_msg
+$(t 'the device log was kept at {1}' "$_keep")"
+        fi
+        die "$_msg"
+    fi
+    rm -f "$_keep"
     if [ -s "$KB/kernel.release" ]; then        # a mainline bundle: its modules into every system on the filesystem
         mount_target "$W/mnt" || die "$(t 'could not mount the Linux filesystem for the kernel modules')"
         DISK=$W/mnt MU300_NO_DEPMOD=1 kernel_modules_into_systems "$KB" ||
@@ -637,10 +661,31 @@ install_systems() {
         umount_target "$W/mnt" || die "$(t 'could not unmount the Linux filesystem from {1}' "$W/mnt")"
     fi
 }
+# boot_readback DEV: what write_boot put on DEV - the image with its vbmeta from offset 0, the AVB footer in the
+# partition's last 64 bytes - read back from the medium into files of their own, in whole 4096-byte blocks, by one dd
+# each whose status counts (a pipeline would turn a read error into a short hash and say no more), after the page
+# cache is dropped, and compared by sha256 with what was written. write_boot has its own check (mu300-update's,
+# through a pipeline); this is the installer's last word before misc is armed (FINDINGS 50). Prints why it failed.
+boot_readback() {
+    _bl=$(fsize "$W/boot/written"); _bn=$(( (_bl + 4095) / 4096 )); _ps=$(part_size "$1")
+    rm -f "$W/boot/readback" "$W/boot/readback.tail"
+    echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
+    dd if="$1" of="$W/boot/readback" bs=4096 count="$_bn" 2>/dev/null || { echo "dd failed"; return 1; }
+    [ "$(fsize "$W/boot/readback")" = $((_bn * 4096)) ] || { echo "short read"; return 1; }
+    [ "$(head -c "$_bl" "$W/boot/readback" | sha256sum | cut -d' ' -f1)" = "$(sha256sum < "$W/boot/written" | cut -d' ' -f1)" ] ||
+        { echo "sha256 differs"; return 1; }
+    dd if="$1" of="$W/boot/readback.tail" bs=4096 skip=$((_ps / 4096 - 1)) count=1 2>/dev/null || { echo "dd failed (footer)"; return 1; }
+    [ "$(tail -c 64 "$W/boot/readback.tail" | sha256sum | cut -d' ' -f1)" = "$(sha256sum < "$W/boot/newfooter" | cut -d' ' -f1)" ] ||
+        { echo "sha256 differs (footer)"; return 1; }
+    rm -f "$W/boot/readback" "$W/boot/readback.tail"
+}
 install_boot() {
     say "$(t 'Writing and verifying boot_{1}' "$LINUX_SLOT")"
+    cat "$W/boot/new" "$W/boot/vbmeta" > "$W/boot/written" || die "$(t 'could not build the boot image')"
     write_boot "$BOOT_LINUX" "$(part_size "$BOOT_LINUX")" "$W/boot/new" "$W/boot/vbmeta" "$W/boot/newfooter" ||
         die "$(t 'boot_{1} did not verify after writing; misc was not changed, so Android keeps booting' "$LINUX_SLOT")"
+    _why=$(boot_readback "$BOOT_LINUX") ||
+        die "$(t 'boot_{1} read back from the eMMC is not the image that was written ({2}); Linux was not armed: misc was not changed, so Android keeps booting' "$LINUX_SLOT" "$_why")"
 }
 arm_linux() {  # the Linux slot's trial block, built from the misc block read at the start; misc must still hold that
     _blk=$W/ramdisk/etc/misc-bc-slot-$LINUX_SLOT-trial.bin
@@ -741,6 +786,7 @@ main() {
     conf_read
     conf_check
     env_check
+    stall_check
     detect_device
     slot_setup
     work_setup

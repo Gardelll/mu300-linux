@@ -109,8 +109,12 @@ what replaced it. The table below gives each section's state.
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
+| 45 | `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146) | current (fixed) |
+| 46 | SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176) | current (fixed) |
+| 47 | A system the Magisk zip added beside another had a password nobody saw (#167) | current (fixed) |
 | 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
 | 49 | The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only | current (U30 Air, Vodafone TR: CNUM answers) |
+| 50 | Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot | current; the timeout path not yet seen on a device |
 
 ## Hardware and firmware facts
 
@@ -4042,3 +4046,78 @@ in the fast tier"), measured so far on this machine only (unit tests; the device
   never written to flash: `sim.json` stays IMEI/IMSI/ICCID, the runtime files are root's only (`umask 077`), the
   collector prints nothing, and the panel's operations log keeps its rule (method, time, outcome - no IMSI or
   numbers). Translations: `Own number` in all 31 catalogs (`tools/luci-i18n.py update`).
+### 50. Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot
+
+What #52 looked like from the outside (§38a): the Magisk installer, OpenWrt to the card, silent for good, a `dd` at
+100 % of one core that `kill -9` did not end, and every retry adding another one until the board was rebooted. §38a
+removed that read past the end of the eMMC, so the known trigger is gone; what stayed was that nothing in either
+installer would have told the user anything if the card, or the SD host, stopped answering for another reason: a
+command stuck in the kernel sits in D state, the installer waits on it forever, and `install.sh`'s `su_do` never
+returns. kanoqwq's TF installer (`tf-stage.sh`, `tf-install-worker.sh`, read as a reference) has three ideas for
+that, taken here in our own shape - one `android-install.sh`, no slot layout of its own, no vold scan beyond
+`sd_release`:
+
+**1. The boot image is read back from the medium, into a file.** Both installers verified `boot_<linux slot>` after
+writing it - `install.sh` with `sha256sum` of the whole partition, the Magisk installer with `mu300-update`'s
+`write_boot`, which hashes a `dd | head -c | sha256sum` pipeline of the first pages - and a mismatch stopped before
+`misc`. Two things were weaker than they looked: a read that fails inside a pipeline leaves a short hash and no
+word of why, and a read right after the write may be served from the page cache rather than the eMMC. Now every
+install drops the caches (`echo 3 > /proc/sys/vm/drop_caches`) and reads back exactly the image's length in whole
+4096-byte blocks with one `dd` into a file (`$T/mu300-boot.rb` for the computer installers, `$W/boot/readback` for
+the zip), whose exit status counts; the sha256 of the file's first `len` bytes must be the image's. The Magisk
+installer's `boot_readback` does this after `write_boot`'s own check and reads the AVB footer block back too, and
+its refusal says which step failed (`dd failed`, `short read`, `sha256 differs`): `boot_b read back from the eMMC is
+not the image that was written (sha256 differs); Linux was not armed: misc was not changed, so Android keeps booting`.
+`install.sh` and `install.ps1` keep their message (`boot_b verify failed (slot a still active, Android keeps
+booting)`). What is written where is unchanged.
+
+**2. The long SD-card stages run bounded, in a process group of their own.** In SD mode `android-install.sh` runs
+the format (`mke2fs`, 900 s), each system's unpack (`tar`, 3600 s; the vendor tarball 900 s), the removal of the old
+or half-installed system (900 s) and a final flush (`sync`, 1800 s, before the OK line, where the trap used to sync
+after it) through `stage_run NAME LIMIT CMD`: the command in a session of its own (`setsid`, Android's toybox has it;
+without it a plain background job), its pid and its exit status in files, and the installer polling every 2 s
+instead of waiting on it. A stage ends when it passes its limit, or when the card's completion counters
+(`/sys/class/block/mmcblk1/stat`: reads and writes completed, sectors read and written - not the time fields, which
+move while a request only waits) have not changed for 120 s. Then the group gets TERM and KILL (a process in D state
+ignores both, and is never waited for), the run says what happened and what to do -
+`the unpack ubuntu stage timed out (no I/O progress on mmcblk1 for 120 s) and was stopped; nothing more is written` /
+`reboot Android before running the installer again` / `the card stays mounted at ..., with no sync and no unmount
+(both would wait on that request)` - and exits 1 before `MU300-INSTALL-OK`, so neither installer writes the boot
+image or `misc`. The EXIT trap (`sd_exit`) then flushes and unmounts nothing: a `sync` or an `umount` would hang on
+the same request. On the eMMC the stages run as before (`STAGE_DISK` empty): Android keeps the eMMC's counters
+moving, and it has not failed this way. When the stat file cannot be read the stall rule is off and the run says so;
+the limit still applies. The counters are read from `$MU300_SYSFS`, the clock is `date +%s`, the knobs for tests are
+`MU300_STAGE_STALL` and `MU300_STAGE_POLL`.
+
+**3. No second run in the same Android boot.** A timeout writes `mu300-install.stalled` - the first line Android's
+`/proc/sys/kernel/random/boot_id`, the second the stage, the time and the reason - into `MU300_LOCK_DIR`
+(`/data/local/tmp` for the computer installers, `/data/adb` for the zip, whose work directory is new each run and
+gone at its end). `android-install.sh` checks it before anything else; the Magisk installer checks it in `main`
+right after `env_check`, before the plan: a lock of the running boot is a refusal (`an earlier run of the installer
+timed out in this Android boot (stage unpack ubuntu, ...): the SD card request it waited on is still stuck in the
+kernel` / `reboot Android, then run the installer again`), a lock of an earlier boot is stale and removed, and a
+run that goes through removes its own. The zip also keeps the device script's output at
+`/data/adb/mu300-device-install.log` (mode 600) when that script fails, and says so; `install.sh` names its
+`work/device-install.log`, `install.ps1` now writes one.
+
+Tests: `tests/test_android_install.py` (`Stages`: the stall and the deadline end a stage and its grandchild and
+write the lock; progress keeps it alive; no counters means the limit only; the eMMC runs it plainly; the same-boot
+re-run is refused and a stale lock removed; a clean run leaves no lock; `sd_exit` after a timeout runs no `sync` and
+no unmount; under `set -e` the OK line never comes; the wiring), `tests/test_magisk_installer.py` (a `dd` whose
+read-back differs or fails: `misc` unchanged, Linux not armed; the lock of this boot refused before the plan, a
+stale one removed; the lock directory handed to the device script; the kept log). macOS has no `setsid` (the tests
+stand one in with Python's `os.setsid`) and no `timeout`; the stages are driven by the script's own `date +%s` loop,
+so nothing else is needed. In a container where the test runner is PID 1 the killed grandchild stays a zombie,
+which the test counts as dead.
+
+Not done here, for a device with a card: (a) a card installation from a computer and from a zip must still go through,
+with `[device] creating ext4 mu300sd`, `installing <os>` and `MU300-INSTALL-OK` in the log, no `mu300-install.stalled`
+afterwards, and `mu300-stage.*` gone from the work directory; (b) the stall path itself - pull the card during the
+unpack, or hold the SD host's clock - must end the stage within about two minutes with the three lines above, leave
+the lock in `/data/local/tmp` or `/data/adb`, and the next run must be refused until a reboot, after which it must
+go through; (c) `cat /sys/class/block/mmcblk1/stat` must change while `tar` writes to the card (if the counters do
+not move for a healthy card, the rule would end a working stage: the field numbers are the ones of the kernel's
+`Documentation/admin-guide/iostats.rst`); (d) the time the format and the unpack take on a slow card against the
+limits (900 s, 3600 s); (e) `setsid` present in Android's `/system/bin` (toybox), and the zip's `busybox` not in the
+device script's PATH; (f) the boot image read-back on both installers: `dd` into the file, then the hash, visible
+in `strace` or by the file's existence while it runs.
