@@ -246,7 +246,8 @@ do_info() {
     md=$(systemctl is-active mu300-mobile-data 2>/dev/null) || true
     ip4=$(ip -4 -o addr show dev sipa_eth0 2>/dev/null | awk '{print $4; exit}')
     ssid=$(sed -n 's/^SSID=//p' "$HOTSPOT" 2>/dev/null | head -n1)
-    if [ -x /opt/mu300/bin/mu300-vpn ] || command -v mu300-vpn >/dev/null 2>&1; then vpn=true; else vpn=false; fi
+    # vpn: the VPN module is installed - its mu300-vpn in the vpn extra on the disk (mu300-extra's test, vpn_module_in)
+    if [ -x "${MU300_DISK:-/mnt/mu300-disk}/extra/vpn/bin/mu300-vpn" ]; then vpn=true; else vpn=false; fi
     printf '{"device":%s,"version":%s,"mobile_data":{"service":%s,"address":%s},"signal":%s,"battery":%s,' \
         "$(js "$(mu300-device 2>/dev/null)")" "$(js "$(cat "$R/etc/mu300/image-version" 2>/dev/null)")" \
         "$(js "${md:-unknown}")" "$(js "$ip4")" "$(signal_json)" "$(battery_json)"
