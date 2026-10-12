@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Жылу"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Ядроның жылу аймақтары, тек оқу үшін. Шекті нүктелері бар аймақ өзіне байланған салқындату құрылғыларын пассивті шегінде шектейді; салқындату күйі 0 — шектеу жоқ."
+
+msgid "Zone"
+msgstr "Аймақ"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Шекті нүктелер"
+
+msgid "Cooling devices"
+msgstr "Салқындату құрылғылары"
+
 msgid "USB role"
 msgstr "USB рөлі"
 
@@ -1650,6 +1668,15 @@ msgstr "Хабар (Enter — жіберу, Shift+Enter — жаңа жол)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Жіберу AT+CMGS (PDU режимі) арқылы жүреді; арна бос емес болса, қайталаңыз. Бір хабарды жою үшін оның көпіршігіндегі себет белгішесін басыңыз."
 
+msgid "Sending…"
+msgstr "Жіберілуде…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Жіберілді; тізім жақында жаңартылады."
+
+msgid "Sending failed"
+msgstr "Жіберу сәтсіз"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "SIM-нен фонда синхрондалуда (AT+CMGL)…"
 
@@ -1688,15 +1715,6 @@ msgstr "Жойылды (тек жергілікті)"
 
 msgid "Enter both a number and a message."
 msgstr "Нөмірді де, хабарды да енгізіңіз."
-
-msgid "Sending…"
-msgstr "Жіберілуде…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Жіберілді; тізім жақында жаңартылады."
-
-msgid "Sending failed"
-msgstr "Жіберу сәтсіз"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d хабар, %d оқылмаған · %d сұхбат"

@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "温度管理"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "カーネルのサーマルゾーン（読み取り専用）。トリップポイントを持つゾーンは、パッシブトリップでそのゾーンに結び付けられた冷却デバイスを制限します。冷却状態 0 は制限なしです。"
+
+msgid "Zone"
+msgstr "ゾーン"
+
+msgid "Temperature"
+msgstr "温度"
+
+msgid "Trip points"
+msgstr "トリップポイント"
+
+msgid "Cooling devices"
+msgstr "冷却デバイス"
+
 msgid "USB role"
 msgstr "USB ロール"
 
@@ -1650,6 +1668,15 @@ msgstr "メッセージ (Enter で送信、Shift+Enter で改行)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "送信には AT+CMGS (PDU モード) を使用します。チャネルがビジーの場合は再試行してください。1 件だけ削除するには、吹き出しのゴミ箱アイコンを使用します。"
 
+msgid "Sending…"
+msgstr "送信中…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "送信しました。まもなく一覧が更新されます。"
+
+msgid "Sending failed"
+msgstr "送信に失敗しました"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "バックグラウンドで SIM から同期しています (AT+CMGL)…"
 
@@ -1688,15 +1715,6 @@ msgstr "削除しました (ローカルのみ)"
 
 msgid "Enter both a number and a message."
 msgstr "番号とメッセージの両方を入力してください。"
-
-msgid "Sending…"
-msgstr "送信中…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "送信しました。まもなく一覧が更新されます。"
-
-msgid "Sending failed"
-msgstr "送信に失敗しました"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d 件、未読 %d 件 · 会話 %d 件"

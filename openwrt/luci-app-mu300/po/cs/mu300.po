@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Teplota"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Teplotní zóny jádra, pouze pro čtení. Zóna s prahovými body omezuje chladicí zařízení, která jsou k ní připojena, na svém pasivním prahu; stav chlazení 0 znamená žádné omezení."
+
+msgid "Zone"
+msgstr "Zóna"
+
+msgid "Temperature"
+msgstr "Teplota"
+
+msgid "Trip points"
+msgstr "Prahové body"
+
+msgid "Cooling devices"
+msgstr "Chladicí zařízení"
+
 msgid "USB role"
 msgstr "Role USB"
 
@@ -1650,6 +1668,15 @@ msgstr "Zpráva (Enter odešle, Shift+Enter nový řádek)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Odesílání používá AT+CMGS (režim PDU); pokud je kanál obsazen, zkuste to znovu. Jednotlivou zprávu smažete ikonou koše na její bublině."
 
+msgid "Sending…"
+msgstr "Odesílání…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Odesláno; seznam se brzy obnoví."
+
+msgid "Sending failed"
+msgstr "Odeslání selhalo"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronizace ze SIM na pozadí (AT+CMGL)…"
 
@@ -1688,15 +1715,6 @@ msgstr "Smazáno (pouze místně)"
 
 msgid "Enter both a number and a message."
 msgstr "Zadejte číslo i zprávu."
-
-msgid "Sending…"
-msgstr "Odesílání…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Odesláno; seznam se brzy obnoví."
-
-msgid "Sending failed"
-msgstr "Odeslání selhalo"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· zpráv: %d, nepřečtených: %d · konverzací: %d"

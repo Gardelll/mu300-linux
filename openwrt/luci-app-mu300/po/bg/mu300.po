@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Температура"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Термичните зони на ядрото, само за четене. Зона с прагови точки ограничава свързаните с нея охлаждащи устройства при пасивния си праг; състояние на охлаждане 0 означава без ограничаване."
+
+msgid "Zone"
+msgstr "Зона"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Прагови точки"
+
+msgid "Cooling devices"
+msgstr "Охлаждащи устройства"
+
 msgid "USB role"
 msgstr "USB роля"
 
@@ -1650,6 +1668,15 @@ msgstr "Съобщение (Enter за изпращане, Shift+Enter за но
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Изпращането използва AT+CMGS (PDU режим); опитайте отново, ако каналът е зает. За изтриване на едно съобщение използвайте иконата с кошче в неговия балон."
 
+msgid "Sending…"
+msgstr "Изпращане…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Изпратено; списъкът ще се опресни скоро."
+
+msgid "Sending failed"
+msgstr "Изпращането е неуспешно"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронизиране от SIM във фонов режим (AT+CMGL)…"
 
@@ -1688,15 +1715,6 @@ msgstr "Изтрито (само локално)"
 
 msgid "Enter both a number and a message."
 msgstr "Въведете номер и съобщение."
-
-msgid "Sending…"
-msgstr "Изпращане…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Изпратено; списъкът ще се опресни скоро."
-
-msgid "Sending failed"
-msgstr "Изпращането е неуспешно"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d съобщения, %d непрочетени · %d разговора"

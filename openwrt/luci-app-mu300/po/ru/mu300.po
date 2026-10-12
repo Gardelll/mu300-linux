@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Температура"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Тепловые зоны ядра, только чтение. Зона с пороговыми точками ограничивает привязанные к ней устройства охлаждения на своём пассивном пороге; состояние охлаждения 0 означает отсутствие ограничения."
+
+msgid "Zone"
+msgstr "Зона"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Пороговые точки"
+
+msgid "Cooling devices"
+msgstr "Устройства охлаждения"
+
 msgid "USB role"
 msgstr "Роль USB"
 
@@ -1650,6 +1668,15 @@ msgstr "Сообщение (Enter — отправить, Shift+Enter — нов
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Отправка использует AT+CMGS (режим PDU); при занятом канале повторите. Чтобы удалить одно сообщение, нажмите значок корзины на его облачке."
 
+msgid "Sending…"
+msgstr "Отправка…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Отправлено; список скоро обновится."
+
+msgid "Sending failed"
+msgstr "Ошибка отправки"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронизация с SIM в фоне (AT+CMGL)…"
 
@@ -1688,15 +1715,6 @@ msgstr "Удалено (только локально)"
 
 msgid "Enter both a number and a message."
 msgstr "Введите номер и сообщение."
-
-msgid "Sending…"
-msgstr "Отправка…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Отправлено; список скоро обновится."
-
-msgid "Sending failed"
-msgstr "Ошибка отправки"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· сообщений: %d, непрочитанных: %d · диалогов: %d"

@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Termika"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Strefy termiczne jądra, tylko do odczytu. Strefa z punktami progowymi ogranicza przypisane do niej urządzenia chłodzące na swoim progu pasywnym; stan chłodzenia 0 oznacza brak ograniczenia."
+
+msgid "Zone"
+msgstr "Strefa"
+
+msgid "Temperature"
+msgstr "Temperatura"
+
+msgid "Trip points"
+msgstr "Punkty progowe"
+
+msgid "Cooling devices"
+msgstr "Urządzenia chłodzące"
+
 msgid "USB role"
 msgstr "Rola USB"
 
@@ -1650,6 +1668,15 @@ msgstr "Wiadomość (Enter wysyła, Shift+Enter nowa linia)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Wysyłanie używa AT+CMGS (tryb PDU); ponów, jeśli kanał jest zajęty. Aby usunąć jedną wiadomość, użyj ikony kosza na jej dymku."
 
+msgid "Sending…"
+msgstr "Wysyłanie…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Wysłano; lista wkrótce się odświeży."
+
+msgid "Sending failed"
+msgstr "Wysyłanie nie powiodło się"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronizacja z SIM w tle (AT+CMGL)…"
 
@@ -1688,15 +1715,6 @@ msgstr "Usunięto (tylko lokalnie)"
 
 msgid "Enter both a number and a message."
 msgstr "Wprowadź numer i wiadomość."
-
-msgid "Sending…"
-msgstr "Wysyłanie…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Wysłano; lista wkrótce się odświeży."
-
-msgid "Sending failed"
-msgstr "Wysyłanie nie powiodło się"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· wiadomości: %d, nieprzeczytane: %d · rozmowy: %d"
