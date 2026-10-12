@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "溫控"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "核心的溫區，唯讀。帶有觸發點的溫區會在其被動觸發點限制與之綁定的冷卻裝置；冷卻狀態 0 表示未限頻。"
+
+msgid "Zone"
+msgstr "溫區"
+
+msgid "Temperature"
+msgstr "溫度"
+
+msgid "Trip points"
+msgstr "觸發點"
+
+msgid "Cooling devices"
+msgstr "冷卻裝置"
+
 msgid "USB role"
 msgstr "USB 角色"
 

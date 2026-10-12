@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Nhiệt"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Các vùng nhiệt của nhân, chỉ đọc. Vùng có điểm ngưỡng sẽ hạn chế các thiết bị làm mát gắn với nó tại ngưỡng thụ động; trạng thái làm mát 0 nghĩa là không hạn chế."
+
+msgid "Zone"
+msgstr "Vùng"
+
+msgid "Temperature"
+msgstr "Nhiệt độ"
+
+msgid "Trip points"
+msgstr "Điểm ngưỡng"
+
+msgid "Cooling devices"
+msgstr "Thiết bị làm mát"
+
 msgid "USB role"
 msgstr "Vai trò USB"
 

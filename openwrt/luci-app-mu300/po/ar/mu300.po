@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "الحرارة"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "مناطق الحرارة في النواة، للقراءة فقط. المنطقة التي لها نقاط عتبة تخنق أجهزة التبريد المرتبطة بها عند عتبتها السلبية؛ حالة تبريد 0 تعني عدم وجود خنق."
+
+msgid "Zone"
+msgstr "المنطقة"
+
+msgid "Temperature"
+msgstr "درجة الحرارة"
+
+msgid "Trip points"
+msgstr "نقاط العتبة"
+
+msgid "Cooling devices"
+msgstr "أجهزة التبريد"
+
 msgid "USB role"
 msgstr "دور USB"
 

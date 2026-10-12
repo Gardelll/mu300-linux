@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Температура"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Тепловые зоны ядра, только чтение. Зона с пороговыми точками ограничивает привязанные к ней устройства охлаждения на своём пассивном пороге; состояние охлаждения 0 означает отсутствие ограничения."
+
+msgid "Zone"
+msgstr "Зона"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Пороговые точки"
+
+msgid "Cooling devices"
+msgstr "Устройства охлаждения"
+
 msgid "USB role"
 msgstr "Роль USB"
 

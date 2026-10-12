@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Lämpötila"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Ytimen lämpöalueet, vain luku. Alue, jolla on raja-arvopisteitä, rajoittaa siihen sidottuja jäähdytyslaitteita passiivisessa raja-arvossaan; jäähdytystila 0 tarkoittaa, ettei rajoitusta ole."
+
+msgid "Zone"
+msgstr "Alue"
+
+msgid "Temperature"
+msgstr "Lämpötila"
+
+msgid "Trip points"
+msgstr "Raja-arvopisteet"
+
+msgid "Cooling devices"
+msgstr "Jäähdytyslaitteet"
+
 msgid "USB role"
 msgstr "USB-rooli"
 

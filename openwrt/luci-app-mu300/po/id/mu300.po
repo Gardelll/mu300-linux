@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Termal"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Zona termal kernel, hanya baca. Zona dengan titik pemicu membatasi perangkat pendingin yang terikat padanya pada titik pasifnya; status pendinginan 0 berarti tidak ada pembatasan."
+
+msgid "Zone"
+msgstr "Zona"
+
+msgid "Temperature"
+msgstr "Suhu"
+
+msgid "Trip points"
+msgstr "Titik pemicu"
+
+msgid "Cooling devices"
+msgstr "Perangkat pendingin"
+
 msgid "USB role"
 msgstr "Peran USB"
 

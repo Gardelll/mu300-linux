@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "温度管理"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "カーネルのサーマルゾーン（読み取り専用）。トリップポイントを持つゾーンは、パッシブトリップでそのゾーンに結び付けられた冷却デバイスを制限します。冷却状態 0 は制限なしです。"
+
+msgid "Zone"
+msgstr "ゾーン"
+
+msgid "Temperature"
+msgstr "温度"
+
+msgid "Trip points"
+msgstr "トリップポイント"
+
+msgid "Cooling devices"
+msgstr "冷却デバイス"
+
 msgid "USB role"
 msgstr "USB ロール"
 

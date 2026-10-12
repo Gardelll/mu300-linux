@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Termiskt"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Kärnans termiska zoner, skrivskyddade. En zon med tröskelpunkter stryper de kylenheter som är bundna till den vid sin passiva tröskel; kyltillstånd 0 betyder ingen strypning."
+
+msgid "Zone"
+msgstr "Zon"
+
+msgid "Temperature"
+msgstr "Temperatur"
+
+msgid "Trip points"
+msgstr "Tröskelpunkter"
+
+msgid "Cooling devices"
+msgstr "Kylenheter"
+
 msgid "USB role"
 msgstr "USB-roll"
 

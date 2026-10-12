@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "حرارتی"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "ناحیه‌های حرارتی هسته، فقط خواندنی. ناحیه‌ای که نقاط آستانه دارد، دستگاه‌های خنک‌کننده متصل به خود را در آستانه غیرفعال محدود می‌کند؛ وضعیت خنک‌کنندگی 0 یعنی بدون محدودسازی."
+
+msgid "Zone"
+msgstr "ناحیه"
+
+msgid "Temperature"
+msgstr "دما"
+
+msgid "Trip points"
+msgstr "نقاط آستانه"
+
+msgid "Cooling devices"
+msgstr "دستگاه‌های خنک‌کننده"
+
 msgid "USB role"
 msgstr "نقش USB"
 

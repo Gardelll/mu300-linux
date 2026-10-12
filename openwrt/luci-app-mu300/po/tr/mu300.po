@@ -384,6 +384,24 @@ msgstr "Donanım azamisi"
 msgid "Frequencies in MHz."
 msgstr "Frekanslar MHz cinsinden."
 
+msgid "Thermal"
+msgstr "Sıcaklık"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Çekirdeğin sıcaklık bölgeleri, salt okunur. Eşik noktaları olan bir bölge, pasif eşiğinde kendisine bağlı soğutma aygıtlarını kısar; soğutma durumu 0, kısma yok demektir."
+
+msgid "Zone"
+msgstr "Bölge"
+
+msgid "Temperature"
+msgstr "Sıcaklık"
+
+msgid "Trip points"
+msgstr "Eşik noktaları"
+
+msgid "Cooling devices"
+msgstr "Soğutma aygıtları"
+
 msgid "USB role"
 msgstr "USB rolü"
 

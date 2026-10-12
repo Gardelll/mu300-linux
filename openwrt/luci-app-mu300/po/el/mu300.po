@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Θερμικά"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Οι θερμικές ζώνες του πυρήνα, μόνο για ανάγνωση. Μια ζώνη με σημεία ορίου περιορίζει τις συσκευές ψύξης που είναι συνδεδεμένες σε αυτήν στο παθητικό της όριο· κατάσταση ψύξης 0 σημαίνει χωρίς περιορισμό."
+
+msgid "Zone"
+msgstr "Ζώνη"
+
+msgid "Temperature"
+msgstr "Θερμοκρασία"
+
+msgid "Trip points"
+msgstr "Σημεία ορίου"
+
+msgid "Cooling devices"
+msgstr "Συσκευές ψύξης"
+
 msgid "USB role"
 msgstr "Ρόλος USB"
 
