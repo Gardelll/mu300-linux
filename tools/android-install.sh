@@ -28,6 +28,8 @@
 # the Magisk installer: /data/adb), MU300_STAGE_STALL / MU300_STAGE_POLL / MU300_BOOT_ID, the stage guard's knobs for
 # the tests (see the stage block).
 set -e
+# the systems' directories are made here: never with the modes of a caller whose umask is not this one
+umask 022
 # install.sh pushes everything to /data/local/tmp. The Magisk installer runs this as root from a directory only root
 # can write (MU300_DEVICE_WORK): files in /data/local/tmp can be replaced by the shell user after they were checked.
 T=${MU300_DEVICE_WORK:-/data/local/tmp}
