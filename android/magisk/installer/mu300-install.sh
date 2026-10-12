@@ -16,6 +16,8 @@
 # MU300_LIB=1 defines the functions and runs nothing (tests/, which also set MU300_DIR to a directory laid out like
 # the zip's mu300/). The MU300_* paths below point at a fake device there.
 set -eu
+# what is built here ends up in the installed systems: with this umask, whatever the shell that flashes the zip has
+umask 022
 D=${MU300_DIR:-$(cd "$(dirname "$0")" && pwd)}
 # mu300-update first: it defines a say and a die of its own, which the ones below replace. MU300_LIB=1 while it is
 # read makes it define its functions only; the caller's value comes back afterwards.
