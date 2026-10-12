@@ -194,7 +194,7 @@ sudo mu300-vpn on
 mu300-vpn status</code></pre>
 <p>Tailscale 的流量也走隧道。如果 VPN 开着断网保护而模块不见了，设备会保持封闭：移动数据和 Wi-Fi 客户端一直断开，直到重新装上模块或关掉 VPN。配置、设置和安全模型见<a href="https://github.com/dikeckaan/mu300-linux-vpn#readme" hreflang="en">模块的 README</a>（英文）。有些运营商会丢弃 UDP、封锁 OpenVPN。</p>
 <p>模块 <strong>v2.0.0</strong>（随 v2026.10.20）把它拆成核心和引擎扩展（更新时作为一组一起带上），加入了<strong>订阅</strong>（服务商给的一个 URL，能生成配置，可按计划刷新）和
-<strong>IPv6 防护</strong>：隧道不带 IPv6 时，IPv6 会在隧道旁边被挡住，而不是绕过断网保护泄漏出去。在带控制面板的 OpenWrt 上，这些都在面板的 <strong>VPN</strong> 菜单里：概览、配置、订阅、引擎、设置和日志。</p>
+<strong>IPv6 防护</strong>：隧道不带 IPv6 时，IPv6 会在隧道旁边被挡住，而不是绕过断网保护泄漏出去。在带控制面板的 OpenWrt 上，这些都在面板的 <strong>VPN</strong> 菜单里：概览、配置、订阅、引擎、设置和日志。面板和工具箱只在装了 VPN 模块之后才显示 VPN 部分。</p>
 </section>
 
 <section id="toolkit">
