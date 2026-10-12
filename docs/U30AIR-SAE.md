@@ -197,6 +197,25 @@ require the full restart described above. APK replacement after a later upgrade 
 
 ## Validation and limits
 
+The maintainer recovered the #165 test device to its stock Wi-Fi stack and
+updated it to v2026.10.21. The original r8 live-add trace was lost after a
+power cycle; the surviving removal trace had four beacon-parameter failures,
+both BSSs disabled, then the primary AP enabled four seconds later. That
+trace does not establish the cause of the original live-add outage.
+
+A further r9 live-add test on 2026-10-12 used continuous `logread -f` over
+USB, with a configuration backup and automatic restore. A single WPA2 primary
+BSS was brought up using a full restart on channel 149/VHT80. Adding an
+opt-in SAE secondary BSS with `wifi reload` produced the explicit
+`U30 SAE: supports a single BSS only` configuration error. The existing AP
+was disabled as well: **r9 rejects the unsupported configuration but does not
+preserve the running primary hotspot during a netifd reload.** Restoring the
+original single SAE BSS with a full wpad/Wi-Fi restart enabled it three seconds
+after the restore marker. Auto/VHT80 and the original security configuration
+were restored, and SIM2 WAN stayed up. The same previously installed modules
+were used; this tests r9's rejection/recovery, not the original r8 failure
+with the maintainer's freshly built module. Raw USB logs remain private.
+
 The 2026-10-12 follow-up retains the maintainer's #165 commits and merges
 main `c47e2c9`. r9 adds a configuration-stage single-BSS restriction and static
 SAE requirements, with 16 SAE/parser/SDK/privacy tests passing (required UBSan)
