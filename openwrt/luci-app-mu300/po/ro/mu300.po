@@ -990,6 +990,9 @@ msgstr "Blocarea a eșuat: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Se resetează blocările de rețea la automat (repornire SFUN, circa 30 de secunde)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Resetarea a eșuat: %s. Setările de blocare salvate au fost păstrate."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Resetarea blocărilor nu a fost confirmată la timp; se comută oricum."
 
@@ -1334,6 +1337,9 @@ msgstr "Stare confirmată"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Citirea de verificare a expirat; selectați „Reîmprospătare stare blocări”"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Resetare verificată: mod de rețea automatic, EN-DC pornit, toate benzile, fără blocare de celulă; setările de blocare salvate au fost șterse"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Aplicat (EN-DC nu necesită repornirea stivei radio)"
@@ -2997,8 +3003,26 @@ msgstr "Pachetul de limbi nu a putut fi eliminat"
 msgid "Lock cache unavailable"
 msgstr "Cache-ul blocărilor nu este disponibil"
 
+msgid "The saved locks could not be cleared"
+msgstr "Blocările salvate nu au putut fi șterse"
+
 msgid "No serving cell to lock to"
 msgstr "Nicio celulă de servire pe care să se blocheze"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modemul nu a răspuns la interogarea modului; nu s-a trimis nimic"
+
+msgid "The modem refused a write"
+msgstr "Modemul a refuzat o scriere"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Recitirea nu corespunde valorilor automate"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Recitirea după repornirea stivei nu corespunde valorilor automate"
+
+msgid "The reset was interrupted"
+msgstr "Resetarea a fost întreruptă"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Reinstalarea pachetelor nu este disponibilă pe acest sistem"

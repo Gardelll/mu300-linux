@@ -990,6 +990,9 @@ msgstr "Бекіту сәтсіз: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Желі құлыптары автоматтыға қайтарылуда (SFUN қайта іске қосу, шамамен 30 секунд)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Қалпына келтіру сәтсіз аяқталды: %s. Сақталған құлып параметрлері сақталды."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Құлыптарды тастау уақытында расталмады; бәрібір ауысады."
 
@@ -1334,6 +1337,9 @@ msgstr "Күй расталды"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Қайта оқу уақыты өтті; «Бекіту күйін жаңарту» таңдаңыз"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Қалпына келтіру тексерілді: желі режимі автоматты, EN-DC қосулы, барлық жолақтар, ұяшық құлпы жоқ; сақталған құлып параметрлері өшірілді"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Қолданылды (EN-DC радиостекті қайта іске қосуды қажет етпейді)"
@@ -2997,8 +3003,26 @@ msgstr "Тіл бумасын жою мүмкін болмады"
 msgid "Lock cache unavailable"
 msgstr "Бекіту кэші қолжетімсіз"
 
+msgid "The saved locks could not be cleared"
+msgstr "Сақталған құлыптарды өшіру мүмкін болмады"
+
 msgid "No serving cell to lock to"
 msgstr "Бекітетін қызмет көрсететін ұяшық жоқ"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Модем режим сұрауына жауап бермеді; ештеңе жіберілмеді"
+
+msgid "The modem refused a write"
+msgstr "Модем жазуды қабылдамады"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Кері оқу автоматты мәндерге сәйкес келмейді"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Стек қайта іске қосылғаннан кейінгі кері оқу автоматты мәндерге сәйкес келмейді"
+
+msgid "The reset was interrupted"
+msgstr "Қалпына келтіру үзілді"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Бұл жүйеде пакеттерді қайта орнату қолжетімсіз"

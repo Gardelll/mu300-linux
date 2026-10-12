@@ -990,6 +990,9 @@ msgstr "Sperren fehlgeschlagen: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Netzsperren werden auf automatisch zurückgesetzt (SFUN-Neustart, etwa 30 Sekunden)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Zurücksetzen fehlgeschlagen: %s. Die gespeicherten Sperreinstellungen wurden beibehalten."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Das Zurücksetzen der Sperren wurde nicht rechtzeitig bestätigt; es wird trotzdem gewechselt."
 
@@ -1334,6 +1337,9 @@ msgstr "Status bestätigt"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Zeitüberschreitung beim Zurücklesen; „Sperrstatus aktualisieren“ wählen"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Zurücksetzen bestätigt: Netzmodus automatisch, EN-DC an, alle Bänder, keine Zellsperre; die gespeicherten Sperreinstellungen sind gelöscht"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Angewendet (EN-DC erfordert keinen Neustart des Funk-Stacks)"
@@ -2997,8 +3003,26 @@ msgstr "Das Sprachpaket konnte nicht entfernt werden"
 msgid "Lock cache unavailable"
 msgstr "Sperr-Cache nicht verfügbar"
 
+msgid "The saved locks could not be cleared"
+msgstr "Die gespeicherten Sperren konnten nicht gelöscht werden"
+
 msgid "No serving cell to lock to"
 msgstr "Keine versorgende Zelle zum Sperren"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Das Modem hat die Modusabfrage nicht beantwortet; nichts wurde gesendet"
+
+msgid "The modem refused a write"
+msgstr "Das Modem hat einen Schreibbefehl abgelehnt"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Das Zurücklesen stimmt nicht mit den automatischen Werten überein"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Das Zurücklesen nach dem Neustart des Protokollstacks stimmt nicht mit den automatischen Werten überein"
+
+msgid "The reset was interrupted"
+msgstr "Das Zurücksetzen wurde unterbrochen"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Neuinstallation von Paketen ist auf diesem System nicht verfügbar"

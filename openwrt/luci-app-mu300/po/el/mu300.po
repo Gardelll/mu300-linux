@@ -990,6 +990,9 @@ msgstr "Το κλείδωμα απέτυχε: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Επαναφορά των κλειδωμάτων δικτύου σε αυτόματο (επανεκκίνηση SFUN, περίπου 30 δευτερόλεπτα)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Η επαναφορά απέτυχε: %s. Οι αποθηκευμένες ρυθμίσεις κλειδώματος διατηρήθηκαν."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Η επαναφορά των κλειδωμάτων δεν επιβεβαιώθηκε εγκαίρως· γίνεται εναλλαγή ούτως ή άλλως."
 
@@ -1334,6 +1337,9 @@ msgstr "Η κατάσταση επιβεβαιώθηκε"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Λήξη χρόνου ανάγνωσης· επιλέξτε «Ανανέωση κατάστασης κλειδώματος»"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Η επαναφορά επαληθεύτηκε: λειτουργία δικτύου αυτόματη, EN-DC ενεργό, όλες οι ζώνες, χωρίς κλείδωμα κυψέλης· οι αποθηκευμένες ρυθμίσεις κλειδώματος διαγράφηκαν"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Εφαρμόστηκε (το EN-DC δεν απαιτεί επανεκκίνηση της στοίβας ραδιοφώνου)"
@@ -2997,8 +3003,26 @@ msgstr "Δεν ήταν δυνατή η αφαίρεση του πακέτου �
 msgid "Lock cache unavailable"
 msgstr "Η κρυφή μνήμη κλειδωμάτων δεν είναι διαθέσιμη"
 
+msgid "The saved locks could not be cleared"
+msgstr "Τα αποθηκευμένα κλειδώματα δεν ήταν δυνατό να διαγραφούν"
+
 msgid "No serving cell to lock to"
 msgstr "Δεν υπάρχει κυψέλη εξυπηρέτησης για κλείδωμα"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Το μόντεμ δεν απάντησε στο ερώτημα λειτουργίας· δεν στάλθηκε τίποτα"
+
+msgid "The modem refused a write"
+msgstr "Το μόντεμ απέρριψε μια εγγραφή"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Η επανάγνωση δεν ταιριάζει με τις αυτόματες τιμές"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Η επανάγνωση μετά την επανεκκίνηση της στοίβας δεν ταιριάζει με τις αυτόματες τιμές"
+
+msgid "The reset was interrupted"
+msgstr "Η επαναφορά διακόπηκε"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Η επανεγκατάσταση πακέτων δεν είναι διαθέσιμη σε αυτό το σύστημα"
