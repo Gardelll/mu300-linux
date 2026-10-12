@@ -108,6 +108,7 @@ what replaced it. The table below gives each section's state.
 | 41 | The vendor daemons' own account | current |
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
+| 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
 
 ## Hardware and firmware facts
 
@@ -3636,7 +3637,89 @@ the loop saw it bound and had nothing to do, and the pulled-down gadget stayed o
 unplugged (its root port on the Mac cannot be power-cycled). Without adb a soft disconnect stays too, until
 `echo connect`; with the fixed adbd it was not tried again.
 
-### 45. The U30 Air's second SIM: the hardware facts behind PR #73 (Snrat)
+## Network namespaces on the vendor kernel
+
+### 44. Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103)
+
+Reported with four boots' worth of pstore on an F50 running OpenWrt on 5.4 with Docker (two containers,
+`restart=always`) and a Codex sandbox: about 25 s after boot a `WARNING` in `retire_sysctl_set` from
+`cleanup_net`, then within a second a fatal exception in an unrelated process in `__kmalloc`, or on the netns
+worker itself:
+
+```text
+Workqueue: netns cleanup_net
+pc : count_subheaders+0x18/0x74
+lr : unregister_sysctl_table+0x28/0xa8
+ xfrm_sysctl_fini+0x34/0x50
+ xfrm_net_exit+0x18/0x50
+ cleanup_net+0x2e4/0x54c
+Kernel panic - not syncing: Fatal exception
+```
+
+and, after a sandbox command finished, `kernel BUG at mm/slub.c:308` (a double free) in `kfree` from the same
+`xfrm_sysctl_fini`.
+
+**Cause**, in the vendor tree (`net/xfrm/xfrm_sysctl.c`, under `CONFIG_XFRM_FRAGMENT`, a Unisoc option - "only
+for sprd" says its Kconfig; it is not upstream, and linux-5.4.y has not changed this file since 2017, so no stable
+fix exists to take). The option adds a `net/core/enable_xfrm_fragment` sysctl, a global switch for fragmenting
+before ESP, and registers it with a *second* `ctl_table_header` whose pointer, and its `kmemdup`'d table, live in
+two `static` variables. `xfrm_sysctl_init()` runs for every network namespace and overwrites both; `xfrm_sysctl_fini()`
+runs for every namespace and unregisters and frees whatever they point at, without clearing them. With one
+namespace at a time the globals happen to track it. With two alive - Docker's containers, dnsmasq's, a sandbox - the
+first to exit unregisters and frees the *newer* namespace's registration and leaves its own behind in a dying
+namespace (`retire_sysctl_set`'s warning); the second's exit then walks a freed header (`count_subheaders`) and
+frees the table again (`slub.c:308`), or the stale memory has been reused and another process's allocation goes
+wrong. A failed second registration also freed the first table while leaving it registered. The entry was 0660 and,
+unlike the four `xfrm_*` entries next to it, not hidden from namespaces owned by an unprivileged user namespace,
+whose "root" has CAP_NET_ADMIN over them: a global kernel switch writable from `unshare -Urn`.
+
+**Fix** (`kernel/patches/xfrm-sysctl-fragment-per-netns.patch`, the reporter's candidate taken as proposed): the
+entry becomes the fifth member of `xfrm_table`, so each namespace's copy is registered and torn down with that
+namespace's own `net->xfrm.sysctl_hdr`, exactly like the four upstream entries; the second header, its table and
+their error path are gone. The switch stays one global `int` with default 1, `get_xfrm_fragment()` (used by the ESP
+output path) is unchanged, so are the path and the mode. One visible change: the entry now follows the table's rule
+and is absent in a namespace of a non-initial user namespace (`unshare -Urn` sees no `enable_xfrm_fragment`; the
+host's stays 1). No struct changes, so the module bundle is unaffected.
+
+**Reproduce** (unpatched 5.4; do it on a board you can reboot, the panic is on teardown and takes the kernel with
+it): two namespaces have to be alive at once, so `for i in $(seq 200); do unshare -n true & unshare -n true; wait;
+done` - or simply starting Docker with two containers - and the warning, then the panic, follow within a few
+iterations after the netns worker runs. `unshare -n true` in a single-threaded loop does not trigger it (one
+namespace at a time keeps the globals consistent), which is why a plain namespace test can pass on the broken
+kernel. The reporter's patched kernel passed 460 lifecycles (sequential and four-way parallel) and 10 sandbox runs
+on an F50 across two boots with no recurrence; our build of the patch (release config, ThinLTO) is in PR for #103,
+with the loop above to run on our F50 before the release.
+
+### 45. `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146)
+
+Found on the U30 Air during the #123 test (7.2.9, also on main): with Wi-Fi idle (`wifi down`, OpenWrt),
+`rmmod sprd_wlan_combo` panics in `__run_timers` within a second. Not a timer that one deinit forgot: **the port's
+platform remove tore nothing down.** The vendor's `sprd_wlan_remove` (`common/sprd_wlan.c`) ends in
+`return sprd_iface_remove(pdev)`; the mainline port dropped that line with the SC2332/SIPC variants, so remove logged
+one line and returned. The module was then freed with the recovery watchdog of PR #100 (`iface_wd.tick`, a
+`delayed_work` in the module's `.bss`, on `system_wq`, rearming itself every second) still armed, and with the
+wiphy, `wlan0`, the WCN reset notifier, the misc device and the inetaddr notifiers all still registered on the
+freed `priv`: the watchdog's timer is the first to go off. The vendor 5.4 driver still has the call (and no
+watchdog), so only the mainline module was affected.
+
+Fix (`upstream/modules/sprd_wlan_combo`):
+- `sprd_wlan_remove` calls `sprd_iface_remove()` for the PCIe variant again: watchdog stopped first, the chip
+  powered on for the close commands, the notifiers, the interfaces and the wiphy unregistered, the chip powered off,
+  TX/RX torn down, `priv` freed.
+- `sprd_iface_remove` no longer returns on a failed WCN power-on with everything still registered: a platform
+  remove cannot refuse, the device is unbound and the module freed either way. The power-on only fails from a count
+  of 0 (no interface open), so the teardown goes on without the chip and skips the power-off that would have
+  balanced it.
+- Two timers that live in `priv` and had no owner where `priv` is freed: the scan timer
+  (`timer_shutdown_sync` in `sprd_core_free`; a scan still running is reported done by `iface_deinit_vif`, which
+  deleted it, but nothing did so unconditionally) and the TCP ACK timers (`sc2355_tcp_ack_deinit` used `del_timer`
+  under the seqlock the callback takes, so a timeout running on another CPU could outlive the deinit; a
+  `timer_shutdown_sync` pass after the lock is dropped waits for it).
+
+Built for 6.18.56 and 7.2.10 (modules only). Device test: see the PR for #146.
+
+
+### 46. The U30 Air's second SIM: the hardware facts behind PR #73 (Snrat)
 What one U30 Air (OpenWrt 25.12.5, Linux 7.2.9, modem firmware `s_modemConfig=7`) showed; `docs/U30AIR-SIM2.md`
 has the sequences and the rules built on them. Not verified on an F50 or a U30 Pro, and on the maintainer's U30
 Air (one SIM) only the SIM1 side could be repeated.
