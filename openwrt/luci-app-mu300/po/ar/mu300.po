@@ -618,8 +618,17 @@ msgstr "المحتوى"
 msgid "Form (URL-encoded)"
 msgstr "نموذج (ترميز URL)"
 
+msgid "Plain text"
+msgstr "نص عادي"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "الحقول: sender، time، text، device، message (القالب بعد ملئه)"
+
+msgid "Custom body"
+msgstr "نص طلب مخصص"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "فارغ: الحقول القياسية (نص عادي: الرسالة). العناصر النائبة: {sender}، {time}، {text}، {device}، {message}. تُهرَّب كل قيمة بحسب النوع المختار. يُعرض هذا النص هنا مجددًا: ضع الأسرار في العنوان أو في ترويسة."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "ترويسات إضافية (واحدة \"Name: value\" في كل سطر)"
@@ -2945,6 +2954,9 @@ msgstr "قائمة تصفية غير صالحة (50 سطرًا على الأكث
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "يجب أن يكون عنوان webhook عنوان URL يبدأ بـ http:// أو https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "نص طلب الـ webhook طويل جدًا أو يحتوي على محرف تحكم"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "ترويسة غير صالحة (واحدة \"Name: value\" في كل سطر؛ يضبط الجهاز Host وContent-Type وContent-Length وTransfer-Encoding وConnection)"

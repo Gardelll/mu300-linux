@@ -618,8 +618,17 @@ msgstr "גוף"
 msgid "Form (URL-encoded)"
 msgstr "טופס (קידוד URL)"
 
+msgid "Plain text"
+msgstr "טקסט פשוט"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "שדות: sender, time, text, device, message (התבנית המלאה)"
+
+msgid "Custom body"
+msgstr "גוף מותאם אישית"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "ריק: השדות הרגילים (טקסט פשוט: ההודעה). מצייני מקום: {sender}, {time}, {text}, {device}, {message}. כל ערך עובר escape לפי הסוג שנבחר. גוף זה מוצג כאן שוב: שמרו סודות בכתובת או בכותרת."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "כותרות נוספות (\"Name: value\" אחת בכל שורה)"
@@ -2945,6 +2954,9 @@ msgstr "רשימת סינון לא תקינה (50 שורות לכל היותר)"
 
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "כתובת ה-webhook חייבת להיות כתובת URL של http:// או https://"
+
+msgid "The webhook body is too long or contains a control character"
+msgstr "גוף ה-webhook ארוך מדי או מכיל תו בקרה"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "כותרת לא תקינה (\"Name: value\" אחת בכל שורה; את Host, Content-Type, Content-Length, Transfer-Encoding ו-Connection המכשיר קובע)"
