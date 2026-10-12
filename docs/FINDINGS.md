@@ -1920,6 +1920,27 @@ with 0, 30, 1 and 1 s between). Each time "card aaaa removed", then "new UHS-I s
 or crc lines. A rebind is a fresh probe with a power cycle of the slot, so it is not the case above (a host that had
 polled an empty slot for minutes); that one needs a card put in by hand and stays open. No kernel change was made.
 
+**Why the CD GPIO was out of reach, and the empty slot's log noise (issue #181).** Mainline's `gpio-eic-sprd.c`
+maps at most three banks of eight lines per controller (`SPRD_EIC_MAX_BANK 3`, the SC9860's layout); the UMS9620's
+sync controller lists six banks in its `reg` (`0x2000c0`, `0x2100c0` ... `0x2500c0`, Unisoc's `qogirn6pro.dtsi`),
+so the chip came up with 24 lines and line 35 (the fifth bank) was rejected by `of_gpio_simple_xlate()`: the GPIO
+lookup never found a chip and reported `-EPROBE_DEFER` for ever. Unisoc's 5.4 driver has `SPRD_EIC_MAX_BANK 8`
+(that is the "Got CD GPIO" of the 5.4 log). The fallback above (drop `cd-gpios`, `MMC_CAP_NEEDS_POLL`) is what made
+the empty slot noisy: `sdhci-sprd` has `SDHCI_QUIRK_BROKEN_CARD_DETECTION`, with which `sdhci_get_cd()` answers
+"present" whenever no CD GPIO is set, so every one-second poll ran a card initialisation (CMD0, CMD8, CMD55 ...)
+against nothing; a command the controller gives up on still produces a late command interrupt after the core has
+finished the request, and `sdhci_cmd_irq()` logs those at error level with a register dump ("Got command interrupt
+0x00000001 even though no command operation was in progress", `Cmd 0x371a` = CMD55, `0x081a` = CMD8, `Resp[0]
+0xffffffff`): 19 dumps in 9 minutes on the F50 under 7.2.10, none with a card in, none on the U30 Air (no slot).
+`upstream/patches/0014-gpio-eic-sprd-eight-EIC-banks.patch` raises the limit to Unisoc's 8 (nothing else in the
+driver depends on it: the bank count comes from `reg`, the interrupt handler walks the banks the chip has), so
+`mmc_of_parse()` finds the line at the first try, the port's fallback does not run, and the core requests the EIC
+line's interrupt (both edges; the sync EIC supports `IRQ_TYPE_EDGE_BOTH`) instead of polling: an empty slot is not
+touched after the one rescan at start, which `mmc_gpio_get_cd()` ends before any command. Expected on the device:
+`gpiochip3` with 48 lines, no "MU300: CD GPIO deferred" line, `cd-gpios` still in `/proc/device-tree`, no "Got
+command interrupt" dump, the slot's interrupt counter at rest, and a card inserted later found by the interrupt
+(the stuck-busy loop of the polled slot above may or may not recur: it needs the test by hand).
+
 ### 31k. The Linux filesystem on the SD card
 Measured on the F50 with the same SL32G card (29.7 GiB, 62331871 sectors in `mmcblk1p1`) on 2026-10-04/05, with
 the installer of this branch, the 6.18.55 #4 bundle and the v2026.10.08 root filesystems, Ubuntu 24.04 and OpenWrt
