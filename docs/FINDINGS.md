@@ -3821,6 +3821,15 @@ Device test (a U30 Air whose line answers `mu300-sms send 7000 KALAN` with a two
 files, `/run/mu300-at/lock` gone afterwards, and the reply pooled; through the panel's SMS page the toast must go
 "Sending…" and then "Sent" with the operations log carrying `sms_send ... ok` and `sms_send result ... ok`.
 
+The Ubuntu side, `sms send` (every system's SMS tool, its own send path, no pool), has the same two since: the same
+`at_lock`/`at_unlock` and `smsc_refresh` (held only when the daemon's fifo is there - without it mu300-at opens the
+tty itself and takes no lock either), and the submission as the same one request `AT+CMGS=N<CR><PDU><Ctrl-Z>`. It
+used to send `AT+CMGS=N` as a request of its own and the PDU as another: the `> ` prompt has no line ending, so the
+daemon never saw an answer to the first (its whole 10 s), counted it as a silent command and drained up to 25 s
+before writing the PDU - and between the two any other client could get in. Device test (an F50-B with a registered
+SIM): `sudo sms send 7000 KALAN` must answer `sent (reference N)` within seconds, with `AT+CSCA?` and the same-value
+`AT+CSCA=` in the daemon's answer files, `/run/mu300-at/lock` gone afterwards, and `sudo sms list` showing the reply.
+
 ### 47. A system the Magisk zip added beside another had a password nobody saw (#167)
 
 Reported as "cannot log in to openwrt-luci / openwrt" on a board that had Ubuntu first and the two OpenWrt systems

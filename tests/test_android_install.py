@@ -543,17 +543,23 @@ class Systems(ShellTest):
         # the accounts carried over (whatever they hold), and the mark that has mu300-update carry some <os>.old's
         # accounts over at boot never stays. PW_SET=1 puts PWHASH in even when it is empty: OpenWrt's root without a
         # password, also over one an update would carry over (MU300_PASSWORD_RESET=yes).
-        cases = (  # name, os, the old system's shadow (None: no old system; '': no shadow file), PW_SET, what root/ubuntu keeps
-            ('fresh, no hash given', 'ubuntu', None, '0', 'ubuntu:$6$image$ubuntu:'),
-            ('fresh, the Magisk zip', 'ubuntu', None, '1', 'ubuntu::'),           # the installer sends a hash for Ubuntu; empty is empty
-            ('fresh OpenWrt, the Magisk zip', 'openwrt', None, '1', 'root::'),
-            ('old system without a shadow', 'ubuntu', '', '0', 'ubuntu:$6$image$ubuntu:'),
-            ('OpenWrt root with an empty password', 'openwrt', 'root::19000:0:99999:7:::\n', '0', 'root::'),
-            ('OpenWrt root reset to none', 'openwrt', 'root:$6$old$root:19000:0:99999:7:::\n', '1', 'root::'),
-            ('locked account', 'ubuntu', 'root:*:1::\nubuntu:!:19000::::::\n', '0', 'ubuntu:!:'),
-            ('no entry for the account', 'ubuntu', 'root:$6$a$b:1::\n', '0', 'ubuntu:$6$image$ubuntu:'),
-            ('the image default carried over', 'ubuntu', 'root:*:1::\nubuntu:$6$image$ubuntu:19000::::::\n', '0', 'ubuntu:$6$image$ubuntu:'))
-        for name, os_, old, pw_set, keeps in cases:
+        # The device log says what the shadow holds (#178 follow-up): with the accounts carried over and PW_SET=1 (or
+        # a hash) the system's own account gets the images' password again, so "kept the accounts and passwords" would
+        # be untrue; only the other accounts keep theirs.
+        KEPT_ALL = 'kept the accounts and passwords of the previous {os}'
+        KEPT_OTHERS_NONE = "kept the other accounts of the previous {os}; {pwu}'s password is the images' own again: none, until one is set"
+        KEPT_OTHERS_HASH = "kept the other accounts of the previous {os}; {pwu}'s password is the one the installer chose (the images' own, or MU300_PASSWORD)"
+        cases = (  # name, os, the old system's shadow (None: no old system; '': no shadow file), PW_SET, what root/ubuntu keeps, the log line
+            ('fresh, no hash given', 'ubuntu', None, '0', 'ubuntu:$6$image$ubuntu:', None),
+            ('fresh, the Magisk zip', 'ubuntu', None, '1', 'ubuntu::', None),           # the installer sends a hash for Ubuntu; empty is empty
+            ('fresh OpenWrt, the Magisk zip', 'openwrt', None, '1', 'root::', None),
+            ('old system without a shadow', 'ubuntu', '', '0', 'ubuntu:$6$image$ubuntu:', None),
+            ('OpenWrt root with an empty password', 'openwrt', 'root::19000:0:99999:7:::\n', '0', 'root::', KEPT_ALL),
+            ('OpenWrt root reset to none', 'openwrt', 'root:$6$old$root:19000:0:99999:7:::\n', '1', 'root::', KEPT_OTHERS_NONE),
+            ('locked account', 'ubuntu', 'root:*:1::\nubuntu:!:19000::::::\n', '0', 'ubuntu:!:', KEPT_ALL),
+            ('no entry for the account', 'ubuntu', 'root:$6$a$b:1::\n', '0', 'ubuntu:$6$image$ubuntu:', KEPT_ALL),
+            ('the image default carried over', 'ubuntu', 'root:*:1::\nubuntu:$6$image$ubuntu:19000::::::\n', '0', 'ubuntu:$6$image$ubuntu:', KEPT_ALL))
+        for name, os_, old, pw_set, keeps, logged in cases:
             with self.subTest(name):
                 for shell in self.each_shell():
                     shutil.rmtree(self.M / os_, ignore_errors=True)
@@ -566,17 +572,29 @@ class Systems(ShellTest):
                         (self.M / os_ / 'etc' / 'precious').write_text('old\n')
                         if old:
                             (self.M / os_ / 'etc' / 'shadow').write_text(old)
-                    self.run_install(shell, OSES=os_, BOOT_OS=os_, UPDATE='1' if old is not None else '0', PW_SET=pw_set)
+                    r = self.run_install(shell, OSES=os_, BOOT_OS=os_, UPDATE='1' if old is not None else '0', PW_SET=pw_set)
                     self.assertFalse((self.M / f'{os_}.new').exists())
                     self.assertIn(keeps, (self.M / os_ / 'etc' / 'shadow').read_text())
                     self.assertFalse((self.M / os_ / 'etc' / '.mu300-accounts-from-image').exists())
                     self.assertFalse((self.M / os_ / 'etc' / 'precious').exists())
-        # with a new hash: installed, the hash in place
+                    kept = [l for l in r.stdout.splitlines() if 'kept the' in l and 'accounts' in l]
+                    pwu = 'ubuntu' if os_ == 'ubuntu' else 'root'
+                    self.assertEqual(kept, [] if logged is None else ['[device] ' + logged.format(os=os_, pwu=pwu)], name)
+        # with a new hash: installed, the hash in place; on an update the log line says so
         for shell in self.each_shell():
             shutil.rmtree(self.M / 'openwrt', ignore_errors=True)
             self.tarball('openwrt', {'etc/shadow': 'root::19000:0:99999:7:::\n'})
             self.run_install(shell, OSES='openwrt', BOOT_OS='openwrt', PWHASH='$6$new$hash')
             self.assertIn('root:$6$new$hash:', (self.M / 'openwrt' / 'etc' / 'shadow').read_text())
+            (self.M / 'openwrt' / 'etc' / 'shadow').write_text('root:$6$old$root:19000:0:99999:7:::\nkaan:$6$k$k:19000::::::\n')
+            (self.M / 'openwrt' / 'etc' / 'passwd').write_text('root:x:0:0:root:/root:/bin/ash\nkaan:x:1000:1000::/home/kaan:/bin/ash\n')
+            self.tarball('openwrt', {'etc/shadow': 'root::19000:0:99999:7:::\n', 'etc/passwd': 'root:x:0:0:root:/root:/bin/ash\n'})
+            r = self.run_install(shell, OSES='openwrt', BOOT_OS='openwrt', UPDATE='1', PWHASH='$6$new$hash', PW_SET='1')
+            shadow = (self.M / 'openwrt' / 'etc' / 'shadow').read_text()
+            self.assertIn('root:$6$new$hash:', shadow)
+            self.assertIn('kaan:$6$k$k:', shadow)
+            self.assertIn('[device] ' + KEPT_OTHERS_HASH.format(os='openwrt', pwu='root'), r.stdout)
+            self.assertNotIn(KEPT_ALL.format(os='openwrt'), r.stdout)
 
     def test_accounts_merge_is_mu300_updates(self):
         # one merge, two copies: android-install.sh runs on Android and cannot source the system's mu300-update
