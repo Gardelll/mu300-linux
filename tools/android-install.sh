@@ -166,6 +166,27 @@ MU300_OFF=$OFF MU300_SIZE=$SIZE sh $T/android-mount-mu300root.sh $M
 trap 'sync; sh $T/android-mount-mu300root.sh -u $M >/dev/null 2>&1; true' EXIT
 fi
 
+# --- bootchain begin
+# The Linux slot's uboot, sml, teecfg, trustos and vbmeta become the ones of Android's slot (android-bootchain.sh),
+# before anything else is installed: a failure stops here, and the installers then write no boot image. The images
+# the Linux slot held go onto the Linux filesystem first (.mu300/bootchain/<date>), and for install.sh/install.ps1
+# also to $T/mu300-bootchain-backup, which they pull into their work directory.
+if [ "${SYNC_BOOTCHAIN:-0}" = 1 ]; then
+    bcdir=$M/.mu300/bootchain/$(date +%Y%m%d-%H%M%S)
+    rm -rf $T/mu300-bootchain-backup
+    bcout=$(sh $T/android-bootchain.sh sync "$bcdir") && bcrc=0 || bcrc=$?
+    echo "$bcout" | grep -v '^BOOTCHAIN-' | sed 's/^/[device] /'
+    if [ $bcrc != 0 ]; then
+        say "$(echo "$bcout" | sed -n 's/^BOOTCHAIN-[A-Z]*: //p')"
+        say "the boot chain was not synced; no system was installed (MU300_SYNC_BOOTCHAIN=0 skips this step)"
+        exit 1
+    fi
+    if [ -z "${MU300_DEVICE_WORK:-}" ] && [ -d "$bcdir" ]; then
+        cp -R "$bcdir" $T/mu300-bootchain-backup && chmod -R a+rX $T/mu300-bootchain-backup || true
+    fi
+fi
+# --- bootchain end
+
 # --- legacy-wipe begin
 if [ "$WIPE_LEGACY" = 1 ] && { [ -x $M/lib/systemd/systemd ] || [ -L $M/lib ]; }; then
     say "removing the root-level Ubuntu"

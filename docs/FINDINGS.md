@@ -99,6 +99,7 @@ what replaced it. The table below gives each section's state.
 | 36 | Power profiles: idle radios, the charging boot, the charge guard | current; power table and device questions open (PR #62) |
 | 37 | System suspend | current (fixes on branch `suspend-drivers`); power not measured |
 | 39 | The SMS pool: durable before the SIM lets go, long messages that never complete, forwarding | current |
+| 40 | The boot chain of the Linux slot: what is loaded per slot, and what the installers copy | current; not yet run on a device whose slots differ |
 | 38 | Three defects from users' reports, 2026-10-07 | current |
 | 38a | A read past the end of the eMMC never returns | current (fixed) |
 | 38b | RNDIS: the port kept the bridge's address | current (fixed) |
@@ -107,6 +108,7 @@ what replaced it. The table below gives each section's state.
 | 41 | The vendor daemons' own account | current |
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
+| 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
 
 ## Hardware and firmware facts
 
@@ -3234,6 +3236,75 @@ command line sampled ~45 000 times during deliveries: no token, URL or header. T
 without the keyword. The page in English and Turkish (save, a refusal translated, the test button, the log). Not
 tested: e-mail (the image has no msmtp), the SMS target (no credit), a real incoming SMS from the network.
 
+### 40. The boot chain of the Linux slot: what is loaded per slot, and what the installers copy
+
+**The problem.** Linux boots from the slot Android does not run from, and LK boots that slot with that slot's own
+bootloader chain. Linux, though, starts Android's modem: `android-vendor-start` rewrites `androidboot.slot_suffix` to
+Android's slot (§5, PR #30), so `modem_control` loads `nr_modem`, `nr_phy` and `pm_sys` of Android's slot and hands
+them to the Trusty TA `kernelbootcp` (`kbc_verify_all_avb2`, `SEC_KBC_START_CP`) - the Trusty of the Linux slot. On a
+device that never took an OTA both slots hold the factory build and nothing differs. After an OTA Android's slot holds
+the new build and the other slot still the factory one (issue #86: on a U30 Air on B18, slot a's `uboot_a`, `sml_a`,
+`vbmeta_a`, `trustos_a` "belong to the factory build"), so a Linux boot runs the factory TEE against the new modem
+images. kano's advice, which the maintainer took: "sync uboot, teecfg, trustos, sml across the A/B slots - copy the
+partitions of Android's slot into the other slot; it solves 99% of the problems."
+
+**What is loaded per slot**, from F50-B's `uboot_log` (16 MiB ring, 108 boots in it, read-only from Linux):
+
+* `uboot`, `sml`, `teecfg`, `trustos`: the secure-boot images. Fastboot downloads of them log
+  `uboot_verify_successful`, `sml_verify_successful`, `teecfg_verify_successful`, `trustos_verify_successful` (each
+  checked against the signature chain before it is written, `download slot: trustos_b`), and at every boot LK finds
+  them already in place (`fdtdec_decode_region: sml-mem@bd000000`, `tos-mem@bd020000`, `zte_tee smc get tos addr`,
+  `uboot_set_root_of_trust succeeded`, `pass_chip_uid_to_tos()`): the SPL loaded the selected slot's set before LK.
+  `stock/README.md` already treats `trustos` as verified together with `sml`, `uboot` and `vbmeta`, one chain per
+  firmware build.
+* `vbmeta`: LK's `avb_slot_verify()` reads `vbmeta_<slot>` and through it `boot`, `dtbo`, `vendor_boot`,
+  `nr_modem`, `nr_phy`, `pm_sys` (`Loading vbmeta struct in footer from partition nr_modem_b`, ...) and the chained
+  `vbmeta_system`, `vbmeta_vendor`, `vbmeta_product`, `vbmeta_odm`, `vbmeta_system_ext` of the booted slot; the
+  device is unlocked (`allow_verification_error is 1`, `Device Status is unlock, skip boot image verify!`), so a
+  mismatch is logged and booted anyway. The root of trust LK hands to Trusty comes from that verification.
+* The SPL itself (`splloader`) is not a by-name partition: it is in the eMMC boot areas, `mmcblk0boot0` and
+  `mmcblk0boot1` byte-identical on F50-B, and LK manages it itself (`slot 1 booted fail, rolling back spl and
+  reboot into normal`, `exchange boot slot!!!`).
+
+**What the installers copy:** `uboot`, `sml`, `teecfg`, `trustos` and `vbmeta` - the four of kano's list and the
+`vbmeta` that is verified with them - from Android's slot to the Linux slot (`tools/android-bootchain.sh`; the copy
+in the switch module is kept identical by a test). Nothing else, by a fixed list that also refuses any NV-like name:
+
+* never the NV and calibration partitions (`nr_fixnv1/2`, `nr_runtimenv1/2`, `nr_deltanv`, `prodnv`, `miscdata`,
+  `persist`, `calinv`, `isedata`, `ztecfg`, `ztepersist`): on F50-B `nr_fixnv1_a` and `nr_fixnv1_b` differ, each
+  slot's NV belongs with that slot;
+* never `boot`, `init_boot`, `vendor_boot`, `dtb`, `dtbo`, `super`, `userdata`, `misc`, and never a partition of
+  Android's slot;
+* not the modem images (`nr_modem`, `nr_phy`, `pm_sys`, `ch_sys`). The evidence does not ask for them: Linux runs
+  Android's slot's copies already (above), and LK only reads the Linux slot's for their AVB footers, which an
+  unlocked device ignores. They also sit beside the per-slot NV. If a device with a synced chain still fails at the
+  handoff, they are the next thing to look at.
+* not `hypervsior`, `ise`, `avbmeta_rs`, `common_rs1/2`, `logo`: nothing in the LK log loads them per slot
+  (`common_rs1_a` and `_b` differ on F50-B; the others are identical there).
+
+**How it is done** (every check before the first write; a refusal changes nothing and stops the installation):
+Android's slot from `ro.boot.slot_suffix` (`_a`/`_b` only); an F50/MU300 or U30 Air by model; `getprop` must
+exist and the running slot's boot partition must not hold a Linux image (never from Linux); misc's
+`bootloader_control` must say Android's slot booted successfully, and the other slot may outrank it only when it
+holds our Linux image (an armed trial), not an OTA waiting for its reboot; both by-name links of each image present,
+two different devices, the same size. Then per image: the same sha256 on both slots - skipped; different - both
+slots' images are copied into the Linux filesystem (`.mu300/bootchain/<date>/<name>_<slot>.img` and `SHA256SUMS`,
+each read back against the partition), then Android's image is written to the Linux slot (`dd conv=fsync`, `sync`,
+`blockdev --flushbufs` and `drop_caches` before the read-back) and its sha256 compared. A mismatch writes every
+image back that was already written, verifies those too, and stops the installation before the boot image is written:
+Linux is not armed, Android is untouched. The host installers also pull the backup into `work/bootchain/<date>`.
+`MU300_SYNC_BOOTCHAIN=0` (`install.ps1 -NoBootchainSync`, `MU300_SYNC_BOOTCHAIN=0` in the Magisk conf) skips it, and
+a device taken as an F50 although its model is not recognised is never synced. Later, from Android:
+`su -c 'mu300-linux bootchain'` (what differs) and `su -c 'mu300-linux bootchain sync'` (backup in
+`/data/adb/mu300-bootchain/<date>`). There is no Linux-side command: from Linux the booted slot is the one to be
+written.
+
+**On the test boards:** F50-B (B09, never updated) has `uboot`, `sml`, `teecfg`, `trustos`, `vbmeta` and every
+`vbmeta_*`, the modem images, `dtb`, `dtbo`, `vendor_boot`, `hypervsior`, `ise`, `logo` identical on both slots (read
+from Linux, 2026-10-11): the installers there say "identical on both slots" and write nothing. Not yet run on a
+device whose slots differ (one that took an OTA); issue #105's power-off at the Trusty/modem handoff was traced to a
+kernel change by its reporter, and this is not claimed as its fix.
+
 ## Users' reports
 
 ### 38. Three defects from users' reports, 2026-10-07
@@ -3605,3 +3676,135 @@ adbd's connection, and adbd hung in it, holding its endpoints: FunctionFS never 
 the loop saw it bound and had nothing to do, and the pulled-down gadget stayed off the bus until the board was
 unplugged (its root port on the Mac cannot be power-cycled). Without adb a soft disconnect stays too, until
 `echo connect`; with the fixed adbd it was not tried again.
+
+## Network namespaces on the vendor kernel
+
+### 44. Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103)
+
+Reported with four boots' worth of pstore on an F50 running OpenWrt on 5.4 with Docker (two containers,
+`restart=always`) and a Codex sandbox: about 25 s after boot a `WARNING` in `retire_sysctl_set` from
+`cleanup_net`, then within a second a fatal exception in an unrelated process in `__kmalloc`, or on the netns
+worker itself:
+
+```text
+Workqueue: netns cleanup_net
+pc : count_subheaders+0x18/0x74
+lr : unregister_sysctl_table+0x28/0xa8
+ xfrm_sysctl_fini+0x34/0x50
+ xfrm_net_exit+0x18/0x50
+ cleanup_net+0x2e4/0x54c
+Kernel panic - not syncing: Fatal exception
+```
+
+and, after a sandbox command finished, `kernel BUG at mm/slub.c:308` (a double free) in `kfree` from the same
+`xfrm_sysctl_fini`.
+
+**Cause**, in the vendor tree (`net/xfrm/xfrm_sysctl.c`, under `CONFIG_XFRM_FRAGMENT`, a Unisoc option - "only
+for sprd" says its Kconfig; it is not upstream, and linux-5.4.y has not changed this file since 2017, so no stable
+fix exists to take). The option adds a `net/core/enable_xfrm_fragment` sysctl, a global switch for fragmenting
+before ESP, and registers it with a *second* `ctl_table_header` whose pointer, and its `kmemdup`'d table, live in
+two `static` variables. `xfrm_sysctl_init()` runs for every network namespace and overwrites both; `xfrm_sysctl_fini()`
+runs for every namespace and unregisters and frees whatever they point at, without clearing them. With one
+namespace at a time the globals happen to track it. With two alive - Docker's containers, dnsmasq's, a sandbox - the
+first to exit unregisters and frees the *newer* namespace's registration and leaves its own behind in a dying
+namespace (`retire_sysctl_set`'s warning); the second's exit then walks a freed header (`count_subheaders`) and
+frees the table again (`slub.c:308`), or the stale memory has been reused and another process's allocation goes
+wrong. A failed second registration also freed the first table while leaving it registered. The entry was 0660 and,
+unlike the four `xfrm_*` entries next to it, not hidden from namespaces owned by an unprivileged user namespace,
+whose "root" has CAP_NET_ADMIN over them: a global kernel switch writable from `unshare -Urn`.
+
+**Fix** (`kernel/patches/xfrm-sysctl-fragment-per-netns.patch`, the reporter's candidate taken as proposed): the
+entry becomes the fifth member of `xfrm_table`, so each namespace's copy is registered and torn down with that
+namespace's own `net->xfrm.sysctl_hdr`, exactly like the four upstream entries; the second header, its table and
+their error path are gone. The switch stays one global `int` with default 1, `get_xfrm_fragment()` (used by the ESP
+output path) is unchanged, so are the path and the mode. One visible change: the entry now follows the table's rule
+and is absent in a namespace of a non-initial user namespace (`unshare -Urn` sees no `enable_xfrm_fragment`; the
+host's stays 1). No struct changes, so the module bundle is unaffected.
+
+**Reproduce** (unpatched 5.4; do it on a board you can reboot, the panic is on teardown and takes the kernel with
+it): two namespaces have to be alive at once, so `for i in $(seq 200); do unshare -n true & unshare -n true; wait;
+done` - or simply starting Docker with two containers - and the warning, then the panic, follow within a few
+iterations after the netns worker runs. `unshare -n true` in a single-threaded loop does not trigger it (one
+namespace at a time keeps the globals consistent), which is why a plain namespace test can pass on the broken
+kernel. The reporter's patched kernel passed 460 lifecycles (sequential and four-way parallel) and 10 sandbox runs
+on an F50 across two boots with no recurrence; our build of the patch (release config, ThinLTO) is in PR for #103,
+with the loop above to run on our F50 before the release.
+
+### 45. `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146)
+
+Found on the U30 Air during the #123 test (7.2.9, also on main): with Wi-Fi idle (`wifi down`, OpenWrt),
+`rmmod sprd_wlan_combo` panics in `__run_timers` within a second. Not a timer that one deinit forgot: **the port's
+platform remove tore nothing down.** The vendor's `sprd_wlan_remove` (`common/sprd_wlan.c`) ends in
+`return sprd_iface_remove(pdev)`; the mainline port dropped that line with the SC2332/SIPC variants, so remove logged
+one line and returned. The module was then freed with the recovery watchdog of PR #100 (`iface_wd.tick`, a
+`delayed_work` in the module's `.bss`, on `system_wq`, rearming itself every second) still armed, and with the
+wiphy, `wlan0`, the WCN reset notifier, the misc device and the inetaddr notifiers all still registered on the
+freed `priv`: the watchdog's timer is the first to go off. The vendor 5.4 driver still has the call (and no
+watchdog), so only the mainline module was affected.
+
+Fix (`upstream/modules/sprd_wlan_combo`):
+- `sprd_wlan_remove` calls `sprd_iface_remove()` for the PCIe variant again: watchdog stopped first, the chip
+  powered on for the close commands, the notifiers, the interfaces and the wiphy unregistered, the chip powered off,
+  TX/RX torn down, `priv` freed.
+- `sprd_iface_remove` no longer returns on a failed WCN power-on with everything still registered: a platform
+  remove cannot refuse, the device is unbound and the module freed either way. The power-on only fails from a count
+  of 0 (no interface open), so the teardown goes on without the chip and skips the power-off that would have
+  balanced it.
+- Two timers that live in `priv` and had no owner where `priv` is freed: the scan timer
+  (`timer_shutdown_sync` in `sprd_core_free`; a scan still running is reported done by `iface_deinit_vif`, which
+  deleted it, but nothing did so unconditionally) and the TCP ACK timers (`sc2355_tcp_ack_deinit` used `del_timer`
+  under the seqlock the callback takes, so a timeout running on another CPU could outlive the deinit; a
+  `timer_shutdown_sync` pass after the lock is dropped waits for it).
+
+Built for 6.18.56 and 7.2.10 (modules only). Device test: see the PR for #146.
+
+### 46. SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176)
+
+Reported on openwrt-luci v2026.10.20, China Broadnet (PLMN 46015), U30-class board (UMS9620): every send from the
+panel to the carrier's service number failed, incoming messages worked. The modem's URC log had
+`+SPIMSREASON: 1,512,"SMS FAILED: CODE:600 REASON:Busy Everywhere"` (the IMS stack's SIP 600 on the submission),
+and the panel's operations log `sms_send - killed`. The reporter's one-shot test through the same mu300-atd, with two
+changes made together, succeeded at once (`+CMGS: 1`, `OK`, and the service answered within seconds):
+
+- `AT+CSCA?` answered `"2B38...",145` (the modem's CSCS is `"HEX"`, so the address reads as hexadecimal: `+86...`),
+  and that exact string and type were written back with `AT+CSCA="2B...",145` - the same value, not another SMSC, and
+  CSCS left alone. What this puts right inside the modem is not known; SMSC state after the IMS registration is the
+  guess. Only `OK` counted.
+- the whole send (CSCA, `AT+CMGF=0`, `AT+CMGS`) ran under one acquisition of mu300-at's client mutex
+  (`/run/mu300-at/lock`). mu300-sms took it once per command, so between its commands any other client (the panel's
+  collectors, mu300-smsd's sync) could run, and the modem's state between PDU mode and the submission was never
+  guaranteed to be what the previous command left.
+
+The two were changed together, so which one was decisive is not known. Both are now in mu300-sms's send:
+
+- `at_lock`: mu300-sms takes `$ATDIR/lock` itself, the way mu300-at does (a holder that is gone is taken over, the
+  wait is `MU300_AT_LOCK_WAIT` seconds of the clock, `mu300-at: busy` when it gives up, so the panel's verdict is
+  unchanged), and tells the mu300-at calls under it with `MU300_AT_LOCK_HELD=<pid>`. mu300-at borrows the lock only
+  when `lock/pid` names that live process; anything else and it takes the lock as before. The lock is released after
+  the submission, before the pool lock (a path holding the pool lock makes no AT call, so send and sync never wait
+  for each other - that rule stands).
+- `smsc_refresh`: `AT+CSCA?`, the address and type parsed strictly (`"[+0-9A-Fa-f]+",[0-9]{1,3}`), written back
+  unchanged. A query that fails or answers something else skips the refresh (logged on stderr), and a write the modem
+  refuses is logged and the send goes on: the SMSC in use is the same either way, and the submission's own answer
+  says what is wrong. Nothing ever picks another SMSC or touches CSCS.
+
+The submission stays one write, `AT+CMGS=N<CR><PDU><Ctrl-Z>`, as before. Waiting for the modem's `> ` prompt first
+would need a byte-wise read in mu300-atd (the prompt has no newline, so the daemon's line reads never see it; it is
+collected with the reply), and what `read -t` leaves in its variable when it times out on a partial line is not the
+same under every shell the daemon runs under (bash, busybox ash) and has not been measured on the device - in the one
+process that owns the channel, where a modem left waiting at the prompt for a PDU that never comes is a wedged
+channel. The reporter's successful send used the combined write too, as every send on the U30 Air has.
+
+The panel: `mu300dash sms_send` ran mu300-sms inside the rpcd call, which rpcd ends at 30 s, while mu300-sms waits
+up to 40 s for `+CMGS` (and its whole transaction longer). A slow send was killed with the call - the message gone out
+or not, with no result anywhere but a `killed` line. `sms_send` now validates and starts the send detached
+(`setsid mu300dash sms-job`, the at_job pattern), answering `started`; `sms_job` says `running` and then the verdict
+`sms_send` used to give (`ok`/`busy`/`Sending failed` with the modem's last line) with `done:1`; the page asks every
+second. A second send while one runs is `busy` (the AT channel is in use), never a second submission; a job that
+died without a result says so and is not resent. The job logs how the send went in the operations log (`sms_send
+result 2.31s ok`), which is what the report was missing.
+
+Device test (a U30 Air whose line answers `mu300-sms send 7000 KALAN` with a two-part reply): the send through
+`/opt/mu300/bin/mu300-sms send 7000 KALAN` must show `AT+CSCA?` and the same-value `AT+CSCA=` in the daemon's answer
+files, `/run/mu300-at/lock` gone afterwards, and the reply pooled; through the panel's SMS page the toast must go
+"Sending…" and then "Sent" with the operations log carrying `sms_send ... ok` and `sms_send result ... ok`.
