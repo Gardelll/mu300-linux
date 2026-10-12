@@ -109,11 +109,11 @@ what replaced it. The table below gives each section's state.
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
-| 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
-| 49 | The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only | current (U30 Air, Vodafone TR: CNUM answers) |
 | 45 | `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146) | current (fixed) |
 | 46 | SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176) | current (fixed) |
 | 47 | A system the Magisk zip added beside another had a password nobody saw (#167) | current (fixed) |
+| 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
+| 49 | The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only | current (U30 Air, Vodafone TR: CNUM answers) |
 | 50 | Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot | current; the timeout path not yet seen on a device |
 
 ## Hardware and firmware facts
