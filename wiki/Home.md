@@ -56,6 +56,27 @@ kernels to choose from; 5G/LTE internet shared over Wi-Fi and USB; SSH, and `adb
 SMS and USSD; an optional VPN module; a web panel on Ubuntu too (Cockpit with an MU300 page, optional); a
 `raspi-config`-like menu called `mu300-toolkit`; automatic fallback to Android; updates on the device.
 
+## New in v2026.10.22
+
+The release of 2026-10-22 (a prerelease first, promoted once a board has run it). Fixes again. What it changes, and
+where to read on:
+
+* **Sending an SMS no longer fails with `SMS FAILED: CODE:600`** on networks that refused every submission (China
+  Broadnet; issue #176): a send is now one AT transaction, with nothing else getting at the modem between the setup
+  and the submission, and the SMSC is written back to the modem unchanged before each one; on OpenWrt (`mu300-sms`
+  and the panel) and on Ubuntu (`sms`). [SMS](SMS), [Troubleshooting](Troubleshooting)
+* **The panel's SMS page keeps its send result:** a slow send used to be killed with the request after 30 s
+  (`sms_send - killed` in the operations log). The send now runs in the background and the page follows it, also
+  after a reload. [Troubleshooting](Troubleshooting)
+* **No more `mmc1` register dumps on the F50** on 6.18 and 7.2: the empty SD slot has real card detect now (the EIC
+  controller's six banks are mapped), so nothing polls it any more (issue #181). [Troubleshooting](Troubleshooting), [Kernels](Kernels)
+* **Magisk zips: known passwords.** A system the zip installs gets the images' own: Ubuntu's user `ubuntu` has the
+  password `ubuntu`, OpenWrt's `root` has none until you set one; `MU300_PASSWORD` still sets one of your own. No
+  random passwords any more, and the password note holds no secret (issue #167). [Installation](Installation#installing-from-android-with-a-magisk-zip-no-computer)
+* **No VPN section without the VPN module:** LuCI's VPN menu, the Cockpit page's VPN tab and the toolkit's VPN item
+  are there only once `mu300-extra install vpn` has run. [VPN](VPN)
+* **Kernels:** 5.4 unchanged; 6.18.56 and 7.2.10 rebuilt with the card-detect fix. [Kernels](Kernels)
+
 ## New in v2026.10.21
 
 The release of 2026-10-21 (a prerelease first, promoted once a board has run it). Mostly fixes. What it changes, and

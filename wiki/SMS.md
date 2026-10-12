@@ -17,6 +17,9 @@ sudo sms watch [COMMAND]            # wait for new messages, run COMMAND for eac
 ```
 
 No `sudo` on OpenWrt. All of it goes through `mu300-atd`, so it queues behind anything else talking to the modem.
+From v2026.10.22 a send is one transaction: the channel is held from the setup to the submission, and the SMSC the
+modem reports is written back to it unchanged first; some networks refused every send without that (issue #176, see
+[Troubleshooting](Troubleshooting)).
 `sms delete` accepts only a message index, `read` or `all` (from v2026.10.20); anything else is refused before the
 modem sees it, so a stray `1,4` can no longer wipe the mailbox.
 
