@@ -117,6 +117,7 @@ what replaced it. The table below gives each section's state.
 | 50 | Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot | current; the timeout path not yet seen on a device |
 | 51 | SMS delivered directly (+CMT), acknowledged only once the pool has it; the SIM path stays as the fallback | current |
 | 52 | The lock reset deleted the saved locks whether or not the modem took them: a verified reset | current (fixed) |
+| 53 | A carrier name shown as hex: UCS2 from a modem whose character set is not UCS2 (#174) | current (fixed; unit tests and a user's report, not measured on our boards) |
 | 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
 
 ## Hardware and firmware facts
@@ -4279,6 +4280,30 @@ on the same computer (its Ubuntu system is at `192.168.79.1`); it was reached ov
 (`root@fe80::50:78ff:fe24:7701%en17`). The subnet-per-device rule of §33b holds only when every system of the board
 is configured.
 
+### 53. A carrier name shown as hex: UCS2 from a modem whose character set is not UCS2 (#174)
+
+A user's panel showed `Carrier: 4E2D56FD8054901A` beside `PLMN: 46001` (F50, OpenWrt, 6.18, v2026.10.20; issue
+#174). That is 中国联通 in UCS2, as hex. Not measured on our boards (no SIM whose name is outside the default
+alphabet): the report, the code and unit tests.
+
+* **Why it was not decoded.** The collector (`unisoc-modem/cell`, `cops_fragment`) read a name as UCS2 hex only when
+  `AT+CSCS?` said `UCS2`. This modem says `HEX` (§46) and does not treat the operator name the way that character
+  set is documented: a name that fits the default alphabet comes as text (the panel has shown `vodafone TR` since
+  it asks for names), and by this report a name the SIM or the network holds in UCS2 comes as that UCS2 in hex. So
+  the character set does not say how the name is written; it did not for text-mode SMS addresses (§26c) or USSD
+  (§26d) either.
+* **The rule now.** With character set `UCS2`: as before (any whole number of code units that is valid UTF-16 with no
+  control character). With any other character set, or none read: the same decoding, but only for a text that cannot
+  reasonably be a name - at least two code units (8 hex digits; `CAFE`, `BEEF` and `FACE` are words), not all decimal
+  digits (a name of digits stays a name: `12345678`, `00540054`), and no private-use or non-character code point.
+  Anything that fails stays the text the modem gave; with no name at all the page still names the operator from the
+  PLMN (`common.js`). No carrier and no PLMN is hard-coded.
+* **Nothing to clear.** What is kept per PLMN in `/var/run/unisoc-modem/operator` is the modem's own line and its
+  character set, not the decoded name; `cell.json` is rewritten every full round. The runtime directory is a tmpfs,
+  and an update ends in a reboot, so no old value survives the fix.
+
+Open: a name of two or more code units that are all decimal digits (U+8054 U+9010 would be `80549010`) stays hex
+under a character set other than UCS2 - the price of leaving digit names alone. Not seen in a report.
 ### 54. A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171)
 
 The webhook of §39 sent one of two fixed bodies (JSON or a form with `sender`, `time`, `text`, `device`,
