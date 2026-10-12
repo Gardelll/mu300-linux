@@ -789,6 +789,9 @@ msgstr "कुल भेजा गया"
 msgid "Used today"
 msgstr "आज उपयोग किया"
 
+msgid "SIM source"
+msgstr "SIM स्रोत"
+
 msgid "Session duration"
 msgstr "सत्र अवधि"
 
@@ -1004,6 +1007,12 @@ msgstr "रीसेट विफल: %s. सहेजी गई लॉक स�
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "लॉक रीसेट समय पर पुष्ट नहीं हुआ; फिर भी स्विच किया जा रहा है।"
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "आंतरिक SIM चुना गया: रीबूट के बाद उपयोग में आएगा"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "आंतरिक SIM चुना गया, पर इस डिवाइस पर समर्थित नहीं है: बाहरी SIM उपयोग में है"
 
 msgid "Uptime %s"
 msgstr "अपटाइम %s"

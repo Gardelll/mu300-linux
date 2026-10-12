@@ -789,6 +789,9 @@ msgstr "총 송신량"
 msgid "Used today"
 msgstr "오늘 사용량"
 
+msgid "SIM source"
+msgstr "SIM 소스"
+
 msgid "Session duration"
 msgstr "세션 시간"
 
@@ -1004,6 +1007,12 @@ msgstr "초기화 실패: %s. 저장된 잠금 설정은 유지되었습니다."
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "고정 초기화를 제때 확인하지 못했습니다. 그대로 전환합니다."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "내장 SIM 선택됨: 재부팅 후 사용됩니다"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "내장 SIM을 선택했지만 이 기기에서는 지원되지 않습니다: 외부 SIM을 사용 중입니다"
 
 msgid "Uptime %s"
 msgstr "가동 시간 %s"

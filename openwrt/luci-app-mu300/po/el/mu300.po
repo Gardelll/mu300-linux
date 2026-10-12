@@ -789,6 +789,9 @@ msgstr "Σύνολο απεσταλμένων"
 msgid "Used today"
 msgstr "Χρήση σήμερα"
 
+msgid "SIM source"
+msgstr "Πηγή SIM"
+
 msgid "Session duration"
 msgstr "Διάρκεια συνεδρίας"
 
@@ -1004,6 +1007,12 @@ msgstr "Η επαναφορά απέτυχε: %s. Οι αποθηκευμένε�
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Η επαναφορά των κλειδωμάτων δεν επιβεβαιώθηκε εγκαίρως· γίνεται εναλλαγή ούτως ή άλλως."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Επιλέχθηκε η εσωτερική SIM: χρησιμοποιείται μετά από επανεκκίνηση"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Επιλέχθηκε η εσωτερική SIM, αλλά δεν υποστηρίζεται σε αυτή τη συσκευή: χρησιμοποιείται η εξωτερική SIM"
 
 msgid "Uptime %s"
 msgstr "Χρόνος λειτουργίας %s"

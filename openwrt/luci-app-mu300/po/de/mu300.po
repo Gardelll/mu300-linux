@@ -789,6 +789,9 @@ msgstr "Insgesamt gesendet"
 msgid "Used today"
 msgstr "Heute verbraucht"
 
+msgid "SIM source"
+msgstr "SIM-Quelle"
+
 msgid "Session duration"
 msgstr "Sitzungsdauer"
 
@@ -1004,6 +1007,12 @@ msgstr "Zurücksetzen fehlgeschlagen: %s. Die gespeicherten Sperreinstellungen w
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Das Zurücksetzen der Sperren wurde nicht rechtzeitig bestätigt; es wird trotzdem gewechselt."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Interne SIM gewählt: wird nach einem Neustart verwendet"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Interne SIM gewählt, auf diesem Gerät aber nicht unterstützt: die externe SIM wird verwendet"
 
 msgid "Uptime %s"
 msgstr "Laufzeit %s"

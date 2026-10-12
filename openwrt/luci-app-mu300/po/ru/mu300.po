@@ -789,6 +789,9 @@ msgstr "Всего отправлено"
 msgid "Used today"
 msgstr "Израсходовано сегодня"
 
+msgid "SIM source"
+msgstr "Источник SIM"
+
 msgid "Session duration"
 msgstr "Длительность сеанса"
 
@@ -1004,6 +1007,12 @@ msgstr "Сброс не удался: %s. Сохранённые настрой�
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Сброс блокировок не подтвердился вовремя; переключение всё равно выполняется."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Выбрана встроенная SIM: будет использоваться после перезагрузки"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Выбрана встроенная SIM, но на этом устройстве она не поддерживается: используется внешняя SIM"
 
 msgid "Uptime %s"
 msgstr "Время работы %s"

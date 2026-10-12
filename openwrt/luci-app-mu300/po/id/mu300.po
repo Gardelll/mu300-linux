@@ -789,6 +789,9 @@ msgstr "Total dikirim"
 msgid "Used today"
 msgstr "Terpakai hari ini"
 
+msgid "SIM source"
+msgstr "Sumber SIM"
+
 msgid "Session duration"
 msgstr "Durasi sesi"
 
@@ -1004,6 +1007,12 @@ msgstr "Pengaturan ulang gagal: %s. Pengaturan kunci yang tersimpan dipertahanka
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Reset kunci tidak terkonfirmasi tepat waktu; tetap beralih."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "SIM internal dipilih: digunakan setelah boot ulang"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "SIM internal dipilih, tetapi tidak didukung di perangkat ini: SIM eksternal yang digunakan"
 
 msgid "Uptime %s"
 msgstr "Waktu aktif %s"

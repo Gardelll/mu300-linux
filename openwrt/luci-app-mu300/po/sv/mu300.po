@@ -789,6 +789,9 @@ msgstr "Totalt skickat"
 msgid "Used today"
 msgstr "Använt i dag"
 
+msgid "SIM source"
+msgstr "SIM-källa"
+
 msgid "Session duration"
 msgstr "Sessionslängd"
 
@@ -1004,6 +1007,12 @@ msgstr "Återställningen misslyckades: %s. De sparade låsinställningarna beh�
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Återställningen av låsen bekräftades inte i tid; byter ändå."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Intern SIM vald: används efter en omstart"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Intern SIM vald, men stöds inte på den här enheten: den externa SIM:en används"
 
 msgid "Uptime %s"
 msgstr "Drifttid %s"

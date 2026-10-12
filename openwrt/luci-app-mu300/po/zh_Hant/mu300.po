@@ -789,6 +789,9 @@ msgstr "累計傳送"
 msgid "Used today"
 msgstr "今日已用"
 
+msgid "SIM source"
+msgstr "SIM 來源"
+
 msgid "Session duration"
 msgstr "連線時間"
 
@@ -1004,6 +1007,12 @@ msgstr "重設失敗：%s。已儲存的鎖定設定被保留。"
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "未能及時確認鎖定已重設；仍然切換。"
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "已選擇內建 SIM：重新啟動後生效"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "已選擇內建 SIM，但此裝置不支援：正在使用外接 SIM"
 
 msgid "Uptime %s"
 msgstr "已運作 %s"

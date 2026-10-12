@@ -789,6 +789,9 @@ msgstr "Total enviado"
 msgid "Used today"
 msgstr "Usado hoje"
 
+msgid "SIM source"
+msgstr "Origem do SIM"
+
 msgid "Session duration"
 msgstr "Duração da sessão"
 
@@ -1004,6 +1007,12 @@ msgstr "Falha na redefinição: %s. As configurações de bloqueio salvas foram 
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "A redefinição dos bloqueios não foi confirmada a tempo; trocando mesmo assim."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "SIM interno selecionado: em uso após reiniciar"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "SIM interno selecionado, mas sem suporte neste dispositivo: o SIM externo está em uso"
 
 msgid "Uptime %s"
 msgstr "Tempo ativo %s"

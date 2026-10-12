@@ -789,6 +789,9 @@ msgstr "Totale inviato"
 msgid "Used today"
 msgstr "Usato oggi"
 
+msgid "SIM source"
+msgstr "Origine SIM"
+
 msgid "Session duration"
 msgstr "Durata della sessione"
 
@@ -1004,6 +1007,12 @@ msgstr "Ripristino non riuscito: %s. Le impostazioni di blocco salvate sono stat
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Il ripristino dei blocchi non è stato confermato in tempo; si passa comunque."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "SIM interna selezionata: in uso dopo un riavvio"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "SIM interna selezionata, ma non supportata su questo dispositivo: è in uso la SIM esterna"
 
 msgid "Uptime %s"
 msgstr "Uptime %s"

@@ -789,6 +789,9 @@ msgstr "Барлығы жіберілді"
 msgid "Used today"
 msgstr "Бүгін пайдаланылды"
 
+msgid "SIM source"
+msgstr "SIM көзі"
+
 msgid "Session duration"
 msgstr "Сеанс ұзақтығы"
 
@@ -1004,6 +1007,12 @@ msgstr "Қалпына келтіру сәтсіз аяқталды: %s. Сақ�
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Құлыптарды тастау уақытында расталмады; бәрібір ауысады."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Ішкі SIM таңдалды: қайта жүктегеннен кейін қолданылады"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Ішкі SIM таңдалды, бірақ бұл құрылғыда қолдау көрсетілмейді: сыртқы SIM қолданылуда"
 
 msgid "Uptime %s"
 msgstr "Жұмыс уақыты %s"

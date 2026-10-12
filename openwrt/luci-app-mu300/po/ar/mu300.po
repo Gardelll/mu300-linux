@@ -789,6 +789,9 @@ msgstr "إجمالي المرسَل"
 msgid "Used today"
 msgstr "المستخدم اليوم"
 
+msgid "SIM source"
+msgstr "مصدر SIM"
+
 msgid "Session duration"
 msgstr "مدة الجلسة"
 
@@ -1004,6 +1007,12 @@ msgstr "فشلت إعادة الضبط: %s. تم الاحتفاظ بإعدادا
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "لم يُؤكَّد إعادة ضبط الأقفال في الوقت المحدد؛ سيتم التبديل على أي حال."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "تم اختيار SIM الداخلية: تُستخدم بعد إعادة التشغيل"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "تم اختيار SIM الداخلية لكنها غير مدعومة على هذا الجهاز: تُستخدم SIM الخارجية"
 
 msgid "Uptime %s"
 msgstr "مدة التشغيل %s"

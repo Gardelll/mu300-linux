@@ -789,6 +789,9 @@ msgstr "Wysłano łącznie"
 msgid "Used today"
 msgstr "Zużyto dziś"
 
+msgid "SIM source"
+msgstr "Źródło SIM"
+
 msgid "Session duration"
 msgstr "Czas sesji"
 
@@ -1004,6 +1007,12 @@ msgstr "Reset nie powiódł się: %s. Zapisane ustawienia blokad zostały zachow
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Reset blokad nie został potwierdzony na czas; przełączanie mimo to."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Wybrano wewnętrzną kartę SIM: będzie używana po ponownym uruchomieniu"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Wybrano wewnętrzną kartę SIM, ale to urządzenie jej nie obsługuje: używana jest zewnętrzna karta SIM"
 
 msgid "Uptime %s"
 msgstr "Czas pracy %s"

@@ -789,6 +789,9 @@ msgstr "סה״כ נשלח"
 msgid "Used today"
 msgstr "נוצל היום"
 
+msgid "SIM source"
+msgstr "מקור ה-SIM"
+
 msgid "Session duration"
 msgstr "משך ההפעלה"
 
@@ -1004,6 +1007,12 @@ msgstr "האיפוס נכשל: %s. הגדרות הנעילה השמורות נש
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "איפוס הנעילות לא אושר בזמן; עובר בכל זאת."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "נבחר SIM פנימי: ייכנס לשימוש לאחר הפעלה מחדש"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "נבחר SIM פנימי, אך הוא אינו נתמך במכשיר זה: ה-SIM החיצוני בשימוש"
 
 msgid "Uptime %s"
 msgstr "זמן פעולה %s"

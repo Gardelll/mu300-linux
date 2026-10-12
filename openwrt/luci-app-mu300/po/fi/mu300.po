@@ -789,6 +789,9 @@ msgstr "Lähetetty yhteensä"
 msgid "Used today"
 msgstr "Käytetty tänään"
 
+msgid "SIM source"
+msgstr "SIM-lähde"
+
 msgid "Session duration"
 msgstr "Istunnon kesto"
 
@@ -1004,6 +1007,12 @@ msgstr "Palautus epäonnistui: %s. Tallennetut lukitusasetukset säilytettiin."
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Lukitusten nollausta ei vahvistettu ajoissa; vaihdetaan silti."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Sisäinen SIM valittu: käytössä uudelleenkäynnistyksen jälkeen"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Sisäinen SIM valittu, mutta tämä laite ei tue sitä: ulkoinen SIM on käytössä"
 
 msgid "Uptime %s"
 msgstr "Käynnissä %s"

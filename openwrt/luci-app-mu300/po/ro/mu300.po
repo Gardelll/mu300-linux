@@ -789,6 +789,9 @@ msgstr "Total trimis"
 msgid "Used today"
 msgstr "Folosit azi"
 
+msgid "SIM source"
+msgstr "Sursă SIM"
+
 msgid "Session duration"
 msgstr "Durata sesiunii"
 
@@ -1004,6 +1007,12 @@ msgstr "Resetarea a eșuat: %s. Setările de blocare salvate au fost păstrate."
 
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Resetarea blocărilor nu a fost confirmată la timp; se comută oricum."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "SIM intern selectat: folosit după o repornire"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "SIM intern selectat, dar neacceptat pe acest dispozitiv: se folosește SIM-ul extern"
 
 msgid "Uptime %s"
 msgstr "Timp de funcționare %s"
