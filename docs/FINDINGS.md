@@ -109,6 +109,10 @@ what replaced it. The table below gives each section's state.
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
+| 45 | `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146) | current |
+| 46 | SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176) | current (fixed) |
+| 47 | A system the Magisk zip added beside another had a password nobody saw (#167) | current (fixed) |
+| 48 | The lock reset deleted the saved locks whether or not the modem took them: a verified reset | current (fixed) |
 
 ## Hardware and firmware facts
 
@@ -3887,3 +3891,75 @@ plan, the closing message and the note in `/data/adb/mu300-linux-password.txt` s
 Device test: a zip install of `openwrt` on a board that has Ubuntu must end with the `root: none yet` line, the file
 must note it under `user: root`, and `ssh root@192.168.77.1` into the booted OpenWrt must log in with no password;
 LuCI's login on openwrt-luci likewise, and `passwd` there must take.
+
+### 48. The lock reset deleted the saved locks whether or not the modem took them: a verified reset
+
+`lock reset` (PR #99; the Locks page's "Reset all to automatic", and "Reset locks and switch" before an OS switch)
+sent the seven automatic values, deleted the five saved settings, restarted the stack and refreshed the cache. It never
+looked at an answer: a write the modem refused, a silent channel, or a mode query that failed (the mode write carries
+the modem's own slot1 and primary-SIM fields read a moment before) all ended the same way, with the saved settings
+gone and the page reading back whatever the modem had. kanoqwq's fork (23361ce, reviewed in
+`docs/superpowers/reviews/2026-10-11-kano-clean-tf-7.2.md`) does this properly; its version sits on an asynchronous
+lock-job queue (`lock-apply.sh`, `lock-jobs.sh`) that was not wanted here. The semantics are ported onto our
+synchronous tool; the job queue is not.
+
+**What `lock reset` does now** (`openwrt/luci-app-mu300/root/usr/libexec/unisoc-modem/lock`):
+
+1. One reset at a time, as before (the apply directory; a dead holder's directory is taken over). A tombstone an
+   earlier reset left (below) is finished first.
+2. `AT+SPTESTMODE?` must answer, and the two fields that go back out (slot1, primary) must be digits, or nothing is
+   sent: "The modem did not answer the mode query; nothing was sent". Every other AT string of the reset is a fixed
+   constant.
+3. The seven writes (`SP5GRAN=1`, `SPTESTMODE=134,<m1>,<prim>`, `SPENDC=1`, `SPLBAND=1,0,0,0,0,0`, `SPLBAND=2,0,0,0,0`,
+   `SPFORCEFRQ=12,4`, `SPFORCEFRQ=16,4`) each have their answer checked: an explicit `ERROR`/`+CME ERROR` stops the
+   reset there ("The modem refused a write", with the command). Silence is not a failure - several vendor setters
+   apply the value and omit the final OK (the boot replay already relies on that) - the read-back decides.
+4. Read-back before the restart: `SPTESTMODE?` first field 134, `SP5GRAN?` 1, `SPENDC?` 1, `SPLBAND=0` an empty mask
+   or the full LTE table, `SPLBAND=3` an empty mask or the full set of the NR bands SP5GCMDS lists that the SPLBAND
+   codec can carry (n6 is supported and not encodable, so the capability list itself is the wrong comparison),
+   `SPFORCEFRQ=12,3` and `16,3` exactly `12,3` / `16,3`. Three tries a second apart; a mismatch names the step.
+5. The one stack restart (under mobile-data's radio lock, as every apply), then the same read-back again, up to ten
+   tries three seconds apart: right after `SFUN=4` the modem answers `CFUN?` but not the lock reads for a few seconds
+   (the guard in `do_get` exists for the same reason).
+6. Only now the saved settings go: a `reset_pending` tombstone is written first, then `mode endc lte nr cell` are
+   deleted, then the tombstone. A reset interrupted between the two (a kill, a reboot) leaves the tombstone, and the
+   next `apply` finishes the deletion before it saves its own setting, the next `replay` (early or late) before it
+   reads anything to replay - so a half-deleted set is never replayed and a fresh setting is never deleted later.
+   The replay switch (`auto_apply`) stays, as before.
+7. The result - `{"state":ok|failed|interrupted|running,"ts","end","pid","error","step","cmd"}` - goes to
+   `/var/run/unisoc-modem/lock-reset.json` and to stdout (exit 1 on a failure). `lock get` carries it as `reset`, so
+   `mu300dash lock_get` does too: the page polls that, since the reset was already started detached from the rpcd
+   call (`setsid lock reset`, PR #137's budget) and now takes 8-10 s plus whatever the radio lock makes it wait. A
+   result still `running` whose pid is gone is reported as `interrupted`. A failed reset keeps the saved settings,
+   says why ("Reset failed: ... The saved lock settings were kept."), and refreshes the cache, because the modem may
+   hold part of the automatic values by then - a partial write cannot be rolled back. The home page's "Reset locks and
+   switch" stops on a failed reset instead of switching to an Android that would come up with the locks the modem
+   still has.
+
+**Measured on F50-B** (openwrt-luci v2026.10.22, kernel 7.2.10, Netgsm on LTE B1, EARFCN 100, PCI 69):
+
+- `lock apply lte 1` (CLI, 5.3 s) and `mu300dash lock_set cell=lte:100,69` (rpcd, detached, done 6 s later) read back
+  as `+SPLBAND: 0,0,0,1,0` and `+SPFORCEFRQ: 12,3,100,69`, saved as `lte=1`, `cell=lte:100,69`.
+- `mu300dash lock_set reset=auto`: `lock_get` showed `reset.state=ok` 10 s after the call; the log: writes and first
+  read-back in 2 s, `SFUN 5 -> 4` 7 s, the second read-back matched at its first try, `reset verified (8s)`. Read-back
+  afterwards: `SPTESTMODE 134,134,0,19,3,1`, `SP5GRAN 1`, `ENDC 1`, `SPLBAND=0 -> 0,482,0,149,0`,
+  `SPLBAND=3 -> 0,0,0` (a cleared NR mask reads back empty here; after a boot the same modem reported the full set
+  `553,0,272` - both count as automatic), `SPFORCEFRQ 12,3` and `16,3`; the state directory empty.
+- A reset killed with SIGKILL 1.5 s after its start (during the writes: the modem already had the cleared masks, no
+  restart yet): the saved `lte` kept, `lock_get` -> `{"state":"interrupted","error":"The reset was interrupted"}`,
+  the apply directory left with a dead pid; the next `lock reset` took it over and verified in 8 s.
+- The tombstone: with `reset_pending` and a saved `lte`, `lock apply endc on` left `endc` alone in the directory;
+  with `reset_pending`, `lte` and `endc`, `lock replay early` (its marker redirected) emptied the directory, wrote the
+  marker and sent no AT command.
+- The CLI's final `lock reset` printed `{"state":"ok",...}` in 8.4 s and left no lock in the modem.
+
+Not measured: a modem that refuses one of the seven writes, or that answers the read-back with something else - on
+this board every write took. Those paths are covered by the unit tests on a fake modem that answers each read from
+what the writes so far have changed (`tests/test_unisoc_plugin.py`), including the kill between the tombstone and the
+deletion (the `rm` stub kills the tool at that moment). The single `apply` paths still send their write and save the
+setting unverified; only their start now finishes a pending tombstone.
+
+Noted during the test: F50-B's openwrt-luci system has LuCI's default LAN `192.168.77.1`, the same subnet as F50 #1
+on the same computer (its Ubuntu system is at `192.168.79.1`); it was reached over its USB link-local address
+(`root@fe80::50:78ff:fe24:7701%en17`). The subnet-per-device rule of §33b holds only when every system of the board
+is configured.
