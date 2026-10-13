@@ -631,7 +631,7 @@ Check 'file: no name'          (AnswersParse @('=x')).Error 'answers file: not a
 ResetAnswers; $script:Ans['MU300_ANS_PASSWORD'] = 'hunter2secret'
 Check 'secret through Ask: taken'  (Ask 'Password' '' 'MU300_ANS_PASSWORD') 'hunter2secret'
 Check 'secret through Ask: not shown' (@($script:lines | Where-Object { "$_" -match 'hunter2' }).Count) 0
-Check 'secret through Ask: event' (Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_PASSWORD","text":"Password","default":"","secret":"1"}'
+Check 'secret through Ask: event' @(Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_PASSWORD","text":"Password","default":"","secret":"1"}'
 Check 'secret asked again: not shown' ((Dies { Ask 'Password' '' 'MU300_ANS_PASSWORD' }) -match 'hunter2') $false
 # given in the environment, it leaves the environment: the programs the installer starts do not inherit it
 ResetAnswers; $env:MU300_ANS_PASSWORD = 'hunter2secret'; $env:MU300_NONINTERACTIVE = '1'
@@ -646,7 +646,7 @@ Remove-Item env:MU300_ANS_PASSWORD; Remove-Item env:MU300_NONINTERACTIVE
 ResetAnswers; $script:Ans['MU300_ANS_KERNEL'] = '2'
 Check 'answer: taken'          (Ask 'Kernel' '1' 'MU300_ANS_KERNEL') '2'
 Check 'answer: shown'          ($script:lines -contains 'Kernel [1]: 2') $true
-Check 'answer: event'          (Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_KERNEL","text":"Kernel","default":"1","answer":"2"}'
+Check 'answer: event'          @(Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_KERNEL","text":"Kernel","default":"1","answer":"2"}'
 # the words of the other languages count, as they do when typed
 ResetAnswers; $script:Ans['MU300_ANS_VPN'] = 'evet'
 Check 'answer: normalised'     (Ask 'VPN? (yes/no)' 'no' 'MU300_ANS_VPN') 'yes'
@@ -661,8 +661,8 @@ Remove-Item env:MU300_ANS_TESTONLY
 ResetAnswers
 $e = Dies { Ask 'Type INSTALL to continue' 'no' 'MU300_ANS_CONFIRM' }
 Check 'unanswered: stops'      $e 'DIE: no answer to the question "Type INSTALL to continue": set MU300_ANS_CONFIRM (nothing is asked and nothing is assumed in answers mode)'
-Check 'unanswered: error event' (Events 'error').Count 1
-Check 'unanswered: no question event' (Events 'question').Count 0
+Check 'unanswered: error event' @(Events 'error').Count 1
+Check 'unanswered: no question event' @(Events 'question').Count 0
 # a question without a variable cannot be answered at all
 ResetAnswers
 Check 'no variable: stops'     ((Dies { Ask 'Something new' 'yes' }) -match '^DIE: this question has no variable') $true
