@@ -6,8 +6,12 @@
 [![Forks](https://img.shields.io/github/forks/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/network/members)
 [![Issues](https://img.shields.io/github/issues/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/issues)
 [![License](https://img.shields.io/badge/license-MIT%20%2F%20GPL--2.0-blue)](LICENSE)
+[![Telegram](https://img.shields.io/badge/Telegram-mu300project-26A5E4?logo=telegram)](https://t.me/mu300project)
 
 New here? The [website](https://kaandikec.com/mu300-linux/) explains it step by step, with pictures (English, Türkçe, 中文), and the [wiki](https://github.com/dikeckaan/mu300-linux/wiki) has a glossary and deeper pages.
+
+News and new releases are announced on the Telegram channel: **[t.me/mu300project](https://t.me/mu300project)**. Follow it to hear
+about updates first.
 
 The ZTE F50 is a pocket 5G router. This project turns it into a small Linux computer: **Ubuntu** (24.04 or
 26.04 LTS) or **OpenWrt** (plain, or with a control panel for the modem), with SSH, Wi-Fi, Bluetooth and its 5G
@@ -162,7 +166,8 @@ install.cmd -Check            # Windows (cmd)
 It reports the storage size, where Android's partitions end and how much free space follows them. On the 64 GB
 device that is about 32 GiB.
 
-If it reports none at all, you have the **32 GB variant**, where `userdata` fills the disk. The installer can make
+If it reports none at all, you have the **32 GB variant**, where `userdata` fills the disk (a 64 GB unit can look
+the same after a vendor firmware flash replaced its partition table, issue #32). The installer can make
 room by shrinking it — that erases everything in Android and rewrites the partition table, so it is experimental
 and it asks first. Back the device up with `tools/backup-device.sh` before saying yes. If the numbers look like
 neither case, stop and open an issue with what `--check` printed; they identify the variant. With an SD card in the
@@ -481,9 +486,9 @@ that does not start still falls back, and the first boot that succeeds locks aga
 goes back. The forgotten-password way out below (unplugging during boot) does not work while Linux is locked.
 
 **Not offered here.** Shrinking `userdata` to make room (the 32 GB variant) rewrites the partition table and erases
-Android's data. It stays with the computer installer (`./install.sh`), where a backup step and a typed `ERASE` come
-first. When there is not enough room inside, the installer says so and names what this device has: the SD card, a
-bigger card, or the computer installer.
+Android's data. It stays with the computer installers (`./install.sh`, `.\install.ps1`), where a backup step and a
+typed `ERASE` come first. When there is not enough room inside, the installer says so and names what this device has:
+the SD card, a bigger card, or the computer installer.
 
 #### Choosing something else: `mu300-install.conf`
 
@@ -801,7 +806,7 @@ Like the installer, it offers to reboot the device from Linux into Android first
 | Web panels | ✅ OpenWrt: LuCI, and the MU300 control panel on `openwrt-luci` (with a terminal in the browser); Ubuntu: Cockpit with an MU300 page as the panel extra; adb to Linux over USB on both (off by default) |
 | Back to Android, automatic rollback | ✅ |
 | Screen output (HDMI over USB-C) | ✗ the USB-C power chip never answers, so no display |
-| Sound | ✗ the board has no speaker and no microphone. Call audio through the modem's audio DSP is work in progress and not in the releases (`kernel/build-audio.sh`, `mu300-audio-dsp`, `mu300-voice`): with those, the sound card comes up (`sprdphone-sc2730`, 19 PCM devices) and the DSP answers, but no audio moves in any scene, and a call without audio ends after about 20 seconds, as it does under Android on this board ([FINDINGS 24, 24b](docs/FINDINGS.md)). The kernels have USB audio drivers, not tried here |
+| Sound | ✗ the board has no speaker and no microphone. Call audio through the modem's audio DSP is work in progress and not in the releases (`kernel/build-audio.sh`, `mu300-audio-dsp`, `mu300-voice`): with those, the sound card comes up (`sprdphone-sc2730`, 19 PCM devices) and the DSP answers, but no audio moves in any scene, and a call without audio ends after about 20 seconds, as it does under Android on this board ([FINDINGS 24, 24b](docs/FINDINGS.md)). The call sequence and kernel fixes of kano's [e5-linux](https://github.com/kanoqwq/e5-linux) are ported, with a Bluetooth headset as the output (`mu300-voice audio start bt`, `tools/hfp`); the DSP image is yours to supply (`mu300-audio-dsp install`), and with it this is not yet measured ([FINDINGS 24c](docs/FINDINGS.md)). The kernels have USB audio drivers, not tried here |
 
 ## How it works, in short
 
