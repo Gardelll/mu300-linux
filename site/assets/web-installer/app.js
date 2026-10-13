@@ -510,7 +510,7 @@ function startWizard() {
   const have = st.linux && st.linux.systems ? Object.keys(st.linux.systems) : [];
   S.w.choices = { target: a.target, systems: [], kernel: (st.linux && st.linux.kernel) || "5.4", bootOs: (st.linux && st.linux.boot_os) || "",
     defaultLinux: st.linux ? !!st.linux.default_linux : true, attempts: (st.linux && st.linux.attempts) || 5, hotspot: true, gpu: true, vpn: false,
-    mode: "update", password: "", password2: "", adb: true, eraseConfirmed: false, overwriteConfirmed: false, have };
+    mode: "update", password: "", password2: "", adb: false, eraseConfirmed: false, overwriteConfirmed: false, have };
   loadReleaseList();
   render();
 }
@@ -1119,7 +1119,8 @@ function linuxView() {
     h("dt", {}, t("home.systems")), h("dd", {}, i.systems.map((o) => sysName(o)).join(", ") || "-"),
     h("dt", {}, t("home.boots")), h("dd", {}, i.bootOs ? sysName(i.bootOs) : "-"),
     h("dt", {}, t("home.default")), h("dd", {}, t(i.defaultBoot === "linux" ? "home.default.linux" : "home.default.android", String(i.attempts))),
-    h("dt", {}, t("linux.uptime")), h("dd", {}, t("linux.uptime.value", String(Math.floor(i.uptime / 3600)), String(Math.floor((i.uptime % 3600) / 60))))));
+    h("dt", {}, t("linux.uptime")), h("dd", {}, t("linux.uptime.value", String(Math.floor(i.uptime / 3600)), String(Math.floor((i.uptime % 3600) / 60)))),
+    i.adb ? [h("dt", {}, "adb"), h("dd", {}, t("linux.adb." + i.adb))] : null));
   if (!i.isRoot) out.append(callout("warn", "", t("linux.not-root")));
   const off = !!S.busy;
   const act = (title, fn, opts = {}) => async () => {

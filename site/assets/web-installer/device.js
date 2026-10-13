@@ -3,8 +3,8 @@
 //   AndroidDevice  rooted Android: everything goes through tools/android-web.sh (pushed to the device first), run
 //                  under su, which answers in JSON and marked lines
 //   LinuxDevice    MU300 Linux with adb on: one adapter around "run a command over adb shell, get JSON"
-//                  (mu300-device --json where the image has it; until then the same facts from the commands every
-//                  image has)
+//                  (mu300-device --json, docs/ADB-INTERFACE.md, where the image has it; the facts it does not
+//                  carry, and all of them on an older image, from the commands every image has)
 //
 // identify(conn) tells which one a connection is. Nothing here touches the DOM; tests/web drives both kinds against
 // a scripted device.
@@ -317,7 +317,9 @@ export function normalizeLinuxInfo(o, source) {
     attempts: /^[1-6]$/.test(s(o.attempts)) ? Number(s(o.attempts)) : 5,
     systems: systems.filter((x) => ["ubuntu", "openwrt", "openwrt-luci"].includes(x)),
     uptime: /^\d+$/.test(s(o.uptime)) ? Number(s(o.uptime)) : 0,
-    isRoot: s(o.root) === "0" || o.root === 0,
+    isRoot: o.root === true || s(o.root) === "0" || o.root === 0,
+    // what adb does there: off, open (every computer gets in), keys (authorised keys only), unavailable; "" unknown
+    adb: ["off", "open", "keys", "unavailable"].includes(s(o.adb)) ? s(o.adb) : "",
   };
 }
 
@@ -343,15 +345,20 @@ export class LinuxDevice {
   // the same for the actions: only the exit status comes back, the text went out masked
   async run(command, options = {}) { return { rc: (await this._run(command, options)).rc }; }
 
-  // The device's own description. An image with "mu300-device --json" answers with one JSON object; an older one
-  // prints the device's name for any argument, and the same facts are then read one by one.
+  // The device's own description. An image with "mu300-device --json" (format 1, docs/ADB-INTERFACE.md) says who
+  // it is, what runs, and what adb does; an older one prints the device's name for any argument. What that JSON
+  // does not carry (the kernel chosen, the system that boots, the systems installed) is read one by one, on both.
   async info() {
     const j = await this._run("mu300-device --json 2>/dev/null", { timeoutMs: 20000 });
+    let own = null;
     const t = j.stdout.trim();
     if (t.startsWith("{")) {
       try {
         const o = JSON.parse(t);
-        if (o && typeof o === "object") return normalizeLinuxInfo(o, "json");
+        if (o && typeof o === "object" && o.mu300 === 1) {
+          own = { device: o.device, version: o.release, kernel: o.kernel, root: o.root === true ? 0 : 1, adb: o.adb,
+            os: [o.system, o.version_id].filter((x) => typeof x === "string" && x).join(" ") };
+        }
       } catch (e) { /* not JSON after all: the commands */ }
     }
     const r = await this._run(LINUX_FACTS, { timeoutMs: 20000 });
@@ -360,7 +367,7 @@ export class LinuxDevice {
       const eq = l.indexOf("=");
       if (eq > 0) o[l.slice(0, eq)] = l.slice(eq + 1);
     }
-    return normalizeLinuxInfo(o, "commands");
+    return normalizeLinuxInfo({ ...o, ...(own || {}) }, own ? "json" : "commands");
   }
 
   // The actions of the manage view. Each is one command of the device's own tools; its output goes to onLine and

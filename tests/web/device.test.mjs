@@ -212,20 +212,27 @@ test("Linux: an image without mu300-device --json is read through the commands e
   const { conn, dev } = await device((cmd) => (cmd.includes("mu300-device --json") ? { stdout: "f50\n", exitCode: 0 } : { stdout: FACTS, exitCode: 0 }));
   const info = await new LinuxDevice(conn).info();
   assert.deepEqual(info, { source: "commands", device: "u30air", version: "v2026.10.23", os: "ubuntu 24.04", kernel: "7.2.10-mu300", kernelChoice: "7.2",
-    bootOs: "ubuntu", defaultBoot: "linux", attempts: 3, systems: ["ubuntu", "openwrt-luci"], uptime: 512, isRoot: true });
+    bootOs: "ubuntu", defaultBoot: "linux", attempts: 3, systems: ["ubuntu", "openwrt-luci"], uptime: 512, isRoot: true, adb: "" });
   assert.equal(dev.shellCalls.length, 2);
   for (const c of dev.shellCalls) for (const never of ["imei", "iccid", "imsi", "mu300-sim", "mu300-at", "sms", "serial"]) assert.ok(!c.cmd.toLowerCase().includes(never), never);
 });
 
-test("Linux: mu300-device --json is taken when it answers with JSON, and its values are checked like any other", async () => {
-  const json = { device: "f50", version: "v2026.11.01", os: "openwrt 25.12", kernel: "6.18.56", kernel_choice: "6.18", boot_os: "openwrt", default_boot: "android",
-    attempts: 9, systems: ["openwrt", "ubuntu", "<script>"], uptime: 77, root: 0, imei: "867530012345678" };
-  const { conn, dev } = await device(() => ({ stdout: JSON.stringify(json) + "\n", exitCode: 0 }));
+test("Linux: mu300-device --json (docs/ADB-INTERFACE.md, format 1) says who it is; the rest is still read, and every value is checked", async () => {
+  const json = { mu300: 1, device: "f50", system: "openwrt-luci", version_id: "25.12.5", release: "v2026.11.01", kernel: "7.2.10", root: true, adb: "open", imei: "867530012345678" };
+  const { conn } = await device((cmd) => (cmd.includes("mu300-device --json") ? { stdout: JSON.stringify(json) + "\n", exitCode: 0 } : { stdout: FACTS, exitCode: 0 }));
   const info = await new LinuxDevice(conn).info();
-  assert.deepEqual(info, { source: "json", device: "f50", version: "v2026.11.01", os: "openwrt 25.12", kernel: "6.18.56", kernelChoice: "6.18", bootOs: "openwrt",
-    defaultBoot: "android", attempts: 5, systems: ["openwrt", "ubuntu"], uptime: 77, isRoot: true });
-  assert.equal(dev.shellCalls.length, 1);
+  assert.deepEqual(info, { source: "json", device: "f50", version: "v2026.11.01", os: "openwrt-luci 25.12.5", kernel: "7.2.10", kernelChoice: "7.2", bootOs: "ubuntu",
+    defaultBoot: "linux", attempts: 3, systems: ["ubuntu", "openwrt-luci"], uptime: 512, isRoot: true, adb: "open" });
   assert.ok(!("imei" in info));
+  // another format number, or nonsense, is not taken for format 1
+  for (const other of [{ ...json, mu300: 2 }, { device: "f50" }, [1], "x"]) {
+    const x = await device((cmd) => (cmd.includes("mu300-device --json") ? { stdout: JSON.stringify(other) + "\n", exitCode: 0 } : { stdout: FACTS, exitCode: 0 }));
+    assert.equal((await new LinuxDevice(x.conn).info()).source, "commands");
+  }
+  const hostile = await device((cmd) => (cmd.includes("mu300-device --json")
+    ? { stdout: JSON.stringify({ mu300: 1, device: "x; rm -rf /", system: "<script>", release: "a\u0000b", kernel: "$(reboot)", root: "yes", adb: "wide-open" }), exitCode: 0 } : { stdout: "", exitCode: 0 }));
+  const h = await new LinuxDevice(hostile.conn).info();
+  assert.deepEqual([h.device, h.os, h.version, h.kernel, h.isRoot, h.adb], ["", "", "", "", false, ""]);
   assert.equal(normalizeLinuxInfo({ device: "x; rm -rf /", version: "a\u0000b", systems: "ubuntu;reboot" }, "json").device, "");
   assert.deepEqual(normalizeLinuxInfo({ version: "v1 <b>" }, "json").version, "");
 });
@@ -372,10 +379,11 @@ test("a backup pulls only the copies the device script makes, by their exact nam
 test("the Linux adapter sends only its own commands: what the device says is never part of one", async () => {
   const evil = "ubuntu; rm -rf / #";
   const { conn, dev } = await device((cmd) => (cmd.includes("mu300-device --json")
-    ? { stdout: JSON.stringify({ device: "f50", kernel_choice: "6.18'; reboot; '", boot_os: evil, systems: [evil, "openwrt"], version: "$(reboot)" }), exitCode: 0 } : { stdout: "", exitCode: 0 }));
+    ? { stdout: JSON.stringify({ mu300: 1, device: "f50", release: "$(reboot)" }), exitCode: 0 }
+    : cmd.includes("version=") ? { stdout: `kernel_choice=6.18'; reboot; '\nboot_os=${evil}\nsystems=${evil} openwrt\n`, exitCode: 0 } : { stdout: "", exitCode: 0 }));
   const l = new LinuxDevice(conn);
   const info = await l.info();
-  assert.deepEqual([info.kernelChoice, info.bootOs, info.systems, info.version], ["", "", ["openwrt"], ""]);
+  assert.deepEqual([info.kernelChoice, info.bootOs, info.systems, info.version], ["", "", [], ""]);
   assert.throws(() => l.setBootOs(evil), code("bad-argument"));
   assert.throws(() => l.setKernel("6.18'; reboot; '"), code("bad-argument"));
   for (const c of dev.shellCalls) assert.ok(!c.cmd.includes("rm -rf") && !c.cmd.includes("reboot;"), c.cmd);

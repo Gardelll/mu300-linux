@@ -33,8 +33,9 @@ for the first run on an F50.
   with `tools/storage.sh` and the bc functions of `tools/android-boot-image.sh`; starting Linux is the Magisk
   module's `switch.sh`).
 * **Managing Linux** is `LinuxDevice` in `device.js`: one adapter around "a command over adb shell, an answer back".
-  It asks `mu300-device --json` first and takes the answer when it is JSON (the branch that adds it is in flight);
-  otherwise it reads the same facts with commands every image has. The actions are `mu300-update check|apply|kernel`,
+  It asks `mu300-device --json` first (format 1, `docs/ADB-INTERFACE.md`: device, system, release, kernel, root,
+  what adb does) and reads what that does not carry - and, on an older image, everything - with commands every
+  image has. The actions are `mu300-update check|apply|kernel`,
   `mu300-os`, `mu300-next-boot`, `reboot`.
 * **Not in the page, on purpose:** shrinking `userdata` on the 32 GB variant and growing it back (the page shows the
   figures and points to `install.sh` / `uninstall.sh`), rooting, unlocking, restoring single partitions from a

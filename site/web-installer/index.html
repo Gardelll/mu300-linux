@@ -130,7 +130,7 @@ A browser installed as a snap or flatpak may need its own permission for USB.</d
 <p>The page says which of these it ran into, as far as the browser tells it.</p>
 
 <h2 id="linux-adb">Managing MU300 Linux: turn adb on first</h2>
-<p>Linux offers adb over the same cable when it is turned on, and it lets in only computers whose adb key it knows; there is no screen to ask on. This browser has a key of its own (the page shows it under “This browser's adb key”). An installation made from this page authorises it when you leave that box ticked. For a Linux installed another way, run on the device, over SSH:</p>
+<p>From the release after v2026.10.23 on, Linux offers adb over the same cable to every computer, and the page can manage it without any preparation. An older Linux has adb off (<code>sudo mu300-usb adb on</code>), and one that was set to authorised keys only lets in just the computers whose adb key it knows; there is no screen to ask on. This browser has a key of its own (the page shows it under “This browser's adb key”). To authorise it, run on the device, over SSH:</p>
 <pre><code>echo '&lt;the key line the page shows&gt;' | sudo mu300-usb adb key -
 sudo mu300-usb adb on</code></pre>
 <p>Whoever holds an authorised key gets a root shell on the device, so authorise only your own browsers and computers.</p>

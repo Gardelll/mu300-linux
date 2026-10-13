@@ -130,7 +130,7 @@ Snap ya da flatpak olarak kurulmuş bir tarayıcının USB için ayrı izne ihti
 <p>Sayfa, tarayıcının bildirdiği kadarıyla bunlardan hangisiyle karşılaştığını söyler.</p>
 
 <h2 id="linux-adb">MU300 Linux'u yönetmek: önce adb'yi açın</h2>
-<p>Linux, açıldığında aynı kablo üzerinden adb sunar ve yalnızca adb anahtarını tanıdığı bilgisayarları içeri alır; soracak bir ekran yoktur. Bu tarayıcının kendi anahtarı vardır (sayfa onu “Bu tarayıcının adb anahtarı” altında gösterir). Bu sayfadan yapılan bir kurulum, o kutuyu işaretli bırakırsanız anahtarı yetkilendirir. Başka yolla kurulmuş bir Linux için cihazda, SSH üzerinden şunu çalıştırın:</p>
+<p>v2026.10.23'ten sonraki sürümden itibaren Linux aynı kablo üzerinden adb'yi her bilgisayara sunar ve sayfa onu hiçbir hazırlık olmadan yönetebilir. Daha eski bir Linux'ta adb kapalıdır (<code>sudo mu300-usb adb on</code>); yalnızca yetkili anahtarlara ayarlanmış olan ise yalnızca adb anahtarını tanıdığı bilgisayarları içeri alır; soracak bir ekran yoktur. Bu tarayıcının kendi anahtarı vardır (sayfa onu “Bu tarayıcının adb anahtarı” altında gösterir). Yetkilendirmek için cihazda, SSH üzerinden şunu çalıştırın:</p>
 <pre><code>echo '&lt;sayfanın gösterdiği anahtar satırı&gt;' | sudo mu300-usb adb key -
 sudo mu300-usb adb on</code></pre>
 <p>Yetkili bir anahtarı elinde tutan herkes cihazda root kabuğu alır; yalnızca kendi tarayıcılarınızı ve bilgisayarlarınızı yetkilendirin.</p>

@@ -130,7 +130,7 @@ sudo udevadm control --reload &amp;&amp; sudo udevadm trigger</code></pre>
 <p>在浏览器能告知的范围内，页面会说明遇到的是哪一种情况。</p>
 
 <h2 id="linux-adb">管理 MU300 Linux：先打开 adb</h2>
-<p>Linux 在打开 adb 后会通过同一根线提供它，并且只让它认识其 adb 密钥的电脑接入；没有可供询问的屏幕。此浏览器有自己的密钥（页面在“此浏览器的 adb 密钥”下显示）。从本页面进行的安装，只要保留那个勾选项，就会为它授权。对于用其他方式安装的 Linux，请在设备上通过 SSH 运行：</p>
+<p>从 v2026.10.23 之后的版本起，Linux 通过同一根线向所有电脑提供 adb，页面无需任何准备即可管理它。更早的 Linux 默认关闭 adb（<code>sudo mu300-usb adb on</code>）；被设置为只接受已授权密钥的系统，则只让它认识其 adb 密钥的电脑接入；没有可供询问的屏幕。此浏览器有自己的密钥（页面在“此浏览器的 adb 密钥”下显示）。要为它授权，请在设备上通过 SSH 运行：</p>
 <pre><code>echo '&lt;页面显示的密钥行&gt;' | sudo mu300-usb adb key -
 sudo mu300-usb adb on</code></pre>
 <p>持有已授权密钥的人可以获得设备的 root shell，所以只给您自己的浏览器和电脑授权。</p>
