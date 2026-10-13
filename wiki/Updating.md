@@ -49,14 +49,19 @@ release after v2026.10.25 on). It runs the same `mu300-update`, so everything on
 Only one update runs at a time. If one was started in a terminal, the page shows it and waits.
 
 From a terminal the file works too: `mu300-update apply --from FILE.zip --unsigned` (`--unsigned` for a file that
-is not signed, `--downgrade` for one older than what is installed), or `--from DIR` for a folder with a release's
-files and their `SHA256SUMS`. `mu300-update inspect FILE.zip` only looks.
+is not signed), or `--from DIR` for a folder with a release's files and their `SHA256SUMS`. `mu300-update inspect
+FILE.zip` only looks.
+
+**An older release is never installed by itself**, from GitHub, a mirror or a file: `mu300-update apply` refuses a
+release older than what is installed unless you add `--downgrade` (from the release after v2026.10.25 on; before,
+`MU300_RELEASE=<older tag>` went back without asking). `rollback` needs no such word: it puts back the copy your
+device kept.
 
 ### Signed releases
 
 A release can carry a signature of its checksums (`SHA256SUMS.sig`). A system that has the project's release key
-(`/opt/mu300/lib/release.pub`) checks it on every update and refuses a release whose signature is wrong, or a newer
-release that has none. Systems up to v2026.10.25 have no key and update as they always did. Details:
+(`/opt/mu300/lib/release.pub`) checks it on every update and refuses a release whose signature is wrong, and one
+that has none unless you say so (`--unsigned`). Systems up to v2026.10.25 have no key and update as they always did. Details:
 [FINDINGS 86](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md).
 
 ## What an update keeps

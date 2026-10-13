@@ -49,7 +49,7 @@ jobs:
           mkdir -p "release/$TAG"
           # (SHA256SUMS.sig: a signed release's signature goes into every zip beside SHA256SUMS; none: nothing)
           gh release download "$TAG" -R "$GITHUB_REPOSITORY" -D "release/$TAG" \
-            -p SHA256SUMS -p SHA256SUMS.sig -p 'mu300-*.tar.gz' -p mu300-update
+            -p SHA256SUMS -p SHA256SUMS.sig -p 'mu300-*.tar.gz' -p mu300-update -p mu300-release
           (cd "release/$TAG" && sha256sum -c SHA256SUMS)
       - name: Build
         run: sh tools/make-magisk-zips.sh "release/$TAG" out "$TAG"
