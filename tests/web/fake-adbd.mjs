@@ -267,7 +267,9 @@ export class FakeAdbd {
       const ctx = { get stdin() { return stdin.toString(); }, waitStdin: () => (stdinClosed ? Promise.resolve() : new Promise((r) => stdinWaiters.push(r))), call };
       let rc = 0;
       try {
-        const r = this.o.shell ? this.o.shell(userCmd, ctx) : { stdout: "", exitCode: 0 };
+        const r0 = this.o.shell ? this.o.shell(userCmd, ctx) : { stdout: "", exitCode: 0 };
+        // a handler may be async and still hand back a generator
+        const r = r0 && typeof r0.then === "function" ? await r0 : r0;
         if (r && typeof r[Symbol.asyncIterator] === "function") {
           const it = r[Symbol.asyncIterator]();
           for (;;) {
@@ -280,7 +282,7 @@ export class FakeAdbd {
             if (value.raw !== undefined) await this._write(st, Buffer.from(value.raw));
           }
         } else {
-          const v = await r;
+          const v = r || {};
           if (v.stdout) await this._write(st, frame(1, Buffer.from(v.stdout)));
           if (v.stderr) await this._write(st, frame(v2 ? 2 : 1, Buffer.from(v.stderr)));
           rc = v.exitCode ?? 0;

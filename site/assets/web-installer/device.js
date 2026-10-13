@@ -1,0 +1,362 @@
+// A device behind an adb connection, as the page uses it. Two kinds, behind one small set of calls each:
+//
+//   AndroidDevice  rooted Android: everything goes through tools/android-web.sh (pushed to the device first), run
+//                  under su, which answers in JSON and marked lines
+//   LinuxDevice    MU300 Linux with adb on: one adapter around "run a command over adb shell, get JSON"
+//                  (mu300-device --json where the image has it; until then the same facts from the commands every
+//                  image has)
+//
+// identify(conn) tells which one a connection is. Nothing here touches the DOM; tests/web drives both kinds against
+// a scripted device.
+import { AdbError } from "./adb/errors.js";
+import { shell } from "./adb/shell.js";
+import { pull, push } from "./adb/sync.js";
+import { classifyLine } from "./flow.js";
+import { Sha256, sha256Hex } from "./sha256.js";
+
+export const STAGE = "/data/local/tmp/mu300-web";
+export const DEVICE_FILES = ["android-web.sh", "storage.sh", "android-boot-image.sh", "android-mount-mu300root.sh", "switch.sh"];
+
+export class DeviceError extends Error {
+  // code: a word the page has a sentence for (the script's MU300-WEB-ERROR codes among them)
+  constructor(code, detail) { super(detail ? `${code}: ${detail}` : code); this.name = "DeviceError"; this.code = code; this.detail = detail || ""; }
+}
+
+const ARG = /^[A-Za-z0-9._:=/-]+$/;
+const lines = (s) => s.split("\n").map((l) => l.replace(/\r+$/, ""));
+
+// ---- which kind of device is this?
+
+// identify(conn) -> { kind: "android" | "linux" | "other", props }
+// One unprivileged command. Android: getprop exists. Our Linux: /etc/mu300 does.
+export async function identify(conn) {
+  const r = await shell(conn, "if [ -d /etc/mu300 ] || [ -x /opt/mu300/bin/mu300-device ]; then echo KIND=linux; " +
+    "elif command -v getprop >/dev/null 2>&1; then echo KIND=android; else echo KIND=other; fi", { timeoutMs: 15000 });
+  const m = /KIND=(linux|android|other)/.exec(r.stdout);
+  return { kind: m ? m[1] : "other" };
+}
+
+// ---- Android
+
+// What Android says without root: who the device is, whether its bootloader says it is unlocked, whether there is a
+// su at all. These are properties any adb user may read; none of them is a serial number or an identity of the SIM.
+const PROPS = ["ro.product.model", "ro.product.device", "ro.build.version.release", "ro.build.display.id", "ro.boot.slot_suffix",
+  "ro.boot.verifiedbootstate", "ro.boot.flash.locked", "ro.boot.vbmeta.device_state", "ro.boot.veritymode", "sys.boot_completed"];
+
+export function lockState(props) {
+  // "unlocked" | "locked" | "unknown", from what the bootloader told Android. Unisoc bootloaders do not all set
+  // these (FINDINGS 72): unknown is an answer.
+  const vb = props["ro.boot.verifiedbootstate"], fl = props["ro.boot.flash.locked"], ds = props["ro.boot.vbmeta.device_state"];
+  if (ds === "unlocked" || fl === "0" || vb === "orange") return "unlocked";
+  if (ds === "locked" || fl === "1" || vb === "green" || vb === "yellow") return "locked";
+  return "unknown";
+}
+
+export class AndroidDevice {
+  constructor(conn, options = {}) {
+    this.conn = conn;
+    this.kind = "android";
+    this.log = options.log || (() => {});          // every line a device command prints, for the raw log
+    this.staged = false;
+  }
+
+  // { props, lock, su: boolean }
+  async probe() {
+    const cmd = PROPS.map((p) => `echo "${p}=$(getprop ${p})"`).join("; ") + "; command -v su >/dev/null 2>&1 && echo SU=1 || echo SU=0";
+    const r = await shell(this.conn, cmd, { timeoutMs: 20000 });
+    const props = {};
+    let su = false;
+    for (const l of lines(r.stdout)) {
+      const eq = l.indexOf("=");
+      if (eq <= 0) continue;
+      if (l.startsWith("SU=")) su = l === "SU=1"; else props[l.slice(0, eq)] = l.slice(eq + 1);
+    }
+    return { props, lock: lockState(props), su };
+  }
+
+  // Is root granted to adb? The first call may wait for the user to answer the root manager's prompt on the device.
+  // -> "granted" | "denied" | "no-su"
+  async root(timeoutMs = 60000) {
+    let r;
+    try {
+      r = await shell(this.conn, "su -c 'id -u' 2>&1", { timeoutMs });
+    } catch (e) {
+      if (e instanceof AdbError && e.code === "timeout") return "denied";
+      throw e;
+    }
+    const out = r.stdout.trim().split(/\s+/).pop() || "";
+    if (out === "0") return "granted";
+    if (/not found|inaccessible|No such file/i.test(r.stdout + r.stderr)) return "no-su";
+    return "denied";
+  }
+
+  // Pushes the device scripts. `fetchFile(name)` returns the bytes of device/NAME as the site serves them; they are
+  // checked against the site's SHA256SUMS before they go to the device.
+  async stage(fetchFile) {
+    const sums = new Map();
+    for (const l of new TextDecoder().decode(await fetchFile("SHA256SUMS")).split("\n")) {
+      const m = /^([0-9a-f]{64}) [ *](\S+)$/.exec(l.trim());
+      if (m) sums.set(m[2], m[1]);
+    }
+    const files = [];
+    for (const name of DEVICE_FILES) {
+      const data = await fetchFile(name);
+      if (!sums.has(name) || (await sha256Hex(data)) !== sums.get(name)) throw new DeviceError("site-files", name);
+      files.push([name, data]);
+    }
+    const r = await shell(this.conn, `mkdir -p ${STAGE}/in && chmod 755 ${STAGE} && echo STAGE-OK`, { timeoutMs: 20000 });
+    if (!r.stdout.includes("STAGE-OK")) throw new DeviceError("no-stage", (r.stdout + r.stderr).trim());
+    for (const [name, data] of files) await push(this.conn, data, `${STAGE}/${name}`, { mode: 0o644 });
+    this.staged = true;
+  }
+
+  // Runs one command of android-web.sh under su. Returns { rc, out: [lines], marks: { NAME: [rest...] } }; a
+  // MU300-WEB-ERROR line becomes a DeviceError. onLine gets every line as it comes.
+  async web(args, options = {}) {
+    for (const a of args) if (!ARG.test(a)) throw new DeviceError("bad-argument", a);
+    const cmd = `su -c 'sh ${STAGE}/android-web.sh ${args.join(" ")}'`;
+    const out = [], marks = {};
+    const take = (l, isErr) => {
+      out.push(l);
+      this.log(l, isErr);
+      const m = /^MU300-WEB-([A-Z]+) ?(.*)$/.exec(l);
+      if (m) (marks[m[1]] = marks[m[1]] || []).push(m[2]);
+      if (options.onLine) options.onLine(l, isErr);
+    };
+    const r = await shell(this.conn, cmd, { onLine: take, stdin: options.stdin, signal: options.signal, timeoutMs: options.timeoutMs,
+      onStdout: () => {}, onStderr: () => {} });
+    if (marks.ERROR) {
+      const [code, ...rest] = marks.ERROR[0].split(" ");
+      throw new DeviceError(code || "device", rest.join(" "));
+    }
+    return { rc: r.exitCode, out, marks };
+  }
+
+  async status(deep = false) {
+    const r = await this.web(deep ? ["status", "deep"] : ["status"], { timeoutMs: 120000 });
+    if (!r.marks.STATUS) throw new DeviceError("no-answer", r.out.slice(-3).join(" | "));
+    let s;
+    try { s = JSON.parse(r.marks.STATUS[0]); } catch (e) { throw new DeviceError("bad-answer", "status"); }
+    if (!s || s.v !== 1 || typeof s.region !== "object" || !Array.isArray(s.parts) || typeof s.sd !== "object" || typeof s.job !== "object") {
+      throw new DeviceError("bad-answer", "status");
+    }
+    return s;
+  }
+
+  // Pushes a Magisk zip and has the device check it against the release's checksum. -> the zip's manifest as the
+  // device read it: { name, web, tag, system, os, ubuntu, kernel }
+  async takeZip(file, name, sha256, options = {}) {
+    await push(this.conn, file, `${STAGE}/in/${name}`, { mode: 0o644, onProgress: options.onProgress, signal: options.signal });
+    const r = await this.web(["take", name, sha256], { timeoutMs: 600000 });
+    if (!r.marks.ZIP) throw new DeviceError("no-answer", "take");
+    try { return JSON.parse(r.marks.ZIP[0]); } catch (e) { throw new DeviceError("bad-answer", "take"); }
+  }
+
+  async addExtra(kind, file, name, sha256, options = {}) {
+    await push(this.conn, file, `${STAGE}/in/${name}`, { mode: 0o644, onProgress: options.onProgress, signal: options.signal });
+    await this.web(["extra", kind, name, sha256], { timeoutMs: 600000 });
+  }
+
+  // The answers of the next run. The password, when there is one, travels on the stdin of a root command.
+  async setAnswers(textValue, password) {
+    await push(this.conn, new TextEncoder().encode(textValue), `${STAGE}/in/answers.conf`, { mode: 0o600 });
+    await this.web(["answers"], { timeoutMs: 30000 });
+    if (password) await this.web(["password"], { stdin: password + "\n", timeoutMs: 30000 });
+  }
+
+  async start(kind, ...args) { await this.web(["run", kind, ...args], { timeoutMs: 60000 }); }
+
+  // Follows the running (or finished) job from its first line. onEvent gets classifyLine()'s objects. Resolves with
+  // the job's exit status (a number, or "interrupted"); rejects when the connection goes - the job itself goes on.
+  async follow(onEvent, signal) {
+    let rc = null;
+    await this.web(["follow"], { signal, onLine: (l) => {
+      const ev = classifyLine(l);
+      if (ev.type === "exit") rc = ev.rc;
+      else if (!l.startsWith("MU300-WEB-")) onEvent(ev);
+    } });
+    if (rc === null) throw new DeviceError("no-answer", "follow");
+    return rc;
+  }
+
+  async cancel() { await this.web(["cancel"], { timeoutMs: 30000 }); }
+  async clean(all = false) { await this.web(all ? ["clean", "all"] : ["clean"], { timeoutMs: 120000 }); }
+
+  // Arms Linux for one boot and restarts. The connection ends with the device: that is the success.
+  async bootLinux() {
+    try {
+      const r = await this.web(["boot-linux"], { timeoutMs: 60000 });
+      return r.out;
+    } catch (e) {
+      if (e instanceof AdbError && (e.code === "disconnected" || e.code === "closed")) return [];
+      throw e;
+    }
+  }
+
+  // Copies of what an installation writes, pulled and checked. `open(name, size)` returns a sink
+  // { write(chunk), close(), abort() } for one file (a file in a folder the user chose, or memory).
+  // -> { files: [{ name, size, sha256 }], androidSlot, linuxSlot }
+  async backup(open, onProgress = () => {}, signal) {
+    const r = await this.web(["backup"], { timeoutMs: 900000, signal });
+    const files = (r.marks.FILE || []).map((l) => {
+      const [name, size, sha256] = l.split(" ");
+      if (!/^[A-Za-z0-9._-]+$/.test(name || "") || !/^\d+$/.test(size || "") || !/^[0-9a-f]{64}$/.test(sha256 || "")) throw new DeviceError("bad-answer", "backup");
+      return { name, size: Number(size), sha256 };
+    });
+    if (!files.length || !r.marks.BACKUP) throw new DeviceError("no-answer", "backup");
+    const total = files.reduce((a, f) => a + f.size, 0);
+    let before = 0;
+    try {
+      for (const f of files) {
+        const sink = await open(f.name, f.size);
+        const h = new Sha256();
+        try {
+          await pull(this.conn, `${STAGE}/out/${f.name}`, async (c) => { h.update(c); await sink.write(c); },
+            { expectedSize: f.size, signal, onProgress: (got) => onProgress(before + got, total, f.name) });
+          if (h.hex() !== f.sha256) throw new DeviceError("backup-mismatch", f.name);
+          await sink.close();
+        } catch (e) {
+          try { await sink.abort(); } catch (e2) { /* nothing to undo */ }
+          throw e;
+        }
+        before += f.size;
+      }
+    } finally {
+      // the copies on the device go, whether the pull worked or not (not when the device is gone)
+      try { await this.web(["clean"], { timeoutMs: 60000 }); } catch (e) { /* the next clean takes them */ }
+    }
+    const m = /android_slot=([ab]) linux_slot=([ab])/.exec(r.marks.BACKUP[0]) || [];
+    return { files, androidSlot: m[1] || "", linuxSlot: m[2] || "" };
+  }
+
+  async reboot() {
+    try {
+      const s = await this.conn.open("reboot:");
+      await s.close();
+    } catch (e) {
+      if (!(e instanceof AdbError)) throw e;
+    }
+  }
+}
+
+// ---- MU300 Linux
+
+// The facts the manage view shows, when the image has no "mu300-device --json" yet: one line each, KEY=VALUE, from
+// commands and files every image has. Never anything of the modem or the SIM.
+const LINUX_FACTS = [
+  'echo "device=$(/opt/mu300/bin/mu300-device 2>/dev/null)"',
+  'echo "version=$(head -n1 /etc/mu300/image-version 2>/dev/null)"',
+  'echo "os=$(. /etc/os-release 2>/dev/null; echo "$ID $VERSION_ID")"',
+  'echo "kernel=$(uname -r)"',
+  'echo "kernel_choice=$(head -n1 /mnt/mu300-disk/boot/kernel 2>/dev/null)"',
+  'echo "boot_os=$(head -n1 /mnt/mu300-disk/.mu300/boot-os 2>/dev/null)"',
+  'echo "default_boot=$(head -n1 /etc/mu300/default-boot 2>/dev/null)"',
+  'echo "attempts=$(head -n1 /mnt/mu300-disk/.mu300/boot-attempts 2>/dev/null)"',
+  'echo "systems=$(for d in ubuntu openwrt openwrt-luci; do [ -d /mnt/mu300-disk/$d/etc ] && printf "%s " $d; done)"',
+  'echo "uptime=$(cut -d. -f1 /proc/uptime 2>/dev/null)"',
+  'echo "root=$(id -u)"',
+].join("; ");
+
+const WORD = /^[A-Za-z0-9._ -]{0,80}$/;
+
+export function normalizeLinuxInfo(o, source) {
+  const s = (v) => (typeof v === "string" && WORD.test(v) ? v.trim() : typeof v === "number" ? String(v) : "");
+  const systems = Array.isArray(o.systems) ? o.systems.map(s) : s(o.systems).split(/\s+/);
+  return {
+    source,                                  // "json" (mu300-device --json) or "commands"
+    device: ["f50", "u30air"].includes(s(o.device)) ? s(o.device) : "",
+    version: s(o.version), os: s(o.os), kernel: s(o.kernel), kernelChoice: s(o.kernel_choice),
+    bootOs: s(o.boot_os), defaultBoot: s(o.default_boot) === "linux" ? "linux" : "android",
+    attempts: /^[1-6]$/.test(s(o.attempts)) ? Number(s(o.attempts)) : 5,
+    systems: systems.filter((x) => ["ubuntu", "openwrt", "openwrt-luci"].includes(x)),
+    uptime: /^\d+$/.test(s(o.uptime)) ? Number(s(o.uptime)) : 0,
+    isRoot: s(o.root) === "0" || o.root === 0,
+  };
+}
+
+export class LinuxDevice {
+  constructor(conn, options = {}) {
+    this.conn = conn;
+    this.kind = "linux";
+    this.log = options.log || (() => {});
+    this.sudo = "";
+  }
+
+  // run(command): one command over adb shell, with /opt/mu300/bin on the PATH; -> { rc, stdout, stderr }
+  async run(command, options = {}) {
+    const take = (l, isErr) => { this.log(l, isErr); if (options.onLine) options.onLine(l, isErr); };
+    const r = await shell(this.conn, `export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"; ${this.sudo}${command}`,
+      { onLine: take, timeoutMs: options.timeoutMs, signal: options.signal });
+    return { rc: r.exitCode, stdout: r.stdout, stderr: r.stderr };
+  }
+
+  // The device's own description. An image with "mu300-device --json" answers with one JSON object; an older one
+  // prints the device's name for any argument, and the same facts are then read one by one.
+  async info() {
+    const j = await this.run("mu300-device --json 2>/dev/null", { timeoutMs: 20000 });
+    const t = j.stdout.trim();
+    if (t.startsWith("{")) {
+      try {
+        const o = JSON.parse(t);
+        if (o && typeof o === "object") return normalizeLinuxInfo(o, "json");
+      } catch (e) { /* not JSON after all: the commands */ }
+    }
+    const r = await this.run(LINUX_FACTS, { timeoutMs: 20000 });
+    const o = {};
+    for (const l of lines(r.stdout)) {
+      const eq = l.indexOf("=");
+      if (eq > 0) o[l.slice(0, eq)] = l.slice(eq + 1);
+    }
+    return normalizeLinuxInfo(o, "commands");
+  }
+
+  // The actions of the manage view. Each is one command of the device's own tools; its output goes to onLine and
+  // to the log, its exit status is the answer.
+  checkUpdate(onLine) { return this.run("mu300-update check", { onLine, timeoutMs: 180000 }); }
+  applyUpdate(onLine, signal) { return this.run("mu300-update apply", { onLine, signal }); }
+  setKernel(k, onLine, signal) {
+    if (!["5.4", "6.18", "7.2"].includes(k)) throw new DeviceError("bad-argument", k);
+    return this.run(`mu300-update kernel ${k}`, { onLine, signal });
+  }
+  setBootOs(name, onLine) {
+    if (!["ubuntu", "openwrt", "openwrt-luci"].includes(name)) throw new DeviceError("bad-argument", name);
+    return this.run(`mu300-os ${name}`, { onLine, timeoutMs: 60000 });
+  }
+  nextBoot(target, onLine) {
+    if (!["android", "linux"].includes(target)) throw new DeviceError("bad-argument", target);
+    return this.run(`mu300-next-boot ${target}`, { onLine, timeoutMs: 60000 });
+  }
+  // the kernel log and the log of this boot: what a bug report needs. The page masks it before it shows or saves it.
+  logs(onLine) {
+    return this.run("echo '--- mu300-update version'; mu300-update version 2>&1; echo '--- dmesg (last 300 lines)'; dmesg 2>/dev/null | tail -n 300; " +
+      "echo '--- system log (last 200 lines)'; if command -v journalctl >/dev/null 2>&1; then journalctl -b -n 200 --no-pager 2>/dev/null; " +
+      "else logread 2>/dev/null | tail -n 200; fi", { onLine, timeoutMs: 120000 });
+  }
+  async reboot() {
+    try { await this.run("sync; reboot", { timeoutMs: 20000 }); } catch (e) { if (!(e instanceof AdbError)) throw e; }
+  }
+  // Android next, then a restart: the way back to Android without a terminal
+  async toAndroid(onLine) {
+    const r = await this.nextBoot("android", onLine);
+    if (r.rc !== 0) return r;
+    await this.reboot();
+    return r;
+  }
+}
+
+// A sink for backup() that keeps a file in memory (for the "save" link of browsers without a folder picker)
+export function memorySink(store) {
+  return (name) => {
+    const parts = [];
+    return { async write(c) { parts.push(c); }, async close() { store.set(name, new Blob(parts)); }, async abort() {} };
+  };
+}
+
+// A sink for backup() that writes into a directory the user picked (File System Access API)
+export function directorySink(dirHandle) {
+  return async (name) => {
+    const fh = await dirHandle.getFileHandle(name, { create: true });
+    const w = await fh.createWritable();
+    return { write: (c) => w.write(c), close: () => w.close(), abort: () => w.abort() };
+  };
+}

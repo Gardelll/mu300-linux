@@ -758,5 +758,109 @@ class BootLinux(WebCase):
         self.assertEqual(self.parts(), before)
 
 
+NODE = shutil.which('node')
+
+
+def node_major():
+    if not NODE:
+        return 0
+    try:
+        return int(subprocess.run([NODE, '--version'], capture_output=True, text=True).stdout.strip().lstrip('v').split('.')[0])
+    except ValueError:
+        return 0
+
+
+@unittest.skipIf(not BUSYBOX, 'no busybox (the script runs under Magisk\'s busybox)')
+@unittest.skipIf(node_major() < 20, 'Node.js 20 or newer is needed for the page\'s code')
+class EndToEnd(WebCase):
+    """the page's own JavaScript (device.js, flow.js, the adb client) through a scripted adbd whose shell runs the
+    real android-web.sh and the Magisk installer on the fake device: tests/web/e2e-android.mjs"""
+
+    def e2e(self, **extra):
+        site = self.tmp / 'site'
+        r = subprocess.run(['sh', str(TOP / 'site/tools/stage.sh'), str(site)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        name, digest = self.full_zip()
+        zip_path = self.tmp / name
+        shutil.move(self.stage / 'in' / name, zip_path)
+        # the page pushes the scripts itself: the device has nothing of the web installer yet
+        shutil.rmtree(self.stage)
+        self.stage.mkdir()
+        self.stub('su', '[ "$1" = -c ] && shift\nexec sh -c "$1"')
+        self.stub('id', 'echo 0')
+        env = self.web_env(E2E_STAGE=self.stage, E2E_SITE=site / 'assets/web-installer/device', E2E_BUSYBOX=BUSYBOX,
+                           E2E_ZIP=zip_path, E2E_ZIP_SHA256=digest, **extra)
+        r = subprocess.run([NODE, str(TOP / 'tests/web/e2e-android.mjs')], capture_output=True, text=True, env=env, timeout=300)
+        lines = [l for l in r.stdout.splitlines() if l.startswith('E2E-RESULT ')]
+        self.assertEqual(len(lines), 1, r.stdout[-3000:] + r.stderr[-3000:])
+        return json.loads(lines[0][len('E2E-RESULT '):])
+
+    def test_backup_plan_install_with_the_watcher_gone_in_the_middle(self):
+        (self.fake.root / 'props').write_text((self.fake.root / 'props').read_text() + 'ro.boot.verifiedbootstate=orange\nsys.boot_completed=1\n')
+        before_a = sha(self.fake.root / 'dev/block/by-name/boot_a')
+        before_b = sha(self.fake.root / 'dev/block/by-name/boot_b')
+        self.fake_install_hook('sleep 2')
+        vpn = self.tmp / 'vpn.tar.gz'
+        vpn.write_bytes(tmi.tar_gz({'VERSION': b'2.0.1\n'}))
+        o = self.e2e(E2E_VPN=vpn)
+        self.assertEqual((o['kind'], o['model'], o['lock'], o['su'], o['root']), ('android', 'ZTE MU300', 'unlocked', True, 'granted'))
+        self.assertEqual(o['blockers'], [])
+        self.assertEqual(o['before']['linux_boot'], 'android-copy')
+        # the backup: the Linux slot's images as they were before the installation
+        self.assertIn('boot_b.img', o['backup'])
+        self.assertTrue(o['backupMatches'])
+        self.assertEqual(o['backupSha']['boot_b.img'], before_b)
+        self.assertEqual(o['inspected']['web'], True)
+        self.assertEqual(o['taken']['web'], 1)
+        self.assertEqual(o['errors'], [])
+        # the plan wrote nothing and said what the page asked for
+        self.assertEqual(o['planRc'], 3)
+        self.assertEqual((o['plan']['boot_attempts'], o['plan']['hotspot'], o['plan']['password'], o['plan']['adb'], o['plan']['dry_run']),
+                         ('4', '0', 'given', '1', '1'))
+        self.assertEqual(o['afterPlan']['linux_boot'], 'android-copy')
+        # the first watcher went away when the systems were being written; the job went on
+        self.assertTrue(o['watcherCut'])
+        self.assertEqual(o['stepsBeforeCut'][-1], 'systems')
+        self.assertEqual(o['installRc'], 0, o['installErrors'])
+        self.assertEqual(o['steps'], ['check', 'unpack', 'plan', 'vendor', 'image', 'systems', 'boot', 'arm', 'done'])
+        self.assertEqual((o['after']['linux_boot'], o['after']['module'], o['after']['job']['rc']), ('linux', 1, 0))
+        by = self.fake.root / 'dev/block/by-name'
+        self.assertEqual(sha(by / 'boot_a'), before_a)
+        self.assertEqual((by / 'misc').read_bytes()[0x800:0x820], with_slots(LIVE_A, b'_b\0\0', 0x9e, 0x2f))
+        env = (self.fake.root / 'install.env').read_text()
+        self.assertIn('BOOT_ATTEMPTS=4', env)
+        self.assertIn('IMPORT_HOTSPOT=0', env)
+        self.assertIn('ADB=1', env)
+        self.assertIn(' web-installer\'', env)
+        # the password reached the installer (its hash is in the env file) and is in no line the page logged
+        self.assertNotIn("PWHASH=''", env)
+        self.assertFalse(o['passwordInLog'])
+        self.assertFalse(o['keyInLog'])
+        self.assertGreater(o['logLines'], 20)
+        # clean all: nothing of the run is left where only root can look, and the stage holds only the scripts
+        self.assertFalse((self.root() / 'zips').exists())
+        self.assertFalse((self.root() / 'answers.conf').exists())
+        self.assertFalse((self.stage / 'in').exists())
+        self.assertFalse((self.stage / 'out').exists())
+
+    def test_install_then_uninstall(self):
+        off, size = self.small_emmc(disk_mib=1200, fs_mib=0)       # room for OpenWrt (a sparse file)
+        # the fake android-install.sh does not make a filesystem: put one where the installer was told to
+        self.fake_install_hook('printf "\\123\\357" | dd of="$FAKE/dev/block/mmcblk0" bs=1 seek=$((OFF + 1080)) conv=notrunc 2>/dev/null; '
+                               'printf mu300root | dd of="$FAKE/dev/block/mmcblk0" bs=1 seek=$((OFF + 1144)) conv=notrunc 2>/dev/null; '
+                               'printf "\\000\\100\\000\\000" | dd of="$FAKE/dev/block/mmcblk0" bs=1 seek=$((OFF + 1028)) conv=notrunc 2>/dev/null')
+        o = self.e2e(E2E_UNINSTALL='secure')
+        self.assertEqual(o['errors'], [])
+        self.assertEqual(o['installRc'], 0, o['installErrors'])
+        self.assertEqual(o['after']['existing'], 'yes')
+        self.assertEqual(o['uninstallRc'], 0)
+        self.assertEqual(o['uninstallSteps'], ['check', 'misc', 'boot', 'erase', 'card', 'cleanup', 'done'])
+        self.assertEqual(o['final'], {'linux_boot': 'android-copy', 'existing': 'no', 'module': 0})
+        by = self.fake.root / 'dev/block/by-name'
+        self.assertEqual((by / 'misc').read_bytes()[0x800:0x820], with_slots(LIVE_A, b'_a\0\0', 0x9f, 0x1e))
+        self.assertEqual(sha(by / 'boot_b'), sha(by / 'boot_a'))
+        self.assertEqual(self.emmc(off, 64 * MIB), bytes(64 * MIB))
+
+
 if __name__ == '__main__':
     unittest.main()

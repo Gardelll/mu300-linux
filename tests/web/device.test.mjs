@@ -1,0 +1,256 @@
+// site/assets/web-installer/device.js against a scripted device: what kind of device a connection is, Android
+// through android-web.sh's marked lines (answers that are not what was asked for are errors, never guesses), a
+// backup that is checked while it is pulled, and the adapter around MU300 Linux.
+import test from "node:test";
+import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import fs from "node:fs";
+
+import { AdbConnection } from "../../site/assets/web-installer/adb/connection.js";
+import { AndroidDevice, DEVICE_FILES, DeviceError, LinuxDevice, STAGE, identify, lockState, memorySink, normalizeLinuxInfo } from "../../site/assets/web-installer/device.js";
+import { FakeAdbd } from "./fake-adbd.mjs";
+
+const FIX = JSON.parse(fs.readFileSync(new URL("./fixtures/adbkey.json", import.meta.url)));
+const KEY = { n: FIX.n, d: FIX.d, e: FIX.e, name: "test" };
+const sha = (b) => crypto.createHash("sha256").update(b).digest("hex");
+const code = (c) => (e) => { assert.ok(e instanceof DeviceError, String(e && e.stack)); assert.equal(e.code, c); return true; };
+
+async function device(shellFn, options = {}) {
+  const dev = new FakeAdbd({ shell: shellFn, ...options });
+  const conn = new AdbConnection(dev.transport(), { key: KEY });
+  await conn.connect();
+  return { dev, conn };
+}
+// a device whose android-web.sh answers are scripted: answers[command] = text | (args, ctx) => text
+function android(answers, options = {}) {
+  const calls = [];
+  return device(async (cmd, ctx) => {
+    const m = /^su -c 'sh \/data\/local\/tmp\/mu300-web\/android-web\.sh (.*)'$/.exec(cmd);
+    if (!m) return answers.raw ? answers.raw(cmd, ctx) : { stdout: "", exitCode: 0 };
+    const args = m[1].split(" ");
+    calls.push(args);
+    if (args[0] === "password") await ctx.waitStdin();
+    const a = answers[args[0]];
+    const out = typeof a === "function" ? await a(args.slice(1), ctx) : a;
+    if (out && typeof out === "object") return out;
+    return { stdout: out ?? "MU300-WEB-ERROR bad-command\n", exitCode: /MU300-WEB-ERROR/.test(out ?? "x") ? 1 : 0 };
+  }, options).then((x) => ({ ...x, calls, a: new AndroidDevice(x.conn) }));
+}
+const STATUS = { v: 1, device: "f50", region: { off: 1, size: 2, existing: "no", dirty: 0 }, parts: [], sd: { dev: "" }, job: { state: "none" } };
+
+test("identify: Android, MU300 Linux, something else", async () => {
+  for (const kind of ["android", "linux", "other"]) {
+    const { conn } = await device((cmd) => ({ stdout: `KIND=${kind}\n`, exitCode: 0 }));
+    assert.deepEqual(await identify(conn), { kind });
+  }
+  const { conn } = await device(() => ({ stdout: "garbage", exitCode: 0 }));
+  assert.deepEqual(await identify(conn), { kind: "other" });
+});
+
+test("probe: the properties, the bootloader's word and whether there is a su, without root", async () => {
+  const { conn, dev } = await device(() => ({ stdout: "ro.product.model=ZTE F50\r\nro.product.device=mu300\r\nro.boot.slot_suffix=_a\r\nro.boot.verifiedbootstate=orange\r\n" +
+    "ro.boot.flash.locked=\r\nsys.boot_completed=1\r\nSU=1\r\n", exitCode: 0 }));
+  const p = await new AndroidDevice(conn).probe();
+  assert.equal(p.props["ro.product.model"], "ZTE F50");
+  assert.equal(p.lock, "unlocked");
+  assert.equal(p.su, true);
+  assert.ok(!dev.shellCalls[0].cmd.includes("su -c"), "nothing in the probe runs as root");
+  for (const never of ["serialno", "imei", "iccid", "imsi", "gsm.", "persist.radio", "ril."]) assert.ok(!dev.shellCalls[0].cmd.toLowerCase().includes(never), never);
+});
+
+test("the bootloader's lock state from what it told Android; nothing told is unknown", () => {
+  assert.equal(lockState({ "ro.boot.vbmeta.device_state": "unlocked" }), "unlocked");
+  assert.equal(lockState({ "ro.boot.flash.locked": "0" }), "unlocked");
+  assert.equal(lockState({ "ro.boot.verifiedbootstate": "orange" }), "unlocked");
+  assert.equal(lockState({ "ro.boot.vbmeta.device_state": "locked" }), "locked");
+  assert.equal(lockState({ "ro.boot.flash.locked": "1", "ro.boot.verifiedbootstate": "green" }), "locked");
+  assert.equal(lockState({ "ro.boot.verifiedbootstate": "yellow" }), "locked");
+  assert.equal(lockState({}), "unknown");
+  assert.equal(lockState({ "ro.boot.verifiedbootstate": "", "ro.boot.flash.locked": "" }), "unknown");
+});
+
+test("root: granted, denied, no su, and a prompt nobody answers", async () => {
+  const ask = async (stdout, exitCode) => new AndroidDevice((await device(() => ({ stdout, exitCode }))).conn).root();
+  assert.equal(await ask("0\n", 0), "granted");
+  assert.equal(await ask("Permission denied\n", 13), "denied");
+  assert.equal(await ask("/system/bin/sh: su: inaccessible or not found\n", 127), "no-su");
+  assert.equal(await ask("2000\n", 0), "denied");
+  const { conn } = await device(async function* () { yield { wait: 500 }; return 0; });
+  assert.equal(await new AndroidDevice(conn).root(50), "denied");
+});
+
+test("stage: the device scripts are checked against the site's checksums, then pushed", async () => {
+  const files = Object.fromEntries(DEVICE_FILES.map((n) => [n, Buffer.from(`#!/bin/sh\n# ${n}\n`)]));
+  const sums = Object.entries(files).map(([n, d]) => `${sha(d)}  ${n}\n`).join("");
+  const fetchFile = (bad) => async (name) => (name === "SHA256SUMS" ? Buffer.from(sums) : name === bad ? Buffer.from("tampered") : files[name]);
+  const { a, dev } = await android({ raw: () => ({ stdout: "STAGE-OK\n", exitCode: 0 }) });
+  await a.stage(fetchFile());
+  for (const n of DEVICE_FILES) assert.deepEqual(Buffer.from(dev.files.get(`${STAGE}/${n}`)), files[n]);
+  assert.equal(a.staged, true);
+  const b = await android({ raw: () => ({ stdout: "STAGE-OK\n", exitCode: 0 }) });
+  await assert.rejects(b.a.stage(fetchFile("storage.sh")), code("site-files"));
+  assert.equal(b.dev.files.size, 0, "nothing is pushed when one file does not match");
+  const c = await android({ raw: () => ({ stdout: "mkdir: Permission denied\n", exitCode: 1 }) });
+  await assert.rejects(c.a.stage(fetchFile()), code("no-stage"));
+});
+
+test("status: JSON on a marked line, with CRLF from a pty; anything else is an error", async () => {
+  const ok = await android({ status: `some text su printed\r\nMU300-WEB-STATUS ${JSON.stringify(STATUS)}\r\n` });
+  assert.deepEqual(await ok.a.status(), STATUS);
+  assert.deepEqual(ok.calls, [["status"]]);
+  await ok.a.status(true);
+  assert.deepEqual(ok.calls[1], ["status", "deep"]);
+  for (const [answer, want] of [["", "no-answer"], ["MU300-WEB-STATUS {not json\n", "bad-answer"], ["MU300-WEB-STATUS []\n", "bad-answer"],
+    [`MU300-WEB-STATUS ${JSON.stringify({ ...STATUS, v: 2 })}\n`, "bad-answer"], [`MU300-WEB-STATUS ${JSON.stringify({ ...STATUS, parts: "x" })}\n`, "bad-answer"],
+    ["MU300-WEB-ERROR no-busybox\n", "no-busybox"], ["MU300-WEB-ERROR not-root\n", "not-root"]]) {
+    await assert.rejects((await android({ status: answer })).a.status(), code(want), answer);
+  }
+});
+
+test("arguments that are not plain words never reach the device's shell", async () => {
+  const { a, calls } = await android({ status: "x" });
+  for (const bad of ["a b", "x;reboot", "$(id)", "it's", "", "a\nb", "`id`"]) await assert.rejects(a.web(["take", bad]), code("bad-argument"));
+  assert.deepEqual(calls, []);
+});
+
+test("a zip: pushed, then checked by the device; the device's refusal is the answer", async () => {
+  const data = new Uint8Array(crypto.randomBytes(300000));
+  const digest = sha(data);
+  const name = "mu300-magisk-v2026.11.01-openwrt-k6.18.zip";
+  const good = await android({ take: ([n, h]) => `MU300-WEB-ZIP ${JSON.stringify({ name: n, web: 1, tag: "v2026.11.01", system: "openwrt", os: "openwrt", ubuntu: "", kernel: "6.18", sha: h })}\n` });
+  const prog = [];
+  const z = await good.a.takeZip(new Blob([data]), name, digest, { onProgress: (s, t) => prog.push([s, t]) });
+  assert.equal(z.tag, "v2026.11.01");
+  assert.equal(z.sha, digest);
+  assert.deepEqual(Buffer.from(good.dev.files.get(`${STAGE}/in/${name}`)), Buffer.from(data));
+  assert.deepEqual(prog.at(-1), [data.length, data.length]);
+  const bad = await android({ take: () => "MU300-WEB-ERROR sha-mismatch " + "0".repeat(64) + "\n" });
+  await assert.rejects(bad.a.takeZip(data, name, digest), (e) => e.code === "sha-mismatch" && e.detail === "0".repeat(64));
+  await assert.rejects((await android({ take: () => "done\n" })).a.takeZip(data, name, digest), code("no-answer"));
+});
+
+test("answers go as a file, the password on stdin of a root command and nowhere else", async () => {
+  let stdinSeen = null;
+  const { a, dev, calls } = await android({ answers: "MU300-WEB-ANSWERS ok\n", password: (args, ctx) => { stdinSeen = ctx.stdin; return "MU300-WEB-PASSWORD ok\n"; } });
+  const logged = [];
+  a.log = (l) => logged.push(l);
+  await a.setAnswers("MU300_BOOT=linux\n", "correct horse");
+  assert.equal(Buffer.from(dev.files.get(`${STAGE}/in/answers.conf`)).toString(), "MU300_BOOT=linux\n");
+  assert.equal(stdinSeen, "correct horse\n");
+  assert.deepEqual(calls, [["answers"], ["password"]]);
+  assert.ok(!dev.shellCalls.some((c) => c.cmd.includes("correct horse")), "the password is in no command line");
+  assert.ok(!logged.join("\n").includes("correct horse"));
+  const none = await android({ answers: "MU300-WEB-ANSWERS ok\n" });
+  await none.a.setAnswers("x=1\n", "");
+  assert.deepEqual(none.calls, [["answers"]]);
+});
+
+test("follow: the job's lines as events, its exit status as the result; a lost connection rejects", async () => {
+  const log = "MU300 Linux v2026.11.01\nMU300-STEP 1/9 check\n- device: ZTE F50\nMU300-PLAN kernel=6.18\n! something refused\n\nMU300-WEB-EXIT 1\n";
+  const { a } = await android({ follow: log });
+  const events = [];
+  assert.equal(await a.follow((e) => events.push(e)), 1);
+  assert.deepEqual(events.map((e) => e.type), ["text", "step", "text", "plan", "error", "text"]);
+  assert.equal(await (await android({ follow: "MU300-WEB-EXIT interrupted\n" })).a.follow(() => {}), "interrupted");
+  await assert.rejects((await android({ follow: "no exit line\n" })).a.follow(() => {}), code("no-answer"));
+  const cut = await android({ follow: async function* () { yield { out: "MU300-STEP 6/9 systems\n" }; yield { wait: 2000 }; return 0; } });
+  const seen = [];
+  const p = cut.a.follow((e) => seen.push(e));
+  setTimeout(() => cut.dev.unplug(), 30);
+  await assert.rejects(p, (e) => e.code === "disconnected");
+  assert.deepEqual(seen, [{ type: "step", n: 6, of: 9, name: "systems" }]);
+});
+
+test("backup: every file pulled, hashed while it comes, compared with what the device said", async () => {
+  const boot = new Uint8Array(crypto.randomBytes(200000)), misc = new Uint8Array(crypto.randomBytes(4096));
+  const files = new Map([[`${STAGE}/out/boot_b.img`, boot], [`${STAGE}/out/misc-head.bin`, misc]]);
+  const list = `MU300-WEB-FILE boot_b.img ${boot.length} ${sha(boot)}\nMU300-WEB-FILE misc-head.bin ${misc.length} ${sha(misc)}\nMU300-WEB-BACKUP android_slot=a linux_slot=b\n`;
+  const { a, calls } = await android({ backup: list, clean: "MU300-WEB-CLEAN ok\n" }, { files });
+  const store = new Map();
+  const prog = [];
+  const r = await a.backup(memorySink(store), (done, total, name) => prog.push([done, total, name]));
+  assert.deepEqual(r, { files: [{ name: "boot_b.img", size: boot.length, sha256: sha(boot) }, { name: "misc-head.bin", size: 4096, sha256: sha(misc) }], androidSlot: "a", linuxSlot: "b" });
+  assert.deepEqual(Buffer.from(await store.get("boot_b.img").arrayBuffer()), Buffer.from(boot));
+  assert.deepEqual(prog.at(-1), [boot.length + 4096, boot.length + 4096, "misc-head.bin"]);
+  assert.deepEqual(calls.map((c) => c[0]), ["backup", "clean"]);
+
+  // the device says one checksum and sends other bytes: no file is kept, and the copies on the device still go
+  const lie = await android({ backup: list.replace(sha(boot), "f".repeat(64)), clean: "MU300-WEB-CLEAN ok\n" }, { files });
+  const store2 = new Map();
+  await assert.rejects(lie.a.backup(memorySink(store2)), code("backup-mismatch"));
+  assert.equal(store2.size, 0);
+  assert.deepEqual(lie.calls.map((c) => c[0]), ["backup", "clean"]);
+  // a size that is not the file's
+  const short = await android({ backup: list.replace(` ${boot.length} `, ` ${boot.length + 1} `), clean: "MU300-WEB-CLEAN ok\n" }, { files });
+  await assert.rejects(short.a.backup(memorySink(new Map())), (e) => e.code === "protocol");
+  // names that are not file names, and an empty list
+  for (const bad of ["MU300-WEB-FILE ../x 1 " + "a".repeat(64) + "\nMU300-WEB-BACKUP android_slot=a linux_slot=b\n", "MU300-WEB-FILE a b c\nMU300-WEB-BACKUP x\n"]) {
+    await assert.rejects((await android({ backup: bad, clean: "" })).a.backup(memorySink(new Map())), code("bad-answer"));
+  }
+  await assert.rejects((await android({ backup: "MU300-WEB-BACKUP android_slot=a linux_slot=b\n", clean: "" })).a.backup(memorySink(new Map())), code("no-answer"));
+});
+
+test("boot-linux ends with the device going away, and that is not an error", async () => {
+  const { a, dev } = await android({ "boot-linux": async function* () { yield { out: "slot b armed for one boot. Rebooting into Linux.\n" }; setTimeout(() => dev.unplug(), 10); yield { wait: 500 }; return 0; } });
+  assert.deepEqual(await a.bootLinux(), []);
+  const no = await android({ "boot-linux": "MU300-WEB-ERROR no-linux\n" });
+  await assert.rejects(no.a.bootLinux(), code("no-linux"));
+});
+
+test("reboot uses adb's own service", async () => {
+  const { a, dev } = await android({});
+  await a.reboot();
+  assert.equal(dev.rebooted, "");
+});
+
+// ------------------------------------------------------------------ MU300 Linux
+
+const FACTS = "device=u30air\nversion=v2026.10.23\nos=ubuntu 24.04\nkernel=7.2.10-mu300\nkernel_choice=7.2\nboot_os=ubuntu\ndefault_boot=linux\nattempts=3\nsystems=ubuntu openwrt-luci \nuptime=512\nroot=0\n";
+
+test("Linux: an image without mu300-device --json is read through the commands every image has", async () => {
+  const { conn, dev } = await device((cmd) => (cmd.includes("mu300-device --json") ? { stdout: "f50\n", exitCode: 0 } : { stdout: FACTS, exitCode: 0 }));
+  const info = await new LinuxDevice(conn).info();
+  assert.deepEqual(info, { source: "commands", device: "u30air", version: "v2026.10.23", os: "ubuntu 24.04", kernel: "7.2.10-mu300", kernelChoice: "7.2",
+    bootOs: "ubuntu", defaultBoot: "linux", attempts: 3, systems: ["ubuntu", "openwrt-luci"], uptime: 512, isRoot: true });
+  assert.equal(dev.shellCalls.length, 2);
+  for (const c of dev.shellCalls) for (const never of ["imei", "iccid", "imsi", "mu300-sim", "mu300-at", "sms", "serial"]) assert.ok(!c.cmd.toLowerCase().includes(never), never);
+});
+
+test("Linux: mu300-device --json is taken when it answers with JSON, and its values are checked like any other", async () => {
+  const json = { device: "f50", version: "v2026.11.01", os: "openwrt 25.12", kernel: "6.18.56", kernel_choice: "6.18", boot_os: "openwrt", default_boot: "android",
+    attempts: 9, systems: ["openwrt", "ubuntu", "<script>"], uptime: 77, root: 0, imei: "867530012345678" };
+  const { conn, dev } = await device(() => ({ stdout: JSON.stringify(json) + "\n", exitCode: 0 }));
+  const info = await new LinuxDevice(conn).info();
+  assert.deepEqual(info, { source: "json", device: "f50", version: "v2026.11.01", os: "openwrt 25.12", kernel: "6.18.56", kernelChoice: "6.18", bootOs: "openwrt",
+    defaultBoot: "android", attempts: 5, systems: ["openwrt", "ubuntu"], uptime: 77, isRoot: true });
+  assert.equal(dev.shellCalls.length, 1);
+  assert.ok(!("imei" in info));
+  assert.equal(normalizeLinuxInfo({ device: "x; rm -rf /", version: "a\u0000b", systems: "ubuntu;reboot" }, "json").device, "");
+  assert.deepEqual(normalizeLinuxInfo({ version: "v1 <b>" }, "json").version, "");
+});
+
+test("Linux: the actions are the device's own commands, with nothing but known words as arguments", async () => {
+  const { conn, dev } = await device((cmd) => ({ stdout: "ok\n", exitCode: cmd.includes("next-boot") ? 0 : 4 }));
+  const l = new LinuxDevice(conn);
+  const lines = [];
+  assert.equal((await l.checkUpdate((x) => lines.push(x))).rc, 4);
+  assert.deepEqual(lines, ["ok"]);
+  await l.setKernel("6.18");
+  await l.setBootOs("openwrt-luci");
+  await l.nextBoot("android");
+  const cmds = dev.shellCalls.map((c) => c.cmd.split("; ").pop());
+  assert.deepEqual(cmds, ["mu300-update check", "mu300-update kernel 6.18", "mu300-os openwrt-luci", "mu300-next-boot android"]);
+  assert.throws(() => l.setKernel("6.18; reboot"), code("bad-argument"));
+  assert.throws(() => l.setBootOs("arch"), code("bad-argument"));
+  assert.throws(() => l.nextBoot("recovery"), code("bad-argument"));
+});
+
+test("Linux: back to Android is next-boot android and then a restart, and only when the first worked", async () => {
+  const ok = await device((cmd) => { if (cmd.includes("reboot")) setTimeout(() => ok.dev.unplug(), 5); return { stdout: "", exitCode: 0 }; });
+  await new LinuxDevice(ok.conn).toAndroid();
+  assert.deepEqual(ok.dev.shellCalls.map((c) => c.cmd.split("; ").slice(1).join("; ")), ["mu300-next-boot android", "sync; reboot"]);
+  const bad = await device(() => ({ stdout: "cannot write misc\n", exitCode: 1 }));
+  const r = await new LinuxDevice(bad.conn).toAndroid();
+  assert.equal(r.rc, 1);
+  assert.equal(bad.dev.shellCalls.length, 1, "no restart when Android was not made the next boot");
+});
