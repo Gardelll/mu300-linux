@@ -108,7 +108,7 @@ what replaced it. The table below gives each section's state.
 | 40 | One stuck AT command wedged the control panel; a second per AT command on OpenWrt | current (fixed) |
 | 41 | The vendor daemons' own account | current |
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
-| 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
+| 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current; the default (off) and who is let in (keys only): superseded by §70 |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
 | 45 | `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146) | current (fixed) |
 | 46 | SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176) | current (fixed) |
@@ -129,6 +129,7 @@ what replaced it. The table below gives each section's state.
 | 64 | An update dropped the panel's saved locks (`/etc/unisoc-modem`) | current (fixed; unit tests only, not reproduced on a device) |
 | 65 | An APN with a user name and a password (`AT+CGPCO`), and what else kanoqwq's APN page does | current (unit tests only; never sent to a modem) |
 | 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
+| 70 | adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it | current (unit tests; nothing of it measured on a device: the checklist is in the section) |
 
 ## Hardware and firmware facts
 
@@ -3814,6 +3815,10 @@ channel 149 works.
 `mu300-usb adb on|off` (off by default) puts AOSP's adbd into the USB gadget next to the network function and the
 ACM console: `adb shell`, `push`, `pull`, `forward` from a computer, as with Android.
 
+**Update 2026-10-13:** adb is on by default now, and adbd lets every computer in unless it is told to take keys
+only (`mu300-usb adb auth open|keys`): §70. What this section says about the daemon, the gadget and FunctionFS
+stands; "off by default", "`auth_required = true` on Linux, always" and "no setting that turns the check off" do not.
+
 **Which adbd.** Ubuntu 26.04 (not 24.04) packages Debian's `adbd` 34.0.5, but Debian patches it to require no
 authorisation at all on Linux (`adbd-don-t-require-authorization-on-Linux.patch`) and it listens on TCP 5555 when it
 finds no FunctionFS: a root shell for anyone on the LAN and the hotspot. It is also glibc-only. Alpine's and nmeum's
@@ -5052,3 +5057,172 @@ taken, not that it is used):
     #   then: mu300-power's suspend and resume (or  mobile-data down; mobile-data up  by hand): the APN and the
     #   credentials are used again (AT+CGDCONT? shows the APN)
     # the F50's internal SIM (sim_slot 1) once without credentials: it dials as before
+### 70. adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it
+
+**The decision.** On 2026-10-13 the owner of the project decided that adb to the Linux systems over USB is on by
+default and accepts every computer without key authorisation. The reason: a browser-based installer and manager
+(WebUSB) and a GUI are being built, and they must be able to talk to a device running Linux without the user first
+getting a key onto it; a browser makes its own adb key, which nobody could have authorised beforehand. Importing a
+key and confirming with a button on the device were offered as alternatives; the owner chose "accept everyone". It
+follows the project's standing rule: bootability and usability over lockdown, and the exposure written down
+instead.
+
+**The exposure.** With the default, anyone who can plug a USB cable into the device gets a root shell without a
+password - also after passwords were set for `ubuntu` and `root` - and with it everything on the device: the
+hotspot key, the VPN profiles, the SMS pool, the SSH host keys, the modem. It is the cable only: adbd has no TCP or
+vsock listener in either mode (below), so nothing changes for the LAN, the hotspot's clients or the mobile network.
+Before this change physical access already gave the same to someone with time (the serial console asks for a
+password, but the boot image and the filesystem are not encrypted or verified); what changes is that it now takes a
+cable and a second. The two commands that close it are in the README, the wiki (Installation, FAQ, Home, Glossary),
+the release notes' body, the installers' question and summary, and in the output of `mu300-usb adb on|auth|status`:
+`sudo mu300-usb adb auth keys` (only authorised keys) and `sudo mu300-usb adb off`.
+
+**How adbd decides.** `mu300-adbd.patch` set `auth_required = true` on Linux unconditionally (§43). AOSP's own switch
+is the property `ro.adb.secure` (0: `handle_new_connection` answers a `CNXN` with "authentication not required" and
+the transport is online at once; 1: it sends an `AUTH` token and waits for a signature of an authorised key). There
+are no Android properties on our systems, so the patch reads one environment variable instead:
+`MU300_ADB_AUTH=open` is `ro.adb.secure=0`, and a missing variable or any other value is `ro.adb.secure=1`.
+`mu300-adbd run` sets it when it starts adbd, from the state below. Nothing else in the patch assigns
+`auth_required`, and the listeners are untouched: adbd still returns before `setup_adb` on Linux, the `tcpip:`
+service (Android's `service.adb.tcp.port`) is inside `#if defined(__ANDROID__)` and `restart_service.cpp` is not in
+`CMakeLists.txt`. Checked on the binary built from this patch (2,493,480 bytes): `strings` finds `MU300_ADB_AUTH`
+and "authentication not required", and none of `service.adb.tcp.port`, `ADBD_PORT`, `adbd listening on`.
+
+**The state, and which reading wins.** Two files in `/etc/mu300`, written by `mu300-usb`: `adb` (`on`/`off`) and
+`adb_auth` (`open`/`keys`). `/etc/mu300` is part of the root filesystem, so there is no mount to wait for at boot,
+and `mu300-update apply` copies the directory whole into the new system (`keep_list`, `cp -a`: owner and modes
+stay), so a choice is not lost by an update; `tests/test_update.py` has `off`, `keys` and a key in the system that
+is replaced. The rules (`mu300-adbd`: `adb_on`, `auth_read`):
+
+| What is there | adb | Who is let in |
+|---|---|---|
+| nothing (a new installation; an update of a device that never touched adb) | on | every computer: the decision |
+| `adb` = `off` | off | - |
+| `adb` = `on`, no `adb_auth` (turned on under v2026.10.20-23, when on meant keys only) | on | keys |
+| no `adb_auth`, a key in `adb_keys` or `/root/.android/adb_keys` (authorised then) | as `adb` says | keys |
+| `adb_auth` = `open`, a regular file of root's that nobody else can write | as `adb` says | every computer |
+| `adb_auth` = `keys` | as `adb` says | keys |
+| `adb_auth` empty, cut short, unreadable, a symlink, writable by group or others, or any other word | as `adb` says | keys, and the log and `adb status` say why |
+| `adb` there and neither `on` nor `off` (empty, cut short) | **off**, and the log says why | - |
+| `/etc/mu300` missing, not root's, or writable by group or others | on | keys, and the log says why |
+| keys, and no key in either file | on | **nobody** (adbd has nothing a signature could match and no socket through which a key could be approved; measured in §43: `unauthorized` with the key file taken away) |
+
+So "open" has exactly two sources: no state at all, or the word `open` in a whole file that only root can write.
+A state that somebody set and that was damaged afterwards is never read as the default.
+
+* **Existing installations.** The old state file can tell "never set" (no file) from "set to off" (`off`), so a
+  device where `mu300-usb adb off` was run stays off. A device that never touched adb turns on, and open, with the
+  update: that is what the decision asks for, and the release notes must say it. A device where adb was turned on,
+  or a key authorised, under v2026.10.20-23 chose keys-only adb, and keeps it: `mu300-usb` writes `adb_auth` with
+  every `adb on`, `off`, `key` and `auth` since, so "no `adb_auth`, but `on` or a key" can only be such a device.
+  It becomes open with `sudo mu300-usb adb auth open`.
+* **Written whole.** `mu300-usb` writes both files as a new file renamed over the old one (`adb_write`): a power cut
+  leaves the old word or the new one. A new file that the filesystem did not get to fill would be empty, which
+  reads as keys (or off). The rename also replaces a symlink instead of writing through it; the new file is
+  created with noclobber, mode 644 (anyone may read whom adb lets in), and the key file stays 600.
+* **Authorising a key does not close an open device**: `adb key` writes the mode in force into `adb_auth` first.
+* **The installers.** The question is now "let in only this computer's adb key instead?" (default no). Yes writes
+  `keys` into `adb_auth`, then `on`, then the key: keys-only from the first boot. The Magisk zip has no question;
+  its systems start open. A build of one's own (`install.sh --build`) builds adbd always.
+
+**Where adb cannot be on.** A mainline kernel from before v2026.10.20 (no `CONFIG_USB_CONFIGFS_F_FS`; a system
+updated without its kernel: `mu300-update kernel` brings one); an image without `/opt/mu300/bin/adbd` (built without
+`tools/adbd/adbd`, or older than v2026.10.20); the U30 Air while its port is a USB host (`mu300-usb host`: there is
+no gadget, `mu300-adbd` leaves it alone and binds again in the device role); and the seconds before the system's
+`mu300-adbd` service starts (boot/init makes the gadget without adb, so the fallback to Android and init's own
+recovery shell are as they were). In each case the network and the console are untouched and `mu300-usb adb
+status` says which it is. The vendor 5.4 kernel has FunctionFS (`CONFIG_USB_CONFIGFS_F_FS=y` in the stock config),
+so adb is expected to work there; it has not been tried (§43).
+
+**What the default-on changes for a computer, from what §43 measured and what it did not.** Every boot now rebinds
+the gadget once, early (before the LAN's DHCP server): the computer sees a replug. The network function and the
+console keep their interface numbers and the VID:PID stays; `bcdDevice` goes from 0x0301 to 0x0303 (0x0302 to
+0x0304 with RNDIS), which is what makes Windows ask for the MS OS descriptors again, and the MS OS descriptors are
+then on with NCM too. On macOS (measured in §43, F50-B, 7.2): NCM and the console came back after the rebind, adb
+worked next to them, and with RNDIS a Mac has no network but has adb. A Mac keeps the interface it knows (the MAC
+address does not change), which matters while its screen is locked. A host without adb sees one more vendor
+interface and ignores it. **Not measured: any Windows host** - whether Windows re-installs the drivers of the
+network and serial interfaces once for the new `bcdDevice`, whether the adb interface gets WinUSB by itself, and
+whether NCM is disturbed by the descriptors being on. Until that is measured, default-on is a change every Windows
+user meets at the first boot after the update, and `sudo mu300-usb adb off` is the way back to the gadget as
+boot/init makes it.
+
+**The installers meet a device in Linux in `adb devices` now.** Its shell is root, so `su -c 'id -u'` says 0 there
+too: nothing but the installer's own check keeps it from being taken for a rooted Android (read from the code, not seen happen: it would wait two
+minutes for `sys.boot_completed`, ask "this does not look like an F50, continue?" and go on after a yes). Now
+(`tools/linux-mode.sh`, shared by `install.sh`, `uninstall.sh` and `tools/reset-password.sh`; the same in
+`install.ps1` and `uninstall.ps1`): a serial that starts with `MU300LINUX` (boot/init) is a device in Linux; it is
+never on the list of devices to choose from, never the answer to "is an Android up", and `ANDROID_SERIAL` naming it
+is dropped. The installer says "The device is running MU300 Linux, not Android" and offers to reboot it into
+Android: over adb where the device lets the computer in (`/opt/mu300/bin/mu300-next-boot android && sync &&
+reboot`, after checking that `mu300-next-boot` is there; no password, and it works where SSH does not, e.g. RNDIS
+on a Mac), else over SSH as before; with neither (keys-only adb, no USB network) it stops with the two commands to
+run on the device. After a device was selected, `ls -d /opt/mu300/bin` on it must print nothing, whatever its serial
+says. `tools/backup-device.sh` refuses a `MU300LINUX` serial. `backup-full.sh`, `collect-logs.sh` and
+`boot/android-boot-linux.sh` take the device adb gives them and were not changed: the first two only read, the
+third compares `boot_b` first and stops.
+
+**For tools:** `adb shell /opt/mu300/bin/mu300-device --json`, one line with the device, the system, its release,
+the kernel, whether the caller is root and what adb does; the contract is `docs/ADB-INTERFACE.md`.
+
+**Tested** (`tests/test_adb.py`, `test_installer.py`, `test_device_scripts.py`, `test_android_install.py`,
+`test_update.py`, `installer.Tests.ps1`; dash and bash here, busybox ash in CI): the patch's one switch and that
+nothing else assigns `auth_required` or reads the environment; every row of the table above; the state written
+whole and not through a symlink; the fake gadget joined with `MU300_ADB_AUTH` as the state says; the installers'
+device selection with a device in Linux alone, next to an F50 in Android, next to a tablet, in keys mode, with and
+without SSH, with a reboot that does not happen, and a Linux behind an Android-looking serial; the JSON line
+parsed, with values that try to break out of their quotes. The patched adbd was built (`tools/adbd/build.sh`,
+Alpine 3.20, arm64) and its strings checked; it was not run, because it needs FunctionFS.
+
+**Not measured on a device** (all test boards were in use; this is the checklist, to be run before a release
+carries the change). `S` is the device's serial in `adb devices`, the computer a Mac unless it says Windows:
+
+1. *Fresh boot, each of Ubuntu 24.04 and OpenWrt (`openwrt-luci`) on 5.4, 6.18 and 7.2, with no `/etc/mu300/adb*`
+   files:* `adb devices` shows `MU300LINUX-... device` within a minute of power-on. On the device
+   `mu300-usb adb status` prints `adb: on`, `auth: open (...)`, `gadget: adb is in it (25100000.dwc3)`;
+   `cat /sys/kernel/config/usb_gadget/linux/bcdDevice` is `0x0303`; `journalctl -u mu300-adbd` (OpenWrt: `logread
+   -e mu300-adbd`) has `auth open: every computer on the USB cable gets a root shell` and `gadget bound on ... with
+   adb`. On 5.4 this is the first run of adbd on that kernel at all: if `adb devices` stays empty, the status line
+   `adbd: cannot run: ...` or the log says why, and the network must be up regardless.
+2. *A root shell from a Mac whose key was never on the device* (`mv ~/.android ~/.android.bak; adb kill-server`
+   first): `adb -s S shell id -u` prints `0`; `adb -s S shell /opt/mu300/bin/mu300-device --json` prints one line
+   such as `{"mu300":1,"device":"f50","system":"ubuntu","version_id":"24.04","release":"v...","kernel":"7.2.10","root":true,"adb":"open"}`;
+   `adb -s S push` and `pull` of a 20 MB file, checksums equal.
+3. *No network listener:* on the device `ss -ltnp | grep -c adbd` (OpenWrt: `netstat -ltnp | grep -c adbd`) prints
+   `0`; from the computer `adb connect 192.168.77.1:5555` says `Connection refused`; `adb -s S tcpip 5555` does not
+   make it listen (the same `0` afterwards).
+4. *Keys:* `sudo mu300-usb adb auth keys` (prints `no key is authorised yet` on a device without keys); after the
+   replug `adb devices` shows `S unauthorized` and `adb -s S shell id` says `device unauthorized`, for as long as
+   one waits. `adb auth keys` with `/etc/mu300/adb_keys` deleted: the same. Then `scp ~/.android/adbkey.pub` to the
+   device, `sudo mu300-usb adb key adbkey.pub`: `adb -s S shell id -u` prints `0` without a replug (after
+   `adb kill-server` at most). A second computer, or the first with a new key (`rm ~/.android/adbkey*; adb
+   kill-server`): `unauthorized`. `sudo mu300-usb adb auth open`: both get in.
+5. *Damaged state:* `: > /etc/mu300/adb_auth; reboot` - `mu300-usb adb status` says `auth: keys (...; ... is
+   empty, unreadable or says neither open nor keys)` and the computer sees `unauthorized`. `chmod 666
+   /etc/mu300/adb_auth` with `open` in it: keys as well. `: > /etc/mu300/adb; reboot`: no adb device, `adb: off
+   (... says neither on nor off)`.
+6. *Off:* `sudo mu300-usb adb off` - the device leaves `adb devices`, `bcdDevice` is `0x0301` again, SSH and the
+   console come back. Still off after `reboot`, and after `mu300-update apply` and the reboot into the new system
+   (`cat /etc/mu300/adb` prints `off`). The same for `adb auth keys` with a key: after an update, still `keys`,
+   the key still gets in, another computer does not.
+7. *An existing installation:* a device on v2026.10.23 that never touched adb, `mu300-update apply`, reboot: as 1.
+   A device where `mu300-usb adb on` was run with a key under v2026.10.23, updated: `auth: keys (...; adb was turned
+   on when it took keys only ...)`, the key gets in, another computer sees `unauthorized`.
+8. *The USB network next to it, macOS:* with adb in the gadget, `ifconfig` shows the device's interface with an
+   address in 192.168.77.0/24 (U30 Air: .78), `ping 192.168.77.1` and `ssh` work, `ls /dev/cu.usbmodem*` has the
+   console; the same when the Mac's screen was locked during the device's boot; the same after ten `adb shell true`
+   in a row (each ends a connection: FunctionFS unbinds the gadget and the loop binds it again after 5 s - the
+   network is away for 6-8 s each time, §43; count them).
+9. *The USB network next to it, Windows 10 and 11, NCM (the default) and RNDIS (`MU300_USBNET`):* after the first
+   boot with adb, Device Manager shows the network adapter and the COM port working, and "ADB Interface" under
+   WinUSB devices without a driver having been installed by hand; `ping 192.168.77.1`; `adb devices` lists the
+   device. Note whether Windows shows "setting up a device" for the network or the COM port again (the new
+   `bcdDevice`), and whether it does so at every boot or once.
+10. *The U30 Air's host role:* `sudo mu300-usb host` with adb on, a flash drive on an OTG adapter mounts; `sudo
+    mu300-usb device`: network, console and adb are back within ten seconds.
+11. *The boot fallback:* a trial boot image that does not reach `mu300-boot-ok` falls back to Android as before
+    (adb plays no part before the system's service starts).
+12. *The installers:* with the device in Linux and adb open, `./install.sh --check` says "The device is running
+    MU300 Linux, not Android", asks, prints `asking it over adb (MU300LINUX-...)`, and goes on once Android is up;
+    the same with `install.ps1 -Check` on Windows. With `adb auth keys` and no key of that computer: over SSH as
+    before.
