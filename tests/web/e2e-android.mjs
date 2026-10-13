@@ -19,7 +19,6 @@ import { generateKey, publicKeyLine } from "../../site/assets/web-installer/adb/
 import { AndroidDevice, STAGE, identify, memorySink } from "../../site/assets/web-installer/device.js";
 import { analyseStorage, answersFor, deviceBlockers, parsePlan, validateChoices } from "../../site/assets/web-installer/flow.js";
 import { inspectMagiskZip } from "../../site/assets/web-installer/zip.js";
-import { Masker } from "../../site/assets/web-installer/privacy.js";
 import { FakeAdbd } from "./fake-adbd.mjs";
 
 const E = process.env;
@@ -66,9 +65,7 @@ async function connect() {
 
 const out = {};
 const log = [];
-const masker = new Masker();
 const PASSWORD = "correct horse battery";
-masker.add(PASSWORD, "***");
 
 const { conn } = await connect();
 out.kind = (await identify(conn)).kind;
@@ -107,7 +104,7 @@ const taken = await dev.takeZip(zipBlob, zipName, E.E2E_ZIP_SHA256);
 out.taken = taken;
 if (E.E2E_VPN) {
   const vpn = await fs.openAsBlob(E.E2E_VPN);
-  await dev.addExtra("vpn", vpn, "mu300-linux-vpn.tar.gz", crypto.createHash("sha256").update(fs.readFileSync(E.E2E_VPN)).digest("hex"));
+  await dev.addExtra("vpn", vpn, crypto.createHash("sha256").update(fs.readFileSync(E.E2E_VPN)).digest("hex"));
 }
 const answers = answersFor(choices, 0, { lang: "en", status, analysis, adbKeyLine: publicKeyLine(key) });
 
@@ -152,7 +149,6 @@ await dev2.clean(true);
 const text = log.join("\n");
 out.logLines = log.length;
 out.passwordInLog = text.includes(PASSWORD);
-out.maskedLogHasPassword = masker.mask(text).includes(PASSWORD);
 out.keyInLog = text.includes(publicKeyLine(key).slice(0, 60));
 await again.conn.close();
 await conn.close();

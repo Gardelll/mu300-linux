@@ -8,6 +8,7 @@ import fs from "node:fs";
 
 import { AdbConnection } from "../../site/assets/web-installer/adb/connection.js";
 import { AndroidDevice, DEVICE_FILES, DeviceError, LinuxDevice, STAGE, identify, lockState, memorySink, normalizeLinuxInfo } from "../../site/assets/web-installer/device.js";
+import { Masker, mask, pageMasker } from "../../site/assets/web-installer/privacy.js";
 import { FakeAdbd } from "./fake-adbd.mjs";
 
 const FIX = JSON.parse(fs.readFileSync(new URL("./fixtures/adbkey.json", import.meta.url)));
@@ -253,4 +254,129 @@ test("Linux: back to Android is next-boot android and then a restart, and only w
   const r = await new LinuxDevice(bad.conn).toAndroid();
   assert.equal(r.rc, 1);
   assert.equal(bad.dev.shellCalls.length, 1, "no restart when Android was not made the next boot");
+});
+
+// ------------------------------------------------------------------ nothing private in what is shown or kept
+
+const SERIAL = "324950664950", IMEI = "867530012345678", MACADDR = "a4:5e:60:c1:22:9f", PASSWORD = "hunter2-Secret!", SSID = "Kaan Home 5G";
+const ADBKEY = "QAAAA" + "Zm9v".repeat(170) + "AAAAAAAAAAAAAAA=";
+const DIRTY = [
+  `[ro.serialno]: [${SERIAL}]`, `ro.boot.serialno=${SERIAL}`, `adb serial ${SERIAL}`, `IMEI: ${IMEI}`, `+CGSN: ${IMEI}`, `imsi=286011234567890`,
+  `ICCID 89900112345678901234`, `wlan0 link/ether ${MACADDR}`, `MU300_PASSWORD=${PASSWORD}`, `password: ${PASSWORD}`, `PSK=wifi-pass-1234`,
+  `wpa_passphrase=wifi-pass-1234`, `[device] hotspot: SSID ${SSID} imported (passphrase 14 chars)`, `ADB_KEY='${ADBKEY} web'`,
+  "PWHASH='$6$abcdefgh$Q9s8d7f6g5h4j3k2l1qwertyuiopasdfghjklzxcvbnm'", `ro.build.fingerprint=ZTE/MU300/mu300:13/${SERIAL}/user`, "sms from +905321234567",
+];
+const SECRETS = [SERIAL, IMEI, "286011234567890", "89900112345678901234", MACADDR, PASSWORD, "wifi-pass-1234", SSID, ADBKEY.slice(0, 60), "Q9s8d7f6g5h4", "+905321234567"];
+const clean = (text, what) => { for (const x of SECRETS) assert.ok(!String(text).includes(x), `${what} holds ${x}: ${String(text).slice(0, 300)}`); };
+
+test("the masker alone: a serial, an IMEI, a MAC, a password, a hotspot name and a key do not survive", () => {
+  const m = new Masker();
+  m.add(SERIAL); m.add(PASSWORD, "***");
+  clean(m.mask(DIRTY.join("\n")), "the masked text");
+  // what a log needs stays readable
+  const kept = "MU300-STEP 6/9 systems\n- Installing openwrt\nMU300-PLAN password=given\nregion offset 27762098176\nsha256 " + "ab12".repeat(16) + "\npassword for ubuntu: unchanged";
+  assert.equal(m.mask(kept), kept);
+});
+
+test("Android: every line the device prints is masked before it reaches the log, an event, a result or an error", async () => {
+  pageMasker.add(SERIAL); pageMasker.add(PASSWORD, "***");
+  const noisy = DIRTY.join("\r\n") + "\r\n";
+  const logged = [];
+  const { conn } = await device(async (cmd) => {
+    if (cmd.includes(" status")) return { stdout: noisy + `MU300-WEB-STATUS ${JSON.stringify(STATUS)}\n`, exitCode: 0 };
+    if (cmd.includes(" follow")) return { stdout: noisy + DIRTY.map((l) => "! " + l).join("\n") + `\nMU300-PLAN have=${IMEI}\nMU300-WEB-EXIT 1\n`, exitCode: 0 };
+    if (cmd.includes(" boot-linux")) return { stdout: noisy, exitCode: 0 };
+    if (cmd.includes(" clean")) return { stdout: `MU300-WEB-ERROR no-root-dir ${DIRTY.join(" ")}\n`, exitCode: 1 };
+    if (cmd.includes("mkdir -p")) return { stdout: DIRTY.join(" "), stderr: DIRTY.join(" "), exitCode: 1 };
+    return { stdout: noisy, exitCode: 0 };
+  });
+  const a = new AndroidDevice(conn, { log: (l) => logged.push(l) });
+  assert.deepEqual(await a.status(), STATUS);                 // the answer itself is read from the line as it came
+  const events = [];
+  await a.follow((e) => events.push(e));
+  clean(JSON.stringify(events), "the events");
+  assert.ok(events.some((e) => e.type === "error"));
+  clean((await a.bootLinux()).join("\n"), "the lines a call returns");
+  await assert.rejects(a.clean(), (e) => { clean(e.message + e.detail, "the error"); return e.code === "no-root-dir"; });
+  await assert.rejects(a.stage(async () => Buffer.from("")), (e) => e.code === "site-files");
+  const sums = DEVICE_FILES.map((n) => `${sha(Buffer.from("x"))}  ${n}\n`).join("");
+  await assert.rejects(a.stage(async (n) => Buffer.from(n === "SHA256SUMS" ? sums : "x")), (e) => { clean(e.message, "the stage error"); return e.code === "no-stage"; });
+  await assert.rejects(a.web(["take", `x ${PASSWORD}`]), (e) => { clean(e.message, "a refused argument"); return e.code === "bad-argument"; });
+  assert.ok(logged.length > 40);
+  clean(logged.join("\n"), "the log");
+  assert.ok(logged.some((l) => l.includes("••••••••4950")));
+});
+
+test("Linux: logs and action output are masked at the source; the facts are read, not shown", async () => {
+  pageMasker.add(SERIAL);
+  const logged = [], seen = [];
+  const { conn } = await device((cmd) => (cmd.includes("mu300-device --json") ? { stdout: "f50\n", exitCode: 0 }
+    : cmd.includes("version=") ? { stdout: FACTS + DIRTY.join("\n") + "\n", exitCode: 0 } : { stdout: DIRTY.join("\n") + "\n", stderr: DIRTY.join("\n") + "\n", exitCode: 0 }));
+  const l = new LinuxDevice(conn, { log: (x) => logged.push(x) });
+  const info = await l.info();
+  clean(JSON.stringify(info), "the device's description");
+  const r = await l.logs((x) => seen.push(x));
+  assert.deepEqual(Object.keys(r), ["rc"], "an action hands back its exit status and no text");
+  await l.checkUpdate((x) => seen.push(x));
+  clean(seen.join("\n"), "what the manage view shows");
+  clean(logged.join("\n"), "the log");
+  assert.ok(seen.length >= DIRTY.length * 2);
+  assert.equal(mask(`x ${SERIAL} y`), "x ••••••••4950 y");
+});
+
+// ------------------------------------------------------------------ nothing a device or a listing says names a path or a command
+
+const HOSTILE = ["a b.zip", "x'; reboot; '.zip", "$(reboot).zip", "`id`.zip", "../../data/adb/x.zip", "mu300-magisk-v1/../x.zip", "mu300-magisk-v1..zip/../../x",
+  "mu300-magisk-v1\n.zip", "/system/bin/sh", "mu300-magisk-v1.zip\0", "mu300-magisk-.zip", "-rf", "", "mu300-magisk-v1.zip extra", "mu300-magisk-v1\\.zip", "mu300-magisk-v1;.zip"];
+
+test("a zip or an extra never goes to a path built from a hostile name, and no command is made of one", async () => {
+  const { a, dev, calls } = await android({ take: "MU300-WEB-ZIP {}\n", extra: "MU300-WEB-EXTRA vpn\n" });
+  const digest = "a".repeat(64);
+  for (const name of HOSTILE) await assert.rejects(a.takeZip(new Uint8Array(10), name, digest), code("bad-argument"), JSON.stringify(name));
+  for (const bad of ["", "abc", "A".repeat(64), "a".repeat(63) + "'", `${"a".repeat(64)};id`]) {
+    await assert.rejects(a.takeZip(new Uint8Array(10), "mu300-magisk-v2026.11.01-openwrt-k5.4.zip", bad), code("bad-argument"), bad);
+    await assert.rejects(a.addExtra("vpn", new Uint8Array(10), bad), code("bad-argument"), bad);
+  }
+  for (const kind of ["lang", "../vpn", "vpn; reboot", "constructor", "__proto__", ""]) await assert.rejects(a.addExtra(kind, new Uint8Array(10), digest), code("bad-argument"), kind);
+  assert.equal(dev.files.size, 0, "nothing was pushed");
+  assert.deepEqual(calls, [], "nothing was run");
+  assert.equal(dev.shellCalls.length, 0);
+  // the good ones go to fixed places
+  await a.takeZip(new Uint8Array(10), "mu300-magisk-v2026.11.01-openwrt-k5.4.zip", digest);
+  await a.addExtra("vpn", new Uint8Array(10), digest);
+  assert.deepEqual([...dev.files.keys()], [`${STAGE}/in/mu300-magisk-v2026.11.01-openwrt-k5.4.zip`, `${STAGE}/in/extra-vpn.tar.gz`]);
+  assert.deepEqual(calls, [["take", "mu300-magisk-v2026.11.01-openwrt-k5.4.zip", digest], ["extra", "vpn", "extra-vpn.tar.gz", digest]]);
+  for (const c of dev.shellCalls) assert.match(c.cmd, /^su -c 'sh \/data\/local\/tmp\/mu300-web\/android-web\.sh [A-Za-z0-9._ -]+'$/);
+});
+
+test("a backup pulls only the copies the device script makes, by their exact names", async () => {
+  const good = `MU300-WEB-FILE boot_b.img 4 ${sha(Buffer.from("boot"))}\n`;
+  const end = "MU300-WEB-BACKUP android_slot=a linux_slot=b\n";
+  const names = ["..", ".", "../../../data/adb/magisk.db", "/data/system/users/0/accounts.db", "boot_b.img/../x", "prodnv.img", "nr_fixnv1_a.img", "persist.img",
+    "userdata.img", "boot_c.img", "boot_b.img;reboot", "$(id)", "a b", "misc.bin", "boot_b.IMG", "x'y", "boot_b.img\\"];
+  for (const name of names) {
+    const files = new Map([[`${STAGE}/out/boot_b.img`, Buffer.from("boot")], [`${STAGE}/out/${name}`, Buffer.from("evil")]]);
+    const x = await android({ backup: `${good}MU300-WEB-FILE ${name} 4 ${sha(Buffer.from("evil"))}\n${end}`, clean: "MU300-WEB-CLEAN ok\n" }, { files });
+    const store = new Map();
+    await assert.rejects(x.a.backup(memorySink(store)), code("bad-answer"), name);
+    assert.equal(store.size, 0, `${name}: nothing is written on this computer`);
+  }
+  // sizes and checksums that are not what they must be, and a name given twice
+  for (const line of [`MU300-WEB-FILE boot_b.img -4 ${"a".repeat(64)}`, `MU300-WEB-FILE boot_b.img 4e3 ${"a".repeat(64)}`, `MU300-WEB-FILE boot_b.img 99999999999 ${"a".repeat(64)}`,
+    "MU300-WEB-FILE boot_b.img 4 zz", `MU300-WEB-FILE boot_b.img 4 ${"a".repeat(64)} extra`.replace(" extra", "\nMU300-WEB-FILE boot_b.img 4 " + "a".repeat(64))]) {
+    const x = await android({ backup: `${line}\n${end}`, clean: "MU300-WEB-CLEAN ok\n" });
+    await assert.rejects(x.a.backup(memorySink(new Map())), code("bad-answer"), line);
+  }
+});
+
+test("the Linux adapter sends only its own commands: what the device says is never part of one", async () => {
+  const evil = "ubuntu; rm -rf / #";
+  const { conn, dev } = await device((cmd) => (cmd.includes("mu300-device --json")
+    ? { stdout: JSON.stringify({ device: "f50", kernel_choice: "6.18'; reboot; '", boot_os: evil, systems: [evil, "openwrt"], version: "$(reboot)" }), exitCode: 0 } : { stdout: "", exitCode: 0 }));
+  const l = new LinuxDevice(conn);
+  const info = await l.info();
+  assert.deepEqual([info.kernelChoice, info.bootOs, info.systems, info.version], ["", "", ["openwrt"], ""]);
+  assert.throws(() => l.setBootOs(evil), code("bad-argument"));
+  assert.throws(() => l.setKernel("6.18'; reboot; '"), code("bad-argument"));
+  for (const c of dev.shellCalls) assert.ok(!c.cmd.includes("rm -rf") && !c.cmd.includes("reboot;"), c.cmd);
 });

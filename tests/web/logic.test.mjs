@@ -39,7 +39,7 @@ test("the log masker: serials, identity numbers, phone numbers and MAC addresses
     "ab stays",
   ].join("\n")).split("\n");
   assert.equal(t[0], "serial ••••••••4950 and ••••••••8329");
-  assert.equal(t[1], "IMEI: [15 digits] IMSI [15 digits] ICCID 8990011234567890123F? [20 digits]");
+  assert.equal(t[1], "IMEI: [masked] IMSI [15 digits] ICCID 8990011234567890123F? [20 digits]");
   assert.equal(t[2], "sms from [phone number] and [phone number]");
   assert.equal(t[3], "password ***");
   assert.equal(t[4], "wlan0 a4:5e:60:••:••:••");

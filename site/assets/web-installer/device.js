@@ -12,6 +12,7 @@ import { AdbError } from "./adb/errors.js";
 import { shell } from "./adb/shell.js";
 import { pull, push } from "./adb/sync.js";
 import { classifyLine } from "./flow.js";
+import { mask as pageMask } from "./privacy.js";
 import { Sha256, sha256Hex } from "./sha256.js";
 
 export const STAGE = "/data/local/tmp/mu300-web";
@@ -22,7 +23,18 @@ export class DeviceError extends Error {
   constructor(code, detail) { super(detail ? `${code}: ${detail}` : code); this.name = "DeviceError"; this.code = code; this.detail = detail || ""; }
 }
 
-const ARG = /^[A-Za-z0-9._:=/-]+$/;
+// What may be an argument of the device script: a plain word (a command, a checksum, a release file's name). No
+// blank, quote, slash, $ or backslash can be in it, and no "..": nothing the device's shell would read as anything
+// but one word, and nothing that names a place outside the directory the script puts it in.
+const ARG = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+export const safeArg = (a) => typeof a === "string" && ARG.test(a) && !a.includes("..");
+// The files the page ever writes on the device, all in its own directory under /data/local/tmp: the device scripts
+// (DEVICE_FILES), the answers, a Magisk zip of a release, an extra under a fixed name. Remote paths are built from
+// these and from nothing a device or a listing said.
+const ZIP_NAME = /^mu300-magisk-v[0-9][A-Za-z0-9._-]{0,80}\.zip$/;
+const EXTRA_FILE = { vpn: "extra-vpn.tar.gz", panel: "extra-panel.tar.gz" };
+// ... and the files it ever reads back: the copies android-web.sh makes for a backup, by their exact names
+const BACKUP_FILE = /^(?:(?:boot|uboot|sml|teecfg|trustos|vbmeta)_[ab]\.img|misc-head\.bin|gpt-head\.bin|gpt-tail\.bin|partitions\.txt)$/;
 const lines = (s) => s.split("\n").map((l) => l.replace(/\r+$/, ""));
 
 // ---- which kind of device is this?
@@ -56,7 +68,10 @@ export class AndroidDevice {
   constructor(conn, options = {}) {
     this.conn = conn;
     this.kind = "android";
-    this.log = options.log || (() => {});          // every line a device command prints, for the raw log
+    // every line a device command prints, for the log - masked here, before anyone gets it (privacy.js)
+    this.mask = options.mask || pageMask;
+    const log = options.log || (() => {});
+    this.log = (l, isErr) => log(this.mask(l), isErr);
     this.staged = false;
   }
 
@@ -105,7 +120,7 @@ export class AndroidDevice {
       files.push([name, data]);
     }
     const r = await shell(this.conn, `mkdir -p ${STAGE}/in && chmod 755 ${STAGE} && echo STAGE-OK`, { timeoutMs: 20000 });
-    if (!r.stdout.includes("STAGE-OK")) throw new DeviceError("no-stage", (r.stdout + r.stderr).trim());
+    if (!r.stdout.includes("STAGE-OK")) throw new DeviceError("no-stage", this.mask((r.stdout + r.stderr).trim()).slice(0, 200));
     for (const [name, data] of files) await push(this.conn, data, `${STAGE}/${name}`, { mode: 0o644 });
     this.staged = true;
   }
@@ -113,21 +128,29 @@ export class AndroidDevice {
   // Runs one command of android-web.sh under su. Returns { rc, out: [lines], marks: { NAME: [rest...] } }; a
   // MU300-WEB-ERROR line becomes a DeviceError. onLine gets every line as it comes.
   async web(args, options = {}) {
-    for (const a of args) if (!ARG.test(a)) throw new DeviceError("bad-argument", a);
+    for (const a of args) if (!safeArg(a)) throw new DeviceError("bad-argument", this.mask(String(a)).slice(0, 40));
     const cmd = `su -c 'sh ${STAGE}/android-web.sh ${args.join(" ")}'`;
     const out = [], marks = {};
+    // marks and events are read from the line as it came (a checksum or a size must not be changed by the masker);
+    // what is kept for showing (out, the log) is masked. options.onEvent gets flow.js's classification with its
+    // text masked; nobody outside this function sees a raw line.
     const take = (l, isErr) => {
-      out.push(l);
+      out.push(this.mask(l));
       this.log(l, isErr);
       const m = /^MU300-WEB-([A-Z]+) ?(.*)$/.exec(l);
       if (m) (marks[m[1]] = marks[m[1]] || []).push(m[2]);
-      if (options.onLine) options.onLine(l, isErr);
+      if (options.onEvent) {
+        const ev = classifyLine(l);
+        if (ev.text !== undefined) ev.text = this.mask(ev.text);
+        if (ev.type === "plan") ev.value = this.mask(ev.value);
+        options.onEvent(ev, l.startsWith("MU300-WEB-"));
+      }
     };
     const r = await shell(this.conn, cmd, { onLine: take, stdin: options.stdin, signal: options.signal, timeoutMs: options.timeoutMs,
       onStdout: () => {}, onStderr: () => {} });
     if (marks.ERROR) {
       const [code, ...rest] = marks.ERROR[0].split(" ");
-      throw new DeviceError(code || "device", rest.join(" "));
+      throw new DeviceError(/^[a-z-]{1,40}$/.test(code) ? code : "device", this.mask(rest.join(" ")).slice(0, 200));
     }
     return { rc: r.exitCode, out, marks };
   }
@@ -146,13 +169,19 @@ export class AndroidDevice {
   // Pushes a Magisk zip and has the device check it against the release's checksum. -> the zip's manifest as the
   // device read it: { name, web, tag, system, os, ubuntu, kernel }
   async takeZip(file, name, sha256, options = {}) {
+    if (typeof name !== "string" || !ZIP_NAME.test(name) || name.includes("..")) throw new DeviceError("bad-argument", "zip name");
+    if (!/^[0-9a-f]{64}$/.test(sha256 || "")) throw new DeviceError("bad-argument", "checksum");
     await push(this.conn, file, `${STAGE}/in/${name}`, { mode: 0o644, onProgress: options.onProgress, signal: options.signal });
     const r = await this.web(["take", name, sha256], { timeoutMs: 600000 });
     if (!r.marks.ZIP) throw new DeviceError("no-answer", "take");
     try { return JSON.parse(r.marks.ZIP[0]); } catch (e) { throw new DeviceError("bad-answer", "take"); }
   }
 
-  async addExtra(kind, file, name, sha256, options = {}) {
+  // an extra goes to the device under a name of the page's own, whatever the picked file is called
+  async addExtra(kind, file, sha256, options = {}) {
+    const name = Object.prototype.hasOwnProperty.call(EXTRA_FILE, kind) ? EXTRA_FILE[kind] : null;
+    if (!name) throw new DeviceError("bad-argument", "extra");
+    if (!/^[0-9a-f]{64}$/.test(sha256 || "")) throw new DeviceError("bad-argument", "checksum");
     await push(this.conn, file, `${STAGE}/in/${name}`, { mode: 0o644, onProgress: options.onProgress, signal: options.signal });
     await this.web(["extra", kind, name, sha256], { timeoutMs: 600000 });
   }
@@ -170,10 +199,9 @@ export class AndroidDevice {
   // the job's exit status (a number, or "interrupted"); rejects when the connection goes - the job itself goes on.
   async follow(onEvent, signal) {
     let rc = null;
-    await this.web(["follow"], { signal, onLine: (l) => {
-      const ev = classifyLine(l);
+    await this.web(["follow"], { signal, onEvent: (ev, own) => {
       if (ev.type === "exit") rc = ev.rc;
-      else if (!l.startsWith("MU300-WEB-")) onEvent(ev);
+      else if (!own) onEvent(ev);
     } });
     if (rc === null) throw new DeviceError("no-answer", "follow");
     return rc;
@@ -186,7 +214,7 @@ export class AndroidDevice {
   async bootLinux() {
     try {
       const r = await this.web(["boot-linux"], { timeoutMs: 60000 });
-      return r.out;
+      return r.out;                       // masked lines
     } catch (e) {
       if (e instanceof AdbError && (e.code === "disconnected" || e.code === "closed")) return [];
       throw e;
@@ -200,9 +228,14 @@ export class AndroidDevice {
     const r = await this.web(["backup"], { timeoutMs: 900000, signal });
     const files = (r.marks.FILE || []).map((l) => {
       const [name, size, sha256] = l.split(" ");
-      if (!/^[A-Za-z0-9._-]+$/.test(name || "") || !/^\d+$/.test(size || "") || !/^[0-9a-f]{64}$/.test(sha256 || "")) throw new DeviceError("bad-answer", "backup");
+      // the name becomes part of a path on the device and a file name on this computer: only the names the device
+      // script gives its copies, a size in digits (at most 1 GiB: no partition it copies is larger), a checksum
+      if (!BACKUP_FILE.test(name || "") || !/^\d{1,10}$/.test(size || "") || Number(size) > 1073741824 || !/^[0-9a-f]{64}$/.test(sha256 || "")) {
+        throw new DeviceError("bad-answer", "backup");
+      }
       return { name, size: Number(size), sha256 };
     });
+    if (new Set(files.map((f) => f.name)).size !== files.length) throw new DeviceError("bad-answer", "backup");
     if (!files.length || !r.marks.BACKUP) throw new DeviceError("no-answer", "backup");
     const total = files.reduce((a, f) => a + f.size, 0);
     let before = 0;
@@ -278,22 +311,28 @@ export class LinuxDevice {
   constructor(conn, options = {}) {
     this.conn = conn;
     this.kind = "linux";
-    this.log = options.log || (() => {});
-    this.sudo = "";
+    this.mask = options.mask || pageMask;
+    const log = options.log || (() => {});
+    this.log = (l, isErr) => log(this.mask(l), isErr);
   }
 
-  // run(command): one command over adb shell, with /opt/mu300/bin on the PATH; -> { rc, stdout, stderr }
-  async run(command, options = {}) {
-    const take = (l, isErr) => { this.log(l, isErr); if (options.onLine) options.onLine(l, isErr); };
-    const r = await shell(this.conn, `export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"; ${this.sudo}${command}`,
+  // _run(command): one command over adb shell, with /opt/mu300/bin on the PATH. The commands are this file's own
+  // (fixed text, arguments from short lists); nothing a device or a listing said is ever part of one. Every line
+  // goes to the log and to onLine masked. -> { rc, stdout }: stdout is what the command printed, for info() to
+  // read facts from, and is not for showing.
+  async _run(command, options = {}) {
+    const take = (l, isErr) => { this.log(l, isErr); if (options.onLine) options.onLine(this.mask(l), isErr); };
+    const r = await shell(this.conn, `export PATH="$PATH:/opt/mu300/bin:/usr/sbin:/sbin"; ${command}`,
       { onLine: take, timeoutMs: options.timeoutMs, signal: options.signal });
-    return { rc: r.exitCode, stdout: r.stdout, stderr: r.stderr };
+    return { rc: r.exitCode, stdout: r.stdout };
   }
+  // the same for the actions: only the exit status comes back, the text went out masked
+  async run(command, options = {}) { return { rc: (await this._run(command, options)).rc }; }
 
   // The device's own description. An image with "mu300-device --json" answers with one JSON object; an older one
   // prints the device's name for any argument, and the same facts are then read one by one.
   async info() {
-    const j = await this.run("mu300-device --json 2>/dev/null", { timeoutMs: 20000 });
+    const j = await this._run("mu300-device --json 2>/dev/null", { timeoutMs: 20000 });
     const t = j.stdout.trim();
     if (t.startsWith("{")) {
       try {
@@ -301,7 +340,7 @@ export class LinuxDevice {
         if (o && typeof o === "object") return normalizeLinuxInfo(o, "json");
       } catch (e) { /* not JSON after all: the commands */ }
     }
-    const r = await this.run(LINUX_FACTS, { timeoutMs: 20000 });
+    const r = await this._run(LINUX_FACTS, { timeoutMs: 20000 });
     const o = {};
     for (const l of lines(r.stdout)) {
       const eq = l.indexOf("=");

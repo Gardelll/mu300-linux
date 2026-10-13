@@ -21,6 +21,13 @@ const ID_NUMBER = /(?<![0-9A-Za-z])\d{14,20}(?![0-9A-Za-z])/g;
 const PHONE = /(?<![0-9A-Za-z])\+\d[\d -]{6,18}\d(?![0-9A-Za-z])/g;
 // a MAC address (the Wi-Fi and Bluetooth addresses are per device)
 const MAC = /(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}(?![0-9A-Fa-f:])/g;
+// the value behind a name that says it is a secret or an identity: "PSK=...", "password: ...", "ro.serialno=...",
+// "SSID x imported" (the installer's own line about the hotspot it copied)
+const NAMED = /\b((?:wpa_)?passphrase|psk|password|passwd|pwhash|ssid|imei|imsi|iccid|msisdn|(?:ro\.(?:boot\.)?)?serialno|serial(?:[ _]number)?)(\s*[=:]\s*|\s+)("[^"]*"|'[^']*'|\S+)/gi;
+const KEEP_AFTER_NAME = /^(none|unchanged|kept|given|image|the|for|is|of|on|off|yes|no|not|\*\*\*|\[.*\]|•+.*)$/i;
+// an adb public key line, or any long run of base64 (a key, a hash of a password)
+const LONG_BASE64 = /(?<![A-Za-z0-9+/])[A-Za-z0-9+/]{120,}={0,2}/g;
+const CRYPT_HASH = /\$(?:1|5|6|y|2[aby])\$[^\s:'"]+/g;
 
 export class Masker {
   constructor() { this.secrets = []; }
@@ -36,7 +43,15 @@ export class Masker {
   mask(text) {
     let t = String(text);
     for (const s of this.secrets) t = t.replace(s.re, s.replacement);
-    return t.replace(ID_NUMBER, (m) => "[" + m.length + " digits]").replace(PHONE, "[phone number]")
+    return t.replace(CRYPT_HASH, "[password hash]").replace(LONG_BASE64, "[key]")
+      .replace(/\bSSID .* imported\b/g, "SSID [masked] imported")
+      .replace(NAMED, (m, name, sep, value) => (sep.trim() === "" && !/^ssid$/i.test(name) ? m : KEEP_AFTER_NAME.test(value) ? m : name + sep + "[masked]"))
+      .replace(ID_NUMBER, (m) => "[" + m.length + " digits]").replace(PHONE, "[phone number]")
       .replace(MAC, (m) => m.slice(0, 8) + ":••:••:••");
   }
 }
+
+// One masker for the whole page: every line a device printed goes through it before it is shown, kept or saved
+// (device.js applies it at the source, so no caller can forget). app.js adds the serial number and the password.
+export const pageMasker = new Masker();
+export const mask = (text) => pageMasker.mask(text);
