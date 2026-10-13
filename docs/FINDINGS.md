@@ -130,6 +130,7 @@ what replaced it. The table below gives each section's state.
 | 65 | An APN with a user name and a password (`AT+CGPCO`), and what else kanoqwq's APN page does | current (unit tests only; never sent to a modem) |
 | 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
 | 70 | adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it | current (unit tests; nothing of it measured on a device: the checklist is in the section) |
+| 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 
 ## Hardware and firmware facts
 
@@ -5226,3 +5227,30 @@ carries the change). `S` is the device's serial in `adb devices`, the computer a
     MU300 Linux, not Android", asks, prints `asking it over adb (MU300LINUX-...)`, and goes on once Android is up;
     the same with `install.ps1 -Check` on Windows. With `adb auth keys` and no key of that computer: over SSH as
     before.
+
+### 81. An update that brought another mu300-update ended with "another mu300-update is running"
+
+Found on the first device update to the v2026.10.24 pre-release (F50, Ubuntu 24.04, v2026.10.23 installed):
+
+    $ sudo mu300-update apply
+    another mu300-update is running (pid 33187)
+
+and nothing was updated. No other run existed, and 33187 was the run itself. `apply` takes the release's own
+`mu300-update` when it differs from the installed one, replaces the installed file and execs the new one: the same
+process, which then takes the lock again (`exec 9>>lock; flock -n 9`). The descriptor it replaces was the lock's
+holder, so that should succeed - but the dispatch starts the keep-alive after `lock_take`, a background loop of
+`ping` and `sleep 3` that inherits descriptor 9, and `keepalive_stop` ends the loop's shell, not the ping or sleep it
+is waiting for. For up to three seconds one of them still holds the lock, and the continued run's `flock -n` fails
+with its own process id in the message. It is a race: an update whose release has the same updater never execs
+(v2026.10.22 to v2026.10.23 on the same device went through), and one that does can win it. A second `mu300-update
+apply` always works, because the installed updater is the release's by then.
+
+The updater that leaves the stragglers behind is the installed one, which no release can change; the one that
+meets them is the release's. So the fix is in what meets them: when `flock` fails in a run that was continued
+(`MU300_SELF_UPDATED`) and the lock file names this process, the lock is this run's; it waits up to ten seconds for
+the descriptor to come free and goes on either way. Any other holder is refused as before. And the keep-alive now
+runs without the lock's descriptor (`9>&-`), so no later updater leaves this behind. Measured: the tests reproduce
+the failure with the old lock code under dash, bash and busybox sh on Linux (macOS has no `flock`; the pid-directory
+lock always knew a continued run by its pid). Devices that took the v2026.10.24 pre-release's updater are not
+affected by it again: their next update meets the fixed one.
+
