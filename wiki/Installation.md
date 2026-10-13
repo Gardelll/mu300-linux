@@ -224,9 +224,10 @@ U30 Air and finds the place by itself. There is no Ubuntu 26.04 zip with kernel 
 
 1. Put the zip on the device and open it in the Magisk app (Modules, Install from storage), or run
    `su -c 'magisk --install-module /sdcard/Download/<zip>'`. Not from recovery.
-2. Read the output: it shows the device, where Linux goes, what it writes and the **password it generated**, which
-   is also in `/data/adb/mu300-linux-password.txt` (read it with `su -c cat /data/adb/mu300-linux-password.txt`,
-   delete it after the first login).
+2. Read the output: it shows the device, where Linux goes, what it writes and **which password works** - the images'
+   own: Ubuntu's user `ubuntu` has the password `ubuntu`, OpenWrt's `root` has none until you set one (`passwd`, or
+   LuCI's System > Administration); `MU300_PASSWORD` in the settings file sets one of your own. The same note is in
+   `/data/adb/mu300-linux-password.txt` (`su -c cat /data/adb/mu300-linux-password.txt`).
 3. Reboot. If Linux does not start, the device returns to Android by itself.
 
 Magisk cannot ask questions, so choices go in a settings file, `mu300-install.conf`. Shrinking `userdata` is not

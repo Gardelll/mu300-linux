@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Thermisch"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "De thermische zones van de kernel, alleen-lezen. Een zone met drempelpunten beperkt de eraan gekoppelde koelapparaten bij haar passieve drempel; koelstand 0 betekent geen beperking."
+
+msgid "Zone"
+msgstr "Zone"
+
+msgid "Temperature"
+msgstr "Temperatuur"
+
+msgid "Trip points"
+msgstr "Drempelpunten"
+
+msgid "Cooling devices"
+msgstr "Koelapparaten"
+
 msgid "USB role"
 msgstr "USB-rol"
 
@@ -604,8 +622,17 @@ msgstr "Inhoud"
 msgid "Form (URL-encoded)"
 msgstr "Formulier (URL-gecodeerd)"
 
+msgid "Plain text"
+msgstr "Platte tekst"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Velden: sender, time, text, device, message (het ingevulde sjabloon)"
+
+msgid "Custom body"
+msgstr "Aangepaste body"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Leeg: de standaardvelden (platte tekst: het bericht). Plaatshouders: {sender}, {time}, {text}, {device}, {message}. Elke waarde wordt ge-escapet voor het gekozen type. Deze body wordt hier opnieuw getoond: zet geheimen in het adres of in een header."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Extra headers (één \"Naam: waarde\" per regel)"
@@ -766,6 +793,9 @@ msgstr "Totaal verzonden"
 msgid "Used today"
 msgstr "Vandaag gebruikt"
 
+msgid "SIM source"
+msgstr "SIM-bron"
+
 msgid "Session duration"
 msgstr "Sessieduur"
 
@@ -834,6 +864,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Provider"
+
+msgid "Own number"
+msgstr "Eigen nummer"
 
 msgid "Module"
 msgstr "Module"
@@ -973,8 +1006,17 @@ msgstr "Vergrendelen mislukt: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Netwerkvergrendelingen worden op automatisch gezet (SFUN-herstart, ongeveer 30 seconden)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Reset mislukt: %s. De opgeslagen vergrendelingsinstellingen zijn behouden."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Het resetten van de vergrendelingen is niet op tijd bevestigd; er wordt toch gewisseld."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Interne SIM gekozen: in gebruik na een herstart"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Interne SIM gekozen, maar niet ondersteund op dit apparaat: de externe SIM is in gebruik"
 
 msgid "Uptime %s"
 msgstr "Uptime %s"
@@ -1317,6 +1359,9 @@ msgstr "Status bevestigd"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Time-out bij teruglezen; kies „Vergrendelingsstatus vernieuwen”"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Reset geverifieerd: netwerkmodus automatisch, EN-DC aan, alle banden, geen celvergrendeling; de opgeslagen vergrendelingsinstellingen zijn gewist"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Toegepast (EN-DC vereist geen herstart van de radiostack)"
@@ -1739,6 +1784,15 @@ msgstr "Bericht (Enter om te verzenden, Shift+Enter voor nieuwe regel)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Verzenden gebruikt AT+CMGS (PDU-modus); probeer opnieuw als het kanaal bezet is. Gebruik het prullenbakpictogram op de ballon om één bericht te verwijderen."
 
+msgid "Sending…"
+msgstr "Verzenden…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Verzonden; de lijst wordt zo vernieuwd."
+
+msgid "Sending failed"
+msgstr "Verzenden mislukt"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchroniseren vanaf de SIM op de achtergrond (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Verwijderd (alleen lokaal)"
 
 msgid "Enter both a number and a message."
 msgstr "Voer zowel een nummer als een bericht in."
-
-msgid "Sending…"
-msgstr "Verzenden…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Verzonden; de lijst wordt zo vernieuwd."
-
-msgid "Sending failed"
-msgstr "Verzenden mislukt"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d berichten, %d ongelezen · %d gesprekken"
@@ -3026,6 +3071,9 @@ msgstr "Ongeldige filterlijst (hooguit 50 regels)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Het webhookadres moet een http://- of https://-URL zijn"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "De webhook-body is te lang of bevat een stuurteken"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Ongeldige header (één \"Naam: waarde\" per regel; Host, Content-Type, Content-Length, Transfer-Encoding en Connection stelt het apparaat in)"
 
@@ -3083,8 +3131,26 @@ msgstr "Het taalpakket kon niet worden verwijderd"
 msgid "Lock cache unavailable"
 msgstr "Vergrendelingscache niet beschikbaar"
 
+msgid "The saved locks could not be cleared"
+msgstr "De opgeslagen vergrendelingen konden niet worden gewist"
+
 msgid "No serving cell to lock to"
 msgstr "Geen serving cell om op te vergrendelen"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "De modem antwoordde niet op de modusopvraag; er is niets verzonden"
+
+msgid "The modem refused a write"
+msgstr "De modem weigerde een schrijfopdracht"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Het teruglezen komt niet overeen met de automatische waarden"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Het teruglezen na de herstart van de stack komt niet overeen met de automatische waarden"
+
+msgid "The reset was interrupted"
+msgstr "Het resetten is onderbroken"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Pakketten opnieuw installeren is op dit systeem niet beschikbaar"

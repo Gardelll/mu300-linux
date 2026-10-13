@@ -37,7 +37,8 @@ On OpenWrt leave out `sudo`. The module lives on the Linux partition (`/mnt/mu30
 latest release as one set. A tarball is installed only when its hash is in the `SHA256SUMS` next to it (v1 modules
 keep both their engines when upgraded). On OpenWrt with the control panel all of this is also in the panel's **VPN**
 menu (see [Control Panel (LuCI)](Control-Panel-(LuCI)#the-panels-pages)); on Ubuntu with the panel extra, the MU300
-page in Cockpit turns the VPN on and off and picks the profile.
+page in Cockpit turns the VPN on and off and picks the profile. Both panels, like `mu300-toolkit`, show their VPN
+section only once the module is installed: without it there is nothing of a VPN in them.
 
 ## Use it
 

@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Жылу"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Ядроның жылу аймақтары, тек оқу үшін. Шекті нүктелері бар аймақ өзіне байланған салқындату құрылғыларын пассивті шегінде шектейді; салқындату күйі 0 — шектеу жоқ."
+
+msgid "Zone"
+msgstr "Аймақ"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Шекті нүктелер"
+
+msgid "Cooling devices"
+msgstr "Салқындату құрылғылары"
+
 msgid "USB role"
 msgstr "USB рөлі"
 
@@ -604,8 +622,17 @@ msgstr "Мазмұны"
 msgid "Form (URL-encoded)"
 msgstr "Пішін (URL кодталған)"
 
+msgid "Plain text"
+msgstr "Қарапайым мәтін"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Өрістер: sender, time, text, device, message (толтырылған үлгі)"
+
+msgid "Custom body"
+msgstr "Өзіндік дене"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Бос: стандартты өрістер (қарапайым мәтін: хабарлама). Толтырғыштар: {sender}, {time}, {text}, {device}, {message}. Әр мән таңдалған түрге сай экрандалады. Бұл дене осында қайта көрсетіледі: құпияларды мекенжайда немесе тақырыпта сақтаңыз."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Қосымша тақырыптар (әр жолда бір \"Аты: мәні\")"
@@ -766,6 +793,9 @@ msgstr "Барлығы жіберілді"
 msgid "Used today"
 msgstr "Бүгін пайдаланылды"
 
+msgid "SIM source"
+msgstr "SIM көзі"
+
 msgid "Session duration"
 msgstr "Сеанс ұзақтығы"
 
@@ -834,6 +864,9 @@ msgstr "Модем"
 
 msgid "Carrier"
 msgstr "Оператор"
+
+msgid "Own number"
+msgstr "Өз нөмірі"
 
 msgid "Module"
 msgstr "Модуль"
@@ -973,8 +1006,17 @@ msgstr "Бекіту сәтсіз: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Желі құлыптары автоматтыға қайтарылуда (SFUN қайта іске қосу, шамамен 30 секунд)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Қалпына келтіру сәтсіз аяқталды: %s. Сақталған құлып параметрлері сақталды."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Құлыптарды тастау уақытында расталмады; бәрібір ауысады."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Ішкі SIM таңдалды: қайта жүктегеннен кейін қолданылады"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Ішкі SIM таңдалды, бірақ бұл құрылғыда қолдау көрсетілмейді: сыртқы SIM қолданылуда"
 
 msgid "Uptime %s"
 msgstr "Жұмыс уақыты %s"
@@ -1317,6 +1359,9 @@ msgstr "Күй расталды"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Қайта оқу уақыты өтті; «Бекіту күйін жаңарту» таңдаңыз"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Қалпына келтіру тексерілді: желі режимі автоматты, EN-DC қосулы, барлық жолақтар, ұяшық құлпы жоқ; сақталған құлып параметрлері өшірілді"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Қолданылды (EN-DC радиостекті қайта іске қосуды қажет етпейді)"
@@ -1739,6 +1784,15 @@ msgstr "Хабар (Enter — жіберу, Shift+Enter — жаңа жол)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Жіберу AT+CMGS (PDU режимі) арқылы жүреді; арна бос емес болса, қайталаңыз. Бір хабарды жою үшін оның көпіршігіндегі себет белгішесін басыңыз."
 
+msgid "Sending…"
+msgstr "Жіберілуде…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Жіберілді; тізім жақында жаңартылады."
+
+msgid "Sending failed"
+msgstr "Жіберу сәтсіз"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "SIM-нен фонда синхрондалуда (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Жойылды (тек жергілікті)"
 
 msgid "Enter both a number and a message."
 msgstr "Нөмірді де, хабарды да енгізіңіз."
-
-msgid "Sending…"
-msgstr "Жіберілуде…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Жіберілді; тізім жақында жаңартылады."
-
-msgid "Sending failed"
-msgstr "Жіберу сәтсіз"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d хабар, %d оқылмаған · %d сұхбат"
@@ -3026,6 +3071,9 @@ msgstr "Сүзгілер тізімі жарамсыз (ең көбі 50 жол)
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Вебхук мекенжайы http:// немесе https:// URL болуы керек"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhook денесі тым ұзын немесе басқару таңбасын қамтиды"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Жарамсыз тақырып (әр жолда бір \"Аты: мәні\"; Host, Content-Type, Content-Length, Transfer-Encoding және Connection құрылғымен орнатылады)"
 
@@ -3083,8 +3131,26 @@ msgstr "Тіл бумасын жою мүмкін болмады"
 msgid "Lock cache unavailable"
 msgstr "Бекіту кэші қолжетімсіз"
 
+msgid "The saved locks could not be cleared"
+msgstr "Сақталған құлыптарды өшіру мүмкін болмады"
+
 msgid "No serving cell to lock to"
 msgstr "Бекітетін қызмет көрсететін ұяшық жоқ"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Модем режим сұрауына жауап бермеді; ештеңе жіберілмеді"
+
+msgid "The modem refused a write"
+msgstr "Модем жазуды қабылдамады"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Кері оқу автоматты мәндерге сәйкес келмейді"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Стек қайта іске қосылғаннан кейінгі кері оқу автоматты мәндерге сәйкес келмейді"
+
+msgid "The reset was interrupted"
+msgstr "Қалпына келтіру үзілді"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Бұл жүйеде пакеттерді қайта орнату қолжетімсіз"

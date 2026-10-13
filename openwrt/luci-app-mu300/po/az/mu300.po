@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "İstilik"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Nüvənin istilik zonaları, yalnız oxunur. Keçid nöqtələri olan zona passiv keçid nöqtəsində ona bağlı soyutma cihazlarını məhdudlaşdırır; 0 soyutma vəziyyəti məhdudlaşdırma olmaması deməkdir."
+
+msgid "Zone"
+msgstr "Zona"
+
+msgid "Temperature"
+msgstr "Temperatur"
+
+msgid "Trip points"
+msgstr "Keçid nöqtələri"
+
+msgid "Cooling devices"
+msgstr "Soyutma cihazları"
+
 msgid "USB role"
 msgstr "USB rolu"
 
@@ -604,8 +622,17 @@ msgstr "Gövdə"
 msgid "Form (URL-encoded)"
 msgstr "Forma (URL kodlu)"
 
+msgid "Plain text"
+msgstr "Sadə mətn"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Sahələr: sender, time, text, device, message (doldurulmuş şablon)"
+
+msgid "Custom body"
+msgstr "Xüsusi gövdə"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Boş: standart sahələr (sadə mətn: mesaj). Yertutanlar: {sender}, {time}, {text}, {device}, {message}. Hər dəyər seçilmiş növə uyğun kodlanır. Bu gövdə burada yenidən göstərilir: gizli məlumatları ünvanda və ya başlıqda saxlayın."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Əlavə başlıqlar (hər sətirdə bir \"Ad: dəyər\")"
@@ -766,6 +793,9 @@ msgstr "Cəmi göndərilən"
 msgid "Used today"
 msgstr "Bu gün istifadə edilən"
 
+msgid "SIM source"
+msgstr "SIM mənbəyi"
+
 msgid "Session duration"
 msgstr "Sessiya müddəti"
 
@@ -834,6 +864,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operator"
+
+msgid "Own number"
+msgstr "Öz nömrə"
 
 msgid "Module"
 msgstr "Modul"
@@ -973,8 +1006,17 @@ msgstr "Kilidləmə uğursuz oldu: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Şəbəkə kilidləri avtomatikə qaytarılır (SFUN yenidən başlatma, təxminən 30 saniyə)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Sıfırlama alınmadı: %s. Saxlanmış kilid ayarları saxlanıldı."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Kilidlərin sıfırlanması vaxtında təsdiqlənmədi; yenə də keçilir."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Daxili SIM seçilib: yenidən başladıldıqdan sonra istifadə olunacaq"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Daxili SIM seçilib, lakin bu cihazda dəstəklənmir: xarici SIM istifadə olunur"
 
 msgid "Uptime %s"
 msgstr "İş müddəti %s"
@@ -1317,6 +1359,9 @@ msgstr "Status təsdiqləndi"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Geri oxuma vaxtı bitdi; “Kilid statusunu yenilə” seçin"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Sıfırlama təsdiqləndi: şəbəkə rejimi avtomatik, EN-DC açıq, bütün zolaqlar, hüceyrə kilidi yoxdur; saxlanmış kilid ayarları silindi"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Tətbiq edildi (EN-DC radio stekinin yenidən başladılmasını tələb etmir)"
@@ -1739,6 +1784,15 @@ msgstr "Mesaj (göndərmək üçün Enter, yeni sətir üçün Shift+Enter)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Göndərmə AT+CMGS (PDU rejimi) istifadə edir; kanal məşğuldursa, yenidən cəhd edin. Bir mesajı silmək üçün onun balonundakı zibil qutusu nişanından istifadə edin."
 
+msgid "Sending…"
+msgstr "Göndərilir…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Göndərildi; siyahı tezliklə yenilənəcək."
+
+msgid "Sending failed"
+msgstr "Göndərmə uğursuz oldu"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Arxa planda SIM-dən sinxronlaşdırılır (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Silindi (yalnız yerli)"
 
 msgid "Enter both a number and a message."
 msgstr "Həm nömrəni, həm də mesajı daxil edin."
-
-msgid "Sending…"
-msgstr "Göndərilir…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Göndərildi; siyahı tezliklə yenilənəcək."
-
-msgid "Sending failed"
-msgstr "Göndərmə uğursuz oldu"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mesaj, %d oxunmamış · %d söhbət"
@@ -3026,6 +3071,9 @@ msgstr "Yanlış filtr siyahısı (ən çox 50 sətir)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhook ünvanı http:// və ya https:// URL olmalıdır"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhook gövdəsi çox uzundur və ya idarəetmə simvolu ehtiva edir"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Yanlış başlıq (hər sətirdə bir \"Ad: dəyər\"; Host, Content-Type, Content-Length, Transfer-Encoding və Connection cihaz tərəfindən təyin edilir)"
 
@@ -3083,8 +3131,26 @@ msgstr "Dil paketini silmək mümkün olmadı"
 msgid "Lock cache unavailable"
 msgstr "Kilid keşi əlçatan deyil"
 
+msgid "The saved locks could not be cleared"
+msgstr "Saxlanmış kilidlər silinə bilmədi"
+
 msgid "No serving cell to lock to"
 msgstr "Kilidlənəcək xidmət edən hüceyrə yoxdur"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem rejim sorğusuna cavab vermədi; heç nə göndərilmədi"
+
+msgid "The modem refused a write"
+msgstr "Modem yazmağı rədd etdi"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Geri oxunma avtomatik dəyərlərlə uyğun gəlmir"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Stekin yenidən başladılmasından sonra geri oxunma avtomatik dəyərlərlə uyğun gəlmir"
+
+msgid "The reset was interrupted"
+msgstr "Sıfırlama yarımçıq qaldı"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Paketlərin yenidən quraşdırılması bu sistemdə mövcud deyil"

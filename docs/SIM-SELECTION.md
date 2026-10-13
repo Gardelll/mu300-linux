@@ -48,6 +48,32 @@ On systemd installations, `mu300-sim select` stores the choice in
 `/etc/mu300/sim-slot`; configure the selected carrier in the existing
 `/etc/mu300/mobile-data.conf`. The two-profile LuCI editor is OpenWrt-specific.
 
+## Devices without a supported slot-1 backend
+
+The F50 boot path and the U30 Air/OpenWrt native backend are separate implementations. On a device without a
+supported backend (including U30 Air outside OpenWrt),
+`mu300-sim select internal` refuses, `mu300-sim status --json` says `slot1_supported: 0`, and a saved
+`network.wan.sim_slot=1` is ignored for the boot (`mu300-sim: ignoring unsupported slot 1; using external slot 0`),
+so every reader - the WAN, the AT daemons, the dashboard - stays on the external card.
+
+The pages say so (issue #194; they offered the internal SIM on every device, and a U30 Air then showed the external
+card's operator with no hint why):
+
+- `dashboard-info` (the panel's local snapshot, `mu300dash sysinfo`/`status`) carries `"sim": {"slot": 0|1,
+  "wanted": 0|1, "slot1_supported": 0|1}` from `mu300-sim status --json` (`null` without the selector).
+- Network → Interfaces → WAN (`protocol/mu300cell.js`) reads it and does not offer **Internal SIM** where
+  `slot1_supported` is 0. If the configuration already has slot 1, the entry stays as "Internal SIM (slot 1): not
+  supported on this device", so the page shows what is saved; choosing the external SIM and saving puts it right.
+  Without the panel, or when the call fails, both sources are offered as before.
+- The home page's connection card gets a **SIM source** row only when the card asked for is not the one in use:
+  "not supported on this device: the external SIM is in use", or on the F50 "in use after a reboot".
+
+The U30 Air/OpenWrt backend has its own channel layout and broker-only cold start/live switch (PR #166).
+Its version-1 status retains `slot1_supported: 1` for these existing pages, alongside the separate
+`capabilities.boot_selection` and `capabilities.live_switch` fields. A failed/unknown current-card observation stays
+`active: null`; the dashboard does not turn the runtime routing pin into a confirmed active card. F50 retains its
+boot-only path. See `docs/U30AIR-SIM2.md` for the recorded 7.2.9 tests and the remaining device/kernel coverage.
+
 ## Why the data-route command is needed
 
 On the tested F50, the internal card registered, received a PDP address, and

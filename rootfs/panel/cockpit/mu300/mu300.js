@@ -400,10 +400,15 @@
     };
 
     /* ---- the frame ---------------------------------------------------------------------------------------- */
-    var TABS = [ [ 'overview', _('Overview') ], [ 'sms', _('SMS') ], [ 'vpn', _('VPN') ], [ 'power', _('Power and CPU') ],
+    var TABS = [ [ 'overview', _('Overview') ], [ 'sms', _('SMS') ], [ 'power', _('Power and CPU') ],
         [ 'wifi', _('Wi-Fi') ], [ 'updates', _('Updates') ] ];
+    /* The VPN tab only when the VPN module is installed: its mu300-vpn in the vpn extra on the disk, the test
+     * mu300-extra itself uses (vpn_module_in). Without the module the page says nothing of a VPN; the module is
+     * installed with mu300-extra install vpn, and the tab is there at the next load. */
+    var VPN_MODULE = '/mnt/mu300-disk/extra/vpn/bin/mu300-vpn';
+    var vpnOn = false;
     function show(name) {
-        if (!pages[name]) name = 'overview';
+        if (!pages[name] || (name === 'vpn' && !vpnOn)) name = 'overview';
         stopTimers();
         current = name;
         Array.prototype.forEach.call(document.querySelectorAll('.mu-tab'), function (t) {
@@ -413,19 +418,28 @@
         pages[name](main);
         if (cockpit.location.path[0] !== name) cockpit.location.go([ name ]);
     }
+    function tab(name, label) {
+        return el('button', { 'class': 'mu-tab', type: 'button', 'data-tab': name, text: label,
+            onclick: function () { show(name); } });
+    }
     function start() {
         var app = document.getElementById('app');
         var nav = el('nav', { 'class': 'mu-tabs' });
-        TABS.forEach(function (t) {
-            nav.appendChild(el('button', { 'class': 'mu-tab', type: 'button', 'data-tab': t[0], text: t[1],
-                onclick: function () { show(t[0]); } }));
-        });
+        var tabs = {};
+        TABS.forEach(function (t) { tabs[t[0]] = nav.appendChild(tab(t[0], t[1])); });
         app.appendChild(el('h1', { text: 'MU300' }));
         app.appendChild(nav);
         app.appendChild(el('div', { id: 'mu-toast' }));
         app.appendChild(el('main', { id: 'mu-main' }));
         cockpit.translate();
-        show(cockpit.location.path[0] || 'overview');
+        var want = cockpit.location.path[0] || 'overview';
+        /* a cheap check (no shell): with the module, the tab goes in before Power and the tab asked for is shown */
+        var vpn = cmd([ 'test', '-x', VPN_MODULE ]).then(function () {
+            vpnOn = true;
+            nav.insertBefore(tab('vpn', _('VPN')), tabs.power);
+        }, function () {});
+        if (want === 'vpn') vpn.then(function () { show(want); });
+        else show(want);
         cockpit.addEventListener('locationchanged', function () {
             if (cockpit.location.path[0] !== current) show(cockpit.location.path[0]);
         });

@@ -247,3 +247,36 @@ The updater's two Linux lock-fixture failures also reproduced on untouched
 main: its final `sleep` could replace the test shell and erase the updater
 cmdline. Keeping the shell alive with a child plus `wait` fixes that fixture;
 all 44 updater tests now pass. These are local results, not a GitHub CI pass.
+
+
+## v2026.10.23 integration follow-up (2026-10-13)
+
+The #73 follow-up branch now merges main `da47e3b` (v2026.10.23) while retaining
+#166's reviewed base and the shared selector/startup fixes above. The merge keeps
+the new SMS transaction mutex, direct-delivery spool and asynchronous rpcd SMS
+job/ACL changes. FINDINGS keeps main's numbering and records the U30 facts as §57.
+
+The U30 status now also reports `slot1_supported: 1`, matching #198's existing
+WAN form/home-page contract without replacing version-1 capabilities. The field
+is produced only by the positively gated U30 Air/OpenWrt backend; the F50 boot-only
+and unsupported-device paths remain separate. The dashboard takes its displayed
+active SIM from the public status, not the routing pin: an unknown active card
+leaves the summary null, while the pinned bearer still determines network counters.
+
+Tests run the real shared selector and U30 status backend with a fake root and
+recorded AT command stub, covering current SIM1/SIM2, saved next-boot SIM2, unknown
+active state, preserved choice and both WAN-form options. The JavaScript checks
+ran with Node rather than being skipped. No AT commands were issued by status.
+
+Local regression: 391 tests across selector, cold startup, live switching, netifd,
+rpcd, dashboard startup/snapshot, translations, updater, static checks, and the
+AT/owner/mobile-data/SIPA scripts passed (one optional real-jsonfilter check
+skipped). Locale, shell syntax and diff checks passed. The two native snapshot
+cases were rerun after making their AT stub explicit and passed. These are local
+checks, not a GitHub CI result.
+
+No new device run was performed for this revision. The recorded hardware tests
+above are on 7.2.9; the 5.4-kernel unit offered in Issue #194, two cards both with
+data service, empty/PIN-locked slots, physical power removal and fresh-image
+assembly still need their own evidence. Keep the code and test records in #73/#166
+for the maintainer's public integration and guarded test build.

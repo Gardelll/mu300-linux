@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Termal"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Zona termal kernel, hanya baca. Zona dengan titik pemicu membatasi perangkat pendingin yang terikat padanya pada titik pasifnya; status pendinginan 0 berarti tidak ada pembatasan."
+
+msgid "Zone"
+msgstr "Zona"
+
+msgid "Temperature"
+msgstr "Suhu"
+
+msgid "Trip points"
+msgstr "Titik pemicu"
+
+msgid "Cooling devices"
+msgstr "Perangkat pendingin"
+
 msgid "USB role"
 msgstr "Peran USB"
 
@@ -604,8 +622,17 @@ msgstr "Isi"
 msgid "Form (URL-encoded)"
 msgstr "Formulir (dienkode URL)"
 
+msgid "Plain text"
+msgstr "Teks biasa"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Kolom: sender, time, text, device, message (templat yang sudah diisi)"
+
+msgid "Custom body"
+msgstr "Isi kustom"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Kosong: bidang standar (teks biasa: pesannya). Placeholder: {sender}, {time}, {text}, {device}, {message}. Setiap nilai di-escape sesuai jenis yang dipilih. Isi ini ditampilkan lagi di sini: simpan rahasia di alamat atau di header."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Header tambahan (satu \"Nama: nilai\" per baris)"
@@ -766,6 +793,9 @@ msgstr "Total dikirim"
 msgid "Used today"
 msgstr "Terpakai hari ini"
 
+msgid "SIM source"
+msgstr "Sumber SIM"
+
 msgid "Session duration"
 msgstr "Durasi sesi"
 
@@ -834,6 +864,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operator"
+
+msgid "Own number"
+msgstr "Nomor sendiri"
 
 msgid "Module"
 msgstr "Modul"
@@ -973,8 +1006,17 @@ msgstr "Gagal mengunci: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Mengembalikan kunci jaringan ke otomatis (restart SFUN, sekitar 30 detik)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Pengaturan ulang gagal: %s. Pengaturan kunci yang tersimpan dipertahankan."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Reset kunci tidak terkonfirmasi tepat waktu; tetap beralih."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "SIM internal dipilih: digunakan setelah boot ulang"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "SIM internal dipilih, tetapi tidak didukung di perangkat ini: SIM eksternal yang digunakan"
 
 msgid "Uptime %s"
 msgstr "Waktu aktif %s"
@@ -1317,6 +1359,9 @@ msgstr "Status dipastikan"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Waktu pembacaan habis; pilih “Segarkan status kunci”"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Pengaturan ulang terverifikasi: mode jaringan otomatis, EN-DC aktif, semua band, tanpa kunci sel; pengaturan kunci yang tersimpan dihapus"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Diterapkan (EN-DC tidak memerlukan mulai ulang stack radio)"
@@ -1739,6 +1784,15 @@ msgstr "Pesan (Enter untuk mengirim, Shift+Enter untuk baris baru)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Pengiriman menggunakan AT+CMGS (mode PDU); coba lagi jika kanal sibuk. Untuk menghapus satu pesan, gunakan ikon tempat sampah pada gelembungnya."
 
+msgid "Sending…"
+msgstr "Mengirim…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Terkirim; daftar akan segera disegarkan."
+
+msgid "Sending failed"
+msgstr "Gagal mengirim"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Menyinkronkan dari SIM di latar belakang (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Dihapus (hanya lokal)"
 
 msgid "Enter both a number and a message."
 msgstr "Masukkan nomor dan pesan."
-
-msgid "Sending…"
-msgstr "Mengirim…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Terkirim; daftar akan segera disegarkan."
-
-msgid "Sending failed"
-msgstr "Gagal mengirim"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d pesan, %d belum dibaca · %d percakapan"
@@ -3026,6 +3071,9 @@ msgstr "Daftar filter tidak valid (paling banyak 50 baris)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Alamat webhook harus berupa URL http:// atau https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Isi webhook terlalu panjang atau mengandung karakter kontrol"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Header tidak valid (satu \"Nama: nilai\" per baris; Host, Content-Type, Content-Length, Transfer-Encoding, dan Connection diatur oleh perangkat)"
 
@@ -3083,8 +3131,26 @@ msgstr "Paket bahasa tidak dapat dihapus"
 msgid "Lock cache unavailable"
 msgstr "Cache kunci tidak tersedia"
 
+msgid "The saved locks could not be cleared"
+msgstr "Kunci yang tersimpan tidak dapat dihapus"
+
 msgid "No serving cell to lock to"
 msgstr "Tidak ada sel layanan untuk dikunci"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem tidak menjawab kueri mode; tidak ada yang dikirim"
+
+msgid "The modem refused a write"
+msgstr "Modem menolak sebuah penulisan"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Pembacaan ulang tidak cocok dengan nilai otomatis"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Pembacaan ulang setelah tumpukan dimulai ulang tidak cocok dengan nilai otomatis"
+
+msgid "The reset was interrupted"
+msgstr "Pengaturan ulang terputus"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Pemasangan ulang paket tidak tersedia di sistem ini"

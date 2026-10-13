@@ -198,9 +198,13 @@ write_linux_boot() {
     adb push "$_wb.misc-slot-$LINUX_SLOT-trial.bin" $T/mu300-bc.bin >/dev/null
     [ "$(su_do "sha256sum $T/mu300-boot.img" | cut -d' ' -f1)" = "$EXP" ] || die "$(t 'pushed boot image hash mismatch')"
     su_do "dd if=$T/mu300-boot.img of=/dev/block/by-name/boot_$LINUX_SLOT bs=4M && sync"
-    [ "$(su_do "sha256sum /dev/block/by-name/boot_$LINUX_SLOT" | cut -d' ' -f1)" = "$EXP" ] ||
+    # read back from the medium (the page cache dropped first): exactly the image's length in whole 4096-byte blocks,
+    # into a file, by one dd whose status counts - a read error leaves no hash to compare instead of a wrong one that
+    # looks like anything (FINDINGS 50). A mismatch stops here: misc is not written, Android keeps booting.
+    _len=$(wc -c < "$1" | tr -d ' ')
+    [ "$(su_do "echo 3 > /proc/sys/vm/drop_caches; dd if=/dev/block/by-name/boot_$LINUX_SLOT of=$T/mu300-boot.rb bs=4096 count=$(( (_len + 4095) / 4096 )) 2>/dev/null && head -c $_len $T/mu300-boot.rb | sha256sum" | cut -d' ' -f1)" = "$EXP" ] ||
         die "$(t 'boot_{1} verify failed (slot {2} still active, Android keeps booting)' "$LINUX_SLOT" "$ANDROID_SLOT")"
-    su_do "dd if=$T/mu300-bc.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc.bin"
+    su_do "dd if=$T/mu300-bc.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc.bin $T/mu300-boot.rb"
 }
 # --- slot end
 slot_setup
@@ -793,7 +797,10 @@ env=$(mktemp)
 write_install_env > "$env"
 adb push "$env" $T/mu300-install.env >/dev/null; rm -f "$env"
 su_do "sh $T/android-install.sh" | tee "$WORK/device-install.log"
-grep -q MU300-INSTALL-OK "$WORK/device-install.log" || die "$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")"
+# a timed-out SD-card stage (FINDINGS 50) names itself in that log, with the way out (reboot Android first)
+grep -q MU300-INSTALL-OK "$WORK/device-install.log" ||
+    die "$(t 'installation on the device failed; boot_{1} and misc were not changed' "$LINUX_SLOT")
+$(t 'the device log was kept at {1}' "$WORK/device-install.log")"
 bootchain_pull
 
 write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"

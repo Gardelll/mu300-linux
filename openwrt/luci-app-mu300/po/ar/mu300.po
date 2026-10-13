@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "الحرارة"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "مناطق الحرارة في النواة، للقراءة فقط. المنطقة التي لها نقاط عتبة تخنق أجهزة التبريد المرتبطة بها عند عتبتها السلبية؛ حالة تبريد 0 تعني عدم وجود خنق."
+
+msgid "Zone"
+msgstr "المنطقة"
+
+msgid "Temperature"
+msgstr "درجة الحرارة"
+
+msgid "Trip points"
+msgstr "نقاط العتبة"
+
+msgid "Cooling devices"
+msgstr "أجهزة التبريد"
+
 msgid "USB role"
 msgstr "دور USB"
 
@@ -604,8 +622,17 @@ msgstr "المحتوى"
 msgid "Form (URL-encoded)"
 msgstr "نموذج (ترميز URL)"
 
+msgid "Plain text"
+msgstr "نص عادي"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "الحقول: sender، time، text، device، message (القالب بعد ملئه)"
+
+msgid "Custom body"
+msgstr "نص طلب مخصص"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "فارغ: الحقول القياسية (نص عادي: الرسالة). العناصر النائبة: {sender}، {time}، {text}، {device}، {message}. تُهرَّب كل قيمة بحسب النوع المختار. يُعرض هذا النص هنا مجددًا: ضع الأسرار في العنوان أو في ترويسة."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "ترويسات إضافية (واحدة \"Name: value\" في كل سطر)"
@@ -766,6 +793,9 @@ msgstr "إجمالي المرسَل"
 msgid "Used today"
 msgstr "المستخدم اليوم"
 
+msgid "SIM source"
+msgstr "مصدر SIM"
+
 msgid "Session duration"
 msgstr "مدة الجلسة"
 
@@ -834,6 +864,9 @@ msgstr "المودم"
 
 msgid "Carrier"
 msgstr "المشغّل"
+
+msgid "Own number"
+msgstr "الرقم الخاص"
 
 msgid "Module"
 msgstr "الوحدة"
@@ -973,8 +1006,17 @@ msgstr "فشل القفل: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "جارٍ إعادة أقفال الشبكة إلى الوضع التلقائي (إعادة تشغيل SFUN، نحو 30 ثانية)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "فشلت إعادة الضبط: %s. تم الاحتفاظ بإعدادات القفل المحفوظة."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "لم يُؤكَّد إعادة ضبط الأقفال في الوقت المحدد؛ سيتم التبديل على أي حال."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "تم اختيار SIM الداخلية: تُستخدم بعد إعادة التشغيل"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "تم اختيار SIM الداخلية لكنها غير مدعومة على هذا الجهاز: تُستخدم SIM الخارجية"
 
 msgid "Uptime %s"
 msgstr "مدة التشغيل %s"
@@ -1317,6 +1359,9 @@ msgstr "تم تأكيد الحالة"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "انتهت مهلة القراءة؛ اختر «تحديث حالة القفل»"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "تم التحقق من إعادة الضبط: وضع الشبكة تلقائي، EN-DC مفعّل، كل النطاقات، لا قفل خلية؛ تم مسح إعدادات القفل المحفوظة"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "تم التطبيق (لا يتطلب EN-DC إعادة تشغيل حزمة الراديو)"
@@ -1739,6 +1784,15 @@ msgstr "الرسالة (Enter للإرسال، Shift+Enter لسطر جديد)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "يستخدم الإرسال AT+CMGS (وضع PDU)؛ أعد المحاولة إذا كانت القناة مشغولة. لحذف رسالة واحدة، استخدم أيقونة سلة المهملات على فقاعتها."
 
+msgid "Sending…"
+msgstr "جارٍ الإرسال…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "تم الإرسال؛ ستُحدَّث القائمة قريباً."
+
+msgid "Sending failed"
+msgstr "فشل الإرسال"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "جارٍ المزامنة من SIM في الخلفية (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "تم الحذف (محلياً فقط)"
 
 msgid "Enter both a number and a message."
 msgstr "أدخل رقماً ورسالة معاً."
-
-msgid "Sending…"
-msgstr "جارٍ الإرسال…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "تم الإرسال؛ ستُحدَّث القائمة قريباً."
-
-msgid "Sending failed"
-msgstr "فشل الإرسال"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d رسالة، %d غير مقروءة · %d محادثة"
@@ -3026,6 +3071,9 @@ msgstr "قائمة تصفية غير صالحة (50 سطرًا على الأكث
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "يجب أن يكون عنوان webhook عنوان URL يبدأ بـ http:// أو https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "نص طلب الـ webhook طويل جدًا أو يحتوي على محرف تحكم"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "ترويسة غير صالحة (واحدة \"Name: value\" في كل سطر؛ يضبط الجهاز Host وContent-Type وContent-Length وTransfer-Encoding وConnection)"
 
@@ -3083,8 +3131,26 @@ msgstr "تعذّرت إزالة حزمة اللغات"
 msgid "Lock cache unavailable"
 msgstr "ذاكرة التخزين المؤقت للأقفال غير متاحة"
 
+msgid "The saved locks could not be cleared"
+msgstr "تعذر مسح الأقفال المحفوظة"
+
 msgid "No serving cell to lock to"
 msgstr "لا توجد خلية خادمة للقفل عليها"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "لم يرد المودم على استعلام الوضع؛ لم يُرسل شيء"
+
+msgid "The modem refused a write"
+msgstr "رفض المودم عملية كتابة"
+
+msgid "The read-back does not match the automatic values"
+msgstr "القراءة المرتجعة لا تطابق القيم التلقائية"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "القراءة المرتجعة بعد إعادة تشغيل المكدس لا تطابق القيم التلقائية"
+
+msgid "The reset was interrupted"
+msgstr "تمت مقاطعة إعادة الضبط"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "إعادة تثبيت الحزم غير متاحة على هذا النظام"

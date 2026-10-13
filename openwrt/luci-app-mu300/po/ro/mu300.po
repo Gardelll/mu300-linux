@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Termic"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Zonele termice ale kernelului, doar citire. O zonă cu puncte de prag limitează dispozitivele de răcire legate de ea la pragul său pasiv; o stare de răcire 0 înseamnă fără limitare."
+
+msgid "Zone"
+msgstr "Zonă"
+
+msgid "Temperature"
+msgstr "Temperatură"
+
+msgid "Trip points"
+msgstr "Puncte de prag"
+
+msgid "Cooling devices"
+msgstr "Dispozitive de răcire"
+
 msgid "USB role"
 msgstr "Rol USB"
 
@@ -604,8 +622,17 @@ msgstr "Corp"
 msgid "Form (URL-encoded)"
 msgstr "Formular (codificat URL)"
 
+msgid "Plain text"
+msgstr "Text simplu"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Câmpuri: sender, time, text, device, message (șablonul completat)"
+
+msgid "Custom body"
+msgstr "Corp personalizat"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Gol: câmpurile standard (text simplu: mesajul). Substituenți: {sender}, {time}, {text}, {device}, {message}. Fiecare valoare este escapată potrivit tipului ales. Acest corp este afișat din nou aici: păstrați secretele în adresă sau într-un antet."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Antete suplimentare (un \"Nume: valoare\" pe linie)"
@@ -766,6 +793,9 @@ msgstr "Total trimis"
 msgid "Used today"
 msgstr "Folosit azi"
 
+msgid "SIM source"
+msgstr "Sursă SIM"
+
 msgid "Session duration"
 msgstr "Durata sesiunii"
 
@@ -834,6 +864,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operator"
+
+msgid "Own number"
+msgstr "Număr propriu"
 
 msgid "Module"
 msgstr "Modul"
@@ -973,8 +1006,17 @@ msgstr "Blocarea a eșuat: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Se resetează blocările de rețea la automat (repornire SFUN, circa 30 de secunde)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Resetarea a eșuat: %s. Setările de blocare salvate au fost păstrate."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Resetarea blocărilor nu a fost confirmată la timp; se comută oricum."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "SIM intern selectat: folosit după o repornire"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "SIM intern selectat, dar neacceptat pe acest dispozitiv: se folosește SIM-ul extern"
 
 msgid "Uptime %s"
 msgstr "Timp de funcționare %s"
@@ -1317,6 +1359,9 @@ msgstr "Stare confirmată"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Citirea de verificare a expirat; selectați „Reîmprospătare stare blocări”"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Resetare verificată: mod de rețea automatic, EN-DC pornit, toate benzile, fără blocare de celulă; setările de blocare salvate au fost șterse"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Aplicat (EN-DC nu necesită repornirea stivei radio)"
@@ -1739,6 +1784,15 @@ msgstr "Mesaj (Enter pentru trimitere, Shift+Enter pentru rând nou)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Trimiterea folosește AT+CMGS (mod PDU); reîncercați dacă canalul este ocupat. Pentru a șterge un mesaj, folosiți pictograma coș de pe bula acestuia."
 
+msgid "Sending…"
+msgstr "Se trimite…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Trimis; lista se reîmprospătează în curând."
+
+msgid "Sending failed"
+msgstr "Trimiterea a eșuat"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Se sincronizează din SIM în fundal (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Șters (doar local)"
 
 msgid "Enter both a number and a message."
 msgstr "Introduceți atât un număr, cât și un mesaj."
-
-msgid "Sending…"
-msgstr "Se trimite…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Trimis; lista se reîmprospătează în curând."
-
-msgid "Sending failed"
-msgstr "Trimiterea a eșuat"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mesaje, %d necitite · %d conversații"
@@ -3026,6 +3071,9 @@ msgstr "Listă de filtre nevalidă (cel mult 50 de linii)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Adresa webhookului trebuie să fie un URL http:// sau https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Corpul webhook-ului este prea lung sau conține un caracter de control"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Antet nevalid (un \"Nume: valoare\" pe linie; Host, Content-Type, Content-Length, Transfer-Encoding și Connection sunt setate de dispozitiv)"
 
@@ -3083,8 +3131,26 @@ msgstr "Pachetul de limbi nu a putut fi eliminat"
 msgid "Lock cache unavailable"
 msgstr "Cache-ul blocărilor nu este disponibil"
 
+msgid "The saved locks could not be cleared"
+msgstr "Blocările salvate nu au putut fi șterse"
+
 msgid "No serving cell to lock to"
 msgstr "Nicio celulă de servire pe care să se blocheze"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modemul nu a răspuns la interogarea modului; nu s-a trimis nimic"
+
+msgid "The modem refused a write"
+msgstr "Modemul a refuzat o scriere"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Recitirea nu corespunde valorilor automate"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Recitirea după repornirea stivei nu corespunde valorilor automate"
+
+msgid "The reset was interrupted"
+msgstr "Resetarea a fost întreruptă"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Reinstalarea pachetelor nu este disponibilă pe acest sistem"

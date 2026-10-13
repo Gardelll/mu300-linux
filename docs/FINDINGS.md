@@ -109,6 +109,19 @@ what replaced it. The table below gives each section's state.
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
+| 45 | `rmmod sprd_wlan_combo` panicked in `__run_timers` (issue #146) | current (fixed) |
+| 46 | SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176) | current (fixed) |
+| 47 | A system the Magisk zip added beside another had a password nobody saw (#167) | current (fixed) |
+| 48 | The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel | current (F50-B, 7.2.10); U30 Air and 6.18 on a board untested |
+| 49 | The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only | current (U30 Air, Vodafone TR: CNUM answers) |
+| 50 | Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot | current; the timeout path not yet seen on a device |
+| 51 | SMS delivered directly (+CMT), acknowledged only once the pool has it; the SIM path stays as the fallback | current |
+| 52 | The lock reset deleted the saved locks whether or not the modem took them: a verified reset | current (fixed) |
+| 53 | A carrier name shown as hex: UCS2 from a modem whose character set is not UCS2 (#174) | current (fixed; unit tests and a user's report, not measured on our boards) |
+| 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
+| 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
+| 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
+| 57 | The U30 Air's second SIM: hardware facts and the reconciled selector behind PR #73/#166 | current (U30 Air, OpenWrt 25.12.5/7.2.9; other kernels untested) |
 
 ## Hardware and firmware facts
 
@@ -998,6 +1011,18 @@ stayed in Linux with `stage=boot-locked (no backstop)`.
 * Measured with N = 5 on OpenWrt, with boot-ok suppressed for two boots: LK booted slot b from `tries = 6`, then
   from 5, then from 4 - two unconfirmed boots in a row stayed in Linux - and the next good boot re-armed 6. Not
   run to exhaustion; the rollback at `tries = 1` is the LK behaviour above.
+
+**Update 2026-10-12: "Reboot to start the updated openwrt-luci" when a reboot starts Android.** A U30 Air with
+Linux on slot a (Android on b) was updated v2026.10.17 -> v2026.10.20 from a Linux boot, and the reboot went to
+Android. The image was fine: `/etc/mu300/default-boot` said `android` (the device had been switched to Android by
+hand earlier), so that boot was itself a one-shot trial armed from Android, and the init log of it says exactly
+that - `stage=misc-restored` (init writing Android's slot block back, §1) and no `stage=default-boot-linux`, with
+`.mu300/boot-tries` at 0 (no backstop ever fired; the updated kernel had come up in 4.9 s). `mu300-update`'s
+`--trial` is a quiet no-op in that state (`mu300-next-boot` answers "default boot is not linux, nothing to do" and
+exits 0), and its last line still promised a reboot. Now `mu300-next-boot --trial` exits 3 when there is nothing to
+arm and 1 when it can only write the initramfs' one-shot block (one boot, not N, §32); `mu300-update` says both, and
+what it prints last after a boot image, a system or a kernel changed is how to start Linux by hand (`mu300-linux`)
+instead of a reboot that goes the other way.
 
 **Boot-ok used to wait for every service.** It was ordered `After=multi-user.target`, so one service that never
 finished - `mobile-data` stuck on a busy AT channel in an older Ubuntu image - kept the boot unconfirmed however
@@ -1908,6 +1933,27 @@ with 0, 30, 1 and 1 s between). Each time "card aaaa removed", then "new UHS-I s
 or crc lines. A rebind is a fresh probe with a power cycle of the slot, so it is not the case above (a host that had
 polled an empty slot for minutes); that one needs a card put in by hand and stays open. No kernel change was made.
 
+**Why the CD GPIO was out of reach, and the empty slot's log noise (issue #181).** Mainline's `gpio-eic-sprd.c`
+maps at most three banks of eight lines per controller (`SPRD_EIC_MAX_BANK 3`, the SC9860's layout); the UMS9620's
+sync controller lists six banks in its `reg` (`0x2000c0`, `0x2100c0` ... `0x2500c0`, Unisoc's `qogirn6pro.dtsi`),
+so the chip came up with 24 lines and line 35 (the fifth bank) was rejected by `of_gpio_simple_xlate()`: the GPIO
+lookup never found a chip and reported `-EPROBE_DEFER` for ever. Unisoc's 5.4 driver has `SPRD_EIC_MAX_BANK 8`
+(that is the "Got CD GPIO" of the 5.4 log). The fallback above (drop `cd-gpios`, `MMC_CAP_NEEDS_POLL`) is what made
+the empty slot noisy: `sdhci-sprd` has `SDHCI_QUIRK_BROKEN_CARD_DETECTION`, with which `sdhci_get_cd()` answers
+"present" whenever no CD GPIO is set, so every one-second poll ran a card initialisation (CMD0, CMD8, CMD55 ...)
+against nothing; a command the controller gives up on still produces a late command interrupt after the core has
+finished the request, and `sdhci_cmd_irq()` logs those at error level with a register dump ("Got command interrupt
+0x00000001 even though no command operation was in progress", `Cmd 0x371a` = CMD55, `0x081a` = CMD8, `Resp[0]
+0xffffffff`): 19 dumps in 9 minutes on the F50 under 7.2.10, none with a card in, none on the U30 Air (no slot).
+`upstream/patches/0014-gpio-eic-sprd-eight-EIC-banks.patch` raises the limit to Unisoc's 8 (nothing else in the
+driver depends on it: the bank count comes from `reg`, the interrupt handler walks the banks the chip has), so
+`mmc_of_parse()` finds the line at the first try, the port's fallback does not run, and the core requests the EIC
+line's interrupt (both edges; the sync EIC supports `IRQ_TYPE_EDGE_BOTH`) instead of polling: an empty slot is not
+touched after the one rescan at start, which `mmc_gpio_get_cd()` ends before any command. Expected on the device:
+`gpiochip3` with 48 lines, no "MU300: CD GPIO deferred" line, `cd-gpios` still in `/proc/device-tree`, no "Got
+command interrupt" dump, the slot's interrupt counter at rest, and a card inserted later found by the interrupt
+(the stuck-busy loop of the polled slot above may or may not recur: it needs the test by hand).
+
 ### 31k. The Linux filesystem on the SD card
 Measured on the F50 with the same SL32G card (29.7 GiB, 62331871 sectors in `mmcblk1p1`) on 2026-10-04/05, with
 the installer of this branch, the 6.18.55 #4 bundle and the v2026.10.08 root filesystems, Ubuntu 24.04 and OpenWrt
@@ -2731,6 +2777,46 @@ Left out: the native charger and fuel gauge (they replace patches 0006/0009-0011
 for every 7.2 kernel - the F50 runs the same one), capacity learning and the 0.1 % display (a full learning cycle
 was not verified by its author), the TCPM stack (PD at 5 V gives nothing over the Rp read), and the build's mu300-usb,
 which drops the boost and with it host mode on battery.
+
+### 33m. The ABSSV U30 Air's charger bus under mainline, and a pin controller (issue #102)
+
+A second U30 Air firmware variant, `U30Air_ABSSV1.0.0B14` (chip id `UMS9620-AB`; ours is `SSV1.0.0B14`): under
+6.18/7.2 the charger never binds (`bq256xx-charger 6-006b: error -19: no charger: -5`, an I2C NACK on the first
+register read), the battery discharges on the cable, and under Android and the project's 5.4 kernel the same unit
+charges. Bus 2 (the NFC tag) works in the same boot, so the I2C subsystem is fine; bus 6 is dead to every device on
+it. One trap the reporter found: `i2cget -y 6` fails on *every* kernel of this unit, Android included, while the
+in-kernel charger driver works - and `i2cdetect -y 6` wedges the controller until a reboot - so userspace SMBus
+reads prove nothing about this bus; only the driver's bind does.
+
+What the two stacks do with the bus-6 pads (SCL6/SDA6, pins 188/189 of the pin controller at 0x642e0000):
+
+- Mainline boots with the vendor DTB unchanged (upstream/README.md), so the DT the kernel sees is Unisoc's: the pin
+  controller `/soc/aon/pinctrl@2e0000` (`sprd,qogirn6pro-pinctrl`) with the board's groups, and `i2c@22a0000`
+  without `pinctrl-names`/`pinctrl-0`. No group names SCL6/SDA6 at all (42 groups: audio, eMMC, SIM, keypad), and
+  the board's own states on the controller are hogs named `gpio_4` ... `gpio_124`, not `default`, so the vendor
+  kernel applies none of them at probe either. On every kernel the pads are as LK left them.
+- Mainline had no pin controller driver for this SoC (only the SC9860's), so `/sys/kernel/debug/pinctrl` was empty
+  and nothing could set or even read a pad.
+
+Patch 0013 ports Unisoc's `pinctrl-sprd-qogirn6pro.c` (GPL-2.0, 511 pins) onto mainline's pinctrl-sprd core: the
+core takes the common/misc register offsets from the SoC driver (0x44/0x444 here, 0x20/0x4020 on the SC9860) and
+the pin encoding grows to Unisoc's (5-bit register index). It binds to the vendor DTB's node as it is. For the
+charger bus it does what a DT group would: it logs both pads' registers (the bootloader's state) and puts them on
+func1 (the pad's own function, the I2C) when they are not - `pinctrl_sprd_qogirn6pro.i2c6_fixup=0` only logs.
+Whether the ABSSV LK really leaves the pads elsewhere is the open question: the same LK boots 5.4 and mainline, and
+5.4 does not touch them either, so the first boot of the patched kernel on that unit decides (the log line
+`QOGIRN6PRO_SCL6: ctl 0x... (funcN) misc 0x..., iic_inf6_sel N`). The register addresses, for a `devmem` comparison
+between 7.2 and 5.4 on the same unit: IIC_INF6_SYS_SEL = bits 27:24 of 0x642e0020 (which AP controller drives pad
+pair 6; 6 on the reporter's unit under Android), SCL6/SDA6 control 0x642e0228/0x642e022c (function select in bits
+5:4: 0 = func1), their misc registers 0x642e0628/0x642e062c, and the i2c6 controller at 0x222a0000.
+
+What else differs between 5.4 and mainline on that bus, should the pads turn out identical: the vendor i2c driver
+sets `I2C_NACK_EN | I2C_TRANS_EN` in I2C_CTL where mainline sets `I2C_EN | I2C_INT_EN` only, and it has a soft reset
+(`RESET_AP_AHB_I2C6_SOFT_RST`) on a transfer timeout; both drivers take the same clocks (`CLK_I2C6_EB`,
+`CLK_AP_I2C6` from `ext_26m`) from the same DTB.
+
+On our (SSV) unit the pin controller must change nothing: the log shows the pads' state, and the fixup only writes
+when the function select is not func1.
 
 ### 34. LEDs, and the defects from a second board's test
 A second F50 (restored from F50 #1's backup, with its own eMMC and factory Wi-Fi address) was tested from a user's
@@ -3718,8 +3804,684 @@ Fix (`upstream/modules/sprd_wlan_combo`):
 
 Built for 6.18.56 and 7.2.10 (modules only). Device test: see the PR for #146.
 
+### 46. SMS sends failed with IMS "Busy Everywhere" until the SMSC was written back; the panel lost slow sends (#176)
 
-### 46. The U30 Air's second SIM: the hardware facts behind PR #73 (Snrat)
+Reported on openwrt-luci v2026.10.20, China Broadnet (PLMN 46015), U30-class board (UMS9620): every send from the
+panel to the carrier's service number failed, incoming messages worked. The modem's URC log had
+`+SPIMSREASON: 1,512,"SMS FAILED: CODE:600 REASON:Busy Everywhere"` (the IMS stack's SIP 600 on the submission),
+and the panel's operations log `sms_send - killed`. The reporter's one-shot test through the same mu300-atd, with two
+changes made together, succeeded at once (`+CMGS: 1`, `OK`, and the service answered within seconds):
+
+- `AT+CSCA?` answered `"2B38...",145` (the modem's CSCS is `"HEX"`, so the address reads as hexadecimal: `+86...`),
+  and that exact string and type were written back with `AT+CSCA="2B...",145` - the same value, not another SMSC, and
+  CSCS left alone. What this puts right inside the modem is not known; SMSC state after the IMS registration is the
+  guess. Only `OK` counted.
+- the whole send (CSCA, `AT+CMGF=0`, `AT+CMGS`) ran under one acquisition of mu300-at's client mutex
+  (`/run/mu300-at/lock`). mu300-sms took it once per command, so between its commands any other client (the panel's
+  collectors, mu300-smsd's sync) could run, and the modem's state between PDU mode and the submission was never
+  guaranteed to be what the previous command left.
+
+The two were changed together, so which one was decisive is not known. Both are now in mu300-sms's send:
+
+- `at_lock`: mu300-sms takes `$ATDIR/lock` itself, the way mu300-at does (a holder that is gone is taken over, the
+  wait is `MU300_AT_LOCK_WAIT` seconds of the clock, `mu300-at: busy` when it gives up, so the panel's verdict is
+  unchanged), and tells the mu300-at calls under it with `MU300_AT_LOCK_HELD=<pid>`. mu300-at borrows the lock only
+  when `lock/pid` names that live process; anything else and it takes the lock as before. The lock is released after
+  the submission, before the pool lock (a path holding the pool lock makes no AT call, so send and sync never wait
+  for each other - that rule stands).
+- `smsc_refresh`: `AT+CSCA?`, the address and type parsed strictly (`"[+0-9A-Fa-f]+",[0-9]{1,3}`), written back
+  unchanged. A query that fails or answers something else skips the refresh (logged on stderr), and a write the modem
+  refuses is logged and the send goes on: the SMSC in use is the same either way, and the submission's own answer
+  says what is wrong. Nothing ever picks another SMSC or touches CSCS.
+
+The submission stays one write, `AT+CMGS=N<CR><PDU><Ctrl-Z>`, as before. Waiting for the modem's `> ` prompt first
+would need a byte-wise read in mu300-atd (the prompt has no newline, so the daemon's line reads never see it; it is
+collected with the reply), and what `read -t` leaves in its variable when it times out on a partial line is not the
+same under every shell the daemon runs under (bash, busybox ash) and has not been measured on the device - in the one
+process that owns the channel, where a modem left waiting at the prompt for a PDU that never comes is a wedged
+channel. The reporter's successful send used the combined write too, as every send on the U30 Air has.
+
+The panel: `mu300dash sms_send` ran mu300-sms inside the rpcd call, which rpcd ends at 30 s, while mu300-sms waits
+up to 40 s for `+CMGS` (and its whole transaction longer). A slow send was killed with the call - the message gone out
+or not, with no result anywhere but a `killed` line. `sms_send` now validates and starts the send detached
+(`setsid mu300dash sms-job`, the at_job pattern), answering `started`; `sms_job` says `running` and then the verdict
+`sms_send` used to give (`ok`/`busy`/`Sending failed` with the modem's last line) with `done:1`; the page asks every
+second. A second send while one runs is `busy` (the AT channel is in use), never a second submission; a job that
+died without a result says so and is not resent. The job logs how the send went in the operations log (`sms_send
+result 2.31s ok`), which is what the report was missing.
+
+Device test (a U30 Air whose line answers `mu300-sms send 7000 KALAN` with a two-part reply): the send through
+`/opt/mu300/bin/mu300-sms send 7000 KALAN` must show `AT+CSCA?` and the same-value `AT+CSCA=` in the daemon's answer
+files, `/run/mu300-at/lock` gone afterwards, and the reply pooled; through the panel's SMS page the toast must go
+"Sending…" and then "Sent" with the operations log carrying `sms_send ... ok` and `sms_send result ... ok`.
+
+The Ubuntu side, `sms send` (every system's SMS tool, its own send path, no pool), has the same two since: the same
+`at_lock`/`at_unlock` and `smsc_refresh` (held only when the daemon's fifo is there - without it mu300-at opens the
+tty itself and takes no lock either), and the submission as the same one request `AT+CMGS=N<CR><PDU><Ctrl-Z>`. It
+used to send `AT+CMGS=N` as a request of its own and the PDU as another: the `> ` prompt has no line ending, so the
+daemon never saw an answer to the first (its whole 10 s), counted it as a silent command and drained up to 25 s
+before writing the PDU - and between the two any other client could get in. Device test (an F50-B with a registered
+SIM): `sudo sms send 7000 KALAN` must answer `sent (reference N)` within seconds, with `AT+CSCA?` and the same-value
+`AT+CSCA=` in the daemon's answer files, `/run/mu300-at/lock` gone afterwards, and `sudo sms list` showing the reply.
+
+### 47. A system the Magisk zip added beside another had a password nobody saw (#167)
+
+Reported as "cannot log in to openwrt-luci / openwrt" on a board that had Ubuntu first and the two OpenWrt systems
+added later with zips (F50-B). The one-boot image's `root:::` was the first suspect and a red herring: the installer
+always replaces that line. Found by mounting the board's Linux disk from Android and looking at the hashes without
+reading them: each added system's `root` had a proper SHA-512 hash - of a **random 12-character password** that
+`mu300-install.sh`'s `build_password` made because the install was a new system (`KEEP_PW=0`) and
+`mu300-install.conf` had no `MU300_PASSWORD`. That password was written only to `/data/adb/mu300-linux-password.txt`,
+a root-only file, and shown once in Magisk's output; every later zip replaced the file, so the second added system's
+password was in no file at all. The `ubuntu` account still had the password the user knew, and the panel's
+`mu300-os <os>` switch booted a system nobody could log in to. (`dropbear`/`rpcd` refusing *empty* passwords was not
+it.) The board was recovered with `tools/reset-password.sh openwrt-luci` from Android, which works for an added
+system too.
+
+Decision (the project owner's): the zip's password for a system it installs is **fixed and well known, like the
+images'** - Ubuntu's user `ubuntu` has the password `ubuntu`; OpenWrt's and openwrt-luci's `root` has no password
+(the empty field stock OpenWrt ships with: dropbear and LuCI let root in until one is set with `passwd` or in LuCI,
+System > Administration). No random password any more, neither for a first install nor for an added system. A
+`MU300_PASSWORD` in `/data/adb/mu300-install.conf` still wins when given (hashed with the bundled busybox's
+`mkpasswd` as before, for every system it installs); it is never shown or written down. An update of a system that
+has accounts of its own keeps carrying them over (`KEEP_PW`), as before; an empty OpenWrt root or an Ubuntu `ubuntu`
+that is still `ubuntu` counts as the images' default, not as a password to keep, so an update of such a system gets
+the default again (the same thing). `MU300_PASSWORD_RESET=yes` now means "the images' own password again".
+
+How: `build_password` hashes `ubuntu` for Ubuntu (a fresh salt each time) and leaves the hash empty for OpenWrt;
+`mu300-install.env` gets one more line, `PW_SET=1`, which tells `android-install.sh` to put `PWHASH` into the
+system's own account even when it is empty (OpenWrt's root without a password) - `PW_SET=0` is the update that keeps
+the accounts, and the computer installer, which never writes the key, behaves as before. `android-install.sh` no
+longer refuses a system whose account would be "empty or the image's default": those are the intended accounts now,
+and the mark that has `mu300-update` carry some `<os>.old`'s accounts over at boot is removed whatever the path. The
+plan, the closing message and the note in `/data/adb/mu300-linux-password.txt` say which account and password work
+(`password for root: none yet - set one with passwd, or in LuCI (System > Administration)`; `password for ubuntu:
+"ubuntu"`), in the three languages; the file keeps the other system's block as before, and holds no secret any more.
+Device test: a zip install of `openwrt` on a board that has Ubuntu must end with the `root: none yet` line, the file
+must note it under `user: root`, and `ssh root@192.168.77.1` into the booted OpenWrt must log in with no password;
+LuCI's login on openwrt-luci likewise, and `passwd` there must take.
+
+### 48. The stock virtual thermal zone on mainline (`mu300_thermal`), and thermal-guard's handoff to the kernel
+
+Under 6.18 and 7.2 nothing in the kernel throttled the CPUs: the mainline port registers the 19 on-die sensors
+(`sprd_thermal_r5p0`, §31) and the cpufreq cooling devices (`CONFIG_CPU_THERMAL`), but no thermal zone had a trip
+point, so the two never met and `thermal-guard` capped `scaling_max_freq` from userspace (85 °C a step down, 75 °C a
+step up, 105 °C power-off). kanoqwq's fork (clean-tf-7.2, 5c8c2f9) brought the kernel's own throttling back with an
+out-of-tree module; the review of 2026-10-11 deferred it for coordination with the guard and a device test. This is
+that work.
+
+**What the stock device tree says** (the F50's live DTB, decompiled; mainline boots the vendor DTB unchanged, §31):
+
+* The 19 physical zones (`lit0-3`, `mid4-6`, `big7`, `apcpu0/1`, `gpu`, `ai0/1`, `ank0-5`, …) have `polling-delay = 0`
+  and no `trips`; so have the four board NTC zones (`chg`, `nr`, `pa`, `board`).
+* One zone has trips: `soc-thmzone`, `polling-delay 1000` ms, `polling-delay-passive 100` ms, `sustainable-power
+  3000`. Trips: `trip-point@0` passive 70 000 mC (hysteresis 1 000), `trip-point@1` passive 85 000 (hysteresis
+  1 000), `soc_crit` critical 110 000 (hysteresis 2 000). Cooling maps, all on the 85 °C trip: `cpu@0` (contribution
+  1024), `cpu@400` (410), `cpu@700` (410), and five vendor nodes under `/cooling-devices` (`cluster0/1/2-cooling`
+  `sprd,cluster-cooling`; `gpu-cooling0` `sprd,mali-power-model`; `npu-cooling0` `sprd,npu-power-model`) that no mainline
+  driver registers.
+* Its sensor is `/virtual-sensor@0`, `compatible = "virtual-thermal"`, `#thermal-sensor-cells = 1`, with
+  `thmzone-cells` naming eleven of the physical **zones** (not sensors): `lit0`-`lit3`, `mid4`-`mid6`, `big7`, `gpu`,
+  `ai0`, `ai1`. The vendor kernel's `sprd_soc_thm` ("virtual-thermal") reports the hottest of them; that is the zone
+  `sprd_cpu_cooling` binds the clusters to on 5.4 (§18).
+
+**(a) an out-of-tree module, or (b) the device tree and the kernel config?** Mainline has nothing for (b): neither
+6.18.56 nor 7.2.10 has a driver matching `virtual-thermal` or any aggregating ("hottest of") thermal sensor
+(`grep -rl 'virtual-thermal\|aggregat' drivers/thermal/` is empty in both trees), and the trips cannot be moved onto a
+physical zone, because the kernel boots the vendor DTB as LK hands it over (a custom DTB hung in `setup_machine_fdt`,
+`upstream/README.md`). What is needed is a driver for that one sensor node; it can live in `upstream/port/` (built in,
+a new `Image`) or in `upstream/modules/` (loaded from the rootfs like the vendor modules). **Chosen: the module**,
+`upstream/modules/mu300_thermal` (after kanoqwq's, GPL-2.0, rewritten with the DT facts above and a probe that defers
+only while a physical zone is not registered yet and fails on a wrong tree): it needs no kernel image change, so no
+untested boot image on anyone's board; `build-modules.sh` builds it for both kernels and the bundles carry it; it is
+tested with `insmod`/`rmmod` on the release kernel; and the seconds between boot and `extra-modules` are covered by
+`thermal-guard` as before. The same source can become a built-in `port/` driver later if that ever matters. The
+module is 90 lines: it looks the eleven zones up by name (`thermal_of` names a zone after its node, so the node name
+is the zone type), registers itself with `devm_thermal_of_zone_register(dev, 0, ...)` and returns the hottest of the
+zones that read; a zone that fails to read is left out of that round (one flaky sensor must not silence the zone
+with the cooling maps bound to it), and only when none reads does `get_temp` fail - then the core logs it once,
+skips the update (no trip is evaluated, the cooling devices keep their state) and the zone's sysfs `temp` read fails
+too, which `thermal-guard` takes as "cap it myself" (below). Never is an unreadable sensor reported as cold. The
+thermal core does the rest: the zone
+with its trips, the cooling maps (the five vendor cooling nodes are ignored, `thermal_of_should_bind` only matches a
+registered cooling device's node), `step_wise` on the passive trips, and `thermal_zone_device_critical` at 110 °C
+(`hw_protection_action` defaults to shutdown in both kernels).
+
+**How the kernel's cap and ours compose.** `cpufreq_cooling` lowers a cluster through a frequency QoS request
+(`FREQ_QOS_MAX`); `scaling_max_freq` *shows* the resolved `policy->max` (the lowest of all requests) and *writing*
+it sets only the user request. So a profile's ceiling (`mu300-cpu`, `/run/mu300/cpu-ceiling`, PR #111) holds under
+the kernel's throttling without any help - the lower of the two wins, and when the kernel lifts its cap the ceiling
+is what is left - while `mu300-cpu status` reads the throttled value and reports `throttling` from the cooling
+devices' `cur_state`, as before. What must not happen is two controllers on one knob: `thermal-guard` stepping
+`scaling_max_freq` down at 85 °C while `step_wise` lowers the QoS at the same temperature, and later lifting a cap
+(ours) while the kernel still holds its own. Hence the handoff, in `thermal-guard`:
+
+* The kernel is told by its release: every 5.x we ship is the vendor kernel, which throttles and protects itself, so
+  there the guard only runs the LED alarm (as before). "A zone has trip points" no longer means "vendor": with the
+  module the mainline zone has them too, and on mainline the guard's 105 °C power-off must stay.
+* On mainline, every round: when an **enabled** zone with a **passive trip at or below HOT** (85 °C) has **every**
+  `cpufreq-*` cooling device bound to it (`thermal_zoneN/cdevK` links against `cooling_deviceM`, compared with `test
+  -ef`) and its `temp` **reads a number within 15 °C of the hottest reading** of the round (a zone whose sensors
+  all fail reads nothing; a stale or zero value sits far below the die, and a kernel that sees no heat would not
+  throttle), the kernel throttles and the guard only watches. On that transition it lifts the caps it set itself (a
+  marker, `/run/mu300/thermal-capped`, set at HOT and cleared when nothing is below the ceiling; it outlives a
+  restart, so a cap from before the module loaded does not stick for ever) back to the profile's ceiling, and leaves
+  `scaling_max_freq` alone from then on. A cap that is not ours (eco's 1.5 GHz, a profile's) is left. With the zone
+  gone (`rmmod`), a cluster left out of the maps, the zone disabled or its reading not to be trusted, it caps again,
+  with a log line on each transition. Bindings alone are not trusted: the handoff would otherwise fail open.
+* The 105 °C power-off stays on mainline in both states; the kernel's own 110 °C critical trip is the second line.
+  The LED alarm is unchanged on every kernel.
+
+`extra-modules` loads the module right after the PMIC watchdog: `modprobe mu300_thermal`, else `insmod` from the
+bundle's directory (`/lib/modules/<release>/mu300_thermal.ko` on OpenWrt, `extra/` on Ubuntu, where depmod may not
+have indexed a bundle yet); the vendor 5.4 kernel has no such file and nothing is tried. Tests
+(`tests/test_device_scripts.py`, `ThermalGuard` and `SipaDele`): the vendor kernel by release (LED only), mainline
+without the zone (caps, powers off), the handoff with the bound zone (no step at 90 °C, power-off at 105 °C still),
+a zone whose `temp` is missing, not a number, stale (40 °C against 90 °C sensors) or whose passive trips lie above
+HOT (all cap), a cluster left out, a disabled zone, no cooling device at all, the marker lifted on the handoff and
+after a restart, capping again when the zone is gone, and the loader's
+`modprobe`/`insmod`/already-loaded/failed paths; under dash, bash and (`test -ef`, `grep -qsx` on an unmatched glob
+checked separately) busybox ash.
+
+Built against the release trees: `mu300_thermal.ko` for 6.18.56 (`vermagic=6.18.56 SMP mod_unload aarch64`, 9 000
+bytes with BTF) and 7.2.10 (`vermagic=7.2.10 SMP preempt mod_unload aarch64`), no warning.
+
+**The panel.** System > CPU has a read-only "Thermal" card from standard thermal sysfs (`mu300-cpu status --json`'s
+new `thermal` array: every zone's type, temperature, trip points and the cooling devices bound to it with their
+states; zones with trips first). It writes nothing: the trips stay the device tree's (the fork's trip editor was not
+taken).
+
+**Device test (F50-B, Ubuntu 24.04, v2026.10.22, kernel 7.2.10, 2026-10-12).** The board had been up 5 minutes
+on the release kernel; the test copies of `thermal-guard` and `mu300-cpu` were put in place (the release ones kept
+and restored at the end) and `mu300_thermal.ko` (the 7.2.10 build) inserted by hand - nothing of the boot image or
+kernel changed.
+
+* Before: 19 zones, none with a trip point; cooling devices `cpufreq-cpu0` 0/9, `cpufreq-cpu4` 0/9, `cpufreq-cpu7`
+  0/10, `devfreq-23140000.gpu` 0/2; hottest 39.2 °C.
+* `insmod`: `mu300-virtual-thermal virtual-sensor@0: soc-thmzone: the hottest of 11 zones`; `thermal_zone19`
+  `type=soc-thmzone mode=enabled policy=step_wise`, trips `0 passive 70000 hyst 1000`, `1 passive 85000 hyst 1000`,
+  `2 critical 110000 hyst 2000`; `cdev0 -> cooling_device2 (cpufreq-cpu7) trip 1 weight 410`, `cdev1 -> cooling_device1
+  (cpufreq-cpu4) trip 1 weight 410`, `cdev2 -> cooling_device0 (cpufreq-cpu0) trip 1 weight 1024` - the three maps of
+  the 85 °C trip, with the DT's contributions; the five vendor cooling nodes left out, as expected. Three seconds
+  later `thermal-guard: kernel thermal zone soc-thmzone throttles the CPUs: watching only, power-off at 105000 mC
+  stays`. `mu300-cpu status --json` listed 20 zones; the soc entry: three trips, three cooling devices at state 0.
+* Load, `yes >/dev/null` on all 8 cores: 38.7 → 64.1 °C in 5 s, 78.0 at 30 s, 84.4 at 50 s, 85.3 °C at 65 s; then
+  the kernel throttled: cooling states `cpu0=1 cpu4=1 cpu7=1` and `scaling_max_freq` **read** 1846/2171/2041 MHz
+  against the user values 2002/2301/2210 (the QoS cap shows through `policy->max`), the temperature held at
+  84.4-85.3 °C, the states flapping between 0 and 1 around the trip (100 ms passive polling, 1 °C hysteresis).
+  `thermal-guard` wrote nothing (its only line in that time: `too hot (SoC 85327 mC): LED alarm on`) and `mu300-cpu
+  status` said `thermal throttling: active` from the cooling states. Writing `cpuinfo_max_freq` into
+  `policy7/scaling_max_freq` under the cap read back 2210000 with the state at 1 a moment later - inconclusive, the
+  states were flapping at that second; the cool-down sample right after showed the cap again (`policy7 cur 1703 /
+  max 2041`, state 1).
+* Load off: 85.3 → 60.1 °C in 5 s, states 0/0/0 and `scaling_max_freq` back to 2002/2301/2210 by itself (the user
+  request was never changed), `cooled down (SoC 64103 mC): LED alarm off`.
+* `rmmod`: `kernel thermal zone soc-thmzone gone: capping cpufreq again` within 5 s, no zone with trips left. The
+  loader path: the `.ko` copied to `/lib/modules/7.2.10/extra/` and the new `extra-modules` run - `loaded
+  mu300_thermal` (`modprobe` had no index, `insmod` by path took it), the zone back, `thermal-guard` handed over again
+  5 s later. The guard alone, with the service stopped and HOT set 2 °C under the current temperature for two rounds:
+  `scaling_max_freq` 2002000 2301000 2210000 → 1703000 2054000 1872000 (two steps each) and the marker
+  `/run/mu300/thermal-capped` present; a cool run lifted them back to 2002000 2301000 2210000.
+* End state: the release `thermal-guard` and `mu300-cpu` restored (same md5 as the backup), the service active, the
+  module not loaded and no `mu300_thermal.ko` under `/lib/modules`, `/run/mu300` without thermal markers, `uname -r`
+  7.2.10 - the release kernel, which was never replaced (no `mu300-update kernel`, so no `rollback-boot` needed).
+
+Open: the U30 Air (same SoC, its own DTB) is untested; its `thmzone-cells` may name other zones, which the module
+reads from the tree. Not taken, as the review decided: the fork's CPU voltage-offset driver.
+### 49. The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only
+
+The panel showed IMEI, IMSI and ICCID but not the SIM's own number (MSISDN). Ported from kanoqwq's fork
+(0d93695, reviewed in `docs/superpowers/reviews/2026-10-11-kano-clean-tf-7.2.md`: "CNUM on full rounds only, never
+in the fast tier"), measured so far on this machine only (unit tests; the device checks are in the PR).
+
+* **Two sources.** `AT+CNUM` reads the number the SIM carries (`+CNUM: "","+905551234567",145`; type 145 is
+  international, a "+" is put in front when the SIM left it out). Many SIMs carry none - the answer is `OK` alone or
+  an empty string - and the number then comes from the IMS public identity the operator provisions, `AT+SPPAURI?`
+  (what the stock RIL's `getPAU` reads): a `tel:` URI first, else a `sip:`/`sips:` URI whose user part is an
+  international number. A bare numeric SIP user part is the IMSI on many networks and is **not** taken as a number.
+  3 to 15 digits (E.164), nothing else, or nothing at all - the panel never guesses.
+* **Where in the tiers.** The IMS identity exists only once IMS is registered, later than the SIM is read at boot, so
+  the number cannot live in the 6 h identity cache (`sim.json`) the way IMEI/IMSI/ICCID do: a miss at boot would
+  stay a miss for hours (kano's own regression). It is asked on **full rounds only** (`cell`, every ~5 s while the
+  page is open): an empty answer is asked again on the next full round (two commands, about 0.3 s at the measured
+  0.13 s per command, §40), a number found is kept in `/var/run/unisoc-modem/own-number` for the boot and not asked
+  again (a SIM change goes through a reboot, the same assumption the identity cache makes). The fast tier (1.5 s)
+  never sends either command, and neither does `mu300dash`'s live `signal` read.
+* **Personal data.** The number reaches the browser in `status`'s `cell.msisdn` / `cell.msisdn_src` (`sim` or
+  `ims`), a read-only method of the existing ACL; the home page shows it under ICCID, masked like the IMSI
+  (`+905****567`) until "Show SIM identifiers", and the row is not there at all when neither source has one. It is
+  never written to flash: `sim.json` stays IMEI/IMSI/ICCID, the runtime files are root's only (`umask 077`), the
+  collector prints nothing, and the panel's operations log keeps its rule (method, time, outcome - no IMSI or
+  numbers). Translations: `Own number` in all 31 catalogs (`tools/luci-i18n.py update`).
+### 50. Three guards for the installers: the boot image read back from the medium, bounded SD-card stages, no re-run in the same boot
+
+What #52 looked like from the outside (§38a): the Magisk installer, OpenWrt to the card, silent for good, a `dd` at
+100 % of one core that `kill -9` did not end, and every retry adding another one until the board was rebooted. §38a
+removed that read past the end of the eMMC, so the known trigger is gone; what stayed was that nothing in either
+installer would have told the user anything if the card, or the SD host, stopped answering for another reason: a
+command stuck in the kernel sits in D state, the installer waits on it forever, and `install.sh`'s `su_do` never
+returns. kanoqwq's TF installer (`tf-stage.sh`, `tf-install-worker.sh`, read as a reference) has three ideas for
+that, taken here in our own shape - one `android-install.sh`, no slot layout of its own, no vold scan beyond
+`sd_release`:
+
+**1. The boot image is read back from the medium, into a file.** Both installers verified `boot_<linux slot>` after
+writing it - `install.sh` with `sha256sum` of the whole partition, the Magisk installer with `mu300-update`'s
+`write_boot`, which hashes a `dd | head -c | sha256sum` pipeline of the first pages - and a mismatch stopped before
+`misc`. Two things were weaker than they looked: a read that fails inside a pipeline leaves a short hash and no
+word of why, and a read right after the write may be served from the page cache rather than the eMMC. Now every
+install drops the caches (`echo 3 > /proc/sys/vm/drop_caches`) and reads back exactly the image's length in whole
+4096-byte blocks with one `dd` into a file (`$T/mu300-boot.rb` for the computer installers, `$W/boot/readback` for
+the zip), whose exit status counts; the sha256 of the file's first `len` bytes must be the image's. The Magisk
+installer's `boot_readback` does this after `write_boot`'s own check and reads the AVB footer block back too, and
+its refusal says which step failed (`dd failed`, `short read`, `sha256 differs`): `boot_b read back from the eMMC is
+not the image that was written (sha256 differs); Linux was not armed: misc was not changed, so Android keeps booting`.
+`install.sh` and `install.ps1` keep their message (`boot_b verify failed (slot a still active, Android keeps
+booting)`). What is written where is unchanged.
+
+**2. The long SD-card stages run bounded, in a process group of their own.** In SD mode `android-install.sh` runs
+the format (`mke2fs`, 900 s), each system's unpack (`tar`, 3600 s; the vendor tarball 900 s), the removal of the old
+or half-installed system (900 s) and a final flush (`sync`, 1800 s, before the OK line, where the trap used to sync
+after it) through `stage_run NAME LIMIT CMD`: the command in a session of its own (`setsid`, Android's toybox has it;
+without it a plain background job), its pid and its exit status in files, and the installer polling every 2 s
+instead of waiting on it. A stage ends when it passes its limit, or when the card's completion counters
+(`/sys/class/block/mmcblk1/stat`: reads and writes completed, sectors read and written - not the time fields, which
+move while a request only waits) have not changed for 120 s. Then the group gets TERM and KILL (a process in D state
+ignores both, and is never waited for), the run says what happened and what to do -
+`the unpack ubuntu stage timed out (no I/O progress on mmcblk1 for 120 s) and was stopped; nothing more is written` /
+`reboot Android before running the installer again` / `the card stays mounted at ..., with no sync and no unmount
+(both would wait on that request)` - and exits 1 before `MU300-INSTALL-OK`, so neither installer writes the boot
+image or `misc`. The EXIT trap (`sd_exit`) then flushes and unmounts nothing: a `sync` or an `umount` would hang on
+the same request. On the eMMC the stages run as before (`STAGE_DISK` empty): Android keeps the eMMC's counters
+moving, and it has not failed this way. When the stat file cannot be read the stall rule is off and the run says so;
+the limit still applies. The counters are read from `$MU300_SYSFS`, the clock is `date +%s`, the knobs for tests are
+`MU300_STAGE_STALL` and `MU300_STAGE_POLL`.
+
+**3. No second run in the same Android boot.** A timeout writes `mu300-install.stalled` - the first line Android's
+`/proc/sys/kernel/random/boot_id`, the second the stage, the time and the reason - into `MU300_LOCK_DIR`
+(`/data/local/tmp` for the computer installers, `/data/adb` for the zip, whose work directory is new each run and
+gone at its end). `android-install.sh` checks it before anything else; the Magisk installer checks it in `main`
+right after `env_check`, before the plan: a lock of the running boot is a refusal (`an earlier run of the installer
+timed out in this Android boot (stage unpack ubuntu, ...): the SD card request it waited on is still stuck in the
+kernel` / `reboot Android, then run the installer again`), a lock of an earlier boot is stale and removed, and a
+run that goes through removes its own. The zip also keeps the device script's output at
+`/data/adb/mu300-device-install.log` (mode 600) when that script fails, and says so; `install.sh` names its
+`work/device-install.log`, `install.ps1` now writes one.
+
+Tests: `tests/test_android_install.py` (`Stages`: the stall and the deadline end a stage and its grandchild and
+write the lock; progress keeps it alive; no counters means the limit only; the eMMC runs it plainly; the same-boot
+re-run is refused and a stale lock removed; a clean run leaves no lock; `sd_exit` after a timeout runs no `sync` and
+no unmount; under `set -e` the OK line never comes; the wiring), `tests/test_magisk_installer.py` (a `dd` whose
+read-back differs or fails: `misc` unchanged, Linux not armed; the lock of this boot refused before the plan, a
+stale one removed; the lock directory handed to the device script; the kept log). macOS has no `setsid` (the tests
+stand one in with Python's `os.setsid`) and no `timeout`; the stages are driven by the script's own `date +%s` loop,
+so nothing else is needed. In a container where the test runner is PID 1 the killed grandchild stays a zombie,
+which the test counts as dead.
+
+Not done here, for a device with a card: (a) a card installation from a computer and from a zip must still go through,
+with `[device] creating ext4 mu300sd`, `installing <os>` and `MU300-INSTALL-OK` in the log, no `mu300-install.stalled`
+afterwards, and `mu300-stage.*` gone from the work directory; (b) the stall path itself - pull the card during the
+unpack, or hold the SD host's clock - must end the stage within about two minutes with the three lines above, leave
+the lock in `/data/local/tmp` or `/data/adb`, and the next run must be refused until a reboot, after which it must
+go through; (c) `cat /sys/class/block/mmcblk1/stat` must change while `tar` writes to the card (if the counters do
+not move for a healthy card, the rule would end a working stage: the field numbers are the ones of the kernel's
+`Documentation/admin-guide/iostats.rst`); (d) the time the format and the unpack take on a slow card against the
+limits (900 s, 3600 s); (e) `setsid` present in Android's `/system/bin` (toybox), and the zip's `busybox` not in the
+device script's PATH; (f) the boot image read-back on both installers: `dd` into the file, then the hash, visible
+in `strace` or by the file's existence while it runs.
+### 51. SMS delivered directly (+CMT), acknowledged only once the pool has it; the SIM path stays as the fallback
+
+Until v2026.10.22 the panel's SMS pool (openwrt-luci: mu300-smsd, mu300-sms, §46) learned of a new message the
+roundabout way: the modem stored it on the SIM and said `+CMTI: "SM",n` on nr0, mu300-smsd saw the line in
+mu300-atd's URC log and ran `mu300-sms sync` (`AT+CMGL=4`, decode, pool, `AT+CMGD` per slot). Two writes to the SIM
+per message, a listing of the whole store, and the SIM as the only safe copy until the pool had it. kanoqwq's fork
+delivers directly instead (GSM 27.005 `+CNMI` with mt=2: the modem forwards the SMS-DELIVER as a `+CMT:` frame and
+waits for `AT+CNMA`); this is that mechanism, ported into this tree's layout.
+
+**Mechanism.** mu300-smsd starts as before: `AT+CNMI=2,1,0,0,0`, a first `sync` (what the SIM holds), then
+`AT+CMGF=0`, `AT+CSMS=1`, `AT+CNMI=3,2,2,0,1`. If any of the three is not `OK` (or `MU300_SMS_DIRECT=0` says not to
+ask), `AT+CNMI=2,1,0,0,0` is asked again and only the +CMTI path runs, exactly as before. With direct delivery on
+(`/run/mu300-smsd.direct` exists) every new message comes as two lines on nr0, where +CMTI came too: `+CMT: ,<length>`
+and the PDU. mu300-atd's nr0 drainer (and its drain and collect on the command channel, should a frame come there)
+hands both lines to `mu300-cmt-spool` on its **stdin** - never argv, which is public - and that writes the PDU as
+`$POOL/incoming/cmt-<epoch>.<random>.ready` via mktemp and rename, fsyncing the file and the directory (busybox
+`fsync`, or coreutils `sync FILE`; never a global sync). The URC log gets one fixed word, `+CMT (PDU spooled)` or
+`+CMT (not spooled)`: not the header, which in text mode would carry the sender, and never the second line. A frame
+inside a reply is taken out of it (a client parsing `AT+CMGL` would read the PDU line as one of its own). Every 5 s
+mu300-smsd pools each `*.ready` with `mu300-sms import-pdu FILE` and **only then** sends `AT+CNMA=1`; an import or an
+acknowledgement that fails ends the round and is retried, three failed rounds in a row set the files aside as
+`*.failed` and fall back to the SIM path. `import-pdu` refuses anything the codec makes no message of, then parks the
+PDU in `$POOL/parts` (mktemp, rename, fsync) and absorbs the parked parts with the same decoding and grouping a SIM
+listing goes through, so a long message's parts wait for each other there as they did on the SIM, with the same
+`MU300_SMS_PARTIAL_WAIT`; the periodic sync lists the SIM and the parked parts together, so a part whose siblings
+never come is pooled after the hour, and the parts of one message join across the SIM (a class 2 part) and the air.
+The pool's dedupe (fingerprint, tombstones) applies: a message the modem delivers again after a lost acknowledgement
+is not pooled twice, and one deleted from the pool stays deleted. The daemon exports `MU300_AT_LOCK_WAIT=8`, so a
+client stuck on the AT channel cannot hold the receiver behind mu300-at's 90 s default. Everything that writes as root
+into the pool (`import-pdu`, the spooler, the daemon's spool loop) refuses symbolic links and directories that are not
+ours (`own_dir`/`own_file`, mu300-update's lock rule) and makes the directories mode 700.
+
+**What the modem does (U30 Air, Vodafone TR).** `AT+CNMI=?` gives `(0-3),(0-3),(0-3),(0-2),(0-1)`, `AT+CSMS=?`
+`(0-1)`. It answers `OK` to `AT+CNMI=3,2,2,0,1` and then reports `+CNMI: 3,2,1,0,1` - it keeps a bm of its own, so
+the daemon's periodic check (every full sync, after which it re-applies the setting) looks at mt alone. ds=0 rather
+than the fork's ds=1 on purpose: nothing here asks for status reports (no SRR bit), and a report routed to the TE
+would need an acknowledgement of its own, which is the one thing that makes the modem drop the routing by itself
+(27.005: no CNMA in time, mt and ds back to 0). A two-part reply from 7000 came as two frames (`+CMT: ,157` then
+`+CMT: ,75`, three seconds apart), the second only after the first was acknowledged; the SIM/ME store stayed at
+`"ME",0,0`. The modem held an unacknowledged message for two minutes without dropping the routing (measured by
+accident: the daemon was stopped between the frame and its import, the spool kept both PDUs, the restarted daemon
+imported and acknowledged them and `+CNMI?` still said `3,2,1,0,1`).
+
+**Device test** (`mu300-sms send 7000 KALAN`, the line answers within seconds):
+
+```
+daemon.info mu300-smsd[9008]: sync: 0 new, 0 on the SIM, 42 in the pool, 0 moved off the SIM
+daemon.err  mu300-smsd[9008]: mu300-smsd: direct delivery is on (+CMT frames into /etc/mu300/sms-pool/incoming)
+daemon.info mu300-smsd[9008]: import: 0 new, 43 in the pool, 1 waiting for its other parts
+daemon.err  mu300-smsd[9008]: mu300-smsd: pooled and acknowledged cmt-1791808049.ePLCmA.ready
+daemon.info mu300-smsd[9008]: new: 000049 from 7000 2026-10-12 15:27:29
+daemon.info mu300-smsd[9008]: import: 1 new, 44 in the pool
+daemon.err  mu300-smsd[9008]: mu300-smsd: pooled and acknowledged cmt-1791808053.iFAgce.ready
+# /run/mu300-at/urc/stty_nr0.log:   +CMT (PDU spooled)  (twice; no PDU, no header fields)
+# AT+CPMS? -> +CPMS: "ME",0,0,"ME",0,0,"ME",0,0        AT+CNMI? -> +CNMI: 3,2,1,0,1
+# mu300-sms show 49 -> sim index:   not on the SIM; ubus call mu300dash sms_list lists 000049 (the panel's page)
+```
+
+The fallback, forced with `MU300_SMS_DIRECT=0`: `the modem did not take direct delivery (or MU300_SMS_DIRECT=0); new
+messages are stored on the SIM and announced (+CMTI)`, `+CNMI: 2,1,0,0,0`, and the same send answered through the old
+path - `+CMTI: "SM",2` in the URC log, `new: 000053 from 7000`, `sync: 1 new, 1 on the SIM, 48 in the pool, 2 moved
+off the SIM`, `sim index: 1,2`, the SIM empty again afterwards. The service restarted went back to direct delivery.
+
+**Tests** (`tests/test_sms_pool.py`, `tests/test_device_scripts.py Atd`): `import-pdu` pools a message with no AT
+command, is idempotent, honours tombstones, joins parts and leaves the waiting ones parked, pools a stale part by a
+sync, joins a SIM part with an air part, refuses non-hex/odd/undecodable/overlong PDUs and every link (a spool entry,
+the parts directory, the pool), fsyncs the parked part before the pool is touched; the spooler writes mode 600 into a
+700 directory with the two fsyncs and nothing else, refuses bad frames and linked directories; the daemon (Linux
+only: it tells a live holder by `/proc`) asks for direct delivery after the first sync, acknowledges after the import
+and in spool order, falls back on each refusal and on `MU300_SMS_DIRECT=0` with +CMTI still working, never
+acknowledges a failed import, gives up after three rounds, keeps the file when the ack is refused, puts the routing
+back when `+CNMI?` says the modem dropped it, sets a linked spool entry aside; mu300-atd on a pty spools a frame from
+nr0, from inside a reply (kept out of the answer), from a drain, logs the fixed word only, drops a text-mode frame
+(sender and text reach nothing), and goes on without the spooler.
+
+**Ubuntu.** mu300-atd and the spooler are on every system, so a `+CMT` frame there is spooled too and never logged -
+but nothing on Ubuntu asks for direct delivery, and that is deliberate: the system's SMS tool, `sms`, has no daemon
+and no pool; `sms watch` polls the store (`AT+CPMS?`/`AT+CMGL`), which cannot miss a message, and `sms list`/`read`
+read the SIM. A message routed to the TE needs something running to acknowledge it, or the modem drops the routing
+and stores the next ones unannounced; a daemon with a pool is what openwrt-luci has and Ubuntu does not. So on Ubuntu
+the modem stays in its storage mode (the fork's smsd is openwrt-luci only here as well), and a PDU that ever lands in
+`/etc/mu300/sms-pool/incoming` there (someone set `AT+CNMI` mt=2 by hand) is kept, unacknowledged, for an
+`mu300-sms import-pdu` that does not exist on that system - documented rather than half-built.
+### 52. The lock reset deleted the saved locks whether or not the modem took them: a verified reset
+
+`lock reset` (PR #99; the Locks page's "Reset all to automatic", and "Reset locks and switch" before an OS switch)
+sent the seven automatic values, deleted the five saved settings, restarted the stack and refreshed the cache. It never
+looked at an answer: a write the modem refused, a silent channel, or a mode query that failed (the mode write carries
+the modem's own slot1 and primary-SIM fields read a moment before) all ended the same way, with the saved settings
+gone and the page reading back whatever the modem had. kanoqwq's fork (23361ce, reviewed in
+`docs/superpowers/reviews/2026-10-11-kano-clean-tf-7.2.md`) does this properly; its version sits on an asynchronous
+lock-job queue (`lock-apply.sh`, `lock-jobs.sh`) that was not wanted here. The semantics are ported onto our
+synchronous tool; the job queue is not.
+
+**What `lock reset` does now** (`openwrt/luci-app-mu300/root/usr/libexec/unisoc-modem/lock`):
+
+1. One reset at a time, as before (the apply directory; a dead holder's directory is taken over). A tombstone an
+   earlier reset left (below) is finished first.
+2. `AT+SPTESTMODE?` must answer, and the two fields that go back out (slot1, primary) must be digits, or nothing is
+   sent: "The modem did not answer the mode query; nothing was sent". Every other AT string of the reset is a fixed
+   constant.
+3. The seven writes (`SP5GRAN=1`, `SPTESTMODE=134,<m1>,<prim>`, `SPENDC=1`, `SPLBAND=1,0,0,0,0,0`, `SPLBAND=2,0,0,0,0`,
+   `SPFORCEFRQ=12,4`, `SPFORCEFRQ=16,4`) each have their answer checked: an explicit `ERROR`/`+CME ERROR` stops the
+   reset there ("The modem refused a write", with the command). Silence is not a failure - several vendor setters
+   apply the value and omit the final OK (the boot replay already relies on that) - the read-back decides.
+4. Read-back before the restart: `SPTESTMODE?` first field 134, `SP5GRAN?` 1, `SPENDC?` 1, `SPLBAND=0` an empty mask
+   or the full LTE table, `SPLBAND=3` an empty mask or the full set of the NR bands SP5GCMDS lists that the SPLBAND
+   codec can carry (n6 is supported and not encodable, so the capability list itself is the wrong comparison),
+   `SPFORCEFRQ=12,3` and `16,3` exactly `12,3` / `16,3`. Three tries a second apart; a mismatch names the step.
+5. The one stack restart (under mobile-data's radio lock, as every apply), then the same read-back again, up to ten
+   tries three seconds apart: right after `SFUN=4` the modem answers `CFUN?` but not the lock reads for a few seconds
+   (the guard in `do_get` exists for the same reason).
+6. Only now the saved settings go: a `reset_pending` tombstone is written first, then `mode endc lte nr cell` are
+   deleted, then the tombstone. A reset interrupted between the two (a kill, a reboot) leaves the tombstone, and the
+   next `apply` finishes the deletion before it saves its own setting, the next `replay` (early or late) before it
+   reads anything to replay - so a half-deleted set is never replayed and a fresh setting is never deleted later.
+   The replay switch (`auto_apply`) stays, as before.
+7. The result - `{"state":ok|failed|interrupted|running,"ts","end","pid","error","step","cmd"}` - goes to
+   `/var/run/unisoc-modem/lock-reset.json` and to stdout (exit 1 on a failure). `lock get` carries it as `reset`, so
+   `mu300dash lock_get` does too: the page polls that, since the reset was already started detached from the rpcd
+   call (`setsid lock reset`, PR #137's budget) and now takes 8-10 s plus whatever the radio lock makes it wait. A
+   result still `running` whose pid is gone is reported as `interrupted`. A failed reset keeps the saved settings,
+   says why ("Reset failed: ... The saved lock settings were kept."), and refreshes the cache, because the modem may
+   hold part of the automatic values by then - a partial write cannot be rolled back. The home page's "Reset locks and
+   switch" stops on a failed reset instead of switching to an Android that would come up with the locks the modem
+   still has.
+
+**Measured on F50-B** (openwrt-luci v2026.10.22, kernel 7.2.10, Netgsm on LTE B1, EARFCN 100, PCI 69):
+
+- `lock apply lte 1` (CLI, 5.3 s) and `mu300dash lock_set cell=lte:100,69` (rpcd, detached, done 6 s later) read back
+  as `+SPLBAND: 0,0,0,1,0` and `+SPFORCEFRQ: 12,3,100,69`, saved as `lte=1`, `cell=lte:100,69`.
+- `mu300dash lock_set reset=auto`: `lock_get` showed `reset.state=ok` 10 s after the call; the log: writes and first
+  read-back in 2 s, `SFUN 5 -> 4` 7 s, the second read-back matched at its first try, `reset verified (8s)`. Read-back
+  afterwards: `SPTESTMODE 134,134,0,19,3,1`, `SP5GRAN 1`, `ENDC 1`, `SPLBAND=0 -> 0,482,0,149,0`,
+  `SPLBAND=3 -> 0,0,0` (a cleared NR mask reads back empty here; after a boot the same modem reported the full set
+  `553,0,272` - both count as automatic), `SPFORCEFRQ 12,3` and `16,3`; the state directory empty.
+- A reset killed with SIGKILL 1.5 s after its start (during the writes: the modem already had the cleared masks, no
+  restart yet): the saved `lte` kept, `lock_get` -> `{"state":"interrupted","error":"The reset was interrupted"}`,
+  the apply directory left with a dead pid; the next `lock reset` took it over and verified in 8 s.
+- The tombstone: with `reset_pending` and a saved `lte`, `lock apply endc on` left `endc` alone in the directory;
+  with `reset_pending`, `lte` and `endc`, `lock replay early` (its marker redirected) emptied the directory, wrote the
+  marker and sent no AT command.
+- The CLI's final `lock reset` printed `{"state":"ok",...}` in 8.4 s and left no lock in the modem.
+
+Not measured: a modem that refuses one of the seven writes, or that answers the read-back with something else - on
+this board every write took. Those paths are covered by the unit tests on a fake modem that answers each read from
+what the writes so far have changed (`tests/test_unisoc_plugin.py`), including the kill between the tombstone and the
+deletion (the `rm` stub kills the tool at that moment). The single `apply` paths still send their write and save the
+setting unverified; only their start now finishes a pending tombstone.
+
+Noted during the test: F50-B's openwrt-luci system has LuCI's default LAN `192.168.77.1`, the same subnet as F50 #1
+on the same computer (its Ubuntu system is at `192.168.79.1`); it was reached over its USB link-local address
+(`root@fe80::50:78ff:fe24:7701%en17`). The subnet-per-device rule of §33b holds only when every system of the board
+is configured.
+
+### 53. A carrier name shown as hex: UCS2 from a modem whose character set is not UCS2 (#174)
+
+A user's panel showed `Carrier: 4E2D56FD8054901A` beside `PLMN: 46001` (F50, OpenWrt, 6.18, v2026.10.20; issue
+#174). That is 中国联通 in UCS2, as hex. Not measured on our boards (no SIM whose name is outside the default
+alphabet): the report, the code and unit tests.
+
+* **Why it was not decoded.** The collector (`unisoc-modem/cell`, `cops_fragment`) read a name as UCS2 hex only when
+  `AT+CSCS?` said `UCS2`. This modem says `HEX` (§46) and does not treat the operator name the way that character
+  set is documented: a name that fits the default alphabet comes as text (the panel has shown `vodafone TR` since
+  it asks for names), and by this report a name the SIM or the network holds in UCS2 comes as that UCS2 in hex. So
+  the character set does not say how the name is written; it did not for text-mode SMS addresses (§26c) or USSD
+  (§26d) either.
+* **The rule now.** With character set `UCS2`: as before (any whole number of code units that is valid UTF-16 with no
+  control character). With any other character set, or none read: the same decoding, but only for a text that cannot
+  reasonably be a name - at least two code units (8 hex digits; `CAFE`, `BEEF` and `FACE` are words), not all decimal
+  digits (a name of digits stays a name: `12345678`, `00540054`), and no private-use or non-character code point.
+  Anything that fails stays the text the modem gave; with no name at all the page still names the operator from the
+  PLMN (`common.js`). No carrier and no PLMN is hard-coded.
+* **Nothing to clear.** What is kept per PLMN in `/var/run/unisoc-modem/operator` is the modem's own line and its
+  character set, not the decoded name; `cell.json` is rewritten every full round. The runtime directory is a tmpfs,
+  and an update ends in a reboot, so no old value survives the fix.
+
+Open: a name of two or more code units that are all decimal digits (U+8054 U+9010 would be `80549010`) stays hex
+under a character set other than UCS2 - the price of leaving digit names alone. Not seen in a report.
+### 54. A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171)
+
+The webhook of §39 sent one of two fixed bodies (JSON or a form with `sender`, `time`, `text`, `device`,
+`message`), which no chat service accepts as it is (issue #171: Lark/Feishu, DingTalk, WeCom, Slack, Discord, Bark,
+ntfy). Measured on this machine only (unit tests against the stub HTTP helper: dash and bash on macOS, busybox ash
+and dash with busybox 1.37 as awk in a Debian container); not sent from a device to a real service.
+
+* **A backslash in a template was stored bare (found here, older than the body).** The adapter wrote a template to
+  its one line with `gsub(/\\/, "\\\\")`. What that replacement means differs between awks: macOS's awk writes two
+  backslashes, busybox awk - the device's - writes one. So on the device a template's `\n` (two characters) was
+  stored as it was and read back as a line break, and `\"` lost its backslash. Nobody reported it for the message
+  template, but a JSON body is made of exactly those. `esc_tpl` now doubles backslashes with `index()` and a
+  concatenation, with no replacement string; the test that pins it fails with the old code only where awk is
+  busybox, which is why the macOS run never saw it.
+
+* **What was added.** A body template of the user's own (`webhook_body` in `/etc/mu300/sms-forward.conf`, stored on
+  one line like the message template) with `{sender}`, `{time}`, `{text}`, `{device}` and `{message}` (the message
+  template filled in), and a third type, plain text. The type is the `Content-Type` - which stays the device's to
+  set, never a header of the user's - and decides how a value is written into the body: JSON as the inside of a
+  string (quote, backslash and every control character escaped; the quotes are the template's), form
+  percent-encoded, text as it is. An empty body is the standard one, byte for byte what it was; for plain text that
+  is the message alone.
+* **Why a message cannot break out of the body.** One awk function (`fill` in `mu300-sms-forward`, which the message
+  template now uses too) gets the template and the values in its environment and only copies them: no shell, no
+  `eval`, no `awk -v` (which reads escapes), and one pass - a `{sender}` that arrives inside an SMS is text. The
+  tests send a sender and a text made of quotes, backslashes, `","admin":true`, `$(...)`, backticks, `&d=e` and
+  control characters through each type and parse what comes out.
+* **Limits.** The panel takes 2000 bytes of template and no control character but newline and tab; the forwarder
+  refuses a filled-in body over 64 KiB (`the webhook body is too large` in the log, not retried), so a template that
+  repeats `{text}` cannot grow without bound.
+* **Not a secret.** The address and the headers never come back to the page (§39); the body does, because a
+  template that cannot be read cannot be edited, and an empty field has to mean "the standard body", not "keep".
+  The page says so and tells the user to keep keys in the address or a header. A service that wants a key inside
+  the body is the case this does not serve well.
+* **Not validated.** A JSON body is not checked when it is saved: the device has no JSON parser the tests can run,
+  and a check that wrongly refused a valid body would be worse than none. "Send test" sends the saved body and the
+  log shows the server's status.
+
+Open, from the same issue: a service that answers HTTP 200 with its own error inside (DingTalk `errcode`, Feishu
+`code`) is logged as delivered - the HTTP helper passes on the status and nothing of the reply's body
+(`sms-forward-http.uc`), so that no reply reaches a log; and the delivery log (RAM, the last 100 lines) has no clear
+button. Section 53 is PR #195's (the carrier name); this branch does not have it.
+
+### 55. Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170)
+
+Three users' F50s (China Telecom SIMs, OpenWrt on an SD card, mainline 6.18 and 7.2) had no modem: `mu300-atd`
+restarted every 10 s with `can't create /dev/stty_nr1: No such device`, `radio.log` repeated `no valid answer to the
+RIL handshake (AT+SMMSWAP=0)`, `/sys/kernel/debug/modem/modem` said `run_state: 255`, `modem_base: 0x0`. Two of them
+found the five imported trees under `/opt/mu300/android` (`dev-properties`, `vendor`, `system`, `apex`,
+`linkerconfig`) `0700 root:root`, files and directories alike, and got a modem by `chmod`. PR #143 (v2026.10.20) had
+changed the account the daemons run as and the device nodes, not these files; #127's reporter measured v2026.10.20
+and it still failed.
+
+**Why the modes matter.** `modem_control` and `refnotify` do not stay root: `mu300vnd` through `setpriv` where the
+system has the account (§41), else their own `setuid(1000)`. They keep `CAP_CHOWN`/`CAP_BLOCK_SUSPEND` and
+`CAP_SYS_TIME`, nothing that reads past a mode. `cp_diskserver` stays root and does not care.
+
+**Where 0700 came from.** `install.sh` on macOS with its folder on FAT or exFAT. Measured on this Mac (an exFAT
+image, `android-vendor/extract-subset.sh` from the F50-B, then `tools/vendor-overlay.py`): the volume shows every
+file and directory as `rwx------` owned by the user, the empty `ld.config.txt` made by `: >` included; `gettarinfo`
+stored that, the tool sets the owner to root, and the overlay's 390 entries were 375 `-rwx------ root`, 14
+`drwx------ root` and the link. A time before 1980 is clamped there too: `linker64` (1970 on the device) came out as
+`Jan  1  1980`, local time. #127's listing has the property files at `Dec 31  1979` - that moment seen in UTC from a
+host east of it, as UTC+8 would be - where a system installed from an ordinary folder has `Jan  1  1970`. The
+initramfs copy is not affected: `boot/build-boot-image.py` decides 0755/0644 by `os.access`, which is why such a
+device still boots and only the installed system's copy is wrong. Windows (the subset comes from the device's own
+archive there) and a folder on a file system that keeps modes were never affected.
+
+**What each state looks like** (F50-B, baseband `5G_MODEM_V2_22C_W25.39.4` - the same as #170's device - release
+v2026.10.22, the trees changed by hand and the board rebooted):
+
+| imported files | system, kernel | modem_control | Trusty lines in dmesg | result |
+|---|---|---|---|---|
+| all five trees 0700 | openwrt-luci, 7.2.10 | runs as uid 1000 | none | `run_state: 255`, `modem_base: 0x0` (#127) |
+| all five trees 0700 | Ubuntu 24.04, 7.2.10 | `chroot: failed to run command '/vendor/bin/modem_control': Permission denied`, the service restarts every 4 s | none | the same |
+| `vendor/etc` alone 0700 | Ubuntu 24.04 and openwrt-luci, 7.2.10 | (Ubuntu's log) `Failed to access xml, error /vendor/etc/modem_cp_info.xml: Permission denied` (and `_sp_`, `_ch_`), `modem_head_correct_load_info: can't get modem img!`, then `open /dev/spipe_nr2 failed, error: No such device` every second | `enter SEC_KBC_GET_TEECFG_FLAG`, `g_wifionly_flag = 0`, `enter SEC_KBC_STOP_CP`, `SEC_KBC_STOP_CP() ret = 0`, `SEC_FIREWALL_UNLOCK_CP_DDR() ret = 0`, `kbc_send_response rc = 4`, `enter SEC_KBC_GET_LOAD_MODEM_FLAG` - and nothing after it | `run_state: 255` (#170's dmesg, line for line) |
+| `vendor/etc` alone 0700 | openwrt-luci, **5.4.254** | - (no vendor log, see below) | the same lines, and nothing after them | the same: the kernel makes no difference |
+| as installed | each of the above on 7.2.10 | - | ... `GET_LOAD_MODEM_FLAG`, one second of image loading, `kbc_verify_all_avb2() ret = 0`, `SEC_KBC_START_CP() ret = 0`, `modem run = 1!` three times | data up 31-35 s after power-on |
+
+With the property area unreadable the daemons end earlier (`Access denied finding property
+"ro.vendor.radio.modemtype"`, `can't get modem type!`: #127's log) and never call Trusty. A `dump_table() len = 0`
+under `SEC_KBC_STOP_CP` is printed on a good start too; the sign is what follows `GET_LOAD_MODEM_FLAG`.
+
+#170 reads "mainline never starts the CP, 5.4 does, same installation". Its dmesg is the third row. The F50-B, with
+the same baseband, starts the CP on 7.2.10 from that release's own Magisk zip (below), and with the files unreadable
+5.4 fails exactly as 7.2 does. So the kernel is not what differed between that device's boots; what did is not
+known (asked in the issue: the modes of the trees, the vendor log, and how each kernel was put on - a Magisk zip
+imports the files again, `mu300-update kernel` does not).
+
+**The Magisk zip's import** was measured for that reason (`magisk --install-module
+mu300-magisk-v2026.10.22-openwrt-luci-k7.2.zip` on the F50-B, Magisk 30.6): the modem started (run = 1 at 14 s, data
+at 32 s), so that path does not make 0700 here - but what it installed was wrong the other way. Under `magisk
+--install-module` the umask is 000, and `collect_subset` names only files, so tar made the directories itself: 16
+directories `0777`, `linkerconfig/ld.config.txt` `0666`. And tar keeps Android's owners: 32 libraries (bionic, the
+VNDK) owned by uid 1000, six programs, `linker64` and one directory by gid 2000. Uid 1000 is the first login
+account on Ubuntu, and root's `cp_diskserver` loads that libc: a login user could become root through it. (An
+install started in the Magisk app goes through the zip's `update-binary`, which sets 022; not measured. The owners
+do not depend on it.) Under a umask of 077 the same code makes `vendor/etc` 0700 - the third row.
+
+**The fix.**
+
+* `android-vendor-start`, before anything else (block `modes`): one `find` over the five trees for anything not
+  root's, a directory that is not 0755 (0711, Android's mode for the property area, is left), a file in a `bin`
+  directory that is not 0755, a property file that is not 0444, any other file that is not 0644. Nothing found: no
+  write, 6 ms. Else five `find ... -exec` set owner and modes (links untouched, `-xdev`), the check runs again, and
+  one line says how many entries and the first - to stderr and to `/dev/kmsg`, because OpenWrt starts this service
+  before its log daemon - with a `vendor-modes-repaired` (or `vendor-modes-wrong`) mark in the boot timeline. This
+  is the part that repairs an installed system: `mu300-update` carries the vendor files over as they are.
+* `tools/vendor-overlay.py`: `host_free_mode` - the mode of an entry from where it goes (the same rule), never
+  from the host. The same exFAT volume now gives `drwxr-xr-x`, `-rwxr-xr-x` in `bin`, `-r--r--r--` properties,
+  `-rw-r--r--` for the rest.
+* `tools/android-boot-image.sh`: `collect_subset`, `collect_gpu`, `collect_firmware` and `vendor_overlay` run under
+  umask 022 whatever the caller has (the caller's is not changed), and the overlay is `chown -hR 0:0` before it is
+  packed. `mu300-install.sh` and `android-install.sh` set umask 022 at the top. On the F50-B under Magisk's busybox,
+  with the caller's umask 000 and 077: 334 `-r--r--r--`, 73 `-rw-r--r--`, 7 `-rwxr-xr-x`, 19 `drwxr-xr-x`, the
+  property directory `drwx--x--x`, all `root/root`.
+* `android-vendor-start` makes `/var/log` before it starts `logdw`. On OpenWrt the service is S09 and `/var/log`
+  is made by `boot` at S10; procd starts the script at once, and when it reached the line first the redirection
+  failed and `logdw` never ran: no `/var/log/android-logcat.txt` on three of four boots here. #135 reported the
+  same after a reboot ("logdw did not start"), #170 shows no vendor log at all, and #127 had one because the
+  service had been restarted by hand.
+
+**Measured on F50-B with the new script** (release v2026.10.22 otherwise):
+
+- openwrt-luci, 7.2.10, all five trees 0700 and the mixed owners an earlier zip install had left: repaired at boot,
+  `kbc_verify_all_avb2` at 13.8 s, `up on sipa_eth0` at 31.7 s, daemons uid 1000, `android-logcat.txt` written.
+- openwrt-luci as the v2026.10.22 zip had just installed it: `[   12.053529] android-vendor-start: 57 imported
+  Android files and directories had an owner or a mode the vendor daemons cannot work with (the first:
+  /opt/mu300/android/vendor); now root's, 0755/0644/0444`; marks `vendor-start` 11.98, `vendor-modes-repaired`
+  12.07; afterwards nothing world-writable, nothing not root's; `run = 1` at 14.0 s, data at 31.9 s.
+- Ubuntu 24.04, 7.2.10, all five trees 0700: 427 entries repaired between 9.16 s and 9.23 s, `run = 1` at 11.5 s,
+  data at 34.8 s, daemons `mu300vnd`. The boot after it: no line, no mark, the modes unchanged.
+
+Not measured: a Magisk zip built from this branch and installed end to end (its import functions were run on the
+device; the zip was not rebuilt), 6.18, the U30 Air.
+
+### 56. The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m
+
+"There is a problem in the VPN part, mihomo and the like" (no details, no issue): the non-default engines were run
+end to end on the U30 Air (OpenWrt openwrt-luci v2026.10.22, kernel 7.2.10, VPN module v2.0.0), from the command line
+and through the page's own calls (`ubus call mu300vpn ...`). What was broken is in the module, and written up there
+([mu300-linux-vpn FINDINGS 26i-26m](https://github.com/dikeckaan/mu300-linux-vpn/blob/main/docs/FINDINGS.md)): on a SIM
+whose carrier lets DNS through to its own resolvers only, sing-box, mihomo and dae never found their server
+(`BOOTSTRAP_DNS` 1.1.1.1 did not answer); a mihomo config with GEOSITE/GEOIP rules could not start, and switching to
+it took the working tunnel down; dae was stopped every 40 s by a start check that cannot pass on kernels from 6.6 on;
+a raw sing-box config that says nothing about DNS left the device and the router's DNS without names; `logs
+ENGINE` hid the engines' own errors, `latency` said "unreachable" for every server, and `profile check ID`, which
+the page calls, did not exist.
+
+Two defects were the page's own. Its check asked for `profile check ID`, the spec's name for a command the module
+only has as `check ID`: the backend now calls `check ID`, which every module version answers (the module gets the
+other name too). And `mu300-vpn` ends a refused import, edit or switch with a line that says only that
+nothing was done, after the line that says why:
+
+    the mihomo config has no proxies or proxy-providers at the top level
+    profile not added
+
+`mu300vpn`'s `cli` took the last line of stderr as the message, so every refused config read "The profile could not
+be added - profile not added" (and "The config was not saved - profile t-mh not changed"), whatever was wrong with
+it: a YAML without proxies, a link dae cannot take, a config mihomo rejects. `cli_message` now takes the line before
+such a closing line (`profile [ID] not added|changed`, `subscription [ID] not added|refreshed`, `profile ID does not
+check: ...`, `profile ID cannot run on this system: ...`), never one of the CLI's `note:` lines, and the closing line
+itself when it stands alone. Measured on the device with the backend in place: the same three requests now answer
+with "the mihomo config has no proxies or proxy-providers at the top level", "the link turns the server's
+certificate check off (allowInsecure), and dae cannot pin the certificate ...", and "mihomo rejects the config as
+this driver rebuilds it (at rules[1], as mihomo counts) ..." (the last with the module's fix).
+
+Through the page's calls, on the fixed module: `profile_add` (a mihomo YAML as text, an ss link as dae, a vless link
+as sing-box), `profile_check`, `use`, `status` with the exit address, `logs` per engine, `killswitch` on and off,
+`sub_refresh` (one, due) with `job`, `latency` (one, all), `engine_remove` refused while in use, `profile_remove`:
+all as the page expects. `sub_add` takes https only, which could not be served on the test link (the CLI's
+`--insecure` did the subscriptions there). Not looked at in a browser: the pages themselves.
+
+
+### 57. The U30 Air's second SIM: the hardware facts behind PR #73 (Snrat)
 What one U30 Air (OpenWrt 25.12.5, Linux 7.2.9, modem firmware `s_modemConfig=7`) showed; `docs/U30AIR-SIM2.md`
 has the sequences and the rules built on them. Not verified on an F50 or a U30 Pro, and on the maintainer's U30
 Air (one SIM) only the SIM1 side could be repeated.
@@ -3737,13 +4499,14 @@ Air (one SIM) only the SIM1 side could be repeated.
 * **Live switch** (the factory `VendorTelephonyManager.setProtocolStack`): select the card before each SFUN group:
   `AT+SPACTCARD=<target>;+SFUN=2`, `AT+SFUN=4`, `AT+SPACTCARD=0` on the target's command channel, `AT+SPSWDATA` on
   its data channel, then `AT+SPACTCARD=<old>;+SFUN=5`, `AT+SFUN=3`, `AT+SPACTCARD=0` on the old one. Both
-  directions worked; the four broker PIDs stayed the same.
+  RF transition directions worked; SIM1 had no data service and the normal switch rolled back. The four broker
+  PIDs stayed the same.
 * **`+CME ERROR: 10` is not "no card".** After `SFUN=5/3` an inserted but inactive card answers `AT+CPIN?` with
   CME ERROR 10, so CPIN is checked only after the card is enabled.
 * **A reopened SIPC channel is a wedged one.** The dual-SIM brokers run without respawn and with
   `MU300_AT_DISABLE_REOPEN=1`; a dead owner means no switch until the next boot, by design.
-* **One APN for both cards.** WAN's APN/PDP settings are shared: a card of another carrier switches cleanly and
-  never gets a bearer. That is why a switch becomes the boot default only once `wan` has an address.
+* **Per-card APN/PDP profiles.** A shared profile can leave a switched card without a bearer. The reconciled
+  controller uses the selected card's profile and saves a switch as the boot default only after its WAN has an address.
 * **A failed cold start used to mean no WAN for the whole boot, every boot** (`radio-freeze` plus a missing ready
   marker, with the choice persisted): hence the one-boot pending marker and the fallback to SIM1 in
   `init.d/mu300-atd` / `mu300-sim2-warmup`, and no registration gate at boot (CFUN=1 is ready, as for SIM1).

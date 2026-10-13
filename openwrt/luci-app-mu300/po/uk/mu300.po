@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Температура"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Теплові зони ядра, лише читання. Зона з пороговими точками обмежує прив'язані до неї пристрої охолодження на своєму пасивному порозі; стан охолодження 0 означає відсутність обмеження."
+
+msgid "Zone"
+msgstr "Зона"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Порогові точки"
+
+msgid "Cooling devices"
+msgstr "Пристрої охолодження"
+
 msgid "USB role"
 msgstr "Роль USB"
 
@@ -604,8 +622,17 @@ msgstr "Тіло"
 msgid "Form (URL-encoded)"
 msgstr "Форма (URL-кодування)"
 
+msgid "Plain text"
+msgstr "Простий текст"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Поля: sender, time, text, device, message (заповнений шаблон)"
+
+msgid "Custom body"
+msgstr "Власне тіло запиту"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Порожньо: стандартні поля (простий текст: повідомлення). Підстановки: {sender}, {time}, {text}, {device}, {message}. Кожне значення екранується відповідно до вибраного типу. Це тіло знову показується тут: секрети тримайте в адресі або в заголовку."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Додаткові заголовки (по одному \"Ім'я: значення\" в рядку)"
@@ -766,6 +793,9 @@ msgstr "Усього надіслано"
 msgid "Used today"
 msgstr "Використано сьогодні"
 
+msgid "SIM source"
+msgstr "Джерело SIM"
+
 msgid "Session duration"
 msgstr "Тривалість сеансу"
 
@@ -834,6 +864,9 @@ msgstr "Модем"
 
 msgid "Carrier"
 msgstr "Оператор"
+
+msgid "Own number"
+msgstr "Власний номер"
 
 msgid "Module"
 msgstr "Модуль"
@@ -973,8 +1006,17 @@ msgstr "Помилка фіксації: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Скидання мережевих блокувань на автоматичний режим (перезапуск SFUN, близько 30 секунд)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Скидання не вдалося: %s. Збережені налаштування блокувань залишено."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Скидання блокувань не підтвердилося вчасно; перемикання все одно виконується."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Вибрано вбудовану SIM: використовуватиметься після перезавантаження"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Вибрано вбудовану SIM, але на цьому пристрої вона не підтримується: використовується зовнішня SIM"
 
 msgid "Uptime %s"
 msgstr "Час роботи %s"
@@ -1317,6 +1359,9 @@ msgstr "Стан підтверджено"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Час зчитування минув; натисніть «Оновити стан фіксації»"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Скидання підтверджено: режим мережі автоматичний, EN-DC увімкнено, усі діапазони, без блокування соти; збережені налаштування блокувань видалено"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Застосовано (EN-DC не потребує перезапуску радіостека)"
@@ -1739,6 +1784,15 @@ msgstr "Повідомлення (Enter — надіслати, Shift+Enter — 
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Надсилання використовує AT+CMGS (режим PDU); якщо канал зайнятий, повторіть. Щоб видалити одне повідомлення, натисніть значок кошика на його бульбашці."
 
+msgid "Sending…"
+msgstr "Надсилання…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Надіслано; список незабаром оновиться."
+
+msgid "Sending failed"
+msgstr "Помилка надсилання"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронізація із SIM у фоні (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Видалено (лише локально)"
 
 msgid "Enter both a number and a message."
 msgstr "Введіть номер і повідомлення."
-
-msgid "Sending…"
-msgstr "Надсилання…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Надіслано; список незабаром оновиться."
-
-msgid "Sending failed"
-msgstr "Помилка надсилання"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· повідомлень: %d, непрочитаних: %d · розмов: %d"
@@ -3026,6 +3071,9 @@ msgstr "Неправильний список фільтрів (не більш�
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Адреса вебхука має бути URL http:// або https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Тіло webhook надто довге або містить керівний символ"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Неправильний заголовок (по одному \"Ім'я: значення\" в рядку; Host, Content-Type, Content-Length, Transfer-Encoding і Connection задає пристрій)"
 
@@ -3083,8 +3131,26 @@ msgstr "Не вдалося видалити мовний пакет"
 msgid "Lock cache unavailable"
 msgstr "Кеш фіксації недоступний"
 
+msgid "The saved locks could not be cleared"
+msgstr "Не вдалося видалити збережені блокування"
+
 msgid "No serving cell to lock to"
 msgstr "Немає обслуговуючої соти для фіксації"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Модем не відповів на запит режиму; нічого не надіслано"
+
+msgid "The modem refused a write"
+msgstr "Модем відхилив запис"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Зворотне читання не збігається з автоматичними значеннями"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Зворотне читання після перезапуску стеку не збігається з автоматичними значеннями"
+
+msgid "The reset was interrupted"
+msgstr "Скидання було перервано"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Повторне встановлення пакетів недоступне в цій системі"

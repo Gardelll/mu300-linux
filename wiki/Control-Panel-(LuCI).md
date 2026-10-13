@@ -61,7 +61,9 @@ Pick it at install ("Which OpenWrt?" -> 2, or `MU300_OPENWRT=luci`), or switch a
 * **System > Power:** the active power profile and why (in your language), battery, power source and the charger's
   input current, the idle settings of the three profiles, the saver threshold and the charge limit (0-100 %, U30 Air).
 * **System > CPU:** the CPU profile: saving, balanced (the default) or performance (`mu300-cpu`). It never touches
-  the voltage, and the thermal protection stays in charge in every profile.
+  the voltage, and the thermal protection stays in charge in every profile. Below it, read only, the kernel's thermal
+  zones: temperatures, trip points and the cooling devices bound to them with their current state (on the mainline
+  kernels the stock `soc-thmzone`, 70/85 °C passive and 110 °C critical, throttles the three clusters at 85 °C).
 * **System > Packages after an update:** the packages you had installed yourself and what the update did with them
   (see [Updating](Updating#packages-you-installed-yourself)).
 * **System > Terminal:** a root shell in the browser ([ttyd](https://github.com/tsl0922/ttyd)). It listens on the LAN

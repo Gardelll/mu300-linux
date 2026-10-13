@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Termiskt"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Kärnans termiska zoner, skrivskyddade. En zon med tröskelpunkter stryper de kylenheter som är bundna till den vid sin passiva tröskel; kyltillstånd 0 betyder ingen strypning."
+
+msgid "Zone"
+msgstr "Zon"
+
+msgid "Temperature"
+msgstr "Temperatur"
+
+msgid "Trip points"
+msgstr "Tröskelpunkter"
+
+msgid "Cooling devices"
+msgstr "Kylenheter"
+
 msgid "USB role"
 msgstr "USB-roll"
 
@@ -604,8 +622,17 @@ msgstr "Innehåll"
 msgid "Form (URL-encoded)"
 msgstr "Formulär (URL-kodat)"
 
+msgid "Plain text"
+msgstr "Oformaterad text"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Fält: sender, time, text, device, message (den ifyllda mallen)"
+
+msgid "Custom body"
+msgstr "Egen kropp"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Tomt: standardfälten (oformaterad text: meddelandet). Platshållare: {sender}, {time}, {text}, {device}, {message}. Varje värde escapas enligt den valda typen. Den här kroppen visas här igen: lägg hemligheter i adressen eller i en header."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Extra rubriker (en \"Namn: värde\" per rad)"
@@ -766,6 +793,9 @@ msgstr "Totalt skickat"
 msgid "Used today"
 msgstr "Använt i dag"
 
+msgid "SIM source"
+msgstr "SIM-källa"
+
 msgid "Session duration"
 msgstr "Sessionslängd"
 
@@ -834,6 +864,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operatör"
+
+msgid "Own number"
+msgstr "Eget nummer"
 
 msgid "Module"
 msgstr "Modul"
@@ -973,8 +1006,17 @@ msgstr "Låsning misslyckades: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Nätverkslåsen återställs till automatiskt (SFUN-omstart, cirka 30 sekunder)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Återställningen misslyckades: %s. De sparade låsinställningarna behölls."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Återställningen av låsen bekräftades inte i tid; byter ändå."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Intern SIM vald: används efter en omstart"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Intern SIM vald, men stöds inte på den här enheten: den externa SIM:en används"
 
 msgid "Uptime %s"
 msgstr "Drifttid %s"
@@ -1317,6 +1359,9 @@ msgstr "Status bekräftad"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Tidsgräns för återläsning överskreds; välj ”Uppdatera låsstatus”"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Återställning verifierad: nätverksläge automatiskt, EN-DC på, alla band, inget cellås; de sparade låsinställningarna är rensade"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Verkställt (EN-DC kräver ingen omstart av radiostacken)"
@@ -1739,6 +1784,15 @@ msgstr "Meddelande (Enter för att skicka, Skift+Enter för ny rad)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Sändning använder AT+CMGS (PDU-läge); försök igen om kanalen är upptagen. Använd papperskorgsikonen på bubblan för att radera ett enskilt meddelande."
 
+msgid "Sending…"
+msgstr "Skickar…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Skickat; listan uppdateras strax."
+
+msgid "Sending failed"
+msgstr "Sändningen misslyckades"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synkroniserar från SIM i bakgrunden (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Raderat (endast lokalt)"
 
 msgid "Enter both a number and a message."
 msgstr "Ange både ett nummer och ett meddelande."
-
-msgid "Sending…"
-msgstr "Skickar…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Skickat; listan uppdateras strax."
-
-msgid "Sending failed"
-msgstr "Sändningen misslyckades"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d meddelanden, %d olästa · %d konversationer"
@@ -3026,6 +3071,9 @@ msgstr "Ogiltig filterlista (högst 50 rader)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhookens adress måste vara en http://- eller https://-URL"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhookens kropp är för lång eller innehåller ett styrtecken"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Ogiltig rubrik (en \"Namn: värde\" per rad; Host, Content-Type, Content-Length, Transfer-Encoding och Connection sätts av enheten)"
 
@@ -3083,8 +3131,26 @@ msgstr "Språkpaketet kunde inte tas bort"
 msgid "Lock cache unavailable"
 msgstr "Låscache inte tillgänglig"
 
+msgid "The saved locks could not be cleared"
+msgstr "De sparade låsen kunde inte rensas"
+
 msgid "No serving cell to lock to"
 msgstr "Ingen betjänande cell att låsa till"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modemet svarade inte på lägesförfrågan; ingenting skickades"
+
+msgid "The modem refused a write"
+msgstr "Modemet avvisade en skrivning"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Återläsningen stämmer inte med de automatiska värdena"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Återläsningen efter omstarten av stacken stämmer inte med de automatiska värdena"
+
+msgid "The reset was interrupted"
+msgstr "Återställningen avbröts"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Att installera om paket är inte tillgängligt på det här systemet"

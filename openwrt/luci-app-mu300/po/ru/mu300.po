@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Температура"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Тепловые зоны ядра, только чтение. Зона с пороговыми точками ограничивает привязанные к ней устройства охлаждения на своём пассивном пороге; состояние охлаждения 0 означает отсутствие ограничения."
+
+msgid "Zone"
+msgstr "Зона"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Пороговые точки"
+
+msgid "Cooling devices"
+msgstr "Устройства охлаждения"
+
 msgid "USB role"
 msgstr "Роль USB"
 
@@ -604,8 +622,17 @@ msgstr "Тело"
 msgid "Form (URL-encoded)"
 msgstr "Форма (URL-кодирование)"
 
+msgid "Plain text"
+msgstr "Простой текст"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Поля: sender, time, text, device, message (заполненный шаблон)"
+
+msgid "Custom body"
+msgstr "Своё тело запроса"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Пусто: стандартные поля (простой текст: сообщение). Подстановки: {sender}, {time}, {text}, {device}, {message}. Каждое значение экранируется под выбранный тип. Это тело снова показывается здесь: секреты держите в адресе или в заголовке."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Дополнительные заголовки (по одному \"Имя: значение\" в строке)"
@@ -766,6 +793,9 @@ msgstr "Всего отправлено"
 msgid "Used today"
 msgstr "Израсходовано сегодня"
 
+msgid "SIM source"
+msgstr "Источник SIM"
+
 msgid "Session duration"
 msgstr "Длительность сеанса"
 
@@ -834,6 +864,9 @@ msgstr "Модем"
 
 msgid "Carrier"
 msgstr "Оператор"
+
+msgid "Own number"
+msgstr "Свой номер"
 
 msgid "Module"
 msgstr "Модуль"
@@ -973,8 +1006,17 @@ msgstr "Ошибка фиксации: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Сброс сетевых блокировок на автоматический режим (перезапуск SFUN, около 30 секунд)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Сброс не удался: %s. Сохранённые настройки блокировок оставлены."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Сброс блокировок не подтвердился вовремя; переключение всё равно выполняется."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Выбрана встроенная SIM: будет использоваться после перезагрузки"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Выбрана встроенная SIM, но на этом устройстве она не поддерживается: используется внешняя SIM"
 
 msgid "Uptime %s"
 msgstr "Время работы %s"
@@ -1317,6 +1359,9 @@ msgstr "Состояние подтверждено"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Истекло время считывания; нажмите «Обновить состояние фиксации»"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Сброс подтверждён: режим сети автоматический, EN-DC включён, все диапазоны, без блокировки соты; сохранённые настройки блокировок удалены"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Применено (EN-DC не требует перезапуска радиостека)"
@@ -1739,6 +1784,15 @@ msgstr "Сообщение (Enter — отправить, Shift+Enter — нов
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Отправка использует AT+CMGS (режим PDU); при занятом канале повторите. Чтобы удалить одно сообщение, нажмите значок корзины на его облачке."
 
+msgid "Sending…"
+msgstr "Отправка…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Отправлено; список скоро обновится."
+
+msgid "Sending failed"
+msgstr "Ошибка отправки"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронизация с SIM в фоне (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Удалено (только локально)"
 
 msgid "Enter both a number and a message."
 msgstr "Введите номер и сообщение."
-
-msgid "Sending…"
-msgstr "Отправка…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Отправлено; список скоро обновится."
-
-msgid "Sending failed"
-msgstr "Ошибка отправки"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· сообщений: %d, непрочитанных: %d · диалогов: %d"
@@ -3026,6 +3071,9 @@ msgstr "Неверный список фильтров (не более 50 ст�
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Адрес вебхука должен быть URL http:// или https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Тело webhook слишком длинное или содержит управляющий символ"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Неверный заголовок (по одному \"Имя: значение\" в строке; Host, Content-Type, Content-Length, Transfer-Encoding и Connection задаёт устройство)"
 
@@ -3083,8 +3131,26 @@ msgstr "Не удалось удалить языковой пакет"
 msgid "Lock cache unavailable"
 msgstr "Кэш фиксации недоступен"
 
+msgid "The saved locks could not be cleared"
+msgstr "Не удалось удалить сохранённые блокировки"
+
 msgid "No serving cell to lock to"
 msgstr "Нет обслуживающей соты для фиксации"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Модем не ответил на запрос режима; ничего не отправлено"
+
+msgid "The modem refused a write"
+msgstr "Модем отклонил запись"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Обратное чтение не совпадает с автоматическими значениями"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Обратное чтение после перезапуска стека не совпадает с автоматическими значениями"
+
+msgid "The reset was interrupted"
+msgstr "Сброс был прерван"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Повторная установка пакетов недоступна в этой системе"

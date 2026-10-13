@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Térmico"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "As zonas térmicas do kernel, somente leitura. Uma zona com pontos de disparo limita os dispositivos de resfriamento vinculados a ela no seu ponto passivo; um estado de resfriamento 0 significa sem limitação."
+
+msgid "Zone"
+msgstr "Zona"
+
+msgid "Temperature"
+msgstr "Temperatura"
+
+msgid "Trip points"
+msgstr "Pontos de disparo"
+
+msgid "Cooling devices"
+msgstr "Dispositivos de resfriamento"
+
 msgid "USB role"
 msgstr "Função USB"
 
@@ -604,8 +622,17 @@ msgstr "Corpo"
 msgid "Form (URL-encoded)"
 msgstr "Formulário (codificado em URL)"
 
+msgid "Plain text"
+msgstr "Texto simples"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Campos: sender, time, text, device, message (o modelo preenchido)"
+
+msgid "Custom body"
+msgstr "Corpo personalizado"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Vazio: os campos padrão (texto simples: a mensagem). Marcadores: {sender}, {time}, {text}, {device}, {message}. Cada valor é escapado conforme o tipo escolhido. Este corpo é exibido aqui novamente: mantenha os segredos no endereço ou em um cabeçalho."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Cabeçalhos extras (um \"Nome: valor\" por linha)"
@@ -766,6 +793,9 @@ msgstr "Total enviado"
 msgid "Used today"
 msgstr "Usado hoje"
 
+msgid "SIM source"
+msgstr "Origem do SIM"
+
 msgid "Session duration"
 msgstr "Duração da sessão"
 
@@ -834,6 +864,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operadora"
+
+msgid "Own number"
+msgstr "Número próprio"
 
 msgid "Module"
 msgstr "Módulo"
@@ -973,8 +1006,17 @@ msgstr "Falha ao bloquear: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Redefinindo os bloqueios de rede para automático (reinício SFUN, cerca de 30 segundos)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Falha na redefinição: %s. As configurações de bloqueio salvas foram mantidas."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "A redefinição dos bloqueios não foi confirmada a tempo; trocando mesmo assim."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "SIM interno selecionado: em uso após reiniciar"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "SIM interno selecionado, mas sem suporte neste dispositivo: o SIM externo está em uso"
 
 msgid "Uptime %s"
 msgstr "Tempo ativo %s"
@@ -1317,6 +1359,9 @@ msgstr "Status confirmado"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "A leitura de confirmação expirou; selecione “Atualizar status dos bloqueios”"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Redefinição verificada: modo de rede automático, EN-DC ligado, todas as bandas, sem bloqueio de célula; as configurações de bloqueio salvas foram apagadas"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Aplicado (EN-DC não exige reinício da pilha de rádio)"
@@ -1739,6 +1784,15 @@ msgstr "Mensagem (Enter para enviar, Shift+Enter para nova linha)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "O envio usa AT+CMGS (modo PDU); tente novamente se o canal estiver ocupado. Para excluir uma mensagem, use o ícone de lixeira no balão dela."
 
+msgid "Sending…"
+msgstr "Enviando…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Enviado; a lista será atualizada em breve."
+
+msgid "Sending failed"
+msgstr "Falha no envio"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Sincronizando do SIM em segundo plano (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Excluído (somente local)"
 
 msgid "Enter both a number and a message."
 msgstr "Informe um número e uma mensagem."
-
-msgid "Sending…"
-msgstr "Enviando…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Enviado; a lista será atualizada em breve."
-
-msgid "Sending failed"
-msgstr "Falha no envio"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mensagens, %d não lidas · %d conversas"
@@ -3026,6 +3071,9 @@ msgstr "Lista de filtros inválida (no máximo 50 linhas)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "O endereço do webhook deve ser uma URL http:// ou https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "O corpo do webhook é longo demais ou contém um caractere de controle"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Cabeçalho inválido (um \"Nome: valor\" por linha; Host, Content-Type, Content-Length, Transfer-Encoding e Connection são definidos pelo dispositivo)"
 
@@ -3083,8 +3131,26 @@ msgstr "Não foi possível remover o pacote de idiomas"
 msgid "Lock cache unavailable"
 msgstr "Cache de bloqueios indisponível"
 
+msgid "The saved locks could not be cleared"
+msgstr "Os bloqueios salvos não puderam ser apagados"
+
 msgid "No serving cell to lock to"
 msgstr "Sem célula servidora para bloquear"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "O modem não respondeu à consulta de modo; nada foi enviado"
+
+msgid "The modem refused a write"
+msgstr "O modem recusou uma gravação"
+
+msgid "The read-back does not match the automatic values"
+msgstr "A releitura não corresponde aos valores automáticos"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "A releitura após o reinício da pilha não corresponde aos valores automáticos"
+
+msgid "The reset was interrupted"
+msgstr "A redefinição foi interrompida"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Reinstalar pacotes não está disponível neste sistema"

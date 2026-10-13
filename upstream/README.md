@@ -187,7 +187,11 @@ Fixes needed on top of the port:
 
 - `sdhci-sprd`: UMS9620 has the r11p3 controller; the vendor driver programs DLL phase `0x2`
   (mainline `0x3`). With `0x3` reads work in HS400ES but every write fails with data CRC errors.
-- `sdhci-sprd`: only the non-removable eMMC is probed (the SD slot is unpopulated and floods the log).
+- `sdhci-sprd`: the eMMC and the SD card slot (`sprd,name` `sdio_sd`) are probed, `sdio_wifi` is not (Wi-Fi is on
+  PCIe). The slot's card detect is line 35 of the EIC sync controller, which mainline's `gpio-eic-sprd` mapped as 24
+  lines (three of its six banks): `patches/0014` maps them all, so the slot is detected by interrupt and an empty
+  slot is left alone (issue #181: polled, it was initialised once a second and filled the log with "Got command
+  interrupt ... even though no command operation was in progress" register dumps).
 - UMP9620 PMIC watchdog, armed by LK for 300 s, is disabled by `ump9620-pmic-wdt-off`.
 - Userspace config: cgroups/namespaces/seccomp, bridge, nftables, IPv6, zram.
 - Thermal: vendor `sprd_thermal_r5p0` (19 on-die zones) with calibration from the UMS9620 eFuse; the eFuse
@@ -195,8 +199,11 @@ Fixes needed on top of the port:
 - cpufreq: vendor `sprd_sip_svc` + `sprd-cpufreq-v2`; ATF does the DVFS, the kernel asks through SIP SMC calls
   (3 policies: 4 little / 3 mid / 1 big, schedutil). PSCI cpuidle (WFI, core sleep, cluster power-down).
   Idle temperature dropped from ~54 C to ~48 C.
-- The stock DT has trip points only on the vendor virtual zone, so `/opt/mu300/bin/thermal-guard` caps cpufreq
-  above 85 C and powers off above 105 C on kernels without SoC trip points.
+- The stock DT has trip points only on the vendor virtual zone (`soc-thmzone`: passive 70/85 C, critical 110 C,
+  cooling maps to the three clusters), whose sensor driver mainline lacks: `modules/mu300_thermal` brings it back
+  (the hottest of the eleven zones the DT names), so the kernel's `step_wise` throttles at 85 C. `extra-modules`
+  loads it; `/opt/mu300/bin/thermal-guard` then only watches (and keeps its 105 C power-off), and caps cpufreq
+  itself only while the zone is absent (FINDINGS 48).
 
 - Watchdog: the UMP9620 PMIC watchdog that LK arms is taken over (`ump9620-pmic-wdt`), 60 s, pinged by the
   core until procd/systemd opens it; a hard hang resets the board back to Android.

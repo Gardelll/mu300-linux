@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Teplota"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Teplotní zóny jádra, pouze pro čtení. Zóna s prahovými body omezuje chladicí zařízení, která jsou k ní připojena, na svém pasivním prahu; stav chlazení 0 znamená žádné omezení."
+
+msgid "Zone"
+msgstr "Zóna"
+
+msgid "Temperature"
+msgstr "Teplota"
+
+msgid "Trip points"
+msgstr "Prahové body"
+
+msgid "Cooling devices"
+msgstr "Chladicí zařízení"
+
 msgid "USB role"
 msgstr "Role USB"
 
@@ -604,8 +622,17 @@ msgstr "Tělo"
 msgid "Form (URL-encoded)"
 msgstr "Formulář (kódování URL)"
 
+msgid "Plain text"
+msgstr "Prostý text"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Pole: sender, time, text, device, message (vyplněná šablona)"
+
+msgid "Custom body"
+msgstr "Vlastní tělo"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Prázdné: standardní pole (prostý text: zpráva). Zástupné symboly: {sender}, {time}, {text}, {device}, {message}. Každá hodnota se escapuje podle zvoleného typu. Toto tělo se zde znovu zobrazí: tajné údaje dejte do adresy nebo do hlavičky."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Další hlavičky (jedna \"Název: hodnota\" na řádek)"
@@ -766,6 +793,9 @@ msgstr "Celkem odesláno"
 msgid "Used today"
 msgstr "Dnes spotřebováno"
 
+msgid "SIM source"
+msgstr "Zdroj SIM"
+
 msgid "Session duration"
 msgstr "Doba relace"
 
@@ -834,6 +864,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operátor"
+
+msgid "Own number"
+msgstr "Vlastní číslo"
 
 msgid "Module"
 msgstr "Modul"
@@ -973,8 +1006,17 @@ msgstr "Uzamčení selhalo: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Obnovují se automatická nastavení sítě (restart SFUN, asi 30 sekund)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Reset se nezdařil: %s. Uložená nastavení zámků byla zachována."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Obnovení zámků nebylo včas potvrzeno; přepíná se i tak."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Vybrána interní SIM: použije se po restartu"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Vybrána interní SIM, ale toto zařízení ji nepodporuje: používá se externí SIM"
 
 msgid "Uptime %s"
 msgstr "Doba provozu %s"
@@ -1317,6 +1359,9 @@ msgstr "Stav ověřen"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Časový limit zpětného čtení vypršel; zvolte „Obnovit stav zámků“"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Reset ověřen: síťový režim automatický, EN-DC zapnuto, všechna pásma, bez zámku buňky; uložená nastavení zámků byla vymazána"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Použito (EN-DC nevyžaduje restart rádiového stacku)"
@@ -1739,6 +1784,15 @@ msgstr "Zpráva (Enter odešle, Shift+Enter nový řádek)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Odesílání používá AT+CMGS (režim PDU); pokud je kanál obsazen, zkuste to znovu. Jednotlivou zprávu smažete ikonou koše na její bublině."
 
+msgid "Sending…"
+msgstr "Odesílání…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Odesláno; seznam se brzy obnoví."
+
+msgid "Sending failed"
+msgstr "Odeslání selhalo"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronizace ze SIM na pozadí (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Smazáno (pouze místně)"
 
 msgid "Enter both a number and a message."
 msgstr "Zadejte číslo i zprávu."
-
-msgid "Sending…"
-msgstr "Odesílání…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Odesláno; seznam se brzy obnoví."
-
-msgid "Sending failed"
-msgstr "Odeslání selhalo"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· zpráv: %d, nepřečtených: %d · konverzací: %d"
@@ -3026,6 +3071,9 @@ msgstr "Neplatný seznam filtrů (nejvýše 50 řádků)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Adresa webhooku musí být URL http:// nebo https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Tělo webhooku je příliš dlouhé nebo obsahuje řídicí znak"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Neplatná hlavička (jedna \"Název: hodnota\" na řádek; Host, Content-Type, Content-Length, Transfer-Encoding a Connection nastavuje zařízení)"
 
@@ -3083,8 +3131,26 @@ msgstr "Jazykový balíček se nepodařilo odebrat"
 msgid "Lock cache unavailable"
 msgstr "Mezipaměť zámků není dostupná"
 
+msgid "The saved locks could not be cleared"
+msgstr "Uložené zámky se nepodařilo vymazat"
+
 msgid "No serving cell to lock to"
 msgstr "Žádná obsluhující buňka k uzamčení"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem neodpověděl na dotaz na režim; nic nebylo odesláno"
+
+msgid "The modem refused a write"
+msgstr "Modem odmítl zápis"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Zpětné čtení neodpovídá automatickým hodnotám"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Zpětné čtení po restartu zásobníku neodpovídá automatickým hodnotám"
+
+msgid "The reset was interrupted"
+msgstr "Reset byl přerušen"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Opětovná instalace balíčků není v tomto systému k dispozici"

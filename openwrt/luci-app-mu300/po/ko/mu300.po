@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "열 관리"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "커널의 열 영역(읽기 전용)입니다. 트립 포인트가 있는 영역은 패시브 트립에서 연결된 냉각 장치를 제한합니다. 냉각 상태 0은 제한이 없음을 뜻합니다."
+
+msgid "Zone"
+msgstr "영역"
+
+msgid "Temperature"
+msgstr "온도"
+
+msgid "Trip points"
+msgstr "트립 포인트"
+
+msgid "Cooling devices"
+msgstr "냉각 장치"
+
 msgid "USB role"
 msgstr "USB 역할"
 
@@ -604,8 +622,17 @@ msgstr "본문"
 msgid "Form (URL-encoded)"
 msgstr "양식(URL 인코딩)"
 
+msgid "Plain text"
+msgstr "일반 텍스트"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "필드: sender, time, text, device, message(채워진 템플릿)"
+
+msgid "Custom body"
+msgstr "사용자 지정 본문"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "비어 있음: 표준 필드(일반 텍스트: 메시지). 자리 표시자: {sender}, {time}, {text}, {device}, {message}. 각 값은 선택한 형식에 맞게 이스케이프됩니다. 이 본문은 여기에 다시 표시됩니다. 비밀 값은 주소나 헤더에 넣으십시오."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "추가 헤더(한 줄에 하나의 \"Name: value\")"
@@ -766,6 +793,9 @@ msgstr "총 송신량"
 msgid "Used today"
 msgstr "오늘 사용량"
 
+msgid "SIM source"
+msgstr "SIM 소스"
+
 msgid "Session duration"
 msgstr "세션 시간"
 
@@ -834,6 +864,9 @@ msgstr "모뎀"
 
 msgid "Carrier"
 msgstr "통신사"
+
+msgid "Own number"
+msgstr "내 번호"
 
 msgid "Module"
 msgstr "모듈"
@@ -973,8 +1006,17 @@ msgstr "잠금 실패: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "네트워크 고정을 자동으로 초기화하는 중(SFUN 재시작, 약 30초)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "초기화 실패: %s. 저장된 잠금 설정은 유지되었습니다."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "고정 초기화를 제때 확인하지 못했습니다. 그대로 전환합니다."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "내장 SIM 선택됨: 재부팅 후 사용됩니다"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "내장 SIM을 선택했지만 이 기기에서는 지원되지 않습니다: 외부 SIM을 사용 중입니다"
 
 msgid "Uptime %s"
 msgstr "가동 시간 %s"
@@ -1317,6 +1359,9 @@ msgstr "상태 확인됨"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "다시 읽기 시간 초과. “잠금 상태 새로 고침”을 선택하십시오"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "초기화 확인됨: 네트워크 모드 자동, EN-DC 켜짐, 모든 대역, 셀 잠금 없음. 저장된 잠금 설정이 지워졌습니다"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "적용됨 (EN-DC는 무선 스택 재시작이 필요하지 않음)"
@@ -1739,6 +1784,15 @@ msgstr "메시지 (Enter로 전송, Shift+Enter로 줄바꿈)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "전송에는 AT+CMGS(PDU 모드)를 사용합니다. 채널이 사용 중이면 다시 시도하십시오. 메시지 하나를 삭제하려면 말풍선의 휴지통 아이콘을 사용하십시오."
 
+msgid "Sending…"
+msgstr "전송 중…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "전송됨. 곧 목록이 새로 고쳐집니다."
+
+msgid "Sending failed"
+msgstr "전송 실패"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "백그라운드에서 SIM 동기화 중 (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "삭제됨 (로컬만)"
 
 msgid "Enter both a number and a message."
 msgstr "번호와 메시지를 모두 입력하십시오."
-
-msgid "Sending…"
-msgstr "전송 중…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "전송됨. 곧 목록이 새로 고쳐집니다."
-
-msgid "Sending failed"
-msgstr "전송 실패"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· 메시지 %d개, 읽지 않음 %d개 · 대화 %d개"
@@ -3026,6 +3071,9 @@ msgstr "잘못된 필터 목록(최대 50줄)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "웹훅 주소는 http:// 또는 https:// URL이어야 합니다"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "웹훅 본문이 너무 길거나 제어 문자를 포함하고 있습니다"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "잘못된 헤더(한 줄에 하나의 \"Name: value\"; Host, Content-Type, Content-Length, Transfer-Encoding, Connection은 기기가 설정합니다)"
 
@@ -3083,8 +3131,26 @@ msgstr "언어 팩을 제거할 수 없습니다"
 msgid "Lock cache unavailable"
 msgstr "잠금 캐시를 사용할 수 없습니다"
 
+msgid "The saved locks could not be cleared"
+msgstr "저장된 잠금을 지울 수 없습니다"
+
 msgid "No serving cell to lock to"
 msgstr "잠글 서빙 셀이 없습니다"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "모뎀이 모드 조회에 응답하지 않았습니다. 아무것도 전송되지 않았습니다"
+
+msgid "The modem refused a write"
+msgstr "모뎀이 쓰기를 거부했습니다"
+
+msgid "The read-back does not match the automatic values"
+msgstr "다시 읽은 값이 자동 값과 일치하지 않습니다"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "스택 재시작 후 다시 읽은 값이 자동 값과 일치하지 않습니다"
+
+msgid "The reset was interrupted"
+msgstr "초기화가 중단되었습니다"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "이 시스템에서는 패키지 재설치를 사용할 수 없습니다"

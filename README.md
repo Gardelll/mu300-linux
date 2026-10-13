@@ -275,8 +275,9 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   `sms delete read` on this system. A message leaves the SIM only once the pool's copy is on the disk (an fsync of
   that file and its directory, never a global sync). A long message whose other parts never come is shown after an
   hour with what did arrive, marked incomplete.
-* **Cellular > SMS forwarding:** off until turned on. Received messages go on to a webhook (JSON or form, extra
-  headers), a Telegram chat, an e-mail address (only when the image has `msmtp`) and/or another phone by SMS, through a
+* **Cellular > SMS forwarding:** off until turned on. Received messages go on to a webhook (JSON, form or plain text,
+  extra headers; the standard fields or a body of your own with `{sender}`, `{time}`, `{text}`, `{device}`,
+  `{message}`, each value escaped for the type), a Telegram chat, an e-mail address (only when the image has `msmtp`) and/or another phone by SMS, through a
   template (`{sender}`, `{time}`, `{text}`, `{device}`), with sender allow/deny lists and keywords. Failed deliveries
   are retried (30 s, doubling, an hour at most, ten times); a delivery log and a "Send test" button. Tokens, passwords
   and the webhook address and headers stay in `/etc/mu300/sms-forward.conf` (root only) and are never shown again.
@@ -356,6 +357,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Test stability under load | `sudo mu300-toolkit stress all 10` |
 | Check the mobile connection | `sudo mobile-data status` |
 | Set the APN | Ubuntu: `/etc/mu300/mobile-data.conf` (`MU300_APN`, `MU300_PDP_TYPE`). OpenWrt: LuCI → Network → Interfaces → wan, or `uci set network.wan.apn='…'; uci commit network; ifup wan`. Leave it empty to keep the context the SIM defines, which is what most carriers expect |
+| Use the F50's internal SIM instead of the card in the slot | `sudo mu300-sim select internal` (`external` goes back; it takes effect at the next boot, the external card is the default, and nothing is written to the modem or the SIM). OpenWrt: LuCI → Network → Interfaces → wan → SIM source, with that card's own APN; Ubuntu: its APN in `/etc/mu300/mobile-data.conf`. F50 only, and the device must have an internal SIM fitted (docs/SIM-SELECTION.md) |
 | Change the Wi-Fi name or password | Ubuntu: edit `/etc/mu300/hotspot.conf`, then `sudo systemctl restart mu300-hotspot`. OpenWrt: LuCI → Network → Wireless (that file is only read once, at the first boot) |
 | Change the hotspot's channel | Ubuntu: `CHANNEL=` in `/etc/mu300/hotspot.conf` (`auto`, or on 5 GHz 36-48 / 149-165). OpenWrt: LuCI → Network → Wireless. Never a DFS channel (52-144): the Wi-Fi driver cannot detect radar, so hostapd could not start there; a DFS channel is replaced by 36 (149 where 36-48 are not allowed) and the log says why (FINDINGS 42) |
 | Read and send SMS | `sudo sms list`, `sudo sms send NUMBER TEXT...`, `sudo sms delete INDEX` (an index, `read` or `all`; anything else is refused before it reaches the modem) (OpenWrt with the panel: Cellular → SMS; Ubuntu with the panel extra: the MU300 page) |
@@ -435,9 +437,10 @@ calls that kernel does not have, the same rule as for `install.sh`. Check a down
 **2. Install it.** Put the zip on the device and open it in the Magisk app (Modules, Install from storage), or run
 `su -c 'magisk --install-module /sdcard/Download/<zip>'`. Not from recovery.
 
-**3. Read the output.** It shows the device it found, where Linux goes, what it will write, and the password it
-generated. The password is also in `/data/adb/mu300-linux-password.txt` (mode 600; read it with
-`su -c cat /data/adb/mu300-linux-password.txt`, and delete the file after the first login). A zip installed over a
+**3. Read the output.** It shows the device it found, where Linux goes, what it will write, and which password works:
+the images' own, as on a computer install without one of your choice - Ubuntu's user `ubuntu` has the password
+`ubuntu`, OpenWrt's `root` has none until you set one (`passwd`, or LuCI's System > Administration). The same note is
+in `/data/adb/mu300-linux-password.txt` (`su -c cat /data/adb/mu300-linux-password.txt`). A zip installed over a
 system that is already there (an update) keeps its accounts and passwords and says "unchanged".
 
 **4. Reboot.** Linux starts. If it does not, the device returns to Android by itself.
@@ -529,9 +532,9 @@ update - would wipe or erase again. For another erase, put the line back.
 | `MU300_BOOT_ATTEMPTS` | `1` to `6` | either | `5` |
 | `MU300_HOTSPOT` | `yes`, `no` | either | `yes`: Android's hotspot name and password are copied |
 | `MU300_GPU` | `yes`, `no` | either | `yes` (skipped with a message when this device lacks a file of the GPU set) |
-| `MU300_PASSWORD` | 6 or more characters | `/data/adb` only | Generated for a new system: 12 characters from `/dev/urandom` without look-alikes. An update keeps the existing password |
-| `MU300_PASSWORD_RESET` | `yes` | `/data/adb` only | Not set: an update keeps the existing password. `yes`: a new one is generated |
-| `MU300_PASSWORD_FILE` | `sdcard` | `/data/adb` only | Not set: the password file is `/data/adb/mu300-linux-password.txt` |
+| `MU300_PASSWORD` | 6 or more characters | `/data/adb` only | The images' own for a new system: Ubuntu's `ubuntu`/`ubuntu`, OpenWrt's `root` without a password. An update keeps the existing password |
+| `MU300_PASSWORD_RESET` | `yes` | `/data/adb` only | Not set: an update keeps the existing password. `yes`: the images' own again |
+| `MU300_PASSWORD_FILE` | `sdcard` | `/data/adb` only | Not set: the password note is `/data/adb/mu300-linux-password.txt` |
 | `MU300_DEVICE` | `f50`, `u30air` | `/data/adb` only | Detected; needed only for a model name the installer does not know |
 | `MU300_LANG` | `en`, `tr`, `zh` | either | The language of the Android locale |
 | `MU300_DRY_RUN` | `1` | either | Not set |
@@ -547,16 +550,19 @@ su -c 'chmod 600 /data/adb/mu300-install.conf'
 
 Only look at what an install would do, with the file on `/sdcard`: `MU300_DRY_RUN=1` on a line of its own.
 
-**The password.** It is never empty and never the image's (`ubuntu`/`ubuntu`, OpenWrt's empty root). An update
-keeps the accounts and passwords the system has, as `mu300-update` does: a password is made only for a system that has
-none of its own yet (a first install, a wipe, the second system next to the first), or when
-`/data/adb/mu300-install.conf` asks for one with `MU300_PASSWORD` or `MU300_PASSWORD_RESET=yes` (put these there, not
-into a zip's own `mu300/mu300-install.conf`, which is never edited and would reset the password at every update). A new one is written to
-`/data/adb/mu300-linux-password.txt`, which only root reads, and shown in the Magisk output (between quotes) before
-anything is installed, so an install that stops later never leaves a password nobody has seen. Only a trusted
-`MU300_PASSWORD_FILE=sdcard` writes it to `/sdcard/mu300-linux-password.txt` instead, where every app with storage
-access can read it. A `MU300_PASSWORD` or `MU300_PASSWORD_RESET` from `/data/adb/mu300-install.conf` is replaced by a
-comment in that file after a successful install.
+**The password.** A system the zip installs gets the images' own, well-known one: Ubuntu's user `ubuntu` has the
+password `ubuntu`, OpenWrt's `root` has none (as stock OpenWrt ships: dropbear and LuCI let root in without one until
+you set one with `passwd` or in LuCI, System > Administration). Nothing random: a random password shown in nothing
+but a root-only file, which the next zip overwrote, left systems added beside a first one with a password nobody knew
+(FINDINGS 47). An update keeps the accounts and passwords the system has, as `mu300-update` does: the images' own
+apply only to a system that has none of its own yet (a first install, a wipe, the second system next to the first), or
+when `/data/adb/mu300-install.conf` asks with `MU300_PASSWORD_RESET=yes`. `MU300_PASSWORD` there sets one of your own
+instead, for every system it installs (put these there, not into a zip's own `mu300/mu300-install.conf`, which is
+never edited and would reset the password at every update); it is hashed and never shown or written down. Which
+password works is said in the Magisk output before anything is installed and noted in
+`/data/adb/mu300-linux-password.txt` (a trusted `MU300_PASSWORD_FILE=sdcard` puts the note in
+`/sdcard/mu300-linux-password.txt` instead). A `MU300_PASSWORD` or `MU300_PASSWORD_RESET` from
+`/data/adb/mu300-install.conf` is replaced by a comment in that file after a successful install.
 
 ### Starting Linux from Android without a computer
 

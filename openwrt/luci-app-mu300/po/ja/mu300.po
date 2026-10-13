@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "温度管理"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "カーネルのサーマルゾーン（読み取り専用）。トリップポイントを持つゾーンは、パッシブトリップでそのゾーンに結び付けられた冷却デバイスを制限します。冷却状態 0 は制限なしです。"
+
+msgid "Zone"
+msgstr "ゾーン"
+
+msgid "Temperature"
+msgstr "温度"
+
+msgid "Trip points"
+msgstr "トリップポイント"
+
+msgid "Cooling devices"
+msgstr "冷却デバイス"
+
 msgid "USB role"
 msgstr "USB ロール"
 
@@ -604,8 +622,17 @@ msgstr "本文"
 msgid "Form (URL-encoded)"
 msgstr "フォーム（URL エンコード）"
 
+msgid "Plain text"
+msgstr "プレーンテキスト"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "フィールド: sender, time, text, device, message（埋め込み済みテンプレート）"
+
+msgid "Custom body"
+msgstr "カスタム本文"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "空欄: 標準のフィールド（プレーンテキスト: メッセージ）。プレースホルダー: {sender}、{time}、{text}、{device}、{message}。各値は選択した形式に合わせてエスケープされます。この本文はここに再表示されます。秘密情報はアドレスかヘッダーに入れてください。"
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "追加ヘッダー（1 行に 1 つの \"Name: value\"）"
@@ -766,6 +793,9 @@ msgstr "送信合計"
 msgid "Used today"
 msgstr "今日の使用量"
 
+msgid "SIM source"
+msgstr "SIM の選択"
+
 msgid "Session duration"
 msgstr "セッション時間"
 
@@ -834,6 +864,9 @@ msgstr "モデム"
 
 msgid "Carrier"
 msgstr "キャリア"
+
+msgid "Own number"
+msgstr "自分の番号"
 
 msgid "Module"
 msgstr "モジュール"
@@ -973,8 +1006,17 @@ msgstr "ロックに失敗しました: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "ネットワークロックを自動にリセットしています（SFUN 再起動、約 30 秒）…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "リセットに失敗しました: %s。保存されたロック設定は保持されました。"
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "ロックのリセットを時間内に確認できませんでした。そのまま切り替えます。"
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "内蔵 SIM を選択済み: 再起動後に使用されます"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "内蔵 SIM を選択済みですが、このデバイスでは対応していません: 外部 SIM を使用中です"
 
 msgid "Uptime %s"
 msgstr "稼働時間 %s"
@@ -1317,6 +1359,9 @@ msgstr "ステータスを確認しました"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "読み戻しがタイムアウトしました。「ロック状態を更新」を選択してください"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "リセットを確認しました: ネットワークモード自動、EN-DC オン、全バンド、セルロックなし。保存されたロック設定は消去されました"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "適用しました (EN-DC は無線スタックの再起動を必要としません)"
@@ -1739,6 +1784,15 @@ msgstr "メッセージ (Enter で送信、Shift+Enter で改行)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "送信には AT+CMGS (PDU モード) を使用します。チャネルがビジーの場合は再試行してください。1 件だけ削除するには、吹き出しのゴミ箱アイコンを使用します。"
 
+msgid "Sending…"
+msgstr "送信中…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "送信しました。まもなく一覧が更新されます。"
+
+msgid "Sending failed"
+msgstr "送信に失敗しました"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "バックグラウンドで SIM から同期しています (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "削除しました (ローカルのみ)"
 
 msgid "Enter both a number and a message."
 msgstr "番号とメッセージの両方を入力してください。"
-
-msgid "Sending…"
-msgstr "送信中…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "送信しました。まもなく一覧が更新されます。"
-
-msgid "Sending failed"
-msgstr "送信に失敗しました"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d 件、未読 %d 件 · 会話 %d 件"
@@ -3026,6 +3071,9 @@ msgstr "無効なフィルター一覧（最大 50 行）"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhook のアドレスは http:// または https:// の URL である必要があります"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhook の本文が長すぎるか、制御文字を含んでいます"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "無効なヘッダー（1 行に 1 つの \"Name: value\"。Host、Content-Type、Content-Length、Transfer-Encoding、Connection はデバイスが設定します）"
 
@@ -3083,8 +3131,26 @@ msgstr "言語パックを削除できませんでした"
 msgid "Lock cache unavailable"
 msgstr "ロックキャッシュを利用できません"
 
+msgid "The saved locks could not be cleared"
+msgstr "保存されたロックを消去できませんでした"
+
 msgid "No serving cell to lock to"
 msgstr "ロックできるサービングセルがありません"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "モデムがモード照会に応答しませんでした。何も送信されていません"
+
+msgid "The modem refused a write"
+msgstr "モデムが書き込みを拒否しました"
+
+msgid "The read-back does not match the automatic values"
+msgstr "読み戻し値が自動の値と一致しません"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "スタック再起動後の読み戻し値が自動の値と一致しません"
+
+msgid "The reset was interrupted"
+msgstr "リセットが中断されました"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "このシステムではパッケージの再インストールを利用できません"

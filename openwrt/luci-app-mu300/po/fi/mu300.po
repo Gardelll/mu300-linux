@@ -388,6 +388,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Lämpötila"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Ytimen lämpöalueet, vain luku. Alue, jolla on raja-arvopisteitä, rajoittaa siihen sidottuja jäähdytyslaitteita passiivisessa raja-arvossaan; jäähdytystila 0 tarkoittaa, ettei rajoitusta ole."
+
+msgid "Zone"
+msgstr "Alue"
+
+msgid "Temperature"
+msgstr "Lämpötila"
+
+msgid "Trip points"
+msgstr "Raja-arvopisteet"
+
+msgid "Cooling devices"
+msgstr "Jäähdytyslaitteet"
+
 msgid "USB role"
 msgstr "USB-rooli"
 
@@ -604,8 +622,17 @@ msgstr "Sisältö"
 msgid "Form (URL-encoded)"
 msgstr "Lomake (URL-koodattu)"
 
+msgid "Plain text"
+msgstr "Pelkkä teksti"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Kentät: sender, time, text, device, message (täytetty pohja)"
+
+msgid "Custom body"
+msgstr "Mukautettu runko"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Tyhjä: vakiokentät (pelkkä teksti: viesti). Paikkamerkit: {sender}, {time}, {text}, {device}, {message}. Jokainen arvo suojataan valitun tyypin mukaan. Tämä runko näytetään tässä uudelleen: pidä salaisuudet osoitteessa tai otsakkeessa."
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Lisäotsakkeet (yksi \"Nimi: arvo\" riviä kohden)"
@@ -766,6 +793,9 @@ msgstr "Lähetetty yhteensä"
 msgid "Used today"
 msgstr "Käytetty tänään"
 
+msgid "SIM source"
+msgstr "SIM-lähde"
+
 msgid "Session duration"
 msgstr "Istunnon kesto"
 
@@ -834,6 +864,9 @@ msgstr "Modeemi"
 
 msgid "Carrier"
 msgstr "Operaattori"
+
+msgid "Own number"
+msgstr "Oma numero"
 
 msgid "Module"
 msgstr "Moduuli"
@@ -973,8 +1006,17 @@ msgstr "Lukitus epäonnistui: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Verkkolukituksia palautetaan automaattisiksi (SFUN-uudelleenkäynnistys, noin 30 sekuntia)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Palautus epäonnistui: %s. Tallennetut lukitusasetukset säilytettiin."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Lukitusten nollausta ei vahvistettu ajoissa; vaihdetaan silti."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Sisäinen SIM valittu: käytössä uudelleenkäynnistyksen jälkeen"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Sisäinen SIM valittu, mutta tämä laite ei tue sitä: ulkoinen SIM on käytössä"
 
 msgid "Uptime %s"
 msgstr "Käynnissä %s"
@@ -1317,6 +1359,9 @@ msgstr "Tila vahvistettu"
 
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Takaisinluku aikakatkaistiin; valitse ”Päivitä lukitusten tila”"
+
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Palautus vahvistettu: verkkotila automaattinen, EN-DC päällä, kaikki taajuusalueet, ei solulukitusta; tallennetut lukitusasetukset on poistettu"
 
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Otettu käyttöön (EN-DC ei vaadi radiopinon uudelleenkäynnistystä)"
@@ -1739,6 +1784,15 @@ msgstr "Viesti (Enter lähettää, Shift+Enter uusi rivi)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Lähetys käyttää AT+CMGS-komentoa (PDU-tila); yritä uudelleen, jos kanava on varattu. Poista yksittäinen viesti sen kuplan roskakorikuvakkeella."
 
+msgid "Sending…"
+msgstr "Lähetetään…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Lähetetty; luettelo päivittyy pian."
+
+msgid "Sending failed"
+msgstr "Lähetys epäonnistui"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synkronoidaan SIM-kortilta taustalla (AT+CMGL)…"
 
@@ -1777,15 +1831,6 @@ msgstr "Poistettu (vain paikallinen)"
 
 msgid "Enter both a number and a message."
 msgstr "Anna sekä numero että viesti."
-
-msgid "Sending…"
-msgstr "Lähetetään…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Lähetetty; luettelo päivittyy pian."
-
-msgid "Sending failed"
-msgstr "Lähetys epäonnistui"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d viestiä, %d lukematonta · %d keskustelua"
@@ -3026,6 +3071,9 @@ msgstr "Virheellinen suodatinluettelo (enintään 50 riviä)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhookin osoitteen on oltava http://- tai https://-URL"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhookin runko on liian pitkä tai sisältää ohjausmerkin"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Virheellinen otsake (yksi \"Nimi: arvo\" riviä kohden; laite asettaa Host-, Content-Type-, Content-Length-, Transfer-Encoding- ja Connection-otsakkeet)"
 
@@ -3083,8 +3131,26 @@ msgstr "Kielipakettia ei voitu poistaa"
 msgid "Lock cache unavailable"
 msgstr "Lukitusvälimuisti ei käytettävissä"
 
+msgid "The saved locks could not be cleared"
+msgstr "Tallennettuja lukituksia ei voitu poistaa"
+
 msgid "No serving cell to lock to"
 msgstr "Ei palvelevaa solua lukittavaksi"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modeemi ei vastannut tilakyselyyn; mitään ei lähetetty"
+
+msgid "The modem refused a write"
+msgstr "Modeemi hylkäsi kirjoituksen"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Takaisinluku ei vastaa automaattisia arvoja"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Takaisinluku pinon uudelleenkäynnistyksen jälkeen ei vastaa automaattisia arvoja"
+
+msgid "The reset was interrupted"
+msgstr "Palautus keskeytyi"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Pakettien uudelleenasennus ei ole käytettävissä tässä järjestelmässä"
