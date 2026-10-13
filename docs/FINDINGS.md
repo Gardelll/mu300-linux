@@ -5305,12 +5305,13 @@ notes that contain `"tag_name": "v2099.01.01"` change nothing (tested with GitHu
 The functions of the block, by name, because a merge will ask: `jv`, `jstr`, `jnum`, `mtime`, `tag_ok`, `newer`,
 `space_needed`, `source_conf`, `key_state`, `sig_raw`, `sig_state`, `stage_private`, `tag_sha`, `sums_trusted`,
 `sums_verdict`, `apply_targets`, `downgrade_ok`, `boot_downgrade_ok`, `zip_p`, `man_val`,
-`from_open`, `from_close`, `from_member`, `from_fits`, `from_installed`, `apply_options`, `from_begin`,
+`from_open`, `from_read`, `payload_is`, `from_close`, `from_member`, `from_fits`, `from_installed`, `apply_options`,
+`from_begin`,
 `from_verified`, `from_handover`, `inspect_json`, `lock_holder`, `size_kb`, `status_json`, `release_json`,
 `releases_json`, `progress` (a test holds the list to the code). The lines outside it: `fetch_verified` (five: the
 file being fetched, the offline source, `stage_private`, the signature twice), `latest_release` and the download
-address (a mirror, below), `apply` (four: `from_begin`, `downgrade_ok`, a zip's one system, `from_handover` before
-it continues with the release's own updater), `kernel_cmd` and the `boot` command (`boot_downgrade_ok`), `check`'s
+address (a mirror, below), `apply` (five: `from_begin`, `downgrade_ok`, `payload_is`, a zip's one system,
+`from_handover` before it continues with the release's own updater), `kernel_cmd` and the `boot` command (`boot_downgrade_ok`), `check`'s
 last line (it names `--downgrade`), the dispatch (`apply_options`, the three commands, `source_conf`) and the help
 text. `space_needed` is
 `apply`'s own rule (1 GB, and 1 GB for every system to update) written a second time so that the page can show it:
@@ -5446,6 +5447,31 @@ newline) and lists it in `SHA256SUMS`, so the signature covers which release the
 needs no download for that - it compares the listed hash with the hash of the tag it was asked for (`tag_sha`). A
 signed `SHA256SUMS` of v2026.10.01 handed out as v2026.11.02, by a mirror or in a zip whose manifest says the newer
 tag, is refused; signed checksums that name no release are not taken as signed.
+
+**A second review** (three findings; all three were in this change's own lines) and what it led to:
+
+* *The gate judged one value and the action used another.* Three places. (a) Every gate - signature, downgrade
+  rule, what the page showed - judged a *name*: the tag asked for, or the tag an unsigned zip's manifest gives
+  itself. What is installed is the files, and nothing compared the two, so an unsigned zip calling itself
+  v2026.12.24 with the system of v2026.09.01 passed the downgrade rule by its name. Now the root filesystem staged
+  for each system must say in its own `etc/mu300/image-version` that it is the release that was judged
+  (`payload_is`, before anything is changed, for every source); with signed checksums the name was bound already.
+  (b) The downgrade rule looked at the systems, and the update also writes the kernel and the boot image: after a
+  `rollback` of a system, a release between the two would have taken the boot image back without a word. The rule
+  now includes the boot image's release. (c) The page's yes was for the file `inspect` had hashed, and the updater
+  was handed a path: the adapter now passes that hash (`apply --from FILE --sha256=HASH`) and the updater takes
+  the file only if it still has it.
+* *Files more open than they need be.* Nothing was opened for the page - it reads through the adapter, as root -
+  but several files were made with whatever umask the caller had: the adapter's task files, the kept answers of
+  `releases` and `inspect`, and what the updater writes of an offline source into the staging directory. The
+  adapter now runs with umask 077 (and starts the updater under 022, which it needs: it makes the directories of
+  the new system), the upload is 600, and what `from_open` and `from_verified` write is 600 under any umask. The
+  staging directory was 755 before this change and is 700 now; one found writable by others is emptied before
+  use, since a name in it could be a link someone left.
+* *Anything else loosened.* Read again for that: `MU300_FROM_SHA` and the two waivers are this run's own words
+  (reset when the options are read, cleared by the adapter), no lock, link check or refusal of the old code was
+  removed, and the commands that take no lock (`status`, `releases`, `inspect`) write nothing but `inspect`'s own
+  temporary directory.
 
 The row that refuses unsigned releases is the one that can lock devices out, so the release side guards it: when
 the tree has the public key and the build has no secret key, `make-release.sh` refuses to publish; and
