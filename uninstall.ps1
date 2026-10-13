@@ -214,7 +214,7 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
     $open = @(LinuxAdbSerials (Quiet { adb devices -l }) -Open)
     if ($open.Count -eq 1) {
         $s = $open[0]
-        if (([string](Quiet { adb -s $s shell 'test -x /opt/mu300/bin/mu300-next-boot && echo mu300' })).Trim() -eq 'mu300') {
+        if (("" + (Quiet { adb -s $s shell 'test -x /opt/mu300/bin/mu300-next-boot && echo mu300' })).Trim() -eq 'mu300') {
             Write-Host ('  ' + "asking it over adb ($s)")
             Quiet { adb -s $s shell '/opt/mu300/bin/mu300-next-boot android && sync && reboot' } | Out-Null
             for ($i = 0; $i -lt 8; $i++) {
@@ -250,7 +250,7 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
     if ((AdbState) -notmatch 'device') { Die 'the device did not come back as Android' }
 }
 # whatever its serial number says: a root shell of our Linux must never be taken for a rooted Android
-if (([string](Quiet { adb shell 'ls -d /opt/mu300/bin 2>/dev/null' })).Trim()) {
+if (("" + (Quiet { adb shell 'ls -d /opt/mu300/bin 2>/dev/null' })).Trim()) {
     Die 'The device is running MU300 Linux, not Android: boot Android yourself (in Linux: sudo mu300-next-boot android && sudo reboot)'
 }
 if ((SuDo 'id -u') -ne '0') { Die 'su does not work on the device' }

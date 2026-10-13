@@ -555,7 +555,7 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
     $open = @(LinuxAdbSerials (Quiet { adb devices -l }) -Open)
     if ($open.Count -eq 1) {
         $s = $open[0]
-        if (([string](Quiet { adb -s $s shell 'test -x /opt/mu300/bin/mu300-next-boot && echo mu300' })).Trim() -eq 'mu300') {
+        if (("" + (Quiet { adb -s $s shell 'test -x /opt/mu300/bin/mu300-next-boot && echo mu300' })).Trim() -eq 'mu300') {
             Write-Host ('  ' + (T 'asking it over adb ({1})' $s))
             Quiet { adb -s $s shell '/opt/mu300/bin/mu300-next-boot android && sync && reboot' } | Out-Null
             for ($i = 0; $i -lt 8; $i++) {
@@ -592,7 +592,7 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
     Write-Host ('  ' + (T 'Android is up'))
 }
 # whatever its serial number says: a root shell of our Linux must never be taken for a rooted Android
-if (([string](Quiet { adb shell 'ls -d /opt/mu300/bin 2>/dev/null' })).Trim()) {
+if (("" + (Quiet { adb shell 'ls -d /opt/mu300/bin 2>/dev/null' })).Trim()) {
     Die ((T 'The device is running MU300 Linux, not Android') + ': ' + (T 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)'))
 }
 # an Android that is still starting answers adb before su and storage are ready: the pulls then failed
