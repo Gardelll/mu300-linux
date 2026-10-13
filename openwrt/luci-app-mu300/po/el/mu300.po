@@ -33,6 +33,9 @@ msgstr "Χρήση δεδομένων"
 msgid "Device management"
 msgstr "Διαχείριση συσκευής"
 
+msgid "Update"
+msgstr "Ενημέρωση"
+
 msgid "Languages"
 msgstr "Γλώσσες"
 
@@ -1050,6 +1053,9 @@ msgstr "Άγκυρα B%s"
 msgid "No serving cell"
 msgstr "Καμία κυψέλη εξυπηρέτησης"
 
+msgid "Version %s is out: update"
+msgstr "Κυκλοφόρησε η έκδοση %s: ενημερώστε"
+
 msgid "Not registered"
 msgstr "Μη καταχωρισμένο"
 
@@ -1938,6 +1944,393 @@ msgstr "Απενεργοποίηση"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "Με 64 κάθε πακέτο φεύγει όπως η κίνηση της ίδιας της συσκευής"
 
+msgid "Check for updates"
+msgstr "Έλεγχος για ενημερώσεις"
+
+msgid "Checking the file"
+msgstr "Έλεγχος του αρχείου"
+
+msgid "Update from a file"
+msgstr "Ενημέρωση από αρχείο"
+
+msgid "Back to the previous version"
+msgstr "Επιστροφή στην προηγούμενη έκδοση"
+
+msgid "Back to the previous boot image"
+msgstr "Επιστροφή στην προηγούμενη εικόνα εκκίνησης"
+
+msgid "Remove the previous version"
+msgstr "Αφαίρεση της προηγούμενης έκδοσης"
+
+msgid "Kernel change"
+msgstr "Αλλαγή πυρήνα"
+
+msgid "Starting…"
+msgstr "Εκκίνηση…"
+
+msgid "Downloading"
+msgstr "Λήψη"
+
+msgid "All files are here and verified"
+msgstr "Όλα τα αρχεία είναι εδώ και έχουν επαληθευτεί"
+
+msgid "Unpacking the new system"
+msgstr "Αποσυμπίεση του νέου συστήματος"
+
+msgid "Carrying over your settings"
+msgstr "Μεταφορά των ρυθμίσεών σας"
+
+msgid "Writing down the packages you installed"
+msgstr "Καταγραφή των πακέτων που εγκαταστήσατε"
+
+msgid "Switching to the new system"
+msgstr "Μετάβαση στο νέο σύστημα"
+
+msgid "Kernel and boot image"
+msgstr "Πυρήνας και εικόνα εκκίνησης"
+
+msgid "Restart the device?"
+msgstr "Επανεκκίνηση της συσκευής;"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "Η συσκευή επανεκκινείται τώρα. Η προεπιλεγμένη εκκίνηση είναι το Android, οπότε ξεκινά το Android: μεταβείτε από εκεί στο Linux για να ξεκινήσει το ενημερωμένο σύστημα."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "Η συσκευή επανεκκινείται τώρα και θα λείπει για περίπου ένα λεπτό. Αν το νέο σύστημα δεν ξεκινήσει, η συσκευή επιστρέφει μόνη της στο Android μετά τις αποτυχημένες προσπάθειες."
+
+msgid "Restart"
+msgstr "Επανεκκίνηση"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "Επανεκκίνηση… ανοίξτε ξανά αυτή τη σελίδα σε περίπου ένα λεπτό."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "Εκτελείται εδώ και %s. Συνεχίζει και όταν κλείσει αυτή η σελίδα· μην απενεργοποιήσετε τη συσκευή."
+
+msgid "Done. Restart the device to start it."
+msgstr "Ολοκληρώθηκε. Επανεκκινήστε τη συσκευή για να τεθεί σε ισχύ."
+
+msgid "Done. Nothing needs a restart."
+msgstr "Ολοκληρώθηκε. Δεν χρειάζεται επανεκκίνηση."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "Δεν ολοκληρώθηκε και ένα μέρος έγινε: διαβάστε το αρχείο καταγραφής πριν επανεκκινήσετε."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "Δεν ολοκληρώθηκε. Δεν άλλαξε τίποτα· το αρχείο καταγραφής εξηγεί τον λόγο."
+
+msgid "Log"
+msgstr "Αρχείο καταγραφής"
+
+msgid "Restart now"
+msgstr "Επανεκκίνηση τώρα"
+
+msgid "Later"
+msgstr "Αργότερα"
+
+msgid "Close"
+msgstr "Κλείσιμο"
+
+msgid "Updating is not available on this system"
+msgstr "Η ενημέρωση δεν είναι διαθέσιμη σε αυτό το σύστημα"
+
+msgid "Another update is running on the device"
+msgstr "Εκτελείται άλλη ενημέρωση στη συσκευή"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "Ξεκίνησε εκτός αυτής της σελίδας (τερματικό, toolkit). Δεν μπορεί να ξεκινήσει τίποτα εδώ μέχρι να τελειώσει."
+
+msgid "Restart needed"
+msgstr "Απαιτείται επανεκκίνηση"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "Αυτό το σύστημα ενημερώθηκε και εκτελεί ακόμη την παλιά έκδοση. Η νέα ξεκινά στην επόμενη επανεκκίνηση."
+
+msgid "Installed"
+msgstr "Εγκατεστημένο"
+
+msgid "This system"
+msgstr "Αυτό το σύστημα"
+
+msgid "Also on this device"
+msgstr "Επίσης σε αυτή τη συσκευή"
+
+msgid "Kernel"
+msgstr "Πυρήνας"
+
+msgid "choice %s"
+msgstr "επιλογή %s"
+
+msgid "Boot image"
+msgstr "Εικόνα εκκίνησης"
+
+msgid "from the installer"
+msgstr "από το πρόγραμμα εγκατάστασης"
+
+msgid "Default boot"
+msgstr "Προεπιλεγμένη εκκίνηση"
+
+msgid "Free space"
+msgstr "Ελεύθερος χώρος"
+
+msgid "Release signatures"
+msgstr "Υπογραφές εκδόσεων"
+
+msgid "checked with the project's key"
+msgstr "ελέγχονται με το κλειδί του έργου"
+
+msgid "this system has no release key"
+msgstr "αυτό το σύστημα δεν έχει κλειδί εκδόσεων"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "Η προεπιλεγμένη εκκίνηση είναι το Android: μια επανεκκίνηση οδηγεί στο Android και το Linux ξεκινά από εκεί."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Το Linux είναι κλειδωμένο ως προεπιλεγμένη εκκίνηση: μια αποτυχημένη εκκίνηση δεν στέλνει τη συσκευή μόνη της στο Android, εκτός από τις πρώτες εκκινήσεις μιας νέας εικόνας εκκίνησης."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Αν το Linux αποτύχει να ξεκινήσει %d φορές στη σειρά, η συσκευή ξεκινά μόνη της το Android."
+
+msgid "Report of the last update"
+msgstr "Αναφορά της τελευταίας ενημέρωσης"
+
+msgid "Online update"
+msgstr "Ενημέρωση μέσω διαδικτύου"
+
+msgid "Asking GitHub…"
+msgstr "Ερώτημα στο GitHub…"
+
+msgid "Checked %s ago"
+msgstr "Ελέγχθηκε πριν από %s"
+
+msgid "Not checked yet"
+msgstr "Δεν έχει ελεγχθεί ακόμη"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "Εγκατάσταση ξανά, μετά την ενημέρωση, των πακέτων που πρόσθεσα (η συσκευή πρέπει να είναι σε σύνδεση στην πρώτη εκκίνηση)"
+
+msgid "Pre-release"
+msgstr "Προέκδοση"
+
+msgid "Newest release"
+msgstr "Νεότερη έκδοση"
+
+msgid "Release notes"
+msgstr "Σημειώσεις έκδοσης"
+
+msgid "Download"
+msgstr "Λήψη"
+
+msgid "Free space needed"
+msgstr "Απαιτούμενος ελεύθερος χώρος"
+
+msgid "not enough: remove the previous version first"
+msgstr "δεν επαρκεί: αφαιρέστε πρώτα την προηγούμενη έκδοση"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "Μια προέκδοση είναι έκδοση που ακόμη δοκιμάζεται: μπορεί να έχει σφάλματα που μια κανονική έκδοση δεν έχει. Η προηγούμενη έκδοση διατηρείται ούτως ή άλλως."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "Αυτό το σύστημα είναι νεότερο από τη νεότερη έκδοση (δοκιμαστική έκδοση)."
+
+msgid "Up to date."
+msgstr "Ενημερωμένο."
+
+msgid "Update to %s"
+msgstr "Ενημέρωση σε %s"
+
+msgid "Choose at least one system"
+msgstr "Επιλέξτε τουλάχιστον ένα σύστημα"
+
+msgid "Update to %s?"
+msgstr "Ενημέρωση σε %s;"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Η συσκευή κατεβάζει το %s, τοποθετεί το νέο σύστημα δίπλα σε αυτό που εκτελείται και μεταβαίνει σε αυτό στην επόμενη επανεκκίνηση. Οι ρυθμίσεις σας μεταφέρονται και η προηγούμενη έκδοση διατηρείται. Διαρκεί αρκετά λεπτά· μην απενεργοποιήσετε τη συσκευή."
+
+msgid "Also offer the pre-release %s"
+msgstr "Να προτείνεται και η προέκδοση %s"
+
+msgid "Systems to update:"
+msgstr "Συστήματα προς ενημέρωση:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "Δεν ήταν δυνατή η επικοινωνία με το GitHub: η συσκευή δεν έχει σύνδεση στο διαδίκτυο ή το GitHub δεν απάντησε. Χωρίς διαδίκτυο, ενημερώστε από αρχείο παρακάτω."
+
+msgid "release"
+msgstr "έκδοση"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "Για συσκευή χωρίς διαδίκτυο: κατεβάστε σε άλλον υπολογιστή το Magisk zip μιας έκδοσης για αυτό το σύστημα και αυτόν τον πυρήνα, από τη σελίδα της έκδοσης στο GitHub, και ανεβάστε το εδώ. Για αυτή τη συσκευή είναι:"
+
+msgid "Uploaded file"
+msgstr "Αρχείο που ανέβηκε"
+
+msgid "Checking the file…"
+msgstr "Έλεγχος του αρχείου…"
+
+msgid "It says it is"
+msgstr "Δηλώνει ότι είναι"
+
+msgid "kernel %s"
+msgstr "πυρήνας %s"
+
+msgid "Signature"
+msgstr "Υπογραφή"
+
+msgid "signed with the project's release key"
+msgstr "υπογεγραμμένο με το κλειδί εκδόσεων του έργου"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "ΛΑΘΟΣ: δεν ταιριάζει με το κλειδί εκδόσεων του έργου"
+
+msgid "not signed"
+msgstr "χωρίς υπογραφή"
+
+msgid "cannot be checked on this system"
+msgstr "δεν μπορεί να ελεγχθεί σε αυτό το σύστημα"
+
+msgid "Its system is not installed on this device."
+msgstr "Το σύστημά του δεν είναι εγκατεστημένο σε αυτή τη συσκευή."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "Είναι η άλλη έκδοση του Ubuntu, όχι η εγκατεστημένη."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "Περιέχει διαφορετικό πυρήνα από αυτόν που χρησιμοποιεί η συσκευή. Πάρτε το zip για τον πυρήνα %s ή αλλάξτε πρώτα τον πυρήνα."
+
+msgid "Its kernel does not run on this model."
+msgstr "Ο πυρήνας του δεν λειτουργεί σε αυτό το μοντέλο."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "Το αρχείο είναι κατεστραμμένο: τα περιεχόμενά του δεν ταιριάζουν με τα αθροίσματα ελέγχου τους."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "Η υπογραφή του είναι λάθος. Αυτό το αρχείο, όπως είναι, δεν προέρχεται από το έργο· δεν εγκαθίσταται ποτέ."
+
+msgid "This file cannot be used here."
+msgstr "Αυτό το αρχείο δεν μπορεί να χρησιμοποιηθεί εδώ."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "Συγκρίνετε το SHA-256 με αυτό στο SHA256SUMS-magisk στη σελίδα της έκδοσης: είναι η μόνη απόδειξη για την προέλευση ενός αρχείου χωρίς υπογραφή."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "Αυτή η έκδοση είναι ήδη εγκατεστημένη· η ενημέρωση θα ανανέωνε μόνο την εικόνα εκκίνησης."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "Γνωρίζω ότι αυτό το αρχείο δεν είναι υπογεγραμμένο: τίποτα δεν αποδεικνύει ότι προέρχεται από το έργο. Σύγκρινα ο ίδιος το SHA-256 του και θέλω να εγκατασταθεί."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "Γνωρίζω ότι αυτή είναι η %s, παλαιότερη από την εγκατεστημένη %s, και θέλω να επιστρέψω σε αυτήν."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "Αυτό δεν είναι αρχείο έκδοσης αυτού του έργου: αναμένεται το Magisk zip μιας έκδοσης."
+
+msgid "Update from this file"
+msgstr "Ενημέρωση από αυτό το αρχείο"
+
+msgid "Tick the confirmations above first"
+msgstr "Επιλέξτε πρώτα τις παραπάνω επιβεβαιώσεις"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Η συσκευή τοποθετεί το σύστημα αυτού του αρχείου δίπλα σε αυτό που εκτελείται και μεταβαίνει σε αυτό στην επόμενη επανεκκίνηση. Οι ρυθμίσεις σας μεταφέρονται και η προηγούμενη έκδοση διατηρείται. Διαρκεί αρκετά λεπτά· μην απενεργοποιήσετε τη συσκευή."
+
+msgid "Check the file"
+msgstr "Έλεγχος του αρχείου"
+
+msgid "Remove the file"
+msgstr "Αφαίρεση του αρχείου"
+
+msgid "Previous version"
+msgstr "Προηγούμενη έκδοση"
+
+msgid "No previous version is kept on this device."
+msgstr "Δεν διατηρείται προηγούμενη έκδοση σε αυτή τη συσκευή."
+
+msgid "replaced %s"
+msgstr "αντικαταστάθηκε στις %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "Θέλω πίσω το προηγούμενο σύστημα· ό,τι άλλαξα μετά την ενημέρωση μένει στην έκδοση που αφήνω."
+
+msgid "Back to the previous version?"
+msgstr "Επιστροφή στην προηγούμενη έκδοση;"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "Το προηγούμενο σύστημα (%s) γίνεται αυτό που ξεκινά στην επόμενη επανεκκίνηση. Η έκδοση που αφήνετε δεν διατηρείται· οι ρυθμίσεις που αλλάξατε μετά την ενημέρωση δεν μεταφέρονται πίσω."
+
+msgid "Go back"
+msgstr "Επιστροφή"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "Η προηγούμενη έκδοση είναι αυτή που εκτελείται τώρα: επανεκκινήστε πρώτα."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "Θέλω πίσω τον προηγούμενο πυρήνα και την προηγούμενη εικόνα εκκίνησης."
+
+msgid "Back to the previous boot image?"
+msgstr "Επιστροφή στην προηγούμενη εικόνα εκκίνησης;"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "Η προηγούμενη εικόνα εκκίνησης (%s) γράφεται στη θέση του Linux και ξεκινά στην επόμενη επανεκκίνηση. Αν δεν ξεκινήσει, η συσκευή επιστρέφει μόνη της στο Android."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "Δεν χρειάζεται να επιστρέψω: διαγραφή του προηγούμενου συστήματος για να ελευθερωθεί ο χώρος του."
+
+msgid "Remove the previous version?"
+msgstr "Αφαίρεση της προηγούμενης έκδοσης;"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "Το αντίγραφο του προηγούμενου συστήματος που διατηρείται διαγράφεται οριστικά. Μετά από αυτό δεν υπάρχει επιστροφή σε αυτό από αυτή τη σελίδα."
+
+msgid "the vendor kernel"
+msgstr "ο πυρήνας του κατασκευαστή"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "όχι με το Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "Αλλαγή του πυρήνα"
+
+msgid "This kernel is the one in use"
+msgstr "Αυτός ο πυρήνας είναι ο πυρήνας σε χρήση"
+
+msgid "Change the kernel to %s?"
+msgstr "Αλλαγή του πυρήνα σε %s;"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "Η συσκευή κατεβάζει αυτόν τον πυρήνα από τη νεότερη έκδοση και γράφει μια νέα εικόνα εκκίνησης· αυτή ξεκινά στην επόμενη επανεκκίνηση. Η προηγούμενη εικόνα εκκίνησης διατηρείται και, αν η νέα δεν ξεκινήσει, η συσκευή επιστρέφει μόνη της στο Android. Η συσκευή πρέπει να είναι σε σύνδεση."
+
+msgid "Start Android at the next restart"
+msgstr "Εκκίνηση του Android στην επόμενη επανεκκίνηση"
+
+msgid "Start Android at the next restart?"
+msgstr "Εκκίνηση του Android στην επόμενη επανεκκίνηση;"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "Η επόμενη επανεκκίνηση, και όσες ακολουθούν, ξεκινούν το Android αντί για το Linux. Το Linux ξεκινά ξανά από το Android (το κουμπί Ενέργεια της μονάδας Magisk ή το mu300-linux)."
+
+msgid "Start Android next"
+msgstr "Εκκίνηση του Android την επόμενη φορά"
+
+msgid "What an update keeps"
+msgstr "Τι διατηρεί μια ενημέρωση"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "Μια ενημέρωση εγκαθιστά το σύστημα της νέας έκδοσης και μεταφέρει ό,τι είναι δικό σας: τις ρυθμίσεις, τους λογαριασμούς και τους κωδικούς τους, τα κλειδιά της συσκευής και τους προσωπικούς καταλόγους. Τα πακέτα που εγκαταστήσατε εσείς καταγράφονται και εγκαθίστανται ξανά στην πρώτη εκκίνηση, μόλις η συσκευή βρεθεί σε σύνδεση. Η προηγούμενη έκδοση μένει στη συσκευή μέχρι να την αφαιρέσετε, ώστε να μπορείτε να επιστρέψετε."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "Η σελίδα του wiki για την ενημέρωση αναφέρει ακριβώς τι διατηρείται."
+
+msgid "Choose a file first"
+msgstr "Επιλέξτε πρώτα ένα αρχείο"
+
+msgid "Uploading: %s of %s"
+msgstr "Μεταφόρτωση: %s από %s"
+
 msgid "running"
 msgstr "εκτελείται"
 
@@ -1971,9 +2364,6 @@ msgstr "Κανένα προφίλ δεν τη χρησιμοποιεί."
 msgid "Removed"
 msgstr "Αφαιρέθηκε"
 
-msgid "Check for updates"
-msgstr "Έλεγχος για ενημερώσεις"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "Κάθε μηχανή είναι ξεχωριστό πρόσθετο: εγκαταστήστε μόνο όσες χρειάζονται τα προφίλ σας. Το Xray εκτελεί συνδέσμους vless, vmess, trojan και ss (με το hev-socks5-tunnel), το sing-box τους ίδιους συνδέσμους και το δικό του JSON, το mihomo συνδρομές Clash, το dae hysteria2, tuic και τα υπόλοιπα σε νεότερους πυρήνες. Το WireGuard και το OpenVPN είναι πακέτα του συστήματος."
 
@@ -1982,9 +2372,6 @@ msgstr "Οι λήψεις είναι δεκάδες MB ανά μηχανή: στ
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "Οι διαθέσιμες εκδόσεις προέρχονται από την τελευταία έκδοση της μονάδας VPN."
-
-msgid "Update"
-msgstr "Ενημέρωση"
 
 msgid "system package"
 msgstr "πακέτο συστήματος"
@@ -2153,9 +2540,6 @@ msgstr "Εκκίνηση"
 
 msgid "Stop"
 msgstr "Διακοπή"
-
-msgid "Restart"
-msgstr "Επανεκκίνηση"
 
 msgid "Stop the VPN?"
 msgstr "Διακοπή του VPN;"
@@ -2333,9 +2717,6 @@ msgstr "Αυτό το προφίλ προέρχεται από συνδρομή:
 
 msgid "Config of %s"
 msgstr "Διαμόρφωση του %s"
-
-msgid "Close"
-msgstr "Κλείσιμο"
 
 msgid "Rename"
 msgstr "Μετονομασία"
@@ -2705,6 +3086,18 @@ msgstr "Ο προσαρμογέας πακέτων δεν έδωσε έγκυρ�
 
 msgid "Invalid packages operation"
 msgstr "Μη έγκυρη ενέργεια πακέτων"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "Η παράμετρος sizes πρέπει να είναι 0 ή 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "Ο προσαρμογέας ενημέρωσης δεν έδωσε έγκυρη απάντηση"
+
+msgid "Unknown update operation"
+msgstr "Άγνωστη λειτουργία ενημέρωσης"
+
+msgid "Invalid update request"
+msgstr "Μη έγκυρο αίτημα ενημέρωσης"
 
 msgid "Request too large"
 msgstr "Το αίτημα είναι πολύ μεγάλο"
@@ -3095,3 +3488,42 @@ msgstr "Δεν ήταν δυνατός ο ορισμός του TTL"
 
 msgid "Unknown TTL operation"
 msgstr "Άγνωστη λειτουργία TTL"
+
+msgid "An update task is already running"
+msgstr "Εκτελείται ήδη μια εργασία ενημέρωσης"
+
+msgid "The task could not be started"
+msgstr "Δεν ήταν δυνατή η εκκίνηση της εργασίας"
+
+msgid "The updater gave no valid reply"
+msgstr "Το πρόγραμμα ενημέρωσης δεν έδωσε έγκυρη απάντηση"
+
+msgid "This needs confirmation"
+msgstr "Αυτό χρειάζεται επιβεβαίωση"
+
+msgid "Check for updates first"
+msgstr "Ελέγξτε πρώτα για ενημερώσεις"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "Ο κατάλογος μεταφόρτωσης δεν είναι ασφαλής· δεν άλλαξε τίποτα"
+
+msgid "Not enough memory for this upload"
+msgstr "Δεν επαρκεί η μνήμη για αυτή τη μεταφόρτωση"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Δεν επαρκεί ο ελεύθερος χώρος στο διαμέρισμα του Linux"
+
+msgid "The file was not checked; upload it again"
+msgstr "Το αρχείο δεν ελέγχθηκε· ανεβάστε το ξανά"
+
+msgid "This file is not for this device"
+msgstr "Αυτό το αρχείο δεν είναι για αυτή τη συσκευή"
+
+msgid "The signature of this file is wrong"
+msgstr "Η υπογραφή αυτού του αρχείου είναι λάθος"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "Αυτό το αρχείο είναι χωρίς υπογραφή: αυτό χρειάζεται επιβεβαίωση"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "Αυτό το αρχείο είναι παλαιότερο από το εγκατεστημένο: αυτό χρειάζεται επιβεβαίωση"

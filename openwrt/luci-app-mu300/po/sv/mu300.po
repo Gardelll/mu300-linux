@@ -33,6 +33,9 @@ msgstr "Dataförbrukning"
 msgid "Device management"
 msgstr "Enhetshantering"
 
+msgid "Update"
+msgstr "Uppdatera"
+
 msgid "Languages"
 msgstr "Språk"
 
@@ -1050,6 +1053,9 @@ msgstr "Ankare B%s"
 msgid "No serving cell"
 msgstr "Ingen betjänande cell"
 
+msgid "Version %s is out: update"
+msgstr "Version %s är ute: uppdatera"
+
 msgid "Not registered"
 msgstr "Inte registrerad"
 
@@ -1938,6 +1944,393 @@ msgstr "Stäng av"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "Med 64 lämnar varje paket enheten som dess egen trafik"
 
+msgid "Check for updates"
+msgstr "Sök efter uppdateringar"
+
+msgid "Checking the file"
+msgstr "Kontrollerar filen"
+
+msgid "Update from a file"
+msgstr "Uppdatera från en fil"
+
+msgid "Back to the previous version"
+msgstr "Tillbaka till föregående version"
+
+msgid "Back to the previous boot image"
+msgstr "Tillbaka till föregående startavbild"
+
+msgid "Remove the previous version"
+msgstr "Ta bort föregående version"
+
+msgid "Kernel change"
+msgstr "Byte av kärna"
+
+msgid "Starting…"
+msgstr "Startar…"
+
+msgid "Downloading"
+msgstr "Hämtar"
+
+msgid "All files are here and verified"
+msgstr "Alla filer är här och kontrollerade"
+
+msgid "Unpacking the new system"
+msgstr "Packar upp det nya systemet"
+
+msgid "Carrying over your settings"
+msgstr "För över dina inställningar"
+
+msgid "Writing down the packages you installed"
+msgstr "Antecknar paketen du har installerat"
+
+msgid "Switching to the new system"
+msgstr "Byter till det nya systemet"
+
+msgid "Kernel and boot image"
+msgstr "Kärna och startavbild"
+
+msgid "Restart the device?"
+msgstr "Starta om enheten?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "Enheten startar om nu. Standardstarten är Android, så Android startar: byt till Linux därifrån för att starta det uppdaterade systemet."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "Enheten startar om nu och är borta i ungefär en minut. Om det nya systemet inte startar går enheten själv tillbaka till Android efter de misslyckade försöken."
+
+msgid "Restart"
+msgstr "Starta om"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "Startar om… öppna den här sidan igen om ungefär en minut."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "Har pågått i %s. Det fortsätter när den här sidan stängs; stäng inte av enheten."
+
+msgid "Done. Restart the device to start it."
+msgstr "Klart. Starta om enheten för att starta det."
+
+msgid "Done. Nothing needs a restart."
+msgstr "Klart. Ingen omstart behövs."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "Det blev inte klart, och en del av det hann göras: läs loggen innan du startar om."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "Det blev inte klart. Inget ändrades; loggen säger varför."
+
+msgid "Log"
+msgstr "Logg"
+
+msgid "Restart now"
+msgstr "Starta om nu"
+
+msgid "Later"
+msgstr "Senare"
+
+msgid "Close"
+msgstr "Stäng"
+
+msgid "Updating is not available on this system"
+msgstr "Uppdatering är inte tillgänglig på det här systemet"
+
+msgid "Another update is running on the device"
+msgstr "En annan uppdatering körs på enheten"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "Det startades utanför den här sidan (en terminal, verktygslådan). Inget kan startas här förrän det är klart."
+
+msgid "Restart needed"
+msgstr "Omstart krävs"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "Det här systemet har uppdaterats och kör fortfarande den gamla versionen. Den nya startar vid nästa omstart."
+
+msgid "Installed"
+msgstr "Installerat"
+
+msgid "This system"
+msgstr "Det här systemet"
+
+msgid "Also on this device"
+msgstr "Finns också på enheten"
+
+msgid "Kernel"
+msgstr "Kärna"
+
+msgid "choice %s"
+msgstr "val %s"
+
+msgid "Boot image"
+msgstr "Startavbild"
+
+msgid "from the installer"
+msgstr "från installationsprogrammet"
+
+msgid "Default boot"
+msgstr "Standardstart"
+
+msgid "Free space"
+msgstr "Ledigt utrymme"
+
+msgid "Release signatures"
+msgstr "Releasesignaturer"
+
+msgid "checked with the project's key"
+msgstr "kontrolleras med projektets nyckel"
+
+msgid "this system has no release key"
+msgstr "det här systemet har ingen releasenyckel"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "Standardstarten är Android: en omstart går till Android, och Linux startas därifrån."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux är låst som standardstart: en misslyckad start skickar inte enheten till Android av sig själv, utom vid de första starterna av en ny startavbild."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Om Linux inte startar %d gånger i rad startar enheten Android av sig själv."
+
+msgid "Report of the last update"
+msgstr "Rapport från den senaste uppdateringen"
+
+msgid "Online update"
+msgstr "Uppdatering via internet"
+
+msgid "Asking GitHub…"
+msgstr "Frågar GitHub…"
+
+msgid "Checked %s ago"
+msgstr "Kontrollerades för %s sedan"
+
+msgid "Not checked yet"
+msgstr "Inte kontrollerat än"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "Installera paketen jag har lagt till igen efter uppdateringen (enheten måste vara online vid första starten)"
+
+msgid "Pre-release"
+msgstr "Förhandsversion"
+
+msgid "Newest release"
+msgstr "Senaste release"
+
+msgid "Release notes"
+msgstr "Versionsinformation"
+
+msgid "Download"
+msgstr "Hämtning"
+
+msgid "Free space needed"
+msgstr "Ledigt utrymme som krävs"
+
+msgid "not enough: remove the previous version first"
+msgstr "räcker inte: ta bort föregående version först"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "En förhandsversion är en release som fortfarande prövas: den kan ha fel som en release inte har. Föregående version sparas ändå."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "Det här systemet är nyare än den senaste releasen (en testrelease)."
+
+msgid "Up to date."
+msgstr "Uppdaterat."
+
+msgid "Update to %s"
+msgstr "Uppdatera till %s"
+
+msgid "Choose at least one system"
+msgstr "Välj minst ett system"
+
+msgid "Update to %s?"
+msgstr "Uppdatera till %s?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Enheten hämtar %s, lägger det nya systemet bredvid det som körs och byter till det vid nästa omstart. Dina inställningar förs över och föregående version sparas. Det tar flera minuter; stäng inte av enheten."
+
+msgid "Also offer the pre-release %s"
+msgstr "Erbjud också förhandsversionen %s"
+
+msgid "Systems to update:"
+msgstr "System att uppdatera:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "GitHub kunde inte nås: enheten har ingen internetanslutning, eller så svarade GitHub inte. Utan internet kan du uppdatera från en fil nedan."
+
+msgid "release"
+msgstr "release"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "För en enhet utan internet: hämta Magisk-zip-filen för en release för det här systemet och den här kärnan på en annan dator, från releasesidan på GitHub, och ladda upp den här. För den här enheten är det:"
+
+msgid "Uploaded file"
+msgstr "Uppladdad fil"
+
+msgid "Checking the file…"
+msgstr "Kontrollerar filen…"
+
+msgid "It says it is"
+msgstr "Den uppger sig vara"
+
+msgid "kernel %s"
+msgstr "kärna %s"
+
+msgid "Signature"
+msgstr "Signatur"
+
+msgid "signed with the project's release key"
+msgstr "signerad med projektets releasenyckel"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "FEL: den stämmer inte med projektets releasenyckel"
+
+msgid "not signed"
+msgstr "inte signerad"
+
+msgid "cannot be checked on this system"
+msgstr "kan inte kontrolleras på det här systemet"
+
+msgid "Its system is not installed on this device."
+msgstr "Filens system är inte installerat på den här enheten."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "Det är den andra Ubuntu-releasen, inte den som är installerad."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "Den innehåller en annan kärna än den här enheten använder. Ta zip-filen för kärna %s, eller byt kärna först."
+
+msgid "Its kernel does not run on this model."
+msgstr "Filens kärna fungerar inte på den här modellen."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "Filen är skadad: innehållet stämmer inte med kontrollsummorna."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "Signaturen är fel. Den här filen kommer inte från projektet i det här skicket; den installeras aldrig."
+
+msgid "This file cannot be used here."
+msgstr "Den här filen kan inte användas här."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "Jämför SHA-256 med den i SHA256SUMS-magisk på releasesidan: det är det enda beviset för varifrån en osignerad fil kommer."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "Den här releasen är redan installerad; uppdateringen skulle bara förnya startavbilden."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "Jag vet att den här filen inte är signerad: inget bevisar att den kommer från projektet. Jag har själv jämfört dess SHA-256 och vill att den installeras."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "Jag vet att detta är %s, äldre än den installerade %s, och vill gå tillbaka till den."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "Det här är inte en releasefil från det här projektet: en Magisk-zip-fil för en release förväntas."
+
+msgid "Update from this file"
+msgstr "Uppdatera från den här filen"
+
+msgid "Tick the confirmations above first"
+msgstr "Kryssa först i bekräftelserna ovan"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Enheten lägger filens system bredvid det som körs och byter till det vid nästa omstart. Dina inställningar förs över och föregående version sparas. Det tar flera minuter; stäng inte av enheten."
+
+msgid "Check the file"
+msgstr "Kontrollera filen"
+
+msgid "Remove the file"
+msgstr "Ta bort filen"
+
+msgid "Previous version"
+msgstr "Föregående version"
+
+msgid "No previous version is kept on this device."
+msgstr "Ingen föregående version finns sparad på den här enheten."
+
+msgid "replaced %s"
+msgstr "ersatt %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "Jag vill ha tillbaka det föregående systemet; det jag har ändrat sedan uppdateringen stannar i versionen jag lämnar."
+
+msgid "Back to the previous version?"
+msgstr "Tillbaka till föregående version?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "Det föregående systemet (%s) blir det som startar vid nästa omstart. Versionen du lämnar sparas inte; inställningar du har ändrat sedan uppdateringen följer inte med tillbaka."
+
+msgid "Go back"
+msgstr "Gå tillbaka"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "Föregående version är den som körs nu: starta om först."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "Jag vill ha tillbaka föregående kärna och startavbild."
+
+msgid "Back to the previous boot image?"
+msgstr "Tillbaka till föregående startavbild?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "Föregående startavbild (%s) skrivs till Linux-platsen och startar vid nästa omstart. Om den inte startar går enheten själv tillbaka till Android."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "Jag behöver inte gå tillbaka: radera det föregående systemet för att frigöra dess utrymme."
+
+msgid "Remove the previous version?"
+msgstr "Ta bort föregående version?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "Den sparade kopian av det föregående systemet raderas för gott. Därefter går det inte att gå tillbaka till det från den här sidan."
+
+msgid "the vendor kernel"
+msgstr "tillverkarens kärna"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "inte med Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "Byt kärna"
+
+msgid "This kernel is the one in use"
+msgstr "Den här kärnan är den som används"
+
+msgid "Change the kernel to %s?"
+msgstr "Byta kärna till %s?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "Enheten hämtar den kärnan från den senaste releasen och skriver en ny startavbild; den startar vid nästa omstart. Föregående startavbild sparas, och om den nya inte startar går enheten själv tillbaka till Android. Enheten måste vara online."
+
+msgid "Start Android at the next restart"
+msgstr "Starta Android vid nästa omstart"
+
+msgid "Start Android at the next restart?"
+msgstr "Starta Android vid nästa omstart?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "Nästa omstart, och de därefter, startar Android i stället för Linux. Linux startas igen från Android (Magisk-modulens Action-knapp, eller mu300-linux)."
+
+msgid "Start Android next"
+msgstr "Starta Android nästa gång"
+
+msgid "What an update keeps"
+msgstr "Vad en uppdatering behåller"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "En uppdatering lägger det nya releasens system på plats och för över det som är ditt: inställningarna, kontona och deras lösenord, enhetens nycklar och hemkatalogerna. Paket som du själv har installerat antecknas och installeras igen vid första starten, så snart enheten är online. Föregående version ligger kvar på enheten tills du tar bort den, så att du kan gå tillbaka."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "Wikisidan Updating listar exakt vad som behålls."
+
+msgid "Choose a file first"
+msgstr "Välj en fil först"
+
+msgid "Uploading: %s of %s"
+msgstr "Laddar upp: %s av %s"
+
 msgid "running"
 msgstr "körs"
 
@@ -1971,9 +2364,6 @@ msgstr "Ingen profil använder den."
 msgid "Removed"
 msgstr "Borttagen"
 
-msgid "Check for updates"
-msgstr "Sök efter uppdateringar"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "Varje motor är ett eget tillägg: installera bara de som dina profiler behöver. Xray kör länkar av typen vless, vmess, trojan och ss (med hev-socks5-tunnel), sing-box samma länkar och sin egen JSON, mihomo Clash-prenumerationer, dae hysteria2, tuic och resten på nyare kärnor. WireGuard och OpenVPN är paket i systemet."
 
@@ -1982,9 +2372,6 @@ msgstr "Nedladdningar är tiotals MB per motor: på mobildata räknas de mot din
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "De tillgängliga versionerna kommer från den senaste releasen av VPN-modulen."
-
-msgid "Update"
-msgstr "Uppdatera"
 
 msgid "system package"
 msgstr "systempaket"
@@ -2153,9 +2540,6 @@ msgstr "Starta"
 
 msgid "Stop"
 msgstr "Stoppa"
-
-msgid "Restart"
-msgstr "Starta om"
 
 msgid "Stop the VPN?"
 msgstr "Stoppa VPN?"
@@ -2333,9 +2717,6 @@ msgstr "Den här profilen kommer från en prenumeration: nästa uppdatering ers�
 
 msgid "Config of %s"
 msgstr "Konfiguration för %s"
-
-msgid "Close"
-msgstr "Stäng"
 
 msgid "Rename"
 msgstr "Byt namn"
@@ -2705,6 +3086,18 @@ msgstr "Paketadaptern gav inget giltigt svar"
 
 msgid "Invalid packages operation"
 msgstr "Ogiltig paketåtgärd"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "Parametern sizes måste vara 0 eller 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "Uppdateringsadaptern gav inget giltigt svar"
+
+msgid "Unknown update operation"
+msgstr "Okänd uppdateringsåtgärd"
+
+msgid "Invalid update request"
+msgstr "Ogiltig uppdateringsbegäran"
 
 msgid "Request too large"
 msgstr "Begäran för stor"
@@ -3095,3 +3488,42 @@ msgstr "TTL kunde inte sättas"
 
 msgid "Unknown TTL operation"
 msgstr "Okänd TTL-åtgärd"
+
+msgid "An update task is already running"
+msgstr "En uppdateringsuppgift körs redan"
+
+msgid "The task could not be started"
+msgstr "Uppgiften kunde inte startas"
+
+msgid "The updater gave no valid reply"
+msgstr "Uppdateraren gav inget giltigt svar"
+
+msgid "This needs confirmation"
+msgstr "Detta kräver bekräftelse"
+
+msgid "Check for updates first"
+msgstr "Sök efter uppdateringar först"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "Uppladdningskatalogen är inte säker; inget ändrades"
+
+msgid "Not enough memory for this upload"
+msgstr "Inte tillräckligt med minne för den här uppladdningen"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Inte tillräckligt med ledigt utrymme på Linux-partitionen"
+
+msgid "The file was not checked; upload it again"
+msgstr "Filen kontrollerades inte; ladda upp den igen"
+
+msgid "This file is not for this device"
+msgstr "Den här filen är inte avsedd för den här enheten"
+
+msgid "The signature of this file is wrong"
+msgstr "Filens signatur är fel"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "Den här filen är inte signerad: det kräver bekräftelse"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "Den här filen är äldre än det som är installerat: det kräver bekräftelse"

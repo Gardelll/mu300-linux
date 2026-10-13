@@ -33,6 +33,9 @@ msgstr "Consum de date"
 msgid "Device management"
 msgstr "Gestionare dispozitiv"
 
+msgid "Update"
+msgstr "Actualizează"
+
 msgid "Languages"
 msgstr "Limbi"
 
@@ -1050,6 +1053,9 @@ msgstr "Ancoră B%s"
 msgid "No serving cell"
 msgstr "Nicio celulă de servire"
 
+msgid "Version %s is out: update"
+msgstr "A apărut versiunea %s: actualizați"
+
 msgid "Not registered"
 msgstr "Neînregistrat"
 
@@ -1938,6 +1944,393 @@ msgstr "Dezactivează"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "Cu 64 fiecare pachet pleacă la fel ca traficul propriu al dispozitivului"
 
+msgid "Check for updates"
+msgstr "Caută actualizări"
+
+msgid "Checking the file"
+msgstr "Se verifică fișierul"
+
+msgid "Update from a file"
+msgstr "Actualizare dintr-un fișier"
+
+msgid "Back to the previous version"
+msgstr "Înapoi la versiunea anterioară"
+
+msgid "Back to the previous boot image"
+msgstr "Înapoi la imaginea de pornire anterioară"
+
+msgid "Remove the previous version"
+msgstr "Elimină versiunea anterioară"
+
+msgid "Kernel change"
+msgstr "Schimbarea kernelului"
+
+msgid "Starting…"
+msgstr "Se pornește…"
+
+msgid "Downloading"
+msgstr "Se descarcă"
+
+msgid "All files are here and verified"
+msgstr "Toate fișierele sunt aici și verificate"
+
+msgid "Unpacking the new system"
+msgstr "Se despachetează noul sistem"
+
+msgid "Carrying over your settings"
+msgstr "Se transferă setările dvs."
+
+msgid "Writing down the packages you installed"
+msgstr "Se notează pachetele instalate de dvs."
+
+msgid "Switching to the new system"
+msgstr "Se trece la noul sistem"
+
+msgid "Kernel and boot image"
+msgstr "Kernel și imagine de pornire"
+
+msgid "Restart the device?"
+msgstr "Reporniți dispozitivul?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "Dispozitivul repornește acum. Pornirea implicită este Android, deci pornește Android: treceți de acolo la Linux pentru a porni sistemul actualizat."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "Dispozitivul repornește acum și lipsește aproximativ un minut. Dacă noul sistem nu pornește, dispozitivul revine singur la Android după încercările eșuate."
+
+msgid "Restart"
+msgstr "Repornește"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "Se repornește… deschideți din nou această pagină peste aproximativ un minut."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "Rulează de %s. Continuă și când această pagină este închisă; nu opriți dispozitivul."
+
+msgid "Done. Restart the device to start it."
+msgstr "Gata. Reporniți dispozitivul ca să intre în funcțiune."
+
+msgid "Done. Nothing needs a restart."
+msgstr "Gata. Nu este nevoie de repornire."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "Nu s-a terminat, iar o parte a fost făcută: citiți jurnalul înainte de a reporni."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "Nu s-a terminat. Nu s-a schimbat nimic; jurnalul spune de ce."
+
+msgid "Log"
+msgstr "Jurnal"
+
+msgid "Restart now"
+msgstr "Repornește acum"
+
+msgid "Later"
+msgstr "Mai târziu"
+
+msgid "Close"
+msgstr "Închide"
+
+msgid "Updating is not available on this system"
+msgstr "Actualizarea nu este disponibilă pe acest sistem"
+
+msgid "Another update is running on the device"
+msgstr "O altă actualizare rulează pe dispozitiv"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "A fost pornită în afara acestei pagini (un terminal, toolkit-ul). Nimic nu poate fi pornit aici până nu se termină."
+
+msgid "Restart needed"
+msgstr "Este necesară repornirea"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "Acest sistem a fost actualizat și rulează încă versiunea veche. Cea nouă pornește la următoarea repornire."
+
+msgid "Installed"
+msgstr "Instalat"
+
+msgid "This system"
+msgstr "Acest sistem"
+
+msgid "Also on this device"
+msgstr "Tot pe acest dispozitiv"
+
+msgid "Kernel"
+msgstr "Kernel"
+
+msgid "choice %s"
+msgstr "alegere %s"
+
+msgid "Boot image"
+msgstr "Imagine de pornire"
+
+msgid "from the installer"
+msgstr "din programul de instalare"
+
+msgid "Default boot"
+msgstr "Pornire implicită"
+
+msgid "Free space"
+msgstr "Spațiu liber"
+
+msgid "Release signatures"
+msgstr "Semnăturile versiunilor"
+
+msgid "checked with the project's key"
+msgstr "verificate cu cheia proiectului"
+
+msgid "this system has no release key"
+msgstr "acest sistem nu are cheia de versiuni"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "Pornirea implicită este Android: o repornire duce la Android, iar Linux se pornește de acolo."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux este blocat ca pornire implicită: o pornire eșuată nu trimite singură dispozitivul la Android, cu excepția primelor porniri ale unei noi imagini de pornire."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Dacă Linux nu reușește să pornească de %d ori la rând, dispozitivul pornește singur Android."
+
+msgid "Report of the last update"
+msgstr "Raportul ultimei actualizări"
+
+msgid "Online update"
+msgstr "Actualizare online"
+
+msgid "Asking GitHub…"
+msgstr "Se întreabă GitHub…"
+
+msgid "Checked %s ago"
+msgstr "Verificat acum %s"
+
+msgid "Not checked yet"
+msgstr "Încă neverificat"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "Instalează din nou după actualizare pachetele adăugate de mine (dispozitivul trebuie să fie online la prima pornire)"
+
+msgid "Pre-release"
+msgstr "Versiune preliminară"
+
+msgid "Newest release"
+msgstr "Cea mai nouă versiune"
+
+msgid "Release notes"
+msgstr "Note de versiune"
+
+msgid "Download"
+msgstr "Descărcare"
+
+msgid "Free space needed"
+msgstr "Spațiu liber necesar"
+
+msgid "not enough: remove the previous version first"
+msgstr "insuficient: eliminați mai întâi versiunea anterioară"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "O versiune preliminară este o versiune încă în probă: poate avea defecte pe care o versiune finală nu le are. Versiunea anterioară se păstrează oricum."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "Acest sistem este mai nou decât cea mai nouă versiune (o versiune de test)."
+
+msgid "Up to date."
+msgstr "La zi."
+
+msgid "Update to %s"
+msgstr "Actualizează la %s"
+
+msgid "Choose at least one system"
+msgstr "Alegeți cel puțin un sistem"
+
+msgid "Update to %s?"
+msgstr "Actualizați la %s?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Dispozitivul descarcă %s, pune noul sistem lângă cel care rulează și trece la el la următoarea repornire. Setările dvs. sunt transferate, iar versiunea anterioară se păstrează. Durează câteva minute; nu opriți dispozitivul."
+
+msgid "Also offer the pre-release %s"
+msgstr "Oferă și versiunea preliminară %s"
+
+msgid "Systems to update:"
+msgstr "Sisteme de actualizat:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "GitHub nu a putut fi contactat: dispozitivul nu are conexiune la internet sau GitHub nu a răspuns. Fără internet, actualizați dintr-un fișier, mai jos."
+
+msgid "release"
+msgstr "versiune"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "Pentru un dispozitiv fără internet: descărcați pe alt calculator zip-ul Magisk al unei versiuni pentru acest sistem și acest kernel, de pe pagina versiunii de pe GitHub, și încărcați-l aici. Pentru acest dispozitiv, acesta este:"
+
+msgid "Uploaded file"
+msgstr "Fișier încărcat"
+
+msgid "Checking the file…"
+msgstr "Se verifică fișierul…"
+
+msgid "It says it is"
+msgstr "Spune că este"
+
+msgid "kernel %s"
+msgstr "kernel %s"
+
+msgid "Signature"
+msgstr "Semnătură"
+
+msgid "signed with the project's release key"
+msgstr "semnat cu cheia de versiuni a proiectului"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "GREȘITĂ: nu corespunde cheii de versiuni a proiectului"
+
+msgid "not signed"
+msgstr "nesemnat"
+
+msgid "cannot be checked on this system"
+msgstr "nu poate fi verificată pe acest sistem"
+
+msgid "Its system is not installed on this device."
+msgstr "Sistemul său nu este instalat pe acest dispozitiv."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "Este cealaltă versiune de Ubuntu, nu cea instalată."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "Conține alt kernel decât cel folosit de acest dispozitiv. Luați zip-ul pentru kernelul %s sau schimbați mai întâi kernelul."
+
+msgid "Its kernel does not run on this model."
+msgstr "Kernelul său nu funcționează pe acest model."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "Fișierul este deteriorat: conținutul nu corespunde sumelor de control."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "Semnătura sa este greșită. Acest fișier nu provine de la proiect în forma aceasta; nu se instalează niciodată."
+
+msgid "This file cannot be used here."
+msgstr "Acest fișier nu poate fi folosit aici."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "Comparați SHA-256 cu cel din SHA256SUMS-magisk de pe pagina versiunii: este singura dovadă a provenienței unui fișier nesemnat."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "Această versiune este deja instalată; actualizarea ar reîmprospăta doar imaginea de pornire."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "Știu că acest fișier nu este semnat: nimic nu dovedește că provine de la proiect. Am comparat chiar eu SHA-256 și vreau să fie instalat."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "Știu că aceasta este %s, mai veche decât %s instalată, și vreau să revin la ea."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "Acesta nu este un fișier de versiune al acestui proiect: se așteaptă zip-ul Magisk al unei versiuni."
+
+msgid "Update from this file"
+msgstr "Actualizează din acest fișier"
+
+msgid "Tick the confirmations above first"
+msgstr "Bifați mai întâi confirmările de mai sus"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Dispozitivul pune sistemul din acest fișier lângă cel care rulează și trece la el la următoarea repornire. Setările dvs. sunt transferate, iar versiunea anterioară se păstrează. Durează câteva minute; nu opriți dispozitivul."
+
+msgid "Check the file"
+msgstr "Verifică fișierul"
+
+msgid "Remove the file"
+msgstr "Elimină fișierul"
+
+msgid "Previous version"
+msgstr "Versiunea anterioară"
+
+msgid "No previous version is kept on this device."
+msgstr "Pe acest dispozitiv nu este păstrată nicio versiune anterioară."
+
+msgid "replaced %s"
+msgstr "înlocuită la %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "Vreau înapoi sistemul anterior; ce am schimbat de la actualizare rămâne în versiunea pe care o părăsesc."
+
+msgid "Back to the previous version?"
+msgstr "Înapoi la versiunea anterioară?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "Sistemul anterior (%s) devine cel care pornește la următoarea repornire. Versiunea pe care o părăsiți nu se păstrează; setările schimbate de la actualizare nu sunt duse înapoi."
+
+msgid "Go back"
+msgstr "Revino"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "Versiunea anterioară este cea care rulează acum: reporniți mai întâi."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "Vreau înapoi kernelul și imaginea de pornire anterioare."
+
+msgid "Back to the previous boot image?"
+msgstr "Înapoi la imaginea de pornire anterioară?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "Imaginea de pornire anterioară (%s) este scrisă în slotul Linux și pornește la următoarea repornire. Dacă nu pornește, dispozitivul revine singur la Android."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "Nu am nevoie să revin: șterge sistemul anterior pentru a-i elibera spațiul."
+
+msgid "Remove the previous version?"
+msgstr "Eliminați versiunea anterioară?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "Copia păstrată a sistemului anterior este ștearsă definitiv. După aceea nu se mai poate reveni la ea din această pagină."
+
+msgid "the vendor kernel"
+msgstr "kernelul producătorului"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "nu cu Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "Schimbă kernelul"
+
+msgid "This kernel is the one in use"
+msgstr "Acest kernel este cel folosit"
+
+msgid "Change the kernel to %s?"
+msgstr "Schimbați kernelul la %s?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "Dispozitivul descarcă acel kernel din cea mai nouă versiune și scrie o nouă imagine de pornire; aceasta pornește la următoarea repornire. Imaginea de pornire anterioară se păstrează, iar dacă cea nouă nu pornește, dispozitivul revine singur la Android. Dispozitivul trebuie să fie online."
+
+msgid "Start Android at the next restart"
+msgstr "Pornește Android la următoarea repornire"
+
+msgid "Start Android at the next restart?"
+msgstr "Porniți Android la următoarea repornire?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "Următoarea repornire și cele de după ea pornesc Android în loc de Linux. Linux se pornește din nou din Android (butonul Acțiune al modulului Magisk sau mu300-linux)."
+
+msgid "Start Android next"
+msgstr "Pornește Android data viitoare"
+
+msgid "What an update keeps"
+msgstr "Ce păstrează o actualizare"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "O actualizare pune în loc sistemul noii versiuni și transferă ce este al dvs.: setările, conturile și parolele lor, cheile dispozitivului și directoarele personale. Pachetele pe care le-ați instalat chiar dvs. sunt notate și instalate din nou la prima pornire, de îndată ce dispozitivul este online. Versiunea anterioară rămâne pe dispozitiv până o eliminați, ca să puteți reveni."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "Pagina despre actualizare din wiki arată exact ce se păstrează."
+
+msgid "Choose a file first"
+msgstr "Alegeți mai întâi un fișier"
+
+msgid "Uploading: %s of %s"
+msgstr "Se încarcă: %s din %s"
+
 msgid "running"
 msgstr "rulează"
 
@@ -1971,9 +2364,6 @@ msgstr "Niciun profil nu rulează pe el."
 msgid "Removed"
 msgstr "Eliminat"
 
-msgid "Check for updates"
-msgstr "Caută actualizări"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "Fiecare motor este un extra separat: instalați doar pe cele de care au nevoie profilurile dvs. Xray rulează linkuri vless, vmess, trojan și ss (cu hev-socks5-tunnel), sing-box aceleași linkuri și propriul JSON, mihomo abonamente Clash, dae hysteria2, tuic și restul pe nuclee mai noi. WireGuard și OpenVPN sunt pachete ale sistemului."
 
@@ -1982,9 +2372,6 @@ msgstr "Descărcările au zeci de MB pentru fiecare motor: pe date mobile se con
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "Versiunile disponibile provin din cea mai recentă versiune a modulului VPN."
-
-msgid "Update"
-msgstr "Actualizează"
 
 msgid "system package"
 msgstr "pachet de sistem"
@@ -2153,9 +2540,6 @@ msgstr "Pornește"
 
 msgid "Stop"
 msgstr "Oprește"
-
-msgid "Restart"
-msgstr "Repornește"
 
 msgid "Stop the VPN?"
 msgstr "Oprești VPN-ul?"
@@ -2333,9 +2717,6 @@ msgstr "Acest profil provine dintr-un abonament: următoarea reîmprospătare a 
 
 msgid "Config of %s"
 msgstr "Configurația %s"
-
-msgid "Close"
-msgstr "Închide"
 
 msgid "Rename"
 msgstr "Redenumește"
@@ -2705,6 +3086,18 @@ msgstr "Adaptorul de pachete nu a dat un răspuns valid"
 
 msgid "Invalid packages operation"
 msgstr "Operație pe pachete nevalidă"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "Parametrul sizes trebuie să fie 0 sau 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "Adaptorul de actualizare nu a dat un răspuns valid"
+
+msgid "Unknown update operation"
+msgstr "Operațiune de actualizare necunoscută"
+
+msgid "Invalid update request"
+msgstr "Cerere de actualizare nevalidă"
 
 msgid "Request too large"
 msgstr "Cerere prea mare"
@@ -3095,3 +3488,42 @@ msgstr "TTL-ul nu a putut fi setat"
 
 msgid "Unknown TTL operation"
 msgstr "Operație TTL necunoscută"
+
+msgid "An update task is already running"
+msgstr "O sarcină de actualizare rulează deja"
+
+msgid "The task could not be started"
+msgstr "Sarcina nu a putut fi pornită"
+
+msgid "The updater gave no valid reply"
+msgstr "Programul de actualizare nu a dat un răspuns valid"
+
+msgid "This needs confirmation"
+msgstr "Este nevoie de confirmare"
+
+msgid "Check for updates first"
+msgstr "Căutați mai întâi actualizări"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "Directorul de încărcare nu este sigur; nu s-a modificat nimic"
+
+msgid "Not enough memory for this upload"
+msgstr "Memorie insuficientă pentru această încărcare"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Spațiu liber insuficient pe partiția Linux"
+
+msgid "The file was not checked; upload it again"
+msgstr "Fișierul nu a fost verificat; încărcați-l din nou"
+
+msgid "This file is not for this device"
+msgstr "Acest fișier nu este pentru acest dispozitiv"
+
+msgid "The signature of this file is wrong"
+msgstr "Semnătura acestui fișier este greșită"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "Acest fișier este nesemnat: este nevoie de confirmare"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "Acest fișier este mai vechi decât ce este instalat: este nevoie de confirmare"

@@ -133,6 +133,7 @@ what replaced it. The table below gives each section's state.
 | 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; nothing of it has run on a device yet (protocol: docs/web-installer.md) |
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
+| 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; nothing of it has run on a device: the protocol is in the section) |
 
 ## Hardware and firmware facts
 
@@ -5273,6 +5274,271 @@ the boot, and the 5.4 kernel has FunctionFS built in.
 `mu300-adbd run` now asks again once a second for a minute (`MU300_ADB_WAIT`) before it believes the no and logs
 it. Measured after the change: adb in `adb devices` 38 s after power-on, `mu300-device --json` answering over it,
 mobile data up. Not measured: OpenWrt on 6.18 and on 5.4, the U30 Air.
+
+### 86. Updating from the panel: System > Update, an update from a file, and release signatures
+
+A third party's panel plugin for a fork has a "System > F50 system upgrade" page: upload a signed update file, see
+the target version and the space it needs, "keep configuration" ticked, a progress bar, a reboot, and afterwards
+"roll back to the previous version". This is the same thing in the project's own panel (`openwrt-luci`, System >
+Update), over the project's own updater. **Nothing of it has run on a device**: both test devices were in use, so
+what follows is the design, what the tests on a computer show, and the protocol for the device.
+
+**One updater.** The page is not a second update engine. Every action is one `mu300-update` command, and the
+command's own lock decides whether it may run. What was added to `mu300-update` is one marked block ("for a panel")
+and the few lines that call it; `apply`, `apply_one`, the keep lists, the accounts, the packages and the boot image
+are untouched, so the work on what an update keeps (the `lossless-update` branch) merges beside it:
+
+| command | what it gives |
+|---|---|
+| `mu300-update status [--sizes]` | one JSON object, no network: the systems and their releases, the copy kept for a rollback (its release; its size only with `--sizes`, adding up a system takes seconds), the kernel (running, the choice, which choices are refused and why), the boot image and the kept one, the default boot and the number of failed boots before Android, free space and the room `apply` wants, who holds the lock, the note of a newer release, whether this system has a release key |
+| `mu300-update releases` | one JSON object: the newest release and - only when one is newer than it - the newest pre-release, each with what this device would download (the root filesystem of every system that is not that release yet, the kernel of its choice, the installed extras, the updater), the sizes, and whether the release is signed |
+| `mu300-update inspect FILE\|DIR` | one JSON object about an offline source: its SHA-256, the release, system and kernel it says it is, whether its files match their checksums, whether it is for this device, how its signature checks. Changes nothing |
+| `mu300-update apply --from FILE\|DIR [--unsigned] [--downgrade]` | the same update from a file instead of GitHub |
+
+Every string of that JSON goes through `jv`, which lets letters, digits and `._+:,()@ /-` through and nothing
+else: a version file with a quote, a backslash or `$(...)` in it cannot break the object, so nothing needs escaping
+and no JSON tool is needed (Ubuntu has none). GitHub's list of releases is read the same way, line by line, after
+every `,"` and `{"` is given a line of its own - which the escaped quotes inside a release's notes never are, so
+notes that contain `"tag_name": "v2099.01.01"` change nothing (tested with GitHub's pretty and compact forms).
+
+The functions of the block, by name, because a merge will ask: `jv`, `jstr`, `jnum`, `mtime`, `tag_ok`, `newer`,
+`space_needed`, `source_conf`, `sig_raw`, `sig_state`, `sums_trusted`, `sums_verdict`, `zip_p`, `man_val`,
+`from_open`, `from_close`, `from_member`, `from_fits`, `from_installed`, `apply_options`, `from_begin`,
+`from_verified`, `from_handover`, `inspect_json`, `lock_holder`, `size_kb`, `status_json`, `release_json`,
+`releases_json`, `progress` (a test holds the list to the code). The lines outside it: `fetch_verified` (four: the
+file being fetched, the offline source, the signature twice), `latest_release` and the download address (a mirror,
+below), `apply` (three: `from_begin`, a zip's one system, `from_handover` before it continues with the release's own
+updater), the dispatch (`apply_options`, the three commands, `source_conf`) and the help text. `space_needed` is
+`apply`'s own rule (1 GB, and 1 GB for every system to update) written a second time so that the page can show it:
+when the free-space check changes, the two must change together.
+
+**The task.** An update takes minutes, rpcd ends a call after 30 s and the page may be closed, so the adapter
+(`/usr/libexec/unisoc-modem/update`, behind mu300dash's `update_get`, `update_job`, `update_act`) starts the command
+with `setsid` as a task of its own, as the SMS send and the VPN pages do (§46: "sms_send - killed"). Its files are in
+the runtime directory (`/var/run/unisoc-modem/update-job`: kind, arguments, pid, log, exit status), which only root
+can enter. It therefore outlives the request, the page, the session and a restart of rpcd, and any browser that
+opens the page sees it. It does not outlive a reboot (the directory is in RAM); after one the page shows what is
+installed, and "restart needed" while the running system is the kept copy. One task at a time; and before anything
+that takes the updater's lock the adapter asks `status` who holds it and names that process and its pid. That look
+never tries the lock itself (`lock_holder` reads the pid the holder wrote and checks that it is a mu300-update that
+changes things): a probe that held the lock for an instant could turn a real run away. The lock stays the authority:
+a run that loses the race ends with the updater's own "another mu300-update is running", in the task's log.
+
+What the page shows of a running task: the step, from the last `==> ...` line of the output (a line it does not
+know is shown as it is, so new steps need no change here); for a download, the file `fetch_verified` named
+(`MU300_PROGRESS`, one `file NAME` line a file) with its size on the partition against the size GitHub gave; the
+log, collapsed. A finished task says whether the device wants a restart by comparing each system's release, the boot
+image and the kernel choice with what they were before it started.
+
+**Online.** "Check" runs `releases` as a task (two requests to GitHub's API, which answers 60 an hour to one
+address without a login; behind a carrier's NAT that may be used up by others, and the page then says what it says
+when the device has no internet: GitHub could not be reached, update from a file). "Update" takes the tag the page
+showed and only a tag the last check offered - the newest release or the pre-release - so what is installed is what
+was shown, whatever became the newest meanwhile. The pre-release is offered only behind a tick that is off.
+
+**From a file.** The format is the release's own Magisk zip (`mu300-magisk-TAG-SYSTEM-kKERNEL.zip`,
+`tools/make-magisk-zips.sh`): it is already published for every release, it is one file, and it holds exactly what an
+update of one system needs - `payload/` with the root filesystem and the kernel bundle of one system and one kernel,
+`mu300/manifest` naming them with their hashes, and the updater. `apply --from ZIP` reads the manifest (each field
+must be one of the values a release makes, and the two file names must be the ones those values give - a manifest
+cannot name a path), then lets `apply` run as it always does with `fetch_verified` reading from the zip: each member
+is read to a pipe by a name this code made (`unzip -p`), never unpacked to a path the zip names. `apply --from DIR`
+takes a directory with a release's files and their `SHA256SUMS`, for a memory stick or `scp`; the page offers only
+the zip. What a zip does not have, the update leaves as it is: the language pack (the installed one stays, as with a
+release that has none), the VPN module (the installed one stays; `mu300-update`'s own offline route for it is
+unchanged), the other systems of the device. It is refused, before anything is changed, when its system is not
+installed, when it is the other Ubuntu release, when its kernel does not run on this model (`./devices` of the
+bundle), when its kernel is not the one the device uses (a system and the boot image of two releases is what this
+updater otherwise only has for one reboot), when it is older than what is installed (unless said: `--downgrade`),
+and when a payload does not match its checksum. A release's updater continues the run only when it knows what a file
+is (`from_handover`): an older one would go to GitHub for the release.
+
+The upload goes through LuCI's own endpoint (cgi-io, with the session and the ACL's one path,
+`/mnt/mu300-disk/.mu300-upload/update.zip`), into a directory on the Linux partition that the adapter makes with
+mode 700 and refuses when it is a link, someone else's or writable by others. Before the upload the adapter is told
+the size and checks the room: the partition must hold the file beside what `apply` wants, and `/tmp` must hold the
+file too, because **cgi-io keeps an upload in `/tmp` until it is complete** and only then moves it to its path
+(read from its source, not measured here: the largest zip, Ubuntu's, is a few hundred MB of RAM for the minute the
+upload takes). After the upload the file is renamed to a name the ACL does not let the panel write, and only that
+file is looked at and used; a link at the upload's path is removed, not followed. It is deleted when the update has
+run, however it went, and by "Remove the file".
+
+**Whom an uploaded file is trusted by.** A release from GitHub is trusted because it came over TLS from the
+project's repository and every file matches the `SHA256SUMS` that came the same way. An uploaded file has no such
+origin: its manifest and its checksums are its own, and say only that it is whole. So the page shows the file's
+SHA-256 and what it says it is before anything, and installing it takes a tick with these words: nothing proves
+that it comes from the project. The real answer is a signature:
+
+* The release workflow signs `SHA256SUMS` (`tools/sign-release.sh`, from `make-release.sh`) with the key in the
+  repository secret `MU300_RELEASE_KEY` and publishes `SHA256SUMS.sig`. The format is that of OpenWrt's `usign` and
+  OpenBSD's `signify` (Ed25519). The signer uses openssl, so the runner needs no usign; what it writes was compared
+  with what `usign -S` writes for the same key and file in the 25.12.5 image: the same bytes, and `usign -V` accepts
+  it.
+* The public key is part of the system: `/opt/mu300/lib/release.pub`, from `rootfs/overlay/` like the updater
+  itself, so both systems get it. Not `/etc/mu300/release.pub`, as first planned: an update carries `/etc/mu300`
+  over from the old system as a whole, so a device would never receive the key, nor a later one.
+* `mu300-update` checks the signature where the system has the key: with `usign` on OpenWrt (it is in the image, 20
+  KB, no new package) and with `openssl` on Ubuntu (`sig_state`; openssl 3 is in both Ubuntu releases). Without the
+  key file nothing is checked and everything is as it was.
+* The Magisk zips carry the release's `SHA256SUMS` and, for a signed release, `SHA256SUMS.sig` (from the release
+  that brings this on): the signature covers the checksums, the checksums the two files of the payload. The zips of
+  v2026.10.25 and older have neither and can never be more than "not signed".
+
+| the source | signature | what happens |
+|---|---|---|
+| any | does not match the key | refused, always; no option takes it |
+| GitHub or a mirror | valid | used |
+| GitHub or a mirror, the system has no key | - | used, as before signing |
+| GitHub or a mirror, the system has a key | none, release is the installed one or newer | refused (every release from the one that brought the key is signed, so a missing signature is a file taken away on the way); `MU300_ALLOW_UNSIGNED=1` takes it |
+| GitHub or a mirror, the system has a key | none, release is older | used, with a line saying it is from before signing (going back must stay possible) |
+| a file or a directory | valid | used; the page asks for no extra tick |
+| a file or a directory | none, or the system has no key or no tool | refused without `--unsigned`; the page's tick is that option |
+
+The fourth row is the one that can lock devices out, so the release side guards it: when the tree has the public
+key and the build has no secret key, `make-release.sh` refuses to publish; and `sign-release.sh` checks its own
+signature against the tree's public key and refuses to sign with a key that is not that one.
+
+**What the owner does to switch signing on** (nothing in this PR makes or holds a key): on any OpenWrt system, or
+in the image's container,
+
+    usign -G -c 'mu300-linux release key' -s release.sec -p release.pub
+    gh secret set MU300_RELEASE_KEY -R dikeckaan/mu300-linux < release.sec     # then keep release.sec offline, or delete it
+    cp release.pub rootfs/overlay/opt/mu300/lib/release.pub                    # commit this file
+
+(`signify-openbsd -G -n -c ... -s release.sec -p release.pub` on Debian or Ubuntu makes the same two files.) From
+the next release on, the release is signed and its images check. The secret alone signs releases that no device
+checks yet; the committed key alone stops the next release from being published. A device starts checking with the
+first system that has the key, so the update *to* that system is the last one trusted the old way.
+
+What the signature does not cover: the VPN module (its own repository and `SHA256SUMS`); `SHA256SUMS-magisk`, the
+checksums of the zips themselves, which is why the page shows a zip's SHA-256 only as something to compare by hand
+and relies on the signed checksums inside it; Magisk, which installs a zip without knowing any of this; and a
+device where someone already is root (the key is a file of the system).
+
+**Another source.** `/etc/mu300/update-source` (root's own file, not writable by others, not a link) can name a
+mirror: `MU300_API_URL=` in place of `https://api.github.com/repos/dikeckaan/mu300-linux` and
+`MU300_DOWNLOAD_URL=` in place of `https://github.com/dikeckaan/mu300-linux/releases/download`, plain http(s) URLs
+only; the command and the panel read the same file. It exists for the device test below and for places where GitHub
+cannot be reached. Without a release key a mirror is trusted as much as whoever runs it; with one it cannot change
+a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root.
+
+**What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
+(`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's
+ubus endpoint takes POSTs with a session. Every parameter is a fixed word, a release tag
+(`v[0-9]{4}\.[0-9]{2}\.[0-9]{2}`), one of the three systems, one of the three kernels, a size or a SHA-256; mu300dash
+refuses anything else before the adapter runs, and the adapter checks again. Everything that changes the device
+also wants the word of its operation (`confirm`), so a stray call does nothing; on the page each of those is a
+dialog that says what will happen, and going back or deleting the kept version takes a tick first. The log and the
+update report are shown redacted: every URL reduced to its scheme (a mirror's address can hold a token), what
+follows a password, key, token or secret word, numbers of 15 to 20 digits (IMSI, ICCID, IMEI) and phone numbers
+(`+` and digits, or ten to fourteen digits after a 0). Sizes, dates and checksums stay.
+
+**For Ubuntu's page.** Cockpit's MU300 page (`rootfs/panel`, out of scope here) can be given the same section with
+the same four commands: `status`, `releases` and `inspect` are plain JSON on stdout, and `apply --from` takes a path.
+What it would need of its own is the task (there `systemd-run` in place of `setsid` and the runtime directory) and
+the upload (Cockpit writes files through its own channel, as root, with no `/tmp` in between).
+
+**Tested** (no device): `tests/test_update_page.py` - the updater's additions under dash, bash and busybox sh
+(status and releases as JSON whatever the files hold; a zip and a directory as sources, what is refused and why, a
+whole `apply --from` on a fake partition with the network stubbed to fail; signatures with a key made in the test,
+a signature made by real usign, a mirror that changes a file with and without its signature; the release signer and
+the zip builder end to end), the adapter against a stand-in updater (what each operation needs before it starts
+anything, the task's states, the lock, the staging directory with links and wrong modes and no room, the redaction),
+and the page under Node with a small DOM (what it shows for a state, what each button sends, that no backend text
+is markup). `tests/test_mu300dash_security.py` has the three methods in every table (hostile values in every
+field, the arguments as the adapter gets them, the ACL).
+
+**Run in the image, not on a device** (the `openwrt-luci` root filesystem of v2026.10.18 as a container on a
+computer, so its busybox ash, busybox awk, uclient-fetch, usign and the static busybox, but no rpcd, no eMMC and
+another kernel): `mu300-update status --sizes`; `releases` against a static mirror laid out as in the protocol below
+(uclient-fetch follows the server's redirect for `releases?per_page=10`, busybox awk reads the list); `inspect` of
+three small zips - unsigned, signed with a throwaway key, and signed with another key - which the static busybox's
+`unzip -p` read and the image's own `usign` judged `valid` and `bad` as they should be.
+
+**Not measured on a device:** everything else. In particular: that a task started by rpcd's child with `setsid`
+outlives a restart of rpcd on this image (the SMS job is started by the same call, §46); cgi-io's use of `/tmp`
+for a zip of real size and what the device does when it does not fit; `unzip -p` on a 100 to 400 MB stored member,
+and how long `inspect` then takes (it hashes the whole zip and both payloads; it is a task for that reason);
+GitHub's real answer and its rate limit from a carrier's address; the download progress against uclient-fetch's
+real behaviour (it writes the file as it goes, which is all the page reads); a whole `apply`, online or from a
+file, with a real boot image; the page in a real browser with the Aurora theme; the texts in 29 languages, which
+are machine translations like the rest of those catalogs.
+
+**The device protocol** (an F50 or U30 Air on `openwrt-luci`, with a previous release installed; `PC` is the
+computer's address as the device sees it, `DEV` the device's):
+
+    # 0. the build under test, onto the device (or an image built from the branch)
+    A=openwrt/luci-app-mu300
+    scp rootfs/overlay/opt/mu300/bin/mu300-update root@$DEV:/opt/mu300/bin/mu300-update
+    scp $A/root/usr/libexec/unisoc-modem/update $A/root/usr/libexec/unisoc-modem/dashboard-info root@$DEV:/usr/libexec/unisoc-modem/
+    scp $A/root/usr/libexec/rpcd/mu300dash root@$DEV:/usr/libexec/rpcd/
+    scp $A/root/usr/share/rpcd/acl.d/luci-app-mu300.json root@$DEV:/usr/share/rpcd/acl.d/
+    scp $A/root/usr/share/luci/menu.d/luci-app-mu300.json root@$DEV:/usr/share/luci/menu.d/
+    scp $A/htdocs/luci-static/resources/view/mu300/update.js $A/htdocs/luci-static/resources/view/mu300/home.js root@$DEV:/www/luci-static/resources/view/mu300/
+    scp $A/htdocs/luci-static/resources/mu300/common.js root@$DEV:/www/luci-static/resources/mu300/
+    ssh root@$DEV 'chmod 755 /usr/libexec/unisoc-modem/update; rm -f /tmp/luci-indexcache*; /etc/init.d/rpcd restart'
+    ssh root@$DEV 'mu300-update status --sizes; mu300-update releases'        # both one line of JSON
+
+    # 1. a mirror with two real releases (OLD installed on the device, NEW the one to update to)
+    OLD=v2026.10.24 NEW=v2026.10.25 R=dikeckaan/mu300-linux
+    mkdir -p mirror/api/releases
+    for t in $OLD $NEW; do gh release download $t -R $R -D mirror/download/$t -p SHA256SUMS -p 'mu300-*.tar.gz' -p mu300-update; done
+    gh api "repos/$R/releases?per_page=10" > mirror/api/releases/index.html     # /api/releases?per_page=10 is served this
+    gh api "repos/$R/releases/tags/$NEW" > mirror/api/releases/latest
+    python3 -m http.server 8000 -d mirror &
+    ssh root@$DEV "printf 'MU300_API_URL=http://$PC:8000/api\nMU300_DOWNLOAD_URL=http://$PC:8000/download\n' > /etc/mu300/update-source; chmod 600 /etc/mu300/update-source"
+
+    # 2. online: System > Update > Check (NEW is offered, with the download size and the room), Update, confirm.
+    #    While it downloads: close the browser, open the page from a phone - the task is there, with the file and
+    #    its percentage. During the unpacking: ssh root@$DEV /etc/init.d/rpcd restart - the task goes on, the page
+    #    finds it again. At the end: "Restart now"; after the restart the page shows NEW and the previous version.
+    ssh root@$DEV 'mu300-update status' ; ssh root@$DEV 'cat /var/run/unisoc-modem/update-job/log | tail -5'
+
+    # 3. one at a time: start an update on the page and, while it runs,
+    ssh root@$DEV 'mu300-update clean'            # "another mu300-update is running (pid N)"
+    #    and the other way round: start "mu300-update apply" in ssh, open the page - it names that run and its
+    #    pid, and every button is off.
+
+    # 4. going back and cleaning: "Back to the previous version" (tick, confirm), restart, the page shows OLD;
+    #    update again; "Back to the previous boot image"; then "Remove the previous version" and
+    ssh root@$DEV 'ls /mnt/mu300-disk; df -h /mnt/mu300-disk'
+
+    # 5. the pre-release: the mirror says OLD is the newest and NEW is a pre-release
+    gh api "repos/$R/releases/tags/$OLD" > mirror/api/releases/latest
+    gh api "repos/$R/releases?per_page=10" | jq --arg t $NEW 'map(if .tag_name == $t then .prerelease = true else . end)' > mirror/api/releases/index.html
+    #    with OLD installed: Check says "Up to date" and offers "Also offer the pre-release NEW" behind a tick
+
+    # 6. no internet: stop the mirror (kill %1), Check - the page says GitHub could not be reached, in words,
+    #    within a minute; then with mobile data off and no update-source file the same against GitHub itself
+    ssh root@$DEV 'rm -f /etc/mu300/update-source'
+
+    # 7. from a file, the real Magisk zip of NEW for this system and kernel, with OLD installed
+    gh release download $NEW -R $R -p "mu300-magisk-$NEW-openwrt-luci-k5.4.zip" -p SHA256SUMS-magisk
+    #    upload it on the page; watch /tmp and the partition meanwhile
+    ssh root@$DEV 'while :; do df -k /tmp /mnt/mu300-disk | tail -2; ls -la /mnt/mu300-disk/.mu300-upload /tmp/luci-upload* 2>/dev/null; sleep 2; done'
+    #    the page shows the SHA-256 (the one in SHA256SUMS-magisk), NEW, the system, the kernel, "not signed";
+    #    tick, update, restart. Then: the zip of another kernel (refused: kernel), of Ubuntu on a device without it
+    #    (refused: system), a zip with one byte changed in the payload (refused: damaged), OLD's zip with NEW
+    #    installed (the downgrade tick), and from the command line
+    ssh root@$DEV 'mu300-update inspect /root/x.zip; mu300-update apply --from /root/x.zip --unsigned'
+
+    # 8. a full partition: fill it until less than 2 GB are free, then Check/Update online (apply stops at "not
+    #    enough free space", the page shows the failed task and "Nothing was changed") and an upload (refused
+    #    before it starts); the same with /tmp nearly full (refused: memory)
+    ssh root@$DEV 'dd if=/dev/zero of=/mnt/mu300-disk/fill bs=1M count=4000; df -h /mnt/mu300-disk'
+    ssh root@$DEV 'rm -f /mnt/mu300-disk/fill'
+
+    # 9. the kernel: change to 6.18 on the page (confirm), restart, uname -r; back to 5.4; "Start Android at the
+    #    next restart", restart, and back with the Magisk module's Action button
+    ssh root@$DEV 'uname -r; mu300-update kernel'
+
+    # 10. signatures, with a throwaway key (never the project's): sign the mirror's SHA256SUMS, give the device
+    #     the public key, update online (the log says "signed with the project's release key"); remove the .sig
+    #     from the mirror (refused); change one byte of a tarball and its line in SHA256SUMS (refused)
+    usign -G -s lab.sec -p lab.pub
+    MU300_RELEASE_KEY_FILE=lab.sec sh tools/sign-release.sh mirror/download/$NEW/SHA256SUMS lab.pub
+    scp lab.pub root@$DEV:/opt/mu300/lib/release.pub
+    #     afterwards: ssh root@$DEV 'rm -f /opt/mu300/lib/release.pub /etc/mu300/update-source'
 
 ## The web installer
 

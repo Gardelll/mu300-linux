@@ -33,6 +33,9 @@ msgstr "שימוש בנתונים"
 msgid "Device management"
 msgstr "ניהול התקן"
 
+msgid "Update"
+msgstr "עדכון"
+
 msgid "Languages"
 msgstr "שפות"
 
@@ -1050,6 +1053,9 @@ msgstr "עוגן B%s"
 msgid "No serving cell"
 msgstr "אין תא משרת"
 
+msgid "Version %s is out: update"
+msgstr "גרסה %s יצאה: עדכנו"
+
 msgid "Not registered"
 msgstr "לא רשום"
 
@@ -1938,6 +1944,393 @@ msgstr "כבה"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "עם 64 כל חבילה יוצאת כמו התעבורה של המכשיר עצמו"
 
+msgid "Check for updates"
+msgstr "בדיקת עדכונים"
+
+msgid "Checking the file"
+msgstr "בודק את הקובץ"
+
+msgid "Update from a file"
+msgstr "עדכון מקובץ"
+
+msgid "Back to the previous version"
+msgstr "חזרה לגרסה הקודמת"
+
+msgid "Back to the previous boot image"
+msgstr "חזרה לתמונת האתחול הקודמת"
+
+msgid "Remove the previous version"
+msgstr "הסרת הגרסה הקודמת"
+
+msgid "Kernel change"
+msgstr "החלפת ליבה"
+
+msgid "Starting…"
+msgstr "מתחיל…"
+
+msgid "Downloading"
+msgstr "מוריד"
+
+msgid "All files are here and verified"
+msgstr "כל הקבצים כאן ואומתו"
+
+msgid "Unpacking the new system"
+msgstr "פורס את המערכת החדשה"
+
+msgid "Carrying over your settings"
+msgstr "מעביר את ההגדרות שלכם"
+
+msgid "Writing down the packages you installed"
+msgstr "רושם את החבילות שהתקנתם"
+
+msgid "Switching to the new system"
+msgstr "עובר למערכת החדשה"
+
+msgid "Kernel and boot image"
+msgstr "ליבה ותמונת אתחול"
+
+msgid "Restart the device?"
+msgstr "להפעיל מחדש את ההתקן?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "ההתקן מופעל מחדש עכשיו. ברירת המחדל לאתחול היא Android, ולכן יעלה Android: עברו משם ל-Linux כדי להפעיל את המערכת המעודכנת."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "ההתקן מופעל מחדש עכשיו ולא יהיה זמין כדקה. אם המערכת החדשה לא תעלה, ההתקן יחזור ל-Android מעצמו אחרי הניסיונות הכושלים."
+
+msgid "Restart"
+msgstr "הפעלה מחדש"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "מופעל מחדש… פתחו את הדף הזה שוב בעוד כדקה."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "פועל כבר %s. הפעולה נמשכת גם כשהדף הזה סגור; אל תכבו את ההתקן."
+
+msgid "Done. Restart the device to start it."
+msgstr "הסתיים. הפעילו מחדש את ההתקן כדי שהשינויים ייכנסו לתוקף."
+
+msgid "Done. Nothing needs a restart."
+msgstr "הסתיים. אין צורך בהפעלה מחדש."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "הפעולה לא הסתיימה, וחלק ממנה כבר בוצע: קראו את היומן לפני הפעלה מחדש."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "הפעולה לא הסתיימה. דבר לא שונה; הסיבה מופיעה ביומן."
+
+msgid "Log"
+msgstr "יומן"
+
+msgid "Restart now"
+msgstr "הפעלה מחדש עכשיו"
+
+msgid "Later"
+msgstr "אחר כך"
+
+msgid "Close"
+msgstr "סגירה"
+
+msgid "Updating is not available on this system"
+msgstr "עדכון אינו זמין במערכת הזו"
+
+msgid "Another update is running on the device"
+msgstr "עדכון אחר פועל בהתקן"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "הפעולה הופעלה מחוץ לדף הזה (ממסוף או מערכת הכלים). אי אפשר להתחיל כאן דבר עד שתסתיים."
+
+msgid "Restart needed"
+msgstr "נדרשת הפעלה מחדש"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "המערכת הזו עודכנה ועדיין מריצה את הגרסה הישנה. החדשה תעלה בהפעלה מחדש הבאה."
+
+msgid "Installed"
+msgstr "מותקן"
+
+msgid "This system"
+msgstr "המערכת הזו"
+
+msgid "Also on this device"
+msgstr "גם בהתקן הזה"
+
+msgid "Kernel"
+msgstr "ליבה"
+
+msgid "choice %s"
+msgstr "בחירה %s"
+
+msgid "Boot image"
+msgstr "תמונת אתחול"
+
+msgid "from the installer"
+msgstr "מהמתקין"
+
+msgid "Default boot"
+msgstr "ברירת המחדל לאתחול"
+
+msgid "Free space"
+msgstr "שטח פנוי"
+
+msgid "Release signatures"
+msgstr "חתימות הגרסאות"
+
+msgid "checked with the project's key"
+msgstr "נבדקות עם מפתח הפרויקט"
+
+msgid "this system has no release key"
+msgstr "למערכת הזו אין מפתח גרסאות"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "ברירת המחדל לאתחול היא Android: הפעלה מחדש עוברת ל-Android, ו-Linux מופעל משם."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux נעול כברירת המחדל לאתחול: עלייה כושלת לא שולחת את ההתקן ל-Android מעצמה, חוץ מהעליות הראשונות של תמונת אתחול חדשה."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "אם Linux לא יעלה %d פעמים ברצף, ההתקן יפעיל את Android מעצמו."
+
+msgid "Report of the last update"
+msgstr "דוח העדכון האחרון"
+
+msgid "Online update"
+msgstr "עדכון מקוון"
+
+msgid "Asking GitHub…"
+msgstr "שואל את GitHub…"
+
+msgid "Checked %s ago"
+msgstr "נבדק לפני %s"
+
+msgid "Not checked yet"
+msgstr "עדיין לא נבדק"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "להתקין מחדש אחרי העדכון את החבילות שהוספתי (ההתקן צריך להיות מקוון בעלייה הראשונה)"
+
+msgid "Pre-release"
+msgstr "גרסת קדם-הפצה"
+
+msgid "Newest release"
+msgstr "הגרסה החדשה ביותר"
+
+msgid "Release notes"
+msgstr "הערות גרסה"
+
+msgid "Download"
+msgstr "הורדה"
+
+msgid "Free space needed"
+msgstr "שטח פנוי נדרש"
+
+msgid "not enough: remove the previous version first"
+msgstr "לא מספיק: הסירו קודם את הגרסה הקודמת"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "גרסת קדם-הפצה היא גרסה שעדיין בניסוי: ייתכנו בה תקלות שאין בגרסה רגילה. הגרסה הקודמת נשמרת בכל מקרה."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "המערכת הזו חדשה יותר מהגרסה החדשה ביותר (גרסת ניסוי)."
+
+msgid "Up to date."
+msgstr "המערכת מעודכנת."
+
+msgid "Update to %s"
+msgstr "עדכון ל-%s"
+
+msgid "Choose at least one system"
+msgstr "בחרו מערכת אחת לפחות"
+
+msgid "Update to %s?"
+msgstr "לעדכן ל-%s?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "ההתקן מוריד את %s, מציב את המערכת החדשה לצד המערכת הפועלת ועובר אליה בהפעלה מחדש הבאה. ההגדרות שלכם מועברות והגרסה הקודמת נשמרת. זה נמשך כמה דקות; אל תכבו את ההתקן."
+
+msgid "Also offer the pre-release %s"
+msgstr "להציע גם את גרסת הקדם-הפצה %s"
+
+msgid "Systems to update:"
+msgstr "מערכות לעדכון:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "לא ניתן היה להגיע ל-GitHub: להתקן אין חיבור לאינטרנט, או ש-GitHub לא ענה. בלי אינטרנט, עדכנו מקובץ למטה."
+
+msgid "release"
+msgstr "גרסה"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "להתקן בלי אינטרנט: הורידו במחשב אחר, מדף הגרסה ב-GitHub, את קובץ ה-zip של Magisk של גרסה למערכת הזו ולליבה הזו, והעלו אותו לכאן. להתקן הזה זהו:"
+
+msgid "Uploaded file"
+msgstr "הקובץ שהועלה"
+
+msgid "Checking the file…"
+msgstr "בודק את הקובץ…"
+
+msgid "It says it is"
+msgstr "לפי הקובץ, זהו"
+
+msgid "kernel %s"
+msgstr "ליבה %s"
+
+msgid "Signature"
+msgstr "חתימה"
+
+msgid "signed with the project's release key"
+msgstr "חתום במפתח הגרסאות של הפרויקט"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "שגויה: אינה תואמת למפתח הגרסאות של הפרויקט"
+
+msgid "not signed"
+msgstr "לא חתום"
+
+msgid "cannot be checked on this system"
+msgstr "לא ניתן לבדוק במערכת הזו"
+
+msgid "Its system is not installed on this device."
+msgstr "המערכת שלו אינה מותקנת בהתקן הזה."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "זו גרסת ה-Ubuntu האחרת, לא זו שמותקנת."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "יש בו ליבה אחרת מזו שההתקן הזה משתמש בה. קחו את ה-zip לליבה %s, או החליפו קודם את הליבה."
+
+msgid "Its kernel does not run on this model."
+msgstr "הליבה שלו אינה פועלת בדגם הזה."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "הקובץ פגום: התוכן שלו אינו תואם לסכומי הביקורת."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "החתימה שלו שגויה. הקובץ הזה, כפי שהוא, אינו מגיע מהפרויקט; הוא לעולם אינו מותקן."
+
+msgid "This file cannot be used here."
+msgstr "אי אפשר להשתמש בקובץ הזה כאן."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "השוו את ה-SHA-256 לזה שב-SHA256SUMS-magisk בדף הגרסה: זו ההוכחה היחידה למקורו של קובץ לא חתום."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "הגרסה הזו כבר מותקנת; העדכון רק ירענן את תמונת האתחול."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "ידוע לי שהקובץ הזה אינו חתום: דבר אינו מוכיח שהוא מגיע מהפרויקט. השוויתי את ה-SHA-256 שלו בעצמי וברצוני שיותקן."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "ידוע לי שזו %s, ישנה יותר מהמותקנת %s, וברצוני לחזור אליה."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "זה אינו קובץ גרסה של הפרויקט הזה: נדרש קובץ zip של Magisk של גרסה."
+
+msgid "Update from this file"
+msgstr "עדכון מהקובץ הזה"
+
+msgid "Tick the confirmations above first"
+msgstr "סמנו קודם את האישורים שלמעלה"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "ההתקן מציב את המערכת שבקובץ הזה לצד המערכת הפועלת ועובר אליה בהפעלה מחדש הבאה. ההגדרות שלכם מועברות והגרסה הקודמת נשמרת. זה נמשך כמה דקות; אל תכבו את ההתקן."
+
+msgid "Check the file"
+msgstr "בדיקת הקובץ"
+
+msgid "Remove the file"
+msgstr "הסרת הקובץ"
+
+msgid "Previous version"
+msgstr "הגרסה הקודמת"
+
+msgid "No previous version is kept on this device."
+msgstr "לא נשמרה גרסה קודמת בהתקן הזה."
+
+msgid "replaced %s"
+msgstr "הוחלפה ב-%s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "ברצוני להחזיר את המערכת הקודמת; מה ששיניתי מאז העדכון נשאר בגרסה שאני עוזב."
+
+msgid "Back to the previous version?"
+msgstr "לחזור לגרסה הקודמת?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "המערכת הקודמת (%s) תהיה זו שעולה בהפעלה מחדש הבאה. הגרסה שאתם עוזבים אינה נשמרת; הגדרות ששיניתם מאז העדכון אינן מועברות חזרה."
+
+msgid "Go back"
+msgstr "חזרה"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "הגרסה הקודמת היא זו שפועלת עכשיו: הפעילו מחדש קודם."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "ברצוני להחזיר את הליבה ואת תמונת האתחול הקודמות."
+
+msgid "Back to the previous boot image?"
+msgstr "לחזור לתמונת האתחול הקודמת?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "תמונת האתחול הקודמת (%s) נכתבת לחריץ של Linux ועולה בהפעלה מחדש הבאה. אם היא לא תעלה, ההתקן יחזור ל-Android מעצמו."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "אין לי צורך לחזור: למחוק את המערכת הקודמת כדי לפנות את המקום שלה."
+
+msgid "Remove the previous version?"
+msgstr "להסיר את הגרסה הקודמת?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "העותק השמור של המערכת הקודמת נמחק לצמיתות. אחרי כן אי אפשר יהיה לחזור אליה מהדף הזה."
+
+msgid "the vendor kernel"
+msgstr "ליבת היצרן"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "לא עם Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "החלפת הליבה"
+
+msgid "This kernel is the one in use"
+msgstr "הליבה הזו היא שבשימוש"
+
+msgid "Change the kernel to %s?"
+msgstr "להחליף את הליבה ל-%s?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "ההתקן מוריד את הליבה הזו מהגרסה החדשה ביותר וכותב תמונת אתחול חדשה; היא עולה בהפעלה מחדש הבאה. תמונת האתחול הקודמת נשמרת, ואם החדשה לא תעלה, ההתקן יחזור ל-Android מעצמו. ההתקן צריך להיות מקוון."
+
+msgid "Start Android at the next restart"
+msgstr "הפעלת Android בהפעלה מחדש הבאה"
+
+msgid "Start Android at the next restart?"
+msgstr "להפעיל את Android בהפעלה מחדש הבאה?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "ההפעלה מחדש הבאה, ואלה שאחריה, מעלות את Android במקום Linux. את Linux מפעילים שוב מתוך Android (כפתור הפעולה של מודול ה-Magisk, או mu300-linux)."
+
+msgid "Start Android next"
+msgstr "הפעלת Android בפעם הבאה"
+
+msgid "What an update keeps"
+msgstr "מה נשמר בעדכון"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "עדכון מציב את המערכת של הגרסה החדשה ומעביר את מה ששלכם: ההגדרות, החשבונות והסיסמאות שלהם, המפתחות של ההתקן וספריות הבית. חבילות שהתקנתם בעצמכם נרשמות ומותקנות מחדש בעלייה הראשונה, ברגע שההתקן מקוון. הגרסה הקודמת נשארת בהתקן עד שתסירו אותה, כך שאפשר לחזור."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "דף העדכון בוויקי מפרט בדיוק מה נשמר."
+
+msgid "Choose a file first"
+msgstr "בחרו קודם קובץ"
+
+msgid "Uploading: %s of %s"
+msgstr "מעלה: %s מתוך %s"
+
 msgid "running"
 msgstr "פועל"
 
@@ -1971,9 +2364,6 @@ msgstr "אף פרופיל אינו פועל עליו."
 msgid "Removed"
 msgstr "הוסר"
 
-msgid "Check for updates"
-msgstr "בדיקת עדכונים"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "כל מנוע הוא תוסף נפרד: התקינו רק את אלה שהפרופילים שלכם צריכים. Xray מריץ קישורי vless, vmess, trojan ו-ss (עם hev-socks5-tunnel), sing-box את אותם קישורים ואת ה-JSON שלו, mihomo מנויי Clash, dae את hysteria2, tuic והשאר בליבות חדשות יותר. WireGuard ו-OpenVPN הם חבילות של המערכת."
 
@@ -1982,9 +2372,6 @@ msgstr "ההורדות הן עשרות MB לכל מנוע: בנתונים סלו
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "הגרסאות הזמינות מגיעות מהגרסה האחרונה של מודול ה-VPN."
-
-msgid "Update"
-msgstr "עדכון"
 
 msgid "system package"
 msgstr "חבילת מערכת"
@@ -2153,9 +2540,6 @@ msgstr "התחלה"
 
 msgid "Stop"
 msgstr "עצירה"
-
-msgid "Restart"
-msgstr "הפעלה מחדש"
 
 msgid "Stop the VPN?"
 msgstr "לעצור את ה-VPN?"
@@ -2333,9 +2717,6 @@ msgstr "פרופיל זה מגיע ממנוי: הרענון הבא שלו יחל
 
 msgid "Config of %s"
 msgstr "תצורת %s"
-
-msgid "Close"
-msgstr "סגירה"
 
 msgid "Rename"
 msgstr "שינוי שם"
@@ -2705,6 +3086,18 @@ msgstr "מתאם החבילות לא החזיר תשובה תקינה"
 
 msgid "Invalid packages operation"
 msgstr "פעולת חבילות לא תקינה"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "הפרמטר sizes חייב להיות 0 או 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "מתאם העדכון לא החזיר תשובה תקינה"
+
+msgid "Unknown update operation"
+msgstr "פעולת עדכון לא מוכרת"
+
+msgid "Invalid update request"
+msgstr "בקשת עדכון לא תקינה"
 
 msgid "Request too large"
 msgstr "הבקשה גדולה מדי"
@@ -3095,3 +3488,42 @@ msgstr "לא ניתן להגדיר את ה-TTL"
 
 msgid "Unknown TTL operation"
 msgstr "פעולת TTL לא ידועה"
+
+msgid "An update task is already running"
+msgstr "משימת עדכון כבר פועלת"
+
+msgid "The task could not be started"
+msgstr "לא ניתן היה להתחיל את המשימה"
+
+msgid "The updater gave no valid reply"
+msgstr "תוכנית העדכון לא החזירה תשובה תקינה"
+
+msgid "This needs confirmation"
+msgstr "נדרש לכך אישור"
+
+msgid "Check for updates first"
+msgstr "בדקו קודם אם יש עדכונים"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "תיקיית ההעלאה אינה בטוחה; דבר לא שונה"
+
+msgid "Not enough memory for this upload"
+msgstr "אין מספיק זיכרון להעלאה הזו"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "אין מספיק שטח פנוי במחיצת Linux"
+
+msgid "The file was not checked; upload it again"
+msgstr "הקובץ לא נבדק; העלו אותו שוב"
+
+msgid "This file is not for this device"
+msgstr "הקובץ הזה אינו מיועד להתקן הזה"
+
+msgid "The signature of this file is wrong"
+msgstr "החתימה של הקובץ הזה שגויה"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "הקובץ הזה לא חתום: נדרש לכך אישור"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "הקובץ הזה ישן יותר ממה שמותקן: נדרש לכך אישור"
