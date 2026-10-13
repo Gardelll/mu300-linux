@@ -124,6 +124,7 @@ what replaced it. The table below gives each section's state.
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
 | 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; unit tests against a table built from #9's figures, not measured on a device) |
 | 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
+| 63 | A reused SMS reference number mixed long messages, or kept them from ever being joined; a part delivered again | current (fixed; unit tests only, not measured on a device) |
 
 ## Hardware and firmware facts
 
@@ -4640,3 +4641,74 @@ named `cmd` in it) and a symlink to `/etc` were both put out of the way, `/etc` 
 `mu300-voice status` then answered. Open: `/run` is still 1777 - `mount -t tmpfs -o mode=755` in `boot/init` is
 the real fix, and it is a boot change that wants its own device test. `/run/mu300-at/answer.<pid>` and
 `/run/mu300/` are as they were.
+
+### 63. A reused SMS reference number mixed long messages, or kept them from ever being joined
+
+The parts of a long (concatenated) message carry a reference number, a total and a part number in their user data
+header. Both `sms` (every system) and `mu300-sms` (the panel's pool on openwrt-luci, the SIM path and the +CMT path
+of section 51 alike) took **sender and reference number** as the identity of a message. The reference is eight bits
+wide in most headers; senders count it up, draw it at random, or send every long message under the same one. So the
+same sender and reference come round again, and two things went wrong, both found by reading and reproduced in unit
+tests, not on a device (no device was available for this work):
+
+- **Two messages under one reference at the same time were mixed.** A later part overwrote the earlier one with the
+  same part number, the totals were merged to the larger one, and all the slots were deleted together. With `sms`
+  this needs nothing unusual, since the SIM keeps messages until somebody deletes them: of two two-part messages
+  from one sender under one reference, `sms list` showed one, made of the newer parts. In the pool it needed a part
+  still waiting for its siblings (up to an hour) when the next message came.
+- **Every later message under the reference of one pooled incomplete was never joined.** A message whose parts did
+  not all come within the hour is pooled with `[...]` and a header `partial: <md5 of its key>`, so that a part
+  arriving after that is pooled at once. The key was sender, reference and total, with nothing that ends its
+  validity: the next long message under that reference, a day or a year later, had each of its parts pooled (and
+  forwarded) the moment it arrived, as "1/3", "1/3", "1/3".
+
+kanoqwq's fork fixed the same class of fault in its own importer (clean-tf-7.2 `a5bd3e06`, "reassemble multipart
+messages before inbox and forwarding"; its importer did not reassemble at all before that, which ours did). Taken
+from it are three ideas, none of its code: a group is keyed by more than the reference (it uses the reference's
+width, the total, coding, PID, language tables and SMSC as well); a reference used again is told apart by the
+distance between the service centre timestamps, ten minutes; and a long message remembers the PDUs of its parts so
+that a part delivered again is recognised. Changed against it:
+
+- Grouping is one place for both tools, `sms-pdu.awk -v mode=group`: decode's records in, the same records out with
+  the key of their message added (`multi:SENDER:REF:TOTAL@TIMESTAMP`). Parts are one message when sender, reference
+  and total agree, their timestamps are within 600 s of the first part seen, and the part number is not already
+  there with another text. Coding, PID and SMSC are not part of the key: the decoder's records do not carry them,
+  and two messages that agree in everything above and differ only there were not thought worth a change to a format
+  two programs parse. The reference's width (8 or 16 bit) is not in it either, for the same reason.
+- Two messages of one sender, reference, total and second (a sender that numbers everything 0 and sends twice in a
+  second) are told apart by a part number that is taken with another text; the parts go to the messages in the order
+  they came. The fork refuses such a part and does not acknowledge it. Here a refused import is never acknowledged,
+  the network delivers it again, and three failed rounds make `mu300-smsd` give direct delivery up (section 51), so
+  one hostile or unlucky sender could switch +CMT off; a best guess that loses nothing was preferred.
+- A concatenation header that says nothing usable (part 0, part 5 of 3, no parts, an element of the wrong length or
+  cut off by the header's end) makes the fork's decoder refuse the PDU. Ours now shows the text as a message of its
+  own, for the reason above; before, such a part waited an hour for siblings that cannot exist, or (part beyond the
+  total) lost its text.
+- The key of a waiting message keeps its name while its parts come in (the waiting state is handed to the grouping
+  as `known`), so a part with an earlier timestamp arriving later does not start the hour over. The state file of
+  the version before (keys without a time) is understood.
+- "The rest of a message pooled incomplete" is now a part with that `partial:` header **and** a timestamp within
+  the same ten minutes of the pooled message's (`sms-pdu.awk -v mode=near`).
+- `part_ids: <md5 of each part's PDU>` on every long message in the pool, also on one pooled incomplete, and among
+  the tombstones when it is deleted. A part delivered again (the acknowledgement of the last part did not reach the
+  network: `mu300-smsd` keeps the spool file and imports it once more, section 51) used to be parked alone, wait
+  its hour and be pooled and forwarded as an incomplete message of its own; it is now dropped as known.
+- The listings `mu300-sms` keeps in `/tmp` while it works hold message text; they are now made with umask 077 (the
+  first of them always was, by mktemp; the others took the caller's umask).
+
+What the fork does and this does not: it holds waiting parts in a directory of their own with one file per part and
+never shows an incomplete message. Ours pools what arrived after an hour, marked incomplete, which is section 39's
+decision (a lost part must not hold the others back for ever) and stays.
+
+Unit tests only (`tests/test_sms_pool.py`: `Codec`, `Listing`, and in `Pool` the tests under "a reference number
+used again"), under dash, bash and busybox ash, the grouping also under busybox awk in a container. Not measured:
+any of it on a device with a real long message. To check on a device with openwrt-luci, with a second phone:
+
+    logread -f | grep -i sms &                       # must never show a number or text
+    # 1. a long message (three parts or more) from the phone: one message in the pool, whole
+    mu300-sms list; mu300-sms show ID
+    grep -c . /etc/mu300/sms-pool/partial 2>/dev/null; ls /etc/mu300/sms-pool/parts    # nothing left waiting
+    sed -n '1,/^$/p' /etc/mu300/sms-pool/msg/ID      # a part_ids line with one hash per part
+    # 2. the same long message twice within a minute, then again after 15 minutes: three messages, each whole
+    # 3. with the panel's forwarding on: each of them forwarded once, whole
+    # 4. Ubuntu, or any system: sms list  with those still on the SIM (AT+CNMI=2,1 path): each shown whole
