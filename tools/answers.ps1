@@ -9,7 +9,12 @@
 #   never the destructive answer. The value @stdin puts the question on the progress stream and reads one line from
 #   standard input.
 #   The file: one NAME=value per line, the value taken as it is to the end of the line, # for comments; names
-#   MU300_* and ANDROID_SERIAL. It holds the password in plain text: keep it private and delete it afterwards.
+#   MU300_* and ANDROID_SERIAL. It holds the password in plain text: keep it in your own profile folder (not in a
+#   folder other users can read) and delete it afterwards.
+# Secrets - the variables in $script:AnsSecret (the password): their values are never printed, never part of an
+#   event and never in an error message, and they are not handed to the programs the installer starts: one given in
+#   the environment is taken out of it at once, one from the file is never put there. The password reaches one
+#   command only, on its standard input: the one that hashes it.
 #   (install.ps1 -Answers is older and different: one answer per line, in the order of the questions.)
 # Progress - $env:MU300_PROGRESS = '1': lines "@@mu300 {json}" on standard output, one event each, next to the text
 #   for people; every value is a string, and characters outside ASCII are written as \uXXXX. The last event of a
@@ -20,6 +25,9 @@ $script:NonInteractive = $false
 $script:Ans = New-Object 'System.Collections.Generic.Dictionary[string,string]'
 $script:AnsAsked = New-Object 'System.Collections.Generic.Dictionary[string,string]'
 $script:ProgressOn = $false
+# the answers that are secrets, in one place
+$script:AnsSecret = @('MU300_ANS_PASSWORD')
+function AnswerSecret([string]$Id) { return ($script:AnsSecret -ccontains $Id) }
 $script:StepId = ''
 $script:StepPct = ''
 
@@ -66,11 +74,14 @@ function AnswersFail([string]$Message) {
 # installer's is an error, not a variable.
 function AnswersParse([string[]]$Lines) {
     $vals = New-Object 'System.Collections.Generic.Dictionary[string,string]'
+    $n = 0
     foreach ($raw in @($Lines)) {
+        $n++
         $line = ([string]$raw).TrimEnd("`r")
         if (-not $line -or $line.StartsWith('#')) { continue }
         $i = $line.IndexOf('=')
-        if ($i -lt 1) { return @{ Ok = $false; Error = "answers file: not NAME=value: $line"; Values = $vals } }
+        # (the line itself is not shown: it may be a secret that lost its name)
+        if ($i -lt 0) { return @{ Ok = $false; Error = "answers file: line $n is not NAME=value"; Values = $vals } }
         $k = $line.Substring(0, $i)
         if ($k -cnotmatch '^(MU300_[A-Z0-9_]+|ANDROID_SERIAL)$') { return @{ Ok = $false; Error = "answers file: not a variable of the installer: $k"; Values = $vals } }
         $vals[$k] = $line.Substring($i + 1)
@@ -85,7 +96,8 @@ function AnswersLoad([string]$File) {
         $script:Ans[$k] = $p.Values[$k]
         # for the programs this one starts too (adb reads ANDROID_SERIAL) - but never the password. (An empty value
         # cannot be put into the environment on Windows: it stays in $script:Ans alone.)
-        if ($k -cne 'MU300_ANS_PASSWORD' -and $p.Values[$k] -ne '') { Set-Item -Path "env:$k" -Value $p.Values[$k] }
+        if (AnswerSecret $k) { Remove-Item "env:$k" -ErrorAction SilentlyContinue }
+        elseif ($p.Values[$k] -ne '') { Set-Item -Path "env:$k" -Value $p.Values[$k] }
     }
     $script:NonInteractive = $true
 }
@@ -98,6 +110,20 @@ function AnswersSetup([string]$File, [bool]$On) {
     if (-not $File -and $env:MU300_ANSWERS) { $File = $env:MU300_ANSWERS }
     if ($File) { AnswersLoad $File }
     if ($On -or $env:MU300_NONINTERACTIVE -eq '1') { $script:NonInteractive = $true }
+    # a secret given in the environment stays in this script and leaves the environment: adb, python and the other
+    # programs started from here do not inherit it
+    foreach ($k in $script:AnsSecret) {
+        $e = [Environment]::GetEnvironmentVariable($k)
+        if ($null -ne $e) {
+            if (-not $script:Ans.ContainsKey($k)) { $script:Ans[$k] = [string]$e }
+            Remove-Item "env:$k" -ErrorAction SilentlyContinue
+        }
+    }
+}
+# AnswersReexport: before the script runs itself again (after its self-update), the secrets go back into the
+# environment for that one start; the new run takes them out again
+function AnswersReexport {
+    foreach ($k in $script:AnsSecret) { if ($script:Ans.ContainsKey($k) -and $script:Ans[$k] -ne '') { Set-Item -Path "env:$k" -Value $script:Ans[$k] } }
 }
 # AnswerLookup ID: @{ Set; Value } from the answers file, else from the environment
 function AnswerLookup([string]$Id) {
@@ -108,6 +134,7 @@ function AnswerLookup([string]$Id) {
 }
 # AnswerNamed QUESTION DEFAULT ID [-Secret]: the answer of a question in answers mode, as it was given
 function AnswerNamed([string]$Question, [string]$Default, [string]$Id, [switch]$Secret) {
+    if (AnswerSecret $Id) { $Secret = $true }
     if (-not $Id) { Die (T 'this question has no variable and cannot be answered without a terminal: {1}' $Question) }
     $a = AnswerLookup $Id
     if (-not $a.Set) { Die (T 'no answer to the question "{1}": set {2} (nothing is asked and nothing is assumed in answers mode)' $Question $Id) }

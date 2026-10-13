@@ -48,7 +48,9 @@
 # The Linux slot gets the boot chain of Android's slot (uboot, sml, teecfg, trustos, vbmeta; backed up first):
 # MU300_SYNC_BOOTCHAIN=0 skips that.
 # It first brings this copy of the project up to date with GitHub (MU300_NO_SELF_UPDATE=1 skips that), and asks for
-# the language (MU300_LANG=en|tr|zh skips that).
+# the language (MU300_LANG=en|tr|zh skips that). Started by a person at a terminal for a plain installation, it then
+# offers the graphical installer of gui/, a window that drives this script (MU300_GUI=0: never ask, MU300_GUI=1:
+# start it without asking; it needs a Python 3.8 or newer with tkinter, which tools/gui-launch.sh looks for).
 #
 # Prebuilt: needs adb, python3, lz4, curl. Downloads the images of the newest release (or $MU300_RELEASE) and checks
 # their sha256. When GitHub has a prerelease newer than that release it asks whether to install the beta instead
@@ -106,6 +108,9 @@ progress hello script install.sh version 1 mode "$([ $CHECK_ONLY = 1 ] && echo c
 # first of all, make this the newest installer (it restarts itself when it changed)
 . "$TOP/tools/self-update.sh"
 self_update "$0" "$@"
+# the graphical installer, offered once to a person who starts a plain installation
+. "$TOP/tools/gui-launch.sh"
+[ $CHECK_ONLY = 1 ] || [ $BACKUP_ONLY = 1 ] || [ $MODE != prebuilt ] || gui_offer
 # --- fetch begin
 # fetch URL OUT: GitHub's release CDN throttles a single connection hard in some regions (measured 0.2 MB/s
 # against a 180 Mbit/s line), so pull the file as parallel ranges and fall back to one stream when that fails.

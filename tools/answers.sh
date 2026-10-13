@@ -10,8 +10,13 @@
 #   standard input, for a program that wants to decide while the installer runs (the graphical installer shows the
 #   installer's own summary before it sends INSTALL).
 #   The file: one NAME=value per line, the value taken as it is to the end of the line (no quotes, no expansion),
-#   # for comments. Names: MU300_* and ANDROID_SERIAL. It holds the password in plain text: keep it private and
-#   delete it afterwards.
+#   # for comments. Names: MU300_* and ANDROID_SERIAL. It holds the password in plain text, so it must be yours
+#   alone: a file that is a link, that another user owns or that anyone else can read or write is refused
+#   (chmod 600). Delete it afterwards.
+# Secrets - the variables in ANSWERS_SECRET (the password): their values are never printed, never part of an event
+#   and never in an error message, and they are not handed to the programs the installer starts: one given in the
+#   environment is taken out of it at once, one from the file is never put there. The password reaches one command
+#   only, on its standard input: the one that hashes it.
 # Progress - MU300_PROGRESS=1 (on standard output) or MU300_PROGRESS_FD=N (on that descriptor, 3..9):
 #   lines "@@mu300 {json}", one event each, next to the text for people. Every value is a string.
 #     {"event":"hello","script":"install.sh","version":"1","mode":"..."}
@@ -25,21 +30,41 @@
 #   The last event of a run is done or error, whatever ends it.
 
 ANSWERS_MODE=0; ANSWERS_ASKED=; PROGRESS_FD=; PROGRESS_STEP=; PROGRESS_PCT=; PROGRESS_ENDED=0
+# the answers that are secrets, in one place
+ANSWERS_SECRET="MU300_ANS_PASSWORD"
+answers_secret() { case " $ANSWERS_SECRET " in *" $1 "*) return 0 ;; esac; return 1; }
+
+# answers_private FILE: the file is this user's alone - no link, owned by this user, no permission for the group or
+# for others. (Not judged where the file system has no such permissions: Git Bash, MSYS, Cygwin.)
+answers_private() {
+    case $(uname -s 2>/dev/null) in MINGW*|MSYS*|CYGWIN*) return 0 ;; esac
+    [ ! -h "$1" ] || return 1
+    _ap=$(ls -ln "$1" 2>/dev/null | awk '{ print $1 " " $3; exit }')
+    case ${_ap%% *} in -???------*) ;; *) return 1 ;; esac
+    [ "${_ap#* }" = "$(id -u)" ]
+}
 
 # answers_load FILE: the variables of an answers file. A name that is not one of ours is an error, not a variable.
 answers_load() {
     [ -r "$1" ] || { printf 'ERROR: cannot read the answers file %s\n' "$1" >&2; exit 2; }
+    answers_private "$1" || {
+        printf 'ERROR: the answers file %s can hold a password and must be yours alone (no link, owned by you, chmod 600)\n' "$1" >&2
+        exit 2; }
+    _an=0
     while IFS= read -r _al || [ -n "$_al" ]; do
+        _an=$((_an + 1))
         _al=$(printf '%s' "$_al" | tr -d '\r')
         case $_al in ''|'#'*) continue ;; esac
-        case $_al in *=*) ;; *) printf 'ERROR: answers file: not NAME=value: %s\n' "$_al" >&2; exit 2 ;; esac
+        # (the line itself is not shown: it may be a secret that lost its name)
+        case $_al in *=*) ;; *) printf 'ERROR: answers file: line %s is not NAME=value\n' "$_an" >&2; exit 2 ;; esac
         _ak=${_al%%=*}; _av=${_al#*=}
         case $_ak in *[!A-Z0-9_]*|'') printf 'ERROR: answers file: not a variable of the installer: %s\n' "$_ak" >&2; exit 2 ;; esac
         case $_ak in MU300_*|ANDROID_SERIAL) ;; *) printf 'ERROR: answers file: not a variable of the installer: %s\n' "$_ak" >&2; exit 2 ;; esac
-        eval "$_ak=\$_av"
-        # for the programs this one starts too (adb reads ANDROID_SERIAL) - but never the password
-        case $_ak in MU300_ANS_PASSWORD) ;; *) export "$_ak" ;; esac
+        # for the programs this one starts too (adb reads ANDROID_SERIAL) - but never a secret: a name that the
+        # environment already exports is unset first, which takes it out of there
+        if answers_secret "$_ak"; then unset "$_ak"; eval "$_ak=\$_av"; else eval "$_ak=\$_av"; export "$_ak"; fi
     done < "$1"
+    _av=; _al=
     ANSWERS_MODE=1
 }
 
@@ -48,6 +73,12 @@ answers_setup() {
     [ -z "${ANSWERS_FILE:-}" ] || MU300_ANSWERS=$ANSWERS_FILE
     [ -z "${MU300_ANSWERS:-}" ] || answers_load "$MU300_ANSWERS"
     [ "${MU300_NONINTERACTIVE:-0}" != 1 ] || ANSWERS_MODE=1
+    # a secret given in the environment stays in this shell and leaves the environment: adb, curl, python and the
+    # other programs started from here do not inherit it
+    for _ak in $ANSWERS_SECRET; do
+        eval "_as=\${$_ak+set}"
+        if [ -n "$_as" ]; then eval "_av=\$$_ak"; unset "$_ak"; eval "$_ak=\$_av"; _av=; fi
+    done
     case ${MU300_PROGRESS_FD:-} in
         [3-9]) PROGRESS_FD=$MU300_PROGRESS_FD ;;
         '') [ "${MU300_PROGRESS:-0}" != 1 ] || PROGRESS_FD=1 ;;
@@ -109,16 +140,18 @@ ask() {
             printf '\n'
         else
             # a question that comes back was not happy with its answer, and the answer would be the same again
-            case " $ANSWERS_ASKED " in *" $4 "*) die "$(t 'the answer in {1} was not accepted: {2}' "$4" "$_a")" ;; esac
+            _ashow=$_a; ! answers_secret "$4" || _ashow='******'
+            case " $ANSWERS_ASKED " in *" $4 "*) die "$(t 'the answer in {1} was not accepted: {2}' "$4" "$_ashow")" ;; esac
             ANSWERS_ASKED="$ANSWERS_ASKED $4"
-            printf '%s [%s]: %s\n' "$2" "$(t "$3")" "$_a"
+            printf '%s [%s]: %s\n' "$2" "$(t "$3")" "$_ashow"
         fi
     else
         printf '%s [%s]: ' "$2" "$(t "$3")"; read -r _a
     fi
     [ -n "$_a" ] || _a=$3
     if command -v normalize_answer >/dev/null 2>&1; then _a=$(normalize_answer "$_a"); fi
-    progress question id "${4:-}" text "$2" default "$3" answer "$_a"
+    if answers_secret "${4:-}"; then progress question id "$4" text "$2" default "$3" secret 1
+    else progress question id "${4:-}" text "$2" default "$3" answer "$_a"; fi
     eval "$1=\$_a"
 }
 

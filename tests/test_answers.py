@@ -5,6 +5,7 @@ of tests/fakeadb.py, which answers what a rooted device would and writes nothing
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import unittest
@@ -107,9 +108,12 @@ class Ask(ShellTest):
     def test_the_password_is_never_shown(self):
         for shell in self.each_shell():
             r = self.run_ask(shell, 'answers_setup; ask_password pw "Password" "Repeat"; echo "len=${#pw}"; '
-                                    'env | grep -c hunter2 || true',
+                                    'sh -c \'echo "child: pw=[${MU300_ANS_PASSWORD-unset}] mode=$MU300_NONINTERACTIVE"\'; '
+                                    'env | grep -c MU300_ANS_PASSWORD; true',
                              MU300_NONINTERACTIVE=1, MU300_PROGRESS=1, MU300_ANS_PASSWORD='hunter2secret')
             self.assertIn('len=13', r.stdout)
+            # given in the environment, it leaves the environment: what the installer starts does not inherit it
+            self.assertIn('child: pw=[unset] mode=1\n0\n', r.stdout)
             self.assertIn('Password: ******', r.stdout)
             self.assertEqual(r.stdout.count('hunter2'), 0)
             self.assertEqual(r.stderr.count('hunter2'), 0)
@@ -118,6 +122,19 @@ class Ask(ShellTest):
                              MU300_NONINTERACTIVE=1)
             self.assertEqual(r.returncode, 1)
             self.assertIn('set MU300_ANS_PASSWORD', r.stderr)
+
+    def test_a_secret_is_never_shown_whichever_way_it_is_asked(self):
+        # the table of secrets decides, not the function that happens to ask
+        for shell in self.each_shell():
+            r = self.run_ask(shell, 'answers_setup; ask pw "Password" "" MU300_ANS_PASSWORD; echo "len=${#pw}"; '
+                                    'ask pw "Password" "" MU300_ANS_PASSWORD',
+                             MU300_NONINTERACTIVE=1, MU300_PROGRESS=1, MU300_ANS_PASSWORD='hunter2secret')
+            self.assertIn('len=13', r.stdout)
+            self.assertIn('Password []: ******', r.stdout)
+            self.assertEqual((r.stdout + r.stderr).count('hunter2'), 0)
+            self.assertIn('the answer in MU300_ANS_PASSWORD was not accepted: ******', r.stderr)
+            self.assertEqual(events(r.stdout)[0], {'event': 'question', 'id': 'MU300_ANS_PASSWORD', 'text': 'Password',
+                                                   'default': '', 'secret': '1'})
 
     def test_the_password_typed_twice(self):
         for shell in self.each_shell():
@@ -130,6 +147,7 @@ class Ask(ShellTest):
         f = self.tmp / 'answers'
         f.write_text('# what to install\n\nMU300_ANS_KERNEL=6.18\r\nMU300_ANS_PASSWORD=p=ss w\'rd $HOME `id` "q" \\n\n'
                      'ANDROID_SERIAL=324950664950\nMU300_ANS_GPU=\nMU300_LANG=tr')
+        f.chmod(0o600)
         code = (f'ANSWERS_FILE="{f}"; answers_setup; echo "mode=$ANSWERS_MODE"; echo "k=$MU300_ANS_KERNEL"; '
                 'printf "p=%s\\n" "$MU300_ANS_PASSWORD"; echo "g=[${MU300_ANS_GPU-unset}]"; echo "l=$MU300_LANG"; '
                 'sh -c \'echo "child: serial=$ANDROID_SERIAL kernel=$MU300_ANS_KERNEL pw=[${MU300_ANS_PASSWORD-unset}]"\'')
@@ -146,20 +164,51 @@ class Ask(ShellTest):
             out = self.sh(shell, self.PRE + 'answers_setup; echo "mode=$ANSWERS_MODE k=$MU300_ANS_KERNEL"',
                           MU300_ANSWERS=str(f)).stdout
             self.assertIn('mode=1 k=6.18', out)
+            # a password that the environment exports too: the file's counts, and it is exported no more
+            out = self.run_ask(shell, code, MU300_ANS_PASSWORD='exported').stdout
+            self.assertIn('child: serial=324950664950 kernel=6.18 pw=[unset]', out)
+            self.assertNotIn('exported', out)
+
+    @unittest.skipIf(os.name == 'nt' or (hasattr(os, 'geteuid') and os.geteuid() == 0), 'needs file permissions that bind')
+    def test_answers_file_must_be_the_users_alone(self):
+        f = self.tmp / 'answers'
+        f.write_text('MU300_ANS_KERNEL=6.18\nMU300_ANS_PASSWORD=hunter2secret\n')
+        code = f'ANSWERS_FILE="{f}"; answers_setup; echo "reached k=$MU300_ANS_KERNEL"'
+        for shell in self.each_shell():
+            for mode in (0o644, 0o640, 0o604, 0o660, 0o606, 0o666, 0o620):
+                f.chmod(mode)
+                r = self.run_ask(shell, code)
+                self.assertEqual(r.returncode, 2, oct(mode))
+                self.assertIn('must be yours alone', r.stderr)
+                self.assertNotIn('reached', r.stdout)
+                self.assertNotIn('hunter2', r.stdout + r.stderr)
+            for mode in (0o600, 0o400, 0o700):
+                f.chmod(mode)
+                self.assertIn('reached k=6.18', self.run_ask(shell, code).stdout, oct(mode))
+            # a link is refused even to a private file: what it points to can be changed by its owner
+            f.chmod(0o600)
+            link = self.tmp / 'link'
+            if not link.exists():
+                link.symlink_to(f)
+            r = self.run_ask(shell, f'ANSWERS_FILE="{link}"; answers_setup; echo reached')
+            self.assertEqual(r.returncode, 2)
+            self.assertNotIn('reached', r.stdout)
 
     def test_answers_file_takes_only_the_installers_variables(self):
         for bad, why in (('PATH=/evil\n', 'not a variable of the installer: PATH'),
                          ('LD_PRELOAD=/x.so\n', 'not a variable of the installer: LD_PRELOAD'),
                          ('mu300_ans_kernel=1\n', 'not a variable of the installer: mu300_ans_kernel'),
                          ('MU300_X;id=1\n', 'not a variable of the installer: MU300_X;id'),
-                         ('MU300_ANS_KERNEL\n', 'not NAME=value: MU300_ANS_KERNEL'),
+                         ('hunter2secret\n', 'line 2 is not NAME=value'),
                          ('=x\n', 'not a variable of the installer: ')):
             f = self.tmp / 'answers'
             f.write_text('MU300_ANS_GPU=yes\n' + bad)
+            f.chmod(0o600)
             for shell in self.each_shell():
                 r = self.run_ask(shell, f'ANSWERS_FILE="{f}"; answers_setup; echo reached')
                 self.assertEqual(r.returncode, 2, bad)
                 self.assertIn(why, r.stderr)
+                self.assertNotIn('hunter2', r.stdout + r.stderr)
                 self.assertNotIn('reached', r.stdout)
         for shell in self.each_shell():
             r = self.run_ask(shell, f'ANSWERS_FILE="{self.tmp}/none"; answers_setup; echo reached')
@@ -279,6 +328,10 @@ class Device(ShellTest):
         super().setUp()
         self.state = self.tmp / 'device.json'
         (self.tmp / 'home').mkdir()
+        # the host tools an installation asks for before anything else: none of these runs gets as far as using them
+        for tool in ('lz4', 'curl'):
+            if not shutil.which(tool):
+                self.stub(tool, 'exit 1')
 
     def device(self, **keys):
         self.state.write_text(json.dumps(keys))
@@ -304,6 +357,15 @@ class Device(ShellTest):
             return []
         rows = [json.loads(l) for l in log.read_text().splitlines()]
         return [r for r in rows if kind is None or r['kind'] == kind]
+
+    def assert_no_secret_anywhere(self, secret):
+        # adb was started with the answers in its environment, and never with the password; and the value is in no
+        # file the run left behind (the work directory, the fake's log)
+        calls = self.calls()
+        self.assertTrue(any('MU300_ANS_KERNEL' in c['answers'] for c in calls))
+        self.assertEqual([c['argv'] for c in calls if 'MU300_ANS_PASSWORD' in c['answers']], [])
+        for p in [Path(str(self.state) + '.log')] + [q for q in (self.tmp / 'work').rglob('*') if q.is_file()]:
+            self.assertNotIn(secret.encode(), p.read_bytes(), str(p))
 
     def assert_nothing_written(self):
         self.assertEqual([c['cmd'] for c in self.calls('write')], [])
@@ -514,6 +576,7 @@ class Install(Device):
     def install(self, shell, answers, stdin='', **env):
         f = self.tmp / 'answers.txt'
         f.write_text(''.join(f'{k}={v}\n' for k, v in answers.items()))
+        f.chmod(0o600)
         r = self.run_script(shell, 'install.sh', '--answers', str(f), stdin=stdin, MU300_PROGRESS=1, **env)
         ev = events(r.stdout)
         asked = [(e['id'], e.get('answer')) for e in ev if e['event'] == 'question' and 'state' not in e]
@@ -535,6 +598,13 @@ class Install(Device):
             self.assertEqual((r.stdout + r.stderr).count('hunter2'), 0)
             self.assertIn({'event': 'info', 'key': 'release', 'value': 'v2026.10.23'}, ev)
             self.assert_nothing_written()
+            self.assert_no_secret_anywhere('hunter2')
+            # the same with the answers in the environment, where the password would be inherited by every program
+            self.device(pull=False)
+            r = self.run_script(shell, 'install.sh', MU300_NONINTERACTIVE=1, MU300_PROGRESS=1, **ANSWERS)
+            self.assertIn('could not read /dev/block/by-name/boot_a', events(r.stdout)[-1]['message'])
+            self.assertEqual((r.stdout + r.stderr).count('hunter2'), 0)
+            self.assert_no_secret_anywhere('hunter2')
 
     def test_a_missing_answer_stops_before_anything_is_read_or_written(self):
         for missing in ('MU300_ANS_SYSTEMS', 'MU300_ANS_KERNEL', 'MU300_ANS_PASSWORD', 'MU300_ANS_DEFAULT_LINUX',

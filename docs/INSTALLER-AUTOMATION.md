@@ -35,12 +35,29 @@ The rules:
   standard input. A program uses it to decide while the installer runs: the graphical installer sets
   `MU300_ANS_CONFIRM=@stdin`, shows the installer's own summary, and sends `INSTALL` only then.
 * Answers typed in the installer's other languages count as they do at the terminal (`evet`, `是`).
-* The password is never printed and never part of an event.
 
 The file is `NAME=value` lines; the value is taken as it is to the end of the line (no quotes, no expansion), `#`
 starts a comment. Only `MU300_*` and `ANDROID_SERIAL` are accepted; any other name is an error. The variables of a
-file are exported to the programs the installer starts (adb reads `ANDROID_SERIAL`), except the password. **The file
-holds the password in plain text**: make it readable by you alone and delete it afterwards.
+file are exported to the programs the installer starts (adb reads `ANDROID_SERIAL`), except the secrets.
+
+### Secrets
+
+One answer is a secret: `MU300_ANS_PASSWORD`. The scripts keep the list in one place (`ANSWERS_SECRET` in
+`tools/answers.sh`, `$script:AnsSecret` in `tools/answers.ps1`), and for every name in it:
+
+* the value is never printed: the transcript shows `******`, an event carries `"secret":"1"` and no answer, and an
+  error message about it shows `******`;
+* it is not handed to the programs the installer starts. From a file it is never exported; given in the
+  environment it is taken out of the environment before anything is started, so adb, curl and python do not
+  inherit it. It reaches one command only, on its standard input: the one that hashes it. The device gets the hash;
+* a line of the file that is not `NAME=value` is reported by its number, not by its text.
+
+**The answers file holds the password in plain text.** `install.sh` and `uninstall.sh` refuse a file that is a
+link, that another user owns, or that its group or anyone else can read or write: create it with `umask 077` (or
+`chmod 600`) before the password goes in. On Windows there is no such check: keep the file in your own profile
+folder, not in a folder other users can read. Delete it when the run ends - the graphical installer does, whatever
+way the run ends. Prefer the file to the environment for the password: other processes of the same user can read a
+process's environment while it starts.
 
 `install.ps1 -Answers FILE` is older and different: one answer per line, in the order of the questions. It stays as
 it is; it never gets the beta question, which would shift its lines.

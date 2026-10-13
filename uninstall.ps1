@@ -110,7 +110,8 @@ function AdbState { SelectDevice -Quiet; [string](Quiet { adb get-state }) }
 function Ask($question, $default, $Id) {
     $a = if ($script:NonInteractive) { AnswerNamed $question $default $Id } else { Read-Host "$question [$default]" }
     $r = if ([string]::IsNullOrWhiteSpace($a)) { $default } else { $a.Trim() }
-    Progress 'question' 'id' $Id 'text' $question 'default' $default 'answer' $r
+    if (AnswerSecret ([string]$Id)) { Progress 'question' 'id' $Id 'text' $question 'default' $default 'secret' '1' }
+    else { Progress 'question' 'id' $Id 'text' $question 'default' $default 'answer' $r }
     return $r
 }
 function SuDo($cmd) { (Quiet { adb shell "su -c '$cmd'" }) -join "`n" -replace "`r", '' }

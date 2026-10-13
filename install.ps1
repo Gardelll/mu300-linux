@@ -28,6 +28,10 @@
     cannot hold every name the Android subset contains (the property area is a set of files called
     u:object_r:<context>:s0), so the archive from the device is kept beside it as work\android-subset\
     windows-source.tar.gz, and the tools that build the images take the subset from that file.
+    Started by a person at a console for a plain installation, it first offers the graphical installer of gui\, a
+    window that drives this script ($env:MU300_GUI = '0': never ask, '1': start it without asking). The window needs
+    a Python 3.8 or newer with tkinter; tools\gui-launch.ps1 looks for one and, with your yes, installs it with
+    winget.
     Only the Linux region (or the SD card), the boot partition of the slot Android does not run from (boot_b, or
     boot_a when Android runs from b) and 32 bytes of misc are written; Android's boot partition, the GPT and
     userdata stay untouched. The one exception is asked for first and needs ERASE typed: where userdata fills the
@@ -276,7 +280,8 @@ function Ask($question, $default, $Id) {
     $a = if ($script:NonInteractive) { AnswerNamed $question $default $Id }
         elseif ($script:AnswerQueue) { NextAnswer $question } else { Read-Host "$question [$(T $default)]" }
     $r = if ([string]::IsNullOrWhiteSpace($a)) { $default } else { NormalizeAnswer $a.Trim() }
-    Progress 'question' 'id' $Id 'text' $question 'default' $default 'answer' $r
+    if (AnswerSecret ([string]$Id)) { Progress 'question' 'id' $Id 'text' $question 'default' $default 'secret' '1' }
+    else { Progress 'question' 'id' $Id 'text' $question 'default' $default 'answer' $r }
     return $r
 }
 # adb shell with root; stdin is never forwarded so prompts of this script are not eaten
@@ -474,10 +479,15 @@ Progress 'hello' 'script' 'install.ps1' 'version' '1' 'mode' $(if ($Check) { 'ch
 # first of all, make this the newest installer (it runs the updated one and ends when it changed)
 if (SelfUpdate) {
     $env:MU300_SELF_UPDATED = '1'
+    AnswersReexport
     $PSBoundParameters['Lang'] = $Lang
     & $PSCommandPath @PSBoundParameters
     exit $LASTEXITCODE
 }
+
+# the graphical installer, offered once to a person who starts a plain installation
+. (Join-Path (Join-Path $Top 'tools') 'gui-launch.ps1')
+GuiOffer ([bool]($script:NonInteractive -or ($null -ne $script:AnswerQueue) -or $Check -or $Backup))
 
 Step 'preflight' 2
 Say (T 'Checking host tools and device')
@@ -1246,6 +1256,7 @@ if ($script:NonInteractive) {
     # MU300_ANS_PASSWORD: no event and no line of output ever shows it
     $p1 = AnswerNamed (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') '' 'MU300_ANS_PASSWORD' -Secret
     $p2 = $p1
+    Progress 'question' 'id' 'MU300_ANS_PASSWORD' 'text' (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') 'default' '' 'secret' '1'
 } elseif ($script:AnswerQueue) {
     $p1 = NextAnswer (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') -Secret
     $p2 = NextAnswer (T 'Repeat') -Secret

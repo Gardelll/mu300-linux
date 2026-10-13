@@ -201,6 +201,9 @@ Check 'install: steps'          (@($r.Events | Where-Object { $_.event -eq 'step
 Check 'install: stops at the pull' "$((LastEvent $r).event): $((LastEvent $r).message)" 'error: pulling boot_a failed'
 Check 'install: exit'           $r.Rc 1
 Check 'install: the password is never shown' ($r.Out -match 'hunter2') $false
+# adb is started with the answers in its environment, and never with the password
+Check 'install: adb sees the answers' (@(Calls '' | Where-Object { $_.answers -contains 'MU300_ANS_KERNEL' }).Count -gt 0) $true
+Check 'install: adb never sees the password' (@(Calls '' | Where-Object { @($_.answers | ForEach-Object { "$_".ToUpper() }) -contains 'MU300_ANS_PASSWORD' }).Count) 0
 Check 'install: the release'    $r.Facts['release'] 'v2026.10.23'
 Check "install: nothing written: $(UntouchedWhy)"  (Untouched) 0
 
@@ -281,6 +284,9 @@ $r = RunScript 'install.ps1' '-NonInteractive' @{ MU300_ANS_SYSTEMS = '2'; MU300
     MU300_ANS_GPU = 'yes'; MU300_ANS_VPN = 'no'; MU300_ANS_ADB = 'no'; MU300_ANS_KERNEL = '5.4'; MU300_ANS_PASSWORD = 'hunter2secret' }
 Check 'environment: questions'  ($r.Asked -join ' ') 'MU300_ANS_SYSTEMS=2 MU300_ANS_DEFAULT_LINUX=no MU300_ANS_HOTSPOT=yes MU300_ANS_GPU=yes MU300_ANS_VPN=no MU300_ANS_ADB=no MU300_ANS_KERNEL=5.4'
 Check 'environment: stops at the pull' (LastEvent $r).message 'pulling boot_a failed'
+Check 'environment: the password is never shown' ($r.Out -match 'hunter2') $false
+Check 'environment: adb sees the answers' (@(Calls '' | Where-Object { @($_.answers | ForEach-Object { "$_".ToUpper() }) -contains 'MU300_ANS_KERNEL' }).Count -gt 0) $true
+Check 'environment: adb never sees the password' (@(Calls '' | Where-Object { @($_.answers | ForEach-Object { "$_".ToUpper() }) -contains 'MU300_ANS_PASSWORD' }).Count) 0
 
 # ---- -AdbPath: asks the device nothing -----------------------------------------------------------------------------
 Device
