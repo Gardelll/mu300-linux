@@ -101,7 +101,11 @@ static void run_bg(const char *cmd)
 {
 	if (!cmd || !*cmd) return;
 	pid_t p = fork();
-	if (p == 0) { setsid(); execl("/bin/sh", "sh", "-c", cmd, (char *)NULL); _exit(127); }
+	if (p == 0) {
+		/* the command gets none of the links: a slow mu300-at must not hold the headset's sockets open */
+		for (int fd = 3; fd < 64; fd++) close(fd);
+		setsid(); execl("/bin/sh", "sh", "-c", cmd, (char *)NULL); _exit(127);
+	}
 }
 
 static void ciev(int idx, int val)
