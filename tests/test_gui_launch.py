@@ -29,7 +29,7 @@ class GuiLaunch(ShellTest):
         or 'later': once $STUBLOG/tk-installed exists."""
         p = self.root / path.lstrip('/') if path.startswith('/') else self.stubs / path
         p.parent.mkdir(parents=True, exist_ok=True)
-        tkrc = {True: 'exit 0', False: 'exit 1', 'later': '[ -e "$STUBLOG/tk-installed" ]; exit $?'}[tk]
+        tkrc = {True: 'exit 0', False: 'exit 1', 'old': 'exit 4', 'later': '[ -e "$STUBLOG/tk-installed" ]; exit $?'}[tk]
         ver = f'echo "{version}"; exit 0' if version else 'exit 9'
         p.write_text('#!/bin/sh\ncase "$2" in\n'
                      f'  *tkinter*) {tkrc} ;;\n  *version_info*) {ver} ;;\nesac\n'
@@ -73,6 +73,33 @@ class GuiLaunch(ShellTest):
             p = self.python('python3', '3.10', tk=False)
             self.python('/usr/bin/python3', '3.9', tk=False)
             self.assertEqual(self.find(shell), f'rc=1 py=[] v=[] notk=[{p}] nv=[3.10] old=[] ov=[]')
+
+    def test_a_tk_older_than_8_6_is_no_tkinter(self):
+        # macOS's own Python (the Command Line Tools') has Tk 8.5, whose window stays black on current macOS
+        for shell in self.each_shell():
+            clt = self.python('/usr/bin/python3', '3.9', tk='old')
+            self.stub('xcode-select', 'exit 0')
+            out = self.run_gui(shell, self.FIND + '; echo "oldtk=$GUI_PY_NOTK_OLDTK"', os_name='Darwin').stdout
+            self.assertIn(f'rc=1 py=[] v=[] notk=[{clt}] nv=[3.9]', out)
+            self.assertIn('oldtk=1', out)
+            top = self.gui_tree()
+            out, ran = self.offer(shell, top=top, MU300_GUI='1', os_name='Darwin')
+            self.assertIn('its Tk is older than 8.6 and cannot draw the window', out)
+            self.assertIn('python.org', out)
+            self.assertEqual(ran, '')
+            # a Homebrew Python without tkinter beside it is the one a command is known for: that one is offered
+            brew = self.python('/opt/homebrew/bin/python3.13', '3.13', tk=False)
+            self.stub('brew', 'exit 0')
+            out = self.run_gui(shell, self.FIND + '; echo "oldtk=$GUI_PY_NOTK_OLDTK"', os_name='Darwin').stdout
+            self.assertIn(f'notk=[{brew}] nv=[3.13]', out)
+            self.assertIn('oldtk=0', out)
+            out, ran = self.offer(shell, top=top, MU300_GUI='1', os_name='Darwin', stdin='\n')
+            self.assertIn('    brew install python-tk@3.13\n', out)
+            # ... and one with a Tk that can is taken, whatever stands in front of it
+            good = self.python('/Library/Frameworks/Python.framework/Versions/3.12/bin/python3', '3.12')
+            self.assertIn(f'rc=0 py=[{good}] v=[3.12]', self.find(shell, os_name='Darwin'))
+            for p in (clt, brew, good, self.stubs / 'brew', self.stubs / 'xcode-select'):
+                p.unlink()
 
     def test_too_old_is_named(self):
         for shell in self.each_shell():

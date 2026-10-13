@@ -81,8 +81,8 @@ function GuiPyCandidates([string]$LocalAppData, [string]$ProgramFiles, [string]$
 }
 
 # GuiPyProbe CANDIDATE: what this Python is - @{ Runs; Version; Old; Tk }. Version is "3.12", '' when it does not
-# run or is no Python (the Store's stub); Old: older than 3.8; Tk: it can import tkinter. The two are asked
-# separately, so the messages can say which is missing.
+# run or is no Python (the Store's stub); Old: older than 3.8; Tk: it can import a tkinter with Tk 8.6 or newer (the
+# window is not drawn right by an older one). The two are asked separately, so the messages can say which is missing.
 function GuiPyProbe($Candidate) {
     $ErrorActionPreference = 'Continue'
     $r = @{ Runs = $false; Version = ''; Old = $false; Tk = $false }
@@ -95,7 +95,7 @@ function GuiPyProbe($Candidate) {
     $r.Runs = $true
     $r.Version = "$($nums[0]).$($nums[1])"
     if ([int]$nums[0] -ne 3 -or [int]$nums[1] -lt 8) { $r.Old = $true; return $r }
-    try { & $exe @pre -c 'import tkinter' 2>$null | Out-Null; $r.Tk = ($LASTEXITCODE -eq 0) } catch { $r.Tk = $false }
+    try { & $exe @pre -c 'import sys, tkinter; sys.exit(0 if tkinter.TkVersion >= 8.6 else 4)' 2>$null | Out-Null; $r.Tk = ($LASTEXITCODE -eq 0) } catch { $r.Tk = $false }
     return $r
 }
 

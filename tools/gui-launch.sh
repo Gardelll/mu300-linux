@@ -8,6 +8,9 @@
 # every failure and every "no" leads to the text installer, which goes on as if nothing had been asked.
 
 GUI_MIN_MINOR=8     # Python 3.8: the oldest the window is written for
+# ... and Tk 8.6: the Tk 8.5 that macOS's own Python (the Command Line Tools') brings opens a window that stays black
+# on current macOS, so a Python whose tkinter is that old counts as one without tkinter
+GUI_TK_PROBE='import sys, tkinter; sys.exit(0 if tkinter.TkVersion >= 8.6 else 4)'
 
 # gui_asked: whether the question is put at all
 gui_asked() {
@@ -65,25 +68,29 @@ gui_py_is_clt_stub() {
 }
 
 # gui_py_probe PATH: what this Python is. PY_VERSION is "3.12" (empty when it does not run or is no Python), PY_OLD
-# is 1 when it is older than 3.8, PY_TK is 1 when it can import tkinter. The two are asked separately, so the
-# messages can say which is missing. Status 0 only for a Python new enough (with or without tkinter).
+# is 1 when it is older than 3.8, PY_TK is 1 when it can import a tkinter with Tk 8.6 or newer (PY_TK_OLD is 1 when
+# its Tk is older). The version and tkinter are asked separately, so the messages can say which is missing. Status
+# 0 only for a Python new enough (with or without tkinter).
 gui_py_probe() {
-    PY_VERSION=; PY_OLD=0; PY_TK=0
+    PY_VERSION=; PY_OLD=0; PY_TK=0; PY_TK_OLD=0
     gui_py_is_clt_stub "$1" && return 1
     _gv=$("$1" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null </dev/null) || return 1
     case $_gv in [0-9]*.[0-9]*) ;; *) return 1 ;; esac
     case $_gv in *[!0-9.]*) return 1 ;; esac
     PY_VERSION=$_gv
     if [ "${_gv%%.*}" -ne 3 ] || [ "${_gv#*.}" -lt $GUI_MIN_MINOR ]; then PY_OLD=1; return 1; fi
-    if "$1" -c 'import tkinter' >/dev/null 2>&1 </dev/null; then PY_TK=1; fi
+    _gt=0; "$1" -c "$GUI_TK_PROBE" >/dev/null 2>&1 </dev/null || _gt=$?
+    case $_gt in 0) PY_TK=1 ;; 4) PY_TK_OLD=1 ;; esac
     return 0
 }
 
 # gui_py_find: GUI_PY, the first Python that is new enough and has tkinter (empty: none). When there is none,
-# GUI_PY_NOTK / GUI_PY_NOTK_VERSION are the first that is new enough but has no tkinter, and GUI_PY_OLD /
-# GUI_PY_OLD_VERSION the first that is too old.
+# GUI_PY_NOTK / GUI_PY_NOTK_VERSION are a Python that is new enough but has no usable tkinter - the first one that
+# gui_tk_command knows a command for, else the first (GUI_PY_NOTK_OLDTK=1: it has one, with a Tk older than 8.6) -
+# and GUI_PY_OLD / GUI_PY_OLD_VERSION the first that is too old.
 gui_py_find() {
-    GUI_PY=; GUI_PY_VERSION=; GUI_PY_NOTK=; GUI_PY_NOTK_VERSION=; GUI_PY_OLD=; GUI_PY_OLD_VERSION=
+    GUI_PY=; GUI_PY_VERSION=; GUI_PY_NOTK=; GUI_PY_NOTK_VERSION=; GUI_PY_NOTK_OLDTK=0; GUI_PY_OLD=; GUI_PY_OLD_VERSION=
+    _gfix=0
     _gl=$(gui_py_candidates)
     _gifs=$IFS; IFS='
 '
@@ -92,10 +99,15 @@ gui_py_find() {
         if gui_py_probe "$_gc"; then
             if [ $PY_TK = 1 ]; then
                 GUI_PY=$_gc; GUI_PY_VERSION=$PY_VERSION
-                GUI_PY_NOTK=; GUI_PY_NOTK_VERSION=; GUI_PY_OLD=; GUI_PY_OLD_VERSION=
+                GUI_PY_NOTK=; GUI_PY_NOTK_VERSION=; GUI_PY_NOTK_OLDTK=0; GUI_PY_OLD=; GUI_PY_OLD_VERSION=
                 return 0
             fi
-            [ -n "$GUI_PY_NOTK" ] || { GUI_PY_NOTK=$_gc; GUI_PY_NOTK_VERSION=$PY_VERSION; }
+            if [ $_gfix = 0 ]; then
+                [ -z "$(gui_tk_command "$_gc" "$PY_VERSION")" ] || _gfix=1
+                if [ -z "$GUI_PY_NOTK" ] || [ $_gfix = 1 ]; then
+                    GUI_PY_NOTK=$_gc; GUI_PY_NOTK_VERSION=$PY_VERSION; GUI_PY_NOTK_OLDTK=$PY_TK_OLD
+                fi
+            fi
         elif [ $PY_OLD = 1 ]; then
             [ -n "$GUI_PY_OLD" ] || { GUI_PY_OLD=$_gc; GUI_PY_OLD_VERSION=$PY_VERSION; }
         fi
@@ -135,7 +147,11 @@ gui_offer() {
     fi
     if ! gui_py_find; then
         if [ -n "$GUI_PY_NOTK" ]; then
-            echo "  $(t 'Python {1} is there ({2}), but without tkinter, which the window is made with.' "$GUI_PY_NOTK_VERSION" "$GUI_PY_NOTK")"
+            if [ "$GUI_PY_NOTK_OLDTK" = 1 ]; then
+                echo "  $(t 'Python {1} is there ({2}), but its Tk is older than 8.6 and cannot draw the window.' "$GUI_PY_NOTK_VERSION" "$GUI_PY_NOTK")"
+            else
+                echo "  $(t 'Python {1} is there ({2}), but without tkinter, which the window is made with.' "$GUI_PY_NOTK_VERSION" "$GUI_PY_NOTK")"
+            fi
             _gc=$(gui_tk_command "$GUI_PY_NOTK" "$GUI_PY_NOTK_VERSION")
             if [ -n "$_gc" ]; then
                 echo "  $(t 'This command installs it:')"
@@ -146,7 +162,10 @@ gui_offer() {
                     gui_py_find || true
                 fi
             else
-                echo "  $(t 'Install tkinter for it with the package tool of this system (the package is usually called python3-tk).')"
+                case $(gui_os) in
+                    Darwin) echo "  $(t 'Get it from python.org, or with Homebrew: brew install python-tk')" ;;
+                    *) echo "  $(t 'Install tkinter for it with the package tool of this system (the package is usually called python3-tk).')" ;;
+                esac
             fi
         elif [ -n "$GUI_PY_OLD" ]; then
             echo "  $(t 'Python {1} is there ({2}), but the window needs Python 3.8 or newer.' "$GUI_PY_OLD_VERSION" "$GUI_PY_OLD")"
