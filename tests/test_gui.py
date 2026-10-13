@@ -1101,10 +1101,10 @@ class Window(unittest.TestCase):
         page = show('install', 2)
         self.assertIn('The beta: v2026.10.25', page)
         self.assertIn('Ubuntu LTS', page)
-        self.assertEqual(str(a.w['next'].state()), "('disabled',)")           # no password yet
+        self.assertIn('disabled', a.w['next'].state())                        # no password yet
         a.v['password'].set('hunter2secret'); a.v['password2'].set('hunter2secret')
         root.update()
-        self.assertEqual(a.w['next'].state(), ())
+        self.assertNotIn('disabled', a.w['next'].state())       # (the pointer may be over it: active, hover)
         self.assertEqual(ctl.choices.password, 'hunter2secret')
         a.v['ubuntu_version'].set('26.04')
         root.update()
@@ -1130,6 +1130,14 @@ class Window(unittest.TestCase):
         ctl.facts = facts(region__size='0', makeroom__first='12275712', makeroom__end='122155007', makeroom__usable_end='122155007',
                           makeroom__min_android='8388608', makeroom__min_linux='1638400', makeroom__max_linux='101490688')
         self.assertIn('Make room now', show('install', 1))
+        # a check that fitted the choices to the device: the widgets follow (a card that holds an installation)
+        ctl.choices.storage = 'sd'
+        a.on_change({'check'})
+        root.update()
+        self.assertEqual(a.v['storage'].get(), 'sd')
+        ctl.choices.storage = 'internal'
+        a.on_change({'check'})
+        root.update()
         ctl.facts = facts(region__existing='yes')
         self.assertIn('Linux is already installed there', show('install', 2))
         self.assertIn('Uninstall', show('manage'))
@@ -1184,7 +1192,7 @@ class Window(unittest.TestCase):
         p.event({'event': 'step', 'id': 'device', 'percent': '80', 'title': 'Installing on the device'})
         show('install', 4)
         self.assertIn('cannot be stopped', str(a.w['cancel-note'].cget('text')))
-        self.assertEqual(str(a.w['cancel'].state()), "('disabled',)")
+        self.assertIn('disabled', a.w['cancel'].state())
         ctl.run = None
         p.event({'event': 'error', 'message': 'installation on the device failed; boot_b and misc were not changed'})
         p.end(1)

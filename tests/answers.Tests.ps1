@@ -97,7 +97,7 @@ function LastEvent($r) { if ($r.Events.Count -eq 0) { return $null }; return $r.
 Device
 $r = RunScript 'install.ps1' '-Check -NonInteractive'
 Check 'check: exit'             $r.Rc 0
-if ($r.Rc -ne 0) { Write-Host $r.Out }
+if ($r.Rc -ne 0 -or (LastEvent $r).event -ne 'done') { Write-Host $r.Out }
 Check 'check: hello'            "$($r.Events[0].event) $($r.Events[0].script) $($r.Events[0].mode)" 'hello install.ps1 check'
 Check 'check: done'             "$((LastEvent $r).event) $((LastEvent $r).result)" 'done ok'
 Check 'check: steps'            (@($r.Events | Where-Object { $_.event -eq 'step' -and $_.id } | ForEach-Object { $_.id }) -join ' ') 'preflight storage'

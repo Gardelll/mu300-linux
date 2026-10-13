@@ -93,6 +93,17 @@ class App:
         else:
             self.validate()
 
+    def _sync(self):
+        """The choices changed behind the widgets (a check fitted them to the device): the variables follow."""
+        c = self.ctl.choices
+        for name, var in self.v.items():
+            if not hasattr(c, name):
+                continue
+            value = getattr(c, name)
+            value = str(value) if isinstance(var, tk.StringVar) else value
+            if var.get() != value:
+                var.set(value)
+
     def _release(self):
         mode, rel = self.v['release_mode'].get(), self.ctl.releases
         tag = {'latest': '', 'beta': rel.get('beta') or '', 'tag': self.v['release_tag'].get().strip()}[mode]
@@ -298,6 +309,8 @@ class App:
             self._after = self.root.after(120, self.tick)
 
     def on_change(self, topics):
+        if 'check' in topics:
+            self._sync()
         if 'devices' in topics:
             self._chip()
             self._auto_check()
@@ -1029,6 +1042,9 @@ class App:
         if kind in ('install', 'makeroom', 'uninstall', 'command'):
             self.auto_checked = None
         if kind == 'install' and p is not None and p.ok:
+            # the password has done its work: it is not kept in the window
+            self.v['password'].set('')
+            self.v['password2'].set('')
             self._show_result = False
             self.goto('install', [s for s, _l in WIZARD].index('done'))
             return

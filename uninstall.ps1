@@ -39,8 +39,15 @@ function T($key) {
 }
 . (Join-Path (Join-Path $Top 'tools') 'answers.ps1')
 AnswersSetup $AnswersFile ([bool]$NonInteractive)
-# an error nobody caught still ends the progress stream with an event: whoever reads it must not wait for more
-trap { Progress 'error' 'message' "$_"; break }
+# An error nobody caught still ends the progress stream with an event - whoever reads it must not wait for more - and
+# the script with status 1, saying where it was. (A trap that only passes the error on leaves the status of the last
+# program that ran, which is 0 more often than not.)
+trap {
+    $where = "$_ ($(Split-Path -Leaf $_.InvocationInfo.ScriptName) line $($_.InvocationInfo.ScriptLineNumber))"
+    Progress 'error' 'message' $where
+    Write-Host "`nERROR: $where" -ForegroundColor Red
+    exit 1
+}
 Progress 'hello' 'script' 'uninstall.ps1' 'version' '1' 'mode' 'uninstall'
 # the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1; $MU300_IP is set to the one
 # that answers
