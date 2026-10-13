@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "थर्मल"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "कर्नेल के थर्मल ज़ोन, केवल पढ़ने के लिए। ट्रिप पॉइंट वाला ज़ोन अपने पैसिव ट्रिप पर उससे जुड़े कूलिंग उपकरणों को सीमित करता है; कूलिंग स्थिति 0 का अर्थ है कोई सीमा नहीं।"
+
+msgid "Zone"
+msgstr "ज़ोन"
+
+msgid "Temperature"
+msgstr "तापमान"
+
+msgid "Trip points"
+msgstr "ट्रिप पॉइंट"
+
+msgid "Cooling devices"
+msgstr "कूलिंग उपकरण"
+
 msgid "USB role"
 msgstr "USB भूमिका"
 
@@ -558,6 +576,9 @@ msgstr "सहेजा गया: %s"
 msgid "Remove the saved value"
 msgstr "सहेजा गया मान हटाएँ"
 
+msgid "Presets"
+msgstr "प्रीसेट"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "प्राप्त संदेश SMS पूल में पहुँचते ही आगे भेजे जाते हैं। विफल डिलीवरी 30 सेकंड बाद फिर आज़माई जाती है, फिर हर बार दोगुने समय बाद (अधिकतम एक घंटा), कुल दस बार।"
 
@@ -600,11 +621,26 @@ msgstr "बॉडी"
 msgid "Form (URL-encoded)"
 msgstr "फ़ॉर्म (URL-एन्कोडेड)"
 
+msgid "Plain text"
+msgstr "सादा पाठ"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "फ़ील्ड: sender, time, text, device, message (भरा हुआ टेम्पलेट)"
 
+msgid "Custom body"
+msgstr "कस्टम बॉडी"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "खाली: मानक फ़ील्ड (सादा पाठ: संदेश)। प्लेसहोल्डर: {sender}, {time}, {text}, {device}, {message}। हर मान चुने गए प्रकार के अनुसार एस्केप किया जाता है। यह बॉडी यहाँ फिर दिखाई जाती है: गोपनीय जानकारी पते या किसी हेडर में रखें।"
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "अतिरिक्त हेडर (प्रति पंक्ति एक \"Name: value\")"
+
+msgid "The answer must contain"
+msgstr "उत्तर में यह होना चाहिए"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "खाली: हर HTTP 2xx उत्तर डिलीवर माना जाता है। कुंजी=मान (उदाहरण के लिए errcode=0) देने पर उत्तर साथ ही ऐसा JSON ऑब्जेक्ट होना चाहिए जिसके शीर्ष स्तर पर इस कुंजी के नीचे यही मान हो; अन्यथा डिलीवरी विफल होती है। लॉग में केवल जाँच का परिणाम लिखा जाता है, उत्तर कभी नहीं।"
 
 msgid "Bot token"
 msgstr "बॉट टोकन"
@@ -671,6 +707,9 @@ msgstr "फ़िल्टर किया गया"
 
 msgid "Dropped"
 msgstr "छोड़ा गया"
+
+msgid "Clear"
+msgstr "साफ़ करें"
 
 msgid "Test"
 msgstr "परीक्षण"
@@ -762,6 +801,9 @@ msgstr "कुल भेजा गया"
 msgid "Used today"
 msgstr "आज उपयोग किया"
 
+msgid "SIM source"
+msgstr "SIM स्रोत"
+
 msgid "Session duration"
 msgstr "सत्र अवधि"
 
@@ -830,6 +872,9 @@ msgstr "मॉडेम"
 
 msgid "Carrier"
 msgstr "ऑपरेटर"
+
+msgid "Own number"
+msgstr "अपना नंबर"
 
 msgid "Module"
 msgstr "मॉड्यूल"
@@ -969,8 +1014,17 @@ msgstr "लॉक विफल: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "नेटवर्क लॉक स्वचालित पर रीसेट हो रहे हैं (SFUN रीस्टार्ट, लगभग 30 सेकंड)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "रीसेट विफल: %s. सहेजी गई लॉक सेटिंग्स रखी गईं।"
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "लॉक रीसेट समय पर पुष्ट नहीं हुआ; फिर भी स्विच किया जा रहा है।"
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "आंतरिक SIM चुना गया: रीबूट के बाद उपयोग में आएगा"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "आंतरिक SIM चुना गया, पर इस डिवाइस पर समर्थित नहीं है: बाहरी SIM उपयोग में है"
 
 msgid "Uptime %s"
 msgstr "अपटाइम %s"
@@ -1314,6 +1368,9 @@ msgstr "स्थिति की पुष्टि हुई"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "वापस पढ़ने का समय समाप्त; “लॉक स्थिति रीफ़्रेश करें” चुनें"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "रीसेट सत्यापित: नेटवर्क मोड स्वचालित, EN-DC चालू, सभी बैंड, कोई सेल लॉक नहीं; सहेजी गई लॉक सेटिंग्स साफ़ कर दी गईं"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "लागू किया गया (EN-DC के लिए रेडियो स्टैक पुनः आरंभ की ज़रूरत नहीं)"
 
@@ -1650,6 +1707,15 @@ msgstr "संदेश (भेजने के लिए Enter, नई पं�
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "भेजने के लिए AT+CMGS (PDU मोड) का उपयोग होता है; चैनल व्यस्त होने पर फिर से प्रयास करें। किसी एक संदेश को हटाने के लिए उसके बबल पर बने कूड़ेदान आइकन का उपयोग करें।"
 
+msgid "Sending…"
+msgstr "भेजा जा रहा है…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "भेजा गया; सूची जल्द ही रीफ़्रेश होगी।"
+
+msgid "Sending failed"
+msgstr "भेजना विफल"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "पृष्ठभूमि में SIM से सिंक किया जा रहा है (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "स्थानीय SMS पूल साफ़ करें"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "केवल स्थानीय फ़ाइलें हटाई जाएँगी; SIM पर संदेश बने रहेंगे।"
-
-msgid "Clear"
-msgstr "साफ़ करें"
 
 msgid "Delete this SMS"
 msgstr "यह SMS हटाएँ"
@@ -1688,15 +1751,6 @@ msgstr "हटाया गया (केवल स्थानीय)"
 
 msgid "Enter both a number and a message."
 msgstr "नंबर और संदेश दोनों दर्ज करें।"
-
-msgid "Sending…"
-msgstr "भेजा जा रहा है…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "भेजा गया; सूची जल्द ही रीफ़्रेश होगी।"
-
-msgid "Sending failed"
-msgstr "भेजना विफल"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d संदेश, %d अपठित · %d बातचीत"
@@ -2919,6 +2973,12 @@ msgstr "अमान्य फ़िल्टर सूची (अधिकत�
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "वेबहुक का पता http:// या https:// URL होना चाहिए"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "वेबहुक बॉडी बहुत लंबी है या उसमें कोई नियंत्रण वर्ण है"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "उत्तर की जाँच कुंजी=मान के रूप में होनी चाहिए, जैसे errcode=0 या ok=true (मान एक पूर्णांक या छोटे अक्षर, अधिकतम 16)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "अमान्य हेडर (प्रति पंक्ति एक \"Name: value\"; Host, Content-Type, Content-Length, Transfer-Encoding और Connection डिवाइस सेट करता है)"
 
@@ -2949,6 +3009,12 @@ msgstr "अग्रेषण सेटिंग्स सहेजी नही
 msgid "SMS forwarding is not installed"
 msgstr "SMS अग्रेषण इंस्टॉल नहीं है"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "अभी-अभी एक परीक्षण शुरू किया गया है; कुछ सेकंड प्रतीक्षा करें"
+
+msgid "The delivery log could not be cleared"
+msgstr "डिलीवरी लॉग साफ़ नहीं किया जा सका"
+
 msgid "Unknown forwarding operation"
 msgstr "अज्ञात अग्रेषण कार्रवाई"
 
@@ -2976,8 +3042,26 @@ msgstr "भाषा पैक हटाया नहीं जा सका"
 msgid "Lock cache unavailable"
 msgstr "लॉक कैश उपलब्ध नहीं"
 
+msgid "The saved locks could not be cleared"
+msgstr "सहेजे गए लॉक साफ़ नहीं किए जा सके"
+
 msgid "No serving cell to lock to"
 msgstr "लॉक करने के लिए कोई सर्विंग सेल नहीं"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "मोडेम ने मोड क्वेरी का उत्तर नहीं दिया; कुछ भी नहीं भेजा गया"
+
+msgid "The modem refused a write"
+msgstr "मोडेम ने एक लेखन अस्वीकार कर दिया"
+
+msgid "The read-back does not match the automatic values"
+msgstr "रीड-बैक स्वचालित मानों से मेल नहीं खाता"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "स्टैक पुनरारंभ के बाद रीड-बैक स्वचालित मानों से मेल नहीं खाता"
+
+msgid "The reset was interrupted"
+msgstr "रीसेट बाधित हो गया"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "इस सिस्टम पर पैकेज फिर से इंस्टॉल करना उपलब्ध नहीं है"

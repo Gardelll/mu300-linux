@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Θερμικά"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Οι θερμικές ζώνες του πυρήνα, μόνο για ανάγνωση. Μια ζώνη με σημεία ορίου περιορίζει τις συσκευές ψύξης που είναι συνδεδεμένες σε αυτήν στο παθητικό της όριο· κατάσταση ψύξης 0 σημαίνει χωρίς περιορισμό."
+
+msgid "Zone"
+msgstr "Ζώνη"
+
+msgid "Temperature"
+msgstr "Θερμοκρασία"
+
+msgid "Trip points"
+msgstr "Σημεία ορίου"
+
+msgid "Cooling devices"
+msgstr "Συσκευές ψύξης"
+
 msgid "USB role"
 msgstr "Ρόλος USB"
 
@@ -558,6 +576,9 @@ msgstr "Αποθηκεύτηκε: %s"
 msgid "Remove the saved value"
 msgstr "Αφαίρεση της αποθηκευμένης τιμής"
 
+msgid "Presets"
+msgstr "Προεπιλογές"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Τα ληφθέντα μηνύματα προωθούνται μόλις φτάσουν στη δεξαμενή SMS. Μια αποτυχημένη αποστολή επαναλαμβάνεται μετά από 30 s και μετά κάθε φορά σε διπλάσιο χρόνο (έως μία ώρα), δέκα φορές συνολικά."
 
@@ -600,11 +621,26 @@ msgstr "Σώμα"
 msgid "Form (URL-encoded)"
 msgstr "Φόρμα (κωδικοποίηση URL)"
 
+msgid "Plain text"
+msgstr "Απλό κείμενο"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Πεδία: sender, time, text, device, message (το συμπληρωμένο πρότυπο)"
 
+msgid "Custom body"
+msgstr "Προσαρμοσμένο σώμα"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Κενό: τα τυπικά πεδία (απλό κείμενο: το μήνυμα). Σύμβολα κράτησης θέσης: {sender}, {time}, {text}, {device}, {message}. Κάθε τιμή διαφεύγεται ανάλογα με τον επιλεγμένο τύπο. Αυτό το σώμα εμφανίζεται ξανά εδώ: κρατήστε τα μυστικά στη διεύθυνση ή σε κεφαλίδα."
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Επιπλέον κεφαλίδες (μία \"Όνομα: τιμή\" ανά γραμμή)"
+
+msgid "The answer must contain"
+msgstr "Η απάντηση πρέπει να περιέχει"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "Κενό: κάθε απάντηση HTTP 2xx μετρά ως παράδοση. Με κλειδί=τιμή (για παράδειγμα errcode=0), η απάντηση πρέπει επιπλέον να είναι αντικείμενο JSON που έχει αυτή την τιμή κάτω από αυτό το κλειδί στο ανώτατο επίπεδό του· αλλιώς η παράδοση αποτυγχάνει. Καταγράφεται μόνο το αποτέλεσμα του ελέγχου, ποτέ η απάντηση."
 
 msgid "Bot token"
 msgstr "Διακριτικό bot"
@@ -671,6 +707,9 @@ msgstr "Φιλτραρίστηκε"
 
 msgid "Dropped"
 msgstr "Απορρίφθηκε"
+
+msgid "Clear"
+msgstr "Εκκαθάριση"
 
 msgid "Test"
 msgstr "Δοκιμή"
@@ -762,6 +801,9 @@ msgstr "Σύνολο απεσταλμένων"
 msgid "Used today"
 msgstr "Χρήση σήμερα"
 
+msgid "SIM source"
+msgstr "Πηγή SIM"
+
 msgid "Session duration"
 msgstr "Διάρκεια συνεδρίας"
 
@@ -830,6 +872,9 @@ msgstr "Μόντεμ"
 
 msgid "Carrier"
 msgstr "Πάροχος"
+
+msgid "Own number"
+msgstr "Δικός αριθμός"
 
 msgid "Module"
 msgstr "Μονάδα"
@@ -969,8 +1014,17 @@ msgstr "Το κλείδωμα απέτυχε: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Επαναφορά των κλειδωμάτων δικτύου σε αυτόματο (επανεκκίνηση SFUN, περίπου 30 δευτερόλεπτα)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Η επαναφορά απέτυχε: %s. Οι αποθηκευμένες ρυθμίσεις κλειδώματος διατηρήθηκαν."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Η επαναφορά των κλειδωμάτων δεν επιβεβαιώθηκε εγκαίρως· γίνεται εναλλαγή ούτως ή άλλως."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Επιλέχθηκε η εσωτερική SIM: χρησιμοποιείται μετά από επανεκκίνηση"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Επιλέχθηκε η εσωτερική SIM, αλλά δεν υποστηρίζεται σε αυτή τη συσκευή: χρησιμοποιείται η εξωτερική SIM"
 
 msgid "Uptime %s"
 msgstr "Χρόνος λειτουργίας %s"
@@ -1314,6 +1368,9 @@ msgstr "Η κατάσταση επιβεβαιώθηκε"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Λήξη χρόνου ανάγνωσης· επιλέξτε «Ανανέωση κατάστασης κλειδώματος»"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Η επαναφορά επαληθεύτηκε: λειτουργία δικτύου αυτόματη, EN-DC ενεργό, όλες οι ζώνες, χωρίς κλείδωμα κυψέλης· οι αποθηκευμένες ρυθμίσεις κλειδώματος διαγράφηκαν"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Εφαρμόστηκε (το EN-DC δεν απαιτεί επανεκκίνηση της στοίβας ραδιοφώνου)"
 
@@ -1650,6 +1707,15 @@ msgstr "Μήνυμα (Enter για αποστολή, Shift+Enter για νέα �
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Η αποστολή χρησιμοποιεί AT+CMGS (λειτουργία PDU)· δοκιμάστε ξανά αν το κανάλι είναι απασχολημένο. Για διαγραφή ενός μηνύματος, χρησιμοποιήστε το εικονίδιο κάδου στο συννεφάκι του."
 
+msgid "Sending…"
+msgstr "Αποστολή…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Εστάλη· η λίστα ανανεώνεται σύντομα."
+
+msgid "Sending failed"
+msgstr "Η αποστολή απέτυχε"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Συγχρονισμός από τη SIM στο παρασκήνιο (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "Εκκαθάριση τοπικής αποθήκης SMS"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "Θα διαγραφούν μόνο τα τοπικά αρχεία· τα μηνύματα στη SIM παραμένουν."
-
-msgid "Clear"
-msgstr "Εκκαθάριση"
 
 msgid "Delete this SMS"
 msgstr "Διαγραφή αυτού του SMS"
@@ -1688,15 +1751,6 @@ msgstr "Διαγράφηκε (μόνο τοπικά)"
 
 msgid "Enter both a number and a message."
 msgstr "Εισαγάγετε αριθμό και μήνυμα."
-
-msgid "Sending…"
-msgstr "Αποστολή…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Εστάλη· η λίστα ανανεώνεται σύντομα."
-
-msgid "Sending failed"
-msgstr "Η αποστολή απέτυχε"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d μηνύματα, %d μη αναγνωσμένα · %d συνομιλίες"
@@ -2919,6 +2973,12 @@ msgstr "Μη έγκυρη λίστα φίλτρων (έως 50 γραμμές)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Η διεύθυνση του webhook πρέπει να είναι URL http:// ή https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Το σώμα του webhook είναι πολύ μεγάλο ή περιέχει χαρακτήρα ελέγχου"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Ο έλεγχος της απάντησης πρέπει να είναι κλειδί=τιμή, όπως errcode=0 ή ok=true (η τιμή ακέραιος αριθμός ή πεζά γράμματα, το πολύ 16)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Μη έγκυρη κεφαλίδα (μία \"Όνομα: τιμή\" ανά γραμμή· τα Host, Content-Type, Content-Length, Transfer-Encoding και Connection τα ορίζει η συσκευή)"
 
@@ -2949,6 +3009,12 @@ msgstr "Δεν ήταν δυνατή η αποθήκευση των ρυθμίσ
 msgid "SMS forwarding is not installed"
 msgstr "Η προώθηση SMS δεν είναι εγκατεστημένη"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Μια δοκιμή ξεκίνησε μόλις τώρα· περιμένετε λίγα δευτερόλεπτα"
+
+msgid "The delivery log could not be cleared"
+msgstr "Το αρχείο παράδοσης δεν ήταν δυνατό να καθαριστεί"
+
 msgid "Unknown forwarding operation"
 msgstr "Άγνωστη λειτουργία προώθησης"
 
@@ -2976,8 +3042,26 @@ msgstr "Δεν ήταν δυνατή η αφαίρεση του πακέτου �
 msgid "Lock cache unavailable"
 msgstr "Η κρυφή μνήμη κλειδωμάτων δεν είναι διαθέσιμη"
 
+msgid "The saved locks could not be cleared"
+msgstr "Τα αποθηκευμένα κλειδώματα δεν ήταν δυνατό να διαγραφούν"
+
 msgid "No serving cell to lock to"
 msgstr "Δεν υπάρχει κυψέλη εξυπηρέτησης για κλείδωμα"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Το μόντεμ δεν απάντησε στο ερώτημα λειτουργίας· δεν στάλθηκε τίποτα"
+
+msgid "The modem refused a write"
+msgstr "Το μόντεμ απέρριψε μια εγγραφή"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Η επανάγνωση δεν ταιριάζει με τις αυτόματες τιμές"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Η επανάγνωση μετά την επανεκκίνηση της στοίβας δεν ταιριάζει με τις αυτόματες τιμές"
+
+msgid "The reset was interrupted"
+msgstr "Η επαναφορά διακόπηκε"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Η επανεγκατάσταση πακέτων δεν είναι διαθέσιμη σε αυτό το σύστημα"

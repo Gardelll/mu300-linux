@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "תרמי"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "אזורי החום של הליבה, לקריאה בלבד. אזור עם נקודות סף מצמצם את התקני הקירור הקשורים אליו בנקודת הסף הפסיבית שלו; מצב קירור 0 פירושו ללא צמצום."
+
+msgid "Zone"
+msgstr "אזור"
+
+msgid "Temperature"
+msgstr "טמפרטורה"
+
+msgid "Trip points"
+msgstr "נקודות סף"
+
+msgid "Cooling devices"
+msgstr "התקני קירור"
+
 msgid "USB role"
 msgstr "תפקיד USB"
 
@@ -558,6 +576,9 @@ msgstr "נשמר: %s"
 msgid "Remove the saved value"
 msgstr "הסרת הערך השמור"
 
+msgid "Presets"
+msgstr "הגדרות מוכנות"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "הודעות שהתקבלו מועברות ברגע שהן מגיעות למאגר ה-SMS. מסירה שנכשלה מנוסה שוב אחרי 30 שניות, ואז בכל פעם אחרי זמן כפול (שעה לכל היותר), עשר פעמים בסך הכול."
 
@@ -600,11 +621,26 @@ msgstr "גוף"
 msgid "Form (URL-encoded)"
 msgstr "טופס (קידוד URL)"
 
+msgid "Plain text"
+msgstr "טקסט פשוט"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "שדות: sender, time, text, device, message (התבנית המלאה)"
 
+msgid "Custom body"
+msgstr "גוף מותאם אישית"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "ריק: השדות הרגילים (טקסט פשוט: ההודעה). מצייני מקום: {sender}, {time}, {text}, {device}, {message}. כל ערך עובר escape לפי הסוג שנבחר. גוף זה מוצג כאן שוב: שמרו סודות בכתובת או בכותרת."
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "כותרות נוספות (\"Name: value\" אחת בכל שורה)"
+
+msgid "The answer must contain"
+msgstr "התשובה חייבת להכיל"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "ריק: כל תשובת HTTP 2xx נחשבת כמסירה. עם מפתח=ערך (למשל errcode=0) התשובה חייבת בנוסף להיות אובייקט JSON שברמה העליונה שלו יש את הערך הזה תחת המפתח הזה; אחרת המסירה נכשלת. ביומן נרשמת רק תוצאת הבדיקה, ולעולם לא התשובה עצמה."
 
 msgid "Bot token"
 msgstr "אסימון בוט"
@@ -671,6 +707,9 @@ msgstr "סונן"
 
 msgid "Dropped"
 msgstr "נזרק"
+
+msgid "Clear"
+msgstr "ניקוי"
 
 msgid "Test"
 msgstr "בדיקה"
@@ -762,6 +801,9 @@ msgstr "סה״כ נשלח"
 msgid "Used today"
 msgstr "נוצל היום"
 
+msgid "SIM source"
+msgstr "מקור ה-SIM"
+
 msgid "Session duration"
 msgstr "משך ההפעלה"
 
@@ -830,6 +872,9 @@ msgstr "מודם"
 
 msgid "Carrier"
 msgstr "ספק"
+
+msgid "Own number"
+msgstr "המספר שלי"
 
 msgid "Module"
 msgstr "מודול"
@@ -969,8 +1014,17 @@ msgstr "הנעילה נכשלה: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "מאפס את נעילות הרשת לאוטומטי (הפעלה מחדש של SFUN, כ-30 שניות)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "האיפוס נכשל: %s. הגדרות הנעילה השמורות נשמרו."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "איפוס הנעילות לא אושר בזמן; עובר בכל זאת."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "נבחר SIM פנימי: ייכנס לשימוש לאחר הפעלה מחדש"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "נבחר SIM פנימי, אך הוא אינו נתמך במכשיר זה: ה-SIM החיצוני בשימוש"
 
 msgid "Uptime %s"
 msgstr "זמן פעולה %s"
@@ -1314,6 +1368,9 @@ msgstr "המצב אושר"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "תם הזמן לקריאה חוזרת; יש לבחור “רענון מצב הנעילה”"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "האיפוס אומת: מצב רשת אוטומטי, EN-DC פועל, כל הפסים, ללא נעילת תא; הגדרות הנעילה השמורות נוקו"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "הוחל (EN-DC אינו דורש הפעלה מחדש של מחסנית הרדיו)"
 
@@ -1650,6 +1707,15 @@ msgstr "הודעה (Enter לשליחה, Shift+Enter לשורה חדשה)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "השליחה משתמשת ב-AT+CMGS (מצב PDU); יש לנסות שוב אם הערוץ תפוס. למחיקת הודעה בודדת, יש להשתמש בסמל הפח שעל הבועה שלה."
 
+msgid "Sending…"
+msgstr "שולח…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "נשלח; הרשימה תתרענן בקרוב."
+
+msgid "Sending failed"
+msgstr "השליחה נכשלה"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "מסנכרן מה-SIM ברקע (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "ניקוי מאגר ה-SMS המקומי"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "רק קבצים מקומיים יימחקו; ההודעות ב-SIM יישארו."
-
-msgid "Clear"
-msgstr "ניקוי"
 
 msgid "Delete this SMS"
 msgstr "מחיקת SMS זה"
@@ -1688,15 +1751,6 @@ msgstr "נמחק (מקומי בלבד)"
 
 msgid "Enter both a number and a message."
 msgstr "יש להזין גם מספר וגם הודעה."
-
-msgid "Sending…"
-msgstr "שולח…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "נשלח; הרשימה תתרענן בקרוב."
-
-msgid "Sending failed"
-msgstr "השליחה נכשלה"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d הודעות, %d שלא נקראו · %d שיחות"
@@ -2919,6 +2973,12 @@ msgstr "רשימת סינון לא תקינה (50 שורות לכל היותר)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "כתובת ה-webhook חייבת להיות כתובת URL של http:// או https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "גוף ה-webhook ארוך מדי או מכיל תו בקרה"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "בדיקת התשובה חייבת להיות בצורת מפתח=ערך, כמו errcode=0 או ok=true (הערך מספר שלם או אותיות קטנות, 16 לכל היותר)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "כותרת לא תקינה (\"Name: value\" אחת בכל שורה; את Host, Content-Type, Content-Length, Transfer-Encoding ו-Connection המכשיר קובע)"
 
@@ -2949,6 +3009,12 @@ msgstr "לא ניתן היה לשמור את הגדרות ההעברה"
 msgid "SMS forwarding is not installed"
 msgstr "העברת SMS אינה מותקנת"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "בדיקה הופעלה לפני רגע; המתינו כמה שניות"
+
+msgid "The delivery log could not be cleared"
+msgstr "לא ניתן היה לנקות את יומן המסירה"
+
 msgid "Unknown forwarding operation"
 msgstr "פעולת העברה לא ידועה"
 
@@ -2976,8 +3042,26 @@ msgstr "לא ניתן היה להסיר את חבילת השפות"
 msgid "Lock cache unavailable"
 msgstr "מטמון הנעילות אינו זמין"
 
+msgid "The saved locks could not be cleared"
+msgstr "לא ניתן היה לנקות את הנעילות השמורות"
+
 msgid "No serving cell to lock to"
 msgstr "אין תא משרת לנעילה"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "המודם לא ענה לשאילתת המצב; לא נשלח דבר"
+
+msgid "The modem refused a write"
+msgstr "המודם דחה כתיבה"
+
+msgid "The read-back does not match the automatic values"
+msgstr "הקריאה החוזרת אינה תואמת לערכים האוטומטיים"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "הקריאה החוזרת לאחר הפעלת המחסנית מחדש אינה תואמת לערכים האוטומטיים"
+
+msgid "The reset was interrupted"
+msgstr "האיפוס הופסק"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "התקנה מחדש של חבילות אינה זמינה במערכת זו"

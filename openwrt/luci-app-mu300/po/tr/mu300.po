@@ -384,6 +384,24 @@ msgstr "Donanım azamisi"
 msgid "Frequencies in MHz."
 msgstr "Frekanslar MHz cinsinden."
 
+msgid "Thermal"
+msgstr "Sıcaklık"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Çekirdeğin sıcaklık bölgeleri, salt okunur. Eşik noktaları olan bir bölge, pasif eşiğinde kendisine bağlı soğutma aygıtlarını kısar; soğutma durumu 0, kısma yok demektir."
+
+msgid "Zone"
+msgstr "Bölge"
+
+msgid "Temperature"
+msgstr "Sıcaklık"
+
+msgid "Trip points"
+msgstr "Eşik noktaları"
+
+msgid "Cooling devices"
+msgstr "Soğutma aygıtları"
+
 msgid "USB role"
 msgstr "USB rolü"
 
@@ -558,6 +576,9 @@ msgstr "Kayıtlı: %s"
 msgid "Remove the saved value"
 msgstr "Kayıtlı değeri sil"
 
+msgid "Presets"
+msgstr "Hazır ayarlar"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Gelen mesajlar SMS havuzuna ulaştıkça iletilir. Başarısız bir gönderim 30 sn sonra, ardından her seferinde iki kat sonra (en fazla bir saat) yeniden denenir; toplam on kez."
 
@@ -600,11 +621,26 @@ msgstr "Gövde"
 msgid "Form (URL-encoded)"
 msgstr "Form (URL kodlu)"
 
+msgid "Plain text"
+msgstr "Düz metin"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Alanlar: sender, time, text, device, message (doldurulmuş şablon)"
 
+msgid "Custom body"
+msgstr "Özel gövde"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Boş: standart alanlar (düz metin: ileti). Yer tutucular: {sender}, {time}, {text}, {device}, {message}. Her değer seçilen türe göre kaçışlanır. Bu gövde burada yeniden gösterilir: gizli bilgileri adreste veya bir başlıkta tutun."
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Ek başlıklar (satır başına bir \"Ad: değer\")"
+
+msgid "The answer must contain"
+msgstr "Yanıtta bulunması gereken"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "Boş: her HTTP 2xx yanıtı teslim edilmiş sayılır. anahtar=değer ile (örneğin errcode=0) yanıt ayrıca, en üst düzeyinde bu anahtarın altında bu değeri taşıyan bir JSON nesnesi olmalıdır; aksi halde gönderim başarısız sayılır. Günlüğe yalnızca denetimin sonucu yazılır, yanıtın kendisi asla."
 
 msgid "Bot token"
 msgstr "Bot belirteci"
@@ -671,6 +707,9 @@ msgstr "Filtrelendi"
 
 msgid "Dropped"
 msgstr "Atıldı"
+
+msgid "Clear"
+msgstr "Temizle"
 
 msgid "Test"
 msgstr "Test"
@@ -762,6 +801,9 @@ msgstr "Toplam gönderilen"
 msgid "Used today"
 msgstr "Bugün kullanılan"
 
+msgid "SIM source"
+msgstr "SIM kaynağı"
+
 msgid "Session duration"
 msgstr "Oturum süresi"
 
@@ -830,6 +872,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operatör"
+
+msgid "Own number"
+msgstr "Kendi numarası"
 
 msgid "Module"
 msgstr "Modül"
@@ -969,8 +1014,17 @@ msgstr "Kilitleme başarısız: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Ağ kilitleri otomatiğe sıfırlanıyor (SFUN yeniden başlatma, yaklaşık 30 saniye)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Sıfırlama başarısız: %s. Kaydedilen kilit ayarları korundu."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Kilit sıfırlaması zamanında doğrulanamadı; yine de geçiliyor."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Dahili SIM seçildi: yeniden başlatmadan sonra kullanılır"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Dahili SIM seçildi, ancak bu cihazda desteklenmiyor: harici SIM kullanılıyor"
 
 msgid "Uptime %s"
 msgstr "Çalışma süresi %s"
@@ -1314,6 +1368,9 @@ msgstr "Durum doğrulandı"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Geri okuma zaman aşımına uğradı; “Kilit durumunu yenile”yi seçin"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Sıfırlama doğrulandı: ağ modu otomatik, EN-DC açık, tüm bantlar, hücre kilidi yok; kaydedilen kilit ayarları temizlendi"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Uygulandı (EN-DC için radyo yığını yeniden başlatılmaz)"
 
@@ -1650,6 +1707,15 @@ msgstr "Mesaj (göndermek için Enter, yeni satır için Shift+Enter)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Gönderme AT+CMGS (PDU modu) kullanır; kanal meşgulse yeniden deneyin. Bir mesajı silmek için balonundaki çöp kutusu simgesini kullanın."
 
+msgid "Sending…"
+msgstr "Gönderiliyor…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Gönderildi; liste birazdan yenilenecek."
+
+msgid "Sending failed"
+msgstr "Gönderme başarısız"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "SIM’den arka planda eşitleniyor (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "Yerel SMS havuzunu temizle"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "Yalnızca yerel dosyalar silinir; SIM’deki mesajlar korunur."
-
-msgid "Clear"
-msgstr "Temizle"
 
 msgid "Delete this SMS"
 msgstr "Bu SMS’i sil"
@@ -1688,15 +1751,6 @@ msgstr "Silindi (yalnızca yerel)"
 
 msgid "Enter both a number and a message."
 msgstr "Numara ve mesaj girin."
-
-msgid "Sending…"
-msgstr "Gönderiliyor…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Gönderildi; liste birazdan yenilenecek."
-
-msgid "Sending failed"
-msgstr "Gönderme başarısız"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d mesaj, %d okunmamış · %d görüşme"
@@ -2919,6 +2973,12 @@ msgstr "Geçersiz filtre listesi (en fazla 50 satır)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Webhook adresi http:// veya https:// ile başlayan bir URL olmalı"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhook gövdesi çok uzun veya bir denetim karakteri içeriyor"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Yanıt denetimi anahtar=değer biçiminde olmalı, errcode=0 veya ok=true gibi (değer bir tam sayı ya da küçük harfler, en fazla 16)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Geçersiz başlık (satır başına bir \"Ad: değer\"; Host, Content-Type, Content-Length, Transfer-Encoding ve Connection cihaz tarafından ayarlanır)"
 
@@ -2949,6 +3009,12 @@ msgstr "Yönlendirme ayarları kaydedilemedi"
 msgid "SMS forwarding is not installed"
 msgstr "SMS yönlendirme kurulu değil"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Az önce bir test başlatıldı; birkaç saniye bekleyin"
+
+msgid "The delivery log could not be cleared"
+msgstr "Gönderim günlüğü temizlenemedi"
+
 msgid "Unknown forwarding operation"
 msgstr "Bilinmeyen yönlendirme işlemi"
 
@@ -2976,8 +3042,26 @@ msgstr "Dil paketi kaldırılamadı"
 msgid "Lock cache unavailable"
 msgstr "Kilit önbelleği kullanılamıyor"
 
+msgid "The saved locks could not be cleared"
+msgstr "Kaydedilen kilitler temizlenemedi"
+
 msgid "No serving cell to lock to"
 msgstr "Kilitlenecek hizmet hücresi yok"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem mod sorgusunu yanıtlamadı; hiçbir şey gönderilmedi"
+
+msgid "The modem refused a write"
+msgstr "Modem bir yazmayı reddetti"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Geri okuma otomatik değerlerle eşleşmiyor"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Yığın yeniden başlatıldıktan sonraki geri okuma otomatik değerlerle eşleşmiyor"
+
+msgid "The reset was interrupted"
+msgstr "Sıfırlama yarıda kesildi"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Paketleri yeniden kurma bu sistemde kullanılamıyor"

@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Thermisch"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Die Thermal-Zonen des Kernels, nur lesend. Eine Zone mit Trip-Points drosselt die an sie gebundenen Kühlgeräte an ihrem passiven Trip-Point; Kühlzustand 0 heißt keine Drosselung."
+
+msgid "Zone"
+msgstr "Zone"
+
+msgid "Temperature"
+msgstr "Temperatur"
+
+msgid "Trip points"
+msgstr "Trip-Points"
+
+msgid "Cooling devices"
+msgstr "Kühlgeräte"
+
 msgid "USB role"
 msgstr "USB-Rolle"
 
@@ -558,6 +576,9 @@ msgstr "Gespeichert: %s"
 msgid "Remove the saved value"
 msgstr "Gespeicherten Wert entfernen"
 
+msgid "Presets"
+msgstr "Vorlagen"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Empfangene Nachrichten werden weitergeleitet, sobald sie im SMS-Pool ankommen. Eine fehlgeschlagene Zustellung wird nach 30 s wiederholt, danach jeweils nach doppelt so langer Zeit (höchstens eine Stunde), insgesamt zehnmal."
 
@@ -600,11 +621,26 @@ msgstr "Inhalt"
 msgid "Form (URL-encoded)"
 msgstr "Formular (URL-kodiert)"
 
+msgid "Plain text"
+msgstr "Nur Text"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Felder: sender, time, text, device, message (die ausgefüllte Vorlage)"
 
+msgid "Custom body"
+msgstr "Eigener Body"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Leer: die Standardfelder (nur Text: die Nachricht). Platzhalter: {sender}, {time}, {text}, {device}, {message}. Jeder Wert wird passend zum gewählten Typ maskiert. Dieser Body wird hier wieder angezeigt: Geheimnisse gehören in die Adresse oder einen Header."
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Zusätzliche Header (ein \"Name: Wert\" pro Zeile)"
+
+msgid "The answer must contain"
+msgstr "Die Antwort muss enthalten"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "Leer: jede HTTP-2xx-Antwort gilt als zugestellt. Mit Schlüssel=Wert (zum Beispiel errcode=0) muss die Antwort außerdem ein JSON-Objekt sein, das auf oberster Ebene unter diesem Schlüssel diesen Wert hat; sonst schlägt die Zustellung fehl. Protokolliert wird nur das Ergebnis der Prüfung, nie die Antwort."
 
 msgid "Bot token"
 msgstr "Bot-Token"
@@ -671,6 +707,9 @@ msgstr "Herausgefiltert"
 
 msgid "Dropped"
 msgstr "Verworfen"
+
+msgid "Clear"
+msgstr "Leeren"
 
 msgid "Test"
 msgstr "Test"
@@ -762,6 +801,9 @@ msgstr "Insgesamt gesendet"
 msgid "Used today"
 msgstr "Heute verbraucht"
 
+msgid "SIM source"
+msgstr "SIM-Quelle"
+
 msgid "Session duration"
 msgstr "Sitzungsdauer"
 
@@ -830,6 +872,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Netzbetreiber"
+
+msgid "Own number"
+msgstr "Eigene Rufnummer"
 
 msgid "Module"
 msgstr "Modul"
@@ -969,8 +1014,17 @@ msgstr "Sperren fehlgeschlagen: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Netzsperren werden auf automatisch zurückgesetzt (SFUN-Neustart, etwa 30 Sekunden)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Zurücksetzen fehlgeschlagen: %s. Die gespeicherten Sperreinstellungen wurden beibehalten."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Das Zurücksetzen der Sperren wurde nicht rechtzeitig bestätigt; es wird trotzdem gewechselt."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Interne SIM gewählt: wird nach einem Neustart verwendet"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Interne SIM gewählt, auf diesem Gerät aber nicht unterstützt: die externe SIM wird verwendet"
 
 msgid "Uptime %s"
 msgstr "Laufzeit %s"
@@ -1314,6 +1368,9 @@ msgstr "Status bestätigt"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Zeitüberschreitung beim Zurücklesen; „Sperrstatus aktualisieren“ wählen"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Zurücksetzen bestätigt: Netzmodus automatisch, EN-DC an, alle Bänder, keine Zellsperre; die gespeicherten Sperreinstellungen sind gelöscht"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Angewendet (EN-DC erfordert keinen Neustart des Funk-Stacks)"
 
@@ -1650,6 +1707,15 @@ msgstr "Nachricht (Enter zum Senden, Umschalt+Enter für neue Zeile)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Das Senden nutzt AT+CMGS (PDU-Modus); bei belegtem Kanal erneut versuchen. Um eine einzelne Nachricht zu löschen, das Papierkorbsymbol an ihrer Sprechblase verwenden."
 
+msgid "Sending…"
+msgstr "Wird gesendet…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Gesendet; die Liste wird gleich aktualisiert."
+
+msgid "Sending failed"
+msgstr "Senden fehlgeschlagen"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronisierung von der SIM im Hintergrund (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "Lokalen SMS-Pool leeren"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "Nur lokale Dateien werden gelöscht; Nachrichten auf der SIM bleiben erhalten."
-
-msgid "Clear"
-msgstr "Leeren"
 
 msgid "Delete this SMS"
 msgstr "Diese SMS löschen"
@@ -1688,15 +1751,6 @@ msgstr "Gelöscht (nur lokal)"
 
 msgid "Enter both a number and a message."
 msgstr "Bitte Nummer und Nachricht eingeben."
-
-msgid "Sending…"
-msgstr "Wird gesendet…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Gesendet; die Liste wird gleich aktualisiert."
-
-msgid "Sending failed"
-msgstr "Senden fehlgeschlagen"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d Nachrichten, %d ungelesen · %d Unterhaltungen"
@@ -2919,6 +2973,12 @@ msgstr "Ungültige Filterliste (höchstens 50 Zeilen)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Die Webhook-Adresse muss eine http://- oder https://-URL sein"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Der Webhook-Body ist zu lang oder enthält ein Steuerzeichen"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Die Antwortprüfung muss Schlüssel=Wert sein, etwa errcode=0 oder ok=true (der Wert eine ganze Zahl oder Kleinbuchstaben, höchstens 16)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Ungültiger Header (ein \"Name: Wert\" pro Zeile; Host, Content-Type, Content-Length, Transfer-Encoding und Connection setzt das Gerät)"
 
@@ -2949,6 +3009,12 @@ msgstr "Die Weiterleitungseinstellungen konnten nicht gespeichert werden"
 msgid "SMS forwarding is not installed"
 msgstr "Die SMS-Weiterleitung ist nicht installiert"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Gerade wurde ein Test gestartet; ein paar Sekunden warten"
+
+msgid "The delivery log could not be cleared"
+msgstr "Das Zustellprotokoll konnte nicht geleert werden"
+
 msgid "Unknown forwarding operation"
 msgstr "Unbekannte Weiterleitungsoperation"
 
@@ -2976,8 +3042,26 @@ msgstr "Das Sprachpaket konnte nicht entfernt werden"
 msgid "Lock cache unavailable"
 msgstr "Sperr-Cache nicht verfügbar"
 
+msgid "The saved locks could not be cleared"
+msgstr "Die gespeicherten Sperren konnten nicht gelöscht werden"
+
 msgid "No serving cell to lock to"
 msgstr "Keine versorgende Zelle zum Sperren"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Das Modem hat die Modusabfrage nicht beantwortet; nichts wurde gesendet"
+
+msgid "The modem refused a write"
+msgstr "Das Modem hat einen Schreibbefehl abgelehnt"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Das Zurücklesen stimmt nicht mit den automatischen Werten überein"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Das Zurücklesen nach dem Neustart des Protokollstacks stimmt nicht mit den automatischen Werten überein"
+
+msgid "The reset was interrupted"
+msgstr "Das Zurücksetzen wurde unterbrochen"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Neuinstallation von Paketen ist auf diesem System nicht verfügbar"

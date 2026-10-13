@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Жылу"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Ядроның жылу аймақтары, тек оқу үшін. Шекті нүктелері бар аймақ өзіне байланған салқындату құрылғыларын пассивті шегінде шектейді; салқындату күйі 0 — шектеу жоқ."
+
+msgid "Zone"
+msgstr "Аймақ"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Шекті нүктелер"
+
+msgid "Cooling devices"
+msgstr "Салқындату құрылғылары"
+
 msgid "USB role"
 msgstr "USB рөлі"
 
@@ -558,6 +576,9 @@ msgstr "Сақталды: %s"
 msgid "Remove the saved value"
 msgstr "Сақталған мәнді жою"
 
+msgid "Presets"
+msgstr "Дайын баптаулар"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Алынған хабарлар SMS пулына түскен бойда қайта жіберіледі. Сәтсіз жіберу 30 с кейін, содан кейін әр жолы екі есе ұзақ уақыттан соң (ең көбі бір сағат) қайталанады, барлығы он рет."
 
@@ -600,11 +621,26 @@ msgstr "Мазмұны"
 msgid "Form (URL-encoded)"
 msgstr "Пішін (URL кодталған)"
 
+msgid "Plain text"
+msgstr "Қарапайым мәтін"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Өрістер: sender, time, text, device, message (толтырылған үлгі)"
 
+msgid "Custom body"
+msgstr "Өзіндік дене"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Бос: стандартты өрістер (қарапайым мәтін: хабарлама). Толтырғыштар: {sender}, {time}, {text}, {device}, {message}. Әр мән таңдалған түрге сай экрандалады. Бұл дене осында қайта көрсетіледі: құпияларды мекенжайда немесе тақырыпта сақтаңыз."
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Қосымша тақырыптар (әр жолда бір \"Аты: мәні\")"
+
+msgid "The answer must contain"
+msgstr "Жауапта болуы тиіс"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "Бос: кез келген HTTP 2xx жауабы жеткізілді деп саналады. кілт=мән берілсе (мысалы, errcode=0), жауап сонымен қатар жоғарғы деңгейінде осы кілттің астында осы мәні бар JSON нысаны болуы тиіс; әйтпесе жеткізу сәтсіз болады. Журналға тек тексеру нәтижесі жазылады, жауаптың өзі ешқашан жазылмайды."
 
 msgid "Bot token"
 msgstr "Бот токені"
@@ -671,6 +707,9 @@ msgstr "Сүзілді"
 
 msgid "Dropped"
 msgstr "Тасталды"
+
+msgid "Clear"
+msgstr "Тазарту"
 
 msgid "Test"
 msgstr "Сынақ"
@@ -762,6 +801,9 @@ msgstr "Барлығы жіберілді"
 msgid "Used today"
 msgstr "Бүгін пайдаланылды"
 
+msgid "SIM source"
+msgstr "SIM көзі"
+
 msgid "Session duration"
 msgstr "Сеанс ұзақтығы"
 
@@ -830,6 +872,9 @@ msgstr "Модем"
 
 msgid "Carrier"
 msgstr "Оператор"
+
+msgid "Own number"
+msgstr "Өз нөмірі"
 
 msgid "Module"
 msgstr "Модуль"
@@ -969,8 +1014,17 @@ msgstr "Бекіту сәтсіз: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Желі құлыптары автоматтыға қайтарылуда (SFUN қайта іске қосу, шамамен 30 секунд)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Қалпына келтіру сәтсіз аяқталды: %s. Сақталған құлып параметрлері сақталды."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Құлыптарды тастау уақытында расталмады; бәрібір ауысады."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Ішкі SIM таңдалды: қайта жүктегеннен кейін қолданылады"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Ішкі SIM таңдалды, бірақ бұл құрылғыда қолдау көрсетілмейді: сыртқы SIM қолданылуда"
 
 msgid "Uptime %s"
 msgstr "Жұмыс уақыты %s"
@@ -1314,6 +1368,9 @@ msgstr "Күй расталды"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Қайта оқу уақыты өтті; «Бекіту күйін жаңарту» таңдаңыз"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Қалпына келтіру тексерілді: желі режимі автоматты, EN-DC қосулы, барлық жолақтар, ұяшық құлпы жоқ; сақталған құлып параметрлері өшірілді"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Қолданылды (EN-DC радиостекті қайта іске қосуды қажет етпейді)"
 
@@ -1650,6 +1707,15 @@ msgstr "Хабар (Enter — жіберу, Shift+Enter — жаңа жол)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Жіберу AT+CMGS (PDU режимі) арқылы жүреді; арна бос емес болса, қайталаңыз. Бір хабарды жою үшін оның көпіршігіндегі себет белгішесін басыңыз."
 
+msgid "Sending…"
+msgstr "Жіберілуде…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Жіберілді; тізім жақында жаңартылады."
+
+msgid "Sending failed"
+msgstr "Жіберу сәтсіз"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "SIM-нен фонда синхрондалуда (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "Жергілікті SMS қоймасын тазарту"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "Тек жергілікті файлдар жойылады; SIM-дегі хабарлар қалады."
-
-msgid "Clear"
-msgstr "Тазарту"
 
 msgid "Delete this SMS"
 msgstr "Бұл SMS-ті жою"
@@ -1688,15 +1751,6 @@ msgstr "Жойылды (тек жергілікті)"
 
 msgid "Enter both a number and a message."
 msgstr "Нөмірді де, хабарды да енгізіңіз."
-
-msgid "Sending…"
-msgstr "Жіберілуде…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Жіберілді; тізім жақында жаңартылады."
-
-msgid "Sending failed"
-msgstr "Жіберу сәтсіз"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d хабар, %d оқылмаған · %d сұхбат"
@@ -2919,6 +2973,12 @@ msgstr "Сүзгілер тізімі жарамсыз (ең көбі 50 жол)
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Вебхук мекенжайы http:// немесе https:// URL болуы керек"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Webhook денесі тым ұзын немесе басқару таңбасын қамтиды"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Жауапты тексеру кілт=мән түрінде болуы тиіс, мысалы errcode=0 немесе ok=true (мән — бүтін сан немесе кіші әріптер, ең көбі 16)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Жарамсыз тақырып (әр жолда бір \"Аты: мәні\"; Host, Content-Type, Content-Length, Transfer-Encoding және Connection құрылғымен орнатылады)"
 
@@ -2949,6 +3009,12 @@ msgstr "Қайта жіберу баптауларын сақтау мүмкін
 msgid "SMS forwarding is not installed"
 msgstr "SMS қайта жіберу орнатылмаған"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Сынақ жаңа ғана басталды; бірнеше секунд күтіңіз"
+
+msgid "The delivery log could not be cleared"
+msgstr "Жеткізу журналын тазалау мүмкін болмады"
+
 msgid "Unknown forwarding operation"
 msgstr "Белгісіз қайта жіберу әрекеті"
 
@@ -2976,8 +3042,26 @@ msgstr "Тіл бумасын жою мүмкін болмады"
 msgid "Lock cache unavailable"
 msgstr "Бекіту кэші қолжетімсіз"
 
+msgid "The saved locks could not be cleared"
+msgstr "Сақталған құлыптарды өшіру мүмкін болмады"
+
 msgid "No serving cell to lock to"
 msgstr "Бекітетін қызмет көрсететін ұяшық жоқ"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Модем режим сұрауына жауап бермеді; ештеңе жіберілмеді"
+
+msgid "The modem refused a write"
+msgstr "Модем жазуды қабылдамады"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Кері оқу автоматты мәндерге сәйкес келмейді"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Стек қайта іске қосылғаннан кейінгі кері оқу автоматты мәндерге сәйкес келмейді"
+
+msgid "The reset was interrupted"
+msgstr "Қалпына келтіру үзілді"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Бұл жүйеде пакеттерді қайта орнату қолжетімсіз"

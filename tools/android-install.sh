@@ -15,6 +15,8 @@
 #   BOOT_ATTEMPTS=1-6  with DEFAULT_LINUX=1: failed boots in a row before Android (.mu300/boot-attempts)
 #   PWHASH             SHA-512 crypt hash for the "ubuntu" (Ubuntu) and "root" (OpenWrt) accounts; empty with
 #                      UPDATE=1: the accounts and passwords of the previous installation stay as they are
+#   PW_SET=0|1         the Magisk installer: 1 puts PWHASH into that account even when it is empty (OpenWrt's root
+#                      without a password, as the image ships it); 0 or not set (install.sh): as above
 #   IMPORT_HOTSPOT=0|1 copy Android's hotspot SSID/passphrase into each system
 #   KERNEL=5.4|6.18|7.2  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel)
 #   ADB=0|1 ADB_KEY    adb over USB to each system on (etc/mu300/adb), for the adb public key ADB_KEY ("BASE64 name",
@@ -22,13 +24,97 @@
 # Extras pushed as $T/mu300-extra-<name>.tar.gz (the work directory, see below) go to extra/<name> on the Linux partition
 # (the VPN module, github.com/dikeckaan/mu300-linux-vpn, as mu300-extra-vpn.tar.gz; each system links it into itself
 # at its first boot: mu300-extra link runs the module's hooks/link).
+# Environment (not the env file): MU300_LOCK_DIR, where the lock of a timed-out SD-card stage lives (default $T;
+# the Magisk installer: /data/adb), MU300_STAGE_STALL / MU300_STAGE_POLL / MU300_BOOT_ID, the stage guard's knobs for
+# the tests (see the stage block).
 set -e
+# the systems' directories are made here: never with the modes of a caller whose umask is not this one
+umask 022
 # install.sh pushes everything to /data/local/tmp. The Magisk installer runs this as root from a directory only root
 # can write (MU300_DEVICE_WORK): files in /data/local/tmp can be replaced by the shell user after they were checked.
 T=${MU300_DEVICE_WORK:-/data/local/tmp}
 . $T/mu300-install.env
 M=$T/mu300root
 say() { echo "[device] $*"; }
+# --- stage begin
+# The long stages on an SD card run bounded (FINDINGS 50). A card, or the SD host, that stops answering leaves a
+# request in the kernel that never completes: the command sits in D state, kill -9 does nothing, and every retry adds
+# another one (38a's dd past the end of the eMMC did the same, one core at 100 % until a reboot). So in SD mode each
+# long stage - the format, the unpack of every system, the flush at the end - runs in a session of its own (setsid:
+# one process group to end) under a deadline, and is ended when the card's completion counters
+# (/sys/class/block/DISK/stat) have not moved for STAGE_STALL seconds. The installer then writes nothing more: no
+# sync and no unmount (both would wait on the same request), the card stays mounted, and a lock keyed by Android's
+# boot id refuses every run until Android has rebooted. On the eMMC the stages run as they are: Android itself keeps
+# the eMMC's counters moving, and the eMMC has not failed this way. (After kanoqwq's TF installer.)
+STAGE_DISK=                                # the card's disk (mmcblk1), set in SD mode; empty: a stage runs as it is
+STAGE_STALL=${MU300_STAGE_STALL:-120}      # seconds without I/O progress that end a stage
+STAGE_POLL=${MU300_STAGE_POLL:-2}
+STAGE_LOCK=${MU300_LOCK_DIR:-$T}/mu300-install.stalled
+STAGE_BOOT_ID=${MU300_BOOT_ID:-/proc/sys/kernel/random/boot_id}
+STALLED=                                   # set once a stage timed out: sd_exit then flushes and unmounts nothing
+boot_id() { _bi=$(cat "$STAGE_BOOT_ID" 2>/dev/null | tr -d ' \n'); echo "${_bi:-unknown}"; }
+stall_check() {  # a lock of this Android boot refuses the run; one of an earlier boot is stale and goes
+    [ -f "$STAGE_LOCK" ] || return 0
+    if [ "$(sed -n 1p "$STAGE_LOCK" 2>/dev/null)" != "$(boot_id)" ]; then rm -f "$STAGE_LOCK"; return 0; fi
+    say "an earlier run of the installer timed out in this Android boot ($(sed -n 2p "$STAGE_LOCK")): the SD card request it waited on is still stuck in the kernel"
+    say "reboot Android, then run the installer again (nothing was written now; the lock is $STAGE_LOCK)"
+    return 1
+}
+stall_clear() { rm -f "$STAGE_LOCK"; }
+stage_stat() {  # the card's completion counters: reads and writes completed, sectors read and written (the time
+    # fields keep moving while a request only waits); nothing when the file cannot be read. Always true.
+    set -- $(cat "${MU300_SYSFS:-/sys}/class/block/$STAGE_DISK/stat" 2>/dev/null)
+    [ $# -lt 7 ] || echo "$1 $3 $5 $7"
+}
+stage_stop() {  # stage_stop PGID: TERM, then KILL, for the whole session (a process in D state ignores both; it is
+    # never waited for). dash and busybox take -PGID, bash wants -- first; a shell that takes neither gets the pid.
+    kill -TERM -- "-$1" 2>/dev/null || kill -TERM "-$1" 2>/dev/null || kill -TERM "$1" 2>/dev/null || true
+    sleep 1
+    kill -KILL -- "-$1" 2>/dev/null || kill -KILL "-$1" 2>/dev/null || kill -KILL "$1" 2>/dev/null || true
+}
+# stage_run NAME LIMIT CMD...: in SD mode CMD in a session of its own, ended after LIMIT seconds, or after
+# STAGE_STALL seconds without I/O progress on STAGE_DISK: the timeout is reported, locks, and returns 1. Otherwise
+# CMD's status. On the eMMC (STAGE_DISK empty) CMD runs as it is.
+stage_run() {
+    _sn=$1 _sl=$2; shift 2
+    if [ -z "$STAGE_DISK" ]; then "$@"; return; fi
+    _sd=$T/mu300-stage.$$; rm -rf "$_sd"; mkdir -p "$_sd"
+    _sz=$(stage_stat)
+    [ -n "$_sz" ] || say "cannot read the I/O counters of $STAGE_DISK: the $_sn stage is bounded by its limit of $_sl s only"
+    # the worker: a session of its own where setsid exists (Android's toybox has it), its pid - the group to end - in
+    # one file, the command's status in another. It is never waited for before that status is there: a process stuck
+    # in the kernel never ends, and a wait on it would hang the installer the way the dd of 38a did.
+    if command -v setsid >/dev/null 2>&1; then _ss=setsid; else _ss=; fi
+    $_ss sh -c '_d=$1; shift; echo $$ > "$_d/pid"; "$@"; echo $? > "$_d/rc.tmp" && mv "$_d/rc.tmp" "$_d/rc"' sh "$_sd" "$@" &
+    _wp=$!
+    _t0=$(date +%s); _tl=$_t0; _why=
+    while [ ! -f "$_sd/rc" ]; do
+        sleep "$STAGE_POLL"
+        [ ! -f "$_sd/rc" ] || break
+        _now=$(date +%s); _cur=$(stage_stat)
+        if [ "$_cur" != "$_sz" ]; then _tl=$_now; _sz=$_cur; fi
+        if [ $((_now - _t0)) -ge "$_sl" ]; then _why="it ran longer than $_sl s"
+        elif [ -n "$_cur" ] && [ $((_now - _tl)) -ge "$STAGE_STALL" ]; then _why="no I/O progress on $STAGE_DISK for $STAGE_STALL s"
+        fi
+        [ -z "$_why" ] || break
+        # a worker that is gone without its status (ended from outside): a failed stage, not a hang
+        _lp=$(cat "$_sd/pid" 2>/dev/null); kill -0 "${_lp:-$_wp}" 2>/dev/null || { sleep 1; [ -f "$_sd/rc" ] || echo 1 > "$_sd/rc"; }
+    done
+    if [ -n "$_why" ]; then
+        stage_stop "$(cat "$_sd/pid" 2>/dev/null || echo "$_wp")"
+        STALLED=1
+        { boot_id; echo "stage $_sn, $(date '+%Y-%m-%d %H:%M'): $_why"; } > "$STAGE_LOCK" 2>/dev/null || true
+        say "the $_sn stage timed out ($_why) and was stopped; nothing more is written"
+        say "a request the SD card ($STAGE_DISK) did not answer is stuck in the kernel: reboot Android before running the installer again (until then every run is refused: $STAGE_LOCK)"
+        say "the card stays mounted at $M, with no sync and no unmount (both would wait on that request)"
+        rm -rf "$_sd"
+        return 1
+    fi
+    _rc=$(cat "$_sd/rc"); wait "$_wp" 2>/dev/null || true
+    rm -rf "$_sd"
+    return "$_rc"
+}
+# --- stage end
 # --- sd begin
 sd_ext4() {  # true when the device holds an ext4 filesystem, labelled or not
     [ "$(dd if="$1" bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' \n')" = 53ef ]
@@ -90,7 +176,8 @@ sd_prepare() {  # sd_prepare DEV FORMAT: create mu300sd, or check that it is the
         s=$(cat "${MU300_SYSFS:-/sys}/class/block/${1##*/}/size" 2>/dev/null) || s=0
         i=$(awk -v s="${s:-0}" 'BEGIN { i = 16384; while (i < 1048576 && s * 512 / (i * 2) >= 65536) i *= 2; print i }')
         say "creating ext4 mu300sd on $1 (one inode per $((i / 1024)) KiB)"
-        $mk -t ext4 -F -b 4096 -m 0 -i "$i" -L mu300sd "$1" >/dev/null
+        # bounded (the stage block); mke2fs's own lines stay quiet inside the stage, the stage's are shown
+        stage_run format 900 sh -c 'exec "$@" >/dev/null' sh $mk -t ext4 -F -b 4096 -m 0 -i "$i" -L mu300sd "$1"
     elif [ "$label" != mu300sd ]; then
         say "no mu300sd filesystem on $1 (run with FORMAT=1)"; return 1
     fi
@@ -119,15 +206,23 @@ sd_mark_internal() {
 sd_unmark() {  # sd_unmark ROOT
     [ "${SD_MODE:-0}" = 1 ] || rm -f "$1/.mu300/root-on-sd"
 }
+# The EXIT trap of SD mode: flush and unmount - unless a stage timed out (STALLED): a sync and an unmount would
+# both wait on the request that is stuck, and the installer would hang where it was meant to stop.
+sd_exit() {
+    [ -n "$STALLED" ] || { sync; sh $T/android-mount-mu300root.sh -u $M >/dev/null 2>&1; }
+    true
+}
 # --- sd end
 
+stall_check || exit 1
 if [ "${SD_MODE:-0}" = 1 ]; then
     [ -b "${SD_DEV:?SD_DEV is not set}" ] || { say "no block device $SD_DEV (is the SD card inserted?)"; exit 1; }
     sd_check "$SD_DEV" || exit 1
+    STAGE_DISK=$(sd_disk "$SD_DEV"); STAGE_DISK=${STAGE_DISK##*/}
     sd_release "$SD_DEV" || exit 1
     sd_prepare "$SD_DEV" "$FORMAT" || exit 1
     MU300_SD_DEV=$SD_DEV sh $T/android-mount-mu300root.sh $M
-    trap 'sync; sh $T/android-mount-mu300root.sh -u $M >/dev/null 2>&1; true' EXIT
+    trap sd_exit EXIT
 else
 # --- the region must not overlap any partition (checked again here, on the device itself)
 end=0
@@ -562,15 +657,15 @@ for os in $OSES; do
     tarball=$T/mu300-$os.tar.gz
     [ -f $tarball ] || { say "missing $tarball"; exit 1; }
     say "installing $os"
-    rm -rf $M/$os.new && mkdir $M/$os.new
-    tar -xzpf $tarball -C $M/$os.new
-    # the account the installer gives a password (ubuntu, OpenWrt's root) and its hash in the image
+    # the writes to the card run bounded (the stage block); on the eMMC as they are
+    stage_run "clean $os" 900 rm -rf $M/$os.new
+    mkdir $M/$os.new
+    stage_run "unpack $os" 3600 tar -xzpf $tarball -C $M/$os.new
+    # the account the installer gives a password (ubuntu, OpenWrt's root)
     case $os in ubuntu) pwu=ubuntu ;; *) pwu=root ;; esac
-    carried=0
-    imghash=$(sed -n "s/^$pwu:\([^:]*\):.*/\1/p" $M/$os.new/etc/shadow 2>/dev/null | head -n1) || imghash=
     # prebuilt images: firmware and Android userspace pulled from this device by install.sh (tools/vendor-overlay.py)
     if [ -f $T/mu300-vendor-$os.tar.gz ]; then
-        tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new
+        stage_run "unpack $os vendor" 900 tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new
         rm -f $T/mu300-vendor-$os.tar.gz
     fi
     # update: carry the settings and user data of the previous installation over to the new system
@@ -640,28 +735,30 @@ for os in $OSES; do
         rm -rf "$M/$os.new/.mu300-image"
         if [ -f "$M/$os/etc/shadow" ]; then
             merge_accounts "$M/$os" "$M/$os.new" || { say "could not carry the accounts of $os over; nothing was replaced"; exit 1; }
-            carried=1
-            say "kept the accounts and passwords of the previous $os"
+            # the log line says what the shadow will hold: with a hash, or PW_SET=1 (the Magisk installer's
+            # MU300_PASSWORD_RESET=yes, or a system that still had the images' accounts), the system's own account
+            # gets PWHASH below, and only the other accounts keep their passwords
+            if [ -n "$PWHASH" ]; then
+                say "kept the other accounts of the previous $os; $pwu's password is the one the installer chose (the images' own, or MU300_PASSWORD)"
+            elif [ "${PW_SET:-0}" = 1 ]; then
+                say "kept the other accounts of the previous $os; $pwu's password is the images' own again: none, until one is set"
+            else
+                say "kept the accounts and passwords of the previous $os"
+            fi
         fi
         extra_keep_vpn $M $M/$os
         [ -n "$extra" ] && say "kept enabled services:$extra"
     fi
-    # The password, before the new system replaces the old one: the hash just chosen, or (an update without one) the
-    # one carried over. Fail closed: a system whose account would be left with no hash, an empty one, the image's
-    # default or the image's accounts is not installed, and the old one stays.
-    if [ -n "$PWHASH" ]; then
-        rm -f $M/$os.new$ACCOUNTS_MARK   # the password is the one just chosen, not one to carry over
+    # The password, before the new system replaces the old one: the hash just chosen (PWHASH; with PW_SET=1 also an
+    # empty one, OpenWrt's root without a password), else the accounts carried over, else the image's own (Ubuntu's
+    # ubuntu/ubuntu, OpenWrt's root without a password: the well-known ones, issue #167). The accounts are this
+    # system's now, whichever they are: never the mark that has mu300-update carry some <os>.old's over at boot.
+    if [ -n "$PWHASH" ] || [ "${PW_SET:-0}" = 1 ]; then
         sed -i "s|^$pwu:[^:]*:|$pwu:$PWHASH:|" $M/$os.new/etc/shadow
     fi
-    h=$(sed -n "s/^$pwu:\([^:]*\):.*/\1/p" $M/$os.new/etc/shadow 2>/dev/null | head -n1) || h=
-    case $h in '$'?*) ;; *) h= ;; esac
-    if [ -z "$h" ] || [ -e $M/$os.new$ACCOUNTS_MARK ] ||
-        { [ -z "$PWHASH" ] && { [ "$carried" != 1 ] || [ "$h" = "$imghash" ]; }; }; then
-        rm -rf $M/$os.new
-        say "$os: $pwu would keep no password of its own (empty, the image's default, or none to carry over); $os was not replaced. Install again with MU300_PASSWORD_RESET=yes in /data/adb/mu300-install.conf (or choose a password in install.sh)"
-        exit 1
-    fi
-    rm -rf $M/$os && mv $M/$os.new $M/$os
+    rm -f $M/$os.new$ACCOUNTS_MARK
+    stage_run "replace $os" 900 rm -rf $M/$os
+    mv $M/$os.new $M/$os
     R=$M/$os
     if [ "${SD_MODE:-0}" = 1 ]; then sd_fstab $R; fi
     mkdir -p $R/etc/mu300
@@ -697,5 +794,9 @@ rm -f $M/boot/installed.tag
 [ -n "$ssid" ] && say "hotspot: SSID $ssid imported (passphrase ${#psk} chars)"
 say "installed: $(ls -d $M/ubuntu $M/openwrt $M/openwrt-luci 2>/dev/null | sed "s|$M/||g" | tr '\n' ' ')boot-os=$BOOT_OS default-linux=$DEFAULT_LINUX"
 sd_mark_internal
+# the card's dirty pages go out now, bounded like the other card stages (the unmount in sd_exit then has little
+# left to wait for); a timeout here is a failure like any other: the OK line never comes, nothing is armed
+[ "${SD_MODE:-0}" != 1 ] || stage_run flush 1800 sync
+stall_clear
 rm -f $T/mu300-install.env
 echo MU300-INSTALL-OK   # install.sh checks for this line (set -e stops before it on any failure)

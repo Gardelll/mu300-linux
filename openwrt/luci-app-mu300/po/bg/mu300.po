@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Температура"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Термичните зони на ядрото, само за четене. Зона с прагови точки ограничава свързаните с нея охлаждащи устройства при пасивния си праг; състояние на охлаждане 0 означава без ограничаване."
+
+msgid "Zone"
+msgstr "Зона"
+
+msgid "Temperature"
+msgstr "Температура"
+
+msgid "Trip points"
+msgstr "Прагови точки"
+
+msgid "Cooling devices"
+msgstr "Охлаждащи устройства"
+
 msgid "USB role"
 msgstr "USB роля"
 
@@ -558,6 +576,9 @@ msgstr "Записано: %s"
 msgid "Remove the saved value"
 msgstr "Премахване на записаната стойност"
 
+msgid "Presets"
+msgstr "Готови настройки"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Получените съобщения се препращат веднага щом стигнат до SMS пула. Неуспешна доставка се повтаря след 30 s, после всеки път след двойно по-дълго време (най-много час), общо десет пъти."
 
@@ -600,11 +621,26 @@ msgstr "Тяло"
 msgid "Form (URL-encoded)"
 msgstr "Формуляр (URL кодиран)"
 
+msgid "Plain text"
+msgstr "Обикновен текст"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Полета: sender, time, text, device, message (попълненият шаблон)"
 
+msgid "Custom body"
+msgstr "Собствено тяло"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Празно: стандартните полета (обикновен текст: съобщението). Заместители: {sender}, {time}, {text}, {device}, {message}. Всяка стойност се екранира според избрания тип. Това тяло се показва тук отново: дръжте тайните в адреса или в заглавка."
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Допълнителни заглавки (по една \"Име: стойност\" на ред)"
+
+msgid "The answer must contain"
+msgstr "Отговорът трябва да съдържа"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "Празно: всеки отговор HTTP 2xx се брои за доставен. С ключ=стойност (например errcode=0) отговорът трябва освен това да е JSON обект, който има тази стойност под този ключ на най-горното си ниво; иначе доставката е неуспешна. В дневника се записва само резултатът от проверката, никога отговорът."
 
 msgid "Bot token"
 msgstr "Токен на бота"
@@ -671,6 +707,9 @@ msgstr "Филтрирано"
 
 msgid "Dropped"
 msgstr "Отхвърлено"
+
+msgid "Clear"
+msgstr "Изчистване"
 
 msgid "Test"
 msgstr "Тест"
@@ -762,6 +801,9 @@ msgstr "Общо изпратени"
 msgid "Used today"
 msgstr "Използвано днес"
 
+msgid "SIM source"
+msgstr "Източник на SIM"
+
 msgid "Session duration"
 msgstr "Продължителност на сесията"
 
@@ -830,6 +872,9 @@ msgstr "Модем"
 
 msgid "Carrier"
 msgstr "Оператор"
+
+msgid "Own number"
+msgstr "Собствен номер"
 
 msgid "Module"
 msgstr "Модул"
@@ -969,8 +1014,17 @@ msgstr "Заключването е неуспешно: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Мрежовите заключвания се връщат на автоматично (рестарт на SFUN, около 30 секунди)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Нулирането не успя: %s. Запазените настройки за заключване са запазени."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Нулирането на заключванията не се потвърди навреме; превключва се въпреки това."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Избрана е вътрешната SIM: ще се използва след рестартиране"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Избрана е вътрешната SIM, но тя не се поддържа на това устройство: използва се външната SIM"
 
 msgid "Uptime %s"
 msgstr "Време на работа %s"
@@ -1314,6 +1368,9 @@ msgstr "Състоянието е потвърдено"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Времето за прочитане изтече; изберете „Опресняване на състоянието на заключването“"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Нулирането е потвърдено: мрежов режим автоматичен, EN-DC включен, всички ленти, без заключване на клетка; запазените настройки за заключване са изчистени"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Приложено (EN-DC не изисква рестартиране на радио стека)"
 
@@ -1650,6 +1707,15 @@ msgstr "Съобщение (Enter за изпращане, Shift+Enter за но
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Изпращането използва AT+CMGS (PDU режим); опитайте отново, ако каналът е зает. За изтриване на едно съобщение използвайте иконата с кошче в неговия балон."
 
+msgid "Sending…"
+msgstr "Изпращане…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Изпратено; списъкът ще се опресни скоро."
+
+msgid "Sending failed"
+msgstr "Изпращането е неуспешно"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Синхронизиране от SIM във фонов режим (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "Изчистване на локалното SMS хранилище"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "Ще бъдат изтрити само локалните файлове; съобщенията в SIM остават."
-
-msgid "Clear"
-msgstr "Изчистване"
 
 msgid "Delete this SMS"
 msgstr "Изтриване на този SMS"
@@ -1688,15 +1751,6 @@ msgstr "Изтрито (само локално)"
 
 msgid "Enter both a number and a message."
 msgstr "Въведете номер и съобщение."
-
-msgid "Sending…"
-msgstr "Изпращане…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Изпратено; списъкът ще се опресни скоро."
-
-msgid "Sending failed"
-msgstr "Изпращането е неуспешно"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d съобщения, %d непрочетени · %d разговора"
@@ -2919,6 +2973,12 @@ msgstr "Невалиден списък с филтри (най-много 50 р
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Адресът на уебкуката трябва да е URL с http:// или https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Тялото на webhook е твърде дълго или съдържа управляващ знак"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Проверката на отговора трябва да е ключ=стойност, например errcode=0 или ok=true (стойността е цяло число или малки букви, най-много 16)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Невалидна заглавка (по една \"Име: стойност\" на ред; Host, Content-Type, Content-Length, Transfer-Encoding и Connection се задават от устройството)"
 
@@ -2949,6 +3009,12 @@ msgstr "Настройките за препращане не можаха да 
 msgid "SMS forwarding is not installed"
 msgstr "Препращането на SMS не е инсталирано"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Току-що беше стартиран тест; изчакайте няколко секунди"
+
+msgid "The delivery log could not be cleared"
+msgstr "Дневникът на доставките не можа да бъде изчистен"
+
 msgid "Unknown forwarding operation"
 msgstr "Неизвестна операция за препращане"
 
@@ -2976,8 +3042,26 @@ msgstr "Езиковият пакет не можа да бъде премахн
 msgid "Lock cache unavailable"
 msgstr "Кешът на заключванията е недостъпен"
 
+msgid "The saved locks could not be cleared"
+msgstr "Запазените заключвания не можаха да бъдат изчистени"
+
 msgid "No serving cell to lock to"
 msgstr "Няма обслужваща клетка за заключване"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Модемът не отговори на заявката за режим; нищо не беше изпратено"
+
+msgid "The modem refused a write"
+msgstr "Модемът отказа запис"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Обратното четене не съвпада с автоматичните стойности"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Обратното четене след рестарта на стека не съвпада с автоматичните стойности"
+
+msgid "The reset was interrupted"
+msgstr "Нулирането беше прекъснато"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Повторното инсталиране на пакети не е налично в тази система"

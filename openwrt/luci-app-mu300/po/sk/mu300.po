@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "Teplota"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "Teplotné zóny jadra, iba na čítanie. Zóna s prahovými bodmi obmedzuje chladiace zariadenia, ktoré sú k nej priradené, na svojom pasívnom prahu; stav chladenia 0 znamená žiadne obmedzenie."
+
+msgid "Zone"
+msgstr "Zóna"
+
+msgid "Temperature"
+msgstr "Teplota"
+
+msgid "Trip points"
+msgstr "Prahové body"
+
+msgid "Cooling devices"
+msgstr "Chladiace zariadenia"
+
 msgid "USB role"
 msgstr "Rola USB"
 
@@ -558,6 +576,9 @@ msgstr "Uložené: %s"
 msgid "Remove the saved value"
 msgstr "Odstrániť uloženú hodnotu"
 
+msgid "Presets"
+msgstr "Predvoľby"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Prijaté správy sa preposielajú hneď, ako prídu do fondu SMS. Neúspešné doručenie sa zopakuje po 30 s a potom zakaždým po dvojnásobnom čase (najviac hodina), celkovo desaťkrát."
 
@@ -600,11 +621,26 @@ msgstr "Telo"
 msgid "Form (URL-encoded)"
 msgstr "Formulár (kódovanie URL)"
 
+msgid "Plain text"
+msgstr "Obyčajný text"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Polia: sender, time, text, device, message (vyplnená šablóna)"
 
+msgid "Custom body"
+msgstr "Vlastné telo"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "Prázdne: štandardné polia (obyčajný text: správa). Zástupné symboly: {sender}, {time}, {text}, {device}, {message}. Každá hodnota sa escapuje podľa zvoleného typu. Toto telo sa tu znova zobrazí: tajné údaje dajte do adresy alebo do hlavičky."
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Ďalšie hlavičky (jedna \"Názov: hodnota\" na riadok)"
+
+msgid "The answer must contain"
+msgstr "Odpoveď musí obsahovať"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "Prázdne: každá odpoveď HTTP 2xx sa počíta ako doručenie. S kľúč=hodnota (napríklad errcode=0) musí byť odpoveď navyše objekt JSON, ktorý má na najvyššej úrovni pod týmto kľúčom túto hodnotu; inak doručenie zlyhá. Do záznamu sa zapisuje len výsledok kontroly, nikdy odpoveď."
 
 msgid "Bot token"
 msgstr "Token bota"
@@ -671,6 +707,9 @@ msgstr "Odfiltrované"
 
 msgid "Dropped"
 msgstr "Zahodené"
+
+msgid "Clear"
+msgstr "Vymazať"
 
 msgid "Test"
 msgstr "Test"
@@ -762,6 +801,9 @@ msgstr "Celkom odoslané"
 msgid "Used today"
 msgstr "Dnes spotrebované"
 
+msgid "SIM source"
+msgstr "Zdroj SIM"
+
 msgid "Session duration"
 msgstr "Trvanie relácie"
 
@@ -830,6 +872,9 @@ msgstr "Modem"
 
 msgid "Carrier"
 msgstr "Operátor"
+
+msgid "Own number"
+msgstr "Vlastné číslo"
 
 msgid "Module"
 msgstr "Modul"
@@ -969,8 +1014,17 @@ msgstr "Uzamknutie zlyhalo: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "Obnovujú sa automatické nastavenia siete (reštart SFUN, asi 30 sekúnd)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "Reset zlyhal: %s. Uložené nastavenia zámkov boli zachované."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "Obnovenie zámkov nebolo včas potvrdené; prepína sa aj tak."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "Vybraná interná SIM: použije sa po reštarte"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "Vybraná interná SIM, ale toto zariadenie ju nepodporuje: používa sa externá SIM"
 
 msgid "Uptime %s"
 msgstr "Doba prevádzky %s"
@@ -1314,6 +1368,9 @@ msgstr "Stav overený"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "Časový limit spätného čítania vypršal; zvoľte „Obnoviť stav zámkov“"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "Reset overený: sieťový režim automatický, EN-DC zapnuté, všetky pásma, bez zámku bunky; uložené nastavenia zámkov boli vymazané"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "Použité (EN-DC nevyžaduje reštart rádiového stacku)"
 
@@ -1650,6 +1707,15 @@ msgstr "Správa (Enter odošle, Shift+Enter nový riadok)"
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "Odosielanie používa AT+CMGS (režim PDU); ak je kanál obsadený, skúste to znova. Jednotlivú správu odstránite ikonou koša na jej bubline."
 
+msgid "Sending…"
+msgstr "Odosielanie…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "Odoslané; zoznam sa čoskoro obnoví."
+
+msgid "Sending failed"
+msgstr "Odoslanie zlyhalo"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "Synchronizácia zo SIM na pozadí (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "Vymazať lokálny zásobník SMS"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "Odstránia sa iba lokálne súbory; správy na SIM zostanú."
-
-msgid "Clear"
-msgstr "Vymazať"
 
 msgid "Delete this SMS"
 msgstr "Odstrániť túto SMS"
@@ -1688,15 +1751,6 @@ msgstr "Odstránené (iba lokálne)"
 
 msgid "Enter both a number and a message."
 msgstr "Zadajte číslo aj správu."
-
-msgid "Sending…"
-msgstr "Odosielanie…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "Odoslané; zoznam sa čoskoro obnoví."
-
-msgid "Sending failed"
-msgstr "Odoslanie zlyhalo"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· správ: %d, neprečítaných: %d · konverzácií: %d"
@@ -2919,6 +2973,12 @@ msgstr "Neplatný zoznam filtrov (najviac 50 riadkov)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "Adresa webhooku musí byť URL http:// alebo https://"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "Telo webhooku je príliš dlhé alebo obsahuje riadiaci znak"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Kontrola odpovede musí mať tvar kľúč=hodnota, napríklad errcode=0 alebo ok=true (hodnota celé číslo alebo malé písmená, najviac 16)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Neplatná hlavička (jedna \"Názov: hodnota\" na riadok; Host, Content-Type, Content-Length, Transfer-Encoding a Connection nastavuje zariadenie)"
 
@@ -2949,6 +3009,12 @@ msgstr "Nastavenia preposielania sa nepodarilo uložiť"
 msgid "SMS forwarding is not installed"
 msgstr "Preposielanie SMS nie je nainštalované"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Test bol spustený pred chvíľou; počkajte niekoľko sekúnd"
+
+msgid "The delivery log could not be cleared"
+msgstr "Záznam doručení sa nepodarilo vymazať"
+
 msgid "Unknown forwarding operation"
 msgstr "Neznáma operácia preposielania"
 
@@ -2976,8 +3042,26 @@ msgstr "Jazykový balík sa nepodarilo odstrániť"
 msgid "Lock cache unavailable"
 msgstr "Vyrovnávacia pamäť zámkov nie je dostupná"
 
+msgid "The saved locks could not be cleared"
+msgstr "Uložené zámky sa nepodarilo vymazať"
+
 msgid "No serving cell to lock to"
 msgstr "Žiadna obsluhujúca bunka na uzamknutie"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "Modem neodpovedal na dopyt na režim; nič nebolo odoslané"
+
+msgid "The modem refused a write"
+msgstr "Modem odmietol zápis"
+
+msgid "The read-back does not match the automatic values"
+msgstr "Spätné čítanie nezodpovedá automatickým hodnotám"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "Spätné čítanie po reštarte zásobníka nezodpovedá automatickým hodnotám"
+
+msgid "The reset was interrupted"
+msgstr "Reset bol prerušený"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "Opätovná inštalácia balíkov nie je v tomto systéme dostupná"

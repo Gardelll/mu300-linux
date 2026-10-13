@@ -384,6 +384,24 @@ msgstr "Hardware max"
 msgid "Frequencies in MHz."
 msgstr "Frequencies in MHz."
 
+msgid "Thermal"
+msgstr "حرارتی"
+
+msgid "The kernel's thermal zones, read only. A zone with trip points throttles the cooling devices bound to it at its passive trip; a cooling state of 0 is no throttling."
+msgstr "ناحیه‌های حرارتی هسته، فقط خواندنی. ناحیه‌ای که نقاط آستانه دارد، دستگاه‌های خنک‌کننده متصل به خود را در آستانه غیرفعال محدود می‌کند؛ وضعیت خنک‌کنندگی 0 یعنی بدون محدودسازی."
+
+msgid "Zone"
+msgstr "ناحیه"
+
+msgid "Temperature"
+msgstr "دما"
+
+msgid "Trip points"
+msgstr "نقاط آستانه"
+
+msgid "Cooling devices"
+msgstr "دستگاه‌های خنک‌کننده"
+
 msgid "USB role"
 msgstr "نقش USB"
 
@@ -558,6 +576,9 @@ msgstr "ذخیره‌شده: %s"
 msgid "Remove the saved value"
 msgstr "حذف مقدار ذخیره‌شده"
 
+msgid "Presets"
+msgstr "پیش‌تنظیم‌ها"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "پیام‌های دریافتی به‌محض رسیدن به مخزن پیامک بازارسال می‌شوند. ارسال ناموفق پس از ۳۰ ثانیه و سپس هر بار پس از دو برابر زمان قبل (حداکثر یک ساعت) دوباره تلاش می‌شود، در مجموع ده بار."
 
@@ -600,11 +621,26 @@ msgstr "بدنه"
 msgid "Form (URL-encoded)"
 msgstr "فرم (کدگذاری URL)"
 
+msgid "Plain text"
+msgstr "متن ساده"
+
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "فیلدها: sender، time، text، device، message (الگوی پرشده)"
 
+msgid "Custom body"
+msgstr "بدنهٔ سفارشی"
+
+msgid "Empty: the standard fields (plain text: the message). Placeholders: {sender}, {time}, {text}, {device}, {message}. Each value is escaped for the chosen type. This body is shown again here: keep secrets in the address or a header."
+msgstr "خالی: فیلدهای استاندارد (متن ساده: پیام). جای‌نگهدارها: {sender}، {time}، {text}، {device}، {message}. هر مقدار متناسب با نوع انتخاب‌شده escape می‌شود. این بدنه دوباره اینجا نمایش داده می‌شود: اطلاعات محرمانه را در نشانی یا یک سرآیند بگذارید."
+
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "سرآیندهای اضافی (هر سطر یک \"Name: value\")"
+
+msgid "The answer must contain"
+msgstr "پاسخ باید شامل این باشد"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "خالی: هر پاسخ HTTP 2xx تحویل‌شده به شمار می‌آید. با کلید=مقدار (برای نمونه errcode=0) پاسخ باید افزون بر آن یک شیء JSON باشد که در بالاترین سطح خود زیر این کلید همین مقدار را دارد؛ وگرنه تحویل ناموفق است. تنها نتیجهٔ بررسی در گزارش ثبت می‌شود، خودِ پاسخ هرگز."
 
 msgid "Bot token"
 msgstr "توکن ربات"
@@ -671,6 +707,9 @@ msgstr "فیلتر شد"
 
 msgid "Dropped"
 msgstr "کنار گذاشته شد"
+
+msgid "Clear"
+msgstr "پاک کردن"
 
 msgid "Test"
 msgstr "آزمایش"
@@ -762,6 +801,9 @@ msgstr "کل ارسالی"
 msgid "Used today"
 msgstr "مصرف امروز"
 
+msgid "SIM source"
+msgstr "منبع سیم‌کارت"
+
 msgid "Session duration"
 msgstr "مدت نشست"
 
@@ -830,6 +872,9 @@ msgstr "مودم"
 
 msgid "Carrier"
 msgstr "اپراتور"
+
+msgid "Own number"
+msgstr "شماره خود"
 
 msgid "Module"
 msgstr "ماژول"
@@ -969,8 +1014,17 @@ msgstr "قفل ناموفق بود: %s"
 msgid "Resetting the network locks to automatic (SFUN restart, about 30 seconds)…"
 msgstr "در حال بازگرداندن قفل‌های شبکه به خودکار (راه‌اندازی مجدد SFUN، حدود ۳۰ ثانیه)…"
 
+msgid "Reset failed: %s. The saved lock settings were kept."
+msgstr "بازنشانی ناموفق بود: %s. تنظیمات قفل ذخیره‌شده نگه داشته شدند."
+
 msgid "The lock reset was not confirmed in time; switching anyway."
 msgstr "بازنشانی قفل‌ها به‌موقع تأیید نشد؛ به هر حال تغییر انجام می‌شود."
+
+msgid "Internal SIM selected: in use after a reboot"
+msgstr "سیم‌کارت داخلی انتخاب شده است: پس از راه‌اندازی مجدد استفاده می‌شود"
+
+msgid "Internal SIM selected, but not supported on this device: the external SIM is in use"
+msgstr "سیم‌کارت داخلی انتخاب شده اما در این دستگاه پشتیبانی نمی‌شود: سیم‌کارت خارجی در حال استفاده است"
 
 msgid "Uptime %s"
 msgstr "زمان کارکرد %s"
@@ -1314,6 +1368,9 @@ msgstr "وضعیت تأیید شد"
 msgid "Readback timed out; select “Refresh lock status”"
 msgstr "مهلت خواندن دوباره تمام شد؛ «تازه‌سازی وضعیت قفل» را انتخاب کنید"
 
+msgid "Reset verified: network mode automatic, EN-DC on, all bands, no cell lock; the saved lock settings are cleared"
+msgstr "بازنشانی تأیید شد: حالت شبکه خودکار، EN-DC روشن، همه باندها، بدون قفل سلول؛ تنظیمات قفل ذخیره‌شده پاک شدند"
+
 msgid "Applied (EN-DC does not require a radio-stack restart)"
 msgstr "اعمال شد (EN-DC نیازی به راه‌اندازی مجدد پشتهٔ رادیو ندارد)"
 
@@ -1650,6 +1707,15 @@ msgstr "پیام (Enter برای ارسال، Shift+Enter برای خط جدید
 msgid "Sending uses AT+CMGS (PDU mode); retry if the channel is busy. To delete one message, use the bin icon on its bubble."
 msgstr "ارسال از AT+CMGS (حالت PDU) استفاده می‌کند؛ اگر کانال مشغول است دوباره تلاش کنید. برای حذف یک پیام، از نماد سطل زباله روی حباب آن استفاده کنید."
 
+msgid "Sending…"
+msgstr "در حال ارسال…"
+
+msgid "Sent; the list refreshes shortly."
+msgstr "ارسال شد؛ فهرست به‌زودی تازه می‌شود."
+
+msgid "Sending failed"
+msgstr "ارسال ناموفق بود"
+
 msgid "Syncing from the SIM in the background (AT+CMGL)…"
 msgstr "در حال همگام‌سازی از SIM در پس‌زمینه (AT+CMGL)…"
 
@@ -1661,9 +1727,6 @@ msgstr "پاک کردن مخزن محلی SMS"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "فقط فایل‌های محلی حذف می‌شوند؛ پیام‌های روی SIM باقی می‌مانند."
-
-msgid "Clear"
-msgstr "پاک کردن"
 
 msgid "Delete this SMS"
 msgstr "حذف این SMS"
@@ -1688,15 +1751,6 @@ msgstr "حذف شد (فقط محلی)"
 
 msgid "Enter both a number and a message."
 msgstr "هم شماره و هم پیام را وارد کنید."
-
-msgid "Sending…"
-msgstr "در حال ارسال…"
-
-msgid "Sent; the list refreshes shortly."
-msgstr "ارسال شد؛ فهرست به‌زودی تازه می‌شود."
-
-msgid "Sending failed"
-msgstr "ارسال ناموفق بود"
 
 msgid "· %d messages, %d unread · %d conversations"
 msgstr "· %d پیام، %d خوانده‌نشده · %d گفت‌وگو"
@@ -2919,6 +2973,12 @@ msgstr "فهرست فیلتر نامعتبر (حداکثر ۵۰ سطر)"
 msgid "The webhook address must be an http:// or https:// URL"
 msgstr "نشانی webhook باید یک URL با http:// یا https:// باشد"
 
+msgid "The webhook body is too long or contains a control character"
+msgstr "بدنهٔ webhook بیش از حد طولانی است یا نویسهٔ کنترلی دارد"
+
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "بررسی پاسخ باید به شکل کلید=مقدار باشد، مانند errcode=0 یا ok=true (مقدار یک عدد صحیح یا حروف کوچک، حداکثر ۱۶)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "سرآیند نامعتبر (هر سطر یک \"Name: value\"؛ Host، Content-Type، Content-Length، Transfer-Encoding و Connection را دستگاه تنظیم می‌کند)"
 
@@ -2949,6 +3009,12 @@ msgstr "تنظیمات بازارسال ذخیره نشد"
 msgid "SMS forwarding is not installed"
 msgstr "بازارسال پیامک نصب نشده است"
 
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "لحظه‌ای پیش یک آزمایش آغاز شد؛ چند ثانیه صبر کنید"
+
+msgid "The delivery log could not be cleared"
+msgstr "گزارش تحویل پاک نشد"
+
 msgid "Unknown forwarding operation"
 msgstr "عملیات بازارسال ناشناخته"
 
@@ -2976,8 +3042,26 @@ msgstr "حذف بستهٔ زبان ممکن نشد"
 msgid "Lock cache unavailable"
 msgstr "حافظهٔ نهان قفل در دسترس نیست"
 
+msgid "The saved locks could not be cleared"
+msgstr "قفل‌های ذخیره‌شده پاک نشدند"
+
 msgid "No serving cell to lock to"
 msgstr "سلول سرویس‌دهنده‌ای برای قفل کردن نیست"
+
+msgid "The modem did not answer the mode query; nothing was sent"
+msgstr "مودم به پرس‌وجوی حالت پاسخ نداد؛ چیزی ارسال نشد"
+
+msgid "The modem refused a write"
+msgstr "مودم یک نوشتن را رد کرد"
+
+msgid "The read-back does not match the automatic values"
+msgstr "بازخوانی با مقادیر خودکار مطابقت ندارد"
+
+msgid "The read-back after the stack restart does not match the automatic values"
+msgstr "بازخوانی پس از راه‌اندازی مجدد پشته با مقادیر خودکار مطابقت ندارد"
+
+msgid "The reset was interrupted"
+msgstr "بازنشانی قطع شد"
 
 msgid "Reinstalling packages is not available on this system"
 msgstr "نصب دوباره بسته‌ها روی این سیستم در دسترس نیست"

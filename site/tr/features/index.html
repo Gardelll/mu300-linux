@@ -115,6 +115,7 @@ cihaz SIM kartın söylediğini kullanır.</p>
 <tr><th scope="row">OpenWrt</th><td>LuCI: Network &gt; Interfaces &gt; wan, ya da <code>uci</code> ile (aşağıda)</td></tr>
 </tbody></table></div>
 <pre><code>uci set network.wan.apn='your.apn'; uci commit network; ifup wan</code></pre>
+<p>Dahili SIM'i olan bir F50, yuvadaki kart yerine onu kullanabilir: <code>mu300-sim select internal</code> (ya da LuCI'de wan arabirimindeki <strong>SIM source</strong> alanı, o kartın kendi APN'siyle), sonra yeniden başlatın; <code>external</code> geri döndürür, varsayılan harici kart olarak kalır.</p>
 <h3 id="data-usage">Ne kadar veri kullandınız</h3>
 <p>Cihaz mobil veriyi günlük ve fatura dönemi başına, iki yönde de, operatörün saydığı gibi sayar. Dönemin başladığı
 günü ve uyarılı bir aylık kotayı ayarlayabilirsiniz; kotada mobil veriyi kapatmak isteğe bağlıdır ve veri, yeni dönem
@@ -235,7 +236,8 @@ güvenlik modeli <a href="https://github.com/dikeckaan/mu300-linux-vpn#readme" h
 <p>Modülün <strong>v2.0.0</strong> sürümü (v2026.10.20 ile) onu bir çekirdek ve motor eklentilerine ayırır (güncellemeler hepsini tek set olarak
 getirir), <strong>abonelikler</strong> ekler (sağlayıcınızın verdiği, profiller üreten bir URL; zamanlamayla yenilenir) ve bir <strong>IPv6
 koruması</strong> getirir: tünel IPv6 taşımıyorsa IPv6, kill switch'i atlayıp sızmak yerine tünelin yanında engellenir. Kontrol panelli
-OpenWrt'de bunların hepsi panelin <strong>VPN</strong> menüsündedir: Genel bakış, Profiller, Abonelikler, Motorlar, Ayarlar ve Günlükler.</p>
+OpenWrt'de bunların hepsi panelin <strong>VPN</strong> menüsündedir: Genel bakış, Profiller, Abonelikler, Motorlar, Ayarlar ve Günlükler. Paneller
+ve araç kutusu VPN bölümünü ancak modül kurulduktan sonra gösterir.</p>
 </section>
 
 <section id="toolkit">
@@ -370,6 +372,7 @@ başlığı altında (İngilizce).</p>
 <li><a href="https://github.com/dikeckaan/mu300-linux/wiki">Wiki (İngilizce)</a></li>
 <li><a href="../../tr/troubleshooting/">Sorun giderme</a></li>
 <li><a href="https://github.com/dikeckaan/mu300-linux/issues">Sorun bildir</a></li>
+<li><a href="https://t.me/mu300project">Telegram kanalı (haberler ve sürümler)</a></li>
 </ul>
 </div>
 <div>
