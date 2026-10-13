@@ -14,7 +14,8 @@
 # the language (MU300_LANG=en|tr|zh skips that).
 #
 # Prebuilt: needs adb, python3, lz4, curl. Downloads the images of the newest release (or $MU300_RELEASE) and checks
-# their sha256. The VPN, when wanted, is the module of github.com/dikeckaan/mu300-linux-vpn: its latest release
+# their sha256. When GitHub has a prerelease newer than that release it asks whether to install the beta instead
+# (default: no; tools/releases.sh). The VPN, when wanted, is the module of github.com/dikeckaan/mu300-linux-vpn: its latest release
 # (MU300_VPN_URL: another place with its files and SHA256SUMS; MU300_VPN_MODULE=FILE: a copy on this computer).
 # Build:    needs adb, docker, python3, lz4 and the kernel outputs in $MU300_KERNEL_OUT (default: out/, kernel/build-all.sh).
 # The published images contain no proprietary files: Wi-Fi/Bluetooth firmware and the Android modem/GPU userspace are
@@ -41,6 +42,7 @@ for a in "$@"; do
 done
 . "$TOP/tools/i18n.sh"
 . "$TOP/tools/storage.sh"
+. "$TOP/tools/releases.sh"
 choose_language
 say() { printf '\n==> %s\n' "$*"; }
 die() { printf '\n%s %s\n' "$(t 'ERROR:' 2>/dev/null || echo ERROR:)" "$*" >&2; exit 1; }
@@ -435,6 +437,9 @@ if [ "$DIRTY" -gt 0 ]; then
 fi
 
 # ---------------------------------------------------------------- choices
+# the release first: it is asked about only when there is a beta, and a GitHub that does not answer stops the run
+# here, before the password and the pulls from the device
+[ $MODE != prebuilt ] || release_resolve
 say "$(t 'What should be installed?')"
 echo "  $(t '1) Ubuntu LTS: 24.04 or 26.04, asked next (full distribution, apt, ~500 MiB RAM in use)')"
 echo "  $(t '2) OpenWrt {1} (router, LuCI web UI, ~140 MiB RAM in use)' "$OWRT_VER")"
@@ -621,15 +626,7 @@ fi
 
 if [ $MODE = prebuilt ]; then
 # ---------------------------------------------------------------- prebuilt images
-if [ -z "$RELEASE" ]; then
-    if [ -n "${MU300_RELEASE_URL:-}" ]; then RELEASE=custom
-    else
-        RELEASE=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
-            | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)
-        [ -n "$RELEASE" ] || die "$(t 'cannot find the newest release of {1} (set MU300_RELEASE=<tag> to pick one)' "$REPO")"
-    fi
-fi
-slot_release_ok "$RELEASE"
+slot_release_ok "$RELEASE"   # (RELEASE: release_resolve, before the questions)
 REL=$WORK/release/$RELEASE
 mkdir -p "$REL"
 # MU300_RELEASE_URL: another location with the same files (e.g. a local test server)
@@ -814,4 +811,5 @@ IP=192.168.77.1; [ $DEVICE = u30air ] && IP=192.168.78.1
 echo "  $(t 'USB network: {1}   SSH: {2}' $IP "$([ "$BOOT_OS" = ubuntu ] && echo ubuntu@$IP || echo root@$IP, LuCI http://$IP)")"
 echo "  $(t 'switch systems: mu300-os {1}   back to Android: mu300-next-boot android' "$(echo "$OSES" | tr ' ' '|')")"
 echo "  $(t 'back to Linux from Android (with Magisk): su -c mu300-linux')"
+echo "  $(t 'News and new releases are on the Telegram channel of the project, you can follow it: {1}' https://t.me/mu300project)"
 adb reboot </dev/null

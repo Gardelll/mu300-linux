@@ -535,5 +535,58 @@ if (-not $py) {
     Remove-Item -Recurse -Force $fx
 }
 
+# ---- the release and the beta question (tools/releases.sh's release_resolve, here ReleasePick and BetaAsked) -------
+$bnames = 'ReleasePick', 'BetaAsked'
+$bdefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $bnames -contains $n.Name }, $true)
+foreach ($d in $bdefs) { . ([scriptblock]::Create($d.Extent.Text)) }
+foreach ($w in $bnames) {
+    if (-not (Get-Command $w -CommandType Function -ErrorAction SilentlyContinue)) { Write-Host "FAIL: $w not found in install.ps1"; exit 99 }
+}
+Check 'beta asked'               (BetaAsked 'v2026.10.23' 'v2026.10.25' $false) $true
+Check 'no beta: not asked'       (BetaAsked 'v2026.10.23' '' $false) $false
+Check 'no release: not asked'    (BetaAsked '' 'v2026.10.25' $false) $false
+Check 'the same tag: not asked'  (BetaAsked 'v2026.10.23' 'v2026.10.23' $false) $false
+Check '-Answers: not asked'      (BetaAsked 'v2026.10.23' 'v2026.10.25' $true) $false
+$site = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
+Check 'release before the questions'  ($site.IndexOf('$rl = ReleaseList') -gt 0 -and $site.IndexOf('$rl = ReleaseList') -lt $site.IndexOf("Say (T 'What should be installed?')")) $true
+Check 'the beta defaults to no'  ($site -match "\(Ask \(T 'Install the beta \{1\} instead of \{2\}\? \(yes/no\)' \`$rl\.Beta \`$Release\) 'no'\) -eq 'yes'") $true
+Check 'a given release is not looked up'  ($site -match '(?s)if \(-not \$Release\) \{\s+if \(\$ReleaseUrl\) \{ \$Release = ''custom'' \}\s+else \{\s+\$rl = ReleaseList') $true
+if (-not $py) {
+    if ($env:GITHUB_ACTIONS) { Check 'python for the release tests' 'none' 'found' }
+    else { Write-Host 'no Python 3 here: the release decision was not run against the fake API answers' }
+} else {
+    # fake answers of GitHub's API, decided by the real tools/release_pick.py
+    function Python { & $py @args }
+    $rx = Join-Path ([IO.Path]::GetTempPath()) ('mu300-rel-' + [guid]::NewGuid())
+    New-Item -ItemType Directory -Path $rx | Out-Null
+    function Rel($tag, $when, $pre, $draft) { '{"tag_name": "' + $tag + '", "published_at": "' + $when + '", "prerelease": ' + $pre + ', "draft": ' + $draft + ', "assets": []}' }
+    $full = Rel 'v2026.10.23' '2026-10-12T17:55:05Z' 'false' 'false'
+    $oldBeta = Rel 'v2026.10.19' '2026-10-11T16:18:01Z' 'true' 'false'
+    $newBeta = Rel 'v2026.10.25' '2026-10-14T08:00:00Z' 'true' 'false'
+    $draft = Rel 'v2026.11.01' '2026-11-01T00:00:00Z' 'true' 'true'
+    $evil = Rel 'v1; calc' '2026-10-20T00:00:00Z' 'true' 'false'
+    $cases = @(
+        @('no prerelease', "[$full]", 'v2026.10.23', ''),
+        @('an overtaken prerelease', "[$full, $oldBeta]", 'v2026.10.23', ''),
+        @('a newer prerelease', "[$oldBeta, $newBeta, $full]", 'v2026.10.23', 'v2026.10.25'),
+        @('a draft', "[$draft, $full]", 'v2026.10.23', ''),
+        @('only a prerelease', "[$newBeta]", '', ''),
+        @('a tag that is not plain', "[$full, $evil]", 'v2026.10.23', ''),
+        @('the rate limit', '{"message": "API rate limit exceeded for 203.0.113.7."}', '', ''),
+        @('a page of a proxy', '<html>blocked</html>', '', ''),
+        @('nothing', '', '', ''))
+    foreach ($c in $cases) {
+        $jf = Join-Path $rx 'releases.json'
+        [IO.File]::WriteAllText($jf, $c[1])
+        $r = ReleasePick $jf
+        Check "release: $($c[0]): latest" $r.Latest $c[2]
+        Check "release: $($c[0]): beta"   $r.Beta $c[3]
+    }
+    $r = ReleasePick (Join-Path $rx 'no-such-file.json')
+    Check 'release: no file: latest'  $r.Latest ''
+    Check 'release: no file: beta'    $r.Beta ''
+    Remove-Item -Recurse -Force $rx
+}
+
 Write-Host "$script:passed passed, $script:failed failed"
 exit $script:failed

@@ -922,6 +922,54 @@ if ($Check) {
 }
 if ($dirty -gt 0 -and (Ask (T 'Type overwrite to use this region anyway') 'no') -ne 'overwrite') { Die (T 'cancelled') }
 
+# ---------------------------------------------------------------- the release (tools/releases.sh's release_resolve)
+# -Release <tag> or -ReleaseUrl: that one, nothing asked. Otherwise the newest full release; when GitHub also has a
+# prerelease published after it, the question is whether to install that beta instead (default: no). It is looked up
+# here, before the other questions: a GitHub that does not answer stops the run before the password and the pulls.
+# ReleasePick: what tools/release_pick.py says about GitHub's list of releases in $JsonFile - Latest and Beta, ''
+# for what there is none of. install.sh and the graphical installer decide with the same file.
+function ReleasePick([string]$JsonFile) {
+    $ErrorActionPreference = 'Continue'
+    $r = @{ Latest = ''; Beta = '' }
+    foreach ($l in @(Python "$Top\tools\release_pick.py" $JsonFile 2>$null)) {
+        if ("$l" -match '^(LATEST|BETA)=([A-Za-z0-9._+-]+)\s*$') {
+            if ($Matches[1] -eq 'LATEST') { $r.Latest = $Matches[2] } else { $r.Beta = $Matches[2] }
+        }
+    }
+    if (-not $r.Latest) { $r.Beta = '' }
+    return $r
+}
+# ReleaseList: GitHub's list, picked. No token is needed. Both are '' when the list does not come (no network, the
+# API's rate limit, a proxy's page): the caller then looks up the newest release alone, as it always did.
+function ReleaseList {
+    $none = @{ Latest = ''; Beta = '' }
+    $f = Join-Path ([IO.Path]::GetTempPath()) "mu300-releases-$PID.json"
+    $ProgressPreference = 'SilentlyContinue'
+    try {
+        Invoke-WebRequest "https://api.github.com/repos/$Repo/releases?per_page=15" -OutFile $f -UseBasicParsing -TimeoutSec 30
+        if (-not (Test-Path $f)) { return $none }
+        return (ReleasePick $f)
+    } catch { return $none }
+    finally { Remove-Item $f -ErrorAction SilentlyContinue }
+}
+# BetaAsked: whether the beta question is put. Not with -Answers: that file holds one answer per question in a fixed
+# order, and a question that comes and goes with GitHub's releases would shift every answer behind it.
+function BetaAsked([string]$Latest, [string]$Beta, [bool]$Positional) { return [bool]($Latest -and $Beta -and $Beta -ne $Latest -and -not $Positional) }
+if (-not $Release) {
+    if ($ReleaseUrl) { $Release = 'custom' }
+    else {
+        $rl = ReleaseList
+        $Release = $rl.Latest
+        if (-not $Release) {
+            try { $Release = (Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest" -UseBasicParsing).tag_name }
+            catch { Die (T 'cannot find the newest release of {1} (use -Release <tag> to pick one)' $Repo) }
+        } elseif (BetaAsked $Release $rl.Beta ([bool]$script:AnswerQueue)) {
+            Write-Host ('  ' + (T 'A beta is out: {1}, a prerelease for testing, newer than the newest full release {2}.' $rl.Beta $Release))
+            if ((Ask (T 'Install the beta {1} instead of {2}? (yes/no)' $rl.Beta $Release) 'no') -eq 'yes') { $Release = $rl.Beta }
+        }
+    }
+}
+
 Say (T 'What should be installed?')
 Write-Host ('  ' + (T '1) Ubuntu LTS: 24.04 or 26.04, asked next (full distribution, apt, ~500 MiB RAM in use)'))
 Write-Host ('  ' + (T '2) OpenWrt {1} (router, LuCI web UI, ~140 MiB RAM in use)' '25.12.5'))
@@ -1107,13 +1155,7 @@ if ($gpu -eq 'yes') {
     Python "$Top\android-vendor\pull_closure.py" /vendor/lib64/libOpenCL.so /vendor/lib64/egl/libGLES_mali.so /vendor/lib64/hw/vulkan.ums9620.so
 }
 
-if (-not $Release) {
-    if ($ReleaseUrl) { $Release = 'custom' }
-    else {
-        try { $Release = (Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest" -UseBasicParsing).tag_name }
-        catch { Die (T 'cannot find the newest release of {1} (use -Release <tag> to pick one)' $Repo) }
-    }
-}
+# ($Release: looked up before the questions, see ReleaseList)
 # Linux on a needs systems that know it (release v2026.10.10 on); a tag that is not a release date is not judged
 if ($LINUX_SLOT -eq 'a' -and $Release -match '^v\d{4}\.\d{2}\.\d{2}' -and [string]::CompareOrdinal($Release, 'v2026.10.10') -lt 0) {
     Die (T 'Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer' $Release 'v2026.10.10')
@@ -1328,4 +1370,5 @@ $ip = if ($DEVICE -eq 'u30air') { '192.168.78.1' } else { '192.168.77.1' }
 Write-Host ('  ' + (T 'USB network: {1}   SSH: {2}' $ip $(if ($BOOT_OS -eq 'ubuntu') { "ubuntu@$ip" } else { "root@$ip, LuCI http://$ip" })))
 Write-Host ('  ' + (T 'switch systems: mu300-os {1}   back to Android: mu300-next-boot android' ($OSES -join '|')))
 Write-Host ('  ' + (T 'back to Linux from Android (with Magisk): su -c mu300-linux'))
+Write-Host ('  ' + (T 'News and new releases are on the Telegram channel of the project, you can follow it: {1}' 'https://t.me/mu300project'))
 & adb reboot | Out-Null
