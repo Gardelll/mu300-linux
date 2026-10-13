@@ -1720,9 +1720,15 @@ msgstr "Switch failed; previous SIM restored"
 msgid "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
 msgstr "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
 
+msgid "The target SIM has no mobile data yet, and the previous SIM had none either: the device stays on the target. The saved boot preference is unchanged."
+msgstr "The target SIM has no mobile data yet, and the previous SIM had none either: the device stays on the target. The saved boot preference is unchanged."
+
 # Source-language fallback for untranslated new controls.
 msgid "Radio state unknown; reboot required"
 msgstr "Radio state unknown; reboot required"
+
+msgid "Radio state unknown; the device is restarting."
+msgstr "Radio state unknown; the device is restarting."
 
 # Source-language fallback for untranslated new controls.
 msgid "Dual SIM control is only for the U30 Air on OpenWrt."
@@ -1731,6 +1737,15 @@ msgstr "Dual SIM control is only for the U30 Air on OpenWrt."
 # Source-language fallback for untranslated new controls.
 msgid "The chosen SIM could not be started at the last boot (no card, PIN, or the modem refused it)."
 msgstr "The chosen SIM could not be started at the last boot (no card, PIN, or the modem refused it)."
+
+msgid "No card answered in the chosen SIM position at the last boot."
+msgstr "No card answered in the chosen SIM position at the last boot."
+
+msgid "The chosen SIM is locked by its PIN."
+msgstr "The chosen SIM is locked by its PIN."
+
+msgid "The chosen SIM got no mobile data within the time at its first boot."
+msgstr "The chosen SIM got no mobile data within the time at its first boot."
 
 # Source-language fallback for untranslated new controls.
 msgid "The second SIM's modem channels did not come up at the last boot."
@@ -1758,6 +1773,9 @@ msgstr "SIM control unavailable"
 # Source-language fallback for untranslated new controls.
 msgid "The device is back on SIM1 without live switching; choose again below to try once more."
 msgstr "The device is back on SIM1 without live switching; choose again below to try once more."
+
+msgid "Waiting for the first mobile data on SIM2: %d s left. Without data the device goes back to SIM1 and restarts."
+msgstr "Waiting for the first mobile data on SIM2: %d s left. Without data the device goes back to SIM1 and restarts."
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching"
@@ -2651,6 +2669,9 @@ msgstr "Bez łączenia poleceń przez \";\""
 
 msgid "Denied: this command wedges the AT port until a reboot"
 msgstr "Odmowa: to polecenie blokuje port AT aż do ponownego uruchomienia"
+
+msgid "Denied: this command moves the SIM selection or the data route; the SIM settings do that"
+msgstr "Denied: this command moves the SIM selection or the data route; the SIM settings do that"
 
 # Source-language fallback for untranslated new controls.
 msgid "The modem is restarting (network locks or a SIM switch, about half a minute), try again shortly"

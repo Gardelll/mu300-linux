@@ -1,282 +1,175 @@
-# U30 Air native dual SIM (experimental)
+# U30 Air dual SIM (experimental)
 
-This opt-in OpenWrt path provides a LuCI **Cellular > Dual SIM** page and
-`mu300-sim` CLI. Both physical cards can be selected without booting Android
-first. A live switch that gets mobile data saves the target as the next
-cold-boot default, matching the factory system's selection behavior. Android
-partitions, firmware and subscriber identities are not modified.
+A U30 Air has two SIM positions. OpenWrt on it can start either card at boot, and, when asked to, move the radio
+from one to the other without a restart. Off by default: a device left alone boots SIM1 exactly as before.
+Android, its partitions and the cards' identities are not touched. OpenWrt on the U30 Air only; on an F50 the
+selector is the boot-time one of `docs/SIM-SELECTION.md`, and everywhere else nothing of this runs.
 
-**One controller, with a U30 backend.** `mu300-sim` retains the shared F50
-selector from merged #72; its public interface is `status [--json]`,
-`active`, `configured`, `select external|internal`, and `default 1|2`.
-The dedicated `mu300-sim-u30` backend handles native cold/live operations only
-on positively identified U30 Air/OpenWrt. F50 keeps its boot-only selector;
-Ubuntu never dispatches the U30 backend. Unknown devices retain slot-0
-routing and cannot opt into slot 1. M3 remains a compatibility candidate,
-not a hardware-validated target.
+What was measured, on which unit, and why it works the way it does: `docs/FINDINGS.md` 74.
 
-Both frontends read OpenWrt preferences from `network.wan.sim_slot` (0/1)
-and `network.wan.sim_hot` (0/1). On the first U30 startup, legacy
-`/etc/mu300-sim-slot` and `/etc/mu300-sim-hot` values are migrated only into
-absent UCI options. Existing choices, including explicitly empty profile
-options, are preserved. When the old selection was SIM2, the old shared
-APN/PDP is copied into absent `apn_internal`/`pdptype_internal` options.
-Legacy preference files are retained under `/etc/mu300/sim-migration/`
-as `.migrated` backups after the commit;
-they are no longer a second active configuration source. Failed commits keep
-the old preference visible and leave migration backups intact.
+## Use the second card
 
-Runtime scripts read the pinned `/run/mu300/sim-slot`, not a newly saved boot
-preference. U30 native brokers keep distinct nr1/nr2/nr4/nr5 roles; F50's
-selected nr1/nr2 or nr4/nr5 still use the established general/data role
-names. F50's context/PCO/QoS/SPSWDATA setup is not reused as a U30 switch
-sequence.
-
-**A failed cold start never costs more than one boot.** The dual-SIM path
-leaves `/etc/mu300-sim-pending` until `mu300-sim2-warmup` confirms the radio
-is up. When the cold start cannot be done (no card, PIN, the modem refusing a
-command, the second group's brokers never coming up) the warm-up puts the
-settings back to SIM1 without live switching and records why in
-`/etc/mu300-sim-fallback` (`cold-start-failed`, `brokers-missing`); if nothing
-was sent to the radio yet, this boot already runs the ordinary SIM1 warm-up.
-A pending marker still there at the next boot (`unconfirmed`: the warm-up
-died) makes that boot a plain SIM1 boot too. The page shows the reason until
-the user chooses again; `mu300-sim status --json` carries it as `fallback`.
-
-## Select and switch
-
-The fresh-image default remains SIM1, with live switching disabled. Enable the
-hot-switch checkbox and reboot once to prepare both groups of persistent AT
-brokers. Then use **Switch to SIM1/SIM2**. On an existing SIM2 cold-start boot
-where all four brokers are already held open, another reboot is unnecessary.
-Disabling the checkbox blocks further live switches; already-open channels stay
-open until shutdown. **Use SIM1/SIM2 at next boot** saves a boot preference
-without moving the current data session.
+Set SIM2's APN first (SIM1 keeps `network.wan.apn` / `pdptype`; SIM2 has its own pair), then choose it and reboot:
 
 ```sh
-mu300-sim status --json
-mu300-sim hot 1       # enable; reboot if status.available is 0
-mu300-sim switch 2    # change now, and save SIM2 for subsequent boots once it has mobile data
-mu300-sim default 1   # change the NEXT boot only (no radio command, no hot switching needed)
-mu300-sim hot 0       # block live switching
+uci set network.wan.apn_internal='cmnet'          # your SIM2 carrier's APN
+uci set network.wan.pdptype_internal='IPV4V6'
+uci commit network
+mu300-sim default 2
+reboot
 ```
 
-The CLI and page use public card numbers 1/2; stored slots and `active` /
-`configured` CLI values remain 0/1 for compatibility with #72. `status` is
-text; rpcd uses `status --json`, with schema `version: 1`. JSON separates
-`active`, `default`, `hot`, capabilities, operation phase/busy/result/error,
-`radio_ready`, `registered`, and `wan_up`; an unknown radio/card or an
-unobserved state is reported as null. Status reads snapshots and WAN status,
-without opening modem channels.
+The same from the panel: Network > Interfaces > WAN (**SIM source**, the card's APN), or **Cellular > Dual SIM**
+(**Use SIM2 at next boot**). `mu300-sim default 1` and a reboot go back.
 
-SIM1 uses `network.wan.apn` / `pdptype`; SIM2 uses `apn_internal` /
-`pdptype_internal`. Netifd tears down the old bearer before the runtime slot
-changes, then dials the selected profile. A normal live switch is saved only
-once WAN is up, has an address, and names the selected `sipa_eth0` or
-`sipa_eth8` (60 seconds by default). A missing bearer, a wrong/stale bearer,
-or a failed target `ifup` triggers one rollback to the previous active SIM;
-the already saved next-boot choice is unchanged. The operation deadline is
-300 seconds, covering RF transition, data confirmation and rollback.
+About 25 s into the boot the radio is on SIM2 and netifd dials it on `sipa_eth8`. `mu300-sim status --json` says
+where things are (`active`, `default`, `fallback`, `boot_check`, `wan_up`); the page shows the same.
 
-**Manual `default 1|2` is independent of all of that.** It needs neither hot
-mode nor target WAN service, never moves RF or restarts the current WAN, and
-can intentionally save SIM1 while SIM2 stays online. Lack of registration or
-data at the next boot is left to netifd; only a failed radio initialization
-triggers cold-start fallback. Selecting the already active card through a
-live-switch command still requires data before replacing a manually saved
-boot choice. An optional offline *live* switch is not implemented.
+**The first boot onto SIM2 is a trial.** A SIM2 that has never had mobile data under Linux gets five minutes from
+its radio coming on. With data it is remembered and never tried again: later outages change nothing. Without, the
+device goes back to SIM1 by itself: the settings are put back, the reason (`no-data`) is kept for the page, and
+the device restarts once. That is deliberate. A card chosen from far away, over the device's own mobile data, that
+registers and never gets a bearer would otherwise leave the device unreachable until somebody walks up to it.
+While it waits the page counts the seconds down.
 
-UCI configuration, diagnostics and legacy migration backups are preserved by
-`mu300-update`; retain them in manual reinstall backups. Live switching
-interrupts cellular sessions, so use USB management for validation. An unknown
-radio after an interrupted operation requires a Linux reboot rather than
-reopening SIPC channels.
+* More time: `uci set network.wan.sim_data_wait='900'; uci commit network` (seconds).
+* No trial at all (stay on SIM2 whatever happens, for a card you know or a test at the desk): `sim_data_wait '0'`.
+* No automatic restart anywhere in this feature: `uci set network.wan.sim_restart='0'`. The page then says
+  "reboot required" where it would have restarted.
 
-| Physical card | URC / command / data channel | CID 1 bearer |
+## When the second card does not start
+
+Nothing here needs a hand on the device: every case ends on SIM1 with the modem under control. The reason stays on
+the page (and in `status --json` as `fallback`) until you choose again.
+
+| reason | what happened | where the device is |
+|---|---|---|
+| `no-sim` | no card answered in that position, with its SIM power on | on SIM1, in the same boot |
+| `sim-pin` | the card is locked by its PIN (nothing here enters a PIN: unlock it in Android or a phone) | on SIM1, in the same boot |
+| `wrong-card` | `/etc/mu300/sim2-iccid` names another card | on SIM1, in the same boot |
+| `brokers-missing` | the second group of modem channels never became ready | on SIM1, in the same boot (about two minutes in) |
+| `no-radio`, `data-route`, `modem-refused` | the modem was told to start SIM2 and did not | restarted into SIM1 |
+| `no-data` | the trial above ran out | restarted into SIM1 |
+| `unconfirmed` | the boot before never finished its start (power lost, a crash) | this boot is SIM1's |
+
+In every case the settings are SIM1 without live switching again. Logs: `/run/mu300/sim2-cold-start.log` (every
+command sent, and why it stopped; no answer of the modem is ever written there), `logread -e mu300-sim`.
+
+## Live switching
+
+```sh
+mu300-sim hot 1       # then reboot once: both groups of channels are opened at boot
+mu300-sim switch 2    # now; saved as the boot default once SIM2 has mobile data
+mu300-sim switch 1
+mu300-sim hot 0       # no more live switches
+```
+
+Or the checkbox and the two **Switch to** buttons on the Dual SIM page. A switch takes about four seconds of radio
+and then waits up to a minute for the target's data.
+
+* Before anything is touched, the target is asked whether a card is there (its SIM power is switched on for the
+  question). No card, or a PIN: refused in a second, the connection never interrupted.
+* The target gets data: it is saved as the boot default.
+* The target gets no data and the card you came from had data: back to that card, default unchanged (about 70 s
+  without data in all).
+* The target gets no data and the card you came from had none either: the device stays on the target, which keeps
+  dialling; the boot default is not changed. `mu300-sim switch <same card>` saves it once it has data, or
+  `mu300-sim default <card>` saves it regardless.
+* Something breaks half way: one way back is tried. If that cannot be verified, or the switch is killed, the radio
+  state is unknown: the device restarts into its saved boot default, which a failed switch never changes.
+
+`mu300-sim default 1|2` only saves the card for the next boot. It needs no live switching, moves no radio and does
+not care whether that card has data now.
+
+While a switch runs, SMS, USSD, the AT terminal and the Locks page answer "busy". In a boot with live switching on
+(or with SIM2 chosen) the Locks page cannot write, the modem reset and the power profile's modem suspend are
+refused, and the panel's collectors share the command channel of the card in use. The locks already in the modem
+stay in force. Voice, USSD and parts of the IPv6 relay still assume SIM1; use IPv4 on SIM2 until they are adapted.
+
+## How it works
+
+| card | URC / command / data channel | bearer |
 | --- | --- | --- |
-| SIM1 (0) | nr0 / nr1 / nr2 | sipa_eth0 |
-| SIM2 (1) | nr3 / nr4 / nr5 | sipa_eth8 |
+| SIM1 (slot 0) | nr0 / nr1 / nr2 | sipa_eth0 |
+| SIM2 (slot 1) | nr3 / nr4 / nr5 | sipa_eth8 |
 
-## Native cold start
+`network.wan.sim_slot` (0/1) is the boot's card and `network.wan.sim_hot` (0/1) live switching; a pre-release's
+`/etc/mu300-sim-slot` and `-hot` are taken over once into options that are not set and kept under
+`/etc/mu300/sim-migration/`. Every reader uses this boot's pin, `/run/mu300/sim-slot`, never the saved choice.
 
-With SIM2 selected, or hot switching enabled for either selected card, S19
-starts nr1/nr2/nr4/nr5 owners and nr0/nr3 URC readers. The nr4/nr5 instances
-wait (inside the procd instance, bounded at 240 s, never in `start_service`)
-for `sbuf_5_006, state: 1,` in `/dev/sipc_sbuf`: a character node exists before
-the CP is up and `spipe_open` returns ENODEV until then. The data brokers use
-their own group's URC log for liveness. Owner respawn and channel reopening
-are disabled: repeated SIPC opens can wedge the channel, and the cold start
-and the switch refuse to run without all four owners rather than talk to a
-reopened one (a dead owner means no switch until the next boot). The
-`sbuf_5_006` seqfile text was checked on Linux 7.2.9 only.
+With SIM2 chosen or live switching on, `init.d/mu300-atd` starts an owner for each of nr1, nr2, nr4 and nr5. They
+wait (inside their procd instances, 240 s at most) for `sbuf_5_006, state: 1,` in `/dev/sipc_sbuf`: the second
+group's nodes exist before the modem is ready and an open before that fails. They are never restarted and never
+reopen a channel: a reopened SIPC channel is a wedged one. `/etc/mu300-sim-pending` is left before any of it and
+removed when the radio is up: a boot that never gets there makes the next one a SIM1 boot.
 
-Under the shared radio lock, the controller waits for actual CP output, sends
-`AT+SMMSWAP=0` through nr1, and requires both groups to report CFUN=0. It checks
-the selected card's CPIN/CCID, then sends through its data broker:
+The cold start (`mu300-sim2-start`, under `mobile-data`'s radio lock, once per boot):
 
 ```text
-AT+SPTESTMODEM=134,134
-AT+SPSWDATA
-AT+SFUN=4
+nr1                 AT+SMMSWAP=0                  the RIL handshake, as every boot
+nr1, nr4            AT+CFUN?                      both must be off
+the card's command  AT+CPIN?                      "+CME ERROR: 10" is also what a position says whose SIM power
+                    AT+SPACTCARD=<n>;+SFUN=2      is off: switched on, then asked again
+                    AT+CCID                       compared with /etc/mu300/sim<n>-iccid if there is one; never logged
+nr1                 AT+SPTESTMODE?                the work modes, read ...
+the card's data     AT+SPTESTMODEM=<m0>,<m1>      ... and written back as they are
+                    AT+SPSWDATA                   the packet-data route to this card
+the card's command  AT+SPSWDATA?                  read back
+the card's data     AT+SFUN=4                     the radio; +CFUN: 1 is "ready"
 ```
 
-The two-argument work-mode command matches the observed modemConfig=7 firmware.
-`SMMSWAP=1` is not a slot selector. Radio readiness is CFUN=1 for either card,
-exactly as the SIM1 path marks it: registration is netifd's to wait for and
-retry (a slow registration used to fail a boot-time gate and leave the whole
-boot without WAN). An optional private
-`/etc/mu300/sim1-iccid` or `sim2-iccid` pins an expected card. Logs omit these
-identifiers. The controller runs at most once per boot. Netifd then owns data
-attachment and retries on `sipa_eth0` or `sipa_eth8`.
+Registration and the bearer are netifd's, as for SIM1.
 
-## Live transaction
-
-The sequence follows the factory `VendorTelephonyManager.setProtocolStack`
-selector logic. After inhibiting new dial/watch rounds and stopping WAN:
+The live switch (`mu300-sim-u30`, one at a time under a kernel lock, 300 s for the whole of it):
 
 ```text
-target command broker: AT+SPACTCARD=<target>;+SFUN=2
-                       AT+SFUN=4
-                       AT+SPACTCARD=0
-target data broker:    AT+SPSWDATA
-old command broker:    AT+SPACTCARD=<old>;+SFUN=5
-                       AT+SFUN=3
-                       AT+SPACTCARD=0
+target's command    AT+SPACTCARD=<t>;+SFUN=2, AT+CPIN?     is a card there? (else SFUN=3 and refused)
+                    ifdown wan
+old card's command  AT+SPACTCARD=<o>;+SFUN=5, ;+SFUN=3     the card in use off
+target's command    AT+SPACTCARD=<t>;+SFUN=2, AT+CPIN?
+target's data       AT+SPSWDATA, AT+SPSWDATA? (command)    the route, read back
+                    AT+SFUN=4
+                    ifup wan, and up to 60 s for an address on the target's bearer
 ```
 
-After enabling the target, verify target CFUN=1, old CFUN=0 and target CPIN
-READY. An inactive stack can report `+CME ERROR: 10` for CPIN despite an
-inserted card, so CPIN is deliberately checked after enable. Only after these
-gates does the controller publish the active slot, clear shared signal caches,
-and ask netifd to dial. The boot default is saved once `wan` is up with an
-address (`ubus call network.interface.wan status`, 60 s at most); without one
-the controller takes WAN down, runs the same sequence back to the previous
-card, dials it again and reports `no_data`, the saved default untouched. The
-watcher reloads its slot without restarting AT owners or the `mu300-post`
-service.
+The card in use goes off before the other one comes on. The factory's order is the reverse, and it worked on the
+unit this was first written on; on the maintainer's unit the second radio would not come on beside the first.
 
-Kernel flock serializes policy edits and switches; the shared mobile-data
-radio mutex protects stack operations. RPC checks strict argument allow-lists
-and launches the switch outside its 30-second request budget. A whole-operation
-300-second deadline (`MU300_SIM_DEADLINE`) covers the switch, the wait for a
-bearer, one rollback and two dials. On a command failure, rollback is tried
-once only if both command brokers still answer. A successful rollback
-preserves the previous boot preference. Silence or failed rollback marks radio
-state unknown, inhibits automated radio resets, and requires a Linux reboot.
-No blind SFUN reset loops or AT owner reopening are attempted.
+## Limits
 
-## Validation and limits
+* Experimental. Measured on two U30 Airs with Linux 7.2 (7.2.9, 7.2.10). On neither did both cards have data.
+* Kernel 5.4 was not run. The readiness line comes from the same vendor driver; if it reads differently there, the
+  boot ends on SIM1 (`brokers-missing`).
+* A modem crash needs a restart; nothing reloads the modem.
+* SMS (the pool, sending, forwarding) still uses SIM1's channels (`/run/mu300-at`): with SIM2 as the card in use,
+  messages for SIM2 are not collected and none can be sent. Not adapted yet.
+* A charging-only boot leaves both radios off.
+* `mu300-update` keeps the settings (they are in `/etc/config/network` and `/etc/mu300`).
 
-Validation uses one U30 Air with OpenWrt 25.12.5 and Linux 7.2.9. Both directions
-have been tested through the native selector sequence and the CLI. The original
-four AT owner PIDs remained unchanged, both RF states matched their selections,
-and switching back to SIM2 restored external IPv4 traffic. SIM1 has no working
-data service, so RF/card readiness and internet availability are reported
-separately. After a CLI switch to SIM1, a full Linux reboot directly enabled SIM1 in about
-32 seconds (SIM2 stayed off). The Chinese LuCI page then switched to SIM2,
-persisted it, and a second full reboot directly registered SIM2 in about
-36 seconds and restored WAN. These are CP cold-initialization tests after
-Linux reboots; a physical power-disconnect cycle has not been separately tested.
+## Records
 
-Tests cover bidirectional switch/default persistence, no-op switches, PIN-lock
-rollback, command rejection, silent CP, missing owners, disabled live switching,
-concurrent requests, injection rejection, charging boots, cold-start order,
-registration failures, and repeated-attempt refusal. A clean image build and
-other device/firmware combinations remain unvalidated.
+**2026-10-13, the maintainer's U30 Air** (OpenWrt 25.12.5, v2026.10.23, Linux 7.2.10; SIM1 with data, a second card
+that registers for emergency service only). The default boot unchanged; the SIM2 cold start (radio ready at
+24.2 s); the trial running out and the restart into SIM1; the readiness line made unreadable and the same-boot way
+back; the live switch in the factory's order failing and in the new order working both ways; a switch to the card
+without data and back; a switch with no data on either side; the controller killed in the middle. Times and the
+modem's answers: `docs/FINDINGS.md` 74. Never seen there: data on `sipa_eth8`.
 
-Charging-only boots leave both radios off. Managed dual-SIM boots refuse the
-legacy SIM-unaware modem reset, suspend/resume and network-lock restart/replay
-paths. Read-only SIM2 dashboard queries share nr4. Voice/USSD and portions of
-the IPv6 relay helpers still assume SIM1; use IPv4 WAN until they are adapted.
-A modem crash needs a Linux reboot; automatic CP reload is outside this patch.
+**2026-10-12, the contributor's U30 Air** (Snrat; OpenWrt 25.12.5, Linux 7.2.9; SIM1 without data service, SIM2
+working), with the revision before the changes above (the factory's switch order, no trial, no automatic restart):
 
-## Current review follow-up (2026-10-12)
+- With SIM2 and its WAN up on `sipa_eth8`, live switching off, `default 1` saved SIM1 without changing the active
+  card or interrupting the WAN.
+- Two boot trials exposed startup defects: an empty optional shell expansion generated
+  `until [ -c /dev/stty_nr1 ]}`, and after that fix the first group's owners opened before the modem's shared
+  buffer was ready and exited, leaving stale fifos. Since then all four owners wait for the readiness line and the
+  warm-up requires a living owner, not just its fifo.
+- A fresh Linux boot initialized SIM2, `CFUN=1` at about 21 s; WAN came up on `sipa_eth8`.
+- `switch 1` reached SIM1's radio but no data service; after the wait one rollback restored SIM2 and its WAN
+  (`no_data`), the saved default still SIM2, all four owner PIDs unchanged.
+- `switch 2` from an offline SIM1 boot restored the WAN on `sipa_eth8` (`switched`), saved SIM2, and the next Linux
+  boot came up on SIM2 again. A certificate-verified HTTPS request from a USB LAN client returned 200.
+- `default 1` and a reboot initialized SIM1 at about 22 s; at 65 s the radio was ready, the WAN down, no fallback:
+  no data did not invalidate the boot.
 
-The branch preserves the maintainer's #166 fixes and merges main `c47e2c9`,
-including merged #72's shared F50 foundation. Shared configuration, boot-only
-selection and the version-1 JSON interface are reconciled with that path;
-the positively gated U30 backend is the only live-switch implementation.
-F50 coverage is simulated here, in addition to the maintainer's independent
-F50 results on #72. M3 is not enabled without its own validation.
-
-The matching integration scripts were installed on the same two-SIM U30 Air
-(OpenWrt 25.12.5, Linux 7.2.9) using USB management and offline script/config
-backups. Android was not entered between these Linux boots. The existing
-Linux-first boot policy with five failed boots before Android was retained.
-
-- With SIM2/WAN up on `sipa_eth8`, hot mode was disabled and `default 1`
-  saved SIM1 without changing active SIM2 or interrupting WAN. Default SIM2
-  and hot mode were restored before the first boot trial.
-- Two initial boot trials exposed real startup defects: an empty optional
-  shell expansion generated `until [ -c /dev/stty_nr1 ]}` (and nr2), and after
-  that fix the first group's owners opened before CP's shared buffer was
-  ready and exited, leaving stale FIFOs. No in-boot reopen was attempted.
-  The failed initialization recorded `cold-start-failed` and selected the
-  SIM1 fallback. All four native owner instances now wait for
-  `sbuf_5_006, state: 1,`; the warm-up requires a living owner as well as its
-  FIFO. Regression tests execute the generated commands, including the
-  empty-condition case, and exercise a dead owner with a stale FIFO.
-- A fresh Linux boot then initialized SIM2 and confirmed `CFUN=1` at about
-  21 seconds. All four owners remained available; WAN came up on `sipa_eth8`
-  and there was no pending/fallback marker.
-- Normal `switch 1` reached SIM1 RF readiness but no data service. After the
-  bounded WAN wait, one rollback restored SIM2/WAN, returned `no_data`, and
-  kept saved default SIM2. All four owner PIDs remained unchanged.
-- Successful `switch 2` from that offline SIM1 boot restored WAN on
-  `sipa_eth8`, returned `switched`, and saved default SIM2 without changing
-  any of the four owner PIDs. A subsequent Linux reboot again initialized
-  SIM2 at about 21 seconds, retained active/default SIM2 and restored WAN
-  without pending/fallback markers. A certificate-verified TLS 1.2 HTTPS request
-  from a USB LAN client returned 200. The PC retained its home Wi-Fi
-  default routes and DNS; only a temporary test-destination route used USB.
-- Manual `default 1` followed by a Linux reboot initialized SIM1 at about
-  22 seconds. At 65 seconds, RF was ready, WAN was down, active/default were
-  both SIM1 and pending/fallback were absent. rpcd `sim_get` returned the
-  same version-1 JSON state. Lack of data did not invalidate the boot.
-
-The earlier validation record describes older revisions; the cases above
-apply to this integration. A physical power-disconnect cycle, a fresh rootfs
-assembly, an empty SIM slot and a PIN-locked card remain untested on this
-hardware. Synthetic tests cover those failure paths. No registration value
-is invented when it was not observed (`registered: null`).
-
-Local targeted checks: selector 16, cold/startup 28, hot switching 17, netifd
-37, rpcd 56, dashboard startup 4, i18n 32, updater 44, static 47. The broader
-device-script run passed 150 tests before the final native-startup edits.
-The updater's two Linux lock-fixture failures also reproduced on untouched
-main: its final `sleep` could replace the test shell and erase the updater
-cmdline. Keeping the shell alive with a child plus `wait` fixes that fixture;
-all 44 updater tests now pass. These are local results, not a GitHub CI pass.
-
-
-## v2026.10.23 integration follow-up (2026-10-13)
-
-The #73 follow-up branch now merges main `da47e3b` (v2026.10.23) while retaining
-#166's reviewed base and the shared selector/startup fixes above. The merge keeps
-the new SMS transaction mutex, direct-delivery spool and asynchronous rpcd SMS
-job/ACL changes. FINDINGS keeps main's numbering and records the U30 facts as §74.
-
-The U30 status now also reports `slot1_supported: 1`, matching #198's existing
-WAN form/home-page contract without replacing version-1 capabilities. The field
-is produced only by the positively gated U30 Air/OpenWrt backend; the F50 boot-only
-and unsupported-device paths remain separate. The dashboard takes its displayed
-active SIM from the public status, not the routing pin: an unknown active card
-leaves the summary null, while the pinned bearer still determines network counters.
-
-Tests run the real shared selector and U30 status backend with a fake root and
-recorded AT command stub, covering current SIM1/SIM2, saved next-boot SIM2, unknown
-active state, preserved choice and both WAN-form options. The JavaScript checks
-ran with Node rather than being skipped. No AT commands were issued by status.
-
-Local regression: 391 tests across selector, cold startup, live switching, netifd,
-rpcd, dashboard startup/snapshot, translations, updater, static checks, and the
-AT/owner/mobile-data/SIPA scripts passed (one optional real-jsonfilter check
-skipped). Locale, shell syntax and diff checks passed. The two native snapshot
-cases were rerun after making their AT stub explicit and passed. These are local
-checks, not a GitHub CI result.
-
-No new device run was performed for this revision. The recorded hardware tests
-above are on 7.2.9; the 5.4-kernel unit offered in Issue #194, two cards both with
-data service, empty/PIN-locked slots, physical power removal and fresh-image
-assembly still need their own evidence. Keep the code and test records in #73/#166
-for the maintainer's public integration and guarded test build.
+Not tested on that unit: a power-disconnect cycle, a fresh image, an empty position, a PIN-locked card.

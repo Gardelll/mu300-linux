@@ -1720,15 +1720,30 @@ msgstr "Geçiş başarısız; önceki SIM geri yüklendi"
 msgid "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
 msgstr "Hedef SIM mobil veri alamadı; önceki SIM geri yüklendi ve kayıtlı açılış tercihi değişmedi."
 
+msgid "The target SIM has no mobile data yet, and the previous SIM had none either: the device stays on the target. The saved boot preference is unchanged."
+msgstr "Hedef SIM henüz mobil veri alamadı, önceki SIM de alamıyordu: cihaz hedef SIM'de kalıyor. Kayıtlı açılış tercihi değişmedi."
+
 # Dual SIM controls.
 msgid "Radio state unknown; reboot required"
 msgstr "Radyo durumu bilinmiyor; yeniden başlatma gerekiyor"
+
+msgid "Radio state unknown; the device is restarting."
+msgstr "Radyo durumu bilinmiyor; cihaz yeniden başlatılıyor."
 
 msgid "Dual SIM control is only for the U30 Air on OpenWrt."
 msgstr "Çift SIM denetimi yalnızca OpenWrt çalıştıran U30 Air içindir."
 
 msgid "The chosen SIM could not be started at the last boot (no card, PIN, or the modem refused it)."
 msgstr "Seçilen SIM son açılışta başlatılamadı (kart yok, PIN gerekli ya da modem reddetti)."
+
+msgid "No card answered in the chosen SIM position at the last boot."
+msgstr "Son açılışta seçilen SIM konumunda hiçbir kart yanıt vermedi."
+
+msgid "The chosen SIM is locked by its PIN."
+msgstr "Seçilen SIM, PIN koduyla kilitli."
+
+msgid "The chosen SIM got no mobile data within the time at its first boot."
+msgstr "Seçilen SIM ilk açılışında süre içinde mobil veri alamadı."
 
 msgid "The second SIM's modem channels did not come up at the last boot."
 msgstr "İkinci SIM'in modem kanalları son açılışta gelmedi."
@@ -1753,6 +1768,9 @@ msgstr "SIM denetimi kullanılamıyor"
 
 msgid "The device is back on SIM1 without live switching; choose again below to try once more."
 msgstr "Cihaz canlı geçiş kapalı olarak SIM1'e döndü; yeniden denemek için aşağıdan tekrar seçin."
+
+msgid "Waiting for the first mobile data on SIM2: %d s left. Without data the device goes back to SIM1 and restarts."
+msgstr "SIM2'de ilk mobil veri bekleniyor: %d sn kaldı. Veri gelmezse cihaz SIM1'e döner ve yeniden başlar."
 
 # Dual SIM controls.
 msgid "Enable hot switching"
@@ -2645,6 +2663,9 @@ msgstr "\";\" ile komut zincirleme yapılamaz"
 
 msgid "Denied: this command wedges the AT port until a reboot"
 msgstr "Reddedildi: bu komut AT bağlantı noktasını yeniden başlatmaya kadar kilitler"
+
+msgid "Denied: this command moves the SIM selection or the data route; the SIM settings do that"
+msgstr "Reddedildi: bu komut SIM seçimini veya veri yolunu değiştirir; bunu SIM ayarları yapar"
 
 msgid "The modem is restarting (network locks or a SIM switch, about half a minute), try again shortly"
 msgstr "Modem yeniden başlıyor (ağ kilitleri ya da SIM geçişi, yaklaşık yarım dakika), biraz sonra tekrar deneyin"

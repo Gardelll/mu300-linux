@@ -72,7 +72,8 @@ The U30 Air/OpenWrt backend has its own channel layout and broker-only cold star
 Its version-1 status retains `slot1_supported: 1` for these existing pages, alongside the separate
 `capabilities.boot_selection` and `capabilities.live_switch` fields. A failed/unknown current-card observation stays
 `active: null`; the dashboard does not turn the runtime routing pin into a confirmed active card. F50 retains its
-boot-only path. See `docs/U30AIR-SIM2.md` for the recorded 7.2.9 tests and the remaining device/kernel coverage.
+boot-only path. `docs/U30AIR-SIM2.md` is that backend's page (how to choose the second card, what happens when it
+does not start, the live switch); `docs/FINDINGS.md` 74 has what two units showed.
 
 ## Why the data-route command is needed
 
