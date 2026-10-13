@@ -127,6 +127,7 @@ what replaced it. The table below gives each section's state.
 | 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
 | 63 | A reused SMS reference number mixed long messages, or kept them from ever being joined; a part delivered again | current (fixed; unit tests only, not measured on a device) |
 | 64 | An update dropped the panel's saved locks (`/etc/unisoc-modem`) | current (fixed; unit tests only, not reproduced on a device) |
+| 65 | An APN with a user name and a password (`AT+CGPCO`), and what else kanoqwq's APN page does | current (unit tests only; never sent to a modem) |
 | 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
 
 ## Hardware and firmware facts
@@ -4939,3 +4940,115 @@ any of it on a device with a real long message. To check on a device with openwr
     # 2. the same long message twice within a minute, then again after 15 minutes: three messages, each whole
     # 3. with the panel's forwarding on: each of them forwarded once, whole
     # 4. Ubuntu, or any system: sms list  with those still on the SIM (AT+CNMI=2,1 path): each shown whole
+
+### 65. An APN with a user name and a password (`AT+CGPCO`), and what else kanoqwq's APN page does
+
+Until now the dial knew an APN and a PDP type and nothing else: `network.wan.apn` / `pdptype` on OpenWrt (LuCI,
+Network -> Interfaces -> wan), `MU300_APN` / `MU300_PDP_TYPE` in `/etc/mu300/mobile-data.conf` on Ubuntu, both kept
+across updates. An APN that asks for credentials (a private APN, some MVNOs) could not be used at all.
+
+kanoqwq's fork added an APN page to its dashboard (clean-tf-7.2 `3826be8b`, "add persistent APN management and safe
+mount discovery"): up to 32 saved profiles, a profile bound to a SIM by its ICCID, an automatic choice for a few
+Chinese carriers by IMSI, credentials, an optional initial-attach setting (`AT+SPCGAPNCFG`). With it comes a note on
+what ZTE's B09 RIL does (`docs/F50-ANDROID-APN-RIL-RESEARCH.zh-CN.md` there, from reading `librilcore.so`): the
+ordinary data call sends the credentials **after `AT+CGDCONT` and before `AT+CGDATA`** as
+
+    AT+CGPCO=0,"<user>","<password>",<cid>,<auth>          auth: 0 none, 1 PAP, 2 CHAP, 3 PAP or CHAP
+
+and not with the `AT+CGAUTH` other modems use. That agrees with what this tree already sent for the F50's internal
+SIM, taken from the stock RIL's trace: `AT+CGPCO=0,"","",1,0` between its `AT+CGDCONT` and `AT+CGEQREQ`.
+
+Taken: that command and its place in the dial. Not his code: his dialer part is bash regular expressions in
+`mobile-data` and a ucode profile store behind his dashboard's RPC. Ours:
+
+- `mobile-data`'s context definition is a function of its own, `define_context`. With `MU300_APN_USER`,
+  `MU300_APN_PASSWORD` and `MU300_APN_AUTH` (`none`, `pap`, `chap`, `both`; left out with a user name or a
+  password: `both`, as Android does) it sends the command above after `AT+CGDCONT` and requires `OK`.
+- OpenWrt: `username`, `password`, `auth` on the wan interface, on the interface's page next to the APN, for the
+  external SIM (the internal one dials its own APN, and is never offered another carrier's credentials). Ubuntu:
+  three lines in `mobile-data.conf`.
+- Without credentials the dial sends exactly what it sent before (the external SIM: `AT+CGDCONT` alone; the internal
+  one: its four commands, byte for byte, an `ERROR` to its empty form ignored as it always was).
+
+**Where the password is, and where it is not.** Checked by the tests for every path (both systems, both cards):
+
+| | |
+|---|---|
+| command lines | never. `mu300-at -` (new) takes the command on its stdin, and `mobile-data` uses that for this one command; `mu300cell.sh` hands the settings to `mobile-data` in its environment. As an argument it would be in `ps` for every user of the system. |
+| environment of other processes | `mobile-data` takes the credentials out of its environment before it starts anything, so `mu300-at`, `mu300-sim`, the LED, the VPN guard inherit none. `/proc/<pid>/environ` of the services is root's. |
+| logs, stderr, traces | never printed. Every refusal says what, not with what. `set -x` is off while the credentials are read and while `define_context` runs. `/tmp/mu300cell.err` and the system log get `mobile-data`'s stderr, which never holds them. |
+| the AT daemon | `mu300-atd` writes its answer files mode 600 now (a modem that echoes commands would put the command there, and the file of a client that gave up stays behind), and throws a late echo (a line that starts with `AT`) away instead of appending it to the URC log. Whether this modem echoes at all is not measured. |
+| settings files | `/etc/config/network` (OpenWrt) and `/etc/mu300/mobile-data.conf` (Ubuntu), written by the user, uci or LuCI, never by these scripts. One function for both, `settings_private`: before credentials are used the file is made mode 600, and unless it then is the owner's alone there is **no dial**. A link is not followed to change anything; what it leads to must be private already. OpenWrt's first boot makes `/etc/config/network` 600 (uci keeps the mode), so it is private before anybody types a password; the example file says `install -m 600`. A release tarball that holds `mobile-data.conf` is refused by `make-release.sh`. |
+| who can read it on OpenWrt | root; and a LuCI login that was granted the network settings (rpcd's `uci` ACL on `network`), the same as a PPPoE password or a WireGuard key. The panel's own ACL (`luci-app-mu300`) grants `uci` on `unisoc_modem` only. `ubus call network.interface.wan status` and `ifstatus wan` show no protocol options, by reading netifd and the handler, which adds no data to them (the commands below check it on a device). A password typed into the panel's AT terminal by hand is in that terminal's history, like anything typed there. |
+| the modem | holds them once given (`AT+CGPCO?` would show them to root). `/etc/mu300/apn-auth-set.sim0` (`.sim1` for the internal card), an empty file, says so: one per card, since each has its own context. |
+
+**Nothing falls back to a dial without them, and nothing stays behind.** Credentials that cannot be used (a quote,
+a control character, 65 characters, an unknown authentication), credentials without an APN, a settings file others
+can read, a modem that does not answer `OK`: each ends the bring-up with a line saying which, and netifd or the
+watchdog tries again. The mark is written (a new file renamed into place, so a link there is replaced and never
+written through) *before* the credentials go out, and if it cannot be written they do not go out. It is removed
+only when the modem has answered `OK` to the empty form. So credentials taken out of the settings, or an APN changed
+to one without any, are taken back from the modem before the next dial; and a modem that does not let go of them
+gets no dial, rather than one that presents the old user name and password to the new APN's network.
+
+One fault of the old code came out on the way: `mu300-power`'s `mobile-data resume` and a `mobile-data up` run by
+hand have no environment from systemd, so on Ubuntu they dialled without `MU300_APN` (the modem usually still had
+the context, which hid it). With credentials that would have been a dial without them. `mobile-data` now reads what
+its environment does not say from `mobile-data.conf` itself, on every run (parsed as `KEY=VALUE`, never executed).
+
+Not taken, and why:
+
+- Profiles, the binding to an ICCID and the carrier list: our APN is one setting per interface (and per card:
+  `apn_internal`), kept across updates; nobody has asked for more. A per-SIM APN becomes worth it with dual SIM,
+  which is being reworked (#166). It follows that the credentials belong to the settings, not to a card: a
+  different card put into the device is offered them too, as it is offered the APN.
+- `AT+SPCGAPNCFG` (the initial attach APN): off by default in his tree too; nothing here needs it.
+- "An empty APN clears the modem's": his dial sends `AT+CGDCONT=1,"IP",""` whenever netifd passes no APN, so that
+  removing an APN in the settings also removes it from the modem. Ours sends nothing for an empty APN, on purpose
+  ("the modem keeps the context the SIM already defines"); whether a context once defined by `AT+CGDCONT` outlives
+  the setting (it is in the modem's NV on other Unisoc firmware) has not been measured here. If it does, an APN
+  taken out of the settings stays in force until something else defines the context. To measure before changing
+  anything: `mu300-at 'AT+CGDCONT?'` before setting an APN, with it, after removing it and redialling, and after a
+  reboot.
+- The patched `block-mount` of the same commit (and `0886ee00`, which fixes its build): fstools' `block info`
+  opens everything that matches `/dev/sd*`, which on this SoC includes the SIPC channel nodes (`sdiag_*` and the
+  like), and an open and close of one of those desynchronises the channel (13b). His patch skips character devices
+  that are not UBI before the probe. Our images do not ship `block-mount`, so nothing here runs `block`; a user who
+  installs it (LuCI's Mount Points) would. Not taken now: it needs a package built with the OpenWrt SDK in the
+  image build and a device to see both the fault and the fix, neither of which this work had. Worth doing before
+  anybody documents mount points on a card. His guard header is LGPL-2.1-or-later (fstools' own licence).
+
+Unit tests only: `tests/test_mu300cell.py` (`MobileDataContext`: the commands and their order for both cards; in
+every run the password on `mu300-at`'s stdin and in no argument, no child's environment, no output and no trace;
+the refusals; the settings file gate for both systems; the mark; the file read by a run without an environment;
+and the protocol handler), `tests/test_device_scripts.py` (`mu300-at -`; `mu300-atd` on a pty with a modem that
+echoes), `tests/test_sim_selection.py`. **No part of this has been sent to a modem**: neither that the F50/U30 Air
+firmware answers `OK` to the command with credentials on the external SIM's context, nor that it answers `OK` to
+the empty form there (if it does not, removing credentials ends in "did not take back the earlier APN credentials"
+and no dial, until `rm /etc/mu300/apn-auth-set.sim0`), nor that a network then accepts them. To check, with a SIM whose
+APN checks credentials (or any SIM: most public APNs accept any user name and password, which shows the command is
+taken, not that it is used):
+
+    # OpenWrt
+    uci set network.wan.apn='<apn>'; uci set network.wan.username='<user>'; uci set network.wan.password='<password>'
+    uci set network.wan.auth='chap'; uci commit network; ifup wan
+    logread -e mu300cell; cat /tmp/mu300cell.err      # no "refused the APN credentials", and never the password
+    ifstatus wan | grep -m1 '"address"'; ping -c 3 1.1.1.1
+    ifstatus wan | grep -c '<password>'; ubus call network.interface dump | grep -c '<password>'    # 0 and 0
+    grep -rl '<password>' /run /tmp /var/log 2>/dev/null     # nothing (logread | grep -c '<password>': 0)
+    mu300-at 'AT+CGDCONT?'; mu300-at 'AT+CGPCO?'      # what the modem holds (CGPCO? may not be answered)
+    mu300-at 'ATE?'; cat /run/mu300-at*/urc/*.log     # does the modem echo; nothing of the command in the log
+    ls -l /etc/mu300/apn-auth-set.sim0 /etc/config/network # the mark; network is -rw-------
+    # while it dials, from a second shell: no AT+CGPCO in any command line or environment
+    while :; do grep -a -l CGPCO /proc/[0-9]*/cmdline 2>/dev/null; done
+    # take them out again: the next dial sends AT+CGPCO=0,"","",1,0 once, the mark is gone, data still comes up
+    uci delete network.wan.username; uci delete network.wan.password; uci delete network.wan.auth
+    uci commit network; ifup wan; ls /etc/mu300/apn-auth-set.sim0; logread -e mu300cell | tail -3
+    # refusals: chmod 644 /etc/config/network is put right by the dial (600 again); a user name without an APN
+    #   gives "set without an APN" in the log and no address
+    # a wrong password on an APN that checks it: the dial fails at the network (no address), nothing in the log
+    # Ubuntu: the same three as MU300_APN_USER, MU300_APN_PASSWORD, MU300_APN_AUTH in /etc/mu300/mobile-data.conf,
+    #   systemctl restart mu300-mobile-data; journalctl -u mu300-mobile-data -n 30; stat -c %a /etc/mu300/mobile-data.conf
+    #   then: mu300-power's suspend and resume (or  mobile-data down; mobile-data up  by hand): the APN and the
+    #   credentials are used again (AT+CGDCONT? shows the APN)
+    # the F50's internal SIM (sim_slot 1) once without credentials: it dials as before
