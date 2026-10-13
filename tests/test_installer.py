@@ -741,7 +741,10 @@ class InstallSlot(ShellTest):
         self.assertIn('--out "$WORK/boot-linux-slot$LINUX_SLOT.img"', build)
         self.assertIn('dev_pull /dev/block/by-name/boot_$ANDROID_SLOT "$WORK/dumps/boot_$ANDROID_SLOT.img"', src)
         self.assertIn('write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"', src)
-        self.assertLess(src.index('\nslot_setup\n'), src.index('dev_pull /dev/block/by-name/boot_'))
+        # (the pull is a function now, shared with --backup: both of its calls come after the slot is known)
+        self.assertLess(src.index('\nslot_setup\n'), src.index('\npull_boot_and_misc\n'))
+        self.assertLess(src.index('\nslot_setup\n'), src.index('[ $BACKUP_ONLY = 0 ] || backup_only'))
+        self.assertEqual(src.count('pull_boot_and_misc\n'), 2)
         self.assertLess(src.index('slot_release_ok "$RELEASE"'), src.index("say \"$(t 'Downloading release {1}'"))
         # no slot is named by hand outside the slot block any more
         rest = src.replace(re.search(r'# --- slot begin\n.*?# --- slot end', src, re.S).group(0), '')

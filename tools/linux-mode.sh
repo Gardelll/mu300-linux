@@ -20,7 +20,7 @@ linux_mode_running() {
 linux_mode_to_android() {
     say "$(t 'The device is running MU300 Linux, not Android')"
     echo "  $(t 'Installing and uninstalling happen from Android, so the device has to reboot first.')"
-    ask go "$(t 'Reboot the device into Android now? (yes/no)')" yes
+    ask go "$(t 'Reboot the device into Android now? (yes/no)')" yes MU300_ANS_REBOOT_ANDROID
     [ "$go" = yes ] || die "$(t 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)')"
     # -t: sudo needs a terminal to ask for the device password, and everything runs in one sudo call so it is
     # asked only once. reboot cuts the connection, so ssh's exit status says nothing: watch the port instead.
@@ -73,7 +73,7 @@ select_device() {  # select_device [quiet]: quiet never asks, it only picks what
     printf '%s\n' "$_sd_all" | awk '{ m = ""; for (i = 3; i <= NF; i++) if ($i ~ /^model:/) m = substr($i, 7); printf "    %d) %s %s\n", NR, $1, m }'
     _sd_def=1
     [ -n "$_sd_one" ] && _sd_def=$(printf '%s\n' "$_sd_all" | awk -v s="$_sd_one" '$1 == s {print NR}')
-    ask _sd_n "$(t 'Device')" "$_sd_def"
+    ask _sd_n "$(t 'Device')" "$_sd_def" MU300_ANS_DEVICE
     _sd_s=$(printf '%s\n' "$_sd_all" | awk -v n="$_sd_n" 'NR == n {print $1}')
     [ -n "$_sd_s" ] || die "$(t 'invalid choice')"
     export ANDROID_SERIAL=$_sd_s

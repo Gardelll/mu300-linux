@@ -6,6 +6,8 @@ $ErrorActionPreference = 'Stop'
 $Top = Split-Path -Parent $PSScriptRoot
 $script:failed = 0
 $script:passed = 0
+# the answers mode and the progress stream, which the installers' functions call (silent unless a test turns it on)
+. (Join-Path (Join-Path $Top 'tools') 'answers.ps1')
 function Check($name, $got, $want) {
     if ([string]$got -ceq [string]$want) { $script:passed++ }
     else { $script:failed++; Write-Host "FAIL $name`n  got:  [$got]`n  want: [$want]" -ForegroundColor Red }
@@ -109,7 +111,7 @@ Check 'internal, foreign card'     (InternalOverCard 'internal' 'foreign') $fals
 Check 'sd over card'               (InternalOverCard 'sd' 'yes') $false
 $src = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
 $iO = $src.IndexOf('if (InternalOverCard $where $sdEx) {')
-$iA = $src.IndexOf("if ((Ask (T 'Type internal to install to internal storage anyway') 'no') -ne 'internal') { Die (T 'cancelled') }")
+$iA = $src.IndexOf("if ((Ask (T 'Type internal to install to internal storage anyway') 'no' 'MU300_ANS_INTERNAL_OVER_CARD') -ne 'internal') { Die (T 'cancelled') }")
 Check 'internal over card asks'    ($iO -ge 0 -and $iA -gt $iO -and $iA - $iO -lt 600) $true
 
 # ---- SdState: what is on the card already (ext4 magic at 1080, label at 1144) -------------------------------------
@@ -329,7 +331,7 @@ $iGate = $site.IndexOf('if ($SD_MODE -eq 0 -and $SIZE -lt 700MB) {')
 $iOffer = $site.IndexOf("    OfferRepartition `$disk `$lastEnd `$SIZE")
 Check 'no room: room is offered' ($iGate -ge 0 -and $iOffer -gt $iGate -and $iOffer - $iGate -lt 900) $true
 Check 'no room: then it ends'   ($site.Substring($iOffer, 200) -match '^[^\n]*\n    exit 0\r?\n\}') $true
-Check 'ERASE is the word itself' ($site -match "wipe Android''s data'\) ''\) -cne 'ERASE'\) \{ Die ") $true
+Check 'ERASE is the word itself' ($site -match "wipe Android''s data'\) '' 'MU300_ANS_ERASE_ANDROID'\) -cne 'ERASE'\) \{ Die ") $true
 
 # The whole path against a device that is three stubs: SuDoToFile reads the two pieces of the partition table, adb
 # pushes files and reboots, SuDo runs what the installer sends as root - and counts everything else as a mistake.
@@ -549,7 +551,7 @@ Check 'the same tag: not asked'  (BetaAsked 'v2026.10.23' 'v2026.10.23' $false) 
 Check '-Answers: not asked'      (BetaAsked 'v2026.10.23' 'v2026.10.25' $true) $false
 $site = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
 Check 'release before the questions'  ($site.IndexOf('$rl = ReleaseList') -gt 0 -and $site.IndexOf('$rl = ReleaseList') -lt $site.IndexOf("Say (T 'What should be installed?')")) $true
-Check 'the beta defaults to no'  ($site -match "\(Ask \(T 'Install the beta \{1\} instead of \{2\}\? \(yes/no\)' \`$rl\.Beta \`$Release\) 'no'\) -eq 'yes'") $true
+Check 'the beta defaults to no'  ($site -match "\(Ask \(T 'Install the beta \{1\} instead of \{2\}\? \(yes/no\)' \`$rl\.Beta \`$Release\) 'no' 'MU300_ANS_BETA'\) -eq 'yes'") $true
 Check 'a given release is not looked up'  ($site -match '(?s)if \(-not \$Release\) \{\s+if \(\$ReleaseUrl\) \{ \$Release = ''custom'' \}\s+else \{\s+\$rl = ReleaseList') $true
 if (-not $py) {
     if ($env:GITHUB_ACTIONS) { Check 'python for the release tests' 'none' 'found' }
@@ -586,6 +588,95 @@ if (-not $py) {
     Check 'release: no file: latest'  $r.Latest ''
     Check 'release: no file: beta'    $r.Beta ''
     Remove-Item -Recurse -Force $rx
+}
+
+# ---- answers mode and the progress stream (tools\answers.ps1, dot-sourced near the top) -----------------------------
+# the functions of the installer that go with it, and stubs for what they call
+$anames = 'Ask', 'NextAnswer'
+$adefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $anames -contains $n.Name }, $true)
+foreach ($d in $adefs) { . ([scriptblock]::Create($d.Extent.Text)) }
+LoadLanguage 'en'
+$script:lines = New-Object System.Collections.ArrayList
+function Write-Host { [void]$script:lines.Add([string]$args[0]) }
+function Die($m) { Progress 'error' 'message' $m; throw "DIE: $m" }
+function AnswersFail([string]$Message) { throw "FAIL: $Message" }
+function ResetAnswers {
+    $script:Ans.Clear(); $script:AnsAsked.Clear(); $script:lines.Clear()
+    $script:NonInteractive = $true; $script:ProgressOn = $true; $script:AnswerQueue = $null
+}
+function Events([string]$Name) { @($script:lines | Where-Object { "$_".StartsWith('@@mu300 {"event":"' + $Name + '"') }) }
+function Dies([scriptblock]$Block) { try { & $Block | Out-Null; return '' } catch { return [string]$_.Exception.Message } }
+
+Check 'json: plain'            (JsonEsc 'Kernel 6.18') 'Kernel 6.18'
+Check 'json: quote, backslash' (JsonEsc 'a"b\c') 'a\"b\\c'
+Check 'json: line end, tab'    (JsonEsc "a`r`nb`tc") 'a  b c'
+Check 'json: control'          (JsonEsc ("a" + [char]1 + [char]27 + "b")) 'ab'
+Check 'json: not ASCII'        (JsonEsc ('T' + [char]0xFC + 'rk' + [char]0x4E2D)) 'T\u00fcrk\u4e2d'
+Check 'event line'             (ProgressLine 'info' 'key' 'region.size' 'value' 34828075008) '@@mu300 {"event":"info","key":"region.size","value":"34828075008"}'
+Check 'event line: no values'  (ProgressLine 'hello') '@@mu300 {"event":"hello"}'
+
+# the file: NAME=value lines, the value as it is
+$pr = AnswersParse @('# a comment', '', 'MU300_ANS_KERNEL=6.18', "MU300_ANS_PASSWORD=p=ss w'rd `$x`r", 'ANDROID_SERIAL=324950664950', 'MU300_ANS_GPU=')
+Check 'file: ok'               $pr.Ok $true
+Check 'file: value'            $pr.Values['MU300_ANS_KERNEL'] '6.18'
+Check 'file: value as it is'   $pr.Values['MU300_ANS_PASSWORD'] "p=ss w'rd `$x"
+Check 'file: serial'           $pr.Values['ANDROID_SERIAL'] '324950664950'
+Check 'file: empty value'      $pr.Values['MU300_ANS_GPU'] ''
+Check 'file: not ours'         (AnswersParse @('PATH=C:\evil')).Error 'answers file: not a variable of the installer: PATH'
+Check 'file: lower case'       (AnswersParse @('mu300_ans_kernel=1')).Ok $false
+Check 'file: no ='             (AnswersParse @('MU300_ANS_KERNEL')).Error 'answers file: not NAME=value: MU300_ANS_KERNEL'
+
+# a question answered by its variable, announced on the stream
+ResetAnswers; $script:Ans['MU300_ANS_KERNEL'] = '2'
+Check 'answer: taken'          (Ask 'Kernel' '1' 'MU300_ANS_KERNEL') '2'
+Check 'answer: shown'          ($script:lines -contains 'Kernel [1]: 2') $true
+Check 'answer: event'          (Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_KERNEL","text":"Kernel","default":"1","answer":"2"}'
+# the words of the other languages count, as they do when typed
+ResetAnswers; $script:Ans['MU300_ANS_VPN'] = 'evet'
+Check 'answer: normalised'     (Ask 'VPN? (yes/no)' 'no' 'MU300_ANS_VPN') 'yes'
+# set to nothing: the default, which is never the destructive answer
+ResetAnswers; $script:Ans['MU300_ANS_CONFIRM'] = ''
+Check 'answer: empty is the default'  (Ask 'Type INSTALL to continue' 'no' 'MU300_ANS_CONFIRM') 'no'
+# from the environment when the file has none
+ResetAnswers; $env:MU300_ANS_TESTONLY = '6.18'
+Check 'answer: environment'    (Ask 'Kernel' '1' 'MU300_ANS_TESTONLY') '6.18'
+Remove-Item env:MU300_ANS_TESTONLY
+# no answer: an error that names the variable, never the default
+ResetAnswers
+$e = Dies { Ask 'Type INSTALL to continue' 'no' 'MU300_ANS_CONFIRM' }
+Check 'unanswered: stops'      $e 'DIE: no answer to the question "Type INSTALL to continue": set MU300_ANS_CONFIRM (nothing is asked and nothing is assumed in answers mode)'
+Check 'unanswered: error event' (Events 'error').Count 1
+Check 'unanswered: no question event' (Events 'question').Count 0
+# a question without a variable cannot be answered at all
+ResetAnswers
+Check 'no variable: stops'     ((Dies { Ask 'Something new' 'yes' }) -match '^DIE: this question has no variable') $true
+# a question that comes back was not happy with its answer: stop instead of asking for ever
+ResetAnswers; $script:Ans['MU300_ANS_KERNEL'] = '9'
+Ask 'Kernel' '1' 'MU300_ANS_KERNEL' | Out-Null
+Check 'asked again: stops'     (Dies { Ask 'Kernel' '1' 'MU300_ANS_KERNEL' }) 'DIE: the answer in MU300_ANS_KERNEL was not accepted: 9'
+# the password: never in an event, never on a line
+ResetAnswers; $script:Ans['MU300_ANS_PASSWORD'] = 'hunter2secret'
+Check 'password: taken'        (AnswerNamed 'Password' '' 'MU300_ANS_PASSWORD' -Secret) 'hunter2secret'
+Check 'password: not shown'    (@($script:lines | Where-Object { "$_" -match 'hunter2' }).Count) 0
+Check 'password: stars'        ($script:lines -contains 'Password []: ******') $true
+# without answers mode nothing here speaks
+$script:NonInteractive = $false; $script:ProgressOn = $false; $script:lines.Clear()
+Progress 'step' 'id' 'x'; Info 'a' 'b'; Step 'x' 3
+Check 'no stream: silent'      $script:lines.Count 0
+$script:ProgressOn = $true
+Step 'download' 20; ProgressSay 'Downloading release v1'
+Check 'step event'             $script:lines[0] '@@mu300 {"event":"step","id":"download","percent":"20","title":"Downloading release v1"}'
+ProgressSay 'A heading without a step'
+Check 'step: id used once'     $script:lines[1] '@@mu300 {"event":"step","id":"","percent":"","title":"A heading without a step"}'
+$script:ProgressOn = $false
+Remove-Item function:Write-Host
+Remove-Item function:Die
+Remove-Item function:AnswersFail
+# every question of both installers has its variable
+foreach ($f in 'install.ps1', 'uninstall.ps1') {
+    $code = [IO.File]::ReadAllText((Join-Path $Top $f))
+    $bare = @([regex]::Matches($code, '(?m)^.*\bAsk \(?[T''"].*$') | ForEach-Object { $_.Value } | Where-Object { $_ -notmatch "'(MU300_[A-Z_]+)'\)?" })
+    Check "$f - a question without a variable: $($bare -join ' | ')" $bare.Count 0
 }
 
 Write-Host "$script:passed passed, $script:failed failed"
