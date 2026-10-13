@@ -38,7 +38,7 @@ that works on our boards may not work on yours.
 
 What you do with your device is your decision and your responsibility. In particular:
 
-* **Rooting, unlocking and recovery are not part of this project.** Getting a device rooted, flashing with Magisk,
+* **Rooting, unlocking, patching and recovery are not part of this project.** Getting a device rooted, flashing with Magisk,
   SPD/BROM or any other third-party tool, and anything you download from anywhere else to do so, is done at your own
   risk, following those tools' own instructions. We did not write them, we do not check them, and we cannot say
   what they do to your device, your data or your warranty.
@@ -115,8 +115,13 @@ trying it costs you the server.
 
 ## Before you start
 
-Your device must already be **rooted and unlocked** (it must already boot a modified Android boot image), and you
-need `adb` on your computer. Getting to that point is not part of this project.
+Your device must already be **rooted, and able to boot a modified boot image**: an unlocked bootloader, or a locked
+one with a patched TrustOS. You also need `adb` on your computer. Getting to that point is not part of this project:
+it does not root, unlock or patch devices and gives no guide for it.
+
+The bootloader does not have to be unlocked. The installers do not refuse a locked one; they say so and ask "Did
+you patch TrustOS?". With a patched TrustOS Linux boots on a locked bootloader; without it the bootloader rejects
+the Linux boot image and the device goes back to Android by itself after the install.
 
 > **Warning.** Installing writes to the `boot_b` and `misc` partitions (`boot_a` instead of `boot_b` when Android
 > runs from slot b, as it often does after an OTA update). If something goes badly wrong you may need a

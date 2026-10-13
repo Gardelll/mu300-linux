@@ -5633,11 +5633,19 @@ from a real machine:
 **The window** (`gui/`, tkinter and the standard library only). Model, runner and controller have no window in
 them and are tested without a display; the widgets are built once per page from the controller's state.
 
-* The device, root and the bootloader are shown separately. Only a missing root blocks an installation. A
-  bootloader that reports "locked" while root works is shown with a warning and does not block: root is what the
-  installer needs, and **what an F50 or U30 Air reports in `ro.boot.flash.locked` and
-  `ro.boot.verifiedbootstate` has not been read from a device for this section**. The window does not root or
-  unlock anything and links to no guide for it.
+* The device, root and the bootloader are shown separately. Only a missing root blocks an installation.
+* **A locked bootloader is a warning, never a refusal - the owner's decision of 2026-10-13.** The bootloader does
+  not have to be unlocked: a device with a patched TrustOS boots a modified boot image with the bootloader locked,
+  and that is enough. No property says whether TrustOS is patched, so nothing can be decided from the lock. Both
+  text installers (in the checks and again in the plan before `INSTALL`) and the window (in the warning colour on
+  the device page and above the summary, never red) say: "The bootloader is locked. Did you patch TrustOS? With a
+  patched TrustOS Linux boots on a locked bootloader; without it the device goes back to Android by itself after
+  the install." There is no extra confirmation. Issue #156 asked for an early refusal on a locked bootloader; this
+  supersedes it. Locked is `ro.boot.flash.locked=1` or `ro.boot.vbmeta.device_state=locked`, unlocked is `0` or
+  `unlocked`, anything else is "not reported"; the verified-boot colour is shown and not interpreted. **What an F50
+  or a U30 Air really reports in these properties - unlocked, locked, locked with a patched TrustOS - is still not
+  measured**: the rule is written from the properties' meaning in Android, not from a device. The window does not
+  root, unlock or patch anything and links to no guide for it.
 * Stop is offered while nothing has been written to the device (up to and including the copy to
   `/data/local/tmp`) and not from `android-install.sh` on; closing the window is refused there too. Closing the
   summary dialog answers no.

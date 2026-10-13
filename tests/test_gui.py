@@ -263,9 +263,23 @@ class Model(unittest.TestCase):
         self.assertEqual(model.Facts().root, None)
         self.assertEqual(facts(root='no').root, False)
         self.assertEqual(facts(bootloader__locked='1').bootloader, 'locked')
-        self.assertEqual(facts(bootloader__locked='', bootloader__verified='green').bootloader, 'locked')
-        self.assertEqual(facts(bootloader__locked='', bootloader__verified='orange').bootloader, 'unlocked')
+        # the two properties that say it; the verified-boot colour is shown, not interpreted
+        self.assertEqual(facts(bootloader__locked='', bootloader__device_state='locked').bootloader, 'locked')
+        self.assertEqual(facts(bootloader__locked='', bootloader__device_state='unlocked').bootloader, 'unlocked')
+        self.assertEqual(facts(bootloader__locked='0', bootloader__device_state='locked').bootloader, 'locked')
+        self.assertEqual(facts(bootloader__locked='', bootloader__verified='green').bootloader, 'unknown')
         self.assertEqual(facts(bootloader__locked='', bootloader__verified='').bootloader, 'unknown')
+        # what the installer's check concluded counts first
+        self.assertEqual(facts(bootloader__locked='0', bootloader__state='locked').bootloader, 'locked')
+
+    def test_a_locked_bootloader_blocks_nothing(self):
+        # a locked bootloader with a patched TrustOS boots Linux, and no property tells: only missing root blocks
+        c = good_choices()
+        for f in (facts(bootloader__locked='1'), facts(bootloader__state='locked', bootloader__verified='green'),
+                  facts(bootloader__locked='', bootloader__device_state='locked')):
+            self.assertEqual(f.bootloader, 'locked')
+            self.assertEqual(model.problems(c, f), [])
+        self.assertEqual([p[0] for p in model.problems(c, facts(bootloader__locked='1', root='no'))], ['device'])
         self.assertEqual(facts(sd__device='/dev/block/mmcblk1p1', sd__bytes='63864569856', sd__state='yes').sd,
                          ('/dev/block/mmcblk1p1', 63864569856, 'yes'))
         self.assertEqual(f.partitions()[-1], ('userdata', 12275712, 41943040))
@@ -1062,6 +1076,17 @@ class Window(unittest.TestCase):
                 out += texts(child)
             return out
 
+        def all_widgets(widget):
+            out = []
+            for child in widget.winfo_children():
+                try:
+                    child.cget('text')
+                    out.append(child)
+                except tk.TclError:
+                    pass
+                out += all_widgets(child)
+            return out
+
         def show(section, step=None):
             a.goto(section, step)
             root.update_idletasks()
@@ -1092,7 +1117,8 @@ class Window(unittest.TestCase):
         page = show('install', 0)
         self.assertIn('ZTE F50 / MU300', page)
         self.assertIn('27.0:MAGISKSU', page)
-        self.assertIn('does not root or unlock devices', page)
+        self.assertIn('does not root, unlock or patch devices', page)
+        self.assertNotIn('The bootloader is locked.', page)
         self.assertNotIn('324950664950', page)              # the serial number is masked until asked for
         a.show_serial = True
         self.assertIn('324950664950', show('install', 0))
@@ -1120,8 +1146,18 @@ class Window(unittest.TestCase):
         # other devices: no root, a locked bootloader, data in the free space, a card, no room
         ctl.facts = facts(root='no'); ctl.check_state = 'failed'; ctl.check_error = 'su does not work on the device'
         self.assertIn('Without root nothing can be installed', show('install', 0))
-        ctl.facts = facts(bootloader__locked='1', root='no')
-        self.assertIn('A locked bootloader starts only', show('install', 0))
+        # a locked bootloader: the question about TrustOS, in the warning colour, and nothing is blocked
+        ctl.facts = facts(bootloader__locked='1')
+        ctl.check_state = 'ok'
+        page = show('install', 0)
+        self.assertIn('The bootloader is locked. Did you patch TrustOS?', page)
+        self.assertNotIn('disabled', a.w['next'].state())
+        locked = [w for w in all_widgets(root) if str(w.cget('text')) == 'locked']
+        self.assertEqual([str(w.cget('style')) for w in locked], ['Card.WarnText.TLabel'])
+        self.assertEqual(ctl.problems(), [])
+        self.assertIn('The bootloader is locked. Did you patch TrustOS?', show('install', 4))     # again before the start
+        ctl.facts = facts(bootloader__locked='', bootloader__device_state='')
+        self.assertIn('not reported', show('install', 0))
         ctl.check_state = 'ok'
         ctl.facts = facts(region__dirty='3', sd__device='/dev/block/mmcblk1p1', sd__bytes='63864569856', sd__state='yes')
         page = show('install', 1)

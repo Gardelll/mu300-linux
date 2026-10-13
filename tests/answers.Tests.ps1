@@ -104,7 +104,8 @@ Check 'check: steps'            (@($r.Events | Where-Object { $_.event -eq 'step
 Check 'check: model'            $r.Facts['device.model'] 'F50 / MU300'
 Check 'check: kind'             $r.Facts['device.kind'] 'f50'
 Check 'check: build'            $r.Facts['android.build'] 'MU300_ZYV1.0.0B09'
-Check 'check: bootloader'       "$($r.Facts['bootloader.locked']) $($r.Facts['bootloader.verified'])" '0 orange'
+Check 'check: bootloader'       "$($r.Facts['bootloader.locked']) $($r.Facts['bootloader.verified']) $($r.Facts['bootloader.state'])" '0 orange unlocked'
+Check 'check: no lock warning'  ($r.Out -match 'The bootloader is locked') $false
 Check 'check: root'             "$($r.Facts['root']) $($r.Facts['root.su'])" 'yes 27.0:MAGISKSU'
 Check 'check: slots'            "$($r.Facts['slot.android']) $($r.Facts['slot.linux'])" 'a b'
 Check 'check: eMMC'             "$($r.Facts['emmc.sectors']) $($r.Facts['emmc.last_end'])" '122159104 54218752'
@@ -120,6 +121,17 @@ $r = RunScript 'install.ps1' '-Check -NonInteractive'
 Check 'u30: kind'               $r.Facts['device.kind'] 'u30air'
 Check 'u30: slots'              "$($r.Facts['slot.android']) $($r.Facts['slot.linux'])" 'b a'
 Check 'u30: bootloader'         "$($r.Facts['bootloader.locked']) $($r.Facts['bootloader.verified'])" '1 green'
+# a locked bootloader is a warning and never a refusal (a patched TrustOS boots Linux on one): the check goes through
+Check 'locked: exit'            $r.Rc 0
+Check 'locked: the fact'        $r.Facts['bootloader.state'] 'locked'
+Check 'locked: the warning'     ($r.Out -match 'WARNING: The bootloader is locked\. Did you patch TrustOS\?') $true
+Check 'locked: done'            (LastEvent $r).event 'done'
+Device 'locked' '' 'device_state' 'locked'
+$r = RunScript 'install.ps1' '-Check -NonInteractive'
+Check 'locked by the other property' "$($r.Facts['bootloader.state']) $($r.Rc)" 'locked 0'
+Device 'locked' '' 'device_state' ''
+$r = RunScript 'install.ps1' '-Check -NonInteractive'
+Check 'lock not reported'       "$($r.Facts['bootloader.state']) $($r.Out -match 'The bootloader is locked')" 'unknown False'
 
 # no root: said before it stops, with what needs no root
 Device 'root' $false
@@ -197,6 +209,9 @@ Device 'pull' $false
 $r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $answers)`""
 Check 'install: every question from its variable' ($r.Asked -join ' ') 'MU300_ANS_SYSTEMS=3 MU300_ANS_BOOT_OS=ubuntu MU300_ANS_UBUNTU=26.04 MU300_ANS_DEFAULT_LINUX=yes MU300_ANS_BOOT_ATTEMPTS=4 MU300_ANS_HOTSPOT=no MU300_ANS_GPU=no MU300_ANS_VPN=no MU300_ANS_ADB=no MU300_ANS_PANEL=yes MU300_ANS_KERNEL=6.18 MU300_ANS_PASSWORD='
 if ($r.Asked.Count -ne 12) { Write-Host $r.Out }
+Device 'pull' $false 'locked' '1'
+$rl = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $answers)`""
+Check 'install, locked: warned and not stopped' "$($rl.Out -match 'WARNING: The bootloader is locked') $($rl.Asked.Count) $((LastEvent $rl).message)" 'True 12 pulling boot_a failed'
 Check 'install: steps'          (@($r.Events | Where-Object { $_.event -eq 'step' -and $_.id } | ForEach-Object { $_.id }) -join ' ') 'preflight storage choices pull'
 Check 'install: stops at the pull' "$((LastEvent $r).event): $((LastEvent $r).message)" 'error: pulling boot_a failed'
 Check 'install: exit'           $r.Rc 1

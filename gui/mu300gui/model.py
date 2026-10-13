@@ -60,18 +60,18 @@ class Facts(dict):
 
     @property
     def bootloader(self):
-        """unlocked, locked or unknown, from ro.boot.flash.locked and the verified-boot state: orange is what an
-        unlocked bootloader shows, green and yellow a locked one."""
-        locked = self.get('bootloader.locked', '')
-        if locked == '0':
-            return 'unlocked'
-        if locked == '1':
+        """locked, unlocked or unknown, as the installer's check says it (bootloader.state), or from the two
+        properties themselves before a check: ro.boot.flash.locked and ro.boot.vbmeta.device_state. Locked is a
+        warning, never a refusal: a locked bootloader with a patched TrustOS boots Linux, and no property tells
+        whether TrustOS is patched."""
+        state = self.get('bootloader.state', '')
+        if state in ('locked', 'unlocked', 'unknown'):
+            return state
+        flash, device = self.get('bootloader.locked', ''), self.get('bootloader.device_state', '').lower()
+        if flash == '1' or device == 'locked':
             return 'locked'
-        state = self.get('bootloader.verified', '').lower()
-        if state == 'orange':
+        if flash == '0' or device == 'unlocked':
             return 'unlocked'
-        if state in ('green', 'yellow', 'red'):
-            return 'locked'
         return 'unknown'
 
     @property

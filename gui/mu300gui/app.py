@@ -460,17 +460,17 @@ class App:
         boot = f.bootloader if (f or checking) else ''
         if not f and p:
             from .model import Facts
-            boot = Facts({'bootloader.locked': p.get('ro.boot.flash.locked', ''), 'bootloader.verified': p.get('ro.boot.verifiedbootstate', '')}).bootloader
+            boot = Facts({'bootloader.locked': p.get('ro.boot.flash.locked', ''),
+                          'bootloader.device_state': p.get('ro.boot.vbmeta.device_state', '')}).bootloader
         o, i = card(body, _('Bootloader'))
         add(o)
         verified = f.get('bootloader.verified') or p.get('ro.boot.verifiedbootstate', '')
-        label = {'unlocked': (_('unlocked'), 'good'), 'locked': (_('locked'), 'bad'), 'unknown': (_('the device does not say'), 'warn')}.get(boot, ('—', ''))
+        # locked is a warning and never a refusal; unlocked is simply said; a device that does not report is no fault
+        label = {'unlocked': (_('unlocked'), ''), 'locked': (_('locked'), 'warn'), 'unknown': (_('not reported'), '')}.get(boot, ('—', ''))
         facts(i, [(_('Bootloader'), label[0], label[1]), (_('Verified boot state'), verified or '—')]).pack(fill='x')
-        if boot == 'locked' and root is True:
-            banner(i, _('The device reports a locked bootloader, yet root works - and root is what the installer goes by. Linux starts from its own boot image in the other slot; if the bootloader refuses that image, the device goes back to Android by itself.'), 'warn').pack(fill='x', pady=(S2, 0))
-        elif boot == 'locked':
-            banner(i, _('A locked bootloader starts only the manufacturer\'s own boot image. Linux needs its own boot image in the other slot, which a locked bootloader refuses, so nothing can be installed on this device as it is.'), 'bad').pack(fill='x', pady=(S2, 0))
-        note = ttk.Label(body, text=_('This project does not root or unlock devices and gives no help with it: the device has to come that way.'),
+        if boot == 'locked':
+            banner(i, _('The bootloader is locked. Did you patch TrustOS? With a patched TrustOS Linux boots on a locked bootloader; without it the device goes back to Android by itself after the install.'), 'warn').pack(fill='x', pady=(S2, 0))
+        note = ttk.Label(body, text=_('This project does not root, unlock or patch devices and gives no help with it: the device has to come that way.'),
                          style='Muted.TLabel', wraplength=700, justify='left')
         add(note)
 
@@ -854,6 +854,8 @@ class App:
             o, i = card(body, _('Ready'), _('This is what you chose. The installer downloads and prepares everything first, then shows exactly what it will write and waits for your yes: nothing is written to the device before that.'))
             add(o)
             facts(i, summary(ctl.choices, ctl.facts, ctl.releases.get('latest') or ''), label_width=24).pack(fill='x')
+            if ctl.facts.bootloader == 'locked':
+                add(banner(body, _('The bootloader is locked. Did you patch TrustOS? With a patched TrustOS Linux boots on a locked bootloader; without it the device goes back to Android by itself after the install.'), 'warn'))
             probs = ctl.problems()
             if probs:
                 add(banner(body, '\n'.join('• ' + m for _f, m in probs), 'bad'))
@@ -1371,7 +1373,7 @@ class App:
 
         o, i = card(body, _('How an installation goes'))
         add(o)
-        steps = (_('You need a ZTE F50 / MU300 or U30 Air that is already rooted and unlocked, USB debugging on, a USB cable, and adb on this computer.'),
+        steps = (_('You need a ZTE F50 / MU300 or U30 Air that is already rooted and able to boot a modified boot image (an unlocked bootloader, or a locked one with a patched TrustOS), USB debugging on, a USB cable, and adb on this computer.'),
                  _('Device: plug it in. The window looks at it without writing anything: the model, root, the bootloader, the storage.'),
                  _('Storage: Linux goes into free space behind Android\'s partitions (about 32 GiB on the 64 GB device) or onto an SD card (F50). Android and its data stay.'),
                  _('What to install: Ubuntu, OpenWrt or both, the kernel, a password.'),
@@ -1382,7 +1384,7 @@ class App:
             r.pack(fill='x', pady=2)
             ttk.Label(r, text=str(n) if n else '•', style='Card.AccentText.TLabel', width=2).pack(side='left', anchor='n')
             ttk.Label(r, text=t, style='Card.TLabel', wraplength=640, justify='left').pack(side='left', anchor='w')
-        banner(i, _('A hobby project, with no warranty. A wrong step, a power cut or a bad cable can still leave a device unusable. This project does not root or unlock devices and gives no help with it.'), 'warn').pack(fill='x', pady=(S3, 0))
+        banner(i, _('A hobby project, with no warranty. A wrong step, a power cut or a bad cable can still leave a device unusable. This project does not root, unlock or patch devices and gives no help with it.'), 'warn').pack(fill='x', pady=(S3, 0))
 
         o, i = card(body, _('Read more'))
         add(o)

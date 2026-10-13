@@ -264,14 +264,24 @@ if [ $CHECK_ONLY = 0 ] && [ $MODE = build ]; then
 fi
 . "$TOP/tools/linux-mode.sh"
 require_android
+adb_prop() { adb shell getprop "$1" </dev/null 2>/dev/null | tr -d '\r' | head -n1; }
+# The bootloader's lock is a warning and never a refusal (the owner's decision of 2026-10-13, FINDINGS 71): Linux
+# needs a device that boots a modified boot image, and that is an unlocked bootloader or a locked one with a patched
+# TrustOS - which no property tells. Without either the device goes back to Android by itself after the install.
+# BL_STATE: locked (ro.boot.flash.locked=1 or ro.boot.vbmeta.device_state=locked), unlocked, or unknown.
+BL_WARN="$(t 'The bootloader is locked. Did you patch TrustOS? With a patched TrustOS Linux boots on a locked bootloader; without it the device goes back to Android by itself after the install.')"
+BL_LOCKED=$(adb_prop ro.boot.flash.locked); BL_DEVICE_STATE=$(adb_prop ro.boot.vbmeta.device_state)
+BL_STATE=unknown
+case "$BL_LOCKED:$BL_DEVICE_STATE" in 1:*|*:locked) BL_STATE=locked ;; 0:*|*:unlocked) BL_STATE=unlocked ;; esac
 # For a program that reads the progress stream: what the device says about itself before anything needs root (the
 # model, Android's build, the bootloader's lock and verified-boot state), then whether su works and whose it is.
-# Read only, and only for the stream: the text for people stays as it was.
+# Read only, and only for the stream.
 if [ -n "$PROGRESS_FD" ]; then
-    adb_prop() { adb shell getprop "$1" </dev/null 2>/dev/null | tr -d '\r' | head -n1; }
     info device.model "$(adb_prop ro.product.model) / $(adb_prop ro.product.device)"
     info android.build "$(adb_prop ro.build.display.id)"
-    info bootloader.locked "$(adb_prop ro.boot.flash.locked)"
+    info bootloader.locked "$BL_LOCKED"
+    info bootloader.device_state "$BL_DEVICE_STATE"
+    info bootloader.state "$BL_STATE"
     info bootloader.verified "$(adb_prop ro.boot.verifiedbootstate)"
     if [ "$(su_do 'id -u')" = 0 ]; then
         info root yes; info root.su "$(adb shell su -v </dev/null 2>/dev/null | tr -d '\r' | head -n1)"
@@ -282,6 +292,7 @@ fi
 [ "$(su_do 'id -u')" = 0 ] || die "$(t 'su does not work on the device')"
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "$(t 'device: {1}' "$model")"
+[ $BL_STATE != locked ] || echo "$(t 'WARNING: {1}' "$BL_WARN")"
 # The U30 Air is the F50's board with a battery: the same kernel and images, a few modules of its own (init
 # loads them; the boot image says which device it is for)
 case "$model" in
@@ -933,6 +944,7 @@ else
     echo "  $(t 'writes:         Linux region at offset {1}, boot_{2}, 32 bytes of misc (boot_{3}, GPT and userdata are not touched)' "$OFF" "$LINUX_SLOT" "$ANDROID_SLOT")"
 fi
 echo "  $BC_LINE"
+[ $BL_STATE != locked ] || echo "  $(t 'WARNING: {1}' "$BL_WARN")"
 ask confirm "$(t 'Type INSTALL to continue')" no MU300_ANS_CONFIRM
 [ "$confirm" = INSTALL ] || die "$(t 'cancelled')"
 

@@ -6,7 +6,7 @@ it again to install, answer a few questions, type `INSTALL`, and the device rest
 **The simple version:** the installer is a careful mover. It measures the empty room first (`--check`), tells you
 exactly which boxes it will put where, waits for you to say yes, and never moves Android's furniture.
 
-> **Hobby project, no warranty.** Rooting and unlocking are not part of this project and happen at your own risk.
+> **Hobby project, no warranty.** Rooting, unlocking and patching are not part of this project and happen at your own risk.
 > A wrong step, a power cut or a bad cable can still leave a device unusable. Keep a backup. See the
 > [full notice](https://github.com/dikeckaan/mu300-linux#a-hobby-project-at-your-own-risk).
 
@@ -25,8 +25,12 @@ flowchart TD
 
 ## What you need
 
-* A **ZTE F50 / MU300** or **ZTE U30 Air** that is already **rooted and unlocked**: it must already boot a modified
-  Android boot image. Getting there is not part of this project.
+* A **ZTE F50 / MU300** or **ZTE U30 Air** that is already **rooted, and able to boot a modified boot image**: an
+  unlocked bootloader, or a locked one with a patched TrustOS. Getting there is not part of this project: it does
+  not root, unlock or patch devices and gives no guide for it.
+  * A **locked bootloader is not refused.** `--check` and the installer print a warning - "The bootloader is
+    locked. Did you patch TrustOS?" - and go on. With a patched TrustOS Linux boots on a locked bootloader; without
+    it the device goes back to Android by itself after the install.
 * **USB debugging** enabled, and the device connected by USB.
 * A computer with **`adb`**:
   * **macOS or Linux:** also Python 3, `lz4` and `curl` (usually already there).
@@ -214,8 +218,9 @@ Nothing is installed without a yes, and a no or a failure simply goes on with th
 What the window does:
 
 * **Device**: the adb devices as they come and go, the model, Android's build, whether USB debugging is authorised,
-  **root** and the **bootloader** each for itself. This project does not root or unlock devices and gives no help
-  with it; the window says so too.
+  **root** and the **bootloader** each for itself. Only missing root stops an installation; a locked bootloader is
+  shown as a warning with the question whether TrustOS is patched, and again in the summary before the start. This
+  project does not root, unlock or patch devices and gives no help with it; the window says so too.
 * **Storage**: the internal storage as a bar - Android's partitions, `userdata`, the free space Linux goes into -
   with the figures of `--check`, the SD card, and on a device without free space what making room would do.
 * **What to install**: every question of the table above, with the same defaults.

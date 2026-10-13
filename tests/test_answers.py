@@ -393,6 +393,8 @@ class Check(Device):
             self.assertEqual(facts['device.kind'], 'f50')
             self.assertEqual(facts['android.build'], 'MU300_ZYV1.0.0B09')
             self.assertEqual((facts['bootloader.locked'], facts['bootloader.verified']), ('0', 'orange'))
+            self.assertEqual((facts['bootloader.device_state'], facts['bootloader.state']), ('unlocked', 'unlocked'))
+            self.assertNotIn('The bootloader is locked', r.stdout)
             self.assertEqual((facts['root'], facts['root.su']), ('yes', '27.0:MAGISKSU'))
             self.assertEqual((facts['slot.android'], facts['slot.linux']), ('a', 'b'))
             self.assertEqual(facts['emmc.sectors'], '122159104')
@@ -418,6 +420,23 @@ class Check(Device):
             self.assertEqual(facts['device.kind'], 'u30air')
             self.assertEqual((facts['slot.android'], facts['slot.linux']), ('b', 'a'))
             self.assertEqual((facts['bootloader.locked'], facts['bootloader.verified']), ('1', 'green'))
+
+    def test_a_locked_bootloader_is_a_warning_and_never_a_refusal(self):
+        # the owner's decision of 2026-10-13: a locked bootloader with a patched TrustOS boots Linux
+        warning = 'WARNING: The bootloader is locked. Did you patch TrustOS?'
+        for shell in self.each_shell():
+            for keys, want in ((dict(locked='1', device_state='locked', verified='green'), 'locked'),
+                               (dict(locked='', device_state='locked'), 'locked'), (dict(locked='1', device_state=''), 'locked'),
+                               (dict(locked='', device_state='unlocked'), 'unlocked'), (dict(locked='', device_state='', verified=''), 'unknown')):
+                self.device(**keys)
+                r, ev, facts = self.check(shell)
+                self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+                self.assertEqual(facts['bootloader.state'], want, keys)
+                self.assertEqual(warning in r.stdout, want == 'locked', keys)
+                self.assertEqual(ev[-1], {'event': 'done', 'result': 'ok'})
+            self.device(locked='1')
+            r = self.run_script(shell, 'install.sh', '--check', MU300_NONINTERACTIVE=1, MU300_LANG='tr')
+            self.assertIn("UYARI: Bootloader kilitli. TrustOS'u yamaladınız mı?", r.stdout)
 
     def test_no_root_is_said_before_it_stops(self):
         for shell in self.each_shell():
@@ -605,6 +624,19 @@ class Install(Device):
             self.assertIn('could not read /dev/block/by-name/boot_a', events(r.stdout)[-1]['message'])
             self.assertEqual((r.stdout + r.stderr).count('hunter2'), 0)
             self.assert_no_secret_anywhere('hunter2')
+
+    def test_a_locked_bootloader_does_not_stop_an_installation(self):
+        for shell in self.each_shell():
+            self.device(pull=False, locked='1', device_state='locked')
+            r, ev, asked = self.install(shell, ANSWERS)
+            self.assertIn('WARNING: The bootloader is locked. Did you patch TrustOS?', r.stdout)
+            self.assertEqual(len(asked), 12)                                # every question was still asked
+            self.assertIn('could not read /dev/block/by-name/boot_a from the device', ev[-1]['message'])
+        # ... and the plan says it again, right before the question
+        src = (TOP / 'install.sh').read_text()
+        plan = src[src.index("say \"$(t 'Ready to install')\""):src.index('ask confirm')]
+        self.assertIn('[ $BL_STATE != locked ] || echo "  $(t \'WARNING: {1}\' "$BL_WARN")"', plan)
+        self.assertNotRegex(src, r'BL_STATE[^\n]*\bdie\b')
 
     def test_a_missing_answer_stops_before_anything_is_read_or_written(self):
         for missing in ('MU300_ANS_SYSTEMS', 'MU300_ANS_KERNEL', 'MU300_ANS_PASSWORD', 'MU300_ANS_DEFAULT_LINUX',

@@ -600,13 +600,27 @@ for ($i = 0; $i -lt 60 -and (AdbProp 'sys.boot_completed') -ne '1'; $i++) {
     if ($i -eq 0) { Write-Host ('  ' + (T 'waiting for Android to finish starting')) }
     Start-Sleep 2
 }
+# The bootloader's lock is a warning and never a refusal (the owner's decision of 2026-10-13, FINDINGS 71): Linux
+# needs a device that boots a modified boot image, and that is an unlocked bootloader or a locked one with a patched
+# TrustOS - which no property tells. Without either the device goes back to Android by itself after the install.
+# BootloaderState: locked (ro.boot.flash.locked=1 or ro.boot.vbmeta.device_state=locked), unlocked, or unknown.
+function BootloaderState([string]$FlashLocked, [string]$DeviceState) {
+    if ($FlashLocked -eq '1' -or $DeviceState -eq 'locked') { return 'locked' }
+    if ($FlashLocked -eq '0' -or $DeviceState -eq 'unlocked') { return 'unlocked' }
+    return 'unknown'
+}
+$BL_WARN = T 'The bootloader is locked. Did you patch TrustOS? With a patched TrustOS Linux boots on a locked bootloader; without it the device goes back to Android by itself after the install.'
+$BL_LOCKED = AdbProp 'ro.boot.flash.locked'; $BL_DEVICE_STATE = AdbProp 'ro.boot.vbmeta.device_state'
+$BL_STATE = BootloaderState $BL_LOCKED $BL_DEVICE_STATE
 # For a program that reads the progress stream: what the device says about itself before anything needs root (the
 # model, Android's build, the bootloader's lock and verified-boot state), then whether su works and whose it is.
-# Read only, and only for the stream: the text for people stays as it was.
+# Read only, and only for the stream.
 if ($script:MuProgress) {
     Info 'device.model' "$(AdbProp 'ro.product.model') / $(AdbProp 'ro.product.device')"
     Info 'android.build' (AdbProp 'ro.build.display.id')
-    Info 'bootloader.locked' (AdbProp 'ro.boot.flash.locked')
+    Info 'bootloader.locked' $BL_LOCKED
+    Info 'bootloader.device_state' $BL_DEVICE_STATE
+    Info 'bootloader.state' $BL_STATE
     Info 'bootloader.verified' (AdbProp 'ro.boot.verifiedbootstate')
     if ((SuDo 'id -u') -eq '0') {
         Info 'root' 'yes'
@@ -616,6 +630,7 @@ if ($script:MuProgress) {
 if ((SuDo 'id -u') -ne '0') { Die (T 'su does not work on the device') }
 $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device')"
 Write-Host (T 'device: {1}' $model)
+if ($BL_STATE -eq 'locked') { Write-Host (T 'WARNING: {1}' $BL_WARN) }
 # The U30 Air is the F50's board with a battery: the same kernel and images, a few modules of its own (init
 # loads them; the boot image says which device it is for)
 $DEVICE = 'f50'
@@ -1477,6 +1492,7 @@ if ($SD_MODE -eq 1) {
     Write-Host ('  ' + (T 'writes:         Linux region at offset {1}, boot_{2}, 32 bytes of misc (boot_{3}, GPT and userdata are not touched)' $OFF $LINUX_SLOT $ANDROID_SLOT))
 }
 Write-Host ('  ' + $BC_LINE)
+if ($BL_STATE -eq 'locked') { Write-Host ('  ' + (T 'WARNING: {1}' $BL_WARN)) }
 # the word itself, in capitals (-cne: PowerShell's -ne does not tell install from INSTALL)
 if ((Ask (T 'Type INSTALL to continue') 'no' 'MU300_ANS_CONFIRM') -cne 'INSTALL') { Die (T 'cancelled') }
 

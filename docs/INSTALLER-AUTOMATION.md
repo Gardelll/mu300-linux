@@ -148,6 +148,8 @@ The stages of an installation, in order: `preflight` 2, `storage` 6, `choices` 1
 | `device.kind` | `f50`, `u30air`, `unknown` |
 | `android.build` | Android's build (`ro.build.display.id`) |
 | `bootloader.locked` | `ro.boot.flash.locked`: `0` unlocked, `1` locked, empty when the device does not say |
+| `bootloader.device_state` | `ro.boot.vbmeta.device_state`: `locked`, `unlocked`, or empty |
+| `bootloader.state` | what the installer makes of the two: `locked`, `unlocked`, `unknown`. Locked is a warning in the text and never a refusal: a locked bootloader with a patched TrustOS boots Linux |
 | `bootloader.verified` | `ro.boot.verifiedbootstate`: `green`, `yellow`, `orange`, `red` |
 | `root` | `yes`, `no`: whether `su` works |
 | `root.su` | what `su -v` says, for example `27.0:MAGISKSU` |
