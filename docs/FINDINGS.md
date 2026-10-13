@@ -124,6 +124,7 @@ what replaced it. The table below gives each section's state.
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
 | 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; unit tests against a table built from #9's figures, not measured on a device) |
 | 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
+| 64 | An update dropped the panel's saved locks (`/etc/unisoc-modem`) | current (fixed; unit tests only, not reproduced on a device) |
 
 ## Hardware and firmware facts
 
@@ -4640,3 +4641,30 @@ named `cmd` in it) and a symlink to `/etc` were both put out of the way, `/etc` 
 `mu300-voice status` then answered. Open: `/run` is still 1777 - `mount -t tmpfs -o mode=755` in `boot/init` is
 the real fix, and it is a boot change that wants its own device test. `/run/mu300-at/answer.<pid>` and
 `/run/mu300/` are as they were.
+
+### 64. An update dropped the panel's saved locks (`/etc/unisoc-modem`)
+
+The control panel of openwrt-luci keeps its state in `/etc/unisoc-modem`: `lock-state.d` (the network mode, band
+and cell locks it applied, which `boot-replay` applies again at boot), the SIM identity cache and the operations
+log. `mu300-update` builds the new system from the release's image and copies over what `keep_list` names; for
+OpenWrt that was `etc/config etc/mu300 etc/dropbear etc/rc.local root`, and `tools/android-install.sh` has its own
+copy of the list for an update from the computer. `/etc/unisoc-modem` was in neither, so every update left it
+behind in `<os>.old`.
+
+What that does, from reading the code (not reproduced on a device): a mode or band lock lives in the modem's NV and
+stays in force (measured on an F50, #96), so after an update the modem is still locked while the panel's lock page shows
+nothing saved; a cell lock does not live in the NV and is kept only by the replay at boot, so it is gone.
+
+Found in kanoqwq's fork, whose `keep_list` has `etc/unisoc-modem` since clean-tf-7.2 `33869287` ("add voltage and
+forwarding controls; fix Wi-Fi log flood"; the line is one word of that commit). Taken: that word, in both of our
+lists. Nothing else of the commit.
+
+Unit tests only (`tests/test_update.py`: `apply_one` on a fake disk carries `etc/unisoc-modem/lock-state.d` over;
+the two lists are the same). To check on a device with openwrt-luci:
+
+    # before the update: a band lock and a cell lock saved from the panel (Cellular -> Network locks)
+    ls -l /etc/unisoc-modem/lock-state.d; /usr/libexec/unisoc-modem/lock get
+    mu300-update apply && reboot
+    # after: the same files, the lock page shows the locks, and the log has the boot replay
+    ls -l /etc/unisoc-modem/lock-state.d; /usr/libexec/unisoc-modem/lock get; logread -e unisoc-modem
+    # the same once from the computer: install.sh --update (tools/android-install.sh's list)
