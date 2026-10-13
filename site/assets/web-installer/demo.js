@@ -57,6 +57,12 @@ class DemoAndroid {
     this.log(`MU300-WEB-ZIP {"name":"${name}","web":1}`);
     return { name, web: 1 };
   }
+  async net() { await wait(600); return this.variant === "small" ? { ok: false, why: "no-network", uplink: "none", detail: "wget: bad address 'github.com'" } : { ok: true, why: "", uplink: "mobile", detail: "" }; }
+  async fetchZip(name, size, sha, onProgress = () => {}) {
+    for (let i = 0; i <= 30; i++) { onProgress(size * i / 30, size); await wait(120); }
+    this.log(`MU300-WEB-ZIP {"name":"${name}","web":1}`);
+    return { name, web: 1 };
+  }
   async addExtra(kind, file, sha, o = {}) { for (let i = 0; i <= 10; i++) { if (o.onProgress) o.onProgress(file.size * i / 10, file.size); await wait(60); } }
   async setAnswers(text) { this.answers = text; }
   async start(kind, ...args) { this.job = { kind, args }; }

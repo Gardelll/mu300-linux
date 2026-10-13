@@ -36,6 +36,8 @@ const EXTRA_FILE = { vpn: "extra-vpn.tar.gz", panel: "extra-panel.tar.gz" };
 // ... and the files it ever reads back: the copies android-web.sh makes for a backup, by their exact names
 const BACKUP_FILE = /^(?:(?:boot|uboot|sml|teecfg|trustos|vbmeta)_[ab]\.img|misc-head\.bin|gpt-head\.bin|gpt-tail\.bin|partitions\.txt)$/;
 const lines = (s) => s.split("\n").map((l) => l.replace(/\r+$/, ""));
+// why the device's own download of a release file failed: the exit status of android-web.sh's fetch job
+export const FETCH_FAILURES = { 10: "fetch-no-network", 11: "fetch-host", 12: "download-failed", 13: "fetch-size" };
 
 // ---- which kind of device is this?
 
@@ -177,15 +179,37 @@ export class AndroidDevice {
     try { return JSON.parse(r.marks.ZIP[0]); } catch (e) { throw new DeviceError("bad-answer", "take"); }
   }
 
-  // The other way to get a release zip onto the device: the device downloads it itself (android-web.sh makes the
-  // address from the name; it uses the device's own internet connection). Then the same check as for a pushed one.
+  // Can the device download from GitHub right now, and over what? `name`: the release zip that would be asked for
+  // (its headers are requested), or nothing for github.com itself.
+  // -> { ok, why: "" | "no-network" | "host" | "tool" | "failed", uplink: "mobile" | "wifi" | "ethernet" | "other" | "none", detail }
+  async net(name) {
+    if (name !== undefined && (typeof name !== "string" || !ZIP_NAME.test(name) || name.includes(".."))) throw new DeviceError("bad-argument", "zip name");
+    const r = await this.web(name ? ["net", name] : ["net"], { timeoutMs: 60000 });
+    if (!r.marks.NET) throw new DeviceError("no-answer", "net");
+    let n;
+    try { n = JSON.parse(r.marks.NET[0]); } catch (e) { throw new DeviceError("bad-answer", "net"); }
+    if (!n || typeof n !== "object") throw new DeviceError("bad-answer", "net");
+    return { ok: n.ok === 1, why: ["no-network", "host", "tool", "failed"].includes(n.why) ? n.why : "",
+      uplink: ["mobile", "wifi", "ethernet", "other"].includes(n.uplink) ? n.uplink : "none", detail: this.mask(String(n.detail || "")).slice(0, 160) };
+  }
+
+  // The device downloads a release zip itself (android-web.sh makes the address from the name; it uses the device's
+  // own internet connection), then the same check as for a pushed one: the release's SHA-256, on the device, of the
+  // file only root can change. onProgress(done, total). An aborted signal cancels the download on the device; what
+  // has arrived stays there and the next call continues it.
   async fetchZip(name, size, sha256, onProgress = () => {}, signal) {
     if (typeof name !== "string" || !ZIP_NAME.test(name) || name.includes("..")) throw new DeviceError("bad-argument", "zip name");
     if (!/^[0-9a-f]{64}$/.test(sha256 || "") || !Number.isSafeInteger(size) || size <= 0) throw new DeviceError("bad-argument", "checksum");
     await this.web(["run", "fetch", name, String(size)], { timeoutMs: 60000 });
     const errors = [];
-    const rc = await this.follow((e) => { if (e.type === "progress") onProgress(e.done, size); else if (e.type === "error") errors.push(e.text); }, signal);
-    if (rc !== 0) throw new DeviceError("download-failed", errors.join(" "));
+    let rc;
+    try {
+      rc = await this.follow((e) => { if (e.type === "progress") onProgress(Math.min(e.done, size), size); else if (e.type === "error") errors.push(e.text); }, signal);
+    } catch (e) {
+      if (e instanceof AdbError && e.code === "aborted") { try { await this.cancel(); } catch (e2) { /* it ended by itself */ } }
+      throw e;
+    }
+    if (rc !== 0) throw new DeviceError(FETCH_FAILURES[rc] || "download-failed", errors.join(" "));
     const r = await this.web(["take", name, sha256], { timeoutMs: 600000 });
     if (!r.marks.ZIP) throw new DeviceError("no-answer", "take");
     try { return JSON.parse(r.marks.ZIP[0]); } catch (e) { throw new DeviceError("bad-answer", "take"); }

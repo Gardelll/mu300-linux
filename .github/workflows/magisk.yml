@@ -68,3 +68,34 @@ jobs:
           [ -n "$TELEGRAM_BOT_TOKEN" ] || { echo "no TELEGRAM_BOT_TOKEN secret: not announced"; exit 0; }
           gh api "repos/$GITHUB_REPOSITORY/contents/tools/telegram-announce.sh" -H 'Accept: application/vnd.github.raw' > /tmp/announce.sh
           sh /tmp/announce.sh zips "$TAG"
+      # The release's mirror for the web installer: the zips in parts of at most 45 MiB and a manifest, as the branch
+      # <tag> of another repository, where raw.githubusercontent.com lets a page read them (a release's own files
+      # cannot be read by a page, FINDINGS 72). Only when this repository names a mirror: the variable MIRROR_REPO
+      # (owner/name of a public repository) and the secret MIRROR_TOKEN (a token that may push to it). Without them
+      # nothing happens, and the web installer has the device download the zip, or takes a file. The branches of
+      # the newest release and of the newest prerelease are kept; older ones are deleted (a release is ~900 MB).
+      # Last, and after the announcement: a mirror that cannot be written fails this job visibly, with the zips
+      # attached all the same. The script of main, not of the tag: older tags do not have it.
+      - name: Mirror for the web installer
+        env:
+          MIRROR_REPO: ${{ vars.MIRROR_REPO }}
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          [ -n "$MIRROR_REPO" ] && [ -n "$MIRROR_TOKEN" ] || { echo "no MIRROR_REPO variable or MIRROR_TOKEN secret: no mirror"; exit 0; }
+          case "$MIRROR_REPO" in *[!0-9A-Za-z._/-]*|*..*|/*|*/|*/*/*) echo "MIRROR_REPO is not owner/name"; exit 1 ;; esac
+          case "$MIRROR_REPO" in */*) ;; *) echo "MIRROR_REPO is not owner/name"; exit 1 ;; esac
+          gh api "repos/$GITHUB_REPOSITORY/contents/tools/make-release-mirror.sh" -H 'Accept: application/vnd.github.raw' > /tmp/make-release-mirror.sh
+          sh /tmp/make-release-mirror.sh out /tmp/mirror "$TAG"
+          cd /tmp/mirror
+          git init -q -b "$TAG"
+          git add -A
+          git -c user.name='mu300-linux release' -c user.email='noreply@github.com' commit -q -m "Mirror of $GITHUB_REPOSITORY $TAG"
+          git push -q --force "https://x-access-token:${MIRROR_TOKEN}@github.com/${MIRROR_REPO}.git" "HEAD:refs/heads/$TAG"
+          echo "pushed: https://raw.githubusercontent.com/$MIRROR_REPO/$TAG/manifest.json"
+          keep=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=30" --jq '[.[] | select(.draft | not) | select(.tag_name | startswith("v"))] | [(map(select(.prerelease | not)) | .[0].tag_name), (map(select(.prerelease)) | .[0].tag_name)] | .[] | select(. != null)')
+          for b in $(GH_TOKEN=$MIRROR_TOKEN gh api "repos/$MIRROR_REPO/branches?per_page=100" --jq '.[].name'); do
+            case "$b" in v[0-9]*) ;; *) continue ;; esac
+            [ "$b" != "$TAG" ] || continue
+            echo "$keep" | grep -qxF "$b" && continue
+            GH_TOKEN=$MIRROR_TOKEN gh api -X DELETE "repos/$MIRROR_REPO/git/refs/heads/$b" >/dev/null && echo "removed the mirror of $b"
+          done
