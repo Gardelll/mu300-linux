@@ -254,7 +254,7 @@ all 44 updater tests now pass. These are local results, not a GitHub CI pass.
 The #73 follow-up branch now merges main `da47e3b` (v2026.10.23) while retaining
 #166's reviewed base and the shared selector/startup fixes above. The merge keeps
 the new SMS transaction mutex, direct-delivery spool and asynchronous rpcd SMS
-job/ACL changes. FINDINGS keeps main's numbering and records the U30 facts as §57.
+job/ACL changes. FINDINGS keeps main's numbering and records the U30 facts as §74.
 
 The U30 status now also reports `slot1_supported: 1`, matching #198's existing
 WAN form/home-page contract without replacing version-1 capabilities. The field

@@ -61,6 +61,7 @@ what replaced it. The table below gives each section's state.
 | 30 | Installer notes | current |
 | 24 | No internal audio hardware | open |
 | 24b | A second board, from a clean install: where the stall actually is | open |
+| 24c | What the Rongyue E5 (kanoqwq/e5-linux) did, and what of it applies here | ported; untested with firmware |
 | 25 | SC2355 Bluetooth on BlueZ | current |
 | 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.56) |
 | 31a | Wi-Fi RX: sync_for_device stopped invalidating | current |
@@ -121,7 +122,10 @@ what replaced it. The table below gives each section's state.
 | 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
 | 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
-| 57 | The U30 Air's second SIM: hardware facts and the reconciled selector behind PR #73/#166 | current (U30 Air, OpenWrt 25.12.5/7.2.9; other kernels untested) |
+| 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; unit tests against a table built from #9's figures, not measured on a device) |
+| 58 | A service's own error in an HTTP 200 answer to the SMS webhook: a KEY=VALUE check of the answer; a button that clears the delivery log (#171) | current (unit tests; measured on the U30 Air against a fake webhook, not against the real services) |
+| 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
+| 74 | The U30 Air's second SIM: hardware facts and the reconciled selector behind PR #73/#166 | current (U30 Air, OpenWrt 25.12.5/7.2.9; other kernels untested) |
 
 ## Hardware and firmware facts
 
@@ -262,8 +266,8 @@ Asked for often, because a smaller eMMC variant leaves less free space behind `u
   * Why only `userdata`: it is the **last** partition, so its end moves and nothing else does. Every other
     partition keeps its offset and the AVB descriptors and the boot chain stay valid. That is the entire
     safety argument, and it does not transfer to any other partition on these devices.
-  * `install.sh` offers it when there is no room, asks how many GiB to give Linux and keeps at least 4 GiB for
-    Android and 800 MiB for Linux, and requires ERASE to be typed. `uninstall.sh` offers to grow it back, off
+  * `install.sh` (and `install.ps1`, #57) offers it when there is no room, asks how many GiB to give Linux and
+    keeps at least 4 GiB for Android and 800 MiB for Linux, and requires ERASE to be typed. `uninstall.sh` offers to grow it back, off
     by default because on the 64 GB variant that would hand the factory gap to Android.
     `tools/resize-last-partition.py` does the edit: it validates both GPT copies and every CRC first, refuses
     if the named partition is not the last one, and re-reads what it produced before handing it over. The
@@ -1671,6 +1675,81 @@ offset directly from the AP at `0x56510000 + 0xe7c` - outside the 1 KiB AP VBC w
 drops off USB and the network. To change a DSP-side register, write `"<reg> <val>"` in hex to that proc file
 instead (`vbc_proc_write` -> `dsp_vbc_reg_write`, e.g. `echo 1700eb0 1`); never map it from the AP.
 
+### 24c. What the Rongyue E5 (kanoqwq/e5-linux) did, and what of it applies here
+kano's [e5-linux](https://github.com/kanoqwq/e5-linux) (MIT) runs Linux on the Rongyue E5, a UMS9621 handset with the
+same AGDSP, VBC v4, MCDT and UMP9620 codec drivers. It started from this project's bring-up (its `e5-audio-dsp` is
+`mu300-audio-dsp` adapted) and got further: the speaker plays (2026-09-25), the microphone records, and a cellular
+call's downlink was heard on the receiver and the speaker (2026-10-02, e5-linux FINDINGS 55). Read against 24 and
+24b, the differences fall in three groups.
+
+**The board, which does not carry over.** The E5 has its own AGDSP image (`l_agdsp_a`, mmcblk0p26, header
+`SharkL5_AUDCP_2023Y_VER_3029`) and a complete device tree (`memory-region` present), a speaker behind an aw87xxx,
+an earpiece and microphones. Its audible call goes DSP -> codec DAC0 -> receiver / AO; this board has nothing on the
+codec, so that output does not exist here.
+
+**The kernel, which does.** Five of its 5.15 patches touch the same drivers this project builds for 5.4, and the
+symptoms they fix are the ones in 24:
+* `0013` period events from an hrtimer. The E5 measured what 24 measured - both `sprd_dma` lines at 0 for a whole
+  stream, with or without the DSP - and concluded that nothing will ever call `snd_pcm_period_elapsed()`: the
+  completion interrupt is the DSP's or nobody's. Its answer is the one Android's HAL gets by opening with
+  `PCM_NOIRQ`: program the DMA without interrupts and tick the period from a timer.
+  `kernel/patches/audio-pcm-period-timer.patch`.
+* `0016` the position read only while `agdsp_can_access()` says the AGCP domain is reachable - the bus hang of 24,
+  hit on the E5 after six idle hours. `audio-pcm-pointer-agcp-access.patch`.
+* `0017`, `0019`, `0020` the DSP front ends limited to S16_LE where the DSP writes S16 whatever was asked, and to
+  interleaved access on every MCDT front end. `audio-fe-dai-formats.patch`.
+`kernel/build-audio.sh` applies all three; the 23 modules build with them (2026-10-11). Its other patches are E5
+board matters (aw87xxx, a headset IMPD oops, the agdsp_pd module order of its tree, which is built in here).
+
+Its notes also contradict one line of 24: there `agdsp_access_en` "changed nothing"; on the E5 it is the control
+that turned "the DMA runs one burst and stops" into "the VBC FIFO drains" (e5-linux FINDINGS 24.2), with
+`VBC DAC0 DG Set` non-zero (Linux leaves it 0, which is digital silence). With the period timer both need
+re-measuring here before either reading is trusted.
+
+**The call sequence, which does.** What the E5 changed between "both PCMs RUNNING, silence" and "heard" (`402fde1`,
+`8e9b8a4`, `2c726fc`), against what `mu300-voice` did:
+
+| | mu300-voice until now | e5-linux |
+|---|---|---|
+| call scene | `FE_VOICE` playback only, 16 kHz | `FE_ST_VOICE` playback **and** capture, 8 kHz mono, both prepared before either starts |
+| profile select | `(mode << 24) \| (0x5e << 16)`, through amixer | `(mode << 24) \| (mode << 16) \| 5` (param id = mode, low byte the voice DAI), raw, before and after the start |
+| voice volume | not set | `VBC_VOLUME` = volume + 1, raw (the control declares max -1, amixer clamps) |
+| downlink mute | not touched | `VBC_DL_MUTE` enable during routing, then `VBC DAC1 DSP MDG` 0,1024 and `VBC_DL_MUTE` disable after the start - the change that made it audible |
+| bandwidth | none | `/dev/audio_pipe_voice` command 0 channel 2 gives NB/WB/SWB/FB; the profile follows it |
+
+Two of these are bugs here on their own: amixer clamps every profile select from mode 16 up - the Bluetooth modes
+(BTHS, 28 and up) included - to `0x0fffffff`, and a capture-less scene leaves the DSP without an uplink, which is
+the VoLTE ~20 s drop of 24b. `mu300-voice audio start` now does the E5's sequence; the undo log puts every control
+back on `audio stop`.
+
+**Bluetooth, which is the output this board has.** kano reports that the F50 under Android, with the AGDSP image of
+a ZTE Voyage 41S (the donor of 24), connects a Bluetooth headset and carries calls on it. That fits: this board's
+PSKey has `g_sys_sco_transmit_mode = 0`, and on the E5's identical controller mode 0 sends SCO audio over the
+controller's PCM pins into VBC IIS3, not over HCI (e5-linux FINDINGS 58-59: no HCI SCO RX, nonzero samples on the
+IIS3 capture once the pin matrix was switched). The vendor route (`audio_route.xml`, `bt_sco` and `btsco_p/_c`)
+is `SYS_IIS0 = vbc_iis3`, `S_VOICE_P_BT` / `S_VOICE_C_BT`, `VBC_SRC_BT_DAC/ADC`, and the E5 found the BT rate must
+be set again after the scene is RUNNING. Two of its findings matter here: on mainline `SYS_IIS0` was a no-op without
+the pin controller (the 5.4 kernel has `pinctrl-sprd-qogirn6pro`), and BlueZ's own SCO path stays silent with this
+PSKey, so the AP must not try to carry SCO audio itself.
+
+What a call on a headset needs from the AP is therefore only the links: the DSP scene (`mu300-voice audio start bt`)
+and an HFP audio gateway holding the service level connection and the SCO link. BlueZ has no AG of its own (oFono
+would want the modem), so `tools/hfp` (`mu300-hfp`) is a minimal one on raw kernel sockets: it connects to the paired
+headset, answers the AT setup, opens CVSD SCO when told, and turns the headset's buttons into `ATA` / `AT+CHUP`.
+`mu300-voice watch` follows `AT+CLCC` and drives both. The AGDSP image stays the user's to supply:
+`mu300-audio-dsp install FILE` checks size and the `AUDCP` header and records the sha256 on the device.
+
+Not measured yet, for want of the firmware on any test board: whether the 41S image runs the BT call scene under
+Linux, and whether the period timer moves `FE_VOICE_PCM_P` / `FE_VOICE_C`.
+
+2026-10-13, against v2026.10.23: the seven audio patches apply to the pristine realme tree in `build-audio.sh`'s
+order and all 23 modules build against the 5.4 tree (`sprd-dmaengine-pcm` with its `period_timer` parameter); they
+were not loaded on a board - the released 5.4 kernel has no audio modules, and no test board has the firmware. On
+F50-B the userspace was run on the released 5.4 and on 7.2.10: without the drivers `mu300-voice` says that this
+kernel has no call audio (it used to say "run mu300-audio-dsp load", which cannot work there), `mu300-hfp` refuses
+an address that is not bonded, and nothing is left running. The call itself, on a headset or through the taps, is
+still unmeasured.
+
 ## Bluetooth
 
 ### 25. SC2355 Bluetooth on BlueZ
@@ -2817,6 +2896,72 @@ sets `I2C_NACK_EN | I2C_TRANS_EN` in I2C_CTL where mainline sets `I2C_EN | I2C_I
 
 On our (SSV) unit the pin controller must change nothing: the log shows the pads' state, and the fixup only writes
 when the function select is not func1.
+
+The reporter's boot of that kernel settled the pads: SCL6/SDA6 were on func1 already (`ctl 0x00000000 (func1) misc
+0x00083088, iic_inf6_sel 6` for both), the four clients `6-0030`, `6-0034`, `6-0063`, `6-006b` exist, and the
+charger still fails its first read (`no charger: -5`). So the pads are not the difference.
+
+**What reading ZTE's charger driver gives instead: the chip may not be at 0x6b at all.** The U30 Air's 5.4 kernel
+builds `drivers/vendor/common/sqc_v8/sqc_bq2560x.c` (`CONFIG_VENDOR_SQC_BQ2560X=m` in `kernel/u30air.fragment`;
+its `bq2560x:bq2560x_charger_probe enter` is the line in the reporter's 5.4 log), not
+`drivers/power/supply/bq2560x-charger.c`. Its `bq2560x_get_chip_vendor_id()` reads REG0B at the node's address
+and, when that read fails, sets `info->client->addr = SGM41513_I2C_ADDR` (0x1a) and reads again; part 0 there is
+an `sgm41513`, part 1 an `sgm41513A`. The client keeps its name, so sysfs shows `6-006b` whichever chip the board
+has. For the chip at 0x1a the driver codes two fields differently (`info->client->addr == SGM41513_I2C_ADDR` in
+`bq2560x_charger_set_current()` and `bq2560x_charger_set_termina_cur()`): the fast charge current in eight ranges
+of eight steps (5, 10, 20, 30, 60, 60, 120, 120 mA from 0, 40, 130, 300, 540, 1020, 1500, 2460 mA) and the
+termination current in sixteen steps (5 ... 240 mA, or six times each with REG0D bit 0 clear); every other
+register it uses is the same for both chips.
+
+That fits everything the reporter measured, which a dead bus does not:
+
+- mainline gets a NACK (-5, in the log 2 ms after the I2C core's first line), not a timeout (-110): the controller
+  ran the transfer and nothing acknowledged 0x6b. Patch 0009 gave up there, as it should on the F50, which has the
+  node and no chip;
+- `i2cget -f -y 6 0x6b 0x00` fails on Android and on 5.4 on that unit while the vendor driver charges through the
+  same bus: what a driver that went on at 0x1a looks like from outside;
+- the other three devices (`ptn38003a` redriver 0x30, `aw883xx` amplifier 0x34, flash 0x63) have no driver under
+  mainline, and whether they answer was only ever tried with i2cget, on a unit where i2cget also fails for the
+  charger that works. "Bus 6 is dead to every device" was never shown; one failed read at 0x6b was.
+
+What is not measured: that the ABSSV unit's chip is at 0x1a. Its 5.4 log decides without any new kernel
+(`dmesg | grep bq2560x_get_chip_vendor_id`: `failed to get vendor id ret=-5` followed by `chg_IC_name=sgm41513`
+for a chip at 0x1a; `pn=0x2` with `chg_IC_name=sgm41511` or `bq25601` and no "failed" line for one at 0x6b).
+Our SSV unit has an SGM41511 at 0x6b (part 2 in REG0B, FINDINGS 33d).
+
+Patch 0015 does what ZTE's driver does, for the `ti,bq2560x_chg` node only: when the read at the node's address
+fails, the same read at 0x1a through a client of its own (`devm_i2c_new_dummy_device`), and when that answers,
+the regmap on that client, the SGM41513's two tables (Android's 1.98 A is code 52 there; the bq25601's 60 mA
+steps would have written 33, which is 600 mA on that chip; the battery node's 300 mA termination current is code
+6 in the times-six range), the precharge current left as the chip has it (ZTE's driver has no code for it),
+`model_name` `sgm41513`, and `nothing at 0x6b (-5): the SGM41513 at 0x1a` in the log. A failure now names both
+reads (`no charger: -5 (and -5 at 0x1a)`), so one boot on the ABSSV unit also says when the idea is wrong. Compiled
+only (the one object, `W=1`, on 6.18.56 and 7.2.10 with the other patches applied); not booted on any device, and
+no SGM41513 was available to test against. What the patch takes to be the same on that chip without ZTE's driver
+showing it: OTG_CONFIG, VBUS_STAT, PG_STAT and IINDET_EN. `mu300-usb` still addresses 0x6b for host mode and would
+have to follow once the chip is confirmed.
+
+What else was compared, in case the chip is not at 0x1a either:
+
+- `sprd-i2c 22240000.i2c: probe ... failed with error -22` is the camera's bus (i2c0, one child,
+  `sensor-main@20`), not the charger's: its node says `clock-frequency = <1000000>` (read on our unit:
+  `000f4240`), mainline's `i2c-sprd.c` takes 100 kHz and 400 kHz only and returns -EINVAL for anything else, the
+  vendor driver also takes 1 MHz. Our SSV unit has no `i2c-0` under 7.2.10 either. Harmless for the charger.
+- Clocks and supplies: the forced command line (`CONFIG_CMDLINE_FORCE`) carries `clk_ignore_unused
+  pd_ignore_unused regulator_ignore_unused` on every unit, so mainline switches off nothing the bootloader left
+  on; the i2c6 clocks are the same three on both units (`ext-26m` source, `i2c6-eb` enable, `ap-i2c6`, 26 MHz;
+  `i2c6-eb` counts 0 on the reporter's unit only because nothing was using the bus when it was read, 1 on ours
+  where the charger is polled).
+- Bus timing at 400 kHz (i2c6's `clock-frequency`, `00061a80` on our unit), from the two `sprd_i2c_set_clk()`:
+  mainline divides SCL 40 % high / 60 % low and writes a start hold of `6 * 26 MHz / 10^7` = 15 source clocks
+  (0.58 us); ZTE's 5.4 driver has "ZTE modify 400K&100K duty 20200827", 31 % / 69 %, and a start hold of
+  `18 * 26 MHz / 10^7` = 46 (1.8 us). A board with slower edges could NACK under mainline's and not under ZTE's;
+  nothing measured says this unit does, and our SSV unit and the NFC bus of the ABSSV unit (also 400 kHz) work
+  with mainline's. This is the next thing to try if 0x1a does not answer.
+- I2C_CTL: the vendor driver also sets `I2C_NACK_EN | I2C_TRANS_EN` (bits 22, 21) and resets the controller
+  (`i2c_rst`) after a transfer timeout. Mainline sets neither bit and still sees a NACK as -5 at once and not as
+  a timeout on this unit, and bus 2 works on the same unit with the same driver, so these are unlikely to
+  be the cause; the reset only ever runs after a timeout, which mainline did not have.
 
 ### 34. LEDs, and the defects from a second board's test
 A second F50 (restored from F50 #1's backup, with its own eMMC and factory Wi-Fi address) was tested from a user's
@@ -4348,7 +4493,7 @@ and dash with busybox 1.37 as awk in a Debian container); not sent from a device
 Open, from the same issue: a service that answers HTTP 200 with its own error inside (DingTalk `errcode`, Feishu
 `code`) is logged as delivered - the HTTP helper passes on the status and nothing of the reply's body
 (`sms-forward-http.uc`), so that no reply reaches a log; and the delivery log (RAM, the last 100 lines) has no clear
-button. Section 53 is PR #195's (the carrier name); this branch does not have it.
+button. Both are §58. Section 53 is PR #195's (the carrier name); this branch does not have it.
 
 ### 55. Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170)
 
@@ -4480,8 +4625,200 @@ as sing-box), `profile_check`, `use`, `status` with the exit address, `logs` per
 all as the page expects. `sub_add` takes https only, which could not be served on the test link (the CLI's
 `--insecure` did the subscriptions there). Not looked at in a browser: the pages themselves.
 
+### 57. A 64 GB unit whose partition table has userdata filling the disk, and no way to make room from Windows (#32)
 
-### 57. The U30 Air's second SIM: the hardware facts behind PR #73 (Snrat)
+Reported in issue #32, in three lines and without a number from the device: on a 64 GB unit a vendor firmware image
+replaced the partition table by one in which `userdata` "fills the entire disk"; `install.ps1` refused it as a layout
+it does not know; and a 4096-sector alignment computation came out as -4 MiB. **Nothing here was measured on a
+device.** We have no unit with that table, and the issue has no `-Check` output, no sector and no name of the image.
+Not known: which image it was, where `userdata` begins in that table, whether it is the last entry, whether the other
+partitions are where the factory table has them, and whether the GPT's last usable LBA is the factory one.
+
+What the code says about it:
+
+* **The -4 MiB is the region arithmetic, and it is what a table that ends at the end of the eMMC gives.** Both
+  installers take the free region from the first 4096-sector (2 MiB) boundary behind the last partition - the next
+  one even when the partition ends on one - to the last boundary but one before the backup GPT (`region_probe` in
+  `tools/storage.sh`, the same two lines in `install.ps1`). With the figures of #9 (122159104 sectors, last usable
+  LBA 122155007) and `userdata` up to the last usable LBA, the partitions end at sector 122155008 = 29823 x 4096:
+  the start is 29824 x 4096 = 122159104, the end of the disk, and the end is 29822 x 4096 = 122150912, which is
+  8192 sectors or 4 MiB before it. Any table whose last partition ends in the last 2 MiB of this eMMC gives the
+  same -4 MiB, so the number fits the report and does not tell where exactly `userdata` ends.
+* When the issue was written, `install.ps1` printed that number ("only -4 MiB of free space after the last
+  partition: this device has a different layout") and `install.sh` went on to `offer_repartition`. Since the fix
+  for #65 a crossed region is an empty one in both, so Windows said "only 0 MiB" - and still had nothing to offer.
+  The arithmetic is now a function there (`FreeRegion`) with the layout above among its tests.
+* **`install.ps1` had no make-room path at all**; `offer_repartition` (#9b) existed in `install.sh` only. It now has
+  `OfferRepartition`, the same steps in the same order: the first 34 and the last 33 sectors of the eMMC are copied
+  to `work\gpt\gpt.head` and `gpt.tail` (that copy is the backup of the table) and nothing else is read;
+  `tools/resize-last-partition.py --show` checks both GPT copies and refuses when `userdata` is not the last
+  partition; at least 4 GiB stay with Android and Linux gets at least 800 MiB; the questions are the same (yes/no
+  with no as the default, the GiB for Linux, the word `ERASE` typed as it is); the backup GPT is written before the
+  primary; the table is read back and compared; the first 32 MiB of `userdata` are cleared so that Android formats
+  it; the device reboots and the installer is run again. Only those three writes exist: the two copies of the table
+  and the start of `userdata`. `-Check` prints the figures and writes nothing.
+* Two things the Windows path does that `install.sh` does not: it compares the SHA-256 of the two pushed files on
+  the device with the ones the tool made before `dd` writes them (a push that failed or stopped halfway would be
+  written as it is), and it deletes the table files of an earlier run before it reads the table, so one of them
+  cannot stand in for a read that failed. Neither was seen to go wrong; both are cheap.
+* A refusal now carries its figures: the eMMC's size in GiB and sectors, the sector the partitions end at, the free
+  MiB behind them, the 700 MiB needed there and what is missing; the tool's own reason when it refuses the table
+  ("the last partition is 'x', not 'userdata'", a CRC that does not match); and, when there is too little to
+  split, `userdata`'s sectors, the 4096 + 800 MiB needed and what is missing.
+
+What is tested, and what is not: `tests/fakegpt.py` builds the table of #9 with `userdata` extended to the last
+usable LBA (the other partitions' sizes are made up; only `userdata`'s sectors and the order matter), and the real
+tool edits it. `tests/test_resize_last_partition.py` checks that the edit changes `userdata`'s last sector and the
+CRCs and no other byte, and what is refused; `tests/installer.Tests.ps1` runs `OfferRepartition` under Windows
+PowerShell 5.1 and PowerShell 7 against three stubs for the device and checks every answer that must change
+nothing, the order of the writes, and the refusals. **Not run: `install.ps1` on a Windows machine against a
+device, and either installer on a unit with this table.** The shrink itself has been done on one 32 GB unit (#9b,
+issue #2); whether Android formats a 64 GB `userdata` that was shrunk this way after a vendor flash is not known.
+`uninstall.ps1` does not offer to grow `userdata` back; `uninstall.sh` does.
+
+### 60. `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149)
+
+Found while reviewing the call audio and voice API branches on F50-B (2026-10-13).
+
+* `boot/init` mounts `/run` as a plain tmpfs, which is mode 1777 - like `/tmp`, not the 0755 systemd would give it.
+  Any local user (a service account, the vendor daemons' own account of 41) can make `/run/<name>` before the
+  daemon that expects to own it: measured, an unprivileged user created a file there.
+* `mu300-voice` moved its state from `/tmp/mu300-voice` to `/run/mu300-voice`, which was the same exposure under
+  another name: pid files it kills, the mixer undo log it writes back, files root writes there. `mu300-atd` did
+  `mkdir -p /run/mu300-at` and looked no further: in a stranger's directory, or behind his symlink, the command
+  fifo is his to write (AT commands, as root's daemon) and every answer his to read.
+* `rootfs/overlay/opt/mu300/lib/run-dir.sh`, one helper for both so the two cannot drift: `run_dir_ours` (a real
+  directory, not a symlink; the daemon's own uid; not writable by group or others) and `run_dir_take`, which makes
+  the directory that - a plain `mkdir`, never `mkdir -p` (through a symlink that makes the directory where it
+  points). The first version of the check refused a foreign directory and stayed down until somebody removed it,
+  which turned the squat into a denial of service; the second removed it with `rm -rf`, which is a race - whoever
+  squatted can still write `/run`, and busybox's recursive remove walks by path. Now nothing depends on what was
+  seen and nothing is deleted recursively: a non-directory goes with `rm -f --`, an empty directory with `rmdir`
+  (neither follows a symlink at that name, each fails harmlessly on the other kind), a directory with contents is
+  moved whole into `/run/.<name>.foreign.<pid>` (made by `mkdir`: ours and 0700, or nothing is moved) and left
+  there to be looked at, and what counts in the end is the check again. A caller who is not the owner (a member
+  of the voice group running `mu300-voice events`) gets the check alone and never creates the directory.
+* The headset's control fifo moved from `/run/mu300-hfp.ctl` into `/run/mu300-voice`, and
+  `/etc/tmpfiles.d/mu300-run.conf` makes both directories at boot.
+* `/run/mu300-at/urc` is 0700 now: with caller id on (`AT+CLIP=1`, which `mu300-voice` sets) every ring writes
+  the caller's number into that log, which was world-readable. Every reader is root.
+
+Measured on F50-B as root under dash, bash and busybox ash: a directory made first by another user (with a fifo
+named `cmd` in it) and a symlink to `/etc` were both put out of the way, `/etc` untouched, the second call silent;
+`mu300-voice status` then answered. Open: `/run` is still 1777 - `mount -t tmpfs -o mode=755` in `boot/init` is
+the real fix, and it is a boot change that wants its own device test. `/run/mu300-at/answer.<pid>` and
+`/run/mu300/` are as they were.
+### 58. A service's own error in an HTTP 200 answer to the SMS webhook, and a button that clears the delivery log (#171)
+
+The two points §54 left open. The webhook counted any 2xx as "Delivered"; chat services answer 200 and put their
+refusal in the body. Measured on the U30 Air (openwrt-luci v2026.10.23, kernel 7.2.10) against a fake webhook on the
+LAN that answers like the services; **not sent to any real service**.
+
+* **One rule the user sets, not a table of services.** "The answer must contain": `KEY=VALUE` (`webhook_expect` in
+  `/etc/mu300/sms-forward.conf`). With it, a 2xx is a delivery only when the answer is a JSON object whose
+  **top-level** `KEY` is the scalar `VALUE`. Empty (the default, and what a page from before the field sends): any
+  2xx, exactly as before - the helper is not even asked for the answer then. The page's presets (`errcode=0`,
+  `code=0`, `code=200`, `ok=true`) only fill the field in. A table of services in the code would be wrong the day
+  one of them changes; none of the answers below needs more than a top-level key.
+* **What the services answer** (read from their documentation on 2026-10-13, not from a real request):
+
+  | Service | Answer | Rule | Source |
+  |---|---|---|---|
+  | WeCom group robot | `errcode` 0 is success, "judge by errcode, not errmsg"; 93000 invalid webhook, 45009 rate limit, -1 busy | `errcode=0` | developer.work.weixin.qq.com/document/path/90313 (the send page, /path/91770, shows no reply) |
+  | Feishu / Lark custom bot | `{"code":0,"msg":"success","data":{}}` (`StatusCode`/`StatusMessage` kept for old clients); 9499 bad request, 19021 signature, 19022 IP, 19024 keyword, 11232 rate limit. The page gives no HTTP status | `code=0` | open.feishu.cn/document/client-docs/bot-v3/add-custom-bot |
+  | Bark | `{"code":200,"message":"success","timestamp":N}`; a failure is `code` 400 or 500 **and the same HTTP status**, so the status alone already catches it. A batch push answers 200 with a code per device inside `data`, which a top-level rule cannot see | none needed (`code=200` is harmless) | bark-server `router.go` (`CommonResp`), `route_push.go` |
+  | Slack incoming webhook | 200 with the plain text `ok`; errors are HTTP 400/403/404 with a word (`invalid_payload`) | none: with a rule set every delivery fails | docs.slack.dev/messaging/sending-messages-using-incoming-webhooks |
+  | Slack Web API | a top-level boolean `ok`, `error` with a short code; the page gives no HTTP status | `ok=true` | docs.slack.dev/apis/web-api |
+  | Telegram Bot API | `ok` (boolean), `description`, `error_code`; the page gives no HTTP status. The Telegram target here is unchanged (status only) | `ok=true` for a webhook pointed at it | core.telegram.org/bots/api, "Making requests" |
+  | DingTalk custom robot | **not read from its own documentation**: open.dingtalk.com renders its pages by script and gave navigation only. Alibaba Cloud's help page quotes the reply `310000: sign not match`; `{"errcode":0,"errmsg":"ok"}` is what every third-party write-up shows | `errcode=0` | help.aliyun.com/document_detail/421895.html |
+
+* **Where the answer is read, and what leaves that place.** `sms-forward-http.uc` still prints the status and nothing
+  of the reply. Only when the caller sets `MU300_FWD_ANSWER=4096` in its environment (never the request, which the
+  user writes) does it add the first 4096 bytes of a **2xx** reply's body after the status line; the rest is read and
+  dropped as before. Those bytes go down a pipe into one awk (`answer_verdict` in `mu300-sms-forward`), which keeps at
+  most 4096 bytes in memory and prints one line: `answer ok`, `answer differs [TOKEN]` or `answer none`. Nothing
+  else of an answer exists outside that pipe: no file, no shell variable, no log.
+* **Why awk and not `jsonfilter` or ucode's `json()`.** A parser refuses an answer cut at 4096 bytes, and a delivery
+  wrongly called failed is sent again. `answer_verdict` walks the text once, counting brackets and skipping strings,
+  so a long answer whose key comes first still gives its verdict; a value the cut may have shortened is not looked
+  at. It also runs in the tests under the shells and the awk the device has, which a ucode function would not
+  (no ucode on the CI runner). The key and the value reach awk in its environment and are compared as text - a
+  string by its content, anything else as written, so `0` is not `0.0` and `"0"` is `0` - never as a pattern, never
+  through a shell. A key that is there twice must be right both times.
+* **What a panel user can learn of an answer, and why it is kept this small.** Before this, nothing of a reply came
+  back: only the HTTP status. Whoever may open this page (the write ACL: the panel's administrator) could already
+  make the device send a POST to any address it reaches, its own loopback and the LAN included, and see the status;
+  that is unchanged, and there is no private-address blocklist, here or before - a webhook to a LAN service is a
+  normal use. What is new is that a test, or a delivery, now says something about a **JSON** reply of that address.
+  It is held to what a status check needs:
+  * The rule: `KEY` is a name (a letter or `_`, then letters, digits, `_`; 32 at most), `VALUE` a whole number of
+    16 digits at most (a `-` before it allowed) or 1 to 16 lowercase letters. The adapter and the forwarder both
+    check it. Only a **top-level scalar** is compared; an object or a list under the key counts as no value.
+  * The log shows the value the service put there only when it is a whole number of 16 digits at most or a bare
+    `true`, `false` or `null`: `the service answered errcode=310000`. Any other value - a text, a fraction, a longer
+    number - is `the service answered another errcode`, without it.
+  * One message, `no errcode in the answer`, for a missing key, an object or list under it, an empty answer,
+    something that is no JSON object, and a key beyond the first 4096 bytes: no length, no type, no excerpt.
+  * "Send test" from the panel is refused when another was started under 5 s ago (`mu300-sms-forward test-gate`,
+    asked by the adapter; the command line's own `test` is root's and is not gated). The page's other actions have
+    no such limit; this one is the only way to ask about an answer at will, and one test at a time was already the
+    rule (the `test` lock).
+
+  **What remains**, for the owner to judge: an administrator of the panel can point the webhook at an address only
+  the device reaches and learn, per test (one in 5 s) or per forwarded SMS, about a reply that is a JSON object:
+  whether it has a given top-level key with a scalar under it; whether that scalar equals a number or a lowercase
+  word of the administrator's choosing; and, when the scalar is a whole number of up to 16 digits or
+  `true`/`false`/`null`, that value itself. A numeric secret at the top level of a JSON reply (a PIN, a counter)
+  could be read that way; a text secret could only be guessed at, a lowercase word of up to 16 letters per try.
+  Nothing of a reply that is not a JSON object, and nothing below the top level, comes back at all. The same
+  administrator can already read and change every setting of the device from the same panel.
+* **Retried or not.** The HTTP status decides first, as before. With a 2xx: another value under the key is the
+  service saying it did not take the message, so it is retried like a 5xx (30 s, doubling, ten times) - another try
+  cannot deliver twice, and rate limits (WeCom 45009, Feishu 11232) pass by themselves. No such value at all fails
+  **without** a retry: nothing says the message was not taken, the rule most likely does not fit the service, and
+  ten retries would then be ten copies of every SMS. A rule in the file that is not such a `KEY=VALUE` (the panel
+  never writes one) sends nothing: `the answer check is not KEY=VALUE`.
+* **"Send test"** goes through the same `deliver`, so it shows the same verdict.
+* **Clear.** `forward_log_clear` (write ACL, no argument) -> `forward logclear` -> `mu300-sms-forward log-clear`,
+  which unlinks `/run/mu300-sms-forward/log` (and `log.part`) and never opens it: a link at that name goes, what it
+  points to stays. The queue and the retry state are not touched.
+
+Measured on the device, through `ubus call mu300dash forward_set` / `forward_test` / `forward_get` (forwarding
+itself left off; the device has no `timeout` command, so the helper ran without one):
+
+| The fake service answered | Rule | Log |
+|---|---|---|
+| `{"errcode":310000,...}` | none | Delivered, `HTTP 200` |
+| `{"errcode":0,"errmsg":"ok"}` | `errcode=0` | Delivered, `HTTP 200, errcode=0` |
+| `{"errcode":310000,...}` / `{"errcode":93000,...}` | `errcode=0` | Failed, `HTTP 200, the service answered errcode=310000` / `=93000` |
+| Feishu's success body | `code=0`, `StatusCode=0` | Delivered |
+| `{"code":19024,...}` | `code=0` | Failed, `the service answered code=19024` |
+| Bark's success / HTTP 400 failure | `code=200` | Delivered / Failed, `HTTP 400` |
+| `{"ok":false,"error":"invalid_auth"}` | `ok=true` | Failed, `the service answered ok=false` |
+| `{"errcode":0,"errcode":7}` | `errcode=0` | Failed, `the service answered errcode=7` |
+| `errcode` the text `hunter2`; `errcode` a text of `$(touch ...)`, backticks, quotes, a line break, an escape sequence | `errcode=0` | Failed, `the service answered another errcode`; no file was made |
+| `ok` as text; an HTML page; 1 MB of every byte value; the key one level down only; an object under the key; 2 MB with the key last | `ok=true`, `errcode=0` | Failed, `HTTP 200, no ok in the answer` / `no errcode in the answer` |
+| HTTP 204, no body | `errcode=0` | Failed, `HTTP 204, no errcode in the answer` |
+| 500 objects deep, then the key at the top; 2 MB with the key first | `errcode=0` | Delivered |
+| HTTP 500, 401 with `{"errcode":0}` | `errcode=0` | Failed, `HTTP 500`, `HTTP 401` |
+
+The page refused `errcode`, `errcode=0;id`, `errcode=$(touch ...)`, `a=b=c` and `err code=0`. A second
+`forward_test` right after one was refused ("A test was started a moment ago; wait a few seconds"), a third 5 s later
+started. Through the queue (the installed forwarder on a pool, configuration and log of its own, first wait 2 s): a
+service that answers `errcode=-1` once and then `errcode=0` gave "Will retry", then "Delivered" after 2 s;
+`errcode=310000` every time gave two retries and "gave up after 3 attempts"; a missing key gave one "Failed" and one
+request. After all of it neither the answers' marker text nor `hunter2` was in any regular file under `/run`,
+`/tmp`, `/var` or `/etc/mu300`, nor in `logread`. `forward_log_clear` emptied a log of 29 lines; with a link at the
+log's name, the link went and its target kept its content; the next test wrote a new 0600 file. In a headless
+browser (Playwright) the page showed the field, a preset filled it in, Save kept it and Clear emptied the table
+(looked at before the rule and the messages were narrowed; the page's script did not change after).
+
+Not measured: any real service; the translations on a device (the test unit ran the changed files over an image
+built without them, so the page's new strings were English); what uclient does with an answer whose `Content-Length`
+is wrong or that never ends (the helper's 15 s timeout is unchanged). The unit tests (`tests/test_sms_forward.py`)
+ran under dash and bash on macOS and under busybox ash with busybox 1.37 as awk in a Debian container.
+
+### 74. The U30 Air's second SIM: the hardware facts behind PR #73 (Snrat)
 What one U30 Air (OpenWrt 25.12.5, Linux 7.2.9, modem firmware `s_modemConfig=7`) showed; `docs/U30AIR-SIM2.md`
 has the sequences and the rules built on them. Not verified on an F50 or a U30 Pro, and on the maintainer's U30
 Air (one SIM) only the SIM1 side could be repeated.
