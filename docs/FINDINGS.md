@@ -130,6 +130,7 @@ what replaced it. The table below gives each section's state.
 | 65 | An APN with a user name and a password (`AT+CGPCO`), and what else kanoqwq's APN page does | current (unit tests only; never sent to a modem) |
 | 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
 | 70 | adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it | current (unit tests; nothing of it measured on a device: the checklist is in the section) |
+| 71 | A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found | current (unit tests, a fake adb and a fake installer; the window seen on macOS only; **not run against a device**, on Windows only by CI) |
 
 ## Hardware and firmware facts
 
@@ -5226,3 +5227,131 @@ carries the change). `S` is the device's serial in `adb devices`, the computer a
     MU300 Linux, not Android", asks, prints `asking it over adb (MU300LINUX-...)`, and goes on once Android is up;
     the same with `install.ps1 -Check` on Windows. With `adb auth keys` and no key of that computer: over SSH as
     before.
+
+### 71. A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found
+
+**Nothing in this section was run against a device.** Every test device was in use while it was written. What ran:
+the unit tests, `install.sh`, `uninstall.sh`, `install.ps1` and `uninstall.ps1` as a whole against an `adb` that is a
+Python program (`tests/fakeadb.py`), and the window on one Mac (macOS 26.6, Python 3.13 with Tk 9.1) against that
+fake adb and a fake installer. On Windows only what CI runs. The list of what a device still has to show is at the
+end.
+
+**Why.** A user showed a third party's Windows program for this project: a form with a device list, six buttons
+and a few tabs, which carries its own copy of what the installer does. A copy drifts: the installer has gained the
+slot rule, the boot chain sync, the read-back of the boot image and the bounded SD stages (§33a, §50, #86) since
+any such copy could have been made. So the window here has no install logic at all. It asks the questions, hands
+the answers to `install.sh` / `install.ps1`, and shows what they report.
+
+**The answers mode** (`tools/answers.sh`, `tools/answers.ps1`; `docs/INSTALLER-AUTOMATION.md` is the reference).
+Each question has one variable, the last argument of its `ask`. Four rules carry the safety:
+
+* A question whose variable is not set stops the run and names the variable. It is never defaulted and nothing is
+  read from standard input in its place. Tested for every question up to the first pull, under dash, bash and
+  busybox ash, and for `install.ps1` under Windows PowerShell 5.1 and PowerShell 7.
+* A variable set to nothing takes the default, and no default is the destructive answer: `INSTALL`, `ERASE`,
+  `overwrite`, `internal` and `UNINSTALL` have to be given.
+* A question that comes back stops. The kernel question and the make-room size repeat until they like the answer;
+  the same variable would answer for ever. The second time is an error ("the answer in MU300_ANS_KERNEL was not
+  accepted: 5.4").
+* `@stdin` as a value puts the question on the stream and reads one line. That is what lets the window show the
+  installer's **own** summary - made after the download and the build, from what is really there - before
+  `INSTALL` is sent. A window that composed a summary of its own from the choices would be showing a guess.
+
+**The progress stream** is lines `@@mu300 {json}` next to the text for people: stages with a percentage, questions
+and answers, the facts of the device, a download's bytes once a second, the sha256 results, errors. The last event
+of a run is `done` or `error` whatever ends it (an `EXIT` trap in the shell scripts, a `trap` in PowerShell): a
+reader must never wait for more. The facts of `--check` are what the window draws the device from, so the window
+and the text check cannot disagree about a device; among them are things the text does not print - the bootloader's
+lock and verified-boot state, read with plain `getprop` **before** the check for root, so a device without root
+still says what it is.
+
+**What went wrong on the way, and is fixed:**
+
+* *PowerShell does not tell `$Ans` from `$ans`.* `tools/answers.ps1` is dot-sourced, so its script variables share
+  `install.ps1`'s scope. The dictionary of answers was `$script:Ans`; `install.ps1`'s own `$ans = Ask ...` (the
+  storage question) replaced it with a string, and the first whole run on Windows stopped with "[System.String]
+  does not contain a method named 'ContainsKey'". `-NonInteractive` was lost the same way: the file set a variable
+  of the parameter's name to `$false` after the parameter had been bound. Every variable of the file has the prefix
+  `Mu` now, and `tests/test_answers.py` checks that the installers use none of those names. Found by CI's first run
+  of `tests/answers.Tests.ps1`, not by reading.
+* *A secret given in the environment was inherited by everything.* `MU300_ANS_PASSWORD` from an answers file was
+  never exported, but one given in the environment stayed there for adb, curl and python to inherit; an answers
+  file was accepted whatever its permissions; a malformed line of it was echoed. Now: one table of secrets, whose
+  values are never printed, never in an event and never in an error; a secret in the environment is taken out of
+  it before anything is started (and put back for the one restart after a self-update); the file must be the
+  user's alone (no link, owned by the user, no permission for group or others - `install.sh`, `uninstall.sh`;
+  Windows has no such check); a bad line is reported by its number. The fake adb records the answer variables it
+  was started with, and the tests look for the password in every output stream, in adb's environment, in the
+  fake's log and in the work directory.
+* *The parts of a parallel download count twice for a moment.* While they are joined both the parts and the whole
+  file exist; the byte count on the stream is capped at the length.
+* *`install.ps1` waited two minutes on a device without root* before it said so: it asked for `sys.boot_completed`
+  through `su`. It asks through plain adb now, as `install.sh` does.
+* *A boot image that could not be pulled was a PowerShell exception* (`Get-Item` on a file that is not there), not
+  the installer's message.
+
+**The beta question.** The installers took `releases/latest`. They now read the list of releases and offer a
+prerelease only when it was published after the newest full release (`tools/release_pick.py`, one file for both
+installers and the window). No token; when the list does not come - offline, the API's rate limit, a proxy's page -
+the newest release is looked up as before and nothing is asked. The release is resolved before the questions now,
+so a GitHub that does not answer stops the run before the password, not after the pulls. `install.ps1 -Answers`
+(one answer per line, in order) never gets the question: it would shift every answer behind it.
+
+**Where a Python that can draw the window is found.** Measured on this Mac, the one fact of this section that came
+from a real machine:
+
+* macOS's own Python - `/usr/bin/python3`, the Command Line Tools' 3.9.6 - has tkinter with **Tk 8.5**. On macOS
+  26.6 its window opens and stays black: no widget is ever drawn. Homebrew's Python 3.13 on the same machine had no
+  tkinter at all; `brew install python-tk@3.13` brought Tk 9.1, and with it the window draws.
+* So a Python counts only when its Tk is 8.6 or newer, an older one is named as such ("its Tk is older than 8.6"),
+  and among the Pythons without a usable tkinter the one a fix is known for is the one offered
+  (`brew install python-tk@X.Y`), not the first found. The window itself refuses an older Tk with exit status 3,
+  on which the installers go on in text.
+* `/usr/bin/python3` without the Command Line Tools is a stub whose only effect is the dialog that offers to
+  install them. It is run only when `xcode-select -p` succeeds (tested with a stub that records being run).
+* On Windows the Microsoft Store's alias is a `python.exe` that prints nothing and fails; every candidate is run
+  with a real argument, so it is never taken for a Python and the Store is never opened. A Python installed a
+  moment ago by winget is not on the process's `PATH`; the installation directories find it.
+* Not measured: any Linux desktop, any Windows machine with a person at it.
+
+**The window** (`gui/`, tkinter and the standard library only). Model, runner and controller have no window in
+them and are tested without a display; the widgets are built once per page from the controller's state.
+
+* The device, root and the bootloader are shown separately. Only a missing root blocks an installation. A
+  bootloader that reports "locked" while root works is shown with a warning and does not block: root is what the
+  installer needs, and **what an F50 or U30 Air reports in `ro.boot.flash.locked` and
+  `ro.boot.verifiedbootstate` has not been read from a device for this section**. The window does not root or
+  unlock anything and links to no guide for it.
+* Stop is offered while nothing has been written to the device (up to and including the copy to
+  `/data/local/tmp`) and not from `android-install.sh` on; closing the window is refused there too. Closing the
+  summary dialog answers no.
+* The make-room path (§9b, §57) is there with its figures and wants `ERASE` typed into the window, which is then
+  the installer's own `MU300_ANS_ERASE_ANDROID`. **It has never been run from the window against a device.**
+* "Back up now" is `install.sh --backup`: Android's boot image and the first block of `misc`, compared with the
+  device by sha256. The NV and calibration partitions are not read by it, by the installers or by the window; the
+  full backup of those stays `tools/backup-device.sh`, which the window names and does not run.
+* A device in our Linux is recognised by its serial number (`MU300LINUX-...`, §70) and asked with
+  `mu300-device --json`; update, kernel switch, restart and back to Android then go over adb as the project's own
+  commands. Without adb to it the window shows the commands and opens an SSH session in the system's terminal.
+* Every line of a run is masked when it comes in: the serial numbers of the attached devices, 15-digit numbers
+  standing alone (IMEI, IMSI), ICCIDs, passwords and their hashes, Wi-Fi passphrases, adb keys, MAC addresses, the
+  home directory's name. Nothing unmasked is kept, so the log on the screen, the copied and the saved log and the
+  diagnostics report cannot differ in that. The masking is by pattern: a secret in a shape nobody thought of is
+  not caught, which is why the report says to read it before posting.
+
+**What a device has to show, in this order** (none of it done):
+
+1. `./install.sh --check` and `.\install.ps1 -Check` with `MU300_PROGRESS=1` on an F50 and a U30 Air: the facts
+   against what the text says, and what `bootloader.locked` / `bootloader.verified` really are there.
+2. `./install.sh --backup`: the two files, the hash line.
+3. An installation with an answers file, on a device that can be reinstalled: every question answered, the summary
+   on `@stdin`, the device booting Linux.
+4. The same from the window on macOS, Linux and Windows: the device page for a device in Android, unauthorised,
+   and in Linux; the storage bar against the real partition table; an installation through to the finish page;
+   Stop during the download; the SSH button.
+5. The uninstaller from the window, with `keep` first.
+6. The window's Manage page against a device in Linux with adb open (§70): what `mu300-device --json` says, an
+   update check, back to Android.
+7. Windows by hand: the question and the search for Python on a machine with only the Store alias, and
+   `[Console]::OutputEncoding` under a window with no console (the Turkish and Chinese text of a run).
+8. The make-room path from the window, last, on a unit that may lose its Android data.

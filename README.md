@@ -202,6 +202,23 @@ which kernel; which one boots; whether Linux boots by default; a password; the V
 copies the Wi-Fi and modem files from your own device, shows exactly what it is about to write, and waits for you to
 type `INSTALL`. Then it reboots into Linux.
 
+**A window instead of a terminal.** Started by hand, the installer first asks whether you want the graphical
+installer: the same steps in a window, with the device, its storage and the progress shown rather than printed
+(`MU300_GUI=0` never asks, `MU300_GUI=1` starts it without asking). It needs a Python 3.8 or newer with tkinter
+(Tk 8.6 or newer); the installer looks for one, says what is missing, and installs nothing without showing the
+command and getting a yes. The window drives this same `install.sh` / `install.ps1`, so it installs nothing
+differently. It can also be started directly: `python3 gui/mu300-gui.py`.
+
+![The graphical installer: the device page](docs/images/gui/gui-01-device.png)
+
+**A beta, when there is one.** When GitHub has a prerelease newer than the newest release, the installer asks
+whether to install that beta instead and names both (default: no). `MU300_RELEASE=<tag>` / `-Release <tag>` picks a
+release and asks nothing.
+
+**Without a terminal.** `./install.sh --answers FILE` (`.\install.ps1 -AnswersFile FILE`) takes every answer from
+variables and asks nothing; a question without an answer stops the run and names its variable.
+`MU300_PROGRESS=1` adds a machine-readable progress stream. See [docs/INSTALLER-AUTOMATION.md](docs/INSTALLER-AUTOMATION.md).
+
 The installer speaks **English, Türkçe and 中文**: it asks at the start (English is the default; `MU300_LANG=tr`
 or `.\install.ps1 -Lang zh` skips the question). Adding a language is one file: see `i18n/README.md`. Before anything else it brings your copy of the project up to date
 with GitHub - a `git clone` is fast-forwarded, a downloaded zip gets the files that changed - and restarts itself if

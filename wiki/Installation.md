@@ -129,9 +129,22 @@ system of their own from a card. The U30 Air has no card slot.
 install.cmd                   # Windows (cmd)
 ```
 
+### Two questions before the device is looked at
+
+* **The language**: English, Türkçe or 中文 (`MU300_LANG=tr` or `.\install.ps1 -Lang zh` skips the question).
+* **"Use the graphical installer?"** - see [The graphical installer](#the-graphical-installer) below. Answer no for
+  the text installer this page describes; `MU300_GUI=0` never asks.
+
+And one more, only when it applies:
+
+* **"Install the beta ... instead of ...?"** When GitHub has a prerelease that is newer than the newest full
+  release, the installer names both and asks. The default is no: a beta has not run on a device as long as a
+  release. Nothing is asked when there is no such prerelease, when you named a release yourself
+  (`MU300_RELEASE=<tag>`, `.\install.ps1 -Release <tag>`), or when GitHub's list cannot be read (offline, its rate
+  limit): then it is the newest release, as before.
+
 First it brings your copy of the project up to date from GitHub and restarts itself if anything changed
-(`MU300_NO_SELF_UPDATE=1` / `-NoSelfUpdate` skips that). Then it asks the language: English, Türkçe or 中文
-(`MU300_LANG=tr` or `.\install.ps1 -Lang zh` skips the question).
+(`MU300_NO_SELF_UPDATE=1` / `-NoSelfUpdate` skips that).
 
 ### The questions, one by one
 
@@ -179,6 +192,46 @@ so you can start Linux from Android later, then reboots into Linux.
 If the device is running Linux rather than Android when you start, the installer notices and offers to reboot it into
 Android for you: over adb where the device lets the computer in (the default; no password to type), else over SSH.
 A device in Linux is in `adb devices` too, as `MU300LINUX-...`, and is never installed to as it is.
+
+## The graphical installer
+
+The same installation in a window: `install.sh` and `install.ps1` offer it when you start them by hand, and it can be
+started directly with `python3 gui/mu300-gui.py` (Windows: `py gui\mu300-gui.py`).
+
+![The graphical installer: storage](https://raw.githubusercontent.com/dikeckaan/mu300-linux/main/docs/images/gui/gui-02-storage.png)
+
+It needs **Python 3.8 or newer with tkinter, Tk 8.6 or newer**. The installer looks for one in every usual place,
+not only on `PATH`, and says which part is missing:
+
+| | where it looks | when tkinter is missing |
+|---|---|---|
+| Windows | `python`, `python3`, `py -3`; `%LOCALAPPDATA%\Programs\Python\Python3*`; `%ProgramFiles%\Python3*`; the Microsoft Store's Python | it asks for the path of a `python.exe`, or installs Python 3.12 with `winget` after showing the command and getting a yes |
+| macOS | `python3` on `PATH`, Homebrew (`/opt/homebrew/bin`, `/usr/local/bin`), python.org's builds, `/usr/bin/python3` | `brew install python-tk@3.x` for a Homebrew Python (shown first, run after a yes); or Python from python.org. **macOS's own Python has Tk 8.5, which cannot draw the window on current macOS: it is not used** |
+| Linux | `python3` on `PATH`, `/usr/bin`, `/usr/local/bin` | `sudo apt-get install -y python3-tk` (Debian, Ubuntu), `sudo dnf install -y python3-tkinter` (Fedora), `sudo pacman -S --noconfirm tk` (Arch), `sudo zypper install -y python3-tk` (openSUSE) - shown first, run after a yes |
+
+Nothing is installed without a yes, and a no or a failure simply goes on with the text installer.
+
+What the window does:
+
+* **Device**: the adb devices as they come and go, the model, Android's build, whether USB debugging is authorised,
+  **root** and the **bootloader** each for itself. This project does not root or unlock devices and gives no help
+  with it; the window says so too.
+* **Storage**: the internal storage as a bar - Android's partitions, `userdata`, the free space Linux goes into -
+  with the figures of `--check`, the SD card, and on a device without free space what making room would do.
+* **What to install**: every question of the table above, with the same defaults.
+* **Backup**: what is copied to the computer before anything is written (Android's boot image and the first block of
+  `misc`), where it goes, and a button that only makes that copy. The NV and calibration partitions are never copied.
+* **Install**: the stages, the download with its speed, the SHA256 checks, and the installer's own summary in a
+  dialog - only "Install now" there sends `INSTALL`. Stopping is offered while nothing has been written to the
+  device, and not after.
+* **Finish**: the SSH address and login for your device and system, and what happens if Linux does not start.
+* **Manage**: start Linux from Android, uninstall; for a device that runs Linux, its release, kernel and system, an
+  update, another kernel, back to Android. **Help**: the links, and a diagnostics report for an issue.
+
+The window is in English, Türkçe and 中文 (switch at the bottom left), light or dark as the system is. Logs it shows,
+copies or saves have serial numbers, IMEI, IMSI, ICCID and passwords masked. It installs nothing by itself: it runs
+`install.sh` / `install.ps1` with your answers ([how](https://github.com/dikeckaan/mu300-linux/blob/main/docs/INSTALLER-AUTOMATION.md)),
+so everything on this page about what is written and what is not holds for it too.
 
 ## Step 3: log in
 
