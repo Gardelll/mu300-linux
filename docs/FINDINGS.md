@@ -122,6 +122,7 @@ what replaced it. The table below gives each section's state.
 | 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
 | 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
+| 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
 
 ## Hardware and firmware facts
 
@@ -1737,6 +1738,14 @@ headset, answers the AT setup, opens CVSD SCO when told, and turns the headset's
 
 Not measured yet, for want of the firmware on any test board: whether the 41S image runs the BT call scene under
 Linux, and whether the period timer moves `FE_VOICE_PCM_P` / `FE_VOICE_C`.
+
+2026-10-13, against v2026.10.23: the seven audio patches apply to the pristine realme tree in `build-audio.sh`'s
+order and all 23 modules build against the 5.4 tree (`sprd-dmaengine-pcm` with its `period_timer` parameter); they
+were not loaded on a board - the released 5.4 kernel has no audio modules, and no test board has the firmware. On
+F50-B the userspace was run on the released 5.4 and on 7.2.10: without the drivers `mu300-voice` says that this
+kernel has no call audio (it used to say "run mu300-audio-dsp load", which cannot work there), `mu300-hfp` refuses
+an address that is not bonded, and nothing is left running. The call itself, on a headset or through the taps, is
+still unmeasured.
 
 ## Bluetooth
 
@@ -4546,3 +4555,37 @@ as sing-box), `profile_check`, `use`, `status` with the exit address, `logs` per
 `sub_refresh` (one, due) with `job`, `latency` (one, all), `engine_remove` refused while in use, `profile_remove`:
 all as the page expects. `sub_add` takes https only, which could not be served on the test link (the CLI's
 `--insecure` did the subscriptions there). Not looked at in a browser: the pages themselves.
+
+
+### 60. `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149)
+
+Found while reviewing the call audio and voice API branches on F50-B (2026-10-13).
+
+* `boot/init` mounts `/run` as a plain tmpfs, which is mode 1777 - like `/tmp`, not the 0755 systemd would give it.
+  Any local user (a service account, the vendor daemons' own account of 41) can make `/run/<name>` before the
+  daemon that expects to own it: measured, an unprivileged user created a file there.
+* `mu300-voice` moved its state from `/tmp/mu300-voice` to `/run/mu300-voice`, which was the same exposure under
+  another name: pid files it kills, the mixer undo log it writes back, files root writes there. `mu300-atd` did
+  `mkdir -p /run/mu300-at` and looked no further: in a stranger's directory, or behind his symlink, the command
+  fifo is his to write (AT commands, as root's daemon) and every answer his to read.
+* `rootfs/overlay/opt/mu300/lib/run-dir.sh`, one helper for both so the two cannot drift: `run_dir_ours` (a real
+  directory, not a symlink; the daemon's own uid; not writable by group or others) and `run_dir_take`, which makes
+  the directory that - a plain `mkdir`, never `mkdir -p` (through a symlink that makes the directory where it
+  points). The first version of the check refused a foreign directory and stayed down until somebody removed it,
+  which turned the squat into a denial of service; the second removed it with `rm -rf`, which is a race - whoever
+  squatted can still write `/run`, and busybox's recursive remove walks by path. Now nothing depends on what was
+  seen and nothing is deleted recursively: a non-directory goes with `rm -f --`, an empty directory with `rmdir`
+  (neither follows a symlink at that name, each fails harmlessly on the other kind), a directory with contents is
+  moved whole into `/run/.<name>.foreign.<pid>` (made by `mkdir`: ours and 0700, or nothing is moved) and left
+  there to be looked at, and what counts in the end is the check again. A caller who is not the owner (a member
+  of the voice group running `mu300-voice events`) gets the check alone and never creates the directory.
+* The headset's control fifo moved from `/run/mu300-hfp.ctl` into `/run/mu300-voice`, and
+  `/etc/tmpfiles.d/mu300-run.conf` makes both directories at boot.
+* `/run/mu300-at/urc` is 0700 now: with caller id on (`AT+CLIP=1`, which `mu300-voice` sets) every ring writes
+  the caller's number into that log, which was world-readable. Every reader is root.
+
+Measured on F50-B as root under dash, bash and busybox ash: a directory made first by another user (with a fifo
+named `cmd` in it) and a symlink to `/etc` were both put out of the way, `/etc` untouched, the second call silent;
+`mu300-voice status` then answered. Open: `/run` is still 1777 - `mount -t tmpfs -o mode=755` in `boot/init` is
+the real fix, and it is a boot change that wants its own device test. `/run/mu300-at/answer.<pid>` and
+`/run/mu300/` are as they were.
