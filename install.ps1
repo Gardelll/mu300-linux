@@ -1308,7 +1308,7 @@ if ($existing -eq 'no') {
     if ($FORMAT -eq 0 -and $OSES -contains 'ubuntu') { $WIPE_LEGACY = 1 }
 }
 if ($SD_MODE -eq 1 -and $FORMAT -eq 1) {
-    if ((Ask (T 'Everything on the SD card ({1}, {2}) will be erased. Type ERASE to continue' $SD_DEV (Gib $SIZE)) 'no' 'MU300_ANS_ERASE_SD') -ne 'ERASE') { Die (T 'cancelled') }
+    if ((Ask (T 'Everything on the SD card ({1}, {2}) will be erased. Type ERASE to continue' $SD_DEV (Gib $SIZE)) 'no' 'MU300_ANS_ERASE_SD') -cne 'ERASE') { Die (T 'cancelled') }
 }
 if ($script:MuAnswersMode) {
     # MU300_ANS_PASSWORD: no event and no line of output ever shows it
@@ -1477,7 +1477,8 @@ if ($SD_MODE -eq 1) {
     Write-Host ('  ' + (T 'writes:         Linux region at offset {1}, boot_{2}, 32 bytes of misc (boot_{3}, GPT and userdata are not touched)' $OFF $LINUX_SLOT $ANDROID_SLOT))
 }
 Write-Host ('  ' + $BC_LINE)
-if ((Ask (T 'Type INSTALL to continue') 'no' 'MU300_ANS_CONFIRM') -ne 'INSTALL') { Die (T 'cancelled') }
+# the word itself, in capitals (-cne: PowerShell's -ne does not tell install from INSTALL)
+if ((Ask (T 'Type INSTALL to continue') 'no' 'MU300_ANS_CONFIRM') -cne 'INSTALL') { Die (T 'cancelled') }
 
 Step 'copy' 75
 Say (T 'Copying to the device')

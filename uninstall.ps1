@@ -151,8 +151,11 @@ $script:PyExe = $null
 function Python { param([Parameter(ValueFromRemainingArguments = $true)][string[]]$PyArgs)
     if (-not $script:PyExe) {
         foreach ($n in 'python', 'python3', 'py') {
-            $c = Get-Command $n -ErrorAction SilentlyContinue
-            if ($c) { $script:PyExe = $c.Source; break }
+            # -CommandType Application: command lookup ignores case and functions win, so a bare `Get-Command python`
+            # finds this very function, whose .Source is empty - and the uninstaller stopped with "Python 3 not
+            # found" on every Windows machine (install.ps1 had the same, issue #3)
+            $c = @(Get-Command $n -CommandType Application -ErrorAction SilentlyContinue)[0]
+            if ($c) { $script:PyExe = $(if ($c.Source) { $c.Source } else { $c.Path }); break }
         }
         if (-not $script:PyExe) { Die 'Python 3 not found' }
     }
@@ -338,7 +341,8 @@ if ($sdwipe -eq 'erase') { Write-Host "  SD card:  mu300sd filesystem erased ($S
 elseif ($SD_HAS -eq 'yes') { Write-Host "  SD card:  kept ($SD_DEV, not bootable)" }
 else { Write-Host '  SD card:  no installation' }
 Write-Host "  untouched: boot_$ANDROID_SLOT, GPT, userdata and all other partitions"
-if ((Ask 'Type UNINSTALL to continue' 'no' 'MU300_ANS_CONFIRM') -ne 'UNINSTALL') { Die 'cancelled' }
+# the word itself, in capitals (-cne: PowerShell's -ne does not tell uninstall from UNINSTALL)
+if ((Ask 'Type UNINSTALL to continue' 'no' 'MU300_ANS_CONFIRM') -cne 'UNINSTALL') { Die 'cancelled' }
 
 # Android still runs from the slot it ran from at the start: its partition is never the one written below
 if ((SuDo 'getprop ro.boot.slot_suffix').Trim() -ne "_$ANDROID_SLOT") { Die "Android no longer runs from slot $ANDROID_SLOT; nothing was changed" }
