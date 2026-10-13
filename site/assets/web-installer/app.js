@@ -1059,7 +1059,8 @@ function donePanel(j) {
   box.append(h("h3", {}, t("done.fallback.title")), h("p", {}, t(c.defaultLinux === false ? "done.fallback.android" : "done.fallback", String(c.attempts || 5))), h("p", {}, t("done.back")));
   box.append(h("p", {}, t(c.adb ? "done.web.adb" : "done.web.noadb")));
   box.append(h("div", { class: "actions" },
-    btn(t("done.reboot.button"), async () => { S.expectDisconnect = true; await S.dev.bootLinux(); }, "primary"),
+    // a plain restart: the installer has armed Linux already, nothing more is written
+    btn(t("done.reboot.button"), async () => { S.expectDisconnect = true; await S.dev.reboot(); }, "primary"),
     btn(t("button.done"), () => { S.view = "home"; S.job = null; render(); })));
   box.append(h("p", { class: "wi-follow" }, ...withLink(t("done.telegram"), TELEGRAM, { rel: "noopener" })));
   return box;
