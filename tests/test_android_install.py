@@ -379,7 +379,7 @@ class Extras(ShellTest):
         self.assertLess(SRC.index('\nextra_vpn_precheck $M\n'), SRC.index('mv $M/$os.new $M/$os'))
         self.assertIn('\nextra_from_push $M\n', SRC)
         # the previous system is looked at before it is removed
-        self.assertLess(SRC.index('extra_keep_vpn $M $M/$os'), SRC.index('stage_run "replace $os" 900 rm -rf $M/$os\n'))
+        self.assertLess(SRC.index('extra_keep_vpn $M $M/$os'), SRC.index('mv $M/$os $M/$os.broken; fi\n'))
 
 def make_tar(path, files):
     with tarfile.open(path, 'w:gz') as t:
@@ -800,7 +800,9 @@ class Stages(ShellTest):
         self.assertIn('stage_run "unpack $os" 3600 tar -xzpf $tarball -C $M/$os.new', SRC)
         self.assertIn('stage_run "unpack $os vendor" 900 tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new', SRC)
         self.assertIn('stage_run "clean $os" 900 rm -rf $M/$os.new\n', SRC)
-        self.assertIn('    stage_run "replace $os" 900 rm -rf $M/$os\n    mv $M/$os.new $M/$os\n', SRC)
+        # the old system goes aside and is removed, bounded, once the new one is in place
+        self.assertIn('    if [ -d $M/$os ]; then mv $M/$os $M/$os.broken; fi\n    mv $M/$os.new $M/$os\n'
+                      '    stage_run "replace $os" 900 rm -rf $M/$os.broken\n', SRC)
         self.assertIn('[ "${SD_MODE:-0}" != 1 ] || stage_run flush 1800 sync\nstall_clear\n', SRC)
         self.assertLess(SRC.index('stage_run flush 1800 sync'), SRC.index('echo MU300-INSTALL-OK'))
         self.assertIn('trap sd_exit EXIT', SRC)

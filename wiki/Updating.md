@@ -3,14 +3,19 @@
 **In one sentence:** `sudo mu300-update check` tells you whether there is a new release, `sudo mu300-update apply`
 installs it on the device itself, and `rollback` takes you back if you do not like it.
 
-**The simple version:** the device builds the new system next to the old one, and only swaps them at the very end.
-If the download breaks halfway, nothing has changed. The old one stays in the cupboard until you throw it away.
+**The simple version:** the device builds the new system next to the old one, moves everything of yours into it, and
+only swaps them at the very end. If the download breaks halfway, nothing has changed. The old one stays in the
+cupboard until you throw it away.
+
+**What you lose in an update: nothing.** Everything you added to the system or changed in it is kept, whichever way
+you update (from v2026.10.26 on; see [What an update keeps](#what-an-update-keeps)).
 
 ## Commands
 
 ```sh
 sudo mu300-update check           # installed version vs newest release
 sudo mu300-update apply           # system, kernel and boot image: download, unpack, switch; then reboot
+sudo mu300-update report          # what the last updates set aside or put back
 sudo mu300-update rollback        # back to the previous system
 sudo mu300-update rollback-boot   # back to the previous kernel and boot image
 sudo mu300-update kernel 7.2      # another kernel: 5.4 (vendor), 6.18 (LTS) or 7.2; no argument shows the current one
@@ -26,17 +31,85 @@ never installs one by itself.**
 
 ## What an update keeps
 
-* your settings (`/etc/mu300`: hotspot, VPN, toolkit), users and home directories, `/usr/local`, SSH host keys,
-  OpenWrt's UCI configuration and services you enabled yourself;
+**Everything you added to the system, and everything you changed in it.** Up to v2026.10.25 an update kept a list
+of places (`/etc/mu300`, home directories, `/usr/local`, SSH keys, OpenWrt's `/etc/config`) and the new release
+replaced the rest: `/etc/wireguard`, a service you wrote, crontabs, `/var/lib/docker`, `/opt` were gone from the
+system afterwards. From v2026.10.26 on it works the other way round. Every release image carries a list of its own
+files with a checksum of each, so the update knows which files of your system came with the release you are on.
+Whatever else is there is yours, and it goes into the new system:
+
+* files in any directory: `/etc/wireguard`, `/etc/netplan`, a systemd unit or an init script you wrote, crontabs,
+  `/var/lib/docker`, a database, `/var/www`, `/opt`, `/srv`, `/home`, `/root`, a swap file - with owner, mode,
+  times, capabilities and ACLs, hard links and holes as they were;
+* settings of the system that you changed (`/etc/ssh/sshd_config`, `/etc/sysctl.conf`, OpenWrt's `/etc/config`);
+* accounts and passwords, also the accounts of services you set up;
+* services as you enabled or disabled them, and files you deleted stay deleted;
 * the vendor files copied from your device (Wi-Fi firmware, the Android modem userspace);
 * the installed extras: the lang extra is brought to the new release, the [VPN](VPN) module to its latest release;
-* packages you installed yourself (`apk add`, `apt install`): see below.
+* packages you installed yourself (`apk add`, `apt install`): installed again at the first boot (see below), with
+  their settings and data carried over like every other file.
+
+It is the same whichever way you update: `mu300-update apply`, the computer installer's **update**, or a
+[Magisk zip](Installation#updating-with-a-zip) installed over what is there.
+
+### Where your version and the release's meet
+
+| What | What the update does |
+|---|---|
+| A file you added | It goes to its place in the new system |
+| A settings file of the system that you changed (under `/etc`, `/var`, `/home`, `/root`, `/srv`, `/usr/local`, `/opt`) | **Yours is used.** When the new release changed that file too, its version is saved in `/etc/mu300/update-kept/<old release>/image/`, so you can compare |
+| A program file you edited (`/usr`, `/bin`, `/lib`, `/www`), one of the project's own files (`/opt/mu300`, the `mu300-*` services), a package's script under `/etc` (`init.d`, `hotplug.d`) | The release's is used, so that the device works. **Yours is saved** in `/etc/mu300/update-kept/<old release>/user/` |
+| A file of the release that you deleted | Stays deleted under `/etc`, `/home`, `/root`, `/srv`, `/usr/local`, `/opt`, and so does a service you disabled. One of the project's own files, or a program file, is back |
+| A package of the release that you removed | It is back: it is part of the release's image |
+| Packages you installed | Not copied file by file: installed again at the first boot (below). Their settings and their data are carried over at once |
+| `/tmp`, `/var/tmp`, `/var/cache`, sockets, what is on another disk (an SD card, a USB stick: the mount point stays), Ubuntu's kernel modules | Not carried: they are made again, or are not part of this system |
+
+**An update never opens what you closed.** adb turned off or limited to keys, your SSH settings and keys, the
+firewall, the VPN's kill switch, sudo rules and sysctl settings stay as you set them, with their file modes. A
+service you disabled or masked stays off, also one of the project's own; a package you removed comes back with the
+release but its service is not started; an account you deleted does not come back with the release's password
+(it is locked). Where the release's version of a file had to be used, the report names it.
+
+**Nothing is dropped without a word.** Whatever was set aside or put back is listed in `/etc/mu300/update-report`.
+The update prints it, the next login reminds you once, and `sudo mu300-update report` shows it again. What was set
+aside stays in `/etc/mu300/update-kept/` through later updates until you delete it
+(`sudo rm -r /etc/mu300/update-kept` once you have looked).
+
+### Room, and going back
+
+`apply` keeps the previous system whole as `<os>.old`, exactly as it was when you updated, for `rollback`. Your
+files are therefore there twice until `sudo mu300-update clean`. When the disk has no room for the second copy,
+`apply` says how much is needed and how much is free, and changes nothing. Then either make room, or update
+without keeping the previous system:
+
+```sh
+sudo mu300-update apply --no-rollback    # your files are moved over, not copied: needs no room, and there is no rollback
+```
+
+Reboot soon after an update. The new system has your files as they were when `apply` ran; what the running system
+changes after that stays in the previous one.
+
+`apply` never goes back to an **older** release by itself: the update is done by the release it installs, and one
+from before v2026.10.26 would keep only the list of places. `rollback` is the way back. (To install an older
+release all the same: `sudo MU300_DOWNGRADE=1 mu300-update apply`.)
+
+### Coming from a release before v2026.10.26
+
+Nothing to do: the new release brings the file lists of every release from v2026.09.21 on. On a system older than
+that, or one built by hand, the update cannot tell a file you changed from one the old release shipped. It then
+carries over everything the new release does not have, keeps the old list of places as yours, and saves every
+other file that differs from the new release's under `/etc/mu300/update-kept/` instead of dropping it. The report
+says so.
+
+Should carrying everything over fail on your device, `sudo MU300_UPDATE_KEEP=list mu300-update apply` updates the
+way it was done before (the list of places only). Please report it.
 
 ## Packages you installed yourself
 
 The release's image has only its own packages. `apply` lists the ones you added before it switches, and the new
 system installs them again at its first boot, once it is online (an hour of tries, then again at the next boots, five
-at most). Until they are back their OpenWrt settings (`/etc/config/<name>`) wait in `/etc/mu300/orphaned-config/`:
+at most). Their data (`/var/lib/<name>`) and their settings are in the new system from the start, like every file of
+yours. Only their OpenWrt UCI settings (`/etc/config/<name>`) wait in `/etc/mu300/orphaned-config/` until they are back:
 settings without their program used to stay active - OpenClash's left the device without DNS. A package the feeds do
 not have (installed from a `.apk` file) cannot come back by itself; its settings stay aside. Services come back
 enabled or disabled as they were (OpenWrt's init scripts, Ubuntu's systemd units).
@@ -103,7 +176,14 @@ Settings and data are kept. Ubuntu 26.04 needs kernel 6.18 or 7.2.
 ## Updating with the computer installer instead
 
 Run `./install.sh` again and answer **update** when it asks *update or wipe*. It reinstalls the systems, writes a fresh
-boot image and keeps your settings and data. It also sets the password you type there.
+boot image and keeps everything of yours, as `apply` does. It also sets the password you type there. The previous
+system is not kept on this path (no `rollback`), so it needs no room for a second copy of your files.
+
+## Updating with a Magisk zip
+
+Install the zip of the new release over the installation, from Android: see
+[Installation](Installation#updating-with-a-zip). It keeps everything of yours too, leaves the other installed
+systems and the extras alone, keeps your password, and works without a network.
 
 ## Coming from a very old release
 

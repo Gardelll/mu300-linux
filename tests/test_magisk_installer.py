@@ -235,7 +235,7 @@ class Conf(ShellTest):
             ex = (sd / 'mu300-install.conf.example').read_text()
             lines = ex.splitlines()
             keys = [l for l in lines if re.match(r'#MU300_[A-Z_]+=', l)]
-            self.assertEqual(len(keys), 17, ex)
+            self.assertEqual(len(keys), 19, ex)
             for line in keys:
                 i = lines.index(line)
                 self.assertTrue(lines[i - 1].startswith('# '), line)          # its explanation, on a line of its own
@@ -689,6 +689,87 @@ class Plan(InstallerCase):
             [line] = [l for l in plan.splitlines() if l.strip().startswith(label)]
             self.assertIn('(default)', line, line)
 
+    def version(self, system, tag):
+        d = self.fake.root / 'fs' / system / 'etc/mu300'
+        d.mkdir(parents=True, exist_ok=True)
+        (d / 'image-version').write_text(tag + '\n')
+
+    def test_an_update_says_what_it_keeps_and_what_it_leaves_alone(self):
+        # the zip carries one system: an installed one of its kind is updated, with everything of the user's kept
+        # (android-install.sh runs the new image's carry block); the others and the extras are not its to touch
+        self.existing_filesystem(systems=('openwrt', 'ubuntu'))
+        self.version('openwrt', 'v2026.10.01')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn('keep: nothing is erased', r.stdout)
+        self.assertRegex(r.stdout, r'update: +openwrt v2026\.10\.01 -> v2026\.10\.06: everything you added to it or changed in it is kept')
+        self.assertIn('/etc/mu300/update-report', r.stdout)
+        self.assertRegex(r.stdout, r'not touched: +ubuntu and the extras \(the VPN module\) stay as they are')
+        self.assertTrue(self.nothing_written())
+        # a system that is not there yet is installed beside the others: nothing to update, the others stay
+        self.reset()
+        self.zip(system='openwrt', kernel='6.18')
+        self.existing_filesystem(systems=('ubuntu',))
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertNotRegex(r.stdout, r'(?m)^ +update: ')
+        self.assertRegex(r.stdout, r'not touched: +ubuntu and the extras')
+        # and the example file says the same, and what wipe erases
+        text = (self.fake.root / 'sdcard/mu300-install.conf.example').read_text()
+        self.assertIn('everything you added to it or', text)
+        self.assertIn('The other installed systems and the extras (the VPN module) are not touched.', text)
+        self.assertIn('wipe (root): the Linux filesystem is made anew. Every installed system, every file in them and the extras', text)
+        for key in ('#MU300_MODE=update', '#MU300_DOWNGRADE=yes', '#MU300_UPDATE_KEEP=all'):
+            self.assertIn('\n' + key + '\n', text)
+
+    def test_never_back_to_an_older_release_by_itself(self):
+        # the zip is v2026.10.06, the installed system of its kind is newer: an update to an older release would be
+        # done by the older image, which may keep only the list of places. Refused, with nothing written.
+        self.existing_filesystem(systems=('openwrt',))
+        self.version('openwrt', 'v2026.10.25')
+        for conf in ('MU300_DRY_RUN=1\n', 'MU300_DRY_RUN=1\nMU300_DOWNGRADE=yes\n', ''):        # /sdcard cannot allow it
+            r = self.run_installer(conf=conf)
+            self.assertNotIn(r.returncode, (0, 3), r.stdout + r.stderr)
+            self.assertIn('The installed openwrt is v2026.10.25, and this zip is v2026.10.06, an older release.', r.stdout + r.stderr)
+            self.assertIn('MU300_DOWNGRADE=yes', r.stdout + r.stderr)
+            self.assertTrue(self.nothing_written())
+        # a file only root can change allows it, and the plan says what that means; it counts for this install only
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_DOWNGRADE=yes\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn('v2026.10.06 is the OLDER release (MU300_DOWNGRADE=yes)', r.stdout)
+        r = self.run_installer(trusted='MU300_DOWNGRADE=yes\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertNotRegex((self.fake.root / 'data/adb/mu300-install.conf').read_text(), r'(?m)^\s*MU300_DOWNGRADE\s*=')
+        # not an older release: the same one, a newer zip, a system that does not say, another system's version
+        for system, tag in (('openwrt', 'v2026.10.06'), ('openwrt', 'v2026.10.05'), ('openwrt', 'dev'), ('ubuntu', 'v2026.10.25')):
+            self.reset()
+            self.zip(system='openwrt', kernel='6.18')
+            self.existing_filesystem(systems=('openwrt', 'ubuntu'))
+            self.version(system, tag)
+            r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+            self.assertEqual(r.returncode, 3, (system, tag, r.stdout + r.stderr))
+        # and a wipe is not an update
+        self.version('openwrt', 'v2026.10.25')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_MODE=wipe\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+
+    def test_keeping_only_the_list_is_for_root_to_ask(self):
+        # MU300_UPDATE_KEEP=list (the update as it was before v2026.10.26) gives up files of the user: only a file
+        # root owns may say it; android-install.sh is told through its environment
+        keep = self.fake.root / 'update-keep'
+        self.fake_install_hook('echo "${MU300_UPDATE_KEEP:-unset}" > "$FAKE/update-keep"')
+        self.existing_filesystem(systems=('openwrt',))
+        r = self.run_installer(conf='MU300_UPDATE_KEEP=list\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(keep.read_text(), 'all\n')
+        self.assertIn('everything you added to it or changed in it is kept', r.stdout)
+        r = self.run_installer(trusted='MU300_UPDATE_KEEP=list\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(keep.read_text(), 'list\n')
+        self.assertIn('only settings, users and home directories are kept (MU300_UPDATE_KEEP=list)', r.stdout)
+        # for this install only
+        self.assertNotRegex((self.fake.root / 'data/adb/mu300-install.conf').read_text(), r'(?m)^\s*MU300_UPDATE_KEEP\s*=')
+
     def test_plan_names_an_installed_openwrt_luci(self):
         # the third system (OpenWrt with the control panel) is one the existing filesystem can hold: it is counted
         # for the space check and named in the plan like the other two
@@ -1063,7 +1144,7 @@ class Install(InstallerCase):
                 r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted=text)
                 self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
                 self.assertNotIn('CREATE new ext4', r.stdout)
-                self.assertIn('keep: settings and data', r.stdout)
+                self.assertIn('keep: nothing is erased', r.stdout)
                 self.assertTrue(self.nothing_written())
 
     def test_misc_changed_meanwhile_is_not_armed(self):
@@ -1192,7 +1273,7 @@ class Install(InstallerCase):
                 f.chmod(0o600)
                 r = self.run_installer()
                 self.kept(r, users)
-                self.assertIn('keep: settings and data', r.stdout)
+                self.assertIn('keep: nothing is erased', r.stdout)
                 self.assertEqual(f.read_text(), 'MU300 Linux v2026.10.01\nuser: x\npassword: the earlier one\n')
                 # no file at all: none is made either
                 self.reset()

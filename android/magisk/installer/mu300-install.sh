@@ -75,7 +75,8 @@ gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 # Android's own shell and toolbox, never Magisk's standalone busybox: its mke2fs makes ext2 only and its losetup has
 # no -S. su -c sh gives install.sh exactly this environment. MU300_DEVICE_WORK tells android-install.sh where its files are.
 # MU300_LOCK_DIR: the lock of a timed-out SD-card stage (android-install.sh, FINDINGS 50) outlives this run's W.
-asw() { env -u ASH_STANDALONE PATH="$APATH" MU300_DEVICE_WORK="${W:-}" MU300_LOCK_DIR="$WORK_PARENT" "$@"; }
+# MU300_UPDATE_KEEP: list keeps only the places an update kept before v2026.10.26 (android-install.sh).
+asw() { env -u ASH_STANDALONE PATH="$APATH" MU300_DEVICE_WORK="${W:-}" MU300_LOCK_DIR="$WORK_PARENT" MU300_UPDATE_KEEP="${MU300_UPDATE_KEEP:-all}" "$@"; }
 su_do() { asw "$DEVSH" -c "$1"; }            # storage.sh's way to run a command on the device: here it is local
 
 android_lang() {  # the language of the Android locale: tr, zh or en
@@ -93,7 +94,7 @@ android_lang() {  # the language of the Android locale: tr, zh or en
 #   untrusted  /sdcard/mu300-install.conf or /sdcard/Download/mu300-install.conf (first found): any app with
 #              storage access can write these, so they choose only what destroys nothing and reveals nothing
 # Trusted values win.
-CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN MU300_SYNC_BOOTCHAIN MU300_ADB_KEY'
+CONF_KEYS='MU300_STORAGE MU300_SD_ERASE MU300_REGION_OVERWRITE MU300_MODE MU300_DOWNGRADE MU300_UPDATE_KEEP MU300_BOOT_OS MU300_BOOT MU300_BOOT_ATTEMPTS MU300_HOTSPOT MU300_GPU MU300_PASSWORD MU300_PASSWORD_RESET MU300_PASSWORD_FILE MU300_DEVICE MU300_LANG MU300_DRY_RUN MU300_SYNC_BOOTCHAIN MU300_ADB_KEY'
 CONF_SET=
 conf_find() { for _f in "$SDCARD/mu300-install.conf" "$SDCARD/Download/mu300-install.conf"; do [ -f "$_f" ] && { echo "$_f"; return 0; }; done; return 0; }
 # erasing, formatting, overriding the model check and the password: only from a trusted file
@@ -102,6 +103,9 @@ conf_trusted_only() {  # conf_trusted_only KEY VALUE
         MU300_SD_ERASE|MU300_REGION_OVERWRITE|MU300_PASSWORD|MU300_PASSWORD_RESET|MU300_PASSWORD_FILE|MU300_DEVICE) return 0 ;;
         MU300_ADB_KEY) return 0 ;;               # whoever holds that key gets a root shell in Linux
         MU300_MODE) [ "$2" = wipe ] ;;
+        # an update that may not carry everything of the user's over: to an older release, or keeping only the list
+        MU300_DOWNGRADE) return 0 ;;
+        MU300_UPDATE_KEEP) [ "$2" = list ] ;;
         *) return 1 ;;
     esac
 }
@@ -179,7 +183,8 @@ conf_valid() {  # conf_valid KEY VALUE: VALUE is exactly one this installer know
         MU300_BOOT_OS) case $2 in ubuntu|openwrt|openwrt-luci) return 0 ;; esac ;;
         MU300_BOOT) case $2 in linux|android) return 0 ;; esac ;;
         MU300_BOOT_ATTEMPTS) case $2 in [1-6]) return 0 ;; esac ;;
-        MU300_SD_ERASE|MU300_REGION_OVERWRITE|MU300_PASSWORD_RESET) [ "$2" = yes ] && return 0 ;;
+        MU300_SD_ERASE|MU300_REGION_OVERWRITE|MU300_PASSWORD_RESET|MU300_DOWNGRADE) [ "$2" = yes ] && return 0 ;;
+        MU300_UPDATE_KEEP) case $2 in all|list) return 0 ;; esac ;;
         MU300_HOTSPOT|MU300_GPU) case $2 in yes|no) return 0 ;; esac ;;
         MU300_PASSWORD_FILE) [ "$2" = sdcard ] && return 0 ;;
         MU300_DEVICE) case $2 in f50|u30air) return 0 ;; esac ;;
@@ -451,8 +456,9 @@ default_hash() {  # default_hash USER HASH: HASH is the image's own password (th
     case $_s in rounds=*|'') return 1 ;; esac
     [ "$(printf '%s\n' ubuntu | "$UBB" mkpasswd -m "$_m" -S "$_s" -P 0 2>/dev/null)" = "$2" ]
 }
-inspect_target() {  # which systems the existing filesystem holds, and its Ubuntu release: mounted read-only
-    HAVE_SYSTEMS=; HAVE_UBUNTU=; HAVE_ACCOUNTS=0
+inspect_target() {  # which systems the existing filesystem holds, its Ubuntu release, and the release of the
+    # system this zip replaces (HAVE_VERSION; empty when it is not there or does not say): mounted read-only
+    HAVE_SYSTEMS=; HAVE_UBUNTU=; HAVE_ACCOUNTS=0; HAVE_VERSION=
     [ "$existing" = yes ] && [ "$FORMAT" = 0 ] || return 0
     mount_target "$W/mnt" ro || die "$(t 'could not mount the existing Linux filesystem')"
     for _os in ubuntu openwrt openwrt-luci; do [ -d "$W/mnt/$_os" ] && HAVE_SYSTEMS="$HAVE_SYSTEMS $_os"; done
@@ -464,6 +470,9 @@ inspect_target() {  # which systems the existing filesystem holds, and its Ubunt
     esac
     _h=
     HAVE_UBUNTU=$(sed -n 's/^VERSION_ID="\(.*\)"/\1/p' "$W/mnt/ubuntu/usr/lib/os-release" 2>/dev/null | head -n1)
+    HAVE_VERSION=$(head -n1 "$W/mnt/$OS/etc/mu300/image-version" 2>/dev/null) || HAVE_VERSION=
+    case $HAVE_VERSION in v[0-9]*) ;; *) HAVE_VERSION= ;; esac
+    case $HAVE_VERSION in *[!0-9A-Za-z._-]*) HAVE_VERSION= ;; esac
     umount_target "$W/mnt" || die "$(t 'could not unmount the Linux filesystem from {1}' "$W/mnt")"
 }
 plan_choices() {
@@ -474,6 +483,18 @@ plan_choices() {
         die "$(t 'Ubuntu 26.04 is installed, and it needs a mainline kernel (6.18 or 7.2): use a zip with one of those kernels, or MU300_MODE=wipe.')"
     fi
     sd_kernel_ok "$KB" || die "$(t 'this kernel cannot read the SD card; use a newer zip')"
+    # Never back to an older release by itself: the new image does the carrying over, and one from before
+    # v2026.10.26 keeps only a list of places - what else was added to the system would be gone from it. (Tags are
+    # dates, so they sort as text; a system that does not say which release it is is not held back.)
+    DOWNGRADE=0
+    if [ "$UPDATE" = 1 ] && [ -n "$HAVE_VERSION" ] && [ "$HAVE_VERSION" != "$TAG" ] &&
+        [ "$(printf '%s\n%s\n' "$HAVE_VERSION" "$TAG" | sort | tail -n1)" = "$HAVE_VERSION" ]; then
+        [ "${MU300_DOWNGRADE:-}" = yes ] ||
+            die "$(t 'The installed {1} is {2}, and this zip is {3}, an older release. Going back to an older release is not done by itself: the older release may not carry over everything you added to the system.' "$OS" "$HAVE_VERSION" "$TAG")
+$(t 'Nothing was changed. To install it all the same, put MU300_DOWNGRADE=yes into {1} (a release before v2026.10.26 then keeps only settings, users and home directories), or MU300_MODE=wipe to start fresh.' "$TRUSTED_CONF")"
+        DOWNGRADE=1; USED_KEYS="$USED_KEYS MU300_DOWNGRADE"
+    fi
+    if [ "$UPDATE" = 1 ] && [ "${MU300_UPDATE_KEEP:-all}" = list ]; then USED_KEYS="$USED_KEYS MU300_UPDATE_KEEP"; fi
     BOOT_OS=${MU300_BOOT_OS:-$OS}
     case " $_after " in *" $BOOT_OS "*) ;; *) die "$(t 'MU300_BOOT_OS={1}, but {1} is not installed' "$BOOT_OS")" ;; esac
     DEFAULT_LINUX=1; [ "${MU300_BOOT:-linux}" = android ] && DEFAULT_LINUX=0
@@ -541,8 +562,25 @@ plan_print() {
     else
         echo "  $(t 'storage:        internal, offset {1}, {2} ({3})' "$INT_OFF" "$(gib "$TARGET_SIZE")" "$(src_of MU300_STORAGE)")"
     fi
-    echo "  $(t 'filesystem:     {1} ({2})' "$([ "$FORMAT" = 1 ] && t 'CREATE new ext4 (erases what is there)' || t 'keep: settings and data of {1} are kept' "$OS")" "$(src_of MU300_MODE)")"
+    if [ "$FORMAT" = 1 ]; then _fs=$(t 'CREATE new ext4 (erases what is there: every installed system, every file in them, the extras)')
+    else _fs=$(t 'keep: nothing is erased'); fi
+    echo "  $(t 'filesystem:     {1} ({2})' "$_fs" "$(src_of MU300_MODE)")"
     [ -z "$HAVE_SYSTEMS" ] || echo "  $(t 'already there:  {1}' "$HAVE_SYSTEMS")"
+    # an update of the system of this zip: what is kept. The others and the extras are not this zip's to touch.
+    case " $HAVE_SYSTEMS " in
+        *" $OS "*)
+            if [ "${MU300_UPDATE_KEEP:-all}" = list ]; then
+                echo "  $(t 'update:         {1} {2} -> {3}: only settings, users and home directories are kept (MU300_UPDATE_KEEP=list)' "$OS" "${HAVE_VERSION:-?}" "$TAG")"
+            else
+                echo "  $(t 'update:         {1} {2} -> {3}: everything you added to it or changed in it is kept (files, settings, accounts and passwords);' "$OS" "${HAVE_VERSION:-?}" "$TAG")"
+                echo "  $(t '                packages you installed are installed again at its first boot; what could not stay in place is listed in /etc/mu300/update-report')"
+            fi
+            [ "$DOWNGRADE" = 0 ] || echo "  $(t '                {1} is the OLDER release (MU300_DOWNGRADE=yes): one from before v2026.10.26 keeps only settings, users and home directories' "$TAG")" ;;
+    esac
+    _others=$(for _os in $HAVE_SYSTEMS; do [ "$_os" = "$OS" ] || printf '%s ' "$_os"; done)
+    if [ "$FORMAT" = 0 ] && [ -n "$_others" ]; then
+        echo "  $(t 'not touched:    {1}and the extras (the VPN module) stay as they are' "$_others")"
+    fi
     echo "  $(t 'boots:          {1} ({2})' "$BOOT_OS" "$(src_of MU300_BOOT_OS)")"
     echo "  $(t 'default boot:   {1} ({2})' "$([ "$DEFAULT_LINUX" = 1 ] && t 'Linux, Android after failed boots' || t 'Android, Linux on demand')" "$(src_of MU300_BOOT)")"
     echo "  $(t 'boot attempts:  {1} failed boots in a row, then Android ({2})' "$BOOT_ATTEMPTS" "$(src_of MU300_BOOT_ATTEMPTS)")"
@@ -594,7 +632,7 @@ write_example() {
         echo "# to $SDCARD. Copy this file there with: su -c 'cp $SDCARD/mu300-install.conf $TRUSTED_CONF && chmod 600 $TRUSTED_CONF'"
         echo "# Values of the last run (${TAG:-}, $(date '+%Y-%m-%d %H:%M')) are shown; a line starting with # is not used."
         echo "# To use a setting, remove the # in front of its key (only there: the explanation stays a comment line)."
-        echo "# MU300_MODE=wipe, MU300_SD_ERASE, MU300_REGION_OVERWRITE and MU300_PASSWORD count for one install: once a"
+        echo "# MU300_MODE=wipe, MU300_SD_ERASE, MU300_REGION_OVERWRITE, MU300_DOWNGRADE, MU300_UPDATE_KEEP=list and MU300_PASSWORD count for one install: once a"
         echo "# successful install has used one, the installer turns its line in $TRUSTED_CONF into a comment."
         echo
         echo "# internal or sd"
@@ -603,8 +641,19 @@ write_example() {
         echo "#MU300_SD_ERASE=yes"
         echo "# (root) use internal free space that holds data"
         echo "#MU300_REGION_OVERWRITE=yes"
-        echo "# update (keep settings and data), or wipe (root)"
+        echo "# update: the system of this zip replaces the installed one of its kind, and everything you added to it or"
+        echo "# changed in it is kept: files anywhere, settings, accounts and passwords. Packages you installed are installed"
+        echo "# again at its first boot. What could not stay in its place is set aside and listed in /etc/mu300/update-report."
+        echo "# The other installed systems and the extras (the VPN module) are not touched."
+        echo "# wipe (root): the Linux filesystem is made anew. Every installed system, every file in them and the extras"
+        echo "# are erased. (Android, its data and the boot fallback are never touched by either.)"
         echo "#MU300_MODE=update"
+        echo "# (root) yes: install this zip over a NEWER release of the same system. A release before v2026.10.26 then"
+        echo "# keeps only settings, users and home directories."
+        echo "#MU300_DOWNGRADE=yes"
+        echo "# (root) list: keep only what an update kept before v2026.10.26 (settings, users, home directories), should"
+        echo "# carrying everything over fail. all is the default."
+        echo "#MU300_UPDATE_KEEP=all"
         echo "# ubuntu or openwrt: which system boots"
         echo "#MU300_BOOT_OS=${BOOT_OS:-${OS:-}}"
         echo "# linux (default boot, Android after failed boots) or android"

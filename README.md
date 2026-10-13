@@ -241,9 +241,10 @@ Details: [FINDINGS 40](docs/FINDINGS.md). Thanks to kano for the advice.
 
 If Linux is already installed it asks whether to **update** or **wipe**:
 
-* **update** — reinstalls the systems but keeps your settings and data: `/etc/mu300` (hotspot, VPN, toolkit), user
-  accounts and home directories, `/usr/local`, SSH host keys, OpenWrt's UCI config, and the services you enabled
-  yourself. Packages you installed yourself are installed again at the first boot (see [Updating](#updating)).
+* **update** — reinstalls the systems and keeps everything you added to them or changed in them: your files
+  wherever they are, settings, accounts and passwords, services you enabled or disabled. Packages you installed
+  yourself are installed again at the first boot (see [Updating](#updating)). From v2026.10.26 on; an older release
+  keeps only `/etc/mu300`, accounts and home directories, `/usr/local`, SSH host keys and OpenWrt's UCI config.
 * **wipe** — erases the Linux filesystem and installs from scratch.
 
 If the device is running Linux rather than Android when you start, the installer notices and offers to reboot it
@@ -546,7 +547,7 @@ too: erasing an SD card needs `MU300_STORAGE=sd` and `MU300_SD_ERASE=yes` both t
 `MU300_STORAGE=internal` there, or no `MU300_STORAGE`.
 
 A setting that erases counts for one install: once a successful install has used `MU300_MODE=wipe`,
-`MU300_SD_ERASE=yes` or `MU300_REGION_OVERWRITE=yes` from `/data/adb/mu300-install.conf`, the installer turns that line
+`MU300_SD_ERASE=yes`, `MU300_REGION_OVERWRITE=yes`, `MU300_DOWNGRADE=yes` or `MU300_UPDATE_KEEP=list` from `/data/adb/mu300-install.conf`, the installer turns that line
 into a comment (as it does with `MU300_PASSWORD` and `MU300_PASSWORD_RESET`) and says so. Otherwise the next zip - the second of two, or an
 update - would wipe or erase again. For another erase, put the line back.
 
@@ -555,7 +556,9 @@ update - would wipe or erase again. For another erase, put the line back.
 | `MU300_STORAGE` | `internal`, `sd` | either | Where an installation already is (the card first); else internal when the free region is big enough; else the install is refused with the reason |
 | `MU300_SD_ERASE` | `yes` | `/data/adb` only | Not set: an SD card is never formatted, not a new one and not one holding an installation with `MU300_MODE=wipe` |
 | `MU300_REGION_OVERWRITE` | `yes` | `/data/adb` only | Not set: an internal region whose free space holds data is not used |
-| `MU300_MODE` | `update`, `wipe` | `update` either, `wipe` `/data/adb` only | `update` when a filesystem is there already (settings and data are kept) |
+| `MU300_MODE` | `update`, `wipe` | `update` either, `wipe` `/data/adb` only | `update` when a filesystem is there already: the system of the zip replaces the installed one of its kind, everything you added to it or changed in it is kept, and the other installed systems and the extras are not touched. `wipe` makes the Linux filesystem anew: every installed system, every file in them and the extras are erased |
+| `MU300_DOWNGRADE` | `yes` | `/data/adb` only | Not set: a zip older than the installed system of its kind is refused (the older release may not carry everything over; one from before v2026.10.26 keeps only settings, users and home directories) |
+| `MU300_UPDATE_KEEP` | `all`, `list` | `list` `/data/adb` only | `all`. `list` keeps only what an update kept before v2026.10.26, should carrying everything over fail |
 | `MU300_BOOT_OS` | `ubuntu`, `openwrt`, `openwrt-luci` | either | The system of this zip |
 
 | `MU300_BOOT` | `linux`, `android` | either | `linux`: Linux is the default boot, Android after failed boots. `android`: Android stays the default and Linux starts on demand |
@@ -736,7 +739,13 @@ sudo mu300-update rollback-boot   # back to the previous kernel and boot image
 sudo mu300-update kernel 7.2      # another kernel: 5.4 (vendor), 6.18 (LTS) or 7.2; no argument shows the current one
 ```
 
-`mu300-toolkit` offers the same under System -> Software update. Your settings, users, `/usr/local` and the vendor
+`mu300-toolkit` offers the same under System -> Software update. **Everything you added to the system or changed in
+it is kept** (from v2026.10.26 on): files in any directory (`/etc/wireguard`, a unit you wrote, crontabs,
+`/var/lib/docker`, `/opt`, `/srv`, `/var/www`), settings you changed, accounts, with owners, modes, capabilities,
+hard links and times as they were. What cannot stay in its place - a program file you edited, where the release's
+must be the one in use - is set aside under `/etc/mu300/update-kept/` and listed in `/etc/mu300/update-report`
+(`sudo mu300-update report`). The rules, and what is never carried (`/tmp`, caches, the package manager's own
+files): [Updating](https://github.com/dikeckaan/mu300-linux/wiki/Updating). The vendor
 files (Wi-Fi firmware, Android modem userspace) and the installed extras are carried over (the lang extra is brought
 to the new release, the [VPN](#vpn) module to its latest one), and the previous version is kept as `<os>.old` for
 
