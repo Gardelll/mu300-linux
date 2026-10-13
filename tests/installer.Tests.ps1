@@ -597,7 +597,8 @@ $adefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.
 foreach ($d in $adefs) { . ([scriptblock]::Create($d.Extent.Text)) }
 LoadLanguage 'en'
 $script:lines = New-Object System.Collections.ArrayList
-function Write-Host { [void]$script:lines.Add([string]$args[0]) }
+# (a failed check still shows: Check prints through Write-Host too)
+function Write-Host { if ("$($args[0])" -like 'FAIL *') { [Console]::Out.WriteLine([string]$args[0]) } else { [void]$script:lines.Add([string]$args[0]) } }
 function Die($m) { Progress 'error' 'message' $m; throw "DIE: $m" }
 function AnswersFail([string]$Message) { throw "FAIL: $Message" }
 function ResetAnswers {
@@ -811,7 +812,7 @@ if ($env:OS -ne 'Windows_NT') {
     $script:glines = New-Object System.Collections.ArrayList
     $script:gasked = New-Object System.Collections.ArrayList
     $script:ganswers = New-Object 'System.Collections.Generic.Queue[string]'
-    function Write-Host { [void]$script:glines.Add([string]$args[0]) }
+    function Write-Host { if ("$($args[0])" -like 'FAIL *') { [Console]::Out.WriteLine([string]$args[0]) } else { [void]$script:glines.Add([string]$args[0]) } }
     function Say($m) { [void]$script:glines.Add("==> $m") }
     function Ask($question, $default, $Id) {
         [void]$script:gasked.Add("$Id=$default")
