@@ -19,12 +19,28 @@ it without a device and with one, and what the owner has to set up for the one p
  device.js    AndroidDevice / LinuxDevice   --adb--> /data/local/tmp/mu300-web/android-web.sh   (pushed by the page)
  adb/*        adb over WebUSB: auth, shell v2, sync      |  under su, Magisk's busybox, ASH_STANDALONE=1
  privacy.js   masks every line a device prints           v
-                                                     /data/adb/mu300-web/   (root only)
+                                                     /data/adb/mu300-web/   (root only, mode 700)
+                                                        dl/<zip>     what the device downloads itself
                                                         zips/<zip>   checked against the release's sha256
                                                         x/<zip>/mu300/install.sh   the zip's own installer
                                                         answers.conf   MU300_ANSWERS (root's, mode 600)
+                                                        out/         the copies of a backup
                                                         job/{log,rc,pid,more}   the run, in a session of its own
 ```
+
+* **Where root writes, and how much.** `/data/local/tmp/mu300-web` is the adb user's: the page pushes its files
+  there, and whoever can write there could put a link where a file is expected. Root creates, writes, chmods and
+  deletes nothing in it. A pushed file is moved (a rename follows no link) into `/data/adb/mu300-web` and judged
+  there: a regular file, of a bounded size, with the checksum asked for. A download, the copies of a backup, the
+  answers, the logs and the job's state are in root's directory only; the page reads a backup's copies as base64
+  from `android-web.sh cat NAME` (the adb user cannot read that directory), and removes what it pushed itself,
+  without root. `/data` is Android's own, so everything root writes there has an end set before it starts: a
+  download is refused when it would leave less than 512 MiB free (the reserve the Magisk installer insists on),
+  cannot grow past the size the release names (the downloader's file size limit, and a watch) and ends after an
+  hour; a zip larger than 300 MiB, or whose installer files say they unpack to more than 64 MiB, is refused; a
+  job's log stops at 8 MiB while the job goes on. The device scripts themselves are run from the adb user's
+  directory, checked by the page against the site's checksums before they are pushed: the adb user is the one who
+  asks for root, so that is its own power and no more.
 
 * **How the release gets onto the device.** The user chooses the system, the kernel and the release (the newest, or
   a newer prerelease when there is one); the page names the Magisk zip of that choice and its size and gets it there
@@ -158,7 +174,7 @@ with Chrome 155. Every row at the Node level (N), in Chrome (C), or both; detail
 | GitHub's API unreachable | C | "The release list could not be loaded. GitHub could not be reached." with Try again |
 | A wrong zip (N, C), an older release's zip, a truncated zip picked (N) | N, C | Refused in the page, with its system and kernel named |
 | A zip with one byte changed | N | Passes the page's look, refused by the device: `sha-mismatch`, nothing kept |
-| Backup to the computer | N, C | 10 files, 78 MiB; `boot_b.img` equal to `sha256sum /dev/block/by-name/boot_b`; no NV partition in it |
+| Backup to the computer | N, C | 10 files, 78 MiB in 14 s; `boot_b.img` equal to `sha256sum /dev/block/by-name/boot_b`; no NV partition in it |
 | Device download: probe, download, progress and speed | N, C | 41 MiB in about 4 s, 112 MiB in about 8 s (about 15 MiB/s, through the relay); checked on the device |
 | Device download: connection cut, cancelled, wrong checksum, no connection | N, C | Continued where it broke; partial kept and continued; `sha-mismatch`; "no connection" and the file picker offered |
 | Browser download from a mirror: a part cut short, then whole | C | "broke off before the file was complete", Try again, then pushed and planned (stand-in server) |

@@ -5310,7 +5310,8 @@ followed by a zero-length packet.
   the mode of a pushed file, and a password does not travel in a file (below).
 * *Over USB, measured on the F50.* The transport, framing and sync work as written: connected in 2 to 100 ms, the
   device scripts staged in 60 ms, a 41 MiB zip pushed at 20 to 27 MiB/s and a 112 MiB one at 20 MiB/s (including the
-  device's SHA-256), a 78 MiB backup pulled at 9 MiB/s with every file's checksum equal to the device's.
+  device's SHA-256), a 78 MiB backup read back in 14 s (as base64 through the shell, 5.5 MiB/s; 9 MiB/s with adb's
+  file service, which root's directory rules out, below) with every file's checksum equal to the device's.
 * *Android's adbd on the F50 asks for no key.* `ro.adb.secure` is 1 and `/data/misc/adb` is empty, yet a key the
   device had never seen got `CNXN` at once: no `AUTH` packet, no question (there is no screen to ask on). So a
   browser's own key needs nothing there. The adbd of MU300 Linux does authenticate when it is set to keys: after an
@@ -5384,7 +5385,8 @@ every asset a `digest` (`sha256:...`). The files themselves can only come to a p
     `\|`. Busybox built for Android uses bionic's regex, which has no `\|` there, so on a device **every** release
     zip was "not the name of a release zip" (`bad-name`), while the tests, under a computer's busybox, passed. The
     name is now taken apart with the shell's own patterns. And a directory `in/` that root made for the download
-    refused the page's next push ("couldn't create file: Permission denied"): it is given to the adb user.
+    in the adb user's directory refused the page's next push ("couldn't create file: Permission denied"): the
+    download now goes to root's own directory.
 * *Second: the browser downloads the zip from a mirror* (`mirror.js`, off until `config.js` names one): a branch
   `<tag>` of another repository with every zip in parts of at most 45 MiB and a manifest
   (`tools/make-release-mirror.sh`, the last step of `magisk.yml`), read from `raw.githubusercontent.com` with plain
@@ -5466,6 +5468,31 @@ cut anywhere for the same reason (measured: a quick uninstall, 7 steps in 5 s, `
 * *A finished run nobody watched* is shown once at the next connection (its log, then "Linux is installed" with the
   restart button), and its files (the zip in `zips/`, 39 to 124 MB, with `x/` and `job/`) are removed then.
 * *Not measured:* the stall guards of §50 through this path, a cable pulled from a U30 Air, a power cut.
+
+**Where root writes on Android, and how much.** `android-web.sh` runs as root and is handed files by the adb
+user, in `/data/local/tmp/mu300-web`. The first version wrote there as root too: the download (`wget -O`), the
+copies of a backup (`out/`, made readable for adb's file service), `rm -rf` of both, a `chown`. Whoever can write a
+directory can put a link at any name in it, and root then writes, truncates, chmods or deletes the link's target.
+Now root touches nothing there. A pushed file is moved into `/data/adb/mu300-web` (mode 700, root's; a rename takes
+the name as it is and follows no link) and judged there, where nobody else can change it: a regular file, not a
+link, not larger than its kind can be, with the checksum that was asked for. The download, the backup's copies, the
+answers, logs and the job's state live in root's directory only; the page reads a copy of the backup as base64
+from `android-web.sh cat NAME` and removes what it pushed itself, unprivileged. The uninstaller, which tidies
+`/data/local/tmp` after the installer for computers, removes single names (a link goes as a link) and walks no
+tree. *Measured on the F50 after the change:* a backup (ten files, checksums equal), a plan from a pushed zip and
+one from a zip the device downloaded, and nothing owned by root in the adb user's directory afterwards. What
+stays: the device scripts are run from that directory (the page checks them against the site's checksums before it
+pushes them); the adb user is the one who asks `su` for root, so this is its own power.
+* *Bounds.* `/data` is Android's own; a full `/data` can stop Android from starting. The first version checked a
+  download's size after `wget` had ended, so a server that sent more, or never stopped, filled the storage first.
+  Now: nothing starts unless the rest of the file leaves 512 MiB free (the reserve the Magisk installer insists
+  on); the downloader runs under a file size limit of the release's size (`ulimit -f`: the kernel refuses the
+  write that would cross it) and a watch that ends it when the file is larger; it ends after an hour whatever the
+  other end does, and the question "can you reach GitHub" after 30 s; a pushed zip may have 300 MiB, an extra 100,
+  the answers 64 KiB; a zip is unpacked only when the files it is asked for say they hold at most 64 MiB and leave
+  the reserve; a job's log stops growing at 8 MiB while the job goes on. Tested with a downloader that writes 5 MB
+  for a file of 100 000 bytes (the file stopped at that size rounded up to a block), one that never ends, one that stalls, and a full
+  storage (`tests/test_android_web.py`, `Bounds`; the links: `Links`).
 
 **The device side, for a caller that is not Magisk** (in every zip from v2026.10.24 on): `MU300_ANSWERS=FILE`
 (the settings of the run from that file alone, which must be root's), `MU300_PROGRESS=1` (`MU300-STEP`, `MU300-PLAN
