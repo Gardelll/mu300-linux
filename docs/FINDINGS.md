@@ -61,6 +61,7 @@ what replaced it. The table below gives each section's state.
 | 30 | Installer notes | current |
 | 24 | No internal audio hardware | open |
 | 24b | A second board, from a clean install: where the stall actually is | open |
+| 24c | What the Rongyue E5 (kanoqwq/e5-linux) did, and what of it applies here | ported; untested with firmware |
 | 25 | SC2355 Bluetooth on BlueZ | current |
 | 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.56) |
 | 31a | Wi-Fi RX: sync_for_device stopped invalidating | current |
@@ -122,6 +123,7 @@ what replaced it. The table below gives each section's state.
 | 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
 | 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; unit tests against a table built from #9's figures, not measured on a device) |
+| 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
 
 ## Hardware and firmware facts
 
@@ -1670,6 +1672,81 @@ registers (base `0x01700000` in the driver's numbering) through the DSP, by IPC 
 offset directly from the AP at `0x56510000 + 0xe7c` - outside the 1 KiB AP VBC window - hangs the bus: the board
 drops off USB and the network. To change a DSP-side register, write `"<reg> <val>"` in hex to that proc file
 instead (`vbc_proc_write` -> `dsp_vbc_reg_write`, e.g. `echo 1700eb0 1`); never map it from the AP.
+
+### 24c. What the Rongyue E5 (kanoqwq/e5-linux) did, and what of it applies here
+kano's [e5-linux](https://github.com/kanoqwq/e5-linux) (MIT) runs Linux on the Rongyue E5, a UMS9621 handset with the
+same AGDSP, VBC v4, MCDT and UMP9620 codec drivers. It started from this project's bring-up (its `e5-audio-dsp` is
+`mu300-audio-dsp` adapted) and got further: the speaker plays (2026-09-25), the microphone records, and a cellular
+call's downlink was heard on the receiver and the speaker (2026-10-02, e5-linux FINDINGS 55). Read against 24 and
+24b, the differences fall in three groups.
+
+**The board, which does not carry over.** The E5 has its own AGDSP image (`l_agdsp_a`, mmcblk0p26, header
+`SharkL5_AUDCP_2023Y_VER_3029`) and a complete device tree (`memory-region` present), a speaker behind an aw87xxx,
+an earpiece and microphones. Its audible call goes DSP -> codec DAC0 -> receiver / AO; this board has nothing on the
+codec, so that output does not exist here.
+
+**The kernel, which does.** Five of its 5.15 patches touch the same drivers this project builds for 5.4, and the
+symptoms they fix are the ones in 24:
+* `0013` period events from an hrtimer. The E5 measured what 24 measured - both `sprd_dma` lines at 0 for a whole
+  stream, with or without the DSP - and concluded that nothing will ever call `snd_pcm_period_elapsed()`: the
+  completion interrupt is the DSP's or nobody's. Its answer is the one Android's HAL gets by opening with
+  `PCM_NOIRQ`: program the DMA without interrupts and tick the period from a timer.
+  `kernel/patches/audio-pcm-period-timer.patch`.
+* `0016` the position read only while `agdsp_can_access()` says the AGCP domain is reachable - the bus hang of 24,
+  hit on the E5 after six idle hours. `audio-pcm-pointer-agcp-access.patch`.
+* `0017`, `0019`, `0020` the DSP front ends limited to S16_LE where the DSP writes S16 whatever was asked, and to
+  interleaved access on every MCDT front end. `audio-fe-dai-formats.patch`.
+`kernel/build-audio.sh` applies all three; the 23 modules build with them (2026-10-11). Its other patches are E5
+board matters (aw87xxx, a headset IMPD oops, the agdsp_pd module order of its tree, which is built in here).
+
+Its notes also contradict one line of 24: there `agdsp_access_en` "changed nothing"; on the E5 it is the control
+that turned "the DMA runs one burst and stops" into "the VBC FIFO drains" (e5-linux FINDINGS 24.2), with
+`VBC DAC0 DG Set` non-zero (Linux leaves it 0, which is digital silence). With the period timer both need
+re-measuring here before either reading is trusted.
+
+**The call sequence, which does.** What the E5 changed between "both PCMs RUNNING, silence" and "heard" (`402fde1`,
+`8e9b8a4`, `2c726fc`), against what `mu300-voice` did:
+
+| | mu300-voice until now | e5-linux |
+|---|---|---|
+| call scene | `FE_VOICE` playback only, 16 kHz | `FE_ST_VOICE` playback **and** capture, 8 kHz mono, both prepared before either starts |
+| profile select | `(mode << 24) \| (0x5e << 16)`, through amixer | `(mode << 24) \| (mode << 16) \| 5` (param id = mode, low byte the voice DAI), raw, before and after the start |
+| voice volume | not set | `VBC_VOLUME` = volume + 1, raw (the control declares max -1, amixer clamps) |
+| downlink mute | not touched | `VBC_DL_MUTE` enable during routing, then `VBC DAC1 DSP MDG` 0,1024 and `VBC_DL_MUTE` disable after the start - the change that made it audible |
+| bandwidth | none | `/dev/audio_pipe_voice` command 0 channel 2 gives NB/WB/SWB/FB; the profile follows it |
+
+Two of these are bugs here on their own: amixer clamps every profile select from mode 16 up - the Bluetooth modes
+(BTHS, 28 and up) included - to `0x0fffffff`, and a capture-less scene leaves the DSP without an uplink, which is
+the VoLTE ~20 s drop of 24b. `mu300-voice audio start` now does the E5's sequence; the undo log puts every control
+back on `audio stop`.
+
+**Bluetooth, which is the output this board has.** kano reports that the F50 under Android, with the AGDSP image of
+a ZTE Voyage 41S (the donor of 24), connects a Bluetooth headset and carries calls on it. That fits: this board's
+PSKey has `g_sys_sco_transmit_mode = 0`, and on the E5's identical controller mode 0 sends SCO audio over the
+controller's PCM pins into VBC IIS3, not over HCI (e5-linux FINDINGS 58-59: no HCI SCO RX, nonzero samples on the
+IIS3 capture once the pin matrix was switched). The vendor route (`audio_route.xml`, `bt_sco` and `btsco_p/_c`)
+is `SYS_IIS0 = vbc_iis3`, `S_VOICE_P_BT` / `S_VOICE_C_BT`, `VBC_SRC_BT_DAC/ADC`, and the E5 found the BT rate must
+be set again after the scene is RUNNING. Two of its findings matter here: on mainline `SYS_IIS0` was a no-op without
+the pin controller (the 5.4 kernel has `pinctrl-sprd-qogirn6pro`), and BlueZ's own SCO path stays silent with this
+PSKey, so the AP must not try to carry SCO audio itself.
+
+What a call on a headset needs from the AP is therefore only the links: the DSP scene (`mu300-voice audio start bt`)
+and an HFP audio gateway holding the service level connection and the SCO link. BlueZ has no AG of its own (oFono
+would want the modem), so `tools/hfp` (`mu300-hfp`) is a minimal one on raw kernel sockets: it connects to the paired
+headset, answers the AT setup, opens CVSD SCO when told, and turns the headset's buttons into `ATA` / `AT+CHUP`.
+`mu300-voice watch` follows `AT+CLCC` and drives both. The AGDSP image stays the user's to supply:
+`mu300-audio-dsp install FILE` checks size and the `AUDCP` header and records the sha256 on the device.
+
+Not measured yet, for want of the firmware on any test board: whether the 41S image runs the BT call scene under
+Linux, and whether the period timer moves `FE_VOICE_PCM_P` / `FE_VOICE_C`.
+
+2026-10-13, against v2026.10.23: the seven audio patches apply to the pristine realme tree in `build-audio.sh`'s
+order and all 23 modules build against the 5.4 tree (`sprd-dmaengine-pcm` with its `period_timer` parameter); they
+were not loaded on a board - the released 5.4 kernel has no audio modules, and no test board has the firmware. On
+F50-B the userspace was run on the released 5.4 and on 7.2.10: without the drivers `mu300-voice` says that this
+kernel has no call audio (it used to say "run mu300-audio-dsp load", which cannot work there), `mu300-hfp` refuses
+an address that is not bonded, and nothing is left running. The call itself, on a headset or through the taps, is
+still unmeasured.
 
 ## Bluetooth
 
@@ -4530,3 +4607,36 @@ nothing, the order of the writes, and the refusals. **Not run: `install.ps1` on 
 device, and either installer on a unit with this table.** The shrink itself has been done on one 32 GB unit (#9b,
 issue #2); whether Android formats a 64 GB `userdata` that was shrunk this way after a vendor flash is not known.
 `uninstall.ps1` does not offer to grow `userdata` back; `uninstall.sh` does.
+
+### 60. `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149)
+
+Found while reviewing the call audio and voice API branches on F50-B (2026-10-13).
+
+* `boot/init` mounts `/run` as a plain tmpfs, which is mode 1777 - like `/tmp`, not the 0755 systemd would give it.
+  Any local user (a service account, the vendor daemons' own account of 41) can make `/run/<name>` before the
+  daemon that expects to own it: measured, an unprivileged user created a file there.
+* `mu300-voice` moved its state from `/tmp/mu300-voice` to `/run/mu300-voice`, which was the same exposure under
+  another name: pid files it kills, the mixer undo log it writes back, files root writes there. `mu300-atd` did
+  `mkdir -p /run/mu300-at` and looked no further: in a stranger's directory, or behind his symlink, the command
+  fifo is his to write (AT commands, as root's daemon) and every answer his to read.
+* `rootfs/overlay/opt/mu300/lib/run-dir.sh`, one helper for both so the two cannot drift: `run_dir_ours` (a real
+  directory, not a symlink; the daemon's own uid; not writable by group or others) and `run_dir_take`, which makes
+  the directory that - a plain `mkdir`, never `mkdir -p` (through a symlink that makes the directory where it
+  points). The first version of the check refused a foreign directory and stayed down until somebody removed it,
+  which turned the squat into a denial of service; the second removed it with `rm -rf`, which is a race - whoever
+  squatted can still write `/run`, and busybox's recursive remove walks by path. Now nothing depends on what was
+  seen and nothing is deleted recursively: a non-directory goes with `rm -f --`, an empty directory with `rmdir`
+  (neither follows a symlink at that name, each fails harmlessly on the other kind), a directory with contents is
+  moved whole into `/run/.<name>.foreign.<pid>` (made by `mkdir`: ours and 0700, or nothing is moved) and left
+  there to be looked at, and what counts in the end is the check again. A caller who is not the owner (a member
+  of the voice group running `mu300-voice events`) gets the check alone and never creates the directory.
+* The headset's control fifo moved from `/run/mu300-hfp.ctl` into `/run/mu300-voice`, and
+  `/etc/tmpfiles.d/mu300-run.conf` makes both directories at boot.
+* `/run/mu300-at/urc` is 0700 now: with caller id on (`AT+CLIP=1`, which `mu300-voice` sets) every ring writes
+  the caller's number into that log, which was world-readable. Every reader is root.
+
+Measured on F50-B as root under dash, bash and busybox ash: a directory made first by another user (with a fifo
+named `cmd` in it) and a symlink to `/etc` were both put out of the way, `/etc` untouched, the second call silent;
+`mu300-voice status` then answered. Open: `/run` is still 1777 - `mount -t tmpfs -o mode=755` in `boot/init` is
+the real fix, and it is a boot change that wants its own device test. `/run/mu300-at/answer.<pid>` and
+`/run/mu300/` are as they were.
