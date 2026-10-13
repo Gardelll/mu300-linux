@@ -131,6 +131,7 @@ what replaced it. The table below gives each section's state.
 | 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
 | 70 | adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it | current (unit tests; nothing of it measured on a device: the checklist is in the section) |
 | 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; run end to end on an F50 from Chrome on macOS on 2026-10-13 (docs/web-installer.md); Windows, a Linux host, the U30 Air, KernelSU/APatch and a download over a carrier's network not measured |
+| 74 | The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, #194) | current (the maintainer's U30 Air on 7.2.10 and the contributor's on 7.2.9); two working cards, kernel 5.4 and an F50 not run |
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 
@@ -5500,3 +5501,138 @@ and it loads no web fonts. The device's own download goes from the device to Git
   `tests/test_web_installer.py` (strings in three languages, the pages' policy and the mirror's switch, the staged
   site, the mirror tool and the page's reader on the same files). In a browser without a device: the three pages
   and the whole wizard with made-up answers (`?demo=android`, `installed`, `small`, `linux`).
+
+### 74. The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, issue #194)
+
+PR #73 (Snrat) brought a cold start of either card and a live switch between them, worked out on one U30 Air with
+two cards (OpenWrt 25.12.5, Linux 7.2.9; its SIM1 without data service, its SIM2 working). #166 is that work with
+the review's fixes, merged with #72's shared selector. On 2026-10-13 it ran on the maintainer's U30 Air (OpenWrt
+25.12.5, v2026.10.23, Linux 7.2.10), which turned out to have a second card too, the other way round: SIM1 with
+data, and in position 2 a card that registers for emergency service only. `docs/U30AIR-SIM2.md` is the user's
+page; this section is what was measured and what was decided from it. Not run on kernel 5.4, on an F50 or on an M3.
+
+**What the modem does**
+
+| | maintainer's unit (7.2.10) | contributor's unit (7.2.9) |
+|---|---|---|
+| channels | slot 0: nr0 (URCs) / nr1 (commands) / nr2 (data), bearer `sipa_eth0`; slot 1: nr3 / nr4 / nr5, `sipa_eth8`; nr6/nr7 belong to slot 0's panel pool | the same |
+| the second group's ttys | exist before they work: `spipe_open` gives `ENODEV` until `/dev/sipc_sbuf` (the driver's seqfile) shows `sbuf_5_006, state: 1,`. All four owners wait for that line, inside their procd instances | found there |
+| `AT+CPIN?` on nr4 at a cold boot | `+CME ERROR: 10`, at every boot, for ten seconds of asking. One second after `AT+SPACTCARD=1;+SFUN=2` (the card's SIM power): `+CPIN: READY`, a CCID of its own, an IMSI. With SIM1's data up meanwhile: SIM1 noticed nothing (`+CFUN: 1`, both contexts active). `AT+SPACTCARD=1;+SFUN=3` puts the position back to `+CME ERROR: 10` | `READY` at once |
+| what `+CME ERROR: 10` therefore means | "no card, **or SIM power off**". The modem seems to power at boot the cards Android had in use; this unit only ever used SIM1 | (after `SFUN=5`/`3` an inserted card says the same there) |
+| `AT+SPACTCARD` | `AT+SPACTCARD?` answers the channel's own card: 0 on nr1/nr2, 1 on nr4/nr5. `AT+SPACTCARD=<n>;+<command>` addresses the command of that line. A line with `AT+SPACTCARD=0` or `=1` alone changes nothing: the answer to `?` stays, and so does the card the channel reads (compared by CCID, never printed) | sent `AT+SPACTCARD=0` alone "to reset the channel" |
+| work modes | `+SPTESTMODE: 134,134,0,19,3,1` (mode of slot 0, of slot 1, primary). The Locks page writes the first | assumed `134,134` |
+| the data route | `AT+SPSWDATA` on a card's data channel gives it the packet-data route, `AT+SPSWDATA?` answers `+SPSWDATA: 0` or `1`. After a SIM2 boot (route 1) and a Linux restart into SIM1 it read 0 again: this firmware does not keep it over a restart | not read |
+| cold start of SIM2 | 16.2 s `AT+SMMSWAP=0`, 20.8 s SIM power, 22.3 s `AT+SPTESTMODEM=134,134`, 23.3 s `AT+SPSWDATA` (read back: SIM2), 23.6 s `AT+SFUN=4`, **24.2 s `+CFUN: 1`**. Then `+CEREG: 2,8` (emergency service only), `+CGATT: 0`, no bearer | CFUN=1 at about 21 s, WAN on `sipa_eth8` |
+| cold start of SIM1 through the same path (live switching on) | `+CFUN: 1` at 21.2 s, data at 26.5 s | at about 22 s |
+| live switch, the target's radio on first (the factory's order, the PR's first sequence) | **does not work**: `AT+SPACTCARD=1;+SFUN=2` OK, then `AT+SFUN=4` on nr4 never answered (8, 12 and 30 s waited), SIM1 lost its radio meanwhile (`+CFUN: 0` on nr1), and after the way back nr4 did not read `+CFUN: 0`, so the result could not be verified | worked in both directions |
+| live switch, the card in use off first | works, both directions, every command answered within a second: `AT+SPACTCARD=0;+SFUN=5`, `;+SFUN=3` (SIM1 off, 1 s), `AT+SPACTCARD=1;+SFUN=2`, `AT+SPSWDATA` on nr5, `AT+SFUN=4` on nr5 (SIM2 `+CFUN: 1` 3 s after the start); the same back, SIM1 registered 5 s later, `ifup wan` up in 2 s | not tried |
+
+**What was decided**
+
+* **One model: one card's radio on at a time.** kanoqwq's fork (clean-tf-7.2 `25f8d0ce`: `mu300-dual-radio`,
+  `mu300-data-sim`) powers both stacks at boot and moves only the data route (`AT+SPSWDATA`, about 1.4 s, no
+  restart). Its boot step fails when the second card is absent or locked, and then neither card gets a radio; its
+  own test unit's SIM2 was unpaid, so data over `sipa_eth8` that way is unproven; here the second radio would not
+  even come on beside the first. Taken from it: the read-back of `AT+SPSWDATA?` as the verification of the route,
+  the work modes read and written back instead of invented, a card named in every command
+  (`AT+SPACTCARD=<n>;+...`), and the three commands kept out of the panel's AT terminal (below).
+* **The live switch is "the card in use off, then the other one on".** It is the cold start's situation, one card
+  coming on while the other is off, which both units have shown; the factory's order needs something this unit
+  does not have. On the contributor's unit the new order has not been run.
+* **`+CME ERROR: 10` is not believed before the SIM power has been on.** The cold start and the live switch both
+  switch it on to ask (`AT+SPACTCARD=<n>;+SFUN=2`), and off again (`;+SFUN=3`) when no card answers or it is locked.
+  The live switch asks before it touches the connection in use: an empty or locked target is refused in a second,
+  the WAN never down.
+* **The work modes are the modem's own**, read (`AT+SPTESTMODE?`) and written back as they are
+  (`AT+SPTESTMODEM=<m0>,<m1>`): a network mode locked on the Locks page is not replaced by a start. `134,134` only
+  when the modem does not say.
+* **Every failure ends on SIM1 with AT, by itself.** The table below. Two of the ways out are a restart of the
+  device, because nothing else brings the data back: a radio that was told to start the other card and did not, and
+  a radio left in an unknown state. A restart lands on the saved boot default, which no failure ever leaves on the
+  card that failed. `network.wan.sim_restart '0'` turns the restarts off (the state then says "reboot required").
+* **A second card has to show data once.** The first time SIM2 is the boot's card it gets
+  `network.wan.sim_data_wait` seconds (300; `0`: no check) from the radio coming on to have an address on
+  `sipa_eth8`. With data it is written to `/etc/mu300/sim-data-seen` and never checked again: an outage is not the
+  card's failure. Without, the settings go back to SIM1 (reason `no-data`) and the device restarts. Whether SIM1
+  has data is not asked. The reason: a card chosen over the device's own mobile data (ours is reached through a VPN
+  over it) that registers and gets no data would keep the device off the network until somebody walked up to it;
+  and a user whose SIM1 has no data either is at the device, reads the reason on the page, and loses a restart.
+  No verdict on a card nobody was dialling: the wan taken down by hand, switched off in the settings, or suspended
+  by the power profile. "Taken down" is netifd's word (`autostart: false`), not `mobile-data`'s marker
+  `/run/mu300-mobile-data-down`: every failed dial goes through a teardown that leaves that marker for a moment, and
+  a check that looked in that moment kept a card without data (measured, on the second of two identical boots).
+* **Issue #194's unit** (two built-in cards, SIM1 China Telecom registered without a data plan, SIM2 China Mobile
+  working, kernel 5.4). "SIM1 is there" is never taken for "SIM1 is usable": a boot with SIM2 chosen does not touch
+  SIM1's stack at all, a SIM2 that gets data is remembered and from then on kept through any outage, and nothing
+  ever moves the device to SIM1 because SIM2 "has no data right now". In the live switch the same distinction is
+  made at the moment of switching: a target without data sends the radio back only when the card in use *had* data;
+  when it had none either, the target stays (`no_data_kept`), netifd keeps dialling it, and the boot default is not
+  saved on a card that showed no data. Our unit is that unit mirrored, and both branches ran on it.
+* **A dial that waits for a card the radio is leaving ends at once** (`wait_registered` looks at the switch
+  marker). Measured before: it held the bring-up lock for its 60 s, and the card the radio went back to stayed
+  without data for 32 s after the switch was over. And netifd's first dial of a dual-SIM boot **waits for the cold
+  start** instead of failing and coming back 20 s later (data 39 s into the boot before, 26.5 s after).
+
+**Failures, and where the device ends** (U: measured on the maintainer's unit; T: unit tests only)
+
+| what goes wrong | reason on the page | where it ends | |
+|---|---|---|---|
+| the settings cannot be read, the marker cannot be written, bash is missing | `invalid-*`, `not-startable` | a SIM1 boot, at once: `init.d/mu300-atd` never returns without AT owners | T |
+| the readiness line never appears (another kernel's seqfile) | `brokers-missing` | this boot: gives up at 104 s, the AT service starts over as SIM1's, radio on at 127 s, data at 132 s | U (the line's text changed by hand) |
+| no card answers with its SIM power on; a PIN; a card that is not the recorded one | `no-sim`, `sim-pin`, `wrong-card` | this boot: SIM1's ordinary warm-up through the owner of nr1 that is already there (10 s later than a plain boot) | T; U with the earlier rule, which took the unpowered card for none |
+| the radio was told to start SIM2 and does not come on | `no-radio`, `data-route`, `modem-refused` | restart into SIM1 (not before 120 s of uptime, so that the boot was marked good) | T |
+| the cold start dies, the device loses power in it | `unconfirmed` | the next boot is SIM1's (the pending marker) | T |
+| SIM2's radio is on, no data within the time, never had any | `no-data` | restart into SIM1: with 150 s set, 174 s into the boot (with 60 s: decided at 86 s, restarted at 120 s); SIM1's data 31.4 to 31.8 s into the next one, the VPN's exit address back | U, twice |
+| the same, but the connection was off (taken down, suspended, disabled) | - | nothing: no verdict on a card nobody was dialling | T; netifd's flag read by hand on the unit |
+| live: the target has no data, the card in use had | result `no_data` | back on the card in use: 3.5 s to switch, 60 s of waiting, 4 s back, WAN up 2 s later; default unchanged | U |
+| live: no data on either | `no_data_kept` | stays on the target; its data came 6 s later by itself; default unchanged until `switch` is asked again | U |
+| live: a command is refused half way | `rolled_back` | back on the card in use | T |
+| live: the channel or the radio lock is busy | `failed` | nothing was sent; WAN up again | T |
+| live: the way back cannot be verified, the modem is silent, the deadline (300 s) | `restarting` | restart into the saved default, 20 s later: data back about 75 s after the failed switch | U (with the first sequence) |
+| live: the controller is killed (`SIGKILL`) | `restarting` | its guard declares the radio unknown within 5 s; restart; data 26.5 s into the next boot | U |
+
+**Who else talks to the modem meanwhile.** The switch holds a kernel `flock` on `/run/mu300/sim-control.lock`
+(gone with its holder: no stale lock; a second request answers "SIM control is busy" at once), runs its commands
+under `mobile-data`'s radio lock (the dial's radio-on, the watchdog, the Locks page's SFUN restart), and while they
+run `mu300-at` tells every other client "busy" in the words they already handle (SMS, USSD, the panel's terminal
+and collectors): `/run/mu300/sim-sequence`, believed only while the lock is held, so a killed switch closes nothing
+(measured: `AT` answered 5 s after the kill). Lock writes, the modem reset and suspend are refused in a dual-SIM
+boot. Nothing from a caller reaches an AT command: the arguments are one of six fixed pairs, and every command is
+built from the two slot numbers; the work modes read from the modem go back out only as two numbers of at most
+three digits.
+
+**The panel's AT terminal** refuses `AT+SPACTCARD=`, `AT+SMMSWAP=` and `AT+SPSWDATA` (its `?` forms pass), on every
+device and in any spelling, as kanoqwq's does: they move the data route under a connection that then answers
+`CONNECT` and loses every packet. `AT+SPTESTMODEM=` asks for confirmation like `AT+SPTESTMODE=`.
+
+**What is written into the modem.** Nothing else is sent.
+
+| command | what it changes | kept by the modem | put back |
+|---|---|---|---|
+| `AT+SMMSWAP=0` (nr1) | the RIL handshake | the same command every boot sends on the SIM1 path | nothing to put back |
+| `AT+SPTESTMODEM=<m0>,<m1>` (the card's data channel, cold start only) | the two work modes: the values just read, so nothing; `134,134` only when they cannot be read | yes (NV) | not needed; with unreadable modes the earlier ones are not known |
+| `AT+SPSWDATA` (the card's data channel) | which card carries packet data | not over a restart (measured) | by the cold start or switch for SIM1; and a plain SIM1 dial asks `AT+SPSWDATA?` and takes it back while `/etc/mu300/sim-data-route-2` exists (left when the route was given to SIM2). Without that mark nothing is asked |
+| `AT+SPACTCARD=<n>;+SFUN=2` / `3` / `5`, `AT+SFUN=4` | SIM power and radio of one card | no | by the next boot; the switch and the cold start switch off what they switched on and could not use |
+
+Nothing writes a PIN, an IMSI, a band or a cell lock. A dual-SIM boot does not replay the Locks page's settings
+(they stay in the modem's NV; only the replay's own restart is left out).
+
+**Nobody who does not use it.** `init.d/mu300-atd` reads the settings on a U30 Air only; with the default (slot 0,
+live switching off) it starts the same three instances as before, and a boot with the branch's files had the
+handshake at 24.6 s and data at 31.7 s (24.1 and 31.2 before). `mu300-sim active`, which every AT client asks
+before every command, answers a pinned 0 from one file read again (2.8 ms; with the library and the device's name
+read first it was 6.7 ms). `mobile-data` asks the modem for the data route only where the mark is. `mu300-at`'s gate
+is one file test. The WAN's teardown now takes the bearer's name from netifd (`ifdown`/`ifup` on SIM1: address gone,
+up again in 5 s).
+
+**Privacy.** The cold start reads the CCID to compare it with `/etc/mu300/sim2-iccid` (a file only the owner
+creates) and never prints it; the logs (`/run/mu300/sim2-cold-start.log`, `sim-switch.log`, mode 600) hold the
+commands sent and no answer; status, the page and the fallback reason carry words from a fixed list.
+`/etc/mu300/sim-data-seen` holds slot numbers.
+
+**Not verified.** Data on `sipa_eth8` under this tree's dial on our hardware (our second card has no service; the
+contributor saw it on his unit with the earlier revision). The new switch order on a unit with two working cards.
+Kernel 5.4, which issue #194's unit runs: whether its `/dev/sipc_sbuf` reads the same line (the same vendor driver;
+if not, the `brokers-missing` row above is what happens). A truly empty position and a PIN-locked card with the
+current rule, on hardware. The restart after `no-radio` (the `no-data` restart, which is the same code, ran). The
+F50: unit tests, and the default path on the U30 Air. An M3.
