@@ -131,6 +131,9 @@ what replaced it. The table below gives each section's state.
 | 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
 | 70 | adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it | current (unit tests; nothing of it measured on a device: the checklist is in the section) |
 | 71 | A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found | current (unit tests, a fake adb and a fake installer; the window seen on macOS only; **not run against a device**, on Windows only by CI) |
+| 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; nothing of it has run on a device yet (protocol: docs/web-installer.md) |
+| 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
+| 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 
 ## Hardware and firmware facts
 
@@ -5228,6 +5231,183 @@ carries the change). `S` is the device's serial in `adb devices`, the computer a
     the same with `install.ps1 -Check` on Windows. With `adb auth keys` and no key of that computer: over SSH as
     before.
 
+### 81. An update that brought another mu300-update ended with "another mu300-update is running"
+
+Found on the first device update to the v2026.10.24 pre-release (F50, Ubuntu 24.04, v2026.10.23 installed):
+
+    $ sudo mu300-update apply
+    another mu300-update is running (pid 33187)
+
+and nothing was updated. No other run existed, and 33187 was the run itself. `apply` takes the release's own
+`mu300-update` when it differs from the installed one, replaces the installed file and execs the new one: the same
+process, which then takes the lock again (`exec 9>>lock; flock -n 9`). The descriptor it replaces was the lock's
+holder, so that should succeed - but the dispatch starts the keep-alive after `lock_take`, a background loop of
+`ping` and `sleep 3` that inherits descriptor 9, and `keepalive_stop` ends the loop's shell, not the ping or sleep it
+is waiting for. For up to three seconds one of them still holds the lock, and the continued run's `flock -n` fails
+with its own process id in the message. It is a race: an update whose release has the same updater never execs
+(v2026.10.22 to v2026.10.23 on the same device went through), and one that does can win it. A second `mu300-update
+apply` always works, because the installed updater is the release's by then.
+
+The updater that leaves the stragglers behind is the installed one, which no release can change; the one that
+meets them is the release's. So the fix is in what meets them: when `flock` fails in a run that was continued
+(`MU300_SELF_UPDATED`) and the lock file names this process, the lock is this run's; it waits up to ten seconds for
+the descriptor to come free and goes on either way. Any other holder is refused as before. And the keep-alive now
+runs without the lock's descriptor (`9>&-`), so no later updater leaves this behind. Measured: the tests reproduce
+the failure with the old lock code under dash, bash and busybox sh on Linux (macOS has no `flock`; the pid-directory
+lock always knew a continued run by its pid). Devices that took the v2026.10.24 pre-release's updater are not
+affected by it again: their next update meets the fixed one.
+
+### 82. adb on by default, and no OpenWrt had it after a boot
+
+The v2026.10.24 pre-release on an F50, openwrt-luci, kernel 7.2.10: `mu300-usb adb status` said `adb: on`, `auth:
+open`, and `gadget: without adb`; no adbd ran, and the computer saw no adb device. `/etc/init.d/mu300-adbd start` by
+hand brought it up at once. On Ubuntu, same device and kernel, adb was there after every boot (section 70).
+
+The service's own trace at boot (its command wrapped in `sh -x` into a file, because the log ring had already
+turned over): it ran 13 s after power-on (S19), FunctionFS was not in `/proc/filesystems`, not built in, and
+`mkdir functions/ffs.adb` failed - which the script takes for "this kernel has no FunctionFS", logs, and exits 0.
+procd does not start a service again that ended by itself. Some seconds later the same `mkdir` works (the module
+is loaded on demand then; what is not ready at second 13 was not looked into). Under systemd the unit starts later
+and never met this. Until adb was on by default nobody saw it: `mu300-usb adb on` starts the service long after
+the boot, and the 5.4 kernel has FunctionFS built in.
+
+`mu300-adbd run` now asks again once a second for a minute (`MU300_ADB_WAIT`) before it believes the no and logs
+it. Measured after the change: adb in `adb devices` 38 s after power-on, `mu300-device --json` answering over it,
+mobile data up. Not measured: OpenWrt on 6.18 and on 5.4, the U30 Air.
+
+## The web installer
+
+### 72. The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves
+
+`site/web-installer/` installs, manages and removes Linux from Chrome or Edge over USB, with nothing on the computer
+but the browser. The design is in `docs/web-installer.md`; this section is what was measured for it on 2026-10-13, and
+what was not. **None of it has run on a device**: every test device was in use, and a browser's USB chooser cannot be
+driven by a script. The page says so (beta), and the protocol for the first run on an F50 is in that document.
+
+**1. The adb client: our own, about 900 lines, no dependency.** The candidate was ya-webadb / Tango (`@yume-chan/adb`
+2.6.4 with `adb-daemon-webusb`, MIT, maintained). It is TypeScript in a dozen packages with bare imports
+(`@yume-chan/async`, `event`, `struct`, `no-data-view`, `stream-extra`; 609 kB unpacked for `adb` alone), so the site
+would need a bundler in CI or a vendored bundle to keep in step by hand, on a page that writes to boot partitions.
+What we need of adb is small and fixed: the handshake with RSA authentication, shell v2 with exit codes, sync push,
+pull and stat, reboot. `site/assets/web-installer/adb/` is that, as plain ES modules the browser and Node load as
+they are. Two things were taken from reading ya-webadb's WebUSB backend and AOSP's `usb_linux.cpp` (facts, no code):
+adbd sends a packet as two USB transfers, so the header is read with a request of one endpoint packet and the payload
+with a request of exactly its length; and a write whose length is a whole number of endpoint packets must be
+followed by a zero-length packet.
+* *The signature.* adb signs the device's 20-byte token as if it were a SHA-1 digest (PKCS#1 v1.5). WebCrypto's
+  `sign()` always hashes first and cannot make that signature, so the key is generated with WebCrypto, exported, and
+  the private operation is a BigInt `modPow` (about 10 ms for RSA-2048 in Node 26). The key therefore lives as
+  numbers in IndexedDB, not as a non-extractable CryptoKey; it is not constant time. Checked: the public key line
+  our code derives from a key made by `adb keygen` (platform-tools 37) is byte for byte the `adbkey.pub` adb wrote
+  for it, and Node's OpenSSL accepts the signature as adbd would (`tests/web/adb.test.mjs`).
+* *Against a real adbd.* Ubuntu 26.04's `adbd` package (AOSP 34.0.5; it needs no key and listens on TCP 5555, which
+  is why §43 could not use it) in a container, the client over a TCP transport: handshake and features, shell v2 with
+  stdout, stderr and the exit status apart, stdin, a timeout that ends the command, push/pull/stat of 0 to 5 MB with
+  equal SHA-256 at the 64 KiB chunk boundaries, refused files, an abort in the middle of a push
+  (`tests/web/interop.test.mjs`, 3 tests, run by hand: `MU300_ADBD_TCP=host:port`). Stock adbd gives a pushed file
+  the owner's mode bits for group and others too (0640 arrived as 0666): the page never relies on the mode of a
+  pushed file, and a password does not travel in a file (below).
+* *Not measured:* the USB transport against a device (framing and the zero-length packet are tested against a fake
+  USBDevice only), authentication against an adbd that asks for a key, the Android "allow USB debugging" prompt
+  with a browser's key, the adbd of MU300 Linux. The WebUSB transport takes a `USBDevice` as the WebUSB API defines
+  it, so the same client runs in Node with the `usb` package's `webusb` object (`docs/web-installer.md`); that is the
+  way to try it on a device without a browser.
+
+**2. How the release files reach the device: the user downloads, the page pushes; or the device downloads.**
+A page cannot read a release asset. Measured with `curl -I -H 'Origin: https://kaandikec.com'`:
+
+| request | answer | CORS |
+|---|---|---|
+| `github.com/.../releases/download/v2026.10.23/SHA256SUMS` | 302 to `release-assets.githubusercontent.com` | no `Access-Control-Allow-Origin` on the 302 |
+| the redirect target | 200, `application/octet-stream` | none |
+| `api.github.com/repos/.../releases/latest` | 200 | `Access-Control-Allow-Origin: *` (60 requests an hour without an account) |
+| `api.github.com/repos/.../releases/assets/ID` with `Accept: application/octet-stream` | 302 with `Access-Control-Allow-Origin: *` | the target it redirects to has none, so `fetch()` fails at the second hop |
+
+So `fetch()` gets the release *list* and nothing of the files. The list is enough for integrity: since 2025 the API
+gives every asset a `digest` (`sha256:...`); all 24 assets of v2026.10.23 have one. Publishing the files a second
+time with CORS was ruled out: GitHub Pages allows 1 GB per site and the 11 zips of one release are 890 MB (41 to
+130 MB each).
+* *Primary:* the page links the zip (an ordinary download, which no CORS rule stops), the user picks the downloaded
+  file, the page reads the zip's directory and `mu300/manifest` in the browser (right system, kernel and release, and
+  an installer that knows this caller), pushes it with adb sync, and the **device** computes its SHA-256 after root
+  has moved it to `/data/adb/mu300-web` - compared with the digest from the API. What is checked is the file the
+  installer will read, after the transfer.
+* *Fallback:* `android-web.sh run fetch NAME SIZE`: the device downloads the zip itself with the root manager's
+  busybox `wget`, from an address the script builds from the zip's name (this project's release of the tag in the
+  name; the page cannot name another), then the same check. It costs the device's mobile data. *Not measured:*
+  whether Magisk's busybox `wget` does TLS and follows GitHub's redirect on these devices (toybox has no `wget`).
+  The page offers it as "let the device download it" and says that not every device's tools can.
+* The Magisk zip is the unit, not the separate assets: it holds the installer of its own release, and its payload is
+  stored uncompressed, so nothing is unpacked twice. Two systems are two zips, one after the other, as in the Magisk
+  app.
+
+**3. WebUSB per platform.** Chromium only (Chrome, Edge, Opera, Brave; not Firefox, not Safari), on https or
+localhost. In a headless Chromium the page finds `navigator.usb` and runs under its Content-Security-Policy with
+no violation; `fetch()` to another host than `api.github.com` is refused by that policy (checked).
+* *Any system:* one program at a time can claim the adb interface. A running adb server has it: `claimInterface`
+  fails with `NetworkError`, which the page reports as "another program is using the device" with `adb kill-server`.
+* *Windows:* WebUSB needs the interface bound to WinUSB. AOSP's adbd carries the Microsoft OS descriptor that asks
+  for it (compatible ID `WINUSB` in its FunctionFS descriptors), and our Linux adbd announces the same (§43), so a
+  stock Windows 10/11 should bind it without a driver. **Unknown:** whether ZTE's firmware leaves OS descriptors on
+  in its gadget, and whether a ZTE driver package claims the interface first; no Windows host was available.
+  Google's USB driver is WinUSB and works with WebUSB; Zadig can bind WinUSB to the one interface. `open()` then
+  fails with `SecurityError`/`NetworkError`, which the page explains per platform.
+* *Linux:* the device node is root's unless a udev rule says otherwise (distributions' `android-udev` rules cover
+  known vendor ids, not necessarily this one). The page shows a rule that matches the adb interface by class
+  (ff/42) with `uaccess`. A snap or flatpak browser may need its own USB permission.
+* *macOS:* nothing to install; only another program holding the device is in the way.
+* *Android Chrome* has WebUSB as well, so a phone with an OTG adapter could run the page. Not built for and not
+  tried: the phone would have to power a battery-less F50 for the whole installation.
+* *Not measured anywhere:* the chooser listing an F50 or U30 Air, and what their Android answers to a browser's key.
+  Whether these devices' bootloaders set `ro.boot.verifiedbootstate`, `ro.boot.flash.locked` or
+  `ro.boot.vbmeta.device_state` is not known either: the page shows "not reported" when none is set.
+
+**4. What a closed tab or a pulled cable leaves.** The installation is not the page's: it is the Magisk zip's own
+installer (`mu300/install.sh`), started by `tools/android-web.sh` as a job in a session of its own (`setsid`, output
+to a file, HUP ignored). The page only watches (`follow`), and a watcher that goes away - tab closed, cable pulled on
+a U30 Air, computer asleep - changes nothing; a new connection reads the same log from its start
+(`tests/test_android_web.py`: a job whose watcher is killed finishes; `tests/web/e2e-android.mjs`: the page's own
+code loses its connection at "systems" and a second connection sees the job end). On an F50 a pulled cable is a
+power cut, as it is for the installer for computers. What is left, by stage (the installer prints the stage,
+`MU300-STEP n/9 name`, and the page shows this sentence beside it):
+
+| stage | written so far | the device then |
+|---|---|---|
+| check, unpack, plan, vendor, image | nothing on the eMMC or the card (files in `/data/adb` only) | boots Android; `clean` removes the files |
+| systems | the Linux filesystem, unfinished | boots Android: boot partitions and misc untouched. Run it again |
+| boot | the Linux slot's boot partition, never Android's | boots Android: the image is written, read back from the medium (`boot_readback`, §50) and only then is misc armed |
+| arm | 32 bytes of misc, read back; the old block is written back when they do not verify | Android's block or the trial block |
+| done | Linux armed for a trial | a Linux that does not finish starting falls back to Android (§17) |
+
+The order and the checks are the Magisk installer's, unchanged; the page adds no write of its own to a block
+device (it composes no `dd`: `tests/test_web_installer.py`). The window in which a cut matters is the installer's
+own, and shorter than install.sh's in one respect: nothing between "boot image verified" and "misc armed" crosses
+the cable. Cancelling is offered only before "systems". The uninstaller (`android-web.sh`, in uninstall.sh's order:
+misc, then the boot partition, then the erase) is safe to cut anywhere for the same reason. *Not measured:* that a
+job really outlives its adb connection under Magisk's `su` on the device (it is its own session; `su`'s daemon may
+still end it), and the stall guards of §50 through this path.
+
+**The device side, for a caller that is not Magisk** (in every zip from the next release on): `MU300_ANSWERS=FILE`
+(the settings of the run from that file alone, which must be root's), `MU300_PROGRESS=1` (`MU300-STEP`, `MU300-PLAN
+key=value`), `mu300/extras/` (the VPN module), `MU300_ADB_KEY` (trusted only). Zips of v2026.10.23 and older do not
+have them, and the page refuses those releases. For Linux the page needs no key since §70 (adb on and open by
+default); it reads `mu300-device --json` (docs/ADB-INTERFACE.md) and offers "only this browser" as a choice, off by
+default, which sets the installed system to authorised keys with the browser's key.
+
+**Privacy.** The page reads ten named properties and never a serial number property; serials come from the USB
+descriptor and are shown masked. Every line a device prints is masked where it enters the page (`device.js`,
+`privacy.js`: serials, 14-20 digit numbers, phone numbers, MAC addresses, values named password/PSK/SSID/IMEI,
+password hashes, keys), on screen and in the saved log. The backup takes the Linux slot's boot image and boot chain,
+misc and the partition table; `android-web.sh` refuses NV, calibration and identity partitions by name. A password
+goes to the device on the stdin of a root command, never in a command line or a file the adb user can read. The
+page's policy (CSP) allows connections to this site and `api.github.com` only, and it loads no web fonts.
+* **Tested** (no device): `tests/web/*.test.mjs` (88 tests: the adb client against a scripted adbd with garbled
+  packets, refused files and a pulled cable; the wizard's rules; the device classes with a device that prints
+  serials, IMEIs and passwords, and with hostile names), `tests/test_android_web.py` (42: android-web.sh on the fake
+  device under busybox, and the page's code end to end through a scripted adbd), `tests/test_magisk_installer.py`
+  (`WebCaller`, 11), `tests/test_web_installer.py` (strings in three languages, the pages' policy, the staged site).
+  In a browser without a device: the three pages and the whole wizard with made-up answers (`?demo=android`,
+  `installed`, `small`, `linux`).
 ### 71. A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found
 
 **Nothing in this section was run against a device.** Every test device was in use while it was written. What ran:
