@@ -114,5 +114,18 @@ authentication bypass should be made solely from a failed client connection.
 
 The outstanding boundary and its detailed validation are being handed back
 to the maintainer. No controlled-frame or authentication-manipulation test
-implementation is included in this contribution. Keep PR #74 on hold until
-the maintainer has resolved and reviewed that part.
+implementation is included in this contribution. PR #74 was continued as #165;
+this finding is open in both, and the mode stays an opt-in experiment until
+it is resolved.
+
+A first probe that needs no new interface, only a Linux client whose frames can
+be shaped (a mac80211 card with wpa_supplicant): add a PMKSA of your own choice
+for the access point (`wpa_cli pmksa_add`), so the client skips SAE and sends
+Open System authentication with that PMKID, and append the matching
+`dd 34 40 45 da 04 <PMK> <PMKID>` element to the association request
+(`wpa_cli vendor_elem_add 13 ...`; it has to be the last element of the frame,
+check with a capture). If the firmware refuses the association, or
+appends its own element (two markers, rejected by the parser), the simplest
+form of the bypass is closed on this firmware. If the client completes the
+four-way handshake without knowing the passphrase, the bypass is real and the
+mode must not be used. Either result goes into FINDINGS 80.

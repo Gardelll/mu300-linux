@@ -9,6 +9,99 @@ recipe (`openwrt/build-u30-sae.sh`, `MU300_SAE_APK_DIR` for `build-rootfs.sh`)
 and does nothing until `u30_sae_offload=1` is set on a BSS. Nothing changes for
 a device that does not opt in on both counts.
 
+## What the offload is, and what it is not (maintainer review, 2026-10-13)
+
+- **Where SAE runs.** In the SC2355 firmware, on every kernel: the driver registers
+  the access point with the SME in the firmware, so hostapd never sees an
+  authentication frame. Nothing in this branch changes what the driver or the
+  firmware does; the only code that turns the mode on is the hostapd patch, in
+  userspace. It uses two things the vendor driver already had: vendor command OUI
+  `0x001374`, subcommand 43 (`vendor_set_sae_password` in `sc2355/vendor.c`, which
+  sends `CMD_SET_SAE_PARAM` to the chip) and the IE buffer of the `NEW_STATION` event.
+- **Kernels.** One driver source serves 5.4 (the vendor tree plus
+  `kernel/patches/wlan_combo-*.patch`) and 6.18/7.2 (`upstream/modules/sprd_wlan_combo`),
+  and the vendor command is in both. Measured only on 7.2.9. On 5.4 and 6.18 the
+  driver builds with these changes and the option has never been run.
+- **Devices.** The switch is the option, not a check of the device. The driver
+  refuses the vendor command unless the firmware reports soft-AP WPA3
+  (`SPRD_EXTEND_SOATAP_WPA3`); hostapd then logs `U30 SAE: firmware configuration
+  failed`, the access point does not start, and the guard below puts WPA2 back.
+  The F50 has the same chip and driver; whether its firmware reports the capability
+  is not known, nobody has tried.
+- **What the password request really carries: the passphrase, nothing else.** The
+  driver parses the group attribute and never counts it (`group_count` stays 0 in
+  `vendor_set_sae_password`), so no group reaches the firmware; and an ACT of
+  `0xffffffff` is the driver's "not set" (`setting->act != -1`), so no
+  anti-clogging threshold is sent either. Group 19 and the anti-clogging behaviour
+  are the firmware's own defaults. hostapd's `sae_groups` and
+  `sae_anti_clogging_threshold` have no effect in this mode.
+- **What hostapd still does:** validation of the RSN element, the four-way handshake
+  (with the imported PMK), mandatory PMF, group key handling.
+  **What it no longer does:** the SAE exchange itself: commit and
+  confirm, anti-clogging, group negotiation, the choice between hunting-and-pecking
+  and H2E. The firmware does hunting-and-pecking only; how well it resists the
+  timing attacks on that method (Dragonblood) is unknown, the firmware is closed.
+- **Other clients and modes.** A WPA2 client cannot join such a BSS: the patch
+  accepts pure SAE with required PMF only, and refuses WPA2/WPA3 mixed mode, optional
+  PMF and a second BSS when the configuration is loaded. The Wi-Fi client (uplink)
+  mode is not touched: joining a WPA3-only network still does not work
+  ([FINDINGS](FINDINGS.md) 14b).
+- **Where the secrets go.** The passphrase: `/etc/config/wireless` and the generated
+  `/var/run/hostapd-phy0.conf` (as with WPA2), then one netlink vendor command, a
+  copy on the kernel's stack and heap that the driver does not wipe, and
+  `CMD_SET_SAE_PARAM` over PCIe into the chip's memory. The PMK comes back with every
+  association, in the `NEW_STATION` event, through nl80211 into hostapd's PMKSA
+  cache. With this branch's module and package pair none of it is written to a log
+  (see "Protocol integration").
+- **Downgrade.** None over the air on such a BSS: pure SAE, PMF required, no
+  transition mode. The guard below is a downgrade made on the device itself, and it
+  is logged as an error.
+
+## When the access point cannot start: the way back
+
+Until 2026-10-13 a BSS with the option that could not start stayed down, at every
+boot, and a device reached only over its hotspot had no way in but USB. Three roads
+lead there: an update (`mu300-update` keeps `/etc/config` and replaces the packages:
+the stock `wpad-basic-mbedtls` does not know `u30_sae_offload` and refuses the whole
+configuration), a firmware that refuses the vendor command, and a configuration the
+patch rejects (mixed mode, optional PMF, a second BSS).
+
+`/opt/mu300/bin/openwrt-wifi-sae-guard` is in every OpenWrt image and does nothing
+unless a `wifi-iface` has `u30_sae_offload=1` in its `hostapd_bss_options`:
+
+- **At boot, before the first `wifi up`** (`mu300-hw`): the installed hostapd does
+  not have the option (its name is not in the binary). The option is taken out
+  before hostapd ever sees it.
+- **About two minutes after boot** (`mu300-post`, after its one `wifi up` retry and
+  a further 60 s of waiting, long enough for automatic channel selection): the
+  access point is still not `ENABLED` in `ubus call hostapd.wlan0 get_status`.
+
+In both cases the BSS becomes `encryption psk2` with the same passphrase,
+`ieee80211w` and `sae_pwe` are deleted, the file as it was is kept in
+`/etc/mu300/wireless.sae-offload` (root only), and `logread` has one line from
+`mu300-wifi`: `WPA3 hotspot (U30 SAE offload): ... The hotspot is back on WPA2 with
+the same password`. WPA2 and not hostapd's own SAE: without the offload a WPA3-only
+BSS on this driver lets nobody in. The price is the one WPA3 was chosen to avoid:
+a captured WPA2 handshake can be attacked offline, so use a long passphrase.
+
+What this means in practice:
+
+- **If the hotspot is gone after a change, reboot and wait three minutes.** It comes
+  back as WPA2. The guard acts at boot only; a change made live that takes the
+  access point down leaves it down until the reboot.
+- It leaves a hotspot alone that is off on purpose: a disabled `wifi-iface` or
+  radio, the Wi-Fi client or its scan mode, the Wi-Fi key's "hotspot off".
+- To go back to the offload afterwards: fix the cause, then
+  `cp /etc/mu300/wireless.sae-offload /etc/config/wireless` and the full restart
+  below.
+- **Over USB** (always works, and the only place to read the log of a hotspot that is
+  down): `ssh root@192.168.78.1`, then `logread -e 'U30 SAE' -e mu300-wifi -e hostapd`.
+  By hand, the same as the guard:
+  `uci del_list wireless.ap0.hostapd_bss_options='u30_sae_offload=1'; uci set wireless.ap0.encryption=psk2; uci -q delete wireless.ap0.ieee80211w; uci -q delete wireless.ap0.sae_pwe; uci commit wireless; wifi down; /etc/init.d/wpad restart; wifi up`.
+
+The guard is tested with stub `uci`/`ubus` under dash, bash and busybox ash
+(`tests/test_u30_sae.py`); it has not run on a device yet.
+
 ## Outstanding PMK trust boundary (why this stays experimental)
 
 Independent review in [PR #74](https://github.com/dikeckaan/mu300-linux/pull/74#issuecomment-6106003178)
@@ -54,6 +147,8 @@ kernel NEW_STATION event as a trailing vendor IE: EID 221, length 52, prefix
 `40:45:da:04`. Only one complete trailing element is accepted, only when the
 opt-in is enabled and firmware setup succeeded on a pure SAE/fullmac BSS.
 Malformed/duplicate/truncated metadata is rejected by a length-bounded parser.
+An association without an accepted element gets no PMK at all, and the four-way
+handshake then fails as it does with the stock hostapd.
 The key goes to the normal PMKSA/authenticator path; normal RSN validation,
 four-way handshake MIC checks and required PMF remain in place. The metadata
 needs a trustworthy firmware origin; the current shared IE buffer does not
@@ -76,6 +171,8 @@ also requires PMKSA caching: leave `disable_pmksa_caching=0` (the default).
 The helper now checks this before sending the firmware password request and
 reports the unsupported configuration. Removing the offload option restores
 the normal configuration path.
+A hotspot that stays down this way comes back as WPA2 after a reboot
+(see "When the access point cannot start" above).
 
 This experiment supports **one enabled AP BSS per radio**. Do not add a
 second SAE test SSID next to a WPA2 hotspot. The driver interface-combination

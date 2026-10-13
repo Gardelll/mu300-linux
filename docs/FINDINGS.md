@@ -125,7 +125,7 @@ what replaced it. The table below gives each section's state.
 | 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; unit tests against a table built from #9's figures, not measured on a device) |
 | 58 | A service's own error in an HTTP 200 answer to the SMS webhook: a KEY=VALUE check of the answer; a button that clears the delivery log (#171) | current (unit tests; measured on the U30 Air against a fake webhook, not against the real services) |
 | 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
-| 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | experimental, opt-in; PMK provenance open |
+| 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | experimental, opt-in build recipe (7.2.9 only); PMK provenance open; the WPA2 fallback not yet run on a device |
 
 ## Hardware and firmware facts
 
@@ -4830,6 +4830,16 @@ showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
   firmware answers each association with the derived PMK and PMKID as a trailing vendor element in the
   `NEW_STATION` IE buffer: EID 221, length 52, prefix `40:45:da:04`, then 32 + 16 bytes. Hunting-and-pecking,
   group 19 only; H2E-only clients and other groups untested.
+* **Only the passphrase reaches the firmware.** `vendor_set_sae_password` (`sc2355/vendor.c`) stores the group and
+  never increments `group_count`, so `vendor_softap_convert_para` writes no group TLV; and it writes the ACT TLV only
+  when `setting->act != -1`, which `0xffffffff` is not. `CMD_SET_SAE_PARAM` therefore carries the entry, the
+  passphrase and the end marker: group 19 and the anti-clogging threshold are the firmware's defaults, and hostapd's
+  `sae_groups` and `sae_anti_clogging_threshold` do nothing in this mode. Left as it is: sending a group list the
+  firmware has never been given is a change nobody has measured.
+* **The gate is the option and a firmware capability, not the device.** The driver answers the vendor command with
+  `-ENOTSUPP` unless the firmware reports `SPRD_EXTEND_SOATAP_WPA3`. The F50 has the same chip and driver; what its
+  firmware reports is not known. The command exists in the 5.4 vendor driver as well as in the mainline port;
+  only 7.2.9 has run it.
 * **The PMK arrives in a client-controlled buffer.** The driver passes `evt_new_station.ie` straight through as
   `assoc_req_ies` (`sc2355/cmdevt.c` -> `common/report.c`), the same bytes that carry the station's own IEs. The
   parser accepts exactly one trailing element and rejects any second marker, which only holds if the firmware
@@ -4844,9 +4854,31 @@ showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
   untouched, the generated `hostapd-phy0.conf` has no `sae`/`u30_sae` key, a WPA2 client is back 32 s after the
   package swap, the VPN stays up. The mode needs pure SAE, `ieee80211w=2`, `sae_pwe=0` and PMKSA caching, and a
   BSS with the option and any other mode fails closed (`Failed to set beacon parameters`, AP-DISABLED).
+  In the patch every new path starts from `u30_sae_offload` (the configuration check, the firmware request, the
+  key import); the one line that is not behind it replaces hostapd's debug hex dump of the association IEs with their
+  length. OpenWrt's wifi-scripts turn the documented UCI settings into `wpa_key_mgmt=SAE`, `ieee80211w=2`,
+  `sae_pwe=0`, `u30_sae_offload=1` and `wpa_passphrase` (no `sae_password`, which the patch refuses), checked with
+  the 25.12.5 scripts in a container.
 * **A second BSS with the option, added live, took the radio down (2026-10-12).** `wifi reload` with a new
   `wifi-iface` (`encryption sae`, `ieee80211w 2`, `sae_pwe 0`, `u30_sae_offload=1`) next to the WPA2 hotspot: both
   SSIDs disappeared and did not come back within ten minutes. The device could only be reached over that hotspot,
   so the cause is not known yet (hostapd gives the whole phy up when one BSS fails to set up; the earlier maintainer
   test used a separate BSS with r6 and a full `wifi down/up`). Enable the option on a device you can reach another
   way, and with a full `wifi down; wifi up`, never `wifi reload`.
+  Snrat's r9 refuses a second BSS when the configuration is loaded (`U30 SAE: supports a single BSS only`); on his
+  device, with `logread -f` over USB, the refusal still took the running WPA2 BSS down with it through netifd's
+  reload. The cause of the r8 outage itself was never captured.
+* **A hotspot that could not start stayed down at every boot; now it goes back to WPA2 (2026-10-13).** Three roads
+  to it: `mu300-update` keeps `/etc/config` and replaces the packages, and the stock wpad refuses a configuration with
+  a key it does not know; the firmware refuses the vendor command; the patch rejects the mode.
+  `openwrt-wifi-sae-guard` (does nothing without the option) looks before the first `wifi up` whether the installed
+  hostapd has the option, and about two minutes after boot whether the access point is `ENABLED`; if not, the BSS
+  becomes `psk2` with the same passphrase, the file as it was is kept in `/etc/mu300/wireless.sae-offload`, and
+  `mu300-wifi` logs one error line. WPA2 because hostapd's own SAE cannot work on this driver (first point). Unit
+  tests only (stub `uci`/`ubus`, dash, bash, busybox ash); not yet run on a device.
+* **Built, 2026-10-13:** `sprd_wlan_combo` with these removals for 7.2.10 and 6.18.56 (with `wcn_bsp`; the five touched
+  files warn only where the vendor's code always did, none of the removed format strings is in the module);
+  for 5.4 the twelve `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver and all 69 objects
+  compile (the module was not linked: ThinLTO wants to write next to the kernel's objects). The hostapd patch applies
+  with GNU patch after OpenWrt 25.12.5's own patches on `ca266cc2` (BSD patch rejects the `ap_config.c` hunk, which
+  has no leading context: build in the SDK, not on macOS).
