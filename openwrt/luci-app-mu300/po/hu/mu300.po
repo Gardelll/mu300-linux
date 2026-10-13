@@ -2976,8 +2976,8 @@ msgstr "A webhook címének http:// vagy https:// URL-nek kell lennie"
 msgid "The webhook body is too long or contains a control character"
 msgstr "A webhook törzse túl hosszú, vagy vezérlőkaraktert tartalmaz"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "A válasz ellenőrzésének kulcs=érték alakúnak kell lennie, például errcode=0 (betűk, számjegyek, _ és -; az értékben . és + is)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "A válasz ellenőrzésének kulcs=érték alakúnak kell lennie, például errcode=0 vagy ok=true (az érték egész szám vagy kisbetűk, legfeljebb 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Érvénytelen fejléc (soronként egy \"Név: érték\"; a Host, Content-Type, Content-Length, Transfer-Encoding és Connection fejlécet az eszköz állítja be)"
@@ -3008,6 +3008,9 @@ msgstr "A továbbítási beállításokat nem sikerült menteni"
 
 msgid "SMS forwarding is not installed"
 msgstr "Az SMS-továbbítás nincs telepítve"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Egy teszt az imént indult el; várjon néhány másodpercet"
 
 msgid "The delivery log could not be cleared"
 msgstr "A kézbesítési naplót nem sikerült törölni"

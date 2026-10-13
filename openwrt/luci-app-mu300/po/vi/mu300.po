@@ -2976,8 +2976,8 @@ msgstr "Địa chỉ webhook phải là URL http:// hoặc https://"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Nội dung webhook quá dài hoặc chứa ký tự điều khiển"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Kiểm tra phản hồi phải có dạng khóa=giá trị, như errcode=0 (chữ cái, chữ số, _ và -; trong giá trị còn có . và +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Kiểm tra phản hồi phải có dạng khóa=giá trị, như errcode=0 hoặc ok=true (giá trị là một số nguyên hoặc chữ thường, tối đa 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Tiêu đề không hợp lệ (mỗi dòng một \"Tên: giá trị\"; Host, Content-Type, Content-Length, Transfer-Encoding và Connection do thiết bị đặt)"
@@ -3008,6 +3008,9 @@ msgstr "Không thể lưu cài đặt chuyển tiếp"
 
 msgid "SMS forwarding is not installed"
 msgstr "Chưa cài đặt chuyển tiếp SMS"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Một lần thử vừa được bắt đầu; hãy đợi vài giây"
 
 msgid "The delivery log could not be cleared"
 msgstr "Không thể xóa nhật ký gửi"

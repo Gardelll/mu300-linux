@@ -2976,8 +2976,8 @@ msgstr "웹훅 주소는 http:// 또는 https:// URL이어야 합니다"
 msgid "The webhook body is too long or contains a control character"
 msgstr "웹훅 본문이 너무 길거나 제어 문자를 포함하고 있습니다"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "응답 확인은 errcode=0처럼 키=값 형식이어야 합니다(문자, 숫자, _ 및 -; 값에는 . 과 + 도 가능)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "응답 확인은 errcode=0 또는 ok=true처럼 키=값 형식이어야 합니다(값은 정수 또는 영문 소문자, 최대 16자)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "잘못된 헤더(한 줄에 하나의 \"Name: value\"; Host, Content-Type, Content-Length, Transfer-Encoding, Connection은 기기가 설정합니다)"
@@ -3008,6 +3008,9 @@ msgstr "전달 설정을 저장할 수 없습니다"
 
 msgid "SMS forwarding is not installed"
 msgstr "SMS 전달이 설치되어 있지 않습니다"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "방금 테스트를 시작했습니다. 몇 초 기다리세요"
 
 msgid "The delivery log could not be cleared"
 msgstr "전달 기록을 지울 수 없습니다"

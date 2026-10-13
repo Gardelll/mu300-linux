@@ -2976,8 +2976,8 @@ msgstr "Η διεύθυνση του webhook πρέπει να είναι URL ht
 msgid "The webhook body is too long or contains a control character"
 msgstr "Το σώμα του webhook είναι πολύ μεγάλο ή περιέχει χαρακτήρα ελέγχου"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Ο έλεγχος της απάντησης πρέπει να είναι κλειδί=τιμή, όπως errcode=0 (γράμματα, ψηφία, _ και -· στην τιμή επίσης . και +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Ο έλεγχος της απάντησης πρέπει να είναι κλειδί=τιμή, όπως errcode=0 ή ok=true (η τιμή ακέραιος αριθμός ή πεζά γράμματα, το πολύ 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Μη έγκυρη κεφαλίδα (μία \"Όνομα: τιμή\" ανά γραμμή· τα Host, Content-Type, Content-Length, Transfer-Encoding και Connection τα ορίζει η συσκευή)"
@@ -3008,6 +3008,9 @@ msgstr "Δεν ήταν δυνατή η αποθήκευση των ρυθμίσ
 
 msgid "SMS forwarding is not installed"
 msgstr "Η προώθηση SMS δεν είναι εγκατεστημένη"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Μια δοκιμή ξεκίνησε μόλις τώρα· περιμένετε λίγα δευτερόλεπτα"
 
 msgid "The delivery log could not be cleared"
 msgstr "Το αρχείο παράδοσης δεν ήταν δυνατό να καθαριστεί"

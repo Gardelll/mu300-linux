@@ -2976,8 +2976,8 @@ msgstr "يجب أن يكون عنوان webhook عنوان URL يبدأ بـ htt
 msgid "The webhook body is too long or contains a control character"
 msgstr "نص طلب الـ webhook طويل جدًا أو يحتوي على محرف تحكم"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "يجب أن يكون فحص الرد بصيغة مفتاح=قيمة، مثل errcode=0 (حروف وأرقام و _ و -؛ وفي القيمة أيضًا . و +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "يجب أن يكون فحص الرد بصيغة مفتاح=قيمة، مثل errcode=0 أو ok=true (القيمة عدد صحيح أو حروف صغيرة، 16 على الأكثر)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "ترويسة غير صالحة (واحدة \"Name: value\" في كل سطر؛ يضبط الجهاز Host وContent-Type وContent-Length وTransfer-Encoding وConnection)"
@@ -3008,6 +3008,9 @@ msgstr "تعذّر حفظ إعدادات إعادة التوجيه"
 
 msgid "SMS forwarding is not installed"
 msgstr "إعادة توجيه الرسائل القصيرة غير مثبّتة"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "بدأ اختبار قبل لحظة؛ انتظر بضع ثوانٍ"
 
 msgid "The delivery log could not be cleared"
 msgstr "تعذّر مسح سجل التسليم"

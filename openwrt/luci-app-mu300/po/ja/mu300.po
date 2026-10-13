@@ -2976,8 +2976,8 @@ msgstr "Webhook のアドレスは http:// または https:// の URL である�
 msgid "The webhook body is too long or contains a control character"
 msgstr "Webhook の本文が長すぎるか、制御文字を含んでいます"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "応答の確認は キー=値 の形式（例: errcode=0）で指定してください（英字、数字、_ と -。値には . と + も使用可）"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "応答の確認は キー=値 の形式（例: errcode=0 や ok=true）で指定してください（値は整数または英小文字、16 文字まで）"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "無効なヘッダー（1 行に 1 つの \"Name: value\"。Host、Content-Type、Content-Length、Transfer-Encoding、Connection はデバイスが設定します）"
@@ -3008,6 +3008,9 @@ msgstr "転送設定を保存できませんでした"
 
 msgid "SMS forwarding is not installed"
 msgstr "SMS 転送はインストールされていません"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "テストを開始したばかりです。数秒待ってください"
 
 msgid "The delivery log could not be cleared"
 msgstr "配信ログを消去できませんでした"

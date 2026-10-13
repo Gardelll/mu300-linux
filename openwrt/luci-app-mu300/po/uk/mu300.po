@@ -2976,8 +2976,8 @@ msgstr "Адреса вебхука має бути URL http:// або https://"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Тіло webhook надто довге або містить керівний символ"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Перевірка відповіді має бути у вигляді ключ=значення, наприклад errcode=0 (літери, цифри, _ та -; у значенні також . та +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Перевірка відповіді має бути у вигляді ключ=значення, наприклад errcode=0 або ok=true (значення — ціле число або малі літери, не більше 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Неправильний заголовок (по одному \"Ім'я: значення\" в рядку; Host, Content-Type, Content-Length, Transfer-Encoding і Connection задає пристрій)"
@@ -3008,6 +3008,9 @@ msgstr "Не вдалося зберегти налаштування перес
 
 msgid "SMS forwarding is not installed"
 msgstr "Пересилання SMS не встановлено"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Тест щойно було запущено; зачекайте кілька секунд"
 
 msgid "The delivery log could not be cleared"
 msgstr "Не вдалося очистити журнал доставки"

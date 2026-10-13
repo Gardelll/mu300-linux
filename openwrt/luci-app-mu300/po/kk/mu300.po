@@ -2976,8 +2976,8 @@ msgstr "Вебхук мекенжайы http:// немесе https:// URL бол
 msgid "The webhook body is too long or contains a control character"
 msgstr "Webhook денесі тым ұзын немесе басқару таңбасын қамтиды"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Жауапты тексеру кілт=мән түрінде болуы тиіс, мысалы errcode=0 (әріптер, цифрлар, _ және -; мәнде . және + де болады)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Жауапты тексеру кілт=мән түрінде болуы тиіс, мысалы errcode=0 немесе ok=true (мән — бүтін сан немесе кіші әріптер, ең көбі 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Жарамсыз тақырып (әр жолда бір \"Аты: мәні\"; Host, Content-Type, Content-Length, Transfer-Encoding және Connection құрылғымен орнатылады)"
@@ -3008,6 +3008,9 @@ msgstr "Қайта жіберу баптауларын сақтау мүмкін
 
 msgid "SMS forwarding is not installed"
 msgstr "SMS қайта жіберу орнатылмаған"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Сынақ жаңа ғана басталды; бірнеше секунд күтіңіз"
 
 msgid "The delivery log could not be cleared"
 msgstr "Жеткізу журналын тазалау мүмкін болмады"

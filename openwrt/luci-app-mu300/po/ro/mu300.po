@@ -2976,8 +2976,8 @@ msgstr "Adresa webhookului trebuie să fie un URL http:// sau https://"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Corpul webhook-ului este prea lung sau conține un caracter de control"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Verificarea răspunsului trebuie să fie cheie=valoare, ca errcode=0 (litere, cifre, _ și -; în valoare și . și +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Verificarea răspunsului trebuie să fie cheie=valoare, ca errcode=0 sau ok=true (valoarea un număr întreg sau litere mici, cel mult 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Antet nevalid (un \"Nume: valoare\" pe linie; Host, Content-Type, Content-Length, Transfer-Encoding și Connection sunt setate de dispozitiv)"
@@ -3008,6 +3008,9 @@ msgstr "Setările de redirecționare nu au putut fi salvate"
 
 msgid "SMS forwarding is not installed"
 msgstr "Redirecționarea SMS nu este instalată"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Un test tocmai a fost pornit; așteptați câteva secunde"
 
 msgid "The delivery log could not be cleared"
 msgstr "Jurnalul de livrare nu a putut fi golit"

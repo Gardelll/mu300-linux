@@ -72,10 +72,12 @@ say so in the body; for those, fill in "The answer must contain" with the key an
 
 The answer must then be a JSON object with that value under that key at its top level. If the key has another value,
 the delivery fails and is retried like any other failure, and the log shows it (`HTTP 200, the service answered
-errcode=310000`). If the answer has no such key or is not JSON, the delivery fails and is **not** sent again, because
-the message may well have arrived: check the rule with "Send test", which applies it too. The device reads at most
-the first 4096 bytes of the answer, in memory, and keeps only the result: the answer itself is never logged or shown.
-The key and the value may be letters, digits, `_` and `-` (the value also `.` and `+`), 32 characters each.
+errcode=310000`; a value that is not a whole number, `true`, `false` or `null` is not shown, only that it is
+another one). If the answer has no such value (`no errcode in the answer`), the delivery fails and is **not** sent
+again, because the message may well have arrived: check the rule with "Send test", which applies it too (one test
+every 5 seconds at most). The device reads at most the first 4096 bytes of the answer, in memory, and keeps only
+the result: the answer itself is never logged or shown. The key is a name of letters, digits and `_` (32 at most);
+the value is a whole number or lowercase letters (16 at most).
 
 The delivery log is kept in memory (the last 100 lines, gone after a reboot); "Clear" under it empties it. Messages
 that still wait to be delivered are not affected.

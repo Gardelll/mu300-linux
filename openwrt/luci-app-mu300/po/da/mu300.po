@@ -2976,8 +2976,8 @@ msgstr "Webhookens adresse skal være en http://- eller https://-URL"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Webhookens indhold er for langt eller indeholder et kontroltegn"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Svarkontrollen skal være nøgle=værdi, som errcode=0 (bogstaver, cifre, _ og -; i værdien også . og +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Svarkontrollen skal være nøgle=værdi, som errcode=0 eller ok=true (værdien et heltal eller små bogstaver, højst 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Ugyldig header (én \"Navn: værdi\" pr. linje; Host, Content-Type, Content-Length, Transfer-Encoding og Connection sættes af enheden)"
@@ -3008,6 +3008,9 @@ msgstr "Indstillingerne for videresendelse kunne ikke gemmes"
 
 msgid "SMS forwarding is not installed"
 msgstr "Videresendelse af SMS er ikke installeret"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "En test blev startet for et øjeblik siden; vent et par sekunder"
 
 msgid "The delivery log could not be cleared"
 msgstr "Leveringsloggen kunne ikke ryddes"

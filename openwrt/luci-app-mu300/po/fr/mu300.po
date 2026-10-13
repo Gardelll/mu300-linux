@@ -2976,8 +2976,8 @@ msgstr "L'adresse du webhook doit être une URL http:// ou https://"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Le corps du webhook est trop long ou contient un caractère de contrôle"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "La vérification de la réponse doit être de la forme clé=valeur, comme errcode=0 (lettres, chiffres, _ et - ; dans la valeur aussi . et +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "La vérification de la réponse doit être de la forme clé=valeur, comme errcode=0 ou ok=true (la valeur : un nombre entier ou des lettres minuscules, 16 au plus)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "En-tête invalide (un \"Nom: valeur\" par ligne ; Host, Content-Type, Content-Length, Transfer-Encoding et Connection sont définis par l'appareil)"
@@ -3008,6 +3008,9 @@ msgstr "Les paramètres de transfert n'ont pas pu être enregistrés"
 
 msgid "SMS forwarding is not installed"
 msgstr "Le transfert de SMS n'est pas installé"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Un test vient d’être lancé ; attendez quelques secondes"
 
 msgid "The delivery log could not be cleared"
 msgstr "Le journal des envois n’a pas pu être vidé"

@@ -2976,8 +2976,8 @@ msgstr "Adres webhooka musi być adresem URL http:// lub https://"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Treść webhooka jest zbyt długa lub zawiera znak sterujący"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Sprawdzenie odpowiedzi musi mieć postać klucz=wartość, jak errcode=0 (litery, cyfry, _ i -; w wartości także . i +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Sprawdzenie odpowiedzi musi mieć postać klucz=wartość, jak errcode=0 lub ok=true (wartość: liczba całkowita albo małe litery, najwyżej 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Nieprawidłowy nagłówek (jeden \"Nazwa: wartość\" w wierszu; Host, Content-Type, Content-Length, Transfer-Encoding i Connection ustawia urządzenie)"
@@ -3008,6 +3008,9 @@ msgstr "Nie udało się zapisać ustawień przekazywania"
 
 msgid "SMS forwarding is not installed"
 msgstr "Przekazywanie SMS nie jest zainstalowane"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Test został uruchomiony przed chwilą; odczekaj kilka sekund"
 
 msgid "The delivery log could not be cleared"
 msgstr "Nie udało się wyczyścić dziennika doręczeń"

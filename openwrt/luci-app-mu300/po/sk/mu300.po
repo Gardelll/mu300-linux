@@ -2976,8 +2976,8 @@ msgstr "Adresa webhooku musí byť URL http:// alebo https://"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Telo webhooku je príliš dlhé alebo obsahuje riadiaci znak"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Kontrola odpovede musí mať tvar kľúč=hodnota, napríklad errcode=0 (písmená, číslice, _ a -; v hodnote aj . a +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Kontrola odpovede musí mať tvar kľúč=hodnota, napríklad errcode=0 alebo ok=true (hodnota celé číslo alebo malé písmená, najviac 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Neplatná hlavička (jedna \"Názov: hodnota\" na riadok; Host, Content-Type, Content-Length, Transfer-Encoding a Connection nastavuje zariadenie)"
@@ -3008,6 +3008,9 @@ msgstr "Nastavenia preposielania sa nepodarilo uložiť"
 
 msgid "SMS forwarding is not installed"
 msgstr "Preposielanie SMS nie je nainštalované"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Test bol spustený pred chvíľou; počkajte niekoľko sekúnd"
 
 msgid "The delivery log could not be cleared"
 msgstr "Záznam doručení sa nepodarilo vymazať"

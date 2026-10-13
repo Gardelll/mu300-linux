@@ -2976,8 +2976,8 @@ msgstr "Het webhookadres moet een http://- of https://-URL zijn"
 msgid "The webhook body is too long or contains a control character"
 msgstr "De webhook-body is te lang of bevat een stuurteken"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "De antwoordcontrole moet sleutel=waarde zijn, zoals errcode=0 (letters, cijfers, _ en -; in de waarde ook . en +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "De antwoordcontrole moet sleutel=waarde zijn, zoals errcode=0 of ok=true (de waarde een geheel getal of kleine letters, hooguit 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Ongeldige header (één \"Naam: waarde\" per regel; Host, Content-Type, Content-Length, Transfer-Encoding en Connection stelt het apparaat in)"
@@ -3008,6 +3008,9 @@ msgstr "De doorstuurinstellingen konden niet worden opgeslagen"
 
 msgid "SMS forwarding is not installed"
 msgstr "SMS doorsturen is niet geïnstalleerd"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Er is zojuist een test gestart; wacht een paar seconden"
 
 msgid "The delivery log could not be cleared"
 msgstr "Het afleverlog kon niet worden gewist"

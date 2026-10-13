@@ -2976,8 +2976,8 @@ msgstr "כתובת ה-webhook חייבת להיות כתובת URL של http:// 
 msgid "The webhook body is too long or contains a control character"
 msgstr "גוף ה-webhook ארוך מדי או מכיל תו בקרה"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "בדיקת התשובה חייבת להיות בצורת מפתח=ערך, כמו errcode=0 (אותיות, ספרות, _ ו- -; בערך גם . ו- +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "בדיקת התשובה חייבת להיות בצורת מפתח=ערך, כמו errcode=0 או ok=true (הערך מספר שלם או אותיות קטנות, 16 לכל היותר)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "כותרת לא תקינה (\"Name: value\" אחת בכל שורה; את Host, Content-Type, Content-Length, Transfer-Encoding ו-Connection המכשיר קובע)"
@@ -3008,6 +3008,9 @@ msgstr "לא ניתן היה לשמור את הגדרות ההעברה"
 
 msgid "SMS forwarding is not installed"
 msgstr "העברת SMS אינה מותקנת"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "בדיקה הופעלה לפני רגע; המתינו כמה שניות"
 
 msgid "The delivery log could not be cleared"
 msgstr "לא ניתן היה לנקות את יומן המסירה"

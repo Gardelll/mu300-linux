@@ -2976,8 +2976,8 @@ msgstr "Webhook ünvanı http:// və ya https:// URL olmalıdır"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Webhook gövdəsi çox uzundur və ya idarəetmə simvolu ehtiva edir"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "Cavab yoxlaması açar=dəyər şəklində olmalıdır, məsələn errcode=0 (hərflər, rəqəmlər, _ və -; dəyərdə həmçinin . və +)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Cavab yoxlaması açar=dəyər şəklində olmalıdır, məsələn errcode=0 və ya ok=true (dəyər tam ədəd və ya kiçik hərflər, ən çoxu 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Yanlış başlıq (hər sətirdə bir \"Ad: dəyər\"; Host, Content-Type, Content-Length, Transfer-Encoding və Connection cihaz tərəfindən təyin edilir)"
@@ -3008,6 +3008,9 @@ msgstr "Yönləndirmə ayarları saxlanıla bilmədi"
 
 msgid "SMS forwarding is not installed"
 msgstr "SMS yönləndirmə quraşdırılmayıb"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Bir az əvvəl sınaq başladılıb; bir neçə saniyə gözləyin"
 
 msgid "The delivery log could not be cleared"
 msgstr "Çatdırılma jurnalını təmizləmək mümkün olmadı"

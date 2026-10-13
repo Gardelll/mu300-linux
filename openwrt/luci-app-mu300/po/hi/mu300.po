@@ -2976,8 +2976,8 @@ msgstr "वेबहुक का पता http:// या https:// URL हो�
 msgid "The webhook body is too long or contains a control character"
 msgstr "वेबहुक बॉडी बहुत लंबी है या उसमें कोई नियंत्रण वर्ण है"
 
-msgid "The answer check must be key=value, like errcode=0 (letters, digits, _ and -; the value also . and +)"
-msgstr "उत्तर की जाँच कुंजी=मान के रूप में होनी चाहिए, जैसे errcode=0 (अक्षर, अंक, _ और -; मान में . और + भी)"
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "उत्तर की जाँच कुंजी=मान के रूप में होनी चाहिए, जैसे errcode=0 या ok=true (मान एक पूर्णांक या छोटे अक्षर, अधिकतम 16)"
 
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "अमान्य हेडर (प्रति पंक्ति एक \"Name: value\"; Host, Content-Type, Content-Length, Transfer-Encoding और Connection डिवाइस सेट करता है)"
@@ -3008,6 +3008,9 @@ msgstr "अग्रेषण सेटिंग्स सहेजी नही
 
 msgid "SMS forwarding is not installed"
 msgstr "SMS अग्रेषण इंस्टॉल नहीं है"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "अभी-अभी एक परीक्षण शुरू किया गया है; कुछ सेकंड प्रतीक्षा करें"
 
 msgid "The delivery log could not be cleared"
 msgstr "डिलीवरी लॉग साफ़ नहीं किया जा सका"
