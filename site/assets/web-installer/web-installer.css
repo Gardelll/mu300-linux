@@ -42,7 +42,7 @@
   background: var(--code-bg); color: var(--ink); white-space: nowrap;
 }
 .wi-chip.ok, .wi-chip.android { background: var(--green-soft); color: var(--green); }
-.wi-chip.linux { background: var(--amber-soft); color: var(--amber); }
+.wi-chip.linux, .wi-chip.warn { background: var(--amber-soft); color: var(--amber); }
 .wi-chip.bad { background: var(--red-soft); color: var(--red); }
 .wi-chip.wait { background: var(--blue-soft); color: var(--blue); }
 .wi-facts { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: .3rem 1.2rem; margin: .6rem 0 0; }

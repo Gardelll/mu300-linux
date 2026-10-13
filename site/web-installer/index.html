@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- This page talks to a device over USB. Its policy: scripts and styles from this site only, and no connection
-     to anything but this site and GitHub's API. (The hash is the theme script below; no web fonts here.) -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-OMJkqZr7SKqxdIEl/JawS5rmqBdCOZaNDw1i12YqLwg='; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; base-uri 'none'; form-action 'none'">
+     to anything but this site, GitHub's API and the project's release mirror on raw.githubusercontent.com. (The hash is the theme script below; no web fonts here.) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-OMJkqZr7SKqxdIEl/JawS5rmqBdCOZaNDw1i12YqLwg='; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <script>try{var t=localStorage.getItem("mu300-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <title>Web installer: install and manage Linux on the ZTE F50 / U30 Air from the browser</title>
@@ -111,8 +111,8 @@
 <li><strong>Back up</strong> what an installation writes, and <strong>uninstall</strong>.</li>
 </ul>
 <p>It does not shrink Android's data partition on the 32 GB variant (it shows the figures and points to the <a href="../install/#variant-32gb">installer for computers</a>), and it does not grow it back.</p>
-<p>You choose the system, the kernel and the release; the page names the file that belongs to that choice and its size, and gets it onto the device without you downloading anything: it asks the <strong>device to download the file itself</strong> from the project's releases on GitHub, over the device's own internet connection, and shows how far it is. A download that breaks continues where it stopped. That costs the file's size (39 to 124 MB per system) of the device's mobile data, which an operator may charge by volume. When the device has no connection, the page says so and takes a file you download yourself (GitHub does not let a web page read a release's files, so the page cannot fetch them for you).</p>
-<p>Whichever way a file comes, the device uses it only when it has the checksum GitHub publishes for the release, which the browser reads from GitHub directly. That check is what the download rests on: the downloader on the device (Magisk's busybox) cannot verify GitHub's certificate, so the page also watches where the download connects and stops one that is sent anywhere but GitHub.</p>
+<p>You choose the system, the kernel and the release; the page names the file that belongs to that choice and its size, and gets it onto the device without you downloading anything: it asks the <strong>device to download the file itself</strong> from the project's releases on GitHub, over the device's own internet connection, and shows how far it is. A download that breaks continues where it stopped. That costs the file's size (39 to 124 MB per system) of the device's mobile data, which an operator may charge by volume. When the device has no connection, the page says so and <strong>this computer downloads the file</strong> from the project's mirror of the release on GitHub and sends it over the cable (GitHub does not let a web page read a release's own files, so the project keeps a copy where a page can). As a last way you download the file yourself and choose it.</p>
+<p>Whichever way a file comes, the device uses it only when it has the checksum GitHub publishes for the release, which the browser reads from GitHub directly. A file's integrity comes from that pinned checksum, not from the connection it travelled over: the downloader on the device (Magisk's busybox) cannot verify GitHub's certificate, so nothing is believed because of where it seems to come from. The page also holds a download to the size the release names and stops one that is sent anywhere but GitHub.</p>
 
 <h2 id="cannot-open">If the browser cannot open the device</h2>
 <div class="qa"><p><strong>Everywhere</strong></p>
@@ -152,7 +152,7 @@ sudo mu300-usb adb on</code></pre>
 
 <h2 id="privacy">What the page sees and keeps</h2>
 <ul>
-<li>It contacts <strong>GitHub's API</strong> for the list of releases, and this site for its own files. Nothing else: no analytics, no fonts or scripts from other sites. The release itself is downloaded by the device, from GitHub, when you choose that.</li>
+<li>It contacts <strong>GitHub's API</strong> for the list of releases, and this site for its own files. Nothing else: no analytics, no fonts or scripts from other sites. The release itself is downloaded by the device from GitHub, or by the browser from the project's mirror on <code>raw.githubusercontent.com</code>, whichever you choose.</li>
 <li>It never asks the device for its IMEI, IMSI, ICCID or phone number, and never reads the partitions that hold the device's identity and radio calibration.</li>
 <li>Serial numbers are shown masked. The log, on screen and in the file you can save, has serial numbers, identity numbers, phone numbers, MAC addresses, passwords and keys masked.</li>
 <li>It keeps one thing in the browser's storage for this site: this browser's adb key.</li>

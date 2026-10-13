@@ -14,7 +14,7 @@ it without a device and with one, and what the owner has to set up for the one p
  app.js       the screen, strings.js (en/tr/zh)
  flow.js      what fits, what is refused, answers
  github.js    release list from api.github.com
- mirror.js    a release zip from the mirror, in parts (off unless config.js names a mirror)
+ mirror.js    a release zip from the mirror (config.js), in parts
  zip.js       reads a picked zip's manifest
  device.js    AndroidDevice / LinuxDevice   --adb--> /data/local/tmp/mu300-web/android-web.sh   (pushed by the page)
  adb/*        adb over WebUSB: auth, shell v2, sync      |  under su, Magisk's busybox, ASH_STANDALONE=1
@@ -49,13 +49,18 @@ it without a device and with one, and what the owner has to set up for the one p
      `wget` from this project's release, over the device's own connection, with progress, continued where it broke
      (`-c`), watched for a redirect to a host that is not GitHub's, and accepted only with the release's size and
      SHA-256. The default whenever the device reaches GitHub.
-  2. *The browser downloads it* from the release mirror (`mirror.js`), checks it, and pushes it over adb. Only when
-     `config.js` names a mirror; see "The release mirror".
-  3. *The user downloads it* and picks the file: the last way, for a device without a connection while there is no
-     mirror.
+  2. *The browser downloads it* from the release mirror (`mirror.js`), checks it, and pushes it over adb: for a
+     device that does not reach GitHub. See "The release mirror".
+  3. *The user downloads it* and picks the file: the last way.
 
   The SHA-256 is the `digest` GitHub's API gives for the release's own asset, read by the browser; the device
-  computes it over the file after root has moved it to `/data/adb/mu300-web`. That check carries all three ways.
+  computes it over the file after root has moved it to `/data/adb/mu300-web`. That check carries all three ways:
+  a file's integrity is by that pinned digest, never by the transport it came over (the device's downloader cannot
+  verify a certificate, FINDINGS 72.2).
+* **A locked bootloader is not an obstacle.** A device with a patched TrustOS starts the Linux boot image with the
+  bootloader locked. The page shows "locked" in the warning colour with a question ("Did you patch TrustOS?"),
+  beside the device's facts and again beside the plan, and blocks nothing; "unlocked" and "not reported" are as
+  before. It never unlocks, patches, or links to a guide for either.
 * **Install** is the Magisk zip's installer (`android/magisk/installer/mu300-install.sh`, in every zip as
   `mu300/install.sh`), started the way Magisk's `customize.sh` starts it, with `MU300_ANSWERS` (the wizard's choices)
   and `MU300_PROGRESS=1` (`MU300-STEP n/9 name`, `MU300-PLAN key=value`). The page runs it twice per zip: once with
@@ -81,29 +86,30 @@ it without a device and with one, and what the owner has to set up for the one p
 The device scripts the page pushes are this repository's (`tools/`, `android/magisk/`), copied next to the page with
 their checksums by `site/tools/stage.sh`, which `.github/workflows/pages.yml` runs. Nothing else is built.
 
-## The release mirror (built, switched off: what the owner has to do)
+## The release mirror
 
 A page cannot read a release's files (FINDINGS 72.2). `raw.githubusercontent.com` does answer a page, for files of a
 repository of at most 100 MB each. So the mirror is another repository whose branch `<tag>` holds every Magisk zip
 of that release in parts of at most 45 MiB and a `manifest.json` (`tools/make-release-mirror.sh`); the page puts a
 zip together from its parts, checks every part and the whole against the release's own checksum, and pushes it over
-adb. It was run in Chrome against an F50 with a stand-in server for `raw.githubusercontent.com` (download, a part cut
-short, push, the device's check and plan); the real host was only measured for its headers, because the repository
-does not exist yet. To switch it on:
+adb. It is on (since 2026-10-13). What it consists of:
 
-1. Create a public repository for it, e.g. `dikeckaan/mu300-linux-mirror` (empty; no settings needed).
-2. In `dikeckaan/mu300-linux`: Settings > Secrets and variables > Actions: the **variable** `MIRROR_REPO`
-   (`dikeckaan/mu300-linux-mirror`) and the **secret** `MIRROR_TOKEN` (a fine-grained token with "Contents: read and
-   write" on the mirror repository only). The last step of `.github/workflows/magisk.yml` then publishes every
-   release there (about 900 MB per release; the branches of the newest release and the newest prerelease are kept,
-   older ones deleted) and does nothing without the two. For a release that exists: run the workflow with its tag.
-3. In `site/assets/web-installer/config.js`: `MIRROR_BASE = "https://raw.githubusercontent.com/dikeckaan/mu300-linux-mirror/"`.
-4. In the three `site/*/web-installer/index.html`: add `https://raw.githubusercontent.com` to `connect-src` of the
-   Content-Security-Policy. `tests/test_web_installer.py` holds 3 and 4 together.
+1. The public repository `dikeckaan/mu300-linux-mirror`.
+2. In `dikeckaan/mu300-linux`: the **variable** `MIRROR_REPO` (`dikeckaan/mu300-linux-mirror`) and the **secret**
+   `MIRROR_DEPLOY_KEY`, the private half of a deploy key of the mirror repository with write access (it can push
+   there and nowhere else; there is no token). The last step of `.github/workflows/magisk.yml` publishes every
+   release there over ssh with that key alone, to a host whose keys are the ones GitHub publishes
+   (`api.github.com/meta`); it keeps the branches of the newest release and the newest prerelease, deletes older
+   ones (`git ls-remote --heads`, `git push --delete`), and does nothing without the two. A release is one push of
+   about 900 MB. For a release that exists: run the workflow with its tag.
+3. `site/assets/web-installer/config.js`: `MIRROR_BASE`.
+4. `https://raw.githubusercontent.com` in `connect-src` of the Content-Security-Policy of the three
+   `site/*/web-installer/index.html`. `tests/test_web_installer.py` holds 3 and 4 together.
 
-Until then the page offers the device's own download and, last, a picked file. Limits to know: a repository should
-stay under 1 GB and one push under 2 GB (one release is one push of ~900 MB); `raw.githubusercontent.com` is not
-meant as a download service and GitHub may throttle it.
+The order of the three ways stays: the device's own download when it reaches GitHub, the mirror when it does not,
+a picked file last (and whenever the mirror has no copy of the release, which is the case until the workflow has
+run for it). Limits to know: a repository should stay under 1 GB and one push under 2 GB;
+`raw.githubusercontent.com` is not meant as a download service and GitHub may throttle it.
 
 ## Testing without a device
 
@@ -163,7 +169,10 @@ hold the adb interface, and that includes a second browser window with the page.
 ## What was run on an F50 on 2026-10-13
 
 F50 (64 GB, Android 13 `F50_FLYMODEM_ZYV1.0.0B09`, Magisk 30.6, bootloader unlocked), release v2026.10.25, a Mac
-with Chrome 155. Every row at the Node level (N), in Chrome (C), or both; details and figures in FINDINGS 72.
+with Chrome 155. Every row at the Node level (N), in Chrome (C), or both; details and figures in FINDINGS 72. After the
+device script's last changes (root's own directory, the bounds) the install from a pushed zip with the connection
+dropped during "systems", Linux, the way back, the quick uninstall, the same install through the page in Chrome with
+the tab closed, and a two-system install by the device's own download were run once more, with the same results.
 
 | What | How | Result |
 |---|---|---|

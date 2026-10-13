@@ -47,7 +47,7 @@ function baseStatus(kind) {
 class DemoAndroid {
   constructor(kind, log) { this.kind = "android"; this.variant = kind; this.log = log; this.serial = "324950664950"; this.st = baseStatus(kind); this.job = null; }
   async probe() {
-    return { props: { "ro.product.model": "ZTE F50", "ro.product.device": "mu300", "ro.build.version.release": "13", "ro.build.display.id": "MU300_ZYV1.0.0B09", "ro.boot.slot_suffix": "_a" }, lock: "unknown", su: true };
+    return { props: { "ro.product.model": "ZTE F50", "ro.product.device": "mu300", "ro.build.version.release": "13", "ro.build.display.id": "MU300_ZYV1.0.0B09", "ro.boot.slot_suffix": "_a" }, lock: this.variant === "installed" ? "locked" : "unknown", su: true };
   }
   async root() { await wait(700); return "granted"; }
   async stage() { await wait(300); }

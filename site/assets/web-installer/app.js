@@ -411,7 +411,9 @@ function devicePanel() {
       asking: chip(t("root.asking"), "wait"), denied: chip(t("root.denied"), "bad"), "no-su": chip(t("root.none"), "bad"), failed: chip(t("root.failed"), "bad") }[S.rootState] || chip("?", "");
     fact(t("device.root"), rootChip);
     const lk = S.probe.lock;
-    fact(t("device.bootloader"), chip(t("lock." + lk), lk === "unlocked" ? "ok" : lk === "locked" ? "bad" : ""));
+    // locked is not an error and stops nothing: with a patched TrustOS a locked device starts Linux. It is a
+    // question for the user, in the warning colour (below, and again beside the plan).
+    fact(t("device.bootloader"), chip(t("lock." + lk), lk === "unlocked" ? "ok" : lk === "locked" ? "warn" : ""));
   }
   if (S.kind === "linux" && S.linux) {
     fact(t("linux.system"), `${S.linux.os || "?"} · ${S.linux.version || "?"}`);
@@ -423,6 +425,7 @@ function devicePanel() {
     if (S.rootState === "denied") p.append(callout("warn", t("root.denied.title"), t("root.denied.text")), h("div", { class: "actions" }, btn(t("button.again"), checkRoot)));
     if (S.rootState === "no-su") p.append(callout("warn", t("root.none.title"), t("root.none.text")));
     if (S.rootState === "failed" && S.failure) p.append(failureBox(S.failure), h("div", { class: "actions" }, btn(t("button.again"), checkRoot)));
+    if (S.probe && S.probe.lock === "locked") p.append(lockedNote());
     if (S.probe) {
       p.append(h("details", { class: "wi-explain" }, h("summary", {}, t("explain.title")),
         h("p", {}, t("explain.root")), h("p", {}, t("explain.lock")), h("p", {}, t("explain.lock." + S.probe.lock)), h("p", {}, t("explain.neither"))));
@@ -430,6 +433,9 @@ function devicePanel() {
   }
   return p;
 }
+
+// the bootloader says "locked": said as a question, never as a refusal
+function lockedNote() { return callout("warn", t("lock.locked.title"), t("lock.locked.question")); }
 
 function failureBox(f) {
   const box = callout("warn", t("failure.title"), errorText(f));
@@ -1067,6 +1073,7 @@ function stepReview() {
     [t("review.bootchain"), p.sync_bootchain === "1" ? (p.bootchain ? t("review.bootchain.sync", p.bootchain.split(" ").join(", "), p.android_slot, p.linux_slot) : t("review.bootchain.same")) : t("review.bootchain.off")],
   ];
   box.append(h("div", { class: "table-scroll" }, h("table", {}, h("tbody", {}, rows.map(([k, v]) => h("tr", {}, h("th", { scope: "row" }, k), h("td", {}, v)))))));
+  if (S.probe && S.probe.lock === "locked") box.append(lockedNote());
   box.append(callout("linux", t("review.writes.title"),
     t("review.writes", p.storage === "sd" ? t("review.writes.sd") : t("review.writes.region"), p.linux_slot, p.android_slot),
     t("review.fallback")));

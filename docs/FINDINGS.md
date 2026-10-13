@@ -5366,7 +5366,11 @@ every asset a `digest` (`sha256:...`). The files themselves can only come to a p
   own verified TLS, computed on the device over the file only root can change; and since `wget` follows redirects
   by itself, what it prints is watched (`Connecting to HOST (ADDRESS:PORT)`): a connection to anything but
   `github.com` or `*.githubusercontent.com` on port 443 ends the download and nothing is kept. A man in the middle
-  can make a download fail and can see which public file is asked for; he cannot get a file installed. `wget -c`
+  can make a download fail and can see which public file is asked for; he cannot get a file installed.
+  **Accepted by the owner (2026-10-13):** the device downloads over a transport that cannot verify certificates,
+  because integrity is by the pinned digest, not by the transport - the SHA-256 comes from `api.github.com` over the
+  browser's verified TLS and is checked on the device, over the file only root can change, before anything is
+  used, with the size and host limits above. `wget -c`
   continues a broken download: cut after 15 MB of 41.4, the second run fetched the other 28.5 MB and the checksum
   was the release's. A try that brings nothing ends with "no connection" (exit status 10 of the job; 11 another
   host, 12 failed, 13 not the release's size); a try that brought something is continued up to five times, and the
@@ -5387,15 +5391,16 @@ every asset a `digest` (`sha256:...`). The files themselves can only come to a p
     name is now taken apart with the shell's own patterns. And a directory `in/` that root made for the download
     in the adb user's directory refused the page's next push ("couldn't create file: Permission denied"): the
     download now goes to root's own directory.
-* *Second: the browser downloads the zip from a mirror* (`mirror.js`, off until `config.js` names one): a branch
-  `<tag>` of another repository with every zip in parts of at most 45 MiB and a manifest
-  (`tools/make-release-mirror.sh`, the last step of `magisk.yml`), read from `raw.githubusercontent.com` with plain
+* *Second: the browser downloads the zip from a mirror* (`mirror.js`; on since 2026-10-13, the repository is
+  `dikeckaan/mu300-linux-mirror`): a branch `<tag>` of that repository with every zip in parts of at most 45 MiB and
+  a manifest (`tools/make-release-mirror.sh`; the last step of `magisk.yml` pushes it with a deploy key of the
+  mirror repository, over ssh to GitHub's published host keys, no token), read from `raw.githubusercontent.com` with plain
   `GET`s (`redirect: "error"`, no credentials). A part must have the manifest's size and SHA-256, the parts must add
   up to the size the release names, and the whole must have the release's checksum - the mirror's word counts for
   nothing. *Measured on the F50, in Chrome, against a stand-in server for that host:* a device without internet was
   told apart and this way proposed; a part cut after 5 MB gave "the download broke off", and the second try
-  downloaded 41 MiB, pushed it and got the device's plan. *Not measured:* the real host with real files (the
-  repository does not exist; `docs/web-installer.md` says what the owner has to create), and GitHub's limits on
+  downloaded 41 MiB, pushed it and got the device's plan. *Not measured:* the real host with real files (the mirror is empty until the
+  first push of a release to it; the page then finds no copy and offers the next way), and GitHub's limits on
   such use.
 * *Last: the user downloads the zip* (an ordinary download, which no CORS rule stops) and picks it; the page reads
   the zip's directory and `mu300/manifest` in the browser and refuses a wrong one before anything is sent.
@@ -5430,7 +5435,11 @@ localhost. The page runs under its Content-Security-Policy with no violation; `f
   tried: the phone would have to power a battery-less F50 for the whole installation.
 * *The bootloader's word, measured on the F50:* `ro.boot.verifiedbootstate=orange`, `ro.boot.flash.locked=0`,
   `ro.boot.vbmeta.device_state=unlocked`: the page shows "unlocked". Whether a U30 Air sets them is not known: the
-  page shows "not reported" when none is set.
+  page shows "not reported" when none is set. **A locked bootloader is not an obstacle** (the owner's correction,
+  2026-10-13): a device with a patched TrustOS starts the modified image with the bootloader locked. The page showed
+  "locked" in red; it now shows it in the warning colour with the question "Did you patch TrustOS?" (with it Linux
+  boots; without it the device goes back to Android by itself after the install), beside the device's facts and
+  beside the plan, and blocks nothing. Not measured: a locked device (the test unit is unlocked).
 * *Root on a device without a screen, measured on the F50:* with Magisk's grant for "Shell" (uid 2000) in place,
   `su -c 'id -u'` answers in 50 ms. With the grant taken away, Magisk asks on a screen nobody sees, waits 10 s and
   says "Permission denied"; the page then shows "not granted" and how to allow Shell (the Magisk app through scrcpy,

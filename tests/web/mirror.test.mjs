@@ -35,9 +35,10 @@ function mirror() {
   return { zip, parts, manifest, asset, files, asked, fetchImpl };
 }
 
-test("the page ships without a mirror, and asks for none", () => {
-  assert.equal(MIRROR_BASE, "");
-  assert.equal(mirrorUrl(MIRROR_BASE, TAG, "manifest.json"), null);
+test("the mirror the page ships with is the project's, at an address the page accepts; without one it asks for none", () => {
+  assert.equal(MIRROR_BASE, "https://raw.githubusercontent.com/dikeckaan/mu300-linux-mirror/");
+  assert.equal(mirrorUrl(MIRROR_BASE, TAG, "manifest.json"), `https://raw.githubusercontent.com/dikeckaan/mu300-linux-mirror/${TAG}/manifest.json`);
+  assert.equal(mirrorUrl("", TAG, "manifest.json"), null);
 });
 
 test("a mirror's address is a repository on raw.githubusercontent.com over https, and nothing else", () => {

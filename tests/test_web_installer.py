@@ -213,7 +213,23 @@ class Pages(unittest.TestCase):
         y = (TOP / '.github/workflows/magisk.yml').read_text()
         step = y[y.index('- name: Mirror for the web installer'):]
         self.assertIn('MIRROR_REPO: ${{ vars.MIRROR_REPO }}', step)
-        self.assertIn('MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}', step)
+        # a deploy key of the mirror repository alone: no token, no API call with one, and the key never printed
+        self.assertIn('MIRROR_DEPLOY_KEY: ${{ secrets.MIRROR_DEPLOY_KEY }}', step)
+        self.assertNotIn('MIRROR_TOKEN', y)
+        self.assertNotIn('x-access-token', step)
+        self.assertIn('-o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$hosts', step)
+        self.assertIn("gh api meta --jq '.ssh_keys[]'", step)          # GitHub's published host keys
+        self.assertNotIn('ssh-keyscan', step)
+        self.assertIn('umask 077', step)
+        self.assertIn('chmod 600 "$key"', step)
+        self.assertIn("trap 'rm -f \"$key\"' EXIT", step)
+        used = [l.strip() for l in step.splitlines() if '$MIRROR_DEPLOY_KEY' in l]
+        self.assertEqual(len(used), 2, used)                          # asked whether it is set; written to its file
+        self.assertTrue(used[0].startswith('[ -n "$MIRROR_REPO" ] && [ -n "$MIRROR_DEPLOY_KEY" ] ||'), used)
+        self.assertEqual(used[1], """( umask 077; printf '%s\\n' "$MIRROR_DEPLOY_KEY" > "$key" )""")
+        self.assertNotIn('set -x', step)
+        self.assertIn('git ls-remote --heads "$remote"', step)
+        self.assertIn('git push -q "$remote" --delete "$b"', step)
         self.assertIn('no mirror"; exit 0; }', step)                # neither set: nothing happens, the job is green
         self.assertNotIn('\n        if:', step)                     # secrets are not available in a step's "if"
         self.assertIn('make-release-mirror.sh', step)
@@ -266,6 +282,27 @@ console.log("MIRROR-OK " + Object.keys(m.files).length);
                 self.assertFalse((tmp / 'o2' / 'manifest.json').exists(), args)
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_a_locked_bootloader_is_a_question_in_the_warning_colour_and_stops_nothing(self):
+        # with a patched TrustOS a locked device starts Linux: "locked" is never an error, a blocker or a refusal
+        s = strings()
+        for lang, word in (('en', 'Did you patch TrustOS?'), ('tr', "TrustOS'u yamaladınız mı?"), ('zh', 'TrustOS')):
+            self.assertIn(word, s[lang]['lock.locked.title'], lang)
+            self.assertIn('TrustOS', s[lang]['lock.locked.question'], lang)
+            self.assertIn('Android', s[lang]['lock.locked.question'], lang)
+            self.assertIn('TrustOS', s[lang]['explain.lock.locked'], lang)
+        app = (WI / 'app.js').read_text()
+        self.assertIn('lk === "unlocked" ? "ok" : lk === "locked" ? "warn" : ""', app)
+        self.assertNotIn('"locked" ? "bad"', app)
+        self.assertEqual(app.count('box.append(lockedNote())') + app.count('p.append(lockedNote())'), 2)   # the device panel, the plan
+        self.assertIn('.wi-chip.warn', (WI / 'web-installer.css').read_text())
+        flow = (WI / 'flow.js').read_text()
+        for a, b in (('export function deviceBlockers', 'export function validPassword'), ('export function validateChoices', 'export function dataNeeded')):
+            self.assertNotRegex(flow[flow.index(a):flow.index(b)], r'locked|bootloader|\.lock\b')
+        # the page names the fact and links to no guide for unlocking or patching
+        for lang in s:
+            for k in ('lock.locked.title', 'lock.locked.question', 'explain.lock.locked'):
+                self.assertNotIn('[', s[lang][k], k)
 
     def test_linked_from_the_navigation_the_install_page_and_the_sitemap(self):
         for p in sorted((TOP / 'site').rglob('index.html')):
