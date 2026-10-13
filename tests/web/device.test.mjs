@@ -380,3 +380,17 @@ test("the Linux adapter sends only its own commands: what the device says is nev
   assert.throws(() => l.setKernel("6.18'; reboot; '"), code("bad-argument"));
   for (const c of dev.shellCalls) assert.ok(!c.cmd.includes("rm -rf") && !c.cmd.includes("reboot;"), c.cmd);
 });
+
+test("the device downloads a zip itself: a job, then the same check; nothing but a release zip's name is sent", async () => {
+  const name = "mu300-magisk-v2026.11.01-openwrt-k6.18.zip", digest = "b".repeat(64);
+  const ok = await android({ run: "MU300-WEB-JOB started fetch\n", follow: "MU300-PROGRESS 500 1000\nMU300-PROGRESS 1000 1000\n\nMU300-WEB-EXIT 0\n", take: `MU300-WEB-ZIP {"web":1}\n` });
+  const prog = [];
+  assert.deepEqual(await ok.a.fetchZip(name, 1000, digest, (d, t) => prog.push([d, t])), { web: 1 });
+  assert.deepEqual(prog, [[500, 1000], [1000, 1000]]);
+  assert.deepEqual(ok.calls, [["run", "fetch", name, "1000"], ["follow"], ["take", name, digest]]);
+  const bad = await android({ run: "MU300-WEB-JOB started fetch\n", follow: "! the download failed (wget status 4)\n\nMU300-WEB-EXIT 1\n" });
+  await assert.rejects(bad.a.fetchZip(name, 1000, digest), (e) => e.code === "download-failed" && /wget status 4/.test(e.detail));
+  assert.ok(!bad.calls.some((c) => c[0] === "take"));
+  for (const n of HOSTILE) await assert.rejects(ok.a.fetchZip(n, 1000, digest), code("bad-argument"), JSON.stringify(n));
+  for (const size of [0, -1, 1.5, "10", NaN]) await assert.rejects(ok.a.fetchZip(name, size, digest), code("bad-argument"));
+});

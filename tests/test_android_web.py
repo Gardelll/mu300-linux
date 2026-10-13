@@ -758,6 +758,51 @@ class BootLinux(WebCase):
         self.assertEqual(self.parts(), before)
 
 
+class Fetch(WebCase):
+    """the other way to get a zip onto the device: the device downloads it, from an address made of the zip's name"""
+
+    NAME = 'mu300-magisk-v2026.11.01-openwrt-k6.18.zip'
+
+    def wget(self, body):
+        self.stub('fake-wget', body)
+        return self.stubs / 'fake-wget'
+
+    def test_the_address_is_this_projects_release_of_the_tag_in_the_name(self):
+        name, digest = self.full_zip(name=self.NAME)
+        src = self.tmp / 'served.zip'
+        shutil.move(self.stage / 'in' / name, src)
+        w = self.wget(f'echo "$@" > "$STUBLOG/wget-args"; while [ "$1" != -O ]; do shift; done; sleep 0.5; cp "{src}" "$2"')
+        r = self.web('run', 'fetch', name, src.stat().st_size, MU300_WGET=w)
+        self.assertEqual(r.stdout.strip(), 'MU300-WEB-JOB started fetch', r.stderr)
+        rc, out = self.follow()
+        self.assertEqual(rc, '0', out)
+        self.assertIn(f'MU300-PROGRESS {src.stat().st_size} {src.stat().st_size}', out)
+        args = (self.tmp / 'wget-args').read_text().split()
+        self.assertEqual(args[-1], f'https://github.com/dikeckaan/mu300-linux/releases/download/v2026.11.01/{name}')
+        # only a file until it is checked: a wrong checksum deletes it, the right one takes it
+        self.assertIn('sha-mismatch', self.web('take', name, '0' * 64).stdout)
+        self.assertFalse((self.stage / 'in' / name).exists())
+        self.web('run', 'fetch', name, 1, MU300_WGET=w)
+        self.follow()
+        self.assertIn('MU300-WEB-ZIP', self.web('take', name, digest).stdout)
+
+    def test_names_that_are_not_a_release_zip_are_never_downloaded(self):
+        w = self.wget('echo called >> "$STUBLOG/wget-args"')
+        for bad in ('mu300-magisk-v1-openwrt-k5.4.zip/../x', 'evil.zip', 'mu300-magisk-v1-arch-k5.4.zip', 'mu300-magisk-v1-openwrt-k9.9.zip',
+                    'mu300-magisk-x-openwrt-k5.4.zip', 'mu300-magisk-v1-openwrt-k5.4.zip?x=1', 'mu300-magisk-v1/evil-openwrt-k5.4.zip', ''):
+            self.assertIn('MU300-WEB-ERROR bad-name', self.web('run', 'fetch', bad, 10, MU300_WGET=w).stdout, bad)
+        self.assertIn('MU300-WEB-ERROR bad-argument', self.web('run', 'fetch', self.NAME, '1;id', MU300_WGET=w).stdout)
+        self.assertFalse((self.tmp / 'wget-args').exists())
+
+    def test_a_failed_download_leaves_no_file_and_says_so(self):
+        w = self.wget('while [ "$1" != -O ]; do shift; done; echo partial > "$2"; exit 4')
+        self.web('run', 'fetch', self.NAME, 100, MU300_WGET=w)
+        rc, out = self.follow()
+        self.assertEqual(rc, '1', out)
+        self.assertIn('! the download failed (wget status 4)', out)
+        self.assertFalse((self.stage / 'in' / self.NAME).exists())
+
+
 NODE = shutil.which('node')
 
 

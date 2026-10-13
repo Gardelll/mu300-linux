@@ -14,6 +14,10 @@
 #                        its installer unpacked. MU300-WEB-ZIP {json}: its manifest, and whether its installer knows
 #                        this caller (web=1).
 #   extra vpn|panel FILE SHA256   an extra pushed as in/FILE, checked the same way, for the next install
+#   run fetch NAME SIZE  the other way to get a zip onto the device: the device downloads it itself, as a job, into
+#                        in/NAME (then "take NAME SHA256" as for a pushed one). The address is made here from NAME
+#                        - this project's release of the tag in the name - and from nothing the page says. It uses
+#                        the device's own internet connection (mobile data), and needs a wget that does https.
 #   answers              in/answers.conf becomes the answers file of the next run (root's, mode 600)
 #   password             one line on stdin: the password of the next run, added to the answers file. It is never an
 #                        argument (ps would show it) nor a file the adb user can read.
@@ -168,6 +172,7 @@ job_main() {  # _job KIND ARG...: runs inside the session; HUP never ends it (th
     _k=$1; shift
     (
         case $_k in
+            fetch) fetch_zip "$@" ;;
             plan) zip_run "$1" plan ;;
             install) zip_run "$1" install ;;
             uninstall) uninstall "$@" ;;
@@ -204,7 +209,7 @@ cancel() {
     # from "systems" on the installer is writing: it is left to finish (every stage after that is safe to finish,
     # none is safe to cut short for no reason)
     case $(cat "$JOB/kind") in
-        plan) ;;
+        plan|fetch) ;;
         install) [ "$(num "$(job_step)" 0)" -lt 6 ] || fail too-late ;;
         *) fail too-late ;;
     esac
@@ -324,6 +329,36 @@ take() {  # take NAME SHA256
     _web=0; grep -q 'MU300_ANSWERS' "$_x/mu300/install.sh" && grep -q 'MU300-STEP' "$_x/mu300/install.sh" && _web=1
     _mf() { sed -n "s/^$1=//p" "$_x/mu300/manifest" | head -n1; }
     out "ZIP {\"name\":$(js "$1"),\"web\":$_web,\"tag\":$(js "$(_mf TAG)"),\"system\":$(js "$(_mf SYSTEM)"),\"os\":$(js "$(_mf OS)"),\"ubuntu\":$(js "$(_mf UBUNTU)"),\"kernel\":$(js "$(_mf KERNEL)")}"
+}
+# fetch_zip NAME SIZE: a release's Magisk zip, downloaded by the device. The tag is the one in the name
+# (mu300-magisk-<tag>-<system>-k<kernel>.zip), the address this project's release of that tag: nothing else can be
+# asked for. Whatever arrives is only a file in in/ until "take" has checked it against the release's checksum.
+REPO_URL=${MU300_REPO_URL:-https://github.com/dikeckaan/mu300-linux/releases/download}
+zip_tag() {  # the tag in a zip's name, or nothing
+    printf '%s\n' "$1" | sed -n 's/^mu300-magisk-\(v[0-9][0-9A-Za-z._]*\)-\(openwrt\|openwrt-luci\|ubuntu-2[46]\.04\)-k\(5\.4\|6\.18\|7\.2\)\.zip$/\1/p'
+}
+fetch_zip() {
+    _tag=$(zip_tag "$1")
+    [ -n "$_tag" ] || { echo "! not the name of a release zip: $1"; return 1; }
+    _size=$(num "${2:-}" 0)
+    mkdir -p "$S/in" || return 1
+    _f=$S/in/$1
+    rm -f "$_f"
+    say "the device downloads $1 itself (its own internet connection)"
+    ${MU300_WGET:-wget} -q -T 60 -O "$_f" "$REPO_URL/$_tag/$1" &
+    _wp=$!
+    while kill -0 "$_wp" 2>/dev/null; do
+        sleep "${MU300_WEB_POLL:-1}"
+        [ ! -f "$_f" ] || echo "MU300-PROGRESS $(fsize "$_f") $_size"
+    done
+    wait "$_wp"; _rc=$?
+    if [ $_rc != 0 ] || [ ! -s "$_f" ]; then
+        rm -f "$_f"
+        echo "! the download failed (wget status $_rc): no connection, or this wget cannot do https. Download the file on the computer instead."
+        return 1
+    fi
+    chmod 644 "$_f"
+    say "downloaded $(fsize "$_f") bytes; not checked yet"
 }
 extra() {  # extra NAME FILE SHA256
     case ${1:-} in vpn|panel) ;; *) fail bad-name ;; esac
@@ -626,6 +661,10 @@ case ${1:-} in
                 [ -f "$(zip_dir "$3")/mu300/install.sh" ] || fail no-zip
                 [ -f "$R/answers.conf" ] || fail no-answers
                 job_start "$2" "$3" ;;
+            fetch)
+                name_ok "${3:-}" && [ -n "$(zip_tag "$3")" ] || fail bad-name
+                case ${4:-} in ''|*[!0-9]*) fail bad-argument ;; esac
+                job_start fetch "$3" "$4" ;;
             uninstall)
                 case ${3:-} in secure|quick|keep) ;; *) fail bad-argument ;; esac
                 case ${4:-} in erase|keep) ;; *) fail bad-argument ;; esac

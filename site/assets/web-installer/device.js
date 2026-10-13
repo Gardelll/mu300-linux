@@ -177,6 +177,20 @@ export class AndroidDevice {
     try { return JSON.parse(r.marks.ZIP[0]); } catch (e) { throw new DeviceError("bad-answer", "take"); }
   }
 
+  // The other way to get a release zip onto the device: the device downloads it itself (android-web.sh makes the
+  // address from the name; it uses the device's own internet connection). Then the same check as for a pushed one.
+  async fetchZip(name, size, sha256, onProgress = () => {}, signal) {
+    if (typeof name !== "string" || !ZIP_NAME.test(name) || name.includes("..")) throw new DeviceError("bad-argument", "zip name");
+    if (!/^[0-9a-f]{64}$/.test(sha256 || "") || !Number.isSafeInteger(size) || size <= 0) throw new DeviceError("bad-argument", "checksum");
+    await this.web(["run", "fetch", name, String(size)], { timeoutMs: 60000 });
+    const errors = [];
+    const rc = await this.follow((e) => { if (e.type === "progress") onProgress(e.done, size); else if (e.type === "error") errors.push(e.text); }, signal);
+    if (rc !== 0) throw new DeviceError("download-failed", errors.join(" "));
+    const r = await this.web(["take", name, sha256], { timeoutMs: 600000 });
+    if (!r.marks.ZIP) throw new DeviceError("no-answer", "take");
+    try { return JSON.parse(r.marks.ZIP[0]); } catch (e) { throw new DeviceError("bad-answer", "take"); }
+  }
+
   // an extra goes to the device under a name of the page's own, whatever the picked file is called
   async addExtra(kind, file, sha256, options = {}) {
     const name = Object.prototype.hasOwnProperty.call(EXTRA_FILE, kind) ? EXTRA_FILE[kind] : null;

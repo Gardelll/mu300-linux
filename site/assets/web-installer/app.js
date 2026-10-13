@@ -740,8 +740,13 @@ function stepFiles() {
         h("a", { class: "wi-btn", href: item.asset.url, rel: "noopener", download: item.asset.name }, t("files.download")),
         h("label", { class: "wi-btn" }, t("files.pick"), h("input", { type: "file", class: "wi-hidden", accept: item.kind === "vpn" ? ".gz,.tgz" : ".zip",
           onchange: (ev) => { if (ev.target.files[0]) pickFile(item, ev.target.files[0]); } }))));
+    if (DEMO) row.lastChild.append(btn(t("demo.file"), () => { const made = { file: { name: item.asset.name, size: item.asset.size }, ok: true }; if (item.kind === "vpn") w.vpnFile = made; else w.files[item.id] = made; render(); }, "small"));
     if (slot && slot.error) row.append(h("p", { class: "wi-bad small" }, slot.error));
-    else if (slot && slot.ok) row.append(h("p", { class: "wi-good small" }, slot.unlisted ? t("files.unlisted") : t("files.ok", slot.file.name)));
+    else if (slot && slot.ok) row.append(h("p", { class: "wi-good small" }, slot.viaDevice ? t("files.device.ok") : slot.unlisted ? t("files.unlisted") : t("files.ok", slot.file.name)));
+    // the fallback: the device downloads the zip itself, over its own connection
+    if (item.kind === "zip" && !(slot && slot.ok)) {
+      row.append(h("p", { class: "small muted" }, t("files.device.note"), " ", btn(t("files.device"), () => { w.files[item.id] = { viaDevice: true, ok: true }; render(); }, "link")));
+    }
     if (!slot || !slot.ok) all = false;
     box.append(row);
   }
@@ -837,7 +842,8 @@ function nameFor(system) { const ctx = wizardCtx(); return ctx.zips[system].name
 
 async function sendRun(i, onProgress) {
   const w = S.w, c = w.choices, system = c.systems[i];
-  await S.dev.takeZip(fileOf(system).file, nameFor(system), shaFor(system), { onProgress: (s, tot) => onProgress(t("send.zip", sysLabel(system)), s, tot) });
+  if (fileOf(system).viaDevice) await S.dev.fetchZip(nameFor(system), wizardCtx().zips[system].size, shaFor(system), (s, tot) => onProgress(t("send.device", sysLabel(system)), s, tot));
+  else await S.dev.takeZip(fileOf(system).file, nameFor(system), shaFor(system), { onProgress: (s, tot) => onProgress(t("send.zip", sysLabel(system)), s, tot) });
   if (i === 0 && c.vpn && w.vpnFile) {
     await S.dev.addExtra("vpn", w.vpnFile.file, S.vpnAsset.sha256, { onProgress: (s, tot) => onProgress(t("send.vpn"), s, tot) });
   }
