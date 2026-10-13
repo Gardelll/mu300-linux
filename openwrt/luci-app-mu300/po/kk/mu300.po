@@ -2226,8 +2226,8 @@ msgstr "IPv6 қорғанысы"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "Белсенді: туннельден тыс IPv6 қабылданбайды"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "VPN қосулы кезде IPv6 оны тасымалдамайтын туннельдің жанынан ешқашан шықпайды: ол бірден қабылданбайды, сондықтан бағдарламалар мен LAN клиенттері ағып кетудің немесе күтудің орнына IPv4-ке ауысады. Автоматты: WireGuard өз конфигурациясындағы IPv6 мекенжайларын пайдаланады, басқа қозғалтқыштар IPv4-те қалады."
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "VPN қосулы кезде IPv6 оны тасымалдамайтын туннельдің жанынан ешқашан шықпайды: ол бірден қабылданбайды, сондықтан бағдарламалар мен LAN клиенттері ағып кетудің немесе күтудің орнына IPv4-ке ауысады. Автоматты: WireGuard пен OpenVPN өз конфигурациясындағы IPv6 мекенжайларын пайдаланады; Xray, sing-box және mihomo үшін әр іске қосылғанда IPv6 туннель арқылы жұмыс істей ме, сол тексеріледі, және олар оны тек сонда тасымалдайды; dae IPv4-те қалады."
 
 msgid "%d ms"
 msgstr "%d ms"

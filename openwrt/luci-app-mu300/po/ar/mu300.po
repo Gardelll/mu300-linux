@@ -2226,8 +2226,8 @@ msgstr "حارس IPv6"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "فعّال: يُرفض IPv6 خارج النفق"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "ما دام VPN يعمل، لا يخرج IPv6 أبدًا بجانب نفق لا يحمله: يُرفض فورًا، فتعود البرامج وعملاء LAN إلى IPv4 بدلًا من التسرب أو الانتظار. تلقائي: يستخدم WireGuard عناوين IPv6 من إعداداته، وتبقى المحركات الأخرى على IPv4."
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "ما دام VPN يعمل، لا يخرج IPv6 أبدًا بجانب نفق لا يحمله: يُرفض فورًا، فتعود البرامج وعملاء LAN إلى IPv4 بدلًا من التسرب أو الانتظار. تلقائي: يستخدم WireGuard و OpenVPN عناوين IPv6 من إعداداتهما؛ أما Xray و sing-box و mihomo فيُختبر عند كل بدء هل يعمل IPv6 عبر النفق، ولا تحمله إلا عندئذٍ؛ ويبقى dae على IPv4."
 
 msgid "%d ms"
 msgstr "%d ms"

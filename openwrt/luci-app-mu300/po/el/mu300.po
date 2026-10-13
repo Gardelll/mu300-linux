@@ -2226,8 +2226,8 @@ msgstr "Προστασία IPv6"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "Ενεργή: το IPv6 εκτός τούνελ απορρίπτεται"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "Όσο το VPN είναι ενεργό, το IPv6 δεν βγαίνει ποτέ δίπλα σε τούνελ που δεν το μεταφέρει: απορρίπτεται αμέσως, ώστε τα προγράμματα και οι πελάτες του LAN να περνούν σε IPv4 αντί να διαρρέουν ή να περιμένουν. Αυτόματο: το WireGuard χρησιμοποιεί τις διευθύνσεις IPv6 της διαμόρφωσής του, οι άλλες μηχανές μένουν σε IPv4."
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "Όσο το VPN είναι ενεργό, το IPv6 δεν βγαίνει ποτέ δίπλα σε τούνελ που δεν το μεταφέρει: απορρίπτεται αμέσως, ώστε τα προγράμματα και οι πελάτες του LAN να περνούν σε IPv4 αντί να διαρρέουν ή να περιμένουν. Αυτόματο: το WireGuard και το OpenVPN χρησιμοποιούν τις διευθύνσεις IPv6 της διαμόρφωσής τους· για τα Xray, sing-box και mihomo ελέγχεται σε κάθε εκκίνηση αν το IPv6 λειτουργεί μέσα από το τούνελ, και μόνο τότε το μεταφέρουν· το dae μένει σε IPv4."
 
 msgid "%d ms"
 msgstr "%d ms"
