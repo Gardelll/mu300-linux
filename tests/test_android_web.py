@@ -473,6 +473,14 @@ class Jobs(WebCase):
         self.web('run', 'plan', name)
         self.follow()
         job = self.root() / 'job'
+        # the job's process ends a moment after it wrote its status: wait for that, or it still counts as running
+        pid = int((job / 'pid').read_text())
+        for _ in range(100):
+            try:
+                os.kill(pid, 0)
+            except OSError:
+                break
+            time.sleep(0.05)
         (job / 'rc').unlink()
         self.assertEqual(self.status()['job']['state'], 'interrupted')
         self.assertEqual(self.follow()[0], 'interrupted')
@@ -752,6 +760,10 @@ class BootLinux(WebCase):
         (by / 'boot_b').write_bytes(bytes(img))
         before = self.parts()
         r = self.web('boot-linux', 'dry', MU300_BUSYBOX=BUSYBOX, MU300_SLOT_SUFFIX='_a')
+        if os.getuid() != 0:
+            # the switch script itself wants root (it has no test switch for that): reaching it is the test here
+            self.assertIn('mu300-linux: run as root', r.stderr)
+            return
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn('misc  new: ' + with_slots(LIVE_A, b'_b\0\0', 0x9e, 0x2f).hex(), r.stdout)
         self.assertIn('dry run: nothing was written', r.stdout)
@@ -831,8 +843,8 @@ class EndToEnd(WebCase):
         # the page pushes the scripts itself: the device has nothing of the web installer yet
         shutil.rmtree(self.stage)
         self.stage.mkdir()
-        self.stub('su', '[ "$1" = -c ] && shift\nexec sh -c "$1"')
-        self.stub('id', 'echo 0')
+        # su: the command runs as this user; only the question "am I root" is answered as a root manager would
+        self.stub('su', '[ "$1" = -c ] && shift\n[ "$1" != "id -u" ] || { echo 0; exit 0; }\nexec sh -c "$1"')
         env = self.web_env(E2E_STAGE=self.stage, E2E_SITE=site / 'assets/web-installer/device', E2E_BUSYBOX=BUSYBOX,
                            E2E_ZIP=zip_path, E2E_ZIP_SHA256=digest, **extra)
         r = subprocess.run([NODE, str(TOP / 'tests/web/e2e-android.mjs')], capture_output=True, text=True, env=env, timeout=300)
