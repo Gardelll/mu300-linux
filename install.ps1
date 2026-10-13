@@ -133,7 +133,7 @@ function NormalizeAnswer([string]$a) {
     $a
 }
 if ($Lang -notin 'en', 'tr', 'zh' -and $AdbPath) { $Lang = 'en' }
-if ($Lang -notin 'en', 'tr', 'zh' -and $script:NonInteractive) { AnswersFail 'no answer to the language question: set MU300_LANG to en, tr or zh' }
+if ($Lang -notin 'en', 'tr', 'zh' -and $script:MuAnswersMode) { AnswersFail 'no answer to the language question: set MU300_LANG to en, tr or zh' }
 if ($Lang -notin 'en', 'tr', 'zh') {
     # the names in their own scripts, written as code points: this file stays ASCII for Windows PowerShell 5.1.
     # (Concatenations inside @(...) need parentheses: the comma binds tighter than +.)
@@ -277,7 +277,7 @@ function SelectDevice([switch]$Quiet) {
 function AdbState { SelectDevice -Quiet; [string](Quiet { adb get-state }) }
 # Ask QUESTION DEFAULT [VARIABLE]: VARIABLE answers the question in answers mode (tools\answers.ps1)
 function Ask($question, $default, $Id) {
-    $a = if ($script:NonInteractive) { AnswerNamed $question $default $Id }
+    $a = if ($script:MuAnswersMode) { AnswerNamed $question $default $Id }
         elseif ($script:AnswerQueue) { NextAnswer $question } else { Read-Host "$question [$(T $default)]" }
     $r = if ([string]::IsNullOrWhiteSpace($a)) { $default } else { NormalizeAnswer $a.Trim() }
     if (AnswerSecret ([string]$Id)) { Progress 'question' 'id' $Id 'text' $question 'default' $default 'secret' '1' }
@@ -414,7 +414,7 @@ function Fetch($url, $out) {
         } -ArgumentList $url, "$out.part$i", $s, $e
     }
     $failed = $false
-    while ($script:ProgressOn -and @($running | Where-Object { $_.State -eq 'Running' }).Count -gt 0) {
+    while ($script:MuProgress -and @($running | Where-Object { $_.State -eq 'Running' }).Count -gt 0) {
         Start-Sleep -Seconds 1
         Progress 'download' 'file' $name 'bytes' (FetchWatch $out) 'total' $len 'state' 'running'
     }
@@ -487,7 +487,7 @@ if (SelfUpdate) {
 
 # the graphical installer, offered once to a person who starts a plain installation
 . (Join-Path (Join-Path $Top 'tools') 'gui-launch.ps1')
-GuiOffer ([bool]($script:NonInteractive -or ($null -ne $script:AnswerQueue) -or $Check -or $Backup))
+GuiOffer ([bool]($script:MuAnswersMode -or ($null -ne $script:AnswerQueue) -or $Check -or $Backup))
 
 Step 'preflight' 2
 Say (T 'Checking host tools and device')
@@ -548,7 +548,7 @@ for ($i = 0; $i -lt 60 -and (AdbProp 'sys.boot_completed') -ne '1'; $i++) {
 # For a program that reads the progress stream: what the device says about itself before anything needs root (the
 # model, Android's build, the bootloader's lock and verified-boot state), then whether su works and whose it is.
 # Read only, and only for the stream: the text for people stays as it was.
-if ($script:ProgressOn) {
+if ($script:MuProgress) {
     Info 'device.model' "$(AdbProp 'ro.product.model') / $(AdbProp 'ro.product.device')"
     Info 'android.build' (AdbProp 'ro.build.display.id')
     Info 'bootloader.locked' (AdbProp 'ro.boot.flash.locked')
@@ -654,7 +654,7 @@ $region = FreeRegion $lastEnd $disk
 [int64]$SIZE = ($region.End - $region.Start) * 512
 Info 'emmc.sectors' $disk; Info 'emmc.last_end' $lastEnd; Info 'region.offset' $OFF; Info 'region.size' $SIZE
 # the partitions, for a picture of the eMMC: "name:first sector:sectors" of each (the stream only; sysfs, read only)
-if ($script:ProgressOn) { Info 'partitions' ((SuDo 'for p in /sys/block/mmcblk0/mmcblk0p*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done') -replace "`n", ' ') }
+if ($script:MuProgress) { Info 'partitions' ((SuDo 'for p in /sys/block/mmcblk0/mmcblk0p*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done') -replace "`n", ' ') }
 function Gib([int64]$b) { '{0:N1} GiB' -f ($b / 1GB) }
 # Where the Linux filesystem goes (tools/storage.sh's choose_storage). The caller asks; an empty answer is the
 # default (StorageDefault): internal storage; the card when there is too little room inside (the way that needs no
@@ -934,6 +934,7 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
 # What each choice needs: the installed systems measure ~320 MiB (OpenWrt) and ~580 MiB (Ubuntu), and an update
 # keeps the previous one as <os>.old while the new one is unpacked, so allow for two of each plus working room.
 [int64]$NEED_OPENWRT = 800MB; [int64]$NEED_UBUNTU = 1600MB; [int64]$NEED_BOTH = 2400MB
+Info 'need.openwrt' $NEED_OPENWRT; Info 'need.ubuntu' $NEED_UBUNTU; Info 'need.both' $NEED_BOTH
 Write-Host (T 'eMMC: {1} ({2} sectors), partitions end at {3} (sector {4}), free after them: {5}' (Gib ($disk * 512)) $disk (Gib ($lastEnd * 512)) $lastEnd (Gib $SIZE))
 # The SD card as the other place for it (boot/init looks there first): "<block device> <512-byte sectors> <type>"
 # of the first mmc disk that is not the eMMC - its first partition when it has one, the whole card otherwise. The
@@ -1252,7 +1253,7 @@ if ($existing -eq 'no') {
 if ($SD_MODE -eq 1 -and $FORMAT -eq 1) {
     if ((Ask (T 'Everything on the SD card ({1}, {2}) will be erased. Type ERASE to continue' $SD_DEV (Gib $SIZE)) 'no' 'MU300_ANS_ERASE_SD') -ne 'ERASE') { Die (T 'cancelled') }
 }
-if ($script:NonInteractive) {
+if ($script:MuAnswersMode) {
     # MU300_ANS_PASSWORD: no event and no line of output ever shows it
     $p1 = AnswerNamed (T 'Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)') '' 'MU300_ANS_PASSWORD' -Secret
     $p2 = $p1

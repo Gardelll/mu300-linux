@@ -602,8 +602,8 @@ function Write-Host { if ("$($args[0])" -like 'FAIL *') { [Console]::Out.WriteLi
 function Die($m) { Progress 'error' 'message' $m; throw "DIE: $m" }
 function AnswersFail([string]$Message) { throw "FAIL: $Message" }
 function ResetAnswers {
-    $script:Ans.Clear(); $script:AnsAsked.Clear(); $script:lines.Clear()
-    $script:NonInteractive = $true; $script:ProgressOn = $true; $script:AnswerQueue = $null
+    $script:MuAnswers.Clear(); $script:MuAsked.Clear(); $script:lines.Clear()
+    $script:MuAnswersMode = $true; $script:MuProgress = $true; $script:AnswerQueue = $null
 }
 function Events([string]$Name) { @($script:lines | Where-Object { "$_".StartsWith('@@mu300 {"event":"' + $Name + '"') }) }
 function Dies([scriptblock]$Block) { try { & $Block | Out-Null; return '' } catch { return [string]$_.Exception.Message } }
@@ -628,7 +628,7 @@ Check 'file: lower case'       (AnswersParse @('mu300_ans_kernel=1')).Ok $false
 Check 'file: no ='             (AnswersParse @('MU300_ANS_GPU=yes', 'hunter2secret')).Error 'answers file: line 2 is not NAME=value'
 Check 'file: no name'          (AnswersParse @('=x')).Error 'answers file: not a variable of the installer: '
 # a secret is never shown, whichever way it is asked for, and never part of an event
-ResetAnswers; $script:Ans['MU300_ANS_PASSWORD'] = 'hunter2secret'
+ResetAnswers; $script:MuAnswers['MU300_ANS_PASSWORD'] = 'hunter2secret'
 Check 'secret through Ask: taken'  (Ask 'Password' '' 'MU300_ANS_PASSWORD') 'hunter2secret'
 Check 'secret through Ask: not shown' (@($script:lines | Where-Object { "$_" -match 'hunter2' }).Count) 0
 Check 'secret through Ask: event' @(Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_PASSWORD","text":"Password","default":"","secret":"1"}'
@@ -636,22 +636,22 @@ Check 'secret asked again: not shown' ((Dies { Ask 'Password' '' 'MU300_ANS_PASS
 # given in the environment, it leaves the environment: the programs the installer starts do not inherit it
 ResetAnswers; $env:MU300_ANS_PASSWORD = 'hunter2secret'; $env:MU300_NONINTERACTIVE = '1'
 AnswersSetup '' $false
-Check 'secret from the environment: kept'  $script:Ans['MU300_ANS_PASSWORD'] 'hunter2secret'
+Check 'secret from the environment: kept'  $script:MuAnswers['MU300_ANS_PASSWORD'] 'hunter2secret'
 Check 'secret from the environment: gone from it' ($null -eq [Environment]::GetEnvironmentVariable('MU300_ANS_PASSWORD')) $true
 AnswersReexport
 Check 'secret back for the restart'   $env:MU300_ANS_PASSWORD 'hunter2secret'
 Remove-Item env:MU300_ANS_PASSWORD; Remove-Item env:MU300_NONINTERACTIVE
 
 # a question answered by its variable, announced on the stream
-ResetAnswers; $script:Ans['MU300_ANS_KERNEL'] = '2'
+ResetAnswers; $script:MuAnswers['MU300_ANS_KERNEL'] = '2'
 Check 'answer: taken'          (Ask 'Kernel' '1' 'MU300_ANS_KERNEL') '2'
 Check 'answer: shown'          ($script:lines -contains 'Kernel [1]: 2') $true
 Check 'answer: event'          @(Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_KERNEL","text":"Kernel","default":"1","answer":"2"}'
 # the words of the other languages count, as they do when typed
-ResetAnswers; $script:Ans['MU300_ANS_VPN'] = 'evet'
+ResetAnswers; $script:MuAnswers['MU300_ANS_VPN'] = 'evet'
 Check 'answer: normalised'     (Ask 'VPN? (yes/no)' 'no' 'MU300_ANS_VPN') 'yes'
 # set to nothing: the default, which is never the destructive answer
-ResetAnswers; $script:Ans['MU300_ANS_CONFIRM'] = ''
+ResetAnswers; $script:MuAnswers['MU300_ANS_CONFIRM'] = ''
 Check 'answer: empty is the default'  (Ask 'Type INSTALL to continue' 'no' 'MU300_ANS_CONFIRM') 'no'
 # from the environment when the file has none
 ResetAnswers; $env:MU300_ANS_TESTONLY = '6.18'
@@ -667,24 +667,24 @@ Check 'unanswered: no question event' @(Events 'question').Count 0
 ResetAnswers
 Check 'no variable: stops'     ((Dies { Ask 'Something new' 'yes' }) -match '^DIE: this question has no variable') $true
 # a question that comes back was not happy with its answer: stop instead of asking for ever
-ResetAnswers; $script:Ans['MU300_ANS_KERNEL'] = '9'
+ResetAnswers; $script:MuAnswers['MU300_ANS_KERNEL'] = '9'
 Ask 'Kernel' '1' 'MU300_ANS_KERNEL' | Out-Null
 Check 'asked again: stops'     (Dies { Ask 'Kernel' '1' 'MU300_ANS_KERNEL' }) 'DIE: the answer in MU300_ANS_KERNEL was not accepted: 9'
 # the password: never in an event, never on a line
-ResetAnswers; $script:Ans['MU300_ANS_PASSWORD'] = 'hunter2secret'
+ResetAnswers; $script:MuAnswers['MU300_ANS_PASSWORD'] = 'hunter2secret'
 Check 'password: taken'        (AnswerNamed 'Password' '' 'MU300_ANS_PASSWORD' -Secret) 'hunter2secret'
 Check 'password: not shown'    (@($script:lines | Where-Object { "$_" -match 'hunter2' }).Count) 0
 Check 'password: stars'        ($script:lines -contains 'Password []: ******') $true
 # without answers mode nothing here speaks
-$script:NonInteractive = $false; $script:ProgressOn = $false; $script:lines.Clear()
+$script:MuAnswersMode = $false; $script:MuProgress = $false; $script:lines.Clear()
 Progress 'step' 'id' 'x'; Info 'a' 'b'; Step 'x' 3
 Check 'no stream: silent'      $script:lines.Count 0
-$script:ProgressOn = $true
+$script:MuProgress = $true
 Step 'download' 20; ProgressSay 'Downloading release v1'
 Check 'step event'             $script:lines[0] '@@mu300 {"event":"step","id":"download","percent":"20","title":"Downloading release v1"}'
 ProgressSay 'A heading without a step'
 Check 'step: id used once'     $script:lines[1] '@@mu300 {"event":"step","id":"","percent":"","title":"A heading without a step"}'
-$script:ProgressOn = $false
+$script:MuProgress = $false
 Remove-Item function:Write-Host
 Remove-Item function:Die
 Remove-Item function:AnswersFail
@@ -713,7 +713,7 @@ Check 'gui: default over SSH (client)' (GuiDefault '' '10.0.0.2 50000 22') 'no'
 Check 'gui: the winget command'      (GuiWingetCommand) 'winget install -e --id Python.Python.3.12 --scope user'
 $site = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
 Check 'gui: offered after the self-update, before the device' ($site.IndexOf('if (SelfUpdate) {') -lt $site.IndexOf('GuiOffer (') -and $site.IndexOf('GuiOffer (') -lt $site.IndexOf("Say (T 'Checking host tools and device')")) $true
-Check 'gui: not with answers, -Check or -Backup' ($site.Contains('GuiOffer ([bool]($script:NonInteractive -or ($null -ne $script:AnswerQueue) -or $Check -or $Backup))')) $true
+Check 'gui: not with answers, -Check or -Backup' ($site.Contains('GuiOffer ([bool]($script:MuAnswersMode -or ($null -ne $script:AnswerQueue) -or $Check -or $Backup))')) $true
 
 if ($env:OS -ne 'Windows_NT') {
     Write-Host 'not Windows: the search for Python was not run against the fake directory trees'

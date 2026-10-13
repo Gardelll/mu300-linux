@@ -724,6 +724,24 @@ class Install(Device):
             self.assertIn(var, header, f'{var} is not in the header of install.sh')
 
 
+class PowerShellNames(unittest.TestCase):
+    def test_the_answers_variables_cannot_collide_with_the_installers(self):
+        # PowerShell's variables ignore case and a dot-sourced file shares its caller's scope: install.ps1's own
+        # "$ans = Ask ..." once replaced the dictionary of answers ($script:Ans then) with a string
+        mine = set()
+        for name in ('tools/answers.ps1', 'tools/gui-launch.ps1'):
+            mine |= {m.lower() for m in re.findall(r'\$script:([A-Za-z_][A-Za-z0-9_]*)', (TOP / name).read_text())}
+        self.assertIn('muanswers', mine)
+        for name in ('install.ps1', 'uninstall.ps1'):
+            src = (TOP / name).read_text()
+            for var in sorted(mine):
+                if var == 'answerqueue':        # install.ps1's own (-Answers), which gui-launch.ps1 only reads
+                    continue
+                self.assertTrue(var.startswith('mu') or var.startswith('gui'), f'{var}: no prefix of its own')
+                bare = re.findall(r'(?i)\$(?!script:)' + re.escape(var) + r'\b', src)
+                self.assertEqual(bare, [], f'{name} has a variable of its own called ${var}')
+
+
 class Uninstall(Device):
     def uninstall(self, shell, **env):
         r = self.run_script(shell, 'uninstall.sh', MU300_NONINTERACTIVE=1, MU300_PROGRESS=1, **env)

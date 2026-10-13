@@ -43,7 +43,7 @@ file are exported to the programs the installer starts (adb reads `ANDROID_SERIA
 ### Secrets
 
 One answer is a secret: `MU300_ANS_PASSWORD`. The scripts keep the list in one place (`ANSWERS_SECRET` in
-`tools/answers.sh`, `$script:AnsSecret` in `tools/answers.ps1`), and for every name in it:
+`tools/answers.sh`, `$script:MuSecrets` in `tools/answers.ps1`), and for every name in it:
 
 * the value is never printed: the transcript shows `******`, an event carries `"secret":"1"` and no answer, and an
   error message about it shows `******`;
@@ -157,6 +157,7 @@ The stages of an installation, in order: `preflight` 2, `storage` 6, `choices` 1
 | `emmc.sectors`, `emmc.last_end` | the eMMC's size, and where its last partition ends, in 512-byte sectors |
 | `partitions` | `name:first sector:sectors` of every partition, separated by spaces |
 | `region.offset`, `region.size` | the free region (or the installation in it), in bytes |
+| `need.openwrt`, `need.ubuntu`, `need.both` | what each choice of systems needs, in bytes |
 | `region.existing` | `yes` when a `mu300root` filesystem is there |
 | `region.dirty` | how many of 16 samples of an empty region hold data |
 | `sd.device`, `sd.bytes`, `sd.state` | the SD card, and `yes` (`mu300sd`), `foreign` (another ext4) or `no` |

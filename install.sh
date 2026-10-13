@@ -511,6 +511,7 @@ gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 # What each choice needs: the installed systems measure ~320 MiB (OpenWrt) and ~580 MiB (Ubuntu), and an update
 # keeps the previous one as <os>.old while the new one is unpacked, so allow for two of each plus working room.
 NEED_OPENWRT=$((800 * 1024 * 1024)); NEED_UBUNTU=$((1600 * 1024 * 1024)); NEED_BOTH=$((2400 * 1024 * 1024))
+info need.openwrt $NEED_OPENWRT; info need.ubuntu $NEED_UBUNTU; info need.both $NEED_BOTH
 echo "$(t 'eMMC: {1} ({2} sectors), partitions end at {3} (sector {4}), free after them: {5}' "$(gib $((disk * 512)))" "$disk" "$(gib $((last_end * 512)))" "$last_end" "$(gib $SIZE)")"
 # the SD card as the other place for it (boot/init looks there first)
 sd_probe

@@ -11,7 +11,7 @@
 #   The file: one NAME=value per line, the value taken as it is to the end of the line, # for comments; names
 #   MU300_* and ANDROID_SERIAL. It holds the password in plain text: keep it in your own profile folder (not in a
 #   folder other users can read) and delete it afterwards.
-# Secrets - the variables in $script:AnsSecret (the password): their values are never printed, never part of an
+# Secrets - the variables in $script:MuSecrets (the password): their values are never printed, never part of an
 #   event and never in an error message, and they are not handed to the programs the installer starts: one given in
 #   the environment is taken out of it at once, one from the file is never put there. The password reaches one
 #   command only, on its standard input: the one that hashes it.
@@ -20,16 +20,21 @@
 #   for people; every value is a string, and characters outside ASCII are written as \uXXXX. The last event of a
 #   run is done or error, whatever ends it.
 # This file stays ASCII: Windows PowerShell 5.1 reads a script without a BOM as ANSI.
+#
+# The variables of this file live in the scope of the script that dot-sources it, next to that script's own - and
+# PowerShell does not tell one spelling of a name from another: the dictionary of answers was once called "Ans", and
+# install.ps1's own "$ans = Ask ..." replaced it with a string. Hence the Mu prefix on every one of them
+# (tests/test_answers.py checks that the installers use none of these names).
 
-$script:NonInteractive = $false
-$script:Ans = New-Object 'System.Collections.Generic.Dictionary[string,string]'
-$script:AnsAsked = New-Object 'System.Collections.Generic.Dictionary[string,string]'
-$script:ProgressOn = $false
+$script:MuAnswersMode = $false
+$script:MuAnswers = New-Object 'System.Collections.Generic.Dictionary[string,string]'
+$script:MuAsked = New-Object 'System.Collections.Generic.Dictionary[string,string]'
+$script:MuProgress = $false
 # the answers that are secrets, in one place
-$script:AnsSecret = @('MU300_ANS_PASSWORD')
-function AnswerSecret([string]$Id) { return ($script:AnsSecret -ccontains $Id) }
-$script:StepId = ''
-$script:StepPct = ''
+$script:MuSecrets = @('MU300_ANS_PASSWORD')
+function AnswerSecret([string]$Id) { return ($script:MuSecrets -ccontains $Id) }
+$script:MuStepId = ''
+$script:MuStepPct = ''
 
 # a value inside a JSON string
 function JsonEsc([string]$Text) {
@@ -53,15 +58,15 @@ function ProgressLine([string]$Name) {
 }
 # Progress NAME KEY VALUE...: one event line; nothing without a progress stream
 function Progress([string]$Name) {
-    if (-not $script:ProgressOn) { return }
+    if (-not $script:MuProgress) { return }
     Write-Host (ProgressLine $Name @args)
 }
 function Info([string]$Key, $Value) { Progress 'info' 'key' $Key 'value' ([string]$Value) }
 # Step ID PERCENT: what the next Say starts, for the stream: its id and how far the whole run is by then
-function Step([string]$Id, $Percent) { $script:StepId = $Id; $script:StepPct = [string]$Percent }
+function Step([string]$Id, $Percent) { $script:MuStepId = $Id; $script:MuStepPct = [string]$Percent }
 function ProgressSay([string]$Title) {
-    Progress 'step' 'id' $script:StepId 'percent' $script:StepPct 'title' $Title
-    $script:StepId = ''; $script:StepPct = ''
+    Progress 'step' 'id' $script:MuStepId 'percent' $script:MuStepPct 'title' $Title
+    $script:MuStepId = ''; $script:MuStepPct = ''
 }
 
 # an error before the script's own Die exists (the options, the answers file)
@@ -93,29 +98,29 @@ function AnswersLoad([string]$File) {
     $p = AnswersParse ([IO.File]::ReadAllLines($File, [Text.Encoding]::UTF8))
     if (-not $p.Ok) { AnswersFail $p.Error }
     foreach ($k in @($p.Values.Keys)) {
-        $script:Ans[$k] = $p.Values[$k]
+        $script:MuAnswers[$k] = $p.Values[$k]
         # for the programs this one starts too (adb reads ANDROID_SERIAL) - but never the password. (An empty value
-        # cannot be put into the environment on Windows: it stays in $script:Ans alone.)
+        # cannot be put into the environment on Windows: it stays in $script:MuAnswers alone.)
         if (AnswerSecret $k) { Remove-Item "env:$k" -ErrorAction SilentlyContinue }
         elseif ($p.Values[$k] -ne '') { Set-Item -Path "env:$k" -Value $p.Values[$k] }
     }
-    $script:NonInteractive = $true
+    $script:MuAnswersMode = $true
 }
 # AnswersSetup FILE SWITCH: after the parameters are read
 function AnswersSetup([string]$File, [bool]$On) {
     if ($env:MU300_PROGRESS -eq '1') {
-        $script:ProgressOn = $true
+        $script:MuProgress = $true
         try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch { }
     }
     if (-not $File -and $env:MU300_ANSWERS) { $File = $env:MU300_ANSWERS }
     if ($File) { AnswersLoad $File }
-    if ($On -or $env:MU300_NONINTERACTIVE -eq '1') { $script:NonInteractive = $true }
+    if ($On -or $env:MU300_NONINTERACTIVE -eq '1') { $script:MuAnswersMode = $true }
     # a secret given in the environment stays in this script and leaves the environment: adb, python and the other
     # programs started from here do not inherit it
-    foreach ($k in $script:AnsSecret) {
+    foreach ($k in $script:MuSecrets) {
         $e = [Environment]::GetEnvironmentVariable($k)
         if ($null -ne $e) {
-            if (-not $script:Ans.ContainsKey($k)) { $script:Ans[$k] = [string]$e }
+            if (-not $script:MuAnswers.ContainsKey($k)) { $script:MuAnswers[$k] = [string]$e }
             Remove-Item "env:$k" -ErrorAction SilentlyContinue
         }
     }
@@ -123,11 +128,11 @@ function AnswersSetup([string]$File, [bool]$On) {
 # AnswersReexport: before the script runs itself again (after its self-update), the secrets go back into the
 # environment for that one start; the new run takes them out again
 function AnswersReexport {
-    foreach ($k in $script:AnsSecret) { if ($script:Ans.ContainsKey($k) -and $script:Ans[$k] -ne '') { Set-Item -Path "env:$k" -Value $script:Ans[$k] } }
+    foreach ($k in $script:MuSecrets) { if ($script:MuAnswers.ContainsKey($k) -and $script:MuAnswers[$k] -ne '') { Set-Item -Path "env:$k" -Value $script:MuAnswers[$k] } }
 }
 # AnswerLookup ID: @{ Set; Value } from the answers file, else from the environment
 function AnswerLookup([string]$Id) {
-    if ($script:Ans.ContainsKey($Id)) { return @{ Set = $true; Value = [string]$script:Ans[$Id] } }
+    if ($script:MuAnswers.ContainsKey($Id)) { return @{ Set = $true; Value = [string]$script:MuAnswers[$Id] } }
     $e = [Environment]::GetEnvironmentVariable($Id)
     if ($null -ne $e) { return @{ Set = $true; Value = [string]$e } }
     return @{ Set = $false; Value = '' }
@@ -146,8 +151,8 @@ function AnswerNamed([string]$Question, [string]$Default, [string]$Id, [switch]$
         if ($null -eq $v) { Die (T 'no answer to the question "{1}" on standard input ({2}=@stdin)' $Question $Id) }
     } else {
         # a question that comes back was not happy with its answer, and the answer would be the same again
-        if ($script:AnsAsked.ContainsKey($Id)) { Die (T 'the answer in {1} was not accepted: {2}' $Id $(if ($Secret) { '******' } else { $v })) }
-        $script:AnsAsked[$Id] = '1'
+        if ($script:MuAsked.ContainsKey($Id)) { Die (T 'the answer in {1} was not accepted: {2}' $Id $(if ($Secret) { '******' } else { $v })) }
+        $script:MuAsked[$Id] = '1'
     }
     Write-Host ("$Question [$Default]: " + $(if ($Secret) { '******' } else { $v }))
     return $v
