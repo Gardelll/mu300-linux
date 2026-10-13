@@ -6,8 +6,12 @@
 [![Forks](https://img.shields.io/github/forks/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/network/members)
 [![Issues](https://img.shields.io/github/issues/dikeckaan/mu300-linux?logo=github)](https://github.com/dikeckaan/mu300-linux/issues)
 [![License](https://img.shields.io/badge/license-MIT%20%2F%20GPL--2.0-blue)](LICENSE)
+[![Telegram](https://img.shields.io/badge/Telegram-mu300project-26A5E4?logo=telegram)](https://t.me/mu300project)
 
 New here? The [website](https://kaandikec.com/mu300-linux/) explains it step by step, with pictures (English, Türkçe, 中文), and the [wiki](https://github.com/dikeckaan/mu300-linux/wiki) has a glossary and deeper pages.
+
+News and new releases are announced on the Telegram channel: **[t.me/mu300project](https://t.me/mu300project)**. Follow it to hear
+about updates first.
 
 The ZTE F50 is a pocket 5G router. This project turns it into a small Linux computer: **Ubuntu** (24.04 or
 26.04 LTS) or **OpenWrt** (plain, or with a control panel for the modem), with SSH, Wi-Fi, Bluetooth and its 5G
