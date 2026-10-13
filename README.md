@@ -284,7 +284,9 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   extra headers; the standard fields or a body of your own with `{sender}`, `{time}`, `{text}`, `{device}`,
   `{message}`, each value escaped for the type), a Telegram chat, an e-mail address (only when the image has `msmtp`) and/or another phone by SMS, through a
   template (`{sender}`, `{time}`, `{text}`, `{device}`), with sender allow/deny lists and keywords. Failed deliveries
-  are retried (30 s, doubling, an hour at most, ten times); a delivery log and a "Send test" button. Tokens, passwords
+  are retried (30 s, doubling, an hour at most, ten times); a delivery log (with a "Clear" button) and a "Send test"
+  button. For services that answer HTTP 200 with their own error inside, the webhook can check the answer
+  (`errcode=0`, `code=0`, `ok=true`): the device keeps only the result, never the answer. Tokens, passwords
   and the webhook address and headers stay in `/etc/mu300/sms-forward.conf` (root only) and are never shown again.
 * **Cellular > AT terminal:** guarded AT commands over the same channel daemons the system uses. A command that scans,
   changes the radio, the APN, the SIM or a setting that persists into Android is explained and sent only after a
