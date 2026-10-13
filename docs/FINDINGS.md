@@ -2817,6 +2817,72 @@ sets `I2C_NACK_EN | I2C_TRANS_EN` in I2C_CTL where mainline sets `I2C_EN | I2C_I
 On our (SSV) unit the pin controller must change nothing: the log shows the pads' state, and the fixup only writes
 when the function select is not func1.
 
+The reporter's boot of that kernel settled the pads: SCL6/SDA6 were on func1 already (`ctl 0x00000000 (func1) misc
+0x00083088, iic_inf6_sel 6` for both), the four clients `6-0030`, `6-0034`, `6-0063`, `6-006b` exist, and the
+charger still fails its first read (`no charger: -5`). So the pads are not the difference.
+
+**What reading ZTE's charger driver gives instead: the chip may not be at 0x6b at all.** The U30 Air's 5.4 kernel
+builds `drivers/vendor/common/sqc_v8/sqc_bq2560x.c` (`CONFIG_VENDOR_SQC_BQ2560X=m` in `kernel/u30air.fragment`;
+its `bq2560x:bq2560x_charger_probe enter` is the line in the reporter's 5.4 log), not
+`drivers/power/supply/bq2560x-charger.c`. Its `bq2560x_get_chip_vendor_id()` reads REG0B at the node's address
+and, when that read fails, sets `info->client->addr = SGM41513_I2C_ADDR` (0x1a) and reads again; part 0 there is
+an `sgm41513`, part 1 an `sgm41513A`. The client keeps its name, so sysfs shows `6-006b` whichever chip the board
+has. For the chip at 0x1a the driver codes two fields differently (`info->client->addr == SGM41513_I2C_ADDR` in
+`bq2560x_charger_set_current()` and `bq2560x_charger_set_termina_cur()`): the fast charge current in eight ranges
+of eight steps (5, 10, 20, 30, 60, 60, 120, 120 mA from 0, 40, 130, 300, 540, 1020, 1500, 2460 mA) and the
+termination current in sixteen steps (5 ... 240 mA, or six times each with REG0D bit 0 clear); every other
+register it uses is the same for both chips.
+
+That fits everything the reporter measured, which a dead bus does not:
+
+- mainline gets a NACK (-5, in the log 2 ms after the I2C core's first line), not a timeout (-110): the controller
+  ran the transfer and nothing acknowledged 0x6b. Patch 0009 gave up there, as it should on the F50, which has the
+  node and no chip;
+- `i2cget -f -y 6 0x6b 0x00` fails on Android and on 5.4 on that unit while the vendor driver charges through the
+  same bus: what a driver that went on at 0x1a looks like from outside;
+- the other three devices (`ptn38003a` redriver 0x30, `aw883xx` amplifier 0x34, flash 0x63) have no driver under
+  mainline, and whether they answer was only ever tried with i2cget, on a unit where i2cget also fails for the
+  charger that works. "Bus 6 is dead to every device" was never shown; one failed read at 0x6b was.
+
+What is not measured: that the ABSSV unit's chip is at 0x1a. Its 5.4 log decides without any new kernel
+(`dmesg | grep bq2560x_get_chip_vendor_id`: `failed to get vendor id ret=-5` followed by `chg_IC_name=sgm41513`
+for a chip at 0x1a; `pn=0x2` with `chg_IC_name=sgm41511` or `bq25601` and no "failed" line for one at 0x6b).
+Our SSV unit has an SGM41511 at 0x6b (part 2 in REG0B, FINDINGS 33d).
+
+Patch 0015 does what ZTE's driver does, for the `ti,bq2560x_chg` node only: when the read at the node's address
+fails, the same read at 0x1a through a client of its own (`devm_i2c_new_dummy_device`), and when that answers,
+the regmap on that client, the SGM41513's two tables (Android's 1.98 A is code 52 there; the bq25601's 60 mA
+steps would have written 33, which is 600 mA on that chip; the battery node's 300 mA termination current is code
+6 in the times-six range), the precharge current left as the chip has it (ZTE's driver has no code for it),
+`model_name` `sgm41513`, and `nothing at 0x6b (-5): the SGM41513 at 0x1a` in the log. A failure now names both
+reads (`no charger: -5 (and -5 at 0x1a)`), so one boot on the ABSSV unit also says when the idea is wrong. Compiled
+only (the one object, `W=1`, on 6.18.56 and 7.2.10 with the other patches applied); not booted on any device, and
+no SGM41513 was available to test against. What the patch takes to be the same on that chip without ZTE's driver
+showing it: OTG_CONFIG, VBUS_STAT, PG_STAT and IINDET_EN. `mu300-usb` still addresses 0x6b for host mode and would
+have to follow once the chip is confirmed.
+
+What else was compared, in case the chip is not at 0x1a either:
+
+- `sprd-i2c 22240000.i2c: probe ... failed with error -22` is the camera's bus (i2c0, one child,
+  `sensor-main@20`), not the charger's: its node says `clock-frequency = <1000000>` (read on our unit:
+  `000f4240`), mainline's `i2c-sprd.c` takes 100 kHz and 400 kHz only and returns -EINVAL for anything else, the
+  vendor driver also takes 1 MHz. Our SSV unit has no `i2c-0` under 7.2.10 either. Harmless for the charger.
+- Clocks and supplies: the forced command line (`CONFIG_CMDLINE_FORCE`) carries `clk_ignore_unused
+  pd_ignore_unused regulator_ignore_unused` on every unit, so mainline switches off nothing the bootloader left
+  on; the i2c6 clocks are the same three on both units (`ext-26m` source, `i2c6-eb` enable, `ap-i2c6`, 26 MHz;
+  `i2c6-eb` counts 0 on the reporter's unit only because nothing was using the bus when it was read, 1 on ours
+  where the charger is polled).
+- Bus timing at 400 kHz (i2c6's `clock-frequency`, `00061a80` on our unit), from the two `sprd_i2c_set_clk()`:
+  mainline divides SCL 40 % high / 60 % low and writes a start hold of `6 * 26 MHz / 10^7` = 15 source clocks
+  (0.58 us); ZTE's 5.4 driver has "ZTE modify 400K&100K duty 20200827", 31 % / 69 %, and a start hold of
+  `18 * 26 MHz / 10^7` = 46 (1.8 us). A board with slower edges could NACK under mainline's and not under ZTE's;
+  nothing measured says this unit does, and our SSV unit and the NFC bus of the ABSSV unit (also 400 kHz) work
+  with mainline's. This is the next thing to try if 0x1a does not answer.
+- I2C_CTL: the vendor driver also sets `I2C_NACK_EN | I2C_TRANS_EN` (bits 22, 21) and resets the controller
+  (`i2c_rst`) after a transfer timeout. Mainline sets neither bit and still sees a NACK as -5 at once and not as
+  a timeout on this unit, and bus 2 works on the same unit with the same driver, so these are unlikely to
+  be the cause; the reset only ever runs after a timeout, which mainline did not have.
+
 ### 34. LEDs, and the defects from a second board's test
 A second F50 (restored from F50 #1's backup, with its own eMMC and factory Wi-Fi address) was tested from a user's
 point of view; what came out of it, measured on 2026-10-05:
