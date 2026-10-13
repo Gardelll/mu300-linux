@@ -121,6 +121,7 @@ what replaced it. The table below gives each section's state.
 | 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
 | 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
+| 58 | A service's own error in an HTTP 200 answer to the SMS webhook: a KEY=VALUE check of the answer; a button that clears the delivery log (#171) | current (unit tests; measured on the U30 Air against a fake webhook, not against the real services) |
 
 ## Hardware and firmware facts
 
@@ -4347,7 +4348,7 @@ and dash with busybox 1.37 as awk in a Debian container); not sent from a device
 Open, from the same issue: a service that answers HTTP 200 with its own error inside (DingTalk `errcode`, Feishu
 `code`) is logged as delivered - the HTTP helper passes on the status and nothing of the reply's body
 (`sms-forward-http.uc`), so that no reply reaches a log; and the delivery log (RAM, the last 100 lines) has no clear
-button. Section 53 is PR #195's (the carrier name); this branch does not have it.
+button. Both are §58. Section 53 is PR #195's (the carrier name); this branch does not have it.
 
 ### 55. Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170)
 
@@ -4478,3 +4479,89 @@ as sing-box), `profile_check`, `use`, `status` with the exit address, `logs` per
 `sub_refresh` (one, due) with `job`, `latency` (one, all), `engine_remove` refused while in use, `profile_remove`:
 all as the page expects. `sub_add` takes https only, which could not be served on the test link (the CLI's
 `--insecure` did the subscriptions there). Not looked at in a browser: the pages themselves.
+
+### 58. A service's own error in an HTTP 200 answer to the SMS webhook, and a button that clears the delivery log (#171)
+
+The two points §54 left open. The webhook counted any 2xx as "Delivered"; chat services answer 200 and put their
+refusal in the body. Measured on the U30 Air (openwrt-luci v2026.10.23, kernel 7.2.10) against a fake webhook on the
+LAN that answers like the services; **not sent to any real service**.
+
+* **One rule the user sets, not a table of services.** "The answer must contain": `KEY=VALUE` (`webhook_expect` in
+  `/etc/mu300/sms-forward.conf`), each side 1 to 32 of `A-Za-z0-9_-`, the value `.` and `+` as well. With it, a 2xx
+  is a delivery only when the answer is a JSON object whose **top-level** `KEY` has that value. Empty (the default,
+  and what a page from before the field sends): any 2xx, exactly as before - the helper is not even asked for the
+  answer then. The page's presets (`errcode=0`, `code=0`, `code=200`, `ok=true`) only fill the field in. A table of
+  services in the code would be wrong the day one of them changes; none of the answers below needs more than a
+  top-level key.
+* **What the services answer** (read from their documentation on 2026-10-13, not from a real request):
+
+  | Service | Answer | Rule | Source |
+  |---|---|---|---|
+  | WeCom group robot | `errcode` 0 is success, "judge by errcode, not errmsg"; 93000 invalid webhook, 45009 rate limit, -1 busy | `errcode=0` | developer.work.weixin.qq.com/document/path/90313 (the send page, /path/91770, shows no reply) |
+  | Feishu / Lark custom bot | `{"code":0,"msg":"success","data":{}}` (`StatusCode`/`StatusMessage` kept for old clients); 9499 bad request, 19021 signature, 19022 IP, 19024 keyword, 11232 rate limit. The page gives no HTTP status | `code=0` | open.feishu.cn/document/client-docs/bot-v3/add-custom-bot |
+  | Bark | `{"code":200,"message":"success","timestamp":N}`; a failure is `code` 400 or 500 **and the same HTTP status**, so the status alone already catches it. A batch push answers 200 with a code per device inside `data`, which a top-level rule cannot see | none needed (`code=200` is harmless) | bark-server `router.go` (`CommonResp`), `route_push.go` |
+  | Slack incoming webhook | 200 with the plain text `ok`; errors are HTTP 400/403/404 with a word (`invalid_payload`) | none: with a rule set it fails as "not a JSON object" | docs.slack.dev/messaging/sending-messages-using-incoming-webhooks |
+  | Slack Web API | a top-level boolean `ok`, `error` with a short code; the page gives no HTTP status | `ok=true` | docs.slack.dev/apis/web-api |
+  | Telegram Bot API | `ok` (boolean), `description`, `error_code`; the page gives no HTTP status. The Telegram target here is unchanged (status only) | `ok=true` for a webhook pointed at it | core.telegram.org/bots/api, "Making requests" |
+  | DingTalk custom robot | **not read from its own documentation**: open.dingtalk.com renders its pages by script and gave navigation only. Alibaba Cloud's help page quotes the reply `310000: sign not match`; `{"errcode":0,"errmsg":"ok"}` is what every third-party write-up shows | `errcode=0` | help.aliyun.com/document_detail/421895.html |
+
+* **Where the answer is read, and what leaves that place.** `sms-forward-http.uc` still prints the status and nothing
+  of the reply. Only when the caller sets `MU300_FWD_ANSWER=4096` in its environment (never the request, which the
+  user writes) does it add the first 4096 bytes of a **2xx** reply's body after the status line; the rest is read and
+  dropped as before. Those bytes go down a pipe into one awk (`answer_verdict` in `mu300-sms-forward`), which keeps at
+  most 4096 bytes in memory and prints one line: `answer ok`, `answer differs TOKEN`, `answer missing`,
+  `answer empty` or `answer notjson`. `TOKEN` is the value found under the key, cut to 24 bytes, every byte outside
+  `A-Za-z0-9_.+-` replaced by `?`. Nothing else of an answer exists outside that pipe: no file, no shell variable, no
+  log. The delivery log gets `HTTP 200, errcode=0` or `HTTP 200, the service answered errcode=310000`.
+* **Why awk and not `jsonfilter` or ucode's `json()`.** A parser refuses an answer cut at 4096 bytes, and a delivery
+  wrongly called failed is sent again. `answer_verdict` walks the text once, counting brackets and skipping strings,
+  so a long answer whose key comes first still gives its verdict; a value the cut may have shortened is not looked
+  at. It also runs in the tests under the shells and the awk the device has, which a ucode function would not
+  (no ucode on the CI runner). The key and the value reach awk in its environment and are compared as text - a
+  string by its content, anything else as written, so `0` is not `0.0` and `"0"` is `0` - never as a pattern, never
+  through a shell. A key that is there twice must be right both times.
+* **Retried or not.** The HTTP status decides first, as before. With a 2xx: another value under the key is the
+  service saying it did not take the message, so it is retried like a 5xx (30 s, doubling, ten times) - another try
+  cannot deliver twice, and rate limits (WeCom 45009, Feishu 11232) pass by themselves. No such key, an empty answer
+  or no JSON object fails **without** a retry: nothing says the message was not taken, the rule most likely does not
+  fit the service, and ten retries would then be ten copies of every SMS. A rule in the file that is not `KEY=VALUE`
+  (the panel never writes one) sends nothing: `the answer check is not KEY=VALUE`.
+* **"Send test"** goes through the same `deliver`, so it shows the same verdict.
+* **Clear.** `forward_log_clear` (write ACL, no argument) -> `forward logclear` -> `mu300-sms-forward log-clear`,
+  which unlinks `/run/mu300-sms-forward/log` (and `log.part`) and never opens it: a link at that name goes, what it
+  points to stays. The queue and the retry state are not touched.
+
+Measured on the device, through `ubus call mu300dash forward_set` / `forward_test` / `forward_get` (forwarding
+itself left off; the device has no `timeout` command, so the helper ran without one):
+
+| The fake service answered | Rule | Log |
+|---|---|---|
+| `{"errcode":310000,...}` | none | Delivered, `HTTP 200` |
+| `{"errcode":0,"errmsg":"ok"}` | `errcode=0` | Delivered, `HTTP 200, errcode=0` |
+| `{"errcode":310000,...}` / `{"errcode":93000,...}` | `errcode=0` | Failed, `HTTP 200, the service answered errcode=310000` / `=93000` |
+| Feishu's success body | `code=0`, `StatusCode=0` | Delivered |
+| `{"code":19024,...}` | `code=0` | Failed, `the service answered code=19024` |
+| Bark's success / HTTP 400 failure | `code=200` | Delivered / Failed, `HTTP 400` |
+| `ok` as text; an HTML page; 16 KiB of every byte value | `ok=true`, `errcode=0` | Failed, `the answer is not a JSON object` |
+| `{"ok":false,"error":"invalid_auth"}` | `ok=true` | Failed, `the service answered ok=false` |
+| HTTP 204, no body | `errcode=0` | Failed, `HTTP 204, the answer is empty` |
+| `errcode` a string of `$(touch ...)`, backticks, quotes, a line break, an escape sequence | `errcode=0` | Failed, `the service answered errcode=??touch??tmp?pwned-171??`; no file was made |
+| `{"errcode":0,"errcode":7}` | `errcode=0` | Failed, `errcode=7` |
+| the key one level down only | `errcode=0` | Failed, `the answer has no errcode` |
+| 500 objects deep, then the key at the top | `errcode=0` | Delivered |
+| 2 MB with the key first / last | `errcode=0` | Delivered / Failed, `the answer has no errcode` |
+| HTTP 500, 401 with `{"errcode":0}` | `errcode=0` | Failed, `HTTP 500`, `HTTP 401` |
+
+The page refused `errcode`, `errcode=0;id`, `errcode=$(touch ...)`, `a=b=c` and `err code=0`. Through the queue
+(the installed forwarder on a pool, configuration and log of its own, first wait 2 s): a service that answers
+`errcode=-1` once and then `errcode=0` gave "Will retry", then "Delivered" after 2 s; `errcode=310000` every time
+gave two retries and "gave up after 3 attempts"; a missing key gave one "Failed" and one request. After all of it the
+answers' marker text was in no regular file under `/run`, `/tmp`, `/var` or `/etc/mu300` and not in `logread`.
+`forward_log_clear` emptied a log of 25 lines; with a link at the log's name, the link went and its target kept its
+content; the next test wrote a new 0600 file. In a headless browser (Playwright) the page showed the field, a preset filled it
+in, Save kept it and Clear emptied the table.
+
+Not measured: any real service; the translations on a device (the test unit ran the changed files over an image
+built without them, so the page's new strings were English); what uclient does with an answer whose `Content-Length`
+is wrong or that never ends (the helper's 15 s timeout is unchanged). The unit tests (`tests/test_sms_forward.py`)
+ran under dash and bash on macOS and under busybox ash with busybox 1.37 as awk in a Debian container.
