@@ -15,7 +15,7 @@ function Check($name, $got, $want) {
 
 # the functions under test, straight from install.ps1
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $Top "install.ps1"), [ref]$null, [ref]$null)
-$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused'
+$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'AndroidLines', 'LinuxAdbSerials', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused'
 $defs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $want -contains $n.Name }, $true)
 foreach ($d in $defs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in 'LoadLanguage', 'T', 'NormalizeAnswer') {
@@ -174,6 +174,19 @@ Check 'adbkey: not adb'     (AdbPubKey $kf) ''
 Check 'adbkey: short'       (AdbPubKey $kf) ''
 Remove-Item $kf
 Check 'adbkey: missing'     (AdbPubKey $kf) ''
+
+# ---- a device running MU300 Linux among the adb devices (adb is on by default there): never one to install to ----
+$f50Line = '324950664950           device usb:1 product:MU300 model:F50 device:MU300 transport_id:1'
+$devs = @('List of devices attached', $f50Line, 'MU300LINUX-324950664950-203d8329 device usb:2 transport_id:2',
+    'MU300LINUX-323960377386 unauthorized usb:3 transport_id:3', '192.168.31.1:55555     offline transport_id:4', '')
+Check 'adb: android lines'     (@(AndroidLines $devs) -join '|') $f50Line
+Check 'adb: linux serials'     (@(LinuxAdbSerials $devs) -join '|') 'MU300LINUX-324950664950-203d8329|MU300LINUX-323960377386'
+Check 'adb: linux, let in'     (@(LinuxAdbSerials $devs -Open) -join '|') 'MU300LINUX-324950664950-203d8329'
+$only = @('List of devices attached', 'MU300LINUX-324950664950-203d8329 device usb:2 transport_id:2', '')
+Check 'adb: only linux'        (@(AndroidLines $only).Count) 0
+Check 'adb: one linux'         (@(LinuxAdbSerials $only -Open).Count) 1
+Check 'adb: nothing attached'  (@(LinuxAdbSerials @('List of devices attached', '')).Count) 0
+Check 'adb: no output'         (@(AndroidLines $null).Count) 0
 
 if (Get-Command sh -CommandType Application -ErrorAction SilentlyContinue) {
     foreach ($e in $sdEnv, $inEnv) {

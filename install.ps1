@@ -245,13 +245,24 @@ function Die($m) { Progress 'error' 'message' $m; Write-Host ("`n" + (T 'ERROR:'
 # it runs, names are case-insensitive, and with it called $Cmd, SuDo's { adb shell "su -c '$cmd'" } ran
 # `su -c '<the text of the block>'` - so "su does not work on the device" on every Windows machine (issue #4).
 function Quiet([scriptblock]$QuietBlock_) { $ErrorActionPreference = 'Continue'; & $QuietBlock_ 2>$null }
+# A device running MU300 Linux is an adb device too: adb is on by default there (FINDINGS 70), and its USB serial
+# number says which system answers: MU300LINUX-... in Linux (boot/init), the bare number in Android. It is never a
+# device to install to, and nothing else would stop it: "su -c id -u" says 0 there as well (the adb shell is root).
+# AndroidLines: the "adb devices -l" lines of the devices in Android that answer.
+function AndroidLines($lines) { @($lines | Where-Object { $_ -match '^\S+\s+device\b' -and $_ -notmatch '^MU300LINUX' }) }
+# LinuxAdbSerials: the serial numbers of the devices in Linux among them; -Open: only those that let this computer
+# in (state "device"; "unauthorized" is an adb that takes authorised keys only)
+function LinuxAdbSerials($lines, [switch]$Open) {
+    @($lines | Where-Object { $_ -match '^MU300LINUX\S*\s+\S+' -and (-not $Open -or $_ -match '^\S+\s+device\b') } |
+        ForEach-Object { ($_ -split '\s+')[0] })
+}
 # With more than one adb device attached (a phone, an emulator, a device over the network) every plain adb command
 # fails with "more than one device/emulator", which read as "no adb device". Pick the F50 and point adb at it with
 # ANDROID_SERIAL: the only device, else the only one that says it is an F50/MU300 or a U30 Air, else ask (-Quiet
 # never asks).
 function SelectDevice([switch]$Quiet) {
     if ($env:ANDROID_SERIAL) { return }
-    $all = @((Quiet { adb devices -l }) | Where-Object { $_ -match '^\S+\s+device\b' })
+    $all = @(AndroidLines (Quiet { adb devices -l }))
     if ($all.Count -eq 0) { return }
     $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air' })
     # the only adb device, and an F50/U30 Air: nothing to ask
@@ -274,7 +285,13 @@ function SelectDevice([switch]$Quiet) {
     $env:ANDROID_SERIAL = ($all[$n - 1] -split '\s+')[0]
 }
 # [string]: with no device adb prints nothing, and `-notmatch` on that empty result is falsy, not true
-function AdbState { SelectDevice -Quiet; [string](Quiet { adb get-state }) }
+# nothing either when the only adb devices are in Linux; "linux" when ANDROID_SERIAL names one of those
+function AdbState {
+    SelectDevice -Quiet
+    if ($env:ANDROID_SERIAL -like 'MU300LINUX*') { return 'linux' }
+    if (-not $env:ANDROID_SERIAL -and @(AndroidLines (Quiet { adb devices -l })).Count -eq 0) { return '' }
+    [string](Quiet { adb get-state })
+}
 # Ask QUESTION DEFAULT [VARIABLE]: VARIABLE answers the question in answers mode (tools\answers.ps1)
 function Ask($question, $default, $Id) {
     $a = if ($script:MuAnswersMode) { AnswerNamed $question $default $Id }
@@ -509,19 +526,42 @@ if (-not $Check) {
 Quiet { adb start-server } | Out-Null
 # The device in Linux, and only a phone or tablet in Android: that is not the one to install to - offer to send the
 # device back to Android first
-$target = @((Quiet { adb devices -l }) | Where-Object { $_ -match '^\S+\s+device\b' -and $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air' })
-$linuxFirst = (-not $env:ANDROID_SERIAL) -and $target.Count -eq 0 -and (LinuxRunning)
+# (ANDROID_SERIAL naming the device in Linux: that is the one to send back to Android, not one to work on)
+if ($env:ANDROID_SERIAL -like 'MU300LINUX*') { Remove-Item Env:ANDROID_SERIAL }
+$devs = @(Quiet { adb devices -l })
+$target = @(AndroidLines $devs | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air' })
+$linuxAdb = @(LinuxAdbSerials $devs)
+$linuxFirst = (-not $env:ANDROID_SERIAL) -and $target.Count -eq 0 -and ($linuxAdb.Count -gt 0 -or (LinuxRunning))
 if (-not $linuxFirst) { SelectDevice }
 if ($linuxFirst -or (AdbState) -notmatch 'device') {
-    # the device may be running MU300 Linux right now: then only SSH on the USB network answers
-    $linux = $linuxFirst -or (LinuxRunning)
+    # the device may be running MU300 Linux right now: then it is on the USB network (SSH) and, with adb on
+    # there, among the adb devices as MU300LINUX-...
+    $linux = $linuxFirst -or $linuxAdb.Count -gt 0 -or (LinuxRunning)
     if (-not $linux) { Die (T 'no adb device (boot Android, enable USB debugging)') }
     Say (T 'The device is running MU300 Linux, not Android')
     Write-Host ('  ' + (T 'Installing and uninstalling happen from Android, so the device has to reboot first.'))
     Write-Host ('  ' + (T 'I can ask it over SSH; you will be prompted for its password.'))
     if ((Ask (T 'Reboot the device into Android now? (yes/no)') 'yes' 'MU300_ANS_REBOOT_ANDROID') -ne 'yes') { Die (T 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)') }
+    # Over adb where the Linux lets this computer in (every computer, by default): a root shell, no password to
+    # type, and it works where the USB network does not. The marker file first: only our Linux is told to reboot.
+    $gone = $false; $sshTried = $false
+    $open = @(LinuxAdbSerials (Quiet { adb devices -l }) -Open)
+    if ($open.Count -eq 1) {
+        $s = $open[0]
+        if (([string](Quiet { adb -s $s shell 'test -x /opt/mu300/bin/mu300-next-boot && echo mu300' })).Trim() -eq 'mu300') {
+            Write-Host ('  ' + (T 'asking it over adb ({1})' $s))
+            Quiet { adb -s $s shell '/opt/mu300/bin/mu300-next-boot android && sync && reboot' } | Out-Null
+            for ($i = 0; $i -lt 8; $i++) {
+                if (@(LinuxAdbSerials (Quiet { adb devices -l })) -notcontains $s) { $gone = $true; break }
+                Start-Sleep 5
+            }
+            if ($gone) { Write-Host ('  ' + (T 'rebooting')) }
+        }
+    }
     # -t: sudo needs a terminal to ask for the device password; reboot cuts the connection, so watch the port
     foreach ($u in 'ubuntu', 'root') {
+        if ($gone -or -not (LinuxRunning)) { break }
+        $sshTried = $true
         Write-Host ('  ' + (T '{1} - enter the device password when asked (Ctrl-C to skip)' "$u@$MU300_IP"))
         & ssh -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=NUL -o LogLevel=ERROR -o ConnectTimeout=8 "$u@$MU300_IP" `
             'if [ "$(id -u)" = 0 ]; then S=; else S=sudo; fi; $S sh -c "/opt/mu300/bin/mu300-next-boot android && sync && reboot"'
@@ -532,6 +572,10 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
         }
         if ($gone) { Write-Host ('  ' + (T 'rebooting')); break }
     }
+    # no way in at all: no SSH on this cable, and an adb that takes authorised keys only or would not reboot
+    if (-not $gone -and -not $sshTried -and @(LinuxAdbSerials (Quiet { adb devices -l })).Count -gt 0) {
+        Die (T 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)')
+    }
     Write-Host ('  ' + (T 'waiting for Android'))
     for ($i = 0; $i -lt 60; $i++) {
         if ((AdbState) -match 'device') { break }
@@ -539,6 +583,10 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
     }
     if ((AdbState) -notmatch 'device') { Die (T 'the device did not come back as Android; boot it yourself (mu300-next-boot android)') }
     Write-Host ('  ' + (T 'Android is up'))
+}
+# whatever its serial number says: a root shell of our Linux must never be taken for a rooted Android
+if (([string](Quiet { adb shell 'ls -d /opt/mu300/bin 2>/dev/null' })).Trim()) {
+    Die ((T 'The device is running MU300 Linux, not Android') + ': ' + (T 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)'))
 }
 # an Android that is still starting answers adb before su and storage are ready: the pulls then failed
 for ($i = 0; $i -lt 60 -and (AdbProp 'sys.boot_completed') -ne '1'; $i++) {
@@ -1195,10 +1243,12 @@ $vx = Ask (T 'Install the VPN module (about 40 MB more to download, 120 MB on th
 if ($vx -ne 'yes' -and $vpnKs.Count -gt 0) {
     Die (T 'The VPN is on with its kill switch in {1}: an update without the VPN module would leave it to nothing. Answer yes to install the module, or turn the VPN off there first (ENABLE=0 in /etc/mu300/vpn.conf).' ($vpnKs -join ' '))
 }
-# adb over USB to Linux (mu300-usb adb on|off on the device): off unless wanted; this computer's adb key, which the
-# installer runs with anyway, is the one authorised. Whoever has an authorised key gets a root shell.
+# adb over USB to Linux is on in every system and lets every computer in, with a root shell and no password (the
+# owner's decision of 2026-10-13, FINDINGS 70; on the device: mu300-usb adb auth open|keys, mu300-usb adb off). The
+# one thing to choose here is to close it to all but this computer from the first boot on: its adb key, which the
+# installer runs with anyway, is then the one authorised, and adb takes authorised keys only.
 $ADB = 0; $ADB_KEY = ''
-if ((Ask (T 'Allow adb (adb shell, push, pull) to Linux over USB from this computer? Its adb key (~/.android/adbkey.pub) gets a root shell (yes/no)') 'no' 'MU300_ANS_ADB') -eq 'yes') {
+if ((Ask (T "adb to Linux over USB is on and lets every computer in: a root shell without a password for anyone who plugs in a cable. Let in only this computer's adb key (~/.android/adbkey.pub) instead? (yes/no)") 'no' 'MU300_ANS_ADB') -eq 'yes') {
     $adbHome = if ($env:ANDROID_USER_HOME) { $env:ANDROID_USER_HOME } else { Join-Path $HOME '.android' }
     $ADB_KEY = AdbPubKey (Join-Path $adbHome 'adbkey.pub')
     if (-not $ADB_KEY) { Die (T 'no adb key of this computer to authorise ({1})' (Join-Path $adbHome 'adbkey.pub')) }
@@ -1409,7 +1459,7 @@ Write-Host ('  ' + (T 'systems:        {1} (boots: {2})' $sysText $BOOT_OS))
 Write-Host ('  ' + (T 'kernel:         {1}' "$KERNEL$(if ($KMAIN) { " (mainline, $((Get-Content "$KMAIN\kernel.release").Trim()))" })"))
 $extras = @($(if ($EXTRA_VPN) { 'vpn' }), $(if ($EXTRA_PANEL) { 'panel' }) | Where-Object { $_ })
 Write-Host ('  ' + (T 'extras:         {1}' $(if ($extras.Count -gt 0) { $extras -join ' ' } else { T 'none' })))
-Write-Host ('  ' + (T 'adb to Linux:   {1}' $(if ($ADB -eq 1) { T 'on, for this computer' } else { T 'off' })))
+Write-Host ('  ' + (T 'adb to Linux:   {1}' $(if ($ADB -eq 1) { T 'on, only for the adb key of this computer' } else { T 'on, for every computer: a root shell without a password (on the device: mu300-usb adb auth keys, or mu300-usb adb off)' })))
 Write-Host ('  ' + (T 'default boot:   {1}' $(if ($DEFAULT_LINUX -eq 1) { T 'Linux (Android after {1} failed boots in a row)' $BOOT_ATTEMPTS } else { T 'Android, Linux on demand' })))
 $fsText = if ($FORMAT -eq 0) { T 'keep existing' } elseif ($SD_MODE -eq 1) { T 'CREATE new ext4 (erases the SD card)' } else { T 'CREATE new ext4 (erases the Linux region)' }
 Write-Host ('  ' + (T 'filesystem:     {1}' $fsText))

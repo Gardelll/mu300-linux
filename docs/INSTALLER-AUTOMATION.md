@@ -89,7 +89,7 @@ A question is asked only where the installer asks it by hand too.
 | `MU300_ANS_HOTSPOT` | `yes`, `no` | copy Android's hotspot name and password |
 | `MU300_ANS_GPU` | `yes`, `no` | the Mali GPU userspace |
 | `MU300_ANS_VPN` | `yes`, `no` | the VPN module |
-| `MU300_ANS_ADB` | `yes`, `no` | adb to Linux for this computer's key |
+| `MU300_ANS_ADB` | `yes`, `no` | adb to Linux is on for every computer: let in this computer's key only |
 | `MU300_ANS_PANEL` | `yes`, `no` | the web panel for Ubuntu |
 | `MU300_ANS_KERNEL` | `5.4`, `6.18`, `7.2` | the kernel |
 | `MU300_ANS_EXISTING` | `update`, `wipe` | Linux is installed already |

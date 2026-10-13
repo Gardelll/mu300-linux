@@ -171,7 +171,7 @@ class Choices:
         self.hotspot = True
         self.gpu = True
         self.vpn = False
-        self.adb = False
+        self.adb = False                    # adb to Linux is on for every computer; True: for this computer's key only
         self.panel = False                  # the web panel for Ubuntu
         self.storage = 'internal'           # internal | sd
         self.existing = 'update'            # with an installation there: update | wipe
@@ -403,7 +403,7 @@ def summary(c, facts, release):
         rows.append((_('Existing installation'), _('update: settings and data are kept') if c.existing == 'update' else _('wipe: start from scratch')))
     rows.append((_('Default boot'), _('Linux (Android after {1} failed boots in a row)', c.boot_attempts) if c.default_linux else _('Android, Linux on demand')))
     extras = [n for flag, n in ((c.vpn, _('VPN module')), (c.panel and c.ubuntu, _('web panel for Ubuntu')), (c.gpu, _('GPU userspace')),
-                                (c.hotspot, _('hotspot name and password from Android')), (c.adb, _('adb to Linux for this computer'))) if flag]
+                                (c.hotspot, _('hotspot name and password from Android')), (c.adb, _('adb to Linux for this computer only'))) if flag]
     rows.append((_('Also'), ', '.join(extras) if extras else _('nothing else')))
     return rows
 

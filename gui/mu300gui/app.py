@@ -722,8 +722,8 @@ class App:
               _('mu300-vpn with Xray and sing-box. A system being replaced whose VPN is on needs it: the installer stops otherwise. It can be added later: sudo mu300-extra install vpn'))
         check(i, _('The web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)'), 'panel',
               _('Cockpit with an MU300 page, on the LAN only. It can be added later: sudo mu300-extra install panel'), enabled=ch.ubuntu)
-        check(i, _('Allow adb to Linux over USB from this computer'), 'adb',
-              _('This computer\'s adb key (~/.android/adbkey.pub) gets a root shell on the device.'))
+        check(i, _('Let only this computer in over adb to Linux'), 'adb',
+              _('adb to Linux over USB is on and lets every computer in: a root shell without a password for anyone who plugs in a cable. With this, only this computer\'s adb key (~/.android/adbkey.pub) is let in.'))
 
         if ch.place_existing(f):
             o, i = card(body, _('Linux is already installed there'), style='Accent')
