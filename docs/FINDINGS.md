@@ -124,6 +124,7 @@ what replaced it. The table below gives each section's state.
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
 | 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; unit tests against a table built from #9's figures, not measured on a device) |
 | 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
+| 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
 
 ## Hardware and firmware facts
 
@@ -4640,3 +4641,26 @@ named `cmd` in it) and a symlink to `/etc` were both put out of the way, `/etc` 
 `mu300-voice status` then answered. Open: `/run` is still 1777 - `mount -t tmpfs -o mode=755` in `boot/init` is
 the real fix, and it is a boot change that wants its own device test. `/run/mu300-at/answer.<pid>` and
 `/run/mu300/` are as they were.
+
+### 66. The OpenWrt image build tries a package download again
+
+`openwrt/build-rootfs.sh` installs the image's packages from the OpenWrt feed inside the build container, one
+`apk update`, one `apk upgrade` and a handful of `apk add`. Each was run once under `sh -e`: a mirror that cut one
+connection in the middle of one package failed the whole image, and in CI the release with it.
+
+kanoqwq's fork wraps its `apk` calls in a function that tries three times (clean-tf-7.2 `33640d01`, "retry
+interrupted OpenWrt package downloads"). Taken: that idea. Ours is a function named `apk` in the container's
+script, so that every call goes through it without being rewritten and a call added later cannot be forgotten;
+`update`, `upgrade` and `add` are tried three times, ten seconds apart, with a line on stderr for each new try;
+`del` and anything else run once. A package the feed does not have fails three times and then fails the build as
+before, half a minute later.
+
+The same fork's `0886ee00` ("create block-mount metadata directory in fresh rootfs") repairs the build of its own
+patched `block-mount`, which we do not have (section 65).
+
+Unit tests only (`tests/test_static.py` `ApkRetry`: the function cut out of the script and run under each shell
+with a stub `apk` that fails a number of times), and the same function once in busybox ash with a real `apk` (Alpine in a container: update, add, del, and a package that does not exist). Not run: an image build. To check, on the build machine and not on
+a device:
+
+    sh openwrt/build-rootfs.sh ...                  # as the release does: the image builds as before
+    # and once with the network cut for a few seconds during "apk add": a "trying again (2 of 3)" line, then the image
