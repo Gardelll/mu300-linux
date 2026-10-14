@@ -134,6 +134,7 @@ what replaced it. The table below gives each section's state.
 | 74 | The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, #194) | current (the maintainer's U30 Air on 7.2.10 and the contributor's on 7.2.9); two working cards, kernel 5.4 and an F50 not run |
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
+| 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 
 ## Hardware and firmware facts
 
@@ -5672,3 +5673,37 @@ Kernel 5.4, which issue #194's unit runs: whether its `/dev/sipc_sbuf` reads the
 if not, the `brokers-missing` row above is what happens). A truly empty position and a PIN-locked card with the
 current rule, on hardware. The restart after `no-radio` (the `no-data` restart, which is the same code, ran). The
 F50: unit tests, and the default path on the U30 Air. An M3.
+
+### 83. An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`)
+
+LuCI's System > Scheduled Tasks page writes `/etc/crontabs/root`, and busybox `crond` runs it (`init.d/cron`,
+START 50). `etc/crontabs` was in neither copy of the keep list - `keep_list` in `mu300-update` nor the one in
+`tools/android-install.sh` - so an update built the new system from the release's image and left the jobs behind
+in `<os>.old`. Two things follow, and the second is worse than the lost line: the page comes up empty after the
+reboot, and the image's own `/etc/crontabs` is an **empty directory**, while OpenWrt's `init.d/cron` begins with
+
+    [ -z "$(ls /etc/crontabs/)" ] && return 1
+
+so `crond` does not run at all in the updated system: every job, present or added later by hand, is dead until
+somebody notices.
+
+Reported by a user (U30 Air, openwrt-luci): the Scheduled Tasks page was empty after an update. The symptom is
+the report's; the cause is read from the code and from the release image (`mu300-openwrt-luci-rootfs.tar.gz`
+carries an empty `./etc/crontabs/`), not reproduced on a board here. OpenWrt's own `sysupgrade` keeps the
+directory - it is what this list means to mirror - and the two lists are kept equal by a test, which is why both
+changed together.
+
+Fixed: `etc/crontabs` added to the OpenWrt branch of both lists. Not touched: the Ubuntu branch, whose images
+carry no cron package (scheduled work there is systemd timers, and a user's own unit files in
+`/etc/systemd/system` are still dropped by an update - a separate gap, and a design decision about which of
+`*.service`, `*.timer` and `*.d/` drop-ins to carry).
+
+Unit tests only (`tests/test_update.py`: `keep_list openwrt-luci` names it, the two lists are equal, and
+`apply_one` on a fake disk carries `etc/crontabs/root` over an image whose own directory is empty). To check on a
+device with openwrt-luci:
+
+    # before the update: a job saved in System > Scheduled Tasks
+    cat /etc/crontabs/root; ps | grep crond
+    mu300-update apply && reboot
+    # after: the same job, and crond running
+    cat /etc/crontabs/root; ps | grep crond
