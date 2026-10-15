@@ -135,7 +135,7 @@ what replaced it. The table below gives each section's state.
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
-| 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; nothing of it has run on a device: the protocol is in the section) |
+| 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 
 ## Hardware and firmware facts
 
@@ -5282,8 +5282,9 @@ mobile data up. Not measured: OpenWrt on 6.18 and on 5.4, the U30 Air.
 A third party's panel plugin for a fork has a "System > F50 system upgrade" page: upload a signed update file, see
 the target version and the space it needs, "keep configuration" ticked, a progress bar, a reboot, and afterwards
 "roll back to the previous version". This is the same thing in the project's own panel (`openwrt-luci`, System >
-Update), over the project's own updater. **Nothing of it has run on a device**: both test devices were in use, so
-what follows is the design, what the tests on a computer show, and the protocol for the device.
+Update), over the project's own updater. It was designed while both test devices were in use; what follows is the
+design, what the tests on a computer show, the protocol for the device, and what the protocol showed on a U30 Air
+(2026-10-15, at the end of the section).
 
 **One updater.** The page is not a second update engine. Every action is one `mu300-update` command, and the
 command's own lock decides whether it may run. What was added to `mu300-update` is one marked block ("for a panel")
@@ -5537,14 +5538,16 @@ another kernel): `mu300-update status --sizes`; `releases` against a static mirr
 three small zips - unsigned, signed with a throwaway key, and signed with another key - which the static busybox's
 `unzip -p` read and the image's own `usign` judged `valid` and `bad` as they should be.
 
-**Not measured on a device:** everything else. In particular: that a task started by rpcd's child with `setsid`
+**Not measured on a device** (before the U30 Air run below): that a task started by rpcd's child with `setsid`
 outlives a restart of rpcd on this image (the SMS job is started by the same call, §46); cgi-io's use of `/tmp`
 for a zip of real size and what the device does when it does not fit; `unzip -p` on a 100 to 400 MB stored member,
 and how long `inspect` then takes (it hashes the whole zip and both payloads; it is a task for that reason);
 GitHub's real answer and its rate limit from a carrier's address; the download progress against uclient-fetch's
 real behaviour (it writes the file as it goes, which is all the page reads); a whole `apply`, online or from a
 file, with a real boot image; the page in a real browser with the Aurora theme; the texts in 29 languages, which
-are machine translations like the rest of those catalogs.
+are machine translations like the rest of those catalogs. Still not measured: the F50, Ubuntu, a carrier's
+rate limit, the 29 machine-translated catalogs, and "Start Android at the next restart" (a U30 Air in Android
+cannot be brought back without hands).
 
 **The device protocol** (an F50 or U30 Air on `openwrt-luci`, with a previous release installed; `PC` is the
 computer's address as the device sees it, `DEV` the device's):
@@ -5626,7 +5629,79 @@ computer's address as the device sees it, `DEV` the device's):
     #     "latest" edited to that tag (refused: the checksums of another release); chmod 666 on the device's key
     #     (refused: not root's own); OLD from the mirror with NEW installed (refused without --downgrade):
     ssh root@$DEV "MU300_RELEASE=$OLD mu300-update apply; MU300_RELEASE=$OLD mu300-update apply --downgrade"
-    #     afterwards: ssh root@$DEV 'rm -f /opt/mu300/lib/release.pub /etc/mu300/update-source'
+    #     afterwards: ssh root@$DEV 'rm -f /etc/mu300/update-source', and the image's own release.pub back (the
+    #     project's key is part of the image since it was committed; an update puts it back as well)
+
+**Measured on a U30 Air** (2026-10-15, `openwrt-luci`, kernel 6.18 and 7.2, the owner's sing-box VPN with its kill
+switch on throughout; test releases built from this branch: v2026.10.28 and v2026.10.30 signed with the project's
+key by `make-release.sh` through `MU300_RELEASE_KEY_FILE`, v2026.10.29 unsigned, v2026.10.31 unsigned - made from
+v2026.10.30 with its root filesystems relabelled, because docker's disk was full; served by a mirror on the
+computer through `/etc/mu300/update-source`, throttled to 300-700 kB/s so a download could be watched):
+
+* **Signed, end to end, from the page:** v2026.10.28 to v2026.10.30 online - Check, "Update to", confirm, the
+  release's own updater taking over ("continuing with the mu300-update of v2026.10.30", "signed with the project's
+  release key" before each download), *Restart now* from the page, up on v2026.10.30 after about 40 s.
+* **The task outlives the page and rpcd:** the page closed during the download; `/etc/init.d/rpcd restart` during
+  "keeping your settings" - the apply went on (its pid unchanged), and the page opened afresh (a new login: the
+  restart ends LuCI's sessions) showed the finished task with its log and *Restart now*.
+* **One at a time, both ways:** with the page's update running, `mu300-update clean` in ssh said "another
+  mu300-update is running (pid N)"; with `mu300-update apply --downgrade` started in ssh, the page said "Another
+  update is running on the device: sh .../mu300-update apply (pid N)", every button off, and `update_act` answered
+  `busy`.
+* **Unsigned:** online, v2026.10.29 and v2026.10.31 on a system with the key are not offered (the page says why,
+  in words; `mu300-update apply` refuses with "nothing was changed"). From a file, the page shows "not signed",
+  the SHA-256 (the one in `SHA256SUMS-magisk`) and the tick with its words; *Update from this file* without the
+  tick is refused on the page ("Tick the confirmations above first") and by the adapter ("This file is not signed:
+  that needs confirmation"); with it, v2026.10.30 to v2026.10.31 installed and started.
+* **Downgrade:** a signed v2026.10.28 zip over v2026.10.29 and a signed v2026.10.30 zip over v2026.10.31, each
+  with the page's tick, installed and started (the second one also wrote a boot image, read back and booted);
+  online `MU300_RELEASE=<older> mu300-update apply` refused without `--downgrade` and went through with it.
+* **Refused files:** a zip cut at 20 MB ("not a release file of this project"), one byte changed in the payload
+  ("damaged: its contents do not match their checksums"), the zip for kernel 7.2 on 6.18 ("another kernel ...
+  take the zip for kernel 6.18"), the Ubuntu 24.04 zip ("its system is not installed"). A 112 MB zip reached the
+  partition in about 3 s over USB; `inspect` of a 42 MB zip took about 10 s.
+* **Full /tmp and partition:** /tmp with 34 MB free: "Upload failed: Not enough memory for this upload" before
+  anything was sent. The partition with 1.4 GB free: the upload is refused ("Not enough free space on the Linux
+  partition") and `apply` stops at "not enough free space" before any download.
+* **Rollback, rollback-boot, clean** from the page, each with its tick and dialog, each restart came up on what
+  the page said (rollback v2026.10.30 to v2026.10.31; the boot image back to the installer's; the kept system
+  deleted, and the copy a rollback leaves with it).
+* **Kernel:** 6.18 to 7.2 from the page (the kernel of the newest release, signed), restart, 7.2.10 with USB,
+  the VPN and its kill switch; back to 6.18 with `mu300-update kernel 6.18`, restart, 6.18.56. With an unsigned
+  newest release the kernel change is refused and the choice stays.
+* **No internet:** the mirror refusing connections: the page said "GitHub could not be reached" after 14 s; an
+  address that never answers: `releases` says offline after 32 s. GitHub itself (no `update-source`, through the
+  VPN) answered in 3 s.
+* **Signatures with the project's key on the device:** `release.pub` made writable by others: "not a file of
+  root's own: nothing is trusted with it, and nothing is updated"; v2026.10.30's signed checksums under the tag
+  v2026.11.01: "these are the checksums of another release than v2026.11.01: not used".
+
+Found and fixed on the way (each with a test):
+
+* `apply --unsigned` and `--downgrade` did not reach the release's own updater: apply hands over with the options
+  taken out, and the two words were shell variables that were not exported - the next updater refused what the
+  owner had allowed ("not signed ... not used" after "continuing with the mu300-update of ..."). They are exported.
+* The page offered an online update it could only fail (an unsigned release on a system with the key, the task
+  then ending with a hint at mobile data): it says why instead, and `fetch_verified` tells a refused release (3)
+  from a download to continue, so `apply` no longer suggests a network fault.
+* After every update that did not change the kernel the boot image kept the older release's name, so `check`
+  said "the boot image may not be" and the page offered the release just installed again: an image found up to
+  date is now named after the release that found it.
+* After a rollback, before the restart, the page named the running system "openwrt" on an `openwrt-luci` device
+  and showed no pending restart: `running_os` did not know `<os>.broken`.
+* The note "compare the SHA-256 ... the only proof of where an unsigned file comes from" showed for a signed file;
+  the reinstall tick showed without an Update button; offline took two rounds of retries (24 s and 64 s before).
+* **`/dev/mmcblk0p38` a plain file.** After one boot the U30 Air's boot_b node was a 50 MB regular file in RAM:
+  OpenWrt's procd mounts a new, empty tmpfs on /dev once preinit is over (`procd_coldplug`) and fills it from the
+  kernel's events, and the early recorder - started in preinit, writing for 420 s - ran its `dd` in that moment
+  and created the file; the node was never made again. `boot_update` refused it only because the file had no
+  header ("boot_b does not hold a boot image header v4"); `rollback-boot` would have written into RAM, read it
+  back as written and reported success. The recorder now writes only to a block device and replaces a plain file
+  with the node (`mknod` from sysfs); `boot_update` and `rollback_boot` take only a block device (`boot_dev`). It
+  happened in one boot, the one before this run; in the ten boots of the run the node stayed a block device.
+* Not changed: a rollback leaves `<os>.broken` (271 MB) until the next `apply` or `clean`, and the page offers
+  *Remove the previous version* only when there is a `<os>.old`; the log of a GitHub download shows the signed
+  redirect URL of the asset (it expires within the hour; the page's log redaction reduces URLs to their scheme).
 
 ## The web installer
 
