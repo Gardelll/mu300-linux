@@ -139,7 +139,7 @@ what replaced it. The table below gives each section's state.
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
-| 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; unit tests only, not measured on a device) |
+| 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; measured on the F50, Android with Magisk, 2026-10-15; the U30 Air's sysfs name read from Linux) |
 
 ## Hardware and firmware facts
 
@@ -6555,7 +6555,7 @@ Changed:
 **Bootability:** unchanged when misc is what by-name says: the same block, written and read back as before; every
 refusal exits before `dd`, and misc stays as it was (Android boots).
 
-**Measured:** nothing on a device. `tests/test_magisk_switch.py` (real, non-dry runs against files standing in for
+**Unit tests:** `tests/test_magisk_switch.py` (real, non-dry runs against files standing in for
 the partitions): a symlink planted at the old name (it and its target untouched, nothing new in `TMPDIR`, the block
 in misc, 4096 bytes still); `by-name/misc` a link to a partition sysfs calls `boot_a`, then one with no sysfs entry
 (refused, the target unchanged), then one sysfs calls `misc` (written there, through the link resolved once);
@@ -6569,3 +6569,17 @@ fake device the sysfs entry. Run in the `mu300-unit` container (busybox, as root
     su -c 'mu300-linux --dry-run'        # the block; nothing written
     # the Action button or su -c mu300-linux: reboots into Linux; ls /data/local/tmp has nothing new
     # the web installer's "Boot Linux" (android-web.sh boot-linux) the same
+
+**Measured on the F50** (Android with Magisk, the module of v2026.10.27 with this branch's `switch.sh`, 2026-10-15):
+
+* `by-name/misc` -> `/dev/block/mmcblk0p3`, whose `uevent` says `PARTNAME=misc`. The U30 Air was not taken to
+  Android (it cannot be brought back from there without a hand on it); under Linux its `mmcblk0p3` is `misc` too
+  (`/sys/class/block/mmcblk0p3/uevent`, the same GPT), as on the F50 under Linux.
+* `--dry-run` under Android's `sh` (the Magisk path) and under Magisk's busybox with `ASH_STANDALONE=1` (the web
+  installer's): the same block (`...9e002f...`, slot b with one try), nothing written. The web installer's own entry,
+  `android-web.sh boot-linux dry` with this `switch.sh` in its stage: the same.
+* With `MU300_BY_NAME` pointing at a directory of links: `misc` -> the `boot_a` partition: refused (`/dev/block/
+  mmcblk0p37 is not the misc partition (sysfs PARTNAME)`); `misc` -> a regular file: refused (`misc resolves
+  outside /dev/block`); `misc` -> `/dev/block/by-name/misc` (a second link): taken.
+* The real switch, `su -c mu300-linux`: `slot b armed for one boot`, rebooted into Linux; no `mu300-bc.bin` in
+  `/data/local/tmp`. The initramfs then restored Android's block, as for every one-shot trial.
