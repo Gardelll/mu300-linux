@@ -132,10 +132,12 @@ what replaced it. The table below gives each section's state.
 | 70 | adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it | current (unit tests; nothing of it measured on a device: the checklist is in the section) |
 | 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; run end to end on an F50 from Chrome on macOS on 2026-10-13 (docs/web-installer.md); Windows, a Linux host, the U30 Air, KernelSU/APatch and a download over a carrier's network not measured |
 | 74 | The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, #194) | current (the maintainer's U30 Air on 7.2.10 and the contributor's on 7.2.9); two working cards, kernel 5.4 and an F50 not run |
+| 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | experimental, opt-in build recipe (7.2.9; 7.2.10 without a client); PMK provenance open; the WPA2 fallback measured on the U30 Air |
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
+| 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 
 ## Hardware and firmware facts
 
@@ -6134,3 +6136,190 @@ device with openwrt-luci:
     mu300-update apply && reboot
     # after: the same job, and crond running
     cat /etc/crontabs/root; ps | grep crond
+### 80. WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat)
+The AP side of 14b's station finding. `docs/U30AIR-SAE.md` has the recipe and the open question; what the hardware
+showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
+
+* **Stock hostapd cannot do SAE on this driver.** The SME is in the firmware (`iw phy`: `connect`, no
+  `authenticate`), so hostapd never sees the SAE frames: a WPA3-only BSS comes up, a client finishes SAE with the
+  firmware and then fails association or the 4-way handshake (macOS: `-3912`).
+* **Two vendor interfaces make it work.** hostapd hands the passphrase to the firmware with vendor command OUI
+  `0x001374`, subcommand 43, nested attributes 8 (passphrase), 6 (group, 19) and 7 (ACT, `0xffffffff`); the
+  firmware answers each association with the derived PMK and PMKID as a trailing vendor element in the
+  `NEW_STATION` IE buffer: EID 221, length 52, prefix `40:45:da:04`, then 32 + 16 bytes. Hunting-and-pecking,
+  group 19 only; H2E-only clients and other groups untested.
+* **Only the passphrase reaches the firmware.** `vendor_set_sae_password` (`sc2355/vendor.c`) stores the group and
+  never increments `group_count`, so `vendor_softap_convert_para` writes no group TLV; and it writes the ACT TLV only
+  when `setting->act != -1`, which `0xffffffff` is not. `CMD_SET_SAE_PARAM` therefore carries the entry, the
+  passphrase and the end marker: group 19 and the anti-clogging threshold are the firmware's defaults, and hostapd's
+  `sae_groups` and `sae_anti_clogging_threshold` do nothing in this mode. Left as it is: sending a group list the
+  firmware has never been given is a change nobody has measured.
+* **The gate is the option and a firmware capability, not the device.** The driver answers the vendor command with
+  `-ENOTSUPP` unless the firmware reports `SPRD_EXTEND_SOATAP_WPA3`. The F50 has the same chip and driver; what its
+  firmware reports is not known. The command exists in the 5.4 vendor driver as well as in the mainline port;
+  only 7.2.9 has run it.
+* **The PMK arrives in a client-controlled buffer.** The driver passes `evt_new_station.ie` straight through as
+  `assoc_req_ies` (`sc2355/cmdevt.c` -> `common/report.c`), the same bytes that carry the station's own IEs. The
+  parser accepts exactly one trailing element and rejects any second marker, which only holds if the firmware
+  always appends its own; nothing proves it refuses an association without a completed SAE exchange. Open.
+* **The stock driver printed secrets at `L_DBG`**: the SAE passphrase (`pwd is :%s`, `vendor.c`), a station PSK
+  (`cfg80211.c`, `%s` on a buffer that is not NUL-terminated), every TX command and up to 400 bytes of every RX
+  message on PCIe (`pcie.c`, `sdio.c`), the `NEW_STATION` event (`cmdevt.c`). The default level is `L_INFO` and this
+  kernel exposes no debugfs node for it, so none leaked by default; the removals are unconditional now. Confirmed
+  on the device with the rebuilt 7.2.9 module: `dmesg` and `logread` through a boot, a WPA2 association and a
+  package swap hold none of the patterns (the only `EVENT:` matches are `reorder_wlan_delba_event`).
+* **Option off is the stock path.** With the patched `wpad-basic-openssl` r8 installed and the WPA2-PSK hotspot
+  untouched, the generated `hostapd-phy0.conf` has no `sae`/`u30_sae` key, a WPA2 client is back 32 s after the
+  package swap, the VPN stays up. The mode needs pure SAE, `ieee80211w=2`, `sae_pwe=0` and PMKSA caching, and a
+  BSS with the option and any other mode fails closed (`Failed to set beacon parameters`, AP-DISABLED).
+  In the patch every new path starts from `u30_sae_offload` (the configuration check, the firmware request, the
+  key import); the one line that is not behind it replaces hostapd's debug hex dump of the association IEs with their
+  length. OpenWrt's wifi-scripts turn the documented UCI settings into `wpa_key_mgmt=SAE`, `ieee80211w=2`,
+  `sae_pwe=0`, `u30_sae_offload=1` and `wpa_passphrase` (no `sae_password`, which the patch refuses), checked with
+  the 25.12.5 scripts in a container.
+* **A second BSS with the option, added live, took the radio down (2026-10-12).** `wifi reload` with a new
+  `wifi-iface` (`encryption sae`, `ieee80211w 2`, `sae_pwe 0`, `u30_sae_offload=1`) next to the WPA2 hotspot: both
+  SSIDs disappeared and did not come back within ten minutes. The device could only be reached over that hotspot,
+  so the cause is not known yet (hostapd gives the whole phy up when one BSS fails to set up; the earlier maintainer
+  test used a separate BSS with r6 and a full `wifi down/up`). Enable the option on a device you can reach another
+  way, and with a full `wifi down; wifi up`, never `wifi reload`.
+  Snrat's r9 refuses a second BSS when the configuration is loaded (`U30 SAE: supports a single BSS only`); on his
+  device, with `logread -f` over USB, the refusal still took the running WPA2 BSS down with it through netifd's
+  reload. The cause of the r8 outage itself was never captured.
+* **A hotspot that could not start stayed down at every boot; now it goes back to WPA2 (2026-10-13).** Three roads
+  to it: `mu300-update` keeps `/etc/config` and replaces the packages, and the stock wpad refuses a configuration with
+  a key it does not know; the firmware refuses the vendor command; the patch rejects the mode.
+  `openwrt-wifi-sae-guard` (does nothing without the option) looks before the first `wifi up` whether the installed
+  hostapd has the option, and about two minutes after boot whether the access point is `ENABLED`; if not, the BSS
+  becomes `psk2` with the same passphrase, the file as it was is kept in `/etc/mu300/wireless.sae-offload`, and
+  `mu300-wifi` logs one error line. WPA2 because hostapd's own SAE cannot work on this driver (first point).
+* **Measured on the U30 Air, 2026-10-13** (OpenWrt 25.12.5, 7.2.10, r9 built with the helper, this branch's
+  `sprd_wlan_combo.ko`; no Wi-Fi client at hand, so no association with SAE was tried):
+  * Without the option the guard changes nothing: `AP-ENABLED` at 40.1 / 41.5 / 43.3 / 43.4 s before, 41.2 / 41.3 /
+    43.3 s with it; silent, the configuration byte-identical, a WPA2 client back by itself.
+  * netifd starts the radio once before `mu300-hw` does (15 to 23 s after power-on; `AP-DISABLED` under the world
+    regulatory domain). So the stock hostapd does see the option once and logs `unknown configuration item`; the
+    guard acts before `mu300-hw`'s `wifi down; wifi up` at about 37 s, and the hotspot was up as WPA2 at 39.9 s, the
+    configuration byte-identical to the one before the opt-in, the saved file mode 600.
+  * A mode r9 refuses (`sae-mixed`; a second BSS): fallback 136 s after power-on, `AP-ENABLED` at 139.5 and 139.7 s.
+    Off on purpose (the key's marker, interface or radio disabled): untouched.
+  * **The log loses the guard's line.** 128 KiB, about 1300 lines, and one Wi-Fi restart writes hundreds: 135 s
+    after the fallback the line was gone. It is now also in `/etc/mu300/wireless.sae-offload.why`, with its time.
+  * r9 with the option: `U30 SAE: firmware runtime parameters configured`, `vendor_set_sae_password type : 8/6/7`,
+    no `firmware not support softap wpa3`, `AP-ENABLED` 5 s after `wifi up`, 41.6 s after power-on; the generated
+    file has `wpa_key_mgmt=SAE`, `ieee80211w=2`, `sae_pwe=0`, `u30_sae_offload=1`. A synthetic passphrase, as text
+    and as hex: 0 lines in `dmesg` and `logread`; none of the removed prints. Option off again: `WPA-PSK`, no line.
+  * The module with the removals booted and ran every step above (its `wcn_bsp` is section-identical to the
+    installed one; `sprd_wlan_combo` 352 bytes of code shorter). The module in v2026.10.25 prints the passphrase
+    with `pr_info`, not at `L_DBG` as the point above says: it holds the four format strings. It was not run with
+    the option, so that print was not seen in a log.
+  * `apk add` of the r9 pair next to `wpad-basic-mbedtls` is refused (conflict): `apk del` the stock one first.
+    This `iw` prints no "Supported commands", and `iw dev wlan0 station dump` on this driver prints no station
+    fields, so neither can serve as a check.
+  * Not measured: any client (WPA3 join, WPA2 refused on the SAE BSS, wrong passphrase, throughput, the PMK
+    probe), kernel 5.4, the F50. After the SAE steps and the original WPA2 configuration back, the WPA2 client that
+    had rejoined earlier did not come back within 4 minutes, nor after the device was all stock again: it had
+    most likely left, and a WPA2 join after SAE in one boot is not shown.
+* **Built, 2026-10-13:** `sprd_wlan_combo` with these removals for 7.2.10 and 6.18.56 (with `wcn_bsp`; the five touched
+  files warn only where the vendor's code always did, none of the removed format strings is in the module);
+  for 5.4 the twelve `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver and all 69 objects
+  compile (the module was not linked: ThinLTO wants to write next to the kernel's objects). The hostapd patch applies
+  with GNU patch after OpenWrt 25.12.5's own patches on `ca266cc2` (BSD patch rejects the `ap_config.c` hunk, which
+  has no leading context: build in the SDK, not on macOS).
+
+## ZTE V50 (MU3351)
+
+### 95. The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his
+
+**Status: experimental. Nothing in this section was measured by this project: nobody here has a V50.** What follows
+separates what kano (kanoqwq) says he read and measured on his V50, in his line of this project (branch
+`clean-tf-7.2`, MIT like this one), from what was checked here. The owner's word (2026-10-15): "if kano did V50
+support, bring it over". Nothing of his tree was run here and no binary of it was taken; the code below is ported
+into this tree's structure.
+
+**kano's commits about the V50.** `f6b0668d` (2026-10-14, "add desktop deployment and isolate F50/V50 profiles"):
+the identity, the device-tree test, the AW9523B LED driver, the LED mapping, dual SIM, NFC, CPU voltage, his notes
+(`docs/V50-MU3351-20261014.zh-CN.md`). `0438ab01` (2026-10-14): the shared eMMC policy that replaced his V50-only
+one, and a changelog. Later ones mention the V50 in passing: `2d3b6f3f` (the F50 and the V50 have no battery: their
+fuel gauge is not one), `e114999d` and `8d3d29e6` (updates and installs on his V50 with his desktop installer),
+`0e19fe32` and `53ef7b1a` (his GUI and docs); `cd4fb28b` (2026-10-01) took a boot-time change from "V50 boot speed
+research".
+
+**What kano says he read or measured (his notes, 2026-10-14; not repeated here).**
+* Identity: `ro.product.model` V50, `ro.product.device` MU3351, platform `ums9620`, board `ums9620_2h10_feimao`, T760:
+  the F50's kernel platform; the same CPU frequency tables, the SC2355 Wi-Fi on PCIe, the same A/B partition names.
+  ZTE's support page calls the V50 MU3351 (not the Blade V50 phone). Android 13, file-based encryption on his unit.
+* Its LEDs: an AW9523B at 0x5b on I2C3 (`/soc/ap-ahb/i2c@2270000/aw9523b_led@5b`), not in the F50's device tree. The
+  DT `idx` values are GPIO pins, not DIM registers (from `aw9523b_brightness_work` in ZTE's Android driver); the
+  current limit is the low two bits of `default_imax` (`aw9523b_set_led_imax`); three lamps, NET1, NET2 and Wi-Fi,
+  each with two white emitters and blue and red ones (from `groupcolor_store`, and lit one group at a time on the
+  unit). The PMIC's `sc27xx:*` LEDs exist there as well, and older scripts picked those.
+* No battery (his power-supply code treats the F50 and the V50 alike: their fuel gauge is synthetic).
+* NFC: I2C2 0x57, reset on AP GPIO189 (the U30 Air's is 190); the tag read and written back.
+* Dual SIM: with only SIM 2 in, `CPIN READY`, `CFUN=1` and both stacks up; registration answered `CEREG=8` (the card
+  was out of credit). Two cards at once: not measured, in his words.
+* eMMC: under mainline ext4 reported `deleted inode referenced` after normal reboots, again after an offline fsck.
+  With the eMMC host's runtime PM forbidden at probe (kernel 7.2.8 "#17") a marker, the configuration and scripts
+  survived a sync and a reboot with their SHA-256, `errors_count` 0: "an improvement, not proof that runtime PM alone
+  caused it". Writing `power/control` "on" from the initramfs hung the boot before the mount. He later replaced it
+  with a policy for every board (FUA emulated with flushes, ordered MMIO in `sdhci-sprd`, the eMMC never powered off
+  at system suspend), which he says was not yet measured on the V50.
+* His V50 booted Linux from slot b with misc's boot control (32 bytes), his boot chain check read the five images
+  alike on both slots, and it ran OpenWrt with the 6.18.54/7.2.8 kernels he built with his AW9523B driver.
+  His installers refuse kernel 5.4 on the V50.
+
+**What was checked here (2026-10-15).**
+* The F50's stock device tree (`vendor_boot`, the live FDT and `dtbo` of an F50, read with `dtc`): no AW9523B, no
+  `charger_policy_service`; its `i2c@2270000` is `sprd,sc9860-i2c`, disabled and empty. The U30 Air's `vendor_boot`
+  (a backup of 2026-09-27): no AW9523B; `charger_policy_service` present. So the node tells the V50 from both.
+* Both mainline kernels (6.18.56, 7.2.10) build with the driver and patch 0017; no warning from either file.
+* Unit tests for every decision below, on dash, bash and busybox sh.
+
+**What was ported, and how a V50 is told apart.**
+* `mu300-device` and `boot/init` (one rule, the same code; a test holds them to it): the label (`/etc/mu300-device`,
+  `/run/mu300/device`) as before, except that **f50** on a device tree with the AW9523B node and without the charger
+  policy service is a **v50** (an older installer took a V50 for an F50 when the user said yes), and **v50** on a
+  device tree without that node is what the tree says (u30air with the charger policy service, else f50). The F50
+  and the U30 Air: no node, so the answer is the one of before in every case (`test_mu300_device_three_boards`,
+  `tests/test_boot_init.py` `Device`).
+* Installers (`install.sh`, `install.ps1`, the Magisk zip, `tools/android-web.sh` for the web installer, the boot
+  chain scripts): exactly `V50 / MU3351` on `ums9620` is a v50, with one line saying it is experimental; a model V50
+  with another device, or a device MU3351 under another model, or another platform is refused, never offered as an
+  F50; `MU300_DEVICE` cannot make a V50 another device (`f50`/`u30air` only, as before). Kernel: mainline only
+  (`install.sh --build`, the 5.4 choice, a zip whose kernel does not name the V50 and the web installer's 5.4 are
+  refused with the way out).
+* Kernel bundles: a mainline bundle names `v50` in `devices` only when its kernel has `CONFIG_LEDS_AW9523B=y`; the 5.4
+  bundle never does, so `mu300-update` never puts 5.4 or an older kernel on a V50.
+* `leds-aw9523b` (kano's driver, `upstream/port/drivers/leds/`, built in): binds only `awinic,aw9523b` with ZTE's
+  binding (`led_enable` 1, `gpio_enable` 0), checks the whole binding and the chip ID 0x23 before it touches the chip;
+  registers the DT groups, each wired pin (`aw9523b:pinN`) and, for exactly the V50's binding, the lamps
+  (`v50:net1:white` ...). `mu300-led`: NET1 is the network lamp (blue 4G, white 5G, red no service), the Wi-Fi lamp
+  white on 5 GHz and blue on 2.4 GHz, NET2 dark; the PMIC's LEDs are never written on a V50.
+* Patch 0017 (`sdhci-sprd`): the eMMC host's runtime PM forbidden at probe where the AW9523B node is, his measured
+  fix, not the later shared policy (that one changes every board, and nothing measured it on the V50 either). On the
+  F50 and the U30 Air it is a lookup that finds nothing.
+* No battery: `mu300-power`, the dashboard's power tile and the USB role setter take the V50 as an F50.
+* The charger at 0x1a (patch 0016, issue #225): bound only with `/charger_policy_service`; the V50 has none (kano's
+  init tests for that node before the AW9523B and still took his unit for a v50; and he says it has no battery), so
+  nothing is bound there, as on the F50.
+* USB network `192.168.79.1` (kano kept the F50's `192.168.77.1`, which collides with an F50 on one computer).
+
+**What does not work yet.** The second SIM (the dual-SIM code is the U30 Air's, §74, and kano's evidence is one card
+in SIM 2 that did not register); NFC (`mu300-nfc` says so; another reset line than the U30 Air's); SIM selection;
+kernel 5.4; kano's CPU voltage whitelist entry for the V50's SML (this tree has no such list); his NET2/Wi-Fi LuCI LED
+page and his OpenWrt LED events for two SIMs.
+
+**Risks.** A V50 that does not boot falls back to Android after the usual attempts (misc's trial). The LED driver and
+patch 0017 do nothing without the node. A V50 installed earlier as an F50 becomes a v50 with the next update: its
+address moves to `192.168.79.1` (Ubuntu without `lan.conf`; OpenWrt keeps the LAN it was set up with) and its kernel
+is updated only to a mainline one that names it (`mu300-update kernel 6.18`). The eMMC trouble kano saw may have
+another cause than runtime PM.
+
+**Checklist for a V50 owner (report in an issue).**
+1. Android: `getprop ro.product.model`, `ro.product.device`, `ro.board.platform` say V50, MU3351, ums9620.
+2. Install with kernel 6.18 (or 7.2) of a release that names the V50; the installer says "ZTE V50: EXPERIMENTAL".
+3. In Linux: `mu300-device` says `v50`; `ssh` to `192.168.79.1` works; `dmesg | grep -i -e aw9523b -e 'kept awake'`
+   shows "4 LED groups, pin mask 0xffff" and "MU300: ZTE V50, eMMC host kept awake".
+4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
+5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
+6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.

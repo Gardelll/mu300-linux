@@ -212,6 +212,16 @@ class Status(WebCase):
         self.assertEqual(s['model'], 'ZTE MU300 "quoted" \\ backslash')
         self.assertEqual(s['device'], 'f50')
 
+    def test_v50_exactly(self):
+        # the ZTE V50 (FINDINGS 95): V50 / MU3351 on ums9620; any other V50 is no device this page knows
+        for kw, want in ((dict(model='V50', product='MU3351', platform='ums9620'), 'v50'),
+                         (dict(model='V50', product='MU3351', platform='mt6789'), ''),
+                         (dict(model='V50', product='MU3351'), ''),
+                         (dict(model='ZTE Blade V50', product='P671F60', platform='ums9620'), ''),
+                         (dict(model='U30 Air'), 'u30air'), (dict(), 'f50')):
+            self.device(**kw)
+            self.assertEqual(self.status()['device'], want, kw)
+
     def test_another_device_and_no_slots(self):
         self.device(model='Pixel 9')
         s = self.status()

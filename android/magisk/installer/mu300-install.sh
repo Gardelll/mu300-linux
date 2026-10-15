@@ -231,7 +231,15 @@ env_check() {
 detect_device() {
     _m="$(getprop ro.product.model) / $(getprop ro.product.device)"
     say "$(t 'device: {1}' "$_m")"
+    # the ZTE V50 (experimental, FINDINGS 95): exactly V50 / MU3351 on ums9620, and never under another name -
+    # MU300_DEVICE (f50 or u30air only) cannot make it another device, and nothing makes another device a V50
     case $_m in
+        "V50 / MU3351"|*" / MU3351"|"V50 / "*)
+            [ "$_m" = "V50 / MU3351" ] && [ "$(getprop ro.board.platform)" = ums9620 ] ||
+                die "$(t 'This looks like a ZTE V50 but is not one this installer knows (model V50, device MU3351, platform ums9620): {1}' "$_m")"
+            [ -z "${MU300_DEVICE:-}" ] || die "$(t 'mu300-install.conf: {1}={2} is not valid' MU300_DEVICE "$MU300_DEVICE")"
+            DEVICE=v50
+            say "$(t 'ZTE V50: EXPERIMENTAL, tested by nobody in this project (kano ported it); mainline kernel only; no second SIM, no NFC; USB network 192.168.79.1')" ;;
         *U30Air*|*U30_Air*|*"U30 Air"*) DEVICE=u30air ;;
         *MU300*|*F50*|*mu300*) DEVICE=f50 ;;
         *) DEVICE= ;;
@@ -314,6 +322,9 @@ payload_unpack() {  # the two payload files copied out of the zip into W, and on
         die "$(t 'the zip is damaged (checksum mismatch); download it again')"
     tar -xzf "$W/kernel.tar.gz" -C "$W/kernel" && rm -f "$W/kernel.tar.gz" || die "$(t 'could not unpack the kernel bundle')"
     KB=$W/kernel
+    if [ "$DEVICE" = v50 ] && ! grep -qw v50 "$KB/devices" 2>/dev/null; then
+        die "$(t 'The ZTE V50 runs only a mainline kernel of a release that knows it: take the zip for kernel 6.18 or 7.2 (of a newer release if this one has none)')"
+    fi
     grep -qw "$DEVICE" "$KB/devices" 2>/dev/null || die "$(t 'this kernel does not support the {1}' "$DEVICE")"
 }
 
@@ -622,7 +633,7 @@ write_example() {
         echo "# (root) write the password note to $PW_FILE_SDCARD instead of $PW_FILE_ROOT"
         echo "#MU300_PASSWORD_FILE=sdcard"
         echo "# (root) f50 or u30air, only when the model is not recognised"
-        echo "#MU300_DEVICE=${DEVICE:-f50}"
+        echo "#MU300_DEVICE=$([ "${DEVICE:-}" = u30air ] && echo u30air || echo f50)"
         echo "# en, tr or zh"
         echo "#MU300_LANG=${MU300_LANG:-en}"
         echo "# only show what would be done"
@@ -839,6 +850,7 @@ conf_drop_used() {
 # installed Linux "not installed"
 report() {
     _ip=192.168.77.1; [ "$DEVICE" != u30air ] || _ip=192.168.78.1
+    [ "$DEVICE" != v50 ] || _ip=192.168.79.1
     _drop=
     for _k in $USED_KEYS MU300_PASSWORD MU300_PASSWORD_RESET; do
         eval "_s=\${SRC_$_k:-}"

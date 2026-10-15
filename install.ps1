@@ -44,11 +44,11 @@ $T = '/data/local/tmp'
 # $PSScriptRoot can be empty in Windows PowerShell 5.1 (param defaults, `powershell -File` from cmd.exe)
 $Top = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 if (-not $Work) { $Work = Join-Path $Top 'work' }
-# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1; $MU300_IP is set to the one
-# that answers
+# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1, V50 192.168.79.1; $MU300_IP is set
+# to the one that answers
 $MU300_IP = '192.168.77.1'
 function LinuxRunning {
-    foreach ($ip in @('192.168.77.1', '192.168.78.1')) {
+    foreach ($ip in @('192.168.77.1', '192.168.78.1', '192.168.79.1')) {
         if (Test-NetConnection -ComputerName $ip -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue) { $script:MU300_IP = $ip; return $true }
     }
     return $false
@@ -234,7 +234,7 @@ function SelectDevice([switch]$Quiet) {
     if ($env:ANDROID_SERIAL) { return }
     $all = @(AndroidLines (Quiet { adb devices -l }))
     if ($all.Count -eq 0) { return }
-    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air' })
+    $f50 = @($all | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' })
     # the only adb device, and an F50/U30 Air: nothing to ask
     if ($all.Count -eq 1 -and $f50.Count -eq 1) { $env:ANDROID_SERIAL = ($all[0] -split '\s+')[0]; return }
     # -Quiet (waiting for the device to come back as Android): only the one F50/U30 Air, never a question.
@@ -452,7 +452,7 @@ Quiet { adb start-server } | Out-Null
 # (ANDROID_SERIAL naming the device in Linux: that is the one to send back to Android, not one to work on)
 if ($env:ANDROID_SERIAL -like 'MU300LINUX*') { Remove-Item Env:ANDROID_SERIAL }
 $devs = @(Quiet { adb devices -l })
-$target = @(AndroidLines $devs | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air' })
+$target = @(AndroidLines $devs | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' })
 $linuxAdb = @(LinuxAdbSerials $devs)
 $linuxFirst = (-not $env:ANDROID_SERIAL) -and $target.Count -eq 0 -and ($linuxAdb.Count -gt 0 -or (LinuxRunning))
 if (-not $linuxFirst) { SelectDevice }
@@ -521,9 +521,17 @@ $model = "$(SuDo 'getprop ro.product.model') / $(SuDo 'getprop ro.product.device
 Write-Host (T 'device: {1}' $model)
 # The U30 Air is the F50's board with a battery: the same kernel and images, a few modules of its own (init
 # loads them; the boot image says which device it is for)
+# The ZTE V50 (model V50, device MU3351, platform ums9620) is experimental (FINDINGS 95): only exactly that, never
+# taken for an F50 (a V50 that is not all three is refused, not asked about), and only with a mainline kernel.
 $DEVICE = 'f50'
 $MODEL_KNOWN = $true
-if ($model -match 'U30Air|U30_Air|U30 Air') {
+if ($model -ceq 'V50 / MU3351' -or $model -cmatch '^V50 / ' -or $model -cmatch ' / MU3351$') {
+    if ($model -cne 'V50 / MU3351' -or (SuDo 'getprop ro.board.platform') -ne 'ums9620') {
+        Die (T 'This looks like a ZTE V50 but is not one this installer knows (model V50, device MU3351, platform ums9620): {1}' $model)
+    }
+    $DEVICE = 'v50'
+    Write-Host (T 'ZTE V50: EXPERIMENTAL, tested by nobody in this project (kano ported it); mainline kernel only; no second SIM, no NFC; USB network 192.168.79.1')
+} elseif ($model -match 'U30Air|U30_Air|U30 Air') {
     $DEVICE = 'u30air'
 } elseif ($model -notmatch 'MU300|F50|mu300') {
     if ((Ask (T 'This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)') 'no') -ne 'yes') { exit 1 }
@@ -1086,9 +1094,11 @@ Write-Host ('  ' + (T '3) 7.2   the newest stable mainline Linux (7.2 for now): 
 Write-Host ('  ' + (T '         as 6.18; tested less than 6.18'))
 Write-Host ('  ' + (T 'This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2'))
 while (-not $KERNEL) {
-    switch (Ask (T 'Kernel') '1') {
+    switch (Ask (T 'Kernel') $(if ($DEVICE -eq 'v50') { '2' } else { '1' })) {
         { $_ -in '1', '5.4' } {
-            if ($UBUNTU -eq '26.04') {
+            if ($DEVICE -eq 'v50') {
+                Write-Host ('  ' + (T 'The ZTE V50 runs a mainline kernel only (6.18 or 7.2).'))
+            } elseif ($UBUNTU -eq '26.04') {
                 Write-Host ('  ' + (T 'Ubuntu 26.04 needs a mainline kernel (6.18 or 7.2): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).'))
             } else { $KERNEL = '5.4' }
         }
@@ -1211,7 +1221,9 @@ if ($vpnFromModule) { FetchVpnModule }
 Remove-Item -Recurse -Force "$REL\kernel" -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path "$REL\kernel" | Out-Null
 & tar -xzf "$REL\mu300-kernel.tar.gz" -C "$REL\kernel"
-if ($DEVICE -ne 'f50' -and -not (Test-Path "$REL\kernel\modules-$DEVICE")) { Die (T 'release {1} does not support this device yet; use a newer one' $Release) }
+# the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline kernel is
+# checked below)
+if (($DEVICE -notin @('f50', 'v50')) -and -not (Test-Path "$REL\kernel\modules-$DEVICE")) { Die (T 'release {1} does not support this device yet; use a newer one' $Release) }
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 $KMAIN = $null
 if ($KERNEL -ne '5.4') {
@@ -1374,7 +1386,7 @@ if ((SuDo 'magisk -v')) {
 }
 
 Say (T 'Done. Rebooting into {1}' $BOOT_OS)
-$ip = if ($DEVICE -eq 'u30air') { '192.168.78.1' } else { '192.168.77.1' }
+$ip = if ($DEVICE -eq 'u30air') { '192.168.78.1' } elseif ($DEVICE -eq 'v50') { '192.168.79.1' } else { '192.168.77.1' }
 Write-Host ('  ' + (T 'USB network: {1}   SSH: {2}' $ip $(if ($BOOT_OS -eq 'ubuntu') { "ubuntu@$ip" } else { "root@$ip, LuCI http://$ip" })))
 Write-Host ('  ' + (T 'switch systems: mu300-os {1}   back to Android: mu300-next-boot android' ($OSES -join '|')))
 Write-Host ('  ' + (T 'back to Linux from Android (with Magisk): su -c mu300-linux'))
