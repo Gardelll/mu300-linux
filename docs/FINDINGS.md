@@ -145,6 +145,7 @@ what replaced it. The table below gives each section's state.
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 | 100 | `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch (kanoqwq 1f8f03fb) | current (fixed; measured on the F50, Ubuntu 24.04, and the U30 Air, openwrt-luci, both v2026.10.27, 2026-10-15) |
 | 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; measured on the F50, Android with Magisk, 2026-10-15; the U30 Air's sysfs name read from Linux) |
+| 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 
@@ -7109,3 +7110,66 @@ fake device the sysfs entry. Run in the `mu300-unit` container (busybox, as root
   outside /dev/block`); `misc` -> `/dev/block/by-name/misc` (a second link): taken.
 * The real switch, `su -c mu300-linux`: `slot b armed for one boot`, rebooted into Linux; no `mu300-bc.bin` in
   `/data/local/tmp`. The initramfs then restored Android's block, as for every one-shot trial.
+### 102. Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry
+
+From kanoqwq's clean-tf-7.2 `149c9d2a` ("preserve TX retries"), checked against our `upstream/modules/sprd_modem/
+sipa_v3` (mainline kernels' modem stack; the 5.4 build uses the vendor tree and is not changed). Three defects in
+`sipa_eth_start_xmit()`, the transmit function of the `sipa_eth` interfaces that carry mobile data:
+
+* **Every retry one more header.** The device is raw IP: a packet arrives with `mac_header == network_header`, and
+  the function `skb_push`es 14 bytes for the IPA's Ethernet framing. When the IPA's send FIFO is full,
+  `sipa_nic_tx()` returns `-EAGAIN` and keeps nothing (`sipa_skb_sender_send_data()` unmaps and returns without
+  taking the skb), and the function returns `NETDEV_TX_BUSY`: the qdisc sends the same skb again later. The push
+  does not move `mac_header`, so the test is true again and every retry pushed another 14 bytes in front of the
+  packet: what finally went out was the packet behind 14·(retries+1) bytes of stale header. For a
+  `CHECKSUM_PARTIAL` TCP/UDP packet the checksum field (the pseudo-header seed) had also been zeroed for the IPA,
+  and stayed zero for the retry.
+* **The IRQ flags in one static variable.** `spin_lock_irqsave(&queue_lock, queue_lock_flags)` with a file-scope
+  `queue_lock_flags`, shared by the TX path and the flow-control wake-up on every CPU: a second CPU taking the lock
+  overwrites the holder's saved interrupt state, and the holder then restores the other CPU's.
+* **A freed skb reported as not sent.** When `skb_linearize()` fails the skb is freed and the function returned the
+  `-ENOMEM` as its `netdev_tx_t`, which the stack does not take as "consumed".
+
+Changed (ours, the same three fixes as his): the push is undone and the seed put back before `NETDEV_TX_BUSY`; the
+flags are a local of each function; a failed linearize returns `NETDEV_TX_OK`. The "fail to send" line is rate
+limited (it fires on every retry under backpressure). Not taken from the same commit here: his Wi-Fi changes (§103),
+and nothing about `sipa overflow ... err=2`, which his own notes leave unexplained.
+
+**When it bites:** whenever `sipa_nic_tx()` says busy. Read from the code this was a full IPA FIFO only, but on
+the devices it is above all **the IPA's resume**: the resource manager answers `-EINPROGRESS` (`sipa_nic_rm_res_
+request()`, before anything is sent: the skb is not taken either) for the first packet after the IPA went to
+sleep. Measured on the F50 (7.2.10): after 25 s without traffic, every first packet met it (`sipa_eth: fail to
+send, ret -115`, six rounds out of six, on the release kernel and on this one); the U30 Air (6.18.56) logged the
+same at boot. A packet retried this way was sent behind the stale header on the release kernel.
+
+**Measured:** built for 7.2.10 and 6.18.56 (`sipa_eth.ko`, no new warnings; built from a copy against the
+`mu300-mainline` volume's trees). `tests/test_sipa_eth_xmit.py` compiles the function from the source with
+stand-ins for the kernel calls (ASan/UBSan where the compiler has them): 1, 3 and 50 busy answers in a row, then
+the packet goes out with exactly one header (54 bytes for 40), unchanged between retries, the seed back, the lock
+released; a failed linearize says `NETDEV_TX_OK` with the skb freed. The previous source does not compile in the
+harness (the static flags), so the test is no negative control of the retry itself. Nothing run on a device.
+
+**Device checklist (before merge; F50 or U30 Air, 6.18 or 7.2, mobile data up):**
+
+    iperf3 -c <server> -t 60 -P 8                    # uplink as hard as the link goes (or a large upload)
+    dmesg | grep -c 'fail to send'                   # retries happened (rate-limited lines) - the case under test
+    # TCP throughput is not worse than before; ping -s 1400 and a download keep working; no oops in dmesg;
+    # ip -s link show sipa_eth0: tx_errors counts the busy answers, no climbing tx_dropped
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches): the F50 (Ubuntu 24.04, 7.2.10) and the U30 Air (openwrt-luci, 6.18.56, the owner's VPN over it), against
+the v2026.10.27 kernels:
+
+* **The first packet after an idle period:** six rounds of 25 s without traffic, then one `ping -I sipa_eth0
+  1.1.1.1`: every round one busy answer (`ret -115`, the IPA resuming) and the ping answered, 6/6 on this kernel and
+  6/6 on the release kernel. So the device did not show the stale header doing harm: either the retried packet
+  survives it somewhere between the IPA and the network, or the busy answer met another packet than the ping. The
+  fix stays what the netdev contract asks (a `NETDEV_TX_BUSY` skb comes back unchanged); no measurement here proves
+  a user-visible effect of the old behaviour.
+* **Uplink under load:** eight parallel uploads (12 MiB each) over the F50's mobile data: `tx_errors` +1 (one busy
+  answer, `fail to send` logged once), no `tx_dropped`, no oops; `ping -s 1400` and a download worked after it.
+  The SIM was throttled to about 1.9 Mbit/s in both directions by then, so throughput says little: an A/B in the
+  same conditions (the release's `sipa_eth.ko` loaded into the test kernel, then this one) gave the same speeds and
+  retransmissions. Unloading and loading `sipa_eth` a second time restarted the F50 (the vendor module is not made
+  to be reloaded; its first reload had already logged `probe ... failed with error -17`): not a test to repeat.
+* The U30 Air carried its VPN over this kernel for three boots; the F50 had mobile data in all of its seven.
