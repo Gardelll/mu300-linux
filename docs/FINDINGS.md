@@ -141,6 +141,7 @@ what replaced it. The table below gives each section's state.
 | 90 | The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection (after kanoqwq's 3cbf37fc) | current (fixed; measured on the U30 Air, openwrt-luci v2026.10.27, 6.18.56, 2026-10-15; the OpenWrt watchdog's messages now reach the log) |
 | 91 | The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst (after kanoqwq's 3cbf37fc) | current (fixed; SIM1 measured on the U30 Air, openwrt-luci v2026.10.27, relay mode, 2026-10-15; the SIM2 choice only under the device's shell, no dual-SIM boot) |
 | 92 | Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken (after kanoqwq's 3cbf37fc) | current (mainline module only; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15; the multicast question not measured) |
+| 93 | sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command (after kanoqwq's 0438ab01) | current (mainline kernels; eMMC soak on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: clean, HS400ES, throughput unchanged; the SD slot not tested, no card) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
@@ -6919,3 +6920,66 @@ boards write in these tests. The hotspot carried on as before: TX to the Mac 300
 on the U30 Air on both kernels (two clusters, about 320 and 570, on both: the Mac, not the kernel), 6 GiB in one
 stream at 594 Mbit/s on the F50, IPv6 multicast (`ping ff02::1`) answered by the Mac over Wi-Fi. The hairpin
 measurement above needs two Wi-Fi clients and was not made.
+### 93. sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command
+
+Mainline `drivers/mmc/host/sdhci-sprd.c` (both of our mainline kernels; the eMMC and the SD card slot) overrides
+the SDHCI register accessors to handle its reserved registers - `SDHCI_MAX_CURRENT`, the read-only
+`SDHCI_BLOCK_COUNT`, the interrupt mask, the hardware-reset bit - and then does the access with `readl_relaxed`,
+`writel_relaxed`, `writew_relaxed`, `writeb_relaxed`. The SDHCI core relies on its accessors being the ordered
+ones: it writes the ADMA descriptor table into DMA memory and then starts the transfer with a register write
+(`SDHCI_COMMAND`, through `writew`). A relaxed MMIO write is not ordered after earlier stores to memory (Linux's
+"device-io" rules; on arm64 `writel` is `__iowmb()` and then the store), so the controller can be told to fetch a
+descriptor whose last store is not yet visible to it - a transfer from or to the wrong place. The vendor's 5.4
+driver is not changed here (its source is fetched at build time and has not been read for this).
+
+kanoqwq found this in clean-tf-7.2 `0438ab01` while chasing ext4 corruption on other Unisoc boards, and his
+evidence is from there, not from ours: on an E5 (his other project), a directory block held the complete content of
+an inode-table block, and file writes logged `mmc0: ADMA error: 0x02000002` with no CRC errors; after the change,
+896 MiB written and read back with `O_DIRECT`, 3584 metadata updates and two offline `e2fsck -fn` were clean, at
+HS400 with runtime PM on. He says himself that it is not proven to be the only cause. **We have no report of
+corruption on an F50 or a U30 Air** (FINDINGS has none), so this is taken as the correct ordering by the kernel's
+own rules, not as the fix of a symptom of ours.
+
+**Taken:** the four accessors' final access becomes `readl`/`writel`/`writew`/`writeb`; every special case stays
+(the reset bit's read in `writeb` keeps its relaxed read: it orders nothing against DMA memory, and the write after
+it is the ordered one). **Changed:** his edit lives in his `emmc.py`; here it is `upstream/port/sdhci_order.py`,
+called from `install.py` next to the other sdhci-sprd edits, idempotent, and the port stops (`port: ...`) when the
+four lines are not exactly where they were - a kernel that changes them must be looked at again, as with the
+other anchors. Not taken: his 5.4 patch (`kernel/patches/sdhci-sprd-dma-ordering.patch`), his eMMC power and
+reliable-write changes (V50-specific, unproven by his own account), his CI C check.
+
+Cost: one barrier (`dmb oshst` / `dmb oshld`) per register access of these two hosts; a transfer takes a handful.
+Not measured.
+
+**Unit tests:** `tests/test_sdhci_order.py` against a copy of mainline's accessor block (the edit, the kept special
+cases, idempotence, a changed driver stops the port). The real tree is checked by the Mainline kernel build
+workflow, dispatched on the branch. **Not run on a device. Hold the merge for a soak on each board:**
+
+    # on the new kernel (both boards; 6.18 and 7.2)
+    dmesg | grep -iE 'mmc[01]|ADMA|EXT4-fs (error|warning)'      # nothing new; HS400 as before:
+    cat /sys/kernel/debug/mmc0/ios                                # timing spec: mmc HS400 enhanced strobe
+    # throughput, before and after (same board, same free space): within noise
+    dd if=/dev/zero of=/var/tmp/t bs=1M count=512 oflag=direct; dd if=/var/tmp/t of=/dev/null bs=1M iflag=direct
+    # a soak: write/verify a few GiB, reboot ten times, e2fsck -fn on the root from Android or the initramfs
+    # the SD card slot (FINDINGS 31j-31l): a card is seen, mounted, read and written; hot-plug still detected
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches), against the release kernels of v2026.10.27 on the same devices:
+
+* **F50, Ubuntu 24.04, 7.2.10.** `mmc0` HS400 enhanced strobe at 200 MHz, as before. 3 GiB of random data in
+  twelve files on the root filesystem (a loop over `mmcblk0` at the Linux region's offset, so every write goes to
+  the eMMC), checksums, read back uncached: all right after writing and after each of five boots of the test kernel
+  and one of the release kernel. `dumpe2fs`: clean. Then from Android, `e2fsck -fn` of the region through a
+  read-only loop: no error (12318 files). No ADMA error, no `EXT4-fs error`, no I/O error in any boot.
+* **U30 Air, openwrt-luci, 6.18.56.** HS400 enhanced strobe. The same 3 GiB soak on the Linux disk, checked after
+  writing, after each of three boots of the test kernel and after the release kernel's boot: all right;
+  `errors_count` 0.
+* **Throughput** (256 MiB `dd` with `oflag=direct`/`iflag=direct` on the F50, three runs each; 1 GiB on the U30 Air
+  in whole seconds): F50 file writes 179-195 MB/s on the test kernel and 189-217 on the release (the same spread
+  on both when repeated), file reads 272-302 and 269-317, the raw `mmcblk0` read 264-267 and 203-264; U30 Air 1 GiB
+  raw read 3-4 s, write with `fsync` 4 s, read back 3-4 s on both. No difference beyond the spread of runs.
+* **The empty SD slot** (`mmc1`, F50): in one of the seven boots of the test kernel the probe's one rescan logged
+  `Got command interrupt 0x00000001 even though no command operation was in progress` with a register dump (`Cmd
+  0x371a`, CMD55; §31j has the cause); none in the four boots of the release kernel this session. Too few boots to
+  tell a difference, and it is the slot without a card, not a transfer.
+* **Not tested:** a card in the slot and hot-plug (none here; the U30 Air has no slot).
