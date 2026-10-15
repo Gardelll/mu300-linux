@@ -77,7 +77,7 @@ A question is asked only where the installer asks it by hand too.
 | `MU300_ANS_MAKE_ROOM` | `yes`, `no` | no free space: shrink `userdata` (erases Android's data) |
 | `MU300_ANS_LINUX_GIB` | a number, `4` or `2.5` | then: how many GiB for Linux |
 | `MU300_ANS_ERASE_ANDROID` | `ERASE` | then: the word that allows it |
-| `MU300_ANS_REBOOT` | `yes`, `no` | then: reboot |
+| `MU300_ANS_REBOOT` | `yes`, `no` | then: reboot (into the reset by Android's recovery; the installation resumes on the next run) |
 | `MU300_ANS_OVERWRITE` | `overwrite` | the free space holds data: use it anyway |
 | `MU300_ANS_BETA` | `yes`, `no` | a prerelease newer than the newest release: install it. `MU300_RELEASE=<tag>` (`-Release`) names the release and asks nothing |
 | `MU300_ANS_SYSTEMS` | `1`, `2`, `3` | Ubuntu, OpenWrt, both |
@@ -100,6 +100,21 @@ A question is asked only where the installer asks it by hand too.
 The variables that were there before work as they did (`MU300_WORK`, `MU300_RELEASE_URL`, `MU300_SYNC_BOOTCHAIN`,
 `MU300_VPN_URL`, `MU300_VPN_MODULE`, `MU300_FETCH_JOBS`, `MU300_NO_SELF_UPDATE`); `install.ps1` now reads
 `MU300_LANG`, `MU300_RELEASE`, `MU300_RELEASE_URL` and `MU300_WORK` where its parameters are not given.
+
+**An unpacked Magisk zip** (`MU300_PACKAGE=DIR`, `--package DIR` / `-Package DIR`, or the zip's own `computer/`
+with its `.mu300-package`; `tools/package.sh`): the system, the Ubuntu, the kernel and the release are the zip's, so
+`MU300_ANS_SYSTEMS`, `MU300_OPENWRT`, `MU300_ANS_BOOT_OS`, `MU300_ANS_UBUNTU`, `MU300_ANS_KERNEL`, `MU300_ANS_BETA` and
+`MU300_ANS_PANEL` are never asked (and `MU300_RELEASE`, `MU300_RELEASE_URL` are not used): a program sets only the
+others. The `download` step checks the two files of the zip instead (`verify` events, `ok` or `mismatch`), and a
+manifest that is not one of a release's stops the run before the device is asked anything. The graphical installer
+started from such a folder offers that system and kernel only.
+
+**A prepared installation** (making room by a reset, EXPERIMENTAL; `tools/resume.sh`, `tools/resume.py`):
+`MU300_BACKUP_DIR` (default `~/mu300-backups`) is where the transaction and the backup go; `MU300_RESUME=0`
+(`--no-resume` / `-NoResume`) ignores a waiting transaction, `MU300_RESUME=1` (`--resume` / `-Resume`) stops when
+there is none for the device, `MU300_TRANSACTION=FILE` (`--transaction` / `-Transaction`) names one. A resumed run
+asks no `MU300_STORAGE` and no `MU300_ANS_OVERWRITE` (the region is the prepared one); a transaction that does not
+match stops the run before anything is written, with the reason in the error event.
 
 ### The variables of `uninstall.sh` / `uninstall.ps1`
 
@@ -167,6 +182,9 @@ The stages of an installation, in order: `preflight` 2, `storage` 6, `choices` 1
 | `verdict`, `verdict.code` | the result line of the check, and `tested`, `both`, `one`, `openwrt`, `existing`, `sd`, `dirty`, `sd-only` |
 | `makeroom.first`, `.end`, `.usable_end`, `.min_android`, `.min_linux`, `.max_linux` | where `userdata` fills the disk: its sectors, and the limits of a split, in sectors |
 | `release` | the release this run installs |
+| `package`, `package.system`, `package.kernel`, `package.release` | an unpacked Magisk zip this run installs from: its folder, and what it holds |
+| `makeroom.crypto`, `.crypto_state`, `.crypto_type` | the make-room path: whether Android's data is encrypted (`yes`, `no`, `unknown`: kano's rule), and `ro.crypto.state` / `ro.crypto.type` |
+| `resume.transaction`, `resume.check`, `resume.backup` | a prepared installation: its transaction, what its checks said (`RESUME-OK` or `RESUME-REFUSED: why`), the backup made before it |
 | `backup.boot`, `backup.misc`, `backup.sha256` | `--backup`: the two files and the boot image's hash |
 
 The facts before `root` need no root, and they are sent before the check for it: a device without root still says
