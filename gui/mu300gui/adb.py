@@ -82,14 +82,29 @@ def parse_devices(text):
     return out
 
 
-def pick(devices, current=None):
+def board(serial):
+    """The board behind an adb serial number, whichever system answers: our Linux's is MU300LINUX-<Android's serial
+    number>-<eMMC id> (boot/init), so a board keeps this across a restart into the other system."""
+    s = serial or ''
+    if s.upper().startswith('MU300LINUX-'):
+        return s.split('-')[1]
+    return s
+
+
+def pick(devices, current=None, board_=None):
     """The device the window works on: the one already chosen while it is still there, else the only F50/U30 Air in
     Android, else the only device in our Linux, else none - never a phone or tablet by itself (the installers ask
-    too whenever it is not the only one and one of ours)."""
+    too whenever it is not the only one and one of ours). BOARD_: the board the window worked on (board()): that one
+    again, in whichever system it comes back, and while it is away (restarting) none - never another in its place
+    (measured: while the F50 restarted after an installation, a U30 Air in Linux was the only device left, and the
+    window went on with it)."""
     if current:
         for d in devices:
             if d.serial == current:
                 return d
+    if board_:
+        same = [d for d in devices if board(d.serial) == board_]
+        return same[0] if len(same) == 1 else None
     targets = [d for d in devices if d.target]
     if len(targets) == 1:
         return targets[0]

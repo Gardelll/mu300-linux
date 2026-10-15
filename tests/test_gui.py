@@ -183,6 +183,32 @@ class Devices(unittest.TestCase):
         self.assertIs(adb.pick([f50, u30], current='323960377386'), u30)  # what the user chose stays chosen
         self.assertIs(adb.pick([f50], current='gone'), f50)
 
+    def test_the_board_worked_on_comes_back_and_no_other_takes_its_place(self):
+        # measured: while the F50 restarted into Linux after an installation, a U30 Air in Linux was the only device,
+        # and the window went on with it (its Manage page would have restarted that one)
+        f50 = adb.Device('324950664950', 'device', {'model': 'F50', 'product': 'MU300', 'device': 'MU300'})
+        f50_linux = adb.Device('MU300LINUX-324950664950-203d8329', 'device', {})
+        u30_linux = adb.Device('MU300LINUX-323960377386-203edc81', 'device', {})
+        self.assertEqual(adb.board(f50_linux.serial), '324950664950')
+        self.assertEqual(adb.board('MU300LINUX-320260377386'), '320260377386')
+        self.assertEqual(adb.board(f50.serial), '324950664950')
+        self.assertIsNone(adb.pick([u30_linux], current=f50.serial, board_='324950664950'))
+        self.assertIs(adb.pick([u30_linux, f50_linux], current=f50.serial, board_='324950664950'), f50_linux)
+        self.assertIs(adb.pick([f50, u30_linux], current=f50_linux.serial, board_='324950664950'), f50)
+        self.assertIs(adb.pick([u30_linux]), u30_linux)                # nothing chosen before: as it was
+        ctl = Controller(top=str(TOP), environ={'MU300_ADB': '/nonexistent/adb', 'PATH': ''})
+        ctl._take('devices', [f50, u30_linux])
+        self.assertEqual(ctl.serial, f50.serial)
+        ctl._take('devices', [u30_linux])                               # the F50 restarts
+        self.assertEqual(ctl.serial, '')
+        ctl._take('devices', [u30_linux])
+        self.assertEqual(ctl.serial, '')
+        ctl._take('devices', [u30_linux, f50_linux])                    # back, in Linux
+        self.assertEqual(ctl.serial, f50_linux.serial)
+        ctl.select(u30_linux.serial)                                    # the user's choice is another board
+        ctl._take('devices', [f50_linux])
+        self.assertEqual(ctl.serial, '')
+
     def test_script_command(self):
         argv = adb.script_argv('/p', 'install', ['--check'])
         if POSIX:

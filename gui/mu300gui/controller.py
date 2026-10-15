@@ -48,6 +48,7 @@ class Controller:
         self.devices = []
         self.devices_seen = False       # adb has answered at least once
         self.serial = ''                # the device the window works on
+        self.board = ''                 # ... and its board (adb.board): the same one again after a restart, no other
         self.props = {}                 # what that device says without root (Android)
         self.linux = {}                 # what it says when it runs our Linux
         self.linux_ip = ''              # a device in Linux that only SSH reaches
@@ -147,8 +148,10 @@ class Controller:
             self.devices = payload or []
             for d in self.devices:
                 self.masker.add_serial(d.serial)
-            chosen = adbmod.pick(self.devices, self.serial)
+            chosen = adbmod.pick(self.devices, self.serial, self.board)
             self.serial = chosen.serial if chosen else ''
+            if chosen:
+                self.board = adbmod.board(chosen.serial)
             key = (chosen.serial, chosen.state) if chosen else None
             if key != self._device_key:         # another device, or the same one in another state
                 self._device_key = key
@@ -191,6 +194,7 @@ class Controller:
         chosen = [d for d in self.devices if d.serial == serial]
         if serial != self.serial and chosen:
             self.serial = serial
+            self.board = adbmod.board(serial)
             self._device_key = (serial, chosen[0].state)
             self._device_changed()
             self._tell('devices', 'check')
