@@ -138,7 +138,15 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
+| 90 | The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection (after kanoqwq's 3cbf37fc) | current (fixed; measured on the U30 Air, openwrt-luci v2026.10.27, 6.18.56, 2026-10-15; the OpenWrt watchdog's messages now reach the log) |
+| 91 | The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst (after kanoqwq's 3cbf37fc) | current (fixed; SIM1 measured on the U30 Air, openwrt-luci v2026.10.27, relay mode, 2026-10-15; the SIM2 choice only under the device's shell, no dual-SIM boot) |
+| 92 | Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken (after kanoqwq's 3cbf37fc) | current (mainline module only; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15; the multicast question not measured) |
+| 93 | sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command (after kanoqwq's 0438ab01) | current (mainline kernels; eMMC soak on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: clean, HS400ES, throughput unchanged; the SD slot not tested, no card) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 100 | `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch (kanoqwq 1f8f03fb) | current (fixed; measured on the F50, Ubuntu 24.04, and the U30 Air, openwrt-luci, both v2026.10.27, 2026-10-15) |
+| 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; measured on the F50, Android with Magisk, 2026-10-15; the U30 Air's sysfs name read from Linux) |
+| 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
+| 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 
@@ -6719,3 +6727,535 @@ only starts below 700 MiB of free region and without an SD card chosen, so it ca
 * Over USB, in Linux, the unit is `MU300LINUX-324950664950-2128e853` on the computer's adb list; a second F50 cloned
   from the same unit shows `MU300LINUX-324950664950-203d8329`, and in Android both would be `324950664950`. A
   resume on one computer with both in Android cannot tell them apart by serial; the eMMC CID in the transaction does.
+### 90. The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection
+
+`mobile-data watch` asks `AT+CGACT?` every 30 s and reconnects after two rounds without our context active. Before
+this change the test was `at "AT+CGACT?" | grep -q "+CGACT:1,1"`, so a round in which the modem gave no final
+result code within 4 s, the client lock was busy, or the answer was `ERROR` counted exactly like a context the
+network had taken down: two such rounds and the watchdog ran `up` (Ubuntu) or `ifup wan` (OpenWrt), which tears
+down the bearer that was still carrying traffic. Nothing measured shows it happening on our boards; the case is
+read from the code. It is the situation kanoqwq describes for a device on the move in clean-tf-7.2 `3cbf37fc`
+("fix: improve cellular mobility"): AT owners can be busy while the modem moves between cells, and a timeout is
+not a detach.
+
+**Taken from 3cbf37fc:** the distinction itself - only an answer is evidence. **Changed:**
+
+* His watchdog never escalates a silent modem and also treats "OK with no line for the context" as unknown. Ours
+  keeps both of the old repairs: "OK" with `<cid>,0` or with no line for the context at all (what a firmware
+  reset leaves, the reason the watchdog exists) is *inactive* and reconnects in two rounds as before; and a modem
+  that stays silent for `MU300_WATCH_UNKNOWN_ROUNDS` rounds (4: about two minutes when every command fails
+  at once, about 4.5 minutes when the daemon hangs, measured below) goes the old way (radio check,
+  then a reconnect a round later), so a channel that only a radio-on would wake up is still woken. An answer in
+  between starts the count over.
+* Not taken: his switch of the radio only on an explicit `+CFUN: 0` (`radio_on` reads `AT+CFUN?` itself and does
+  nothing to a radio that is on, so the old check costs a handshake, not a connection), and his `ubus ... renew`
+  for an active context whose address changed: here only the relay monitor (`mu300cell-v6.sh`, relay mode) acts
+  on a renew; in every other mode nothing would, so a changed address keeps the measured reconnect.
+
+`watch_context` returns `active`, `inactive` or `unknown`; `+CGACT: 1,1` with a space and a CR are read too, and
+`+CGACT:11,1` or `1,10` are not taken for context 1. Unit tests: `tests/test_device_scripts.py`
+(`MobileData.test_watch_context_states`, `..._leaves_the_bearer_alone_while_the_modem_does_not_answer`,
+`..._still_reconnects_a_modem_that_stays_silent`, `..._an_answer_between_silent_rounds_starts_the_count_over`,
+`..._an_answered_lost_context_still_reconnects_in_two_rounds`).
+
+**Measured on the U30 Air** (openwrt-luci v2026.10.27, kernel 6.18.56, SIM1, relay mode, the owner's VPN with its
+kill switch on; 2026-10-15), with this branch's `mobile-data` in place of the release's:
+
+* **No log on OpenWrt at all.** procd kept none of the watchdog's stderr (`mu300-post`'s `cellwatch` instance had
+  no `procd_set_param stderr 1`, which every other long-running instance of ours has), so "mobile data lost ...
+  reconnecting" never reached `logread` - not with this change, not before it. The device run below used a
+  watchdog started by hand with its stderr in a file; the instance now sets `stderr 1`
+  (`MobileData.test_the_openwrt_watchdog_logs`).
+* **A silent channel.** The nr2 daemon (`MU300_AT_DIR=/run/mu300-at2`) stopped with `SIGSTOP` for 80, 85, 165 and
+  200 s: no reconnect, the bearer's address unchanged, nothing in the log. One unanswered command takes about 35 s,
+  not the 4 s asked for: `mu300-at -t 4` waits for a daemon that does not take the command off its fifo (measured:
+  "no answer from the daemon" after 35 s, an answered `AT+CGACT?` in under 1 s). So a round of a silent channel is
+  about 65 s, and the four rounds before the old repair take about **4.5 minutes**, not two. Stopped for 290 s:
+  `no answer about the data context for 4 rounds`, then the radio check (`radio was off, switching it on`: the
+  silent channel did not answer `AT+CFUN?` either), and the next round, answered again, started the count over -
+  no redial.
+* **A lost context** (`AT+CGACT=0,1` on the panel's channel nr6): `mobile data lost (modem reset or detached),
+  reconnecting` 58 s later, `ifup wan`, the same address back, data through the tunnel again.
+* **Airplane** (`AT+CFUN=0` on nr6): `radio was off, switching it on`, then reconnects - but on this U30 Air (dual
+  SIM managed, FINDINGS 74) `+CFUN: 1` came back with the SIM's power off (`AT+CPIN?` `+CME ERROR: 10`, `+CEREG:
+  2,8`, emergency only), and every attach failed ("not registered on the network") until `AT+SPACTCARD=0;+SFUN=2`
+  and `AT+SFUN=4` by hand. `radio_on` returns early when `/run/mu300/sim-managed` exists, so the watchdog's repair
+  cannot power a card back on there. Unchanged code (`radio_on` is the release's); left for the dual-SIM work.
+* Not this change, seen on the way: on Ubuntu (F50), stopping the watchdog logs `wlock: unbound variable` (the
+  `EXIT`/`TERM` trap names a `local` of `watch()`); on OpenWrt a `TERM` is caught by that trap and the watchdog runs
+  on without its lock. Both are the release's.
+
+Device checklist (either board, either system):
+
+    # 1. normal: data up, then watch the log for five minutes - no "reconnecting"
+    logread -f | grep mobile-data     # OpenWrt (with stderr 1);  journalctl -fu mu300-mobile-data-watch  on Ubuntu
+    # 2. a silent channel: kill -STOP the nr2 daemon (MU300_AT_DIR=/run/mu300-at2 in its environment), kill -CONT it
+    #    after under 4 min - no reconnect, the address unchanged; after 5 min the radio check, as above
+    # 3. a lost context: AT+CGACT=0,1 on the panel's AT terminal - "mobile data lost ... reconnecting" within ~60 s,
+    #    data back as before
+    # 4. airplane: AT+CFUN=0 - "radio was off, switching it on" and data back, as before
+### 91. The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst
+
+`mu300cell-v6.sh` is relay mode's event monitor (openwrt-luci, `option ipv6 'relay'`): it reports the RA's IPv6
+to netifd and, on a `+CGEV`, reads `AT+CGCONTRDP=1` once and moves the bearer's IPv4 address and DNS in place,
+without a redial. kanoqwq reworked his copy for mobility in clean-tf-7.2 `3cbf37fc`; comparing it with ours showed
+one defect his commit does not name and three he does. All four are read from the code; none was seen on a device.
+
+* **The wrong card (ours alone).** The monitor read the bearer on `/run/mu300-at6`, `at7`, `at` and the URCs from
+  `/run/mu300-at/urc/stty_nr<slot*3>.log`, whatever the card. In a dual-SIM boot on SIM2 (`/run/mu300-radio-freeze`,
+  FINDINGS 74) `/run/mu300-at` is SIM1's nr1 and SIM2's owner is `/run/mu300-at4`, whose URC log is
+  `/run/mu300-at4/urc/stty_nr3.log`. So the monitor asked SIM1 (radio off: no bearer, "keeping the last state")
+  and waited for a log that never appears: on SIM2, an address change was never followed, and the watchdog's
+  reconnect was the only repair. It now picks the channels and the log the way `mobile-data` and the panel's
+  collector do: SIM1 nr6/nr7/nr1 and `stty_nr0.log`; SIM2 pinned at boot `/run/mu300-at` (its nr4 then) and
+  `stty_nr3.log` there; SIM2 in a dual-SIM boot `/run/mu300-at4`. A slot `mu300-sim` cannot name ends the monitor.
+  No `AT+SPACTCARD=` prefix is added: each of these channels already belongs to the card it is used for.
+* **What is believed (from 3cbf37fc).** The address must be four 0-255 parts without leading zeros and not
+  `0.0.0.0`, the mask contiguous (the old `mask2prefix` turned anything unknown into /32), CR and blanks are
+  removed, and a DNS of `0.0.0.0` (no second server) or one that is not an address is left out. Nothing else of
+  the answer reaches `ip` or netifd.
+* **A failed install keeps the old snapshot (from 3cbf37fc).** The new address and the route go in first; when
+  one fails, the previous address/DNS stay the monitor's state, nothing is reported, and the next hint or renew
+  tries again (before, the new values were taken as current and the next read said "unchanged"). The old address
+  goes only after the new one holds, and then the new one is put in once more (the old primary takes a secondary
+  of its subnet with it: no `promote_secondaries`, as in `mu300cell.sh`'s setup). An unchanged bearer whose
+  address the kernel lost is put back.
+* **Hints (from 3cbf37fc).** `+CGEV` ACT/DEACT (the short `NW ACT` forms) and DETACH and Unisoc's `+SPPCODATA`
+  now ask for a read besides PDN and MODIFY. A hint in the 2 s after a read used to be dropped - possibly the last
+  of a burst, the one after which the new address is readable; it now waits out the rest of the 2 s. One queued
+  read covers a burst: the producer sends a hint only when it creates `/run/mu300cell-<config>.events.pdp` (a
+  directory: `mkdir` is atomic and never follows a symlink), the reader removes it just before its AT read.
+
+**Not taken from 3cbf37fc:** the monitor for an IPv4-only context (relay mode is dual-stack only here; an IPv4-only
+bearer keeps the watchdog's measured reconnect), the exit to netifd after three readings of an inactive context
+(the watchdog owns that repair: FINDINGS 90), `proto_set_keep 0`, and his watchdog's `ubus ... renew`.
+
+Unit tests: `tests/test_mu300cell.py` class `RelayMonitorBearer` (the monitor sourced with `MU300CELL_V6_LIB=1`):
+the channels and log per slot and dual-SIM state, `mask2prefix`, `valid_ipv4`, `read_bearer`, add-before-delete,
+failure and retry, the lost kernel address, the hint patterns. Under dash and bash locally, busybox sh in CI.
+
+**Measured on the U30 Air** (openwrt-luci v2026.10.27, kernel 6.18.56, SIM1, `option ipv6 'relay'`, 2026-10-15),
+this branch's monitor in place of the release's and `ifup wan` to start it:
+
+* The monitor tails `/run/mu300-at/urc/stty_nr0.log`. `ubus call network.interface.wan renew`: `manual-renew:
+  bearer unchanged`. `ip -4 addr flush dev sipa_eth0 scope global` and a renew: `manual-renew: bearer updated to
+  <the same address>/8`, the address and the default route back, no ifdown, no redial.
+* **The checklist's `AT+CGACT` cycle on the panel's terminal does not reach the monitor**, on this branch or the
+  release's: the `+CGEV: ME PDN DEACT/ACT` of a command sent on nr6 are answered on nr6 only (they came back with
+  the command's own reply) and never reach nr0's URC log, which only has what the modem announces there. So the
+  hint path was driven by appending lines to that log: six hints at once (`NW PDN DEACT`, `NW DETACH`, `NW PDN
+  ACT`, `+SPPCODATA`, `NW MODIFY`, `ME PDN ACT 1,0`) gave one read (`cgev: bearer unchanged`); a hint and another
+  2 s later gave two reads, 2 and 5 s after the first (the release's monitor drops the second); lines that are not
+  hints, none.
+* **SIM2 not run as a boot:** this unit's second card registers for emergency service only (§74), so a boot on it
+  has no bearer, `mu300cell` never connects and the monitor never starts. The choice of channels and log was run
+  under the device's own busybox sh instead (a copy of the monitor, `mu300-sim` stubbed, the freeze flag a file):
+  slot 0 `/run/mu300-at6 /run/mu300-at7 /run/mu300-at` + `stty_nr0.log` with or without the flag; slot 1 without it
+  `/run/mu300-at` + `stty_nr3.log`; slot 1 with it `/run/mu300-at4` + `/run/mu300-at4/urc/stty_nr3.log`.
+* Seen on the way, not this change: after the WAN was redialled several times by these tests, the VPN's sing-box
+  logged `network: missing default interface` and stayed without an exit until `/etc/init.d/mu300-vpn restart`.
+
+Device checklist (openwrt-luci, relay mode):
+
+    # 1. F50 or U30 Air on SIM1: the monitor runs and follows a change
+    ps w | grep [m]u300cell-v6; logread -f | grep mu300cell-renew
+    #    a network-side change (or URC lines appended to /run/mu300-at/urc/stty_nr0.log): one "bearer updated"/
+    #    "unchanged" line per burst, no ifdown. AT+CGACT on the panel's terminal (nr6) is answered on nr6 only.
+    ubus call network.interface.wan renew        # "manual-renew: bearer unchanged"
+    # 2. U30 Air, a dual-SIM boot on SIM2: the monitor's tail is on /run/mu300-at4/urc/stty_nr3.log and its reads
+    #    go to /run/mu300-at4 (ps w | grep 'tail -n 0 -F'); the same AT+CGACT cycle on SIM2
+    # 3. a lost address: ip -4 addr flush dev sipa_eth0 scope global; ubus call network.interface.wan renew
+    #    - the address is back without a redial
+### 92. Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken
+
+kanoqwq's clean-tf-7.2 `3cbf37fc` brought two Wi-Fi changes from his T551M work to the SC2355 driver. Both were
+compared with our `upstream/modules/sprd_wlan_combo` (the mainline kernels' module) and with what our bridge does.
+
+**Taken: per-frame logs bounded.** In AP mode the TX path wrote, for every frame, `pr_info("... group
+lut_index=...")` when a group-addressed frame found its LUT entry (every broadcast and multicast frame sent), and
+`pr_err("... sta disconn, no data tx!")` for each frame still queued for a client that has left; every frame
+`sprd_send_data` refused was `netdev_err(... drop msg due to TX Err)` on top. The first two are now
+`pr_debug_ratelimited` (as the module's other per-frame lines already are, `pcie.c` `free_num`, `tx.c` "no
+credit"), the third is under `net_ratelimit()`. Nothing else changes: the frame is still refused with `-EPERM`,
+still freed with its message (`dev_kfree_skb`, `sprd_chip_free_msg`), the same return values. Both `pcie.c` and
+`sdio.c` (only the PCIe path runs on the F50 and the U30 Air). Not measured: how much of the kernel log these lines
+filled on our boards (no report of it); kanoqwq's concern is the CPU a burst of them costs when a busy client
+drops off. The 5.4 driver (`kernel/patches/wlan_combo-*`) is not changed here: his 5.4 patch was written against
+the realme source, which is not in this repository to check that it applies, and a hunk that fails stops the
+release build.
+
+**Not taken: the AP/GO multicast "endian fix".** In `sc2355/rx.c` the AP's receive path compares `eth->h_proto`
+(big endian) with `ETH_P_IP`/`ETH_P_IPV6` (host order), so on this CPU the "not IP" test is always true and every
+group frame a client sends is copied back to the BSS by the driver *and* handed to the stack. His fix (`htons()`)
+makes IP multicast go to the stack only. That is a behaviour change, not a bug fix, for us: a Linux bridge never
+sends a frame back out of the port it came from unless that port has hairpin mode, and nothing in this tree sets
+hairpin on `wlan0`. Without the driver's copy, mDNS, SSDP, LLMNR, IPv4 broadcasts and IPv6 ND multicast from one
+Wi-Fi client would no longer reach the other clients of the same radio (a phone casting to a TV on the same
+hotspot). Where hairpin *is* on (OpenWrt's netifd turns it on for a wireless port with `multicast_to_unicast`), the
+present code gives a duplicate, which is harmless for these protocols. A comment at the branch says so, so it is
+not "fixed" blindly. Measure before changing it:
+
+    cat /sys/class/net/wlan0/brport/hairpin_mode /sys/class/net/wlan0/brport/multicast_to_unicast 2>/dev/null
+    # two phones on the same band: mDNS between them (e.g. a Chromecast/AirPlay target, or `avahi-browse -a`),
+    # tcpdump -ni wlan0 udp port 5353 on the device: one copy or two per query
+
+Device checklist for the taken part (either board, 6.18 or 7.2):
+
+    dmesg -C; # a busy client (a download) on Wi-Fi, then switch its Wi-Fi off
+    dmesg | grep -c 'sta disconn'              # 0 (debug only) - before: one line per queued frame
+    dmesg | grep -c 'group lut_index'          # 0 - before: one line per broadcast/multicast frame
+    echo 'module sprd_wlan_combo +p' > /sys/kernel/debug/dynamic_debug/control   # the lines are there, bounded
+    # the hotspot keeps working: a second client, ping and a download
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches): the F50 on Ubuntu 24.04 with 7.2.10, the U30 Air on openwrt-luci with 6.18.56, a MacBook on the 5 GHz
+hotspot (802.11ac, 80 MHz) as the client; against the release kernels of v2026.10.27 on the same devices. The
+device sent to the Mac (bash `/dev/tcp`) and the Mac's Wi-Fi was switched off 4 s into it; the log then:
+
+| | release kernel | test kernel |
+|---|---|---|
+| F50, `sta disconn, no data tx!` | 13 (error level, one per frame) | 0 |
+| F50, `drop msg due to TX Err` | 13 | 12, with `net_ratelimit: 1 callbacks suppressed` |
+| U30 Air, the same two | 10 and 10 | 0 and 12 (rate limited) |
+| `group lut_index` | 0 | 0 |
+
+`group lut_index` never appeared in any run on either kernel, so the first of the three lines is not one our
+boards write in these tests. The hotspot carried on as before: TX to the Mac 300-590 Mbit/s on the F50 and 210-500
+on the U30 Air on both kernels (two clusters, about 320 and 570, on both: the Mac, not the kernel), 6 GiB in one
+stream at 594 Mbit/s on the F50, IPv6 multicast (`ping ff02::1`) answered by the Mac over Wi-Fi. The hairpin
+measurement above needs two Wi-Fi clients and was not made.
+### 93. sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command
+
+Mainline `drivers/mmc/host/sdhci-sprd.c` (both of our mainline kernels; the eMMC and the SD card slot) overrides
+the SDHCI register accessors to handle its reserved registers - `SDHCI_MAX_CURRENT`, the read-only
+`SDHCI_BLOCK_COUNT`, the interrupt mask, the hardware-reset bit - and then does the access with `readl_relaxed`,
+`writel_relaxed`, `writew_relaxed`, `writeb_relaxed`. The SDHCI core relies on its accessors being the ordered
+ones: it writes the ADMA descriptor table into DMA memory and then starts the transfer with a register write
+(`SDHCI_COMMAND`, through `writew`). A relaxed MMIO write is not ordered after earlier stores to memory (Linux's
+"device-io" rules; on arm64 `writel` is `__iowmb()` and then the store), so the controller can be told to fetch a
+descriptor whose last store is not yet visible to it - a transfer from or to the wrong place. The vendor's 5.4
+driver is not changed here (its source is fetched at build time and has not been read for this).
+
+kanoqwq found this in clean-tf-7.2 `0438ab01` while chasing ext4 corruption on other Unisoc boards, and his
+evidence is from there, not from ours: on an E5 (his other project), a directory block held the complete content of
+an inode-table block, and file writes logged `mmc0: ADMA error: 0x02000002` with no CRC errors; after the change,
+896 MiB written and read back with `O_DIRECT`, 3584 metadata updates and two offline `e2fsck -fn` were clean, at
+HS400 with runtime PM on. He says himself that it is not proven to be the only cause. **We have no report of
+corruption on an F50 or a U30 Air** (FINDINGS has none), so this is taken as the correct ordering by the kernel's
+own rules, not as the fix of a symptom of ours.
+
+**Taken:** the four accessors' final access becomes `readl`/`writel`/`writew`/`writeb`; every special case stays
+(the reset bit's read in `writeb` keeps its relaxed read: it orders nothing against DMA memory, and the write after
+it is the ordered one). **Changed:** his edit lives in his `emmc.py`; here it is `upstream/port/sdhci_order.py`,
+called from `install.py` next to the other sdhci-sprd edits, idempotent, and the port stops (`port: ...`) when the
+four lines are not exactly where they were - a kernel that changes them must be looked at again, as with the
+other anchors. Not taken: his 5.4 patch (`kernel/patches/sdhci-sprd-dma-ordering.patch`), his eMMC power and
+reliable-write changes (V50-specific, unproven by his own account), his CI C check.
+
+Cost: one barrier (`dmb oshst` / `dmb oshld`) per register access of these two hosts; a transfer takes a handful.
+Not measured.
+
+**Unit tests:** `tests/test_sdhci_order.py` against a copy of mainline's accessor block (the edit, the kept special
+cases, idempotence, a changed driver stops the port). The real tree is checked by the Mainline kernel build
+workflow, dispatched on the branch. **Not run on a device. Hold the merge for a soak on each board:**
+
+    # on the new kernel (both boards; 6.18 and 7.2)
+    dmesg | grep -iE 'mmc[01]|ADMA|EXT4-fs (error|warning)'      # nothing new; HS400 as before:
+    cat /sys/kernel/debug/mmc0/ios                                # timing spec: mmc HS400 enhanced strobe
+    # throughput, before and after (same board, same free space): within noise
+    dd if=/dev/zero of=/var/tmp/t bs=1M count=512 oflag=direct; dd if=/var/tmp/t of=/dev/null bs=1M iflag=direct
+    # a soak: write/verify a few GiB, reboot ten times, e2fsck -fn on the root from Android or the initramfs
+    # the SD card slot (FINDINGS 31j-31l): a card is seen, mounted, read and written; hot-plug still detected
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches), against the release kernels of v2026.10.27 on the same devices:
+
+* **F50, Ubuntu 24.04, 7.2.10.** `mmc0` HS400 enhanced strobe at 200 MHz, as before. 3 GiB of random data in
+  twelve files on the root filesystem (a loop over `mmcblk0` at the Linux region's offset, so every write goes to
+  the eMMC), checksums, read back uncached: all right after writing and after each of five boots of the test kernel
+  and one of the release kernel. `dumpe2fs`: clean. Then from Android, `e2fsck -fn` of the region through a
+  read-only loop: no error (12318 files). No ADMA error, no `EXT4-fs error`, no I/O error in any boot.
+* **U30 Air, openwrt-luci, 6.18.56.** HS400 enhanced strobe. The same 3 GiB soak on the Linux disk, checked after
+  writing, after each of three boots of the test kernel and after the release kernel's boot: all right;
+  `errors_count` 0.
+* **Throughput** (256 MiB `dd` with `oflag=direct`/`iflag=direct` on the F50, three runs each; 1 GiB on the U30 Air
+  in whole seconds): F50 file writes 179-195 MB/s on the test kernel and 189-217 on the release (the same spread
+  on both when repeated), file reads 272-302 and 269-317, the raw `mmcblk0` read 264-267 and 203-264; U30 Air 1 GiB
+  raw read 3-4 s, write with `fsync` 4 s, read back 3-4 s on both. No difference beyond the spread of runs.
+* **The empty SD slot** (`mmc1`, F50): in one of the seven boots of the test kernel the probe's one rescan logged
+  `Got command interrupt 0x00000001 even though no command operation was in progress` with a register dump (`Cmd
+  0x371a`, CMD55; §31j has the cause); none in the four boots of the release kernel this session. Too few boots to
+  tell a difference, and it is the slot without a card, not a transfer.
+* **Not tested:** a card in the slot and hot-plug (none here; the U30 Air has no slot).
+### 100. `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch
+
+From kanoqwq's clean-tf-7.2 `1f8f03fb` ("misc-only trial boot, protect switch flow"): his desktop installer's
+"Boot OpenWrt once" changes the 32-byte `bootloader_control` block in misc and nothing else, and says so. Our Magisk
+switch (`mu300-linux`, `switch.sh`) already works that way: it never mounts the Linux disk and never touches its
+`default-boot`. The Linux side did not, which an earlier review of ours had flagged:
+
+* **The file before misc.** `mu300-next-boot android|linux|lock` wrote `/etc/mu300/default-boot` first and misc
+  second. The initramfs reads that file (§ default boot, `boot/init`): `linux` makes it skip restoring Android's
+  slot. A misc write that failed (or read back wrong) left the file saying what misc did not.
+* **No lock.** `mu300-boot-ok.service` runs `--rearm` at every boot: it reads the file, then writes the Linux slot's
+  block. A `mu300-next-boot android` (the panel's Switch to Android, a shell) between the read and the write was
+  overwritten by the re-arm: the next boot went to Linux again, with the file saying `android` (the initramfs then
+  restores Android's slot, so the boot after that one was Android: one boot late, never stranded).
+
+Changed (ours; nothing of his code, his change was to his desktop installer only):
+
+* The file is written only after misc has been written and read back (`write_bc`; `PENDING_CONF` names the word
+  that goes with the block). A failed `dd` now says `writing misc failed` instead of ending silently under `set -e`.
+  The degraded arm of §32 (the initramfs' one-shot block, exit 1) still records `linux`, as before: misc was written.
+* The file is written whole and never through a symlink: a new file next to it (`umask 022`, `set -C`), renamed
+  over it.
+* Every command but `status` holds `flock` on `/run/mu300/next-boot.lock` (fd 9) from its first read to its last
+  write, waiting up to 60 s (`MU300_NEXT_BOOT_WAIT`) and then failing without writing anything. Without `flock(1)`
+  (or without `/run/mu300`), or where the lock file is a symlink, nothing is serialised, as before. Ubuntu has
+  util-linux's, OpenWrt busybox's applet.
+
+**Bootability.** Every failure path leaves misc as LK last saw it or as it was verified, and the file as it was: a
+failed `android` leaves Linux armed (the countdown or the next re-arm as before); a failed `linux` leaves the trial
+mode, whose fallback is Android. A file that cannot be written after misc was is reported (exit 1): for `android`
+misc already points at Android; for `linux` the initramfs keeps restoring Android's slot (one-shot trial). A lock
+that is never released (a hung `mu300-next-boot`) costs one boot's re-arm; the slot still has its remaining tries.
+
+**Unit tests** (`tests/test_device_scripts.py`
+`NextBoot`): misc unwritable or the Android block missing, the file untouched; the file through a symlink; the
+degraded arm; a stub `flock` that stays busy (refused after the wait, misc and the file untouched; `status` never
+waits; a symlinked lock file not opened); and the real `flock(1)` holding off a second writer (Linux only; run in
+the `mu300-unit` container).
+
+**Measured on both boards** (2026-10-15), this branch's `mu300-next-boot` in place of the release's: the F50 on
+Ubuntu 24.04 (util-linux `flock`), the U30 Air on openwrt-luci (busybox `flock`), both v2026.10.27, and boots of
+the release and of a test kernel:
+
+* `android`, then `linux`: the file says `android`/`linux` after each, misc `...9f001e...` (Android's block) and
+  `...9e006f...` (slot b, tries 6) read back; no `.default-boot.*` left; `/run/mu300/next-boot.lock` there, root's.
+* **The lock.** `flock /run/mu300/next-boot.lock sleep 10` held, then `android`: went through after 9 s. Held for
+  100 s with `MU300_NEXT_BOOT_WAIT=5`: `another mu300-next-boot is still running`, exit 1 after 4 s, misc and the
+  file as they were (`android`); `status` did not wait. The same on both boards.
+* **The re-arm at boot** (F50: `mu300-boot-ok`, after its 30 s): with the lock held from 20 s into the boot until
+  45 s, the service finished at 48 s with `slot b armed: 5 failed boot(s)` (tries back to 6). On the U30 Air
+  (`mu300-post`'s `bootok`) the re-arm left `boots since the last good one: 0` and tries 6 after each of three boots; the F50
+  came back to Linux at each of its nine boots under this script.
+* `mu300-update kernel` (which runs `--trial`) under this script on both boards, then the boot of that kernel: armed
+  and re-armed as before.
+* F50: `mu300-next-boot android` and a reboot: Android; the Magisk switch back: Linux (`android` in the file, the
+  initramfs restored Android's block: the one-shot trial); `mu300-next-boot linux` made Linux the default again.
+* Small things: the wait is `MU300_NEXT_BOOT_WAIT` minus one seconds (59 by default, 4 for 5); the renamed file
+  loses the SELinux label the old one carried on the F50 (`ls -l` showed `-rw-r--r--.` before, no dot after), which
+  nothing reads on Linux.
+
+**Device checklist (before merge; F50 or U30 Air, Ubuntu and OpenWrt, any kernel):**
+
+    sudo mu300-next-boot status                       # note the misc block
+    sudo mu300-next-boot android; cat /etc/mu300/default-boot   # android; status shows Android's block
+    sudo mu300-next-boot linux;   cat /etc/mu300/default-boot   # linux; slot armed (tries N+1)
+    ls -l /etc/mu300/default-boot /run/mu300/next-boot.lock     # a regular file, root's; the lock file exists
+    # the race: hold the lock and switch; the switch waits, then goes through
+    sudo flock /run/mu300/next-boot.lock sleep 10 & sleep 1; time sudo mu300-next-boot android   # ~9 s
+    sudo mu300-next-boot linux; sudo reboot           # comes back to Linux; systemctl status mu300-boot-ok: success
+    # OpenWrt: the panel's Switch to Android, then reboot: Android; mu300-linux from Android: Linux again
+### 101. The Magisk switch built its misc block under a fixed name in the adb shell user's directory
+
+Found while comparing our switch with kanoqwq's clean-tf-7.2 `1f8f03fb` (his one-time boot changes misc only; ours
+does too, §100), and narrowed by a security review of the first version of this fix. `mu300-linux`
+(`android/magisk/mu300-linux-switch/switch.sh`, run as root) wrote the 32-byte block to
+`${TMPDIR:-/data/local/tmp}/mu300-bc.bin`, checked its size, then `dd`'d it into misc. `/data/local/tmp` belongs to
+the adb `shell` user (2000, mode 0771, no sticky bit): that user, without root, could plant `mu300-bc.bin` as a
+symlink (root's `printf >` follows it and overwrites the target) or replace the file between the size check and
+`dd` (and so choose the bytes that go into misc; the read-back then fails, with misc already changed). A private
+`mktemp -d` directory there (the first version) is not enough: without the sticky bit the shell user can rename it
+away and put a directory of their own in its place between `mktemp` and the write. Apps cannot write there; the
+user at the adb shell can, and on a device where Magisk grants root only to chosen apps that is less than root.
+
+Changed:
+
+* **No file on the way.** The 64 hex digits are checked (hex only), the bytes `printf` makes are counted (32), and
+  `printf` goes straight into `dd ... bs=1 count=32 conv=notrunc`. Nothing is created in any directory.
+* **misc resolved once.** `by-name/misc` is followed once (`readlink -f`); the result has to be a block device under
+  `/dev/block` whose sysfs entry (`/sys/class/block/<name>/uevent`, written by nobody but the kernel) says
+  `PARTNAME=misc`. That one path is read (the live block), written and read back. A link that leads anywhere else
+  (another partition, a file) is refused before anything is written. (`MU300_SYSFS`, tests only, stands for `/sys`
+  and lets a regular file stand for the device.)
+
+**Bootability:** unchanged when misc is what by-name says: the same block, written and read back as before; every
+refusal exits before `dd`, and misc stays as it was (Android boots).
+
+**Unit tests:** `tests/test_magisk_switch.py` (real, non-dry runs against files standing in for
+the partitions): a symlink planted at the old name (it and its target untouched, nothing new in `TMPDIR`, the block
+in misc, 4096 bytes still); `by-name/misc` a link to a partition sysfs calls `boot_a`, then one with no sysfs entry
+(refused, the target unchanged), then one sysfs calls `misc` (written there, through the link resolved once);
+without the test switch, a regular file is refused (`outside /dev/block`). `test_android_web.BootLinux` gives its
+fake device the sysfs entry. Run in the `mu300-unit` container (busybox, as root).
+
+**Device checklist (before merge; Android with Magisk, Linux installed):**
+
+    su -c 'readlink -f /dev/block/by-name/misc; grep PARTNAME /sys/class/block/$(basename $(readlink -f /dev/block/by-name/misc))/uevent'
+    # PARTNAME=misc - if not, this change refuses to switch on that device: report it
+    su -c 'mu300-linux --dry-run'        # the block; nothing written
+    # the Action button or su -c mu300-linux: reboots into Linux; ls /data/local/tmp has nothing new
+    # the web installer's "Boot Linux" (android-web.sh boot-linux) the same
+
+**Measured on the F50** (Android with Magisk, the module of v2026.10.27 with this branch's `switch.sh`, 2026-10-15):
+
+* `by-name/misc` -> `/dev/block/mmcblk0p3`, whose `uevent` says `PARTNAME=misc`. The U30 Air was not taken to
+  Android (it cannot be brought back from there without a hand on it); under Linux its `mmcblk0p3` is `misc` too
+  (`/sys/class/block/mmcblk0p3/uevent`, the same GPT), as on the F50 under Linux.
+* `--dry-run` under Android's `sh` (the Magisk path) and under Magisk's busybox with `ASH_STANDALONE=1` (the web
+  installer's): the same block (`...9e002f...`, slot b with one try), nothing written. The web installer's own entry,
+  `android-web.sh boot-linux dry` with this `switch.sh` in its stage: the same.
+* With `MU300_BY_NAME` pointing at a directory of links: `misc` -> the `boot_a` partition: refused (`/dev/block/
+  mmcblk0p37 is not the misc partition (sysfs PARTNAME)`); `misc` -> a regular file: refused (`misc resolves
+  outside /dev/block`); `misc` -> `/dev/block/by-name/misc` (a second link): taken.
+* The real switch, `su -c mu300-linux`: `slot b armed for one boot`, rebooted into Linux; no `mu300-bc.bin` in
+  `/data/local/tmp`. The initramfs then restored Android's block, as for every one-shot trial.
+### 102. Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry
+
+From kanoqwq's clean-tf-7.2 `149c9d2a` ("preserve TX retries"), checked against our `upstream/modules/sprd_modem/
+sipa_v3` (mainline kernels' modem stack; the 5.4 build uses the vendor tree and is not changed). Three defects in
+`sipa_eth_start_xmit()`, the transmit function of the `sipa_eth` interfaces that carry mobile data:
+
+* **Every retry one more header.** The device is raw IP: a packet arrives with `mac_header == network_header`, and
+  the function `skb_push`es 14 bytes for the IPA's Ethernet framing. When the IPA's send FIFO is full,
+  `sipa_nic_tx()` returns `-EAGAIN` and keeps nothing (`sipa_skb_sender_send_data()` unmaps and returns without
+  taking the skb), and the function returns `NETDEV_TX_BUSY`: the qdisc sends the same skb again later. The push
+  does not move `mac_header`, so the test is true again and every retry pushed another 14 bytes in front of the
+  packet: what finally went out was the packet behind 14·(retries+1) bytes of stale header. For a
+  `CHECKSUM_PARTIAL` TCP/UDP packet the checksum field (the pseudo-header seed) had also been zeroed for the IPA,
+  and stayed zero for the retry.
+* **The IRQ flags in one static variable.** `spin_lock_irqsave(&queue_lock, queue_lock_flags)` with a file-scope
+  `queue_lock_flags`, shared by the TX path and the flow-control wake-up on every CPU: a second CPU taking the lock
+  overwrites the holder's saved interrupt state, and the holder then restores the other CPU's.
+* **A freed skb reported as not sent.** When `skb_linearize()` fails the skb is freed and the function returned the
+  `-ENOMEM` as its `netdev_tx_t`, which the stack does not take as "consumed".
+
+Changed (ours, the same three fixes as his): the push is undone and the seed put back before `NETDEV_TX_BUSY`; the
+flags are a local of each function; a failed linearize returns `NETDEV_TX_OK`. The "fail to send" line is rate
+limited (it fires on every retry under backpressure). Not taken from the same commit here: his Wi-Fi changes (§103),
+and nothing about `sipa overflow ... err=2`, which his own notes leave unexplained.
+
+**When it bites:** whenever `sipa_nic_tx()` says busy. Read from the code this was a full IPA FIFO only, but on
+the devices it is above all **the IPA's resume**: the resource manager answers `-EINPROGRESS` (`sipa_nic_rm_res_
+request()`, before anything is sent: the skb is not taken either) for the first packet after the IPA went to
+sleep. Measured on the F50 (7.2.10): after 25 s without traffic, every first packet met it (`sipa_eth: fail to
+send, ret -115`, six rounds out of six, on the release kernel and on this one); the U30 Air (6.18.56) logged the
+same at boot. A packet retried this way was sent behind the stale header on the release kernel.
+
+**Measured:** built for 7.2.10 and 6.18.56 (`sipa_eth.ko`, no new warnings; built from a copy against the
+`mu300-mainline` volume's trees). `tests/test_sipa_eth_xmit.py` compiles the function from the source with
+stand-ins for the kernel calls (ASan/UBSan where the compiler has them): 1, 3 and 50 busy answers in a row, then
+the packet goes out with exactly one header (54 bytes for 40), unchanged between retries, the seed back, the lock
+released; a failed linearize says `NETDEV_TX_OK` with the skb freed. The previous source does not compile in the
+harness (the static flags), so the test is no negative control of the retry itself. Nothing run on a device.
+
+**Device checklist (before merge; F50 or U30 Air, 6.18 or 7.2, mobile data up):**
+
+    iperf3 -c <server> -t 60 -P 8                    # uplink as hard as the link goes (or a large upload)
+    dmesg | grep -c 'fail to send'                   # retries happened (rate-limited lines) - the case under test
+    # TCP throughput is not worse than before; ping -s 1400 and a download keep working; no oops in dmesg;
+    # ip -s link show sipa_eth0: tx_errors counts the busy answers, no climbing tx_dropped
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches): the F50 (Ubuntu 24.04, 7.2.10) and the U30 Air (openwrt-luci, 6.18.56, the owner's VPN over it), against
+the v2026.10.27 kernels:
+
+* **The first packet after an idle period:** six rounds of 25 s without traffic, then one `ping -I sipa_eth0
+  1.1.1.1`: every round one busy answer (`ret -115`, the IPA resuming) and the ping answered, 6/6 on this kernel and
+  6/6 on the release kernel. So the device did not show the stale header doing harm: either the retried packet
+  survives it somewhere between the IPA and the network, or the busy answer met another packet than the ping. The
+  fix stays what the netdev contract asks (a `NETDEV_TX_BUSY` skb comes back unchanged); no measurement here proves
+  a user-visible effect of the old behaviour.
+* **Uplink under load:** eight parallel uploads (12 MiB each) over the F50's mobile data: `tx_errors` +1 (one busy
+  answer, `fail to send` logged once), no `tx_dropped`, no oops; `ping -s 1400` and a download worked after it.
+  The SIM was throttled to about 1.9 Mbit/s in both directions by then, so throughput says little: an A/B in the
+  same conditions (the release's `sipa_eth.ko` loaded into the test kernel, then this one) gave the same speeds and
+  retransmissions. Unloading and loading `sipa_eth` a second time restarted the F50 (the vendor module is not made
+  to be reloaded; its first reload had already logged `probe ... failed with error -17`): not a test to repeat.
+* The U30 Air carried its VPN over this kernel for three boots; the F50 had mobile data in all of its seven.
+### 103. Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure
+
+From kanoqwq's clean-tf-7.2 `149c9d2a`. His notes (`docs/WIFI-TX-RETRY-20261015.zh-CN.md` there) are measurements on
+an F50 with OpenWrt 25.12.5 and 7.2.8, with kprobes on the command path; our `upstream/modules/sprd_wlan_combo`
+and `wcn_bsp` have the same code at each point. Ported in our own words; his tests, docs and his 5.4 patches not
+taken (the 5.4 driver is built from `kernel/patches/wlan_combo-*`, against a vendor tree, as in §92).
+
+* **A freed skb used on (both transports).** `sc2355_pcie_hif_fill_msdu_dscr()` / `sc2355_hif_fill_msdu_dscr()`,
+  when the headroom was short, replaced the skb with `skb_realloc_headroom()` and `kfree_skb()`'d the original - but
+  only their own copy of the pointer changed: `sc2355_send_data()` and `sprd_xmit_data2cmd_wq()` then filled the
+  message from, or copied and freed, the freed skb (and on an allocation failure freed it a second time). The
+  descriptor was also written into a header shared with clones (a bridge flooding a frame to several ports clones
+  it). Now `skb_cow_head()` (also when `skb_header_cloned()`), sized with the `offset` the push adds; the skb stays
+  the caller's, a failure returns `-ENOMEM` and the caller frees as before; `ethhdr` is read again afterwards (the
+  checksum-offload branch uses it). How often the short-headroom case happens on our boards is not known.
+* **The group TID never set on PCIe.** `sprd_xmit_data2cmd_wq()` sends a frame as a firmware command and, for an
+  AP's group frames, sets the BK TID "to avoid FW hang". It read the descriptor at `skb->data`; on PCIe that is the
+  5-byte address prefix the fill puts in front, so the "LUT index" it tested was the descriptor's offset byte (11)
+  and the branch never ran (kanoqwq's probe: `off=11, lut=4, tid=0`). The descriptor is now taken behind the prefix,
+  before SDIO's flag is pushed (as his E5 SDIO driver does); the per-frame `pr_info` is a rate-limited debug line.
+* **AP IPv6 multicast through the command path.** `tx_mc_pkt()` sent every IPv6 multicast frame of the access point
+  (neighbour discovery, router advertisements, mDNS) as `CMD_TX_DATA`. kanoqwq replayed bursts of eight 12-byte mDNS
+  queries (`ff02::fb`, one burst a second, six bursts) from the USB side of an F50: in each burst the first six
+  were answered OK and the last two `SPRD_CMD_STATUS_ERROR` (-6), twelve in all, identical bytes succeeding and
+  failing; the command worker had already given the frame up. On PCIe these frames now take the data queue, as IPv4
+  multicast always has (firmware credits, EDMA backpressure, the group LUT entry); `tx_filter_ip_pkt()` after it still
+  sends DHCPv6, DNS and VoWiFi by command, EAPOL never comes here. His check after the change: 112 replayed frames all
+  on the data path, no command error, a phone's IPv6 neighbour entry learnt again over multicast ND and its IPv6
+  ping answered. SDIO (no board of ours) keeps the vendor's path.
+  This is the TX side. §92 (the AP RX "endian fix", not taken) is about frames *from* a client being copied back to
+  the BSS; nothing here changes that, and mDNS/ND between clients keeps working the way §92 describes.
+* **A full EDMA pending ring.** The PCIe TX data channel queues at most three submissions behind the running one
+  (`edma_pending_q_buffer`, four slots); a fourth was refused with `ERROR` (-1), counted by the WLAN side like a hard
+  push failure (`pushfail_count`: more than 100 in a row flushed the frames waiting; `failcount`: more than 50), and
+  nothing woke the TX thread when room came back. Now the ring returns `-EAGAIN` (nothing was taken; every other
+  user of `mchn_push_link` - Bluetooth, the RX refill - only tests for non-zero), the WLAN side keeps the frames
+  without counting, and both TX data channels register a `tx_complete` callback that wakes the TX thread when the
+  bus finishes a transfer; the wait flag is armed before the submission, since the completion can come before the
+  push returns. His F50 run afterwards: 128 refusals in 30 min, all `-EAGAIN`, TX kept growing (up to 40.8 Mbit/s in
+  5 s samples), no `tx return err`, no flush, no firmware assert.
+
+`wcn_bsp` and `sprd_wlan_combo` change together (the new return value): the release builds both from this tree.
+
+**Measured here:** built for 7.2.10 and 6.18.56 (`wcn_bsp`, `sprd_wlan_combo`) against the `mu300-mainline`
+volume's trees, compared with the same build of `main`: no new warning. `tests/test_wifi_tx_path.py` reads the source
+for each point. Nothing run on a device (both test devices were in use); his measurements above are on his F50.
+
+**Device checklist (before merge; F50 and U30 Air, 6.18 and 7.2, the hotspot on 5 GHz):**
+
+    # before/after: dmesg -C; a phone on the hotspot
+    ping6 -c3 ff02::1%br-lan            # (OpenWrt; Ubuntu: the hotspot bridge) every client answers
+    # from a computer on USB, a burst of mDNS: for i in $(seq 8); do avahi-resolve -n x$i.local & done
+    dmesg | grep -i 'CMD_TX_DATA' | grep -ci err      # 0 after (before: errors in bursts)
+    dmesg | grep -c 'push link fail'                         # may be > 0 (rate limited); no 'tx return err'
+    # a long download and upload on the phone (iperf3 -R and normal), 10 min: no 'tx return err', no flush,
+    # no firmware assert, throughput not lower than before; IPv4 and IPv6 browsing, AirPlay/Chromecast between
+    # two phones still found (mDNS between clients, §92); a second client joins and gets DHCPv4 and an IPv6 address
+
+**Measured on both boards** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day
+plus the four branches): the F50 (Ubuntu 24.04, 7.2.10) and the U30 Air (openwrt-luci, 6.18.56), a MacBook on the
+5 GHz hotspot (802.11ac, 80 MHz) as the one Wi-Fi client and on the USB side as the sender of the replay; against
+the v2026.10.27 kernels on the same devices.
+
+* **kanoqwq's replay:** six bursts of eight 12-byte mDNS queries to `ff02::fb`, one burst a second, sent by the
+  Mac on its USB link to the device, which bridges them to the Wi-Fi client:
+
+  | | release kernel | test kernel |
+  |---|---|---|
+  | F50: `CMD_TX_DATA ... SPRD_CMD_STATUS_ERROR` | 8 | 0 |
+  | F50: wlan0 `tx_packets` during the replay | +13 | +50 |
+  | U30 Air: `CMD_TX_DATA ... SPRD_CMD_STATUS_ERROR` | 12 (two per burst of eight, as he saw) | 0 |
+  | U30 Air: wlan0 `tx_packets` during the replay | +3 | +59 |
+
+  (On the release kernel the command path does not count in `tx_packets`; on this one the 48 frames are data.)
+* `ping ff02::1` on the bridge: the Mac's Wi-Fi address answered (4 of 5; its USB address the same, the first
+  one lost to neighbour discovery) on both boards.
+* **A full EDMA ring:** under 300 MiB transfers to the Mac, `edma_pending_q_buffer(10) full` with `push link fail:
+  -11` (rate limited) 140-170 times on the F50 and 80 on the U30 Air; `tx return err` 0 (the U30 Air's release
+  kernel had logged 8738 of them in its two hours before the test), no flush of queued frames (the only `flush`
+  lines are a client leaving), no firmware assert, no oops. TX to the Mac 300-590 Mbit/s on the F50 and 210-500 on
+  the U30 Air, the same spread as on the release kernels; 6 GiB in one stream at 594 Mbit/s on the F50.
+* **The client leaving during a transfer:** no oops, no use-after-free report (the kernel has no KASAN), the
+  hotspot took the Mac back (§92 has the log lines).
+* Not covered: two Wi-Fi clients (mDNS between them, a second client's DHCPv6), an SDIO board, and the skb
+  short-headroom path, which no log line shows; nothing here proves the use-after-free case was reached.
