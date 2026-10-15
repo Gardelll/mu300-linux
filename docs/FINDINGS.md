@@ -138,7 +138,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
-| 92 | Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken (after kanoqwq's 3cbf37fc) | current (mainline module only; compiled in CI, not run on a device) |
+| 92 | Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken (after kanoqwq's 3cbf37fc) | current (mainline module only; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15; the multicast question not measured) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 
 ## Hardware and firmware facts
@@ -6569,3 +6569,21 @@ Device checklist for the taken part (either board, 6.18 or 7.2):
     dmesg | grep -c 'group lut_index'          # 0 - before: one line per broadcast/multicast frame
     echo 'module sprd_wlan_combo +p' > /sys/kernel/debug/dynamic_debug/control   # the lines are there, bounded
     # the hotspot keeps working: a second client, ping and a download
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches): the F50 on Ubuntu 24.04 with 7.2.10, the U30 Air on openwrt-luci with 6.18.56, a MacBook on the 5 GHz
+hotspot (802.11ac, 80 MHz) as the client; against the release kernels of v2026.10.27 on the same devices. The
+device sent to the Mac (bash `/dev/tcp`) and the Mac's Wi-Fi was switched off 4 s into it; the log then:
+
+| | release kernel | test kernel |
+|---|---|---|
+| F50, `sta disconn, no data tx!` | 13 (error level, one per frame) | 0 |
+| F50, `drop msg due to TX Err` | 13 | 12, with `net_ratelimit: 1 callbacks suppressed` |
+| U30 Air, the same two | 10 and 10 | 0 and 12 (rate limited) |
+| `group lut_index` | 0 | 0 |
+
+`group lut_index` never appeared in any run on either kernel, so the first of the three lines is not one our
+boards write in these tests. The hotspot carried on as before: TX to the Mac 300-590 Mbit/s on the F50 and 210-500
+on the U30 Air on both kernels (two clusters, about 320 and 570, on both: the Mac, not the kernel), 6 GiB in one
+stream at 594 Mbit/s on the F50, IPv6 multicast (`ping ff02::1`) answered by the Mac over Wi-Fi. The hairpin
+measurement above needs two Wi-Fi clients and was not made.
