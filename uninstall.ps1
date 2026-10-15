@@ -16,11 +16,12 @@ param()
 
 $ErrorActionPreference = 'Stop'
 $T = '/data/local/tmp'
-# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1; $MU300_IP is set to the one
+# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1, V50 192.168.79.1; $MU300_IP is set
+# to the one
 # that answers
 $MU300_IP = '192.168.77.1'
 function LinuxRunning {
-    foreach ($ip in @('192.168.77.1', '192.168.78.1')) {
+    foreach ($ip in @('192.168.77.1', '192.168.78.1', '192.168.79.1')) {
         if (Test-NetConnection -ComputerName $ip -Port 22 -InformationLevel Quiet -WarningAction SilentlyContinue) { $script:MU300_IP = $ip; return $true }
     }
     return $false

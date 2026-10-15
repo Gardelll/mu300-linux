@@ -42,12 +42,13 @@ class Fixture(ShellTest):
         self.stub('getprop', f'sed -n "s/^$1=//p" "{self.props}"')
         self.device()
 
-    def device(self, slot='_a', model='ZTE MU300', product='mu300', differ=(), meta=None):
+    def device(self, slot='_a', model='ZTE MU300', product='mu300', differ=(), meta=None, platform=''):
         """Android on SLOT; the five images identical on both slots except DIFFER (Android's slot holds the newer
         build); META: (slot a, slot b) metadata bytes of misc instead of the ones of Android booted on SLOT"""
         shutil.rmtree(self.by)
         self.by.mkdir()
-        self.props.write_text(f'ro.product.model={model}\nro.product.device={product}\nro.boot.slot_suffix={slot}\n')
+        self.props.write_text(f'ro.product.model={model}\nro.product.device={product}\nro.boot.slot_suffix={slot}\n'
+                              f'ro.board.platform={platform}\n')
         a, b = meta or ((0x9f, 0x1e) if slot == '_a' else (0x1e, 0x9f))
         fake_misc(self.by / 'misc', with_slots(LIVE_A, (slot or '_a').encode() + b'\0\0', a, b))
         fake_stock(self.by / 'boot_a', size=1 << 20, vbmeta_offset=1 << 19)
@@ -144,6 +145,16 @@ class Refusals(Fixture):
         for shell in self.each_shell():
             self.device(model='U30 Air', product='U30Air')
             self.assertEqual(self.run_bc(shell, 'check').returncode, 0)
+
+    def test_v50_only_exactly(self):
+        # the ZTE V50 (FINDINGS 95): V50 / MU3351 on ums9620, nothing less (a Blade V50 phone is no V50)
+        for shell in self.each_shell():
+            self.device(model='V50', product='MU3351', platform='ums9620')
+            self.assertEqual(self.run_bc(shell, 'check').returncode, 0)
+            self.device(model='V50', product='MU3351', platform='mt6789')
+            self.refused(shell, 'not on the UMS9620 platform')
+            self.device(model='ZTE Blade V50', product='P671F60', platform='ums9620')
+            self.refused(shell, 'not a ZTE F50')
 
     def test_android_slot_not_marked_successful(self):
         # right after an update: the other slot is still the one to fall back to
