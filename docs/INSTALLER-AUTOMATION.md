@@ -101,6 +101,14 @@ The variables that were there before work as they did (`MU300_WORK`, `MU300_RELE
 `MU300_VPN_URL`, `MU300_VPN_MODULE`, `MU300_FETCH_JOBS`, `MU300_NO_SELF_UPDATE`); `install.ps1` now reads
 `MU300_LANG`, `MU300_RELEASE`, `MU300_RELEASE_URL` and `MU300_WORK` where its parameters are not given.
 
+**An unpacked Magisk zip** (`MU300_PACKAGE=DIR`, `--package DIR` / `-Package DIR`, or the zip's own `computer/`
+with its `.mu300-package`; `tools/package.sh`): the system, the Ubuntu, the kernel and the release are the zip's, so
+`MU300_ANS_SYSTEMS`, `MU300_OPENWRT`, `MU300_ANS_BOOT_OS`, `MU300_ANS_UBUNTU`, `MU300_ANS_KERNEL`, `MU300_ANS_BETA` and
+`MU300_ANS_PANEL` are never asked (and `MU300_RELEASE`, `MU300_RELEASE_URL` are not used): a program sets only the
+others. The `download` step checks the two files of the zip instead (`verify` events, `ok` or `mismatch`), and a
+manifest that is not one of a release's stops the run before the device is asked anything. The graphical installer
+started from such a folder offers that system and kernel only.
+
 ### The variables of `uninstall.sh` / `uninstall.ps1`
 
 | variable | values | the question |
@@ -167,6 +175,7 @@ The stages of an installation, in order: `preflight` 2, `storage` 6, `choices` 1
 | `verdict`, `verdict.code` | the result line of the check, and `tested`, `both`, `one`, `openwrt`, `existing`, `sd`, `dirty`, `sd-only` |
 | `makeroom.first`, `.end`, `.usable_end`, `.min_android`, `.min_linux`, `.max_linux` | where `userdata` fills the disk: its sectors, and the limits of a split, in sectors |
 | `release` | the release this run installs |
+| `package`, `package.system`, `package.kernel`, `package.release` | an unpacked Magisk zip this run installs from: its folder, and what it holds |
 | `backup.boot`, `backup.misc`, `backup.sha256` | `--backup`: the two files and the boot image's hash |
 
 The facts before `root` need no root, and they are sent before the check for it: a device without root still says

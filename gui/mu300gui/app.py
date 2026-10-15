@@ -674,6 +674,25 @@ class App:
             return b
 
         room = ch.place_bytes(f)
+        if ctl.package and ctl.package.get('error'):
+            add(banner(body, _('{1} is not an unpacked Magisk zip of a release that this installer can read (its mu300/manifest is not valid). Unpack the zip again.', ctl.package['dir']), 'bad'))
+        if ch.package:
+            self._package_card(body, add, ch)
+        else:
+            self._choose_system_kernel_release(body, add, ctl, f, ch, room, check, radio)
+        self._choose_rest(body, add, ctl, f, ch, check)
+
+    def _package_card(self, body, add, ch):
+        """An unpacked Magisk zip: what it installs, and nothing to choose about it."""
+        pkg = ch.package
+        names = {'openwrt': 'OpenWrt 25.12', 'openwrt-luci': _('OpenWrt with the MU300 control panel'),
+                 'ubuntu-24.04': 'Ubuntu 24.04 LTS', 'ubuntu-26.04': 'Ubuntu 26.04 LTS'}
+        o, i = card(body, _('This package'), _('This window was started from an unpacked Magisk zip: it installs the system and the kernel of that zip, from its own files, and downloads nothing. Another system or kernel: the zip of that combination.'))
+        add(o)
+        facts(i, [(_('System'), names.get(pkg['system'], pkg['system'])), (_('Kernel'), pkg['kernel']), (_('Release'), pkg['tag']),
+                  (_('Folder'), pkg['dir']), (_('Files'), size(pkg.get('bytes', 0)))]).pack(fill='x')
+
+    def _choose_system_kernel_release(self, body, add, ctl, f, ch, room, check, radio):
         o, i = card(body, _('Systems'), _('One or both. With both, mu300-os switches between them later.'))
         add(o)
         check(i, 'Ubuntu LTS', 'ubuntu', _('The full distribution with apt; about 500 MiB of RAM in use. Needs {1}.', size(f.need('ubuntu'))),
@@ -718,6 +737,7 @@ class App:
             ttk.Label(i, text=_('To download: {1} in {2} files (checked against the release\'s SHA256 sums).', size(total), len(plan)),
                       style='Card.Small.TLabel').pack(anchor='w', pady=(S2, 0))
 
+    def _choose_rest(self, body, add, ctl, f, ch, check):
         o, i = card(body, _('Starting'))
         add(o)
         check(i, _('Start Linux by default instead of Android'), 'default_linux',
@@ -735,8 +755,9 @@ class App:
         check(i, _('The Mali GPU (OpenCL) userspace, about 90 MiB'), 'gpu')
         check(i, _('The VPN module (about 40 MB more to download, 120 MB on the device)'), 'vpn',
               _('mu300-vpn with Xray and sing-box. A system being replaced whose VPN is on needs it: the installer stops otherwise. It can be added later: sudo mu300-extra install vpn'))
-        check(i, _('The web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)'), 'panel',
-              _('Cockpit with an MU300 page, on the LAN only. It can be added later: sudo mu300-extra install panel'), enabled=ch.ubuntu)
+        if not ch.package:          # (a file of the release, not of a zip)
+            check(i, _('The web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)'), 'panel',
+                  _('Cockpit with an MU300 page, on the LAN only. It can be added later: sudo mu300-extra install panel'), enabled=ch.ubuntu)
         check(i, _('Let only this computer in over adb to Linux'), 'adb',
               _('adb to Linux over USB is on and lets every computer in: a root shell without a password for anyone who plugs in a cable. With this, only this computer\'s adb key (~/.android/adbkey.pub) is let in.'))
 
@@ -765,10 +786,11 @@ class App:
         if self.advanced:
             g = ttk.Frame(i, style='Card.TFrame')
             g.pack(fill='x', pady=(S2, 0))
-            ttk.Radiobutton(g, text=_('Another release, by its tag:'), variable=self.v['release_mode'], value='tag', style='Card.TRadiobutton').grid(row=0, column=0, sticky='w')
-            ttk.Entry(g, textvariable=self.v['release_tag'], width=18).grid(row=0, column=1, sticky='w', padx=S2)
-            ttk.Label(g, text=_('A mirror with the release\'s files (URL):'), style='Card.TLabel').grid(row=1, column=0, sticky='w', pady=2)
-            ttk.Entry(g, textvariable=self.v['release_url'], width=32).grid(row=1, column=1, sticky='w', padx=S2)
+            if not ch.package:      # (a package is its own release)
+                ttk.Radiobutton(g, text=_('Another release, by its tag:'), variable=self.v['release_mode'], value='tag', style='Card.TRadiobutton').grid(row=0, column=0, sticky='w')
+                ttk.Entry(g, textvariable=self.v['release_tag'], width=18).grid(row=0, column=1, sticky='w', padx=S2)
+                ttk.Label(g, text=_('A mirror with the release\'s files (URL):'), style='Card.TLabel').grid(row=1, column=0, sticky='w', pady=2)
+                ttk.Entry(g, textvariable=self.v['release_url'], width=32).grid(row=1, column=1, sticky='w', padx=S2)
             ttk.Label(g, text=_('Parallel connections per download:'), style='Card.TLabel').grid(row=2, column=0, sticky='w', pady=2)
             ttk.Combobox(g, textvariable=self.v['fetch_jobs'], values=['1', '2', '4', '8', '16'], width=4, state='readonly').grid(row=2, column=1, sticky='w', padx=S2)
             ttk.Label(g, text=_('Another place for the VPN module (URL):'), style='Card.TLabel').grid(row=3, column=0, sticky='w', pady=2)

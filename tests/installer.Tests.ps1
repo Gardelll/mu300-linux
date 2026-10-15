@@ -15,7 +15,7 @@ function Check($name, $got, $want) {
 
 # the functions under test, straight from install.ps1
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $Top "install.ps1"), [ref]$null, [ref]$null)
-$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'AndroidLines', 'LinuxAdbSerials', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused'
+$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'AndroidLines', 'LinuxAdbSerials', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused', 'PackageDir', 'PackageManifest', 'PackageCheck'
 $defs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $want -contains $n.Name }, $true)
 foreach ($d in $defs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in 'LoadLanguage', 'T', 'NormalizeAnswer') {
@@ -133,7 +133,7 @@ Check 'sd kernel, other features'   (SdKernelOk 1 $kd) $false
 Check 'sd kernel, sdcard'           (SdKernelOk 1 $kd) $true
 Remove-Item -Recurse -Force $kd
 $src = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
-$iUnpack = $src.IndexOf('& tar -xzf "$REL\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN')
+$iUnpack = $src.IndexOf('& tar -xzf "$ASSETS\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN')
 $iCheck = $src.IndexOf('if (-not (SdKernelOk $SD_MODE $KMAIN))')
 Check 'sd kernel check after unpack' ($iUnpack -ge 0 -and $iCheck -gt $iUnpack) $true
 
@@ -907,6 +907,46 @@ if ($env:OS -ne 'Windows_NT') {
     Remove-Item function:Write-Host
     Remove-Item -Recurse -Force $gx -ErrorAction SilentlyContinue
 }
+
+# ---- a package: an unpacked Magisk zip (tools/package.sh is the same for install.sh) ------------------------------------
+$px = Join-Path ([IO.Path]::GetTempPath()) ('mu300-package-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Force -Path (Join-Path $px 'computer'), (Join-Path $px 'mu300'), (Join-Path $px 'payload') | Out-Null
+Check 'package: none'           (PackageDir '' (Join-Path $px 'computer')) ''
+[IO.File]::WriteAllText((Join-Path $px 'computer\.mu300-package'), "x`n")
+Check 'package: by the mark'    (PackageDir '' (Join-Path $px 'computer')) $px
+Check 'package: named'          (PackageDir 'D:\other' (Join-Path $px 'computer')) 'D:\other'
+[IO.File]::WriteAllText((Join-Path $px 'payload\mu300-kernel-6.18.tar.gz'), 'kernel bundle')
+[IO.File]::WriteAllText((Join-Path $px 'payload\mu300-openwrt-rootfs.tar.gz'), 'openwrt system')
+$hk = (Get-FileHash (Join-Path $px 'payload\mu300-kernel-6.18.tar.gz') -Algorithm SHA256).Hash.ToLower()
+$hr = (Get-FileHash (Join-Path $px 'payload\mu300-openwrt-rootfs.tar.gz') -Algorithm SHA256).Hash.ToLower()
+function PkgManifest([hashtable]$Over) {
+    $m = [ordered]@{ TAG = 'v2026.10.27'; SYSTEM = 'openwrt'; OS = 'openwrt'; UBUNTU = ''; KERNEL = '6.18'; KERNEL_ASSET = 'mu300-kernel-6.18.tar.gz'
+        ROOTFS_ASSET = 'mu300-openwrt-rootfs.tar.gz'; SHA256_KERNEL = $hk; SHA256_ROOTFS = $hr }
+    if ($Over) { foreach ($k in $Over.Keys) { $m[$k] = $Over[$k] } }
+    [IO.File]::WriteAllText((Join-Path $px 'mu300\manifest'), (($m.Keys | ForEach-Object { "$_=$($m[$_])" }) -join "`r`n") + "`r`n")
+    return (PackageManifest $px)
+}
+$pm = PkgManifest
+Check 'package: read'           "$($pm.TAG) $($pm.SYSTEM) $($pm.OS) [$($pm.UBUNTU)] $($pm.KERNEL) $($pm.KERNEL_ASSET) $($pm.ROOTFS_ASSET)" 'v2026.10.27 openwrt openwrt [] 6.18 mu300-kernel-6.18.tar.gz mu300-openwrt-rootfs.tar.gz'
+foreach ($bad in @(@{ TAG = '2026.10.27' }, @{ TAG = 'v1..2' }, @{ TAG = 'v1;x' }, @{ SYSTEM = 'ubuntu' }, @{ ROOTFS_ASSET = '..\..\x' },
+                   @{ KERNEL = '6.19' }, @{ KERNEL_ASSET = 'mu300-kernel.tar.gz' }, @{ SHA256_KERNEL = ('X' * 64) }, @{ SHA256_ROOTFS = 'ab' },
+                   @{ SYSTEM = 'ubuntu-26.04'; OS = 'ubuntu'; UBUNTU = '26.04'; ROOTFS_ASSET = 'mu300-ubuntu-26.04-rootfs.tar.gz'; KERNEL = '5.4'; KERNEL_ASSET = 'mu300-kernel.tar.gz' })) {
+    Check "package: refused $(@($bad.Keys) -join ',')=$(@($bad.Values) -join ',')" ($null -eq (PkgManifest $bad)) $true
+}
+# a key in another case is not one of the manifest's (the installer on the device reads TAG, not tag)
+[IO.File]::WriteAllText((Join-Path $px 'mu300\manifest'), "tag=v2026.10.27`n")
+Check 'package: keys are exact' ($null -eq (PackageManifest $px)) $true
+$pm = PkgManifest
+[IO.File]::WriteAllText((Join-Path $px 'mu300\SHA256SUMS'), "$hk  mu300-kernel-6.18.tar.gz`n$hr *mu300-openwrt-rootfs.tar.gz`n")
+Check 'package: both match'     "[$(PackageCheck $px 'mu300-kernel-6.18.tar.gz' $hk)][$(PackageCheck $px 'mu300-openwrt-rootfs.tar.gz' $hr)]" '[][]'
+Check 'package: not the manifest''s' (PackageCheck $px 'mu300-openwrt-rootfs.tar.gz' ('0' * 64)) 'mismatch'
+[IO.File]::WriteAllText((Join-Path $px 'mu300\SHA256SUMS'), "$hk  mu300-kernel-6.18.tar.gz`n$('0' * 64)  mu300-openwrt-rootfs.tar.gz`n")
+Check 'package: not SHA256SUMS''s' (PackageCheck $px 'mu300-openwrt-rootfs.tar.gz' $hr) 'mismatch'
+[IO.File]::WriteAllText((Join-Path $px 'mu300\SHA256SUMS'), "$hk  mu300-kernel-6.18.tar.gz`n")
+Check 'package: not in SHA256SUMS' (PackageCheck $px 'mu300-openwrt-rootfs.tar.gz' $hr) 'mismatch'
+Remove-Item (Join-Path $px 'payload\mu300-kernel-6.18.tar.gz')
+Check 'package: missing'        (PackageCheck $px 'mu300-kernel-6.18.tar.gz' $hk) 'missing'
+Remove-Item -Recurse -Force $px -ErrorAction SilentlyContinue
 
 Write-Host "$script:passed passed, $script:failed failed"
 exit $script:failed

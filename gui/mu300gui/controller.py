@@ -11,7 +11,7 @@ import sys
 import threading
 import time
 
-from . import TOP, adb as adbmod, releases, runner
+from . import TOP, adb as adbmod, package as packagemod, releases, runner
 from .i18n import _, language
 from .masking import Masker
 from .model import (BACKUP_STEPS, CHECK_STEPS, INSTALL_STEPS, MAKEROOM_STEPS, UNINSTALL_STEPS, Choices, Facts, Progress,
@@ -59,6 +59,10 @@ class Controller:
         self.releases = {'latest': None, 'beta': None, 'files': {}}
         self.releases_state = 'idle'    # idle | running | ok | failed
         self.choices = Choices()
+        # an unpacked Magisk zip (package.py): its system and kernel, and nothing to ask GitHub
+        self.package = packagemod.load(top, self.environ)
+        if self.package and not self.package.get('error'):
+            self.choices.apply_package(self.package)
         self.run = None
         self.run_kind = ''              # check | backup | install | makeroom | uninstall | command
         self.progress = None
@@ -86,7 +90,8 @@ class Controller:
     def start(self):
         """Begin watching: find adb, list the devices again and again, ask GitHub for the releases once."""
         self._thread(self._watch)
-        self.fetch_releases()
+        if not self.package:
+            self.fetch_releases()
 
     def close(self):
         self._stop.set()
@@ -404,7 +409,7 @@ class Controller:
         if room and c.ubuntu and c.openwrt and room < f.need('both'):
             # both do not fit: the one that does (the installers refuse the choice; here it is not offered)
             c.ubuntu, c.openwrt = (room >= f.need('ubuntu')), (room < f.need('ubuntu'))
-        if not c.kernel_ok():
+        if not c.kernel_ok() and not c.package:
             c.kernel = '6.18'
 
     # ---- the log
