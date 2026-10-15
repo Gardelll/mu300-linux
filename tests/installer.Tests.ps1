@@ -6,6 +6,8 @@ $ErrorActionPreference = 'Stop'
 $Top = Split-Path -Parent $PSScriptRoot
 $script:failed = 0
 $script:passed = 0
+# the answers mode and the progress stream, which the installers' functions call (silent unless a test turns it on)
+. (Join-Path (Join-Path $Top 'tools') 'answers.ps1')
 function Check($name, $got, $want) {
     if ([string]$got -ceq [string]$want) { $script:passed++ }
     else { $script:failed++; Write-Host "FAIL $name`n  got:  [$got]`n  want: [$want]" -ForegroundColor Red }
@@ -13,7 +15,7 @@ function Check($name, $got, $want) {
 
 # the functions under test, straight from install.ps1
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $Top "install.ps1"), [ref]$null, [ref]$null)
-$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused'
+$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'AndroidLines', 'LinuxAdbSerials', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused', 'PackageDir', 'PackageManifest', 'PackageCheck'
 $defs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $want -contains $n.Name }, $true)
 foreach ($d in $defs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in 'LoadLanguage', 'T', 'NormalizeAnswer') {
@@ -109,7 +111,7 @@ Check 'internal, foreign card'     (InternalOverCard 'internal' 'foreign') $fals
 Check 'sd over card'               (InternalOverCard 'sd' 'yes') $false
 $src = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
 $iO = $src.IndexOf('if (InternalOverCard $where $sdEx) {')
-$iA = $src.IndexOf("if ((Ask (T 'Type internal to install to internal storage anyway') 'no') -ne 'internal') { Die (T 'cancelled') }")
+$iA = $src.IndexOf("if ((Ask (T 'Type internal to install to internal storage anyway') 'no' 'MU300_ANS_INTERNAL_OVER_CARD') -ne 'internal') { Die (T 'cancelled') }")
 Check 'internal over card asks'    ($iO -ge 0 -and $iA -gt $iO -and $iA - $iO -lt 600) $true
 
 # ---- SdState: what is on the card already (ext4 magic at 1080, label at 1144) -------------------------------------
@@ -131,7 +133,7 @@ Check 'sd kernel, other features'   (SdKernelOk 1 $kd) $false
 Check 'sd kernel, sdcard'           (SdKernelOk 1 $kd) $true
 Remove-Item -Recurse -Force $kd
 $src = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
-$iUnpack = $src.IndexOf('& tar -xzf "$REL\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN')
+$iUnpack = $src.IndexOf('& tar -xzf "$ASSETS\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN')
 $iCheck = $src.IndexOf('if (-not (SdKernelOk $SD_MODE $KMAIN))')
 Check 'sd kernel check after unpack' ($iUnpack -ge 0 -and $iCheck -gt $iUnpack) $true
 
@@ -172,6 +174,19 @@ Check 'adbkey: not adb'     (AdbPubKey $kf) ''
 Check 'adbkey: short'       (AdbPubKey $kf) ''
 Remove-Item $kf
 Check 'adbkey: missing'     (AdbPubKey $kf) ''
+
+# ---- a device running MU300 Linux among the adb devices (adb is on by default there): never one to install to ----
+$f50Line = '324950664950           device usb:1 product:MU300 model:F50 device:MU300 transport_id:1'
+$devs = @('List of devices attached', $f50Line, 'MU300LINUX-324950664950-203d8329 device usb:2 transport_id:2',
+    'MU300LINUX-323960377386 unauthorized usb:3 transport_id:3', '192.168.31.1:55555     offline transport_id:4', '')
+Check 'adb: android lines'     (@(AndroidLines $devs) -join '|') $f50Line
+Check 'adb: linux serials'     (@(LinuxAdbSerials $devs) -join '|') 'MU300LINUX-324950664950-203d8329|MU300LINUX-323960377386'
+Check 'adb: linux, let in'     (@(LinuxAdbSerials $devs -Open) -join '|') 'MU300LINUX-324950664950-203d8329'
+$only = @('List of devices attached', 'MU300LINUX-324950664950-203d8329 device usb:2 transport_id:2', '')
+Check 'adb: only linux'        (@(AndroidLines $only).Count) 0
+Check 'adb: one linux'         (@(LinuxAdbSerials $only -Open).Count) 1
+Check 'adb: nothing attached'  (@(LinuxAdbSerials @('List of devices attached', '')).Count) 0
+Check 'adb: no output'         (@(AndroidLines $null).Count) 0
 
 if (Get-Command sh -CommandType Application -ErrorAction SilentlyContinue) {
     foreach ($e in $sdEnv, $inEnv) {
@@ -241,13 +256,28 @@ Check 'no install: default no'  (VpnDefault @(VpnOnSystems @('ubuntu') 'no' 0 ''
 Check 'no install: no probe'    $script:suCmd ''
 
 # ---- making room (issue #32): install.sh's offer_repartition, here OfferRepartition -------------------------------
-$rnames = 'Quiet', 'FreeRegion', 'GptShow', 'RepartitionPlan', 'RepartitionSectors', 'LayoutFigures', 'GptTool', 'GptDump', 'OfferRepartition'
+$rnames = 'Quiet', 'FreeRegion', 'GptShow', 'RepartitionPlan', 'RepartitionSectors', 'LayoutFigures', 'GptTool', 'GptDump', 'OfferRepartition',
+    'ResumePy', 'ParseFacts', 'FactsOk', 'ResumeFacts', 'ResumeBackup', 'ResumePush', 'ResumeSha', 'WriteUnix', 'ResumePending'
 $rdefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $rnames -contains $n.Name }, $true)
 foreach ($d in $rdefs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in $rnames) {
     if (-not (Get-Command $w -CommandType Function -ErrorAction SilentlyContinue)) { Write-Host "FAIL: $w not found in install.ps1"; exit 99 }
 }
 LoadLanguage 'en'
+# what the make-room path reads to identify the device, as install.ps1 sends it (the same text as tools/resume.sh's)
+$FactsCmd = [regex]::Match([IO.File]::ReadAllText((Join-Path $Top 'install.ps1')), "(?m)^\`$script:FactsCmd = '([^']*)'").Groups[1].Value
+$script:FactsCmd = $FactsCmd
+$shFacts = [regex]::Match([IO.File]::ReadAllText((Join-Path (Join-Path $Top 'tools') 'resume.sh')), "_rf=\`$\(su_do '([^']*)'\)").Groups[1].Value
+Check 'facts: the same command as install.sh' ($FactsCmd -and $FactsCmd -ceq $shFacts) $true
+Check 'facts: no double quotes (Windows PowerShell 5.1 drops them)' $FactsCmd.Contains('"') $false
+$pf = ParseFacts "NODE=mmcblk0p18`r`nCID=15010053454d36344720c1a6b7d2e900`nSTART=12275712`nSIZE=109879296`nSTATE=encrypted`nTYPE=file`nSOURCE=/dev/block/dm-6`nMAGIC=`nEXT="
+Check 'facts: read'             "$($pf.NODE) $($pf.START) $($pf.SIZE) $($pf.STATE) $($pf.TYPE) [$($pf.MAGIC)]" 'mmcblk0p18 12275712 109879296 encrypted file []'
+$pf.SERIAL = '324950664950'
+Check 'facts: ok'               (FactsOk $pf) $true
+foreach ($bad in @(@{ NODE = 'sda1' }, @{ NODE = 'mmcblk0p18;x' }, @{ CID = 'XYZ' }, @{ CID = ('a' * 31) }, @{ START = '' }, @{ SIZE = '1e3' }, @{ SERIAL = '' })) {
+    $b = $pf.Clone(); foreach ($k in $bad.Keys) { $b[$k] = $bad[$k] }
+    Check "facts: refused $(@($bad.Keys) -join ',')" (FactsOk $b) $false
+}
 # The figures of the 64 GB eMMC (FINDINGS #9): 122159104 sectors, last usable LBA 122155007, userdata from sector
 # 12275712, 20 GiB of it at the factory. Issue #32 gives no sectors: its layout is this one with userdata extended to
 # the last usable LBA (tests/fakegpt.py's vendor64).
@@ -328,8 +358,8 @@ $site = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
 $iGate = $site.IndexOf('if ($SD_MODE -eq 0 -and $SIZE -lt 700MB) {')
 $iOffer = $site.IndexOf("    OfferRepartition `$disk `$lastEnd `$SIZE")
 Check 'no room: room is offered' ($iGate -ge 0 -and $iOffer -gt $iGate -and $iOffer - $iGate -lt 900) $true
-Check 'no room: then it ends'   ($site.Substring($iOffer, 200) -match '^[^\n]*\n    exit 0\r?\n\}') $true
-Check 'ERASE is the word itself' ($site -match "wipe Android''s data'\) ''\) -cne 'ERASE'\) \{ Die ") $true
+Check 'no room: then it ends'   ($site.Substring($iOffer, 200) -match '^[^\n]*\n    Progress ''done'' ''result'' ''ok''\r?\n    exit 0\r?\n\}') $true
+Check 'ERASE is the word itself' ($site -match "wipe Android''s data'\) '' 'MU300_ANS_ERASE_ANDROID'\) -cne 'ERASE'\) \{ Die ") $true
 
 # The whole path against a device that is three stubs: SuDoToFile reads the two pieces of the partition table, adb
 # pushes files and reboots, SuDo runs what the installer sends as root - and counts everything else as a mistake.
@@ -358,16 +388,24 @@ if (-not $py) {
         & $py (Join-Path (Join-Path $Top 'tests') 'fakegpt.py') (Join-Path $fx 'dev') $Layout
         $script:dev = @{ disk = $D64; head = [IO.File]::ReadAllBytes((Join-Path $fx 'dev.head')); tail = [IO.File]::ReadAllBytes((Join-Path $fx 'dev.tail'))
             files = @{}; cmds = (New-Object System.Collections.ArrayList); bad = 0; rebooted = $false; wiped = $false
-            shortPush = $false; deafDisk = $false; noRead = $false }
+            shortPush = $false; deafDisk = $false; noRead = $false; marker = @{}; bcb = $null
+            facts = "NODE=mmcblk0p18`nCID=15010053454d36344720c1a6b7d2e900`nSTART=$F64`nSIZE=$($U64 - $F64 + 1)`nSTATE=encrypted`nTYPE=file`nSOURCE=/dev/block/dm-6`nMAGIC=`nEXT=" }
         $script:dev.head0 = Sha256Hex $script:dev.head; $script:dev.tail0 = Sha256Hex $script:dev.tail
         if (-not $SameWork) { $script:Work = Join-Path $fx ('work-' + [guid]::NewGuid()) }
     }
     function Python { & $py @args }
+    function AdbProp($name) { if ($name -eq 'ro.serialno') { return '324950664950' } else { $script:dev.bad++; return '' } }
+    $ANDROID_SLOT = 'a'
+    $BackupDir = Join-Path $fx 'backups'
+    # the bytes of a partition of the fake device, the same every time
+    function PartBytes([string]$Name) { return [Text.Encoding]::ASCII.GetBytes(("$Name " * 300)) }
     function SuDoToFile($cmd, $path) {
         [void]$script:dev.cmds.Add("pull: $cmd")
         if ($script:dev.noRead) { return }
         if ($cmd -ceq 'dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null') { [IO.File]::WriteAllBytes($path, $script:dev.head) }
         elseif ($cmd -ceq "dd if=/dev/block/mmcblk0 bs=512 skip=$($script:dev.disk - 33) count=33 2>/dev/null") { [IO.File]::WriteAllBytes($path, $script:dev.tail) }
+        elseif ($cmd -ceq 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null') { [IO.File]::WriteAllBytes($path, (New-Object byte[] 4096)) }
+        elseif ($cmd -cmatch '^cat /dev/block/by-name/((boot|uboot|sml|teecfg|trustos|vbmeta)_[ab])$') { [IO.File]::WriteAllBytes($path, (PartBytes $Matches[1])) }
         else { $script:dev.bad++ }
     }
     function adb {
@@ -379,19 +417,35 @@ if (-not $py) {
         } elseif ($args[0] -eq 'reboot' -and $args.Count -eq 1) { $script:dev.rebooted = $true }
         else { $script:dev.bad++ }
     }
+    $tmpFiles = '/data/local/tmp/mu300-new.head /data/local/tmp/mu300-new.tail /data/local/tmp/mu300-marker.bin /data/local/tmp/mu300-bcb.bin'
     function SuDo($cmd) {
         [void]$script:dev.cmds.Add("su: $cmd")
         $seek = $script:dev.disk - 33
-        if ($cmd -cmatch '^sha256sum (/data/local/tmp/new\.(head|tail))$') {
+        if ($cmd -ceq $script:FactsCmd) { return $script:dev.facts }
+        if ($cmd -cmatch '^sha256sum (/data/local/tmp/mu300-(new\.head|new\.tail|marker\.bin|bcb\.bin))$') {
             $f = $Matches[1]
             if ($script:dev.files.ContainsKey($f)) { return "$(Sha256Hex $script:dev.files[$f])  $f`r" } else { return '' }
         }
-        if ($cmd -ceq "dd if=/data/local/tmp/new.tail of=/dev/block/mmcblk0 bs=512 seek=$seek conv=fsync 2>/dev/null") {
-            if (-not $script:dev.deafDisk) { $script:dev.tail = $script:dev.files['/data/local/tmp/new.tail'] }
-        } elseif ($cmd -ceq 'dd if=/data/local/tmp/new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null') {
-            if (-not $script:dev.deafDisk) { $script:dev.head = $script:dev.files['/data/local/tmp/new.head'] }
-        } elseif ($cmd -ceq 'dd if=/dev/zero of=/dev/block/by-name/userdata bs=1M count=32 conv=fsync 2>/dev/null') { $script:dev.wiped = $true }
-        elseif ($cmd -cne 'sync; rm -f /data/local/tmp/new.head /data/local/tmp/new.tail' -and $cmd -cne 'rm -f /data/local/tmp/new.head /data/local/tmp/new.tail') { $script:dev.bad++ }
+        if ($cmd -cmatch '^sha256sum /dev/block/by-name/((boot|uboot|sml|teecfg|trustos|vbmeta)_[ab])$') { return "$(Sha256Hex (PartBytes $Matches[1]))  /dev/block/by-name/$($Matches[1])`r" }
+        if ($cmd -ceq 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v') { return ' 5f 61 00 00 42 43 41 42 01 02 00 00 9f 00 1e 00 00 00 00 00 00 00 00 00 00 00 00 00 0b e1 71 46' }
+        if ($cmd -cmatch '^dd if=/dev/block/mmcblk0 bs=512 skip=(\d+) count=8 2>/dev/null \| sha256sum$') {
+            $b = if ($script:dev.marker.ContainsKey($Matches[1])) { $script:dev.marker[$Matches[1]] } else { New-Object byte[] 4096 }
+            return "$(Sha256Hex $b)  -"
+        }
+        if ($cmd -ceq 'dd if=/dev/block/by-name/misc bs=2048 count=1 2>/dev/null | sha256sum') {
+            $b = if ($script:dev.bcb) { $script:dev.bcb } else { New-Object byte[] 2048 }
+            return "$(Sha256Hex $b)  -"
+        }
+        if ($cmd -ceq "dd if=/data/local/tmp/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$seek conv=fsync 2>/dev/null") {
+            if (-not $script:dev.deafDisk) { $script:dev.tail = $script:dev.files['/data/local/tmp/mu300-new.tail'] }
+        } elseif ($cmd -ceq 'dd if=/data/local/tmp/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null') {
+            if (-not $script:dev.deafDisk) { $script:dev.head = $script:dev.files['/data/local/tmp/mu300-new.head'] }
+        } elseif ($cmd -cmatch '^dd if=/data/local/tmp/mu300-marker\.bin of=/dev/block/mmcblk0 bs=512 seek=(\d+) count=8 conv=notrunc,fsync 2>/dev/null$') {
+            $script:dev.marker[$Matches[1]] = $script:dev.files['/data/local/tmp/mu300-marker.bin']
+        } elseif ($cmd -ceq 'dd if=/data/local/tmp/mu300-bcb.bin of=/dev/block/by-name/misc bs=2048 count=1 conv=notrunc,fsync 2>/dev/null') {
+            $script:dev.bcb = $script:dev.files['/data/local/tmp/mu300-bcb.bin']
+        } elseif ($cmd -cmatch '^dd if=/dev/zero of=') { $script:dev.wiped = $true }
+        elseif ($cmd -cne "sync; rm -f $tmpFiles" -and $cmd -cne "rm -f $tmpFiles") { $script:dev.bad++ }
         return ''
     }
     function Die($m) { throw "DIE: $m" }
@@ -415,11 +469,17 @@ if (-not $py) {
         try { OfferRepartition $script:dev.disk ($U64 + 1) 0 } catch { $script:died = "$($_.Exception.Message)" }
     }
     function Writes { @($script:dev.cmds | Where-Object { $_ -match ' of=' }) }
-    function Untouched { ((Sha256Hex $script:dev.head) -eq $script:dev.head0) -and ((Sha256Hex $script:dev.tail) -eq $script:dev.tail0) -and -not $script:dev.wiped -and -not $script:dev.rebooted -and (Writes).Count -eq 0 }
+    function Untouched { ((Sha256Hex $script:dev.head) -eq $script:dev.head0) -and ((Sha256Hex $script:dev.tail) -eq $script:dev.tail0) -and -not $script:dev.wiped -and -not $script:dev.rebooted -and (Writes).Count -eq 0 -and $null -eq $script:dev.bcb -and $script:dev.marker.Count -eq 0 }
     function Printed([string]$Pattern) { [bool](@($script:out | Where-Object { $_ -match $Pattern }).Count) }
-    $tailDd = "su: dd if=/data/local/tmp/new.tail of=/dev/block/mmcblk0 bs=512 seek=$($D64 - 33) conv=fsync 2>/dev/null"
-    $headDd = 'su: dd if=/data/local/tmp/new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null'
-    $zeroDd = 'su: dd if=/dev/zero of=/dev/block/by-name/userdata bs=1M count=32 conv=fsync 2>/dev/null'
+    $tailDd = "su: dd if=/data/local/tmp/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$($D64 - 33) conv=fsync 2>/dev/null"
+    $headDd = 'su: dd if=/data/local/tmp/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null'
+    # userdata ends where the region behind it is the 4 GiB asked for (FINDINGS 112); its first 4 KiB hold the token
+    [int64]$newEnd4 = [math]::Floor(($D64 - 34) / 4096 - 1) * 4096 - 8388608 - 4096 - 1
+    $rgStart = (FreeRegion ($newEnd4 + 1) $D64).Start
+    $markerDd = "su: dd if=/data/local/tmp/mu300-marker.bin of=/dev/block/mmcblk0 bs=512 seek=$rgStart count=8 conv=notrunc,fsync 2>/dev/null"
+    $bcbDd = 'su: dd if=/data/local/tmp/mu300-bcb.bin of=/dev/block/by-name/misc bs=2048 count=1 conv=notrunc,fsync 2>/dev/null'
+    $bcbFile = Join-Path $fx 'bcb.bin'
+    & $py (Join-Path (Join-Path $Top 'tools') 'resume.py') bcb $bcbFile
 
     # -Check: the figures, no question, nothing written
     $Check = $true
@@ -433,7 +493,9 @@ if (-not $py) {
     Check 'check: says so'          ($script:out[$script:out.Count - 1]) '  -Check writes nothing. Run the installer without it to make room.'
     Check 'check: no question'      $script:asked.Count 0
     Check 'check: device untouched' (Untouched) $true
-    Check 'check: reads the table only' (($script:dev.cmds -join '|')) "pull: dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null|pull: dd if=/dev/block/mmcblk0 bs=512 skip=$($D64 - 33) count=33 2>/dev/null"
+    Check 'check: reads the table and what identifies the device' (($script:dev.cmds -join '|')) "pull: dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null|pull: dd if=/dev/block/mmcblk0 bs=512 skip=$($D64 - 33) count=33 2>/dev/null|su: $FactsCmd"
+    Check 'check: the reset, it says' (Printed "Android's own recovery erases Android's data") $true
+    Check 'check: encrypted, it says' (Printed "^  Android's data:       encrypted \(encrypted/file\)$") $true
     Check 'check: nothing unexpected' $script:dev.bad 0
 
     # the default answer is no
@@ -462,39 +524,65 @@ if (-not $py) {
     Check 'shrink: what Android keeps' (Printed '^  userdata \(Android\):   48[.,]4 GiB$') $true
     Check 'shrink: what Linux gets' (Printed '^  Linux region:         4[.,]0 GiB$') $true
     Check 'shrink: questions'       ($script:asked -join '|') ('Make room by shrinking userdata? (yes/no)|' + ('How many GiB for Linux? (the rest stays with Android)|' * 4) + "Type ERASE to rewrite the partition table and wipe Android's data|Reboot now? (yes/no)")
-    # the backup copy of the table first, then the primary, then the start of userdata - and nothing else is written
-    Check 'shrink: what is written' ((Writes) -join '|') "$tailDd|$headDd|$zeroDd"
+    # the backup copy of the table first, then the primary, then the token, then the request to recovery - and nothing
+    # else is written
+    Check 'shrink: what is written' ((Writes) -join '|') "$tailDd|$headDd|$markerDd|$bcbDd"
     Check 'shrink: nothing unexpected' $script:dev.bad 0
     Check 'shrink: the table was kept'  ((Sha256Hex ([IO.File]::ReadAllBytes("$gd\gpt.head"))) + (Sha256Hex ([IO.File]::ReadAllBytes("$gd\gpt.tail")))) ($script:dev.head0 + $script:dev.tail0)
     Check 'shrink: the device has the new one' ((Sha256Hex $script:dev.head) + (Sha256Hex $script:dev.tail)) ((Sha256Hex ([IO.File]::ReadAllBytes("$gd\new.head"))) + (Sha256Hex ([IO.File]::ReadAllBytes("$gd\new.tail"))))
     Check 'shrink: it differs'      ((Sha256Hex $script:dev.head) -ne $script:dev.head0 -and (Sha256Hex $script:dev.tail) -ne $script:dev.tail0) $true
     $now = GptShow @(GptTool $gd @('after.head,after.tail', '--disk-sectors', "$D64", '--name', 'userdata', '--show'))
     Check 'shrink: userdata starts where it did' $now.First $F64
-    Check 'shrink: userdata ends 4 GiB earlier'  $now.End ($U64 - 8388608)
-    Check 'shrink: says where'      (Printed '^  userdata now ends at sector 113766399$') $true
-    Check 'shrink: userdata cleared' $script:dev.wiped $true
+    Check 'shrink: userdata ends before a 4 GiB region'  $now.End $newEnd4
+    Check 'shrink: the region is the size asked for' ((FreeRegion ($newEnd4 + 1) $D64).End - $rgStart) 8388608
+    Check 'shrink: says where'      (Printed '^  userdata now ends at sector 113758207$') $true
+    Check 'shrink: userdata not cleared from here' $script:dev.wiped $false
+    Check 'shrink: the request to recovery' (Sha256Hex $script:dev.bcb) (Sha256Hex ([IO.File]::ReadAllBytes($bcbFile)))
+    $tx = @(Get-ChildItem -LiteralPath $BackupDir -Recurse -Filter 'transaction.json')
+    Check 'shrink: one transaction'  $tx.Count 1
+    $txj = [IO.File]::ReadAllText($tx[0].FullName) | ConvertFrom-Json
+    Check 'shrink: the transaction' "$($txj.state) $($txj.serial) $($txj.slot) $($txj.cid) $($txj.region_start) $($txj.target)" "prepared 324950664950 a 15010053454d36344720c1a6b7d2e900 $rgStart $($newEnd4 - $F64 + 1)"
+    $mk = Join-Path $fx 'marker.bin'
+    & $py (Join-Path (Join-Path $Top 'tools') 'resume.py') marker $txj.token $mk
+    Check 'shrink: the token'       (Sha256Hex $script:dev.marker["$rgStart"]) (Sha256Hex ([IO.File]::ReadAllBytes($mk)))
+    $bk = Split-Path -Parent $tx[0].FullName
+    Check 'shrink: the backup'      (@(Get-Content (Join-Path $bk 'SHA256SUMS')).Count) 15
+    Check 'shrink: the backup of boot_b' (Sha256Hex ([IO.File]::ReadAllBytes((Join-Path $bk 'boot_b.img')))) (Sha256Hex (PartBytes 'boot_b'))
     Check 'shrink: reboots'         $script:dev.rebooted $true
     Check 'shrink: the last thing'  ($script:dev.cmds[$script:dev.cmds.Count - 1]) 'adb: reboot'
     # no partition but userdata is named, and nothing but the partition table is read
-    Check 'shrink: no other partition' (@($script:dev.cmds | Where-Object { $_ -match 'by-name/(?!userdata )|nvram|fixnv|runtimenv|prodnv|persist|miscdata|mmcblk0p' }).Count) 0
-    Check 'shrink: reads'           (@($script:dev.cmds | Where-Object { $_ -like 'pull:*' } | Sort-Object -Unique).Count) 2
+    Check 'shrink: no other partition' (@($script:dev.cmds | Where-Object { $_ -match 'by-name/(?!(misc|userdata|boot_[ab]|uboot_[ab]|sml_[ab]|teecfg_[ab]|trustos_[ab]|vbmeta_[ab])\b)|nvram|fixnv|runtimenv|prodnv|persist|miscdata' }).Count) 0
+    Check 'shrink: reads'           (@($script:dev.cmds | Where-Object { $_ -like 'pull:*' } | Sort-Object -Unique).Count) 15
+    Remove-Item -Recurse -Force $BackupDir
 
     # "no" to the reboot
     FakeDevice 'vendor64'; RunOffer @('yes', '2.5', 'ERASE', 'no')
     Check 'no reboot: no error'     $script:died ''
-    Check 'no reboot: written'      ((Writes) -join '|') "$tailDd|$headDd|$zeroDd"
+    Check 'no reboot: written'      ((Writes) -join '|') ("$tailDd|$headDd|$markerDd|$bcbDd" -replace "seek=$rgStart", "seek=$((FreeRegion ($newEnd4 + 8388608 - 5242880 + 1) $D64).Start)")
     Check 'no reboot: stays up'     $script:dev.rebooted $false
 
     # a push that stops halfway: what is on the device is not what was made, and nothing is written
     FakeDevice 'vendor64'; $script:dev.shortPush = $true; RunOffer @('yes', '4', 'ERASE')
     Check 'short push: refused'     $script:died 'DIE: the new partition table did not arrive on the device as it was made; nothing is changed'
     Check 'short push: device untouched' (Untouched) $true
-    Check 'short push: cleaned up'  ($script:dev.cmds[$script:dev.cmds.Count - 1]) 'su: rm -f /data/local/tmp/new.head /data/local/tmp/new.tail'
+    Check 'short push: cleaned up'  ($script:dev.cmds[$script:dev.cmds.Count - 1]) "su: rm -f $tmpFiles"
 
     # a device whose table does not change: said, and userdata is not cleared
     FakeDevice 'vendor64'; $script:dev.deafDisk = $true; RunOffer @('yes', '4', 'ERASE')
     Check 'did not take: said'      $script:died 'DIE: the table did not take (userdata still ends at 122155007). Nothing else was changed.'
-    Check 'did not take: userdata not cleared' ($script:dev.wiped -or $script:dev.rebooted) $false
+    Check 'did not take: no reset asked for' ($script:dev.wiped -or $script:dev.rebooted -or $null -ne $script:dev.bcb -or $script:dev.marker.Count -gt 0) $false
+
+    # an encryption state that cannot be told: kano's rule, nothing is changed
+    FakeDevice 'vendor64'; $script:dev.facts = $script:dev.facts -replace 'STATE=encrypted', 'STATE=' -replace 'TYPE=file', 'TYPE=' -replace 'SOURCE=/dev/block/dm-6', 'SOURCE=/dev/block/mmcblk0p18' -replace 'MAGIC=', 'MAGIC=1020f5f2'
+    RunOffer @('yes', '4', 'ERASE')
+    Check 'unknown crypto: refused' $script:died "DIE: Android's encryption state is unknown (?/?); nothing is changed."
+    Check 'unknown crypto: no question' $script:asked.Count 0
+    Check 'unknown crypto: device untouched' (Untouched) $true
+    # the table and the running kernel disagree: reboot first
+    FakeDevice 'vendor64'; $script:dev.facts = $script:dev.facts -replace "SIZE=\d+", 'SIZE=4096'
+    RunOffer @('yes', '4', 'ERASE')
+    Check 'kernel disagrees: refused' $script:died 'DIE: the partition table and the running kernel disagree about userdata; reboot Android and try again'
+    Check 'kernel disagrees: device untouched' (Untouched) $true
 
     # a partition behind userdata: not a table to make room in. The tool's reason and the figures, no question
     FakeDevice 'nvlast64'; RunOffer @('yes', '4', 'ERASE')
@@ -534,6 +622,422 @@ if (-not $py) {
     Remove-Item function:Write-Host
     Remove-Item -Recurse -Force $fx
 }
+
+# ---- the release and the beta question (tools/releases.sh's release_resolve, here ReleasePick and BetaAsked) -------
+$bnames = 'ReleasePick', 'BetaAsked', 'TagKey', 'TagNewer'
+$bdefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $bnames -contains $n.Name }, $true)
+foreach ($d in $bdefs) { . ([scriptblock]::Create($d.Extent.Text)) }
+foreach ($w in $bnames) {
+    if (-not (Get-Command $w -CommandType Function -ErrorAction SilentlyContinue)) { Write-Host "FAIL: $w not found in install.ps1"; exit 99 }
+}
+# the release tags (docs/FINDINGS.md 125): the table every language is held to
+foreach ($line in [IO.File]::ReadAllLines((Join-Path (Join-Path (Join-Path $Top 'tests') 'fixtures') 'release-tags.tsv'))) {
+    if (-not $line -or $line.StartsWith('#')) { continue }
+    $f = $line.Split("`t")
+    switch ($f[0]) {
+        'ok'  { Check "tag ok [$($f[1])]" ($null -ne (TagKey $f[1])) $true }
+        'bad' { Check "tag bad [$($f[1])]" ($null -eq (TagKey $f[1])) $true }
+        'cmp' {
+            $a = $f[1]; $b = $f[3]
+            $got = if (TagNewer $a $b) { if (TagNewer $b $a) { 'both' } else { '>' } } elseif (TagNewer $b $a) { '<' } elseif ($null -ne (TagKey $a) -and $null -ne (TagKey $b)) { '=' } else { '!' }
+            Check "tag $a $($f[2]) $b" $got $f[2]
+        }
+    }
+}
+Check 'tag: a newline after it'  ($null -eq (TagKey "v2026.10.16.1`n")) $true
+Check 'tag: other digits'        ($null -eq (TagKey "v2026.10.16.$([char]0x0661)")) $true
+$site0 = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
+Check 'slot a: by TagNewer'      ($site0 -match "\(TagNewer 'v2026\.10\.10' \`$Release\)") $true
+Check 'beta asked'               (BetaAsked 'v2026.10.23' 'v2026.10.25' $false) $true
+Check 'no beta: not asked'       (BetaAsked 'v2026.10.23' '' $false) $false
+Check 'no release: not asked'    (BetaAsked '' 'v2026.10.25' $false) $false
+Check 'the same tag: not asked'  (BetaAsked 'v2026.10.23' 'v2026.10.23' $false) $false
+Check '-Answers: not asked'      (BetaAsked 'v2026.10.23' 'v2026.10.25' $true) $false
+$site = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
+Check 'release before the questions'  ($site.IndexOf('$rl = ReleaseList') -gt 0 -and $site.IndexOf('$rl = ReleaseList') -lt $site.IndexOf("Say (T 'What should be installed?')")) $true
+Check 'the beta defaults to no'  ($site -match "\(Ask \(T 'Install the beta \{1\} instead of \{2\}\? \(yes/no\)' \`$rl\.Beta \`$Release\) 'no' 'MU300_ANS_BETA'\) -eq 'yes'") $true
+Check 'a given release is not looked up'  ($site -match '(?s)if \(-not \$Release\) \{\s+if \(\$ReleaseUrl\) \{ \$Release = ''custom'' \}\s+else \{\s+\$rl = ReleaseList') $true
+if (-not $py) {
+    if ($env:GITHUB_ACTIONS) { Check 'python for the release tests' 'none' 'found' }
+    else { Write-Host 'no Python 3 here: the release decision was not run against the fake API answers' }
+} else {
+    # fake answers of GitHub's API, decided by the real tools/release_pick.py
+    function Python { & $py @args }
+    $rx = Join-Path ([IO.Path]::GetTempPath()) ('mu300-rel-' + [guid]::NewGuid())
+    New-Item -ItemType Directory -Path $rx | Out-Null
+    function Rel($tag, $when, $pre, $draft) { '{"tag_name": "' + $tag + '", "published_at": "' + $when + '", "prerelease": ' + $pre + ', "draft": ' + $draft + ', "assets": []}' }
+    $full = Rel 'v2026.10.23' '2026-10-12T17:55:05Z' 'false' 'false'
+    $oldBeta = Rel 'v2026.10.19' '2026-10-11T16:18:01Z' 'true' 'false'
+    $newBeta = Rel 'v2026.10.25' '2026-10-14T08:00:00Z' 'true' 'false'
+    $draft = Rel 'v2026.11.01' '2026-11-01T00:00:00Z' 'true' 'true'
+    $evil = Rel 'v1; calc' '2026-10-20T00:00:00Z' 'true' 'false'
+    $cases = @(
+        @('no prerelease', "[$full]", 'v2026.10.23', ''),
+        @('an overtaken prerelease', "[$full, $oldBeta]", 'v2026.10.23', ''),
+        @('a newer prerelease', "[$oldBeta, $newBeta, $full]", 'v2026.10.23', 'v2026.10.25'),
+        @('a draft', "[$draft, $full]", 'v2026.10.23', ''),
+        @('only a prerelease', "[$newBeta]", '', ''),
+        @('a tag that is not plain', "[$full, $evil]", 'v2026.10.23', ''),
+        @('the rate limit', '{"message": "API rate limit exceeded for 203.0.113.7."}', '', ''),
+        @('a page of a proxy', '<html>blocked</html>', '', ''),
+        @('nothing', '', '', ''))
+    foreach ($c in $cases) {
+        $jf = Join-Path $rx 'releases.json'
+        [IO.File]::WriteAllText($jf, $c[1])
+        $r = ReleasePick $jf
+        Check "release: $($c[0]): latest" $r.Latest $c[2]
+        Check "release: $($c[0]): beta"   $r.Beta $c[3]
+    }
+    $r = ReleasePick (Join-Path $rx 'no-such-file.json')
+    Check 'release: no file: latest'  $r.Latest ''
+    Check 'release: no file: beta'    $r.Beta ''
+    Remove-Item -Recurse -Force $rx
+}
+
+# ---- answers mode and the progress stream (tools\answers.ps1, dot-sourced near the top) -----------------------------
+# the functions of the installer that go with it, and stubs for what they call
+$anames = 'Ask', 'NextAnswer'
+$adefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $anames -contains $n.Name }, $true)
+foreach ($d in $adefs) { . ([scriptblock]::Create($d.Extent.Text)) }
+LoadLanguage 'en'
+$script:lines = New-Object System.Collections.ArrayList
+# (a failed check still shows: Check prints through Write-Host too)
+function Write-Host { if ("$($args[0])" -like 'FAIL *') { [Console]::Out.WriteLine([string]$args[0]) } else { [void]$script:lines.Add([string]$args[0]) } }
+function Die($m) { Progress 'error' 'message' $m; throw "DIE: $m" }
+function AnswersFail([string]$Message) { throw "FAIL: $Message" }
+function ResetAnswers {
+    $script:MuAnswers.Clear(); $script:MuAsked.Clear(); $script:lines.Clear()
+    $script:MuAnswersMode = $true; $script:MuProgress = $true; $script:AnswerQueue = $null
+}
+function Events([string]$Name) { @($script:lines | Where-Object { "$_".StartsWith('@@mu300 {"event":"' + $Name + '"') }) }
+function Dies([scriptblock]$Block) { try { & $Block | Out-Null; return '' } catch { return [string]$_.Exception.Message } }
+
+Check 'json: plain'            (JsonEsc 'Kernel 6.18') 'Kernel 6.18'
+Check 'json: quote, backslash' (JsonEsc 'a"b\c') 'a\"b\\c'
+Check 'json: line end, tab'    (JsonEsc "a`r`nb`tc") 'a  b c'
+Check 'json: control'          (JsonEsc ("a" + [char]1 + [char]27 + "b")) 'ab'
+Check 'json: not ASCII'        (JsonEsc ('T' + [char]0xFC + 'rk' + [char]0x4E2D)) 'T\u00fcrk\u4e2d'
+Check 'event line'             (ProgressLine 'info' 'key' 'region.size' 'value' 34828075008) '@@mu300 {"event":"info","key":"region.size","value":"34828075008"}'
+Check 'event line: no values'  (ProgressLine 'hello') '@@mu300 {"event":"hello"}'
+
+# the file: NAME=value lines, the value as it is
+$pr = AnswersParse @('# a comment', '', 'MU300_ANS_KERNEL=6.18', "MU300_ANS_PASSWORD=p=ss w'rd `$x`r", 'ANDROID_SERIAL=324950664950', 'MU300_ANS_GPU=')
+Check 'file: ok'               $pr.Ok $true
+Check 'file: value'            $pr.Values['MU300_ANS_KERNEL'] '6.18'
+Check 'file: value as it is'   $pr.Values['MU300_ANS_PASSWORD'] "p=ss w'rd `$x"
+Check 'file: serial'           $pr.Values['ANDROID_SERIAL'] '324950664950'
+Check 'file: empty value'      $pr.Values['MU300_ANS_GPU'] ''
+Check 'file: not ours'         (AnswersParse @('PATH=C:\evil')).Error 'answers file: not a variable of the installer: PATH'
+Check 'file: lower case'       (AnswersParse @('mu300_ans_kernel=1')).Ok $false
+Check 'file: no ='             (AnswersParse @('MU300_ANS_GPU=yes', 'hunter2secret')).Error 'answers file: line 2 is not NAME=value'
+Check 'file: no name'          (AnswersParse @('=x')).Error 'answers file: not a variable of the installer: '
+# a secret is never shown, whichever way it is asked for, and never part of an event
+ResetAnswers; $script:MuAnswers['MU300_ANS_PASSWORD'] = 'hunter2secret'
+Check 'secret through Ask: taken'  (Ask 'Password' '' 'MU300_ANS_PASSWORD') 'hunter2secret'
+Check 'secret through Ask: not shown' (@($script:lines | Where-Object { "$_" -match 'hunter2' }).Count) 0
+Check 'secret through Ask: event' @(Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_PASSWORD","text":"Password","default":"","secret":"1"}'
+Check 'secret asked again: not shown' ((Dies { Ask 'Password' '' 'MU300_ANS_PASSWORD' }) -match 'hunter2') $false
+# given in the environment, it leaves the environment: the programs the installer starts do not inherit it
+ResetAnswers; $env:MU300_ANS_PASSWORD = 'hunter2secret'; $env:MU300_NONINTERACTIVE = '1'
+AnswersSetup '' $false
+Check 'secret from the environment: kept'  $script:MuAnswers['MU300_ANS_PASSWORD'] 'hunter2secret'
+Check 'secret from the environment: gone from it' ($null -eq [Environment]::GetEnvironmentVariable('MU300_ANS_PASSWORD')) $true
+AnswersReexport
+Check 'secret back for the restart'   $env:MU300_ANS_PASSWORD 'hunter2secret'
+Remove-Item env:MU300_ANS_PASSWORD; Remove-Item env:MU300_NONINTERACTIVE
+
+# a question answered by its variable, announced on the stream
+ResetAnswers; $script:MuAnswers['MU300_ANS_KERNEL'] = '2'
+Check 'answer: taken'          (Ask 'Kernel' '1' 'MU300_ANS_KERNEL') '2'
+Check 'answer: shown'          ($script:lines -contains 'Kernel [1]: 2') $true
+Check 'answer: event'          @(Events 'question')[0] '@@mu300 {"event":"question","id":"MU300_ANS_KERNEL","text":"Kernel","default":"1","answer":"2"}'
+# the words of the other languages count, as they do when typed
+ResetAnswers; $script:MuAnswers['MU300_ANS_VPN'] = 'evet'
+Check 'answer: normalised'     (Ask 'VPN? (yes/no)' 'no' 'MU300_ANS_VPN') 'yes'
+# set to nothing: the default, which is never the destructive answer
+ResetAnswers; $script:MuAnswers['MU300_ANS_CONFIRM'] = ''
+Check 'answer: empty is the default'  (Ask 'Type INSTALL to continue' 'no' 'MU300_ANS_CONFIRM') 'no'
+# from the environment when the file has none
+ResetAnswers; $env:MU300_ANS_TESTONLY = '6.18'
+Check 'answer: environment'    (Ask 'Kernel' '1' 'MU300_ANS_TESTONLY') '6.18'
+Remove-Item env:MU300_ANS_TESTONLY
+# no answer: an error that names the variable, never the default
+ResetAnswers
+$e = Dies { Ask 'Type INSTALL to continue' 'no' 'MU300_ANS_CONFIRM' }
+Check 'unanswered: stops'      $e 'DIE: no answer to the question "Type INSTALL to continue": set MU300_ANS_CONFIRM (nothing is asked and nothing is assumed in answers mode)'
+Check 'unanswered: error event' @(Events 'error').Count 1
+Check 'unanswered: no question event' @(Events 'question').Count 0
+# a question without a variable cannot be answered at all
+ResetAnswers
+Check 'no variable: stops'     ((Dies { Ask 'Something new' 'yes' }) -match '^DIE: this question has no variable') $true
+# a question that comes back was not happy with its answer: stop instead of asking for ever
+ResetAnswers; $script:MuAnswers['MU300_ANS_KERNEL'] = '9'
+Ask 'Kernel' '1' 'MU300_ANS_KERNEL' | Out-Null
+Check 'asked again: stops'     (Dies { Ask 'Kernel' '1' 'MU300_ANS_KERNEL' }) 'DIE: the answer in MU300_ANS_KERNEL was not accepted: 9'
+# the password: never in an event, never on a line
+ResetAnswers; $script:MuAnswers['MU300_ANS_PASSWORD'] = 'hunter2secret'
+Check 'password: taken'        (AnswerNamed 'Password' '' 'MU300_ANS_PASSWORD' -Secret) 'hunter2secret'
+Check 'password: not shown'    (@($script:lines | Where-Object { "$_" -match 'hunter2' }).Count) 0
+Check 'password: stars'        ($script:lines -contains 'Password []: ******') $true
+# without answers mode nothing here speaks
+$script:MuAnswersMode = $false; $script:MuProgress = $false; $script:lines.Clear()
+Progress 'step' 'id' 'x'; Info 'a' 'b'; Step 'x' 3
+Check 'no stream: silent'      $script:lines.Count 0
+$script:MuProgress = $true
+Step 'download' 20; ProgressSay 'Downloading release v1'
+Check 'step event'             $script:lines[0] '@@mu300 {"event":"step","id":"download","percent":"20","title":"Downloading release v1"}'
+ProgressSay 'A heading without a step'
+Check 'step: id used once'     $script:lines[1] '@@mu300 {"event":"step","id":"","percent":"","title":"A heading without a step"}'
+$script:MuProgress = $false
+Remove-Item function:Write-Host
+Remove-Item function:Die
+Remove-Item function:AnswersFail
+# every question of both installers has its variable
+foreach ($f in 'install.ps1', 'uninstall.ps1') {
+    $code = [IO.File]::ReadAllText((Join-Path $Top $f))
+    $bare = @([regex]::Matches($code, '(?m)^.*\bAsk \(?[T''"].*$') | ForEach-Object { $_.Value } | Where-Object { $_ -notmatch "'(MU300_[A-Z_]+)'\)?" })
+    Check "$f - a question without a variable: $($bare -join ' | ')" $bare.Count 0
+}
+
+# ---- the graphical installer's question and the Python it needs (tools\gui-launch.ps1; tools/gui-launch.sh's tests
+# are tests/test_gui_launch.py) ------------------------------------------------------------------------------------
+. (Join-Path (Join-Path $Top 'tools') 'gui-launch.ps1')
+LoadLanguage 'en'
+# whether it is asked at all: setting, MU300_FROM_GUI, scripted (answers of either kind, -Check, -Backup), a console
+Check 'gui: a person at a console'   (GuiAsked '' '' $false $true) $true
+Check 'gui: no console'              (GuiAsked '' '' $false $false) $false
+Check 'gui: MU300_GUI=0'             (GuiAsked '0' '' $false $true) $false
+Check 'gui: MU300_GUI=1, no console' (GuiAsked '1' '' $false $false) $true
+Check 'gui: started by the window'   (GuiAsked '1' '1' $false $true) $false
+Check 'gui: scripted'                (GuiAsked '' '' $true $true) $false
+Check 'gui: scripted, MU300_GUI=1'   (GuiAsked '1' '' $true $true) $false
+Check 'gui: default with a screen'   (GuiDefault '' '') 'yes'
+Check 'gui: default over SSH'        (GuiDefault '10.0.0.2 50000 10.0.0.1 22' '') 'no'
+Check 'gui: default over SSH (client)' (GuiDefault '' '10.0.0.2 50000 22') 'no'
+Check 'gui: the winget command'      (GuiWingetCommand) 'winget install -e --id Python.Python.3.12 --scope user'
+$site = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
+Check 'gui: offered after the self-update, before the device' ($site.IndexOf('if (SelfUpdate) {') -lt $site.IndexOf('GuiOffer (') -and $site.IndexOf('GuiOffer (') -lt $site.IndexOf("Say (T 'Checking host tools and device')")) $true
+Check 'gui: not with answers, -Check or -Backup' ($site.Contains('GuiOffer ([bool]($script:MuAnswersMode -or ($null -ne $script:AnswerQueue) -or $Check -or $Backup))')) $true
+
+if ($env:OS -ne 'Windows_NT') {
+    Write-Host 'not Windows: the search for Python was not run against the fake directory trees'
+} else {
+    # Fake trees with stub interpreters: python.cmd files that answer the two probes (the version, import tkinter)
+    # and record whatever else they are started with. $ver '' is the Microsoft Store's alias with no Python behind
+    # it: it prints nothing and fails.
+    $gx = Join-Path ([IO.Path]::GetTempPath()) ('mu300-gui-' + [guid]::NewGuid())
+    $lad = Join-Path $gx 'LocalAppData'; $pf = Join-Path $gx 'Program Files'; $pf86 = Join-Path $gx 'Program Files (x86)'
+    New-Item -ItemType Directory -Path $lad, $pf, $pf86 | Out-Null
+    $ranLog = Join-Path $gx 'ran.txt'
+    function StubPython([string]$Dir, [string]$Ver, [int]$TkRc, [int]$GuiRc = 0, [string]$Leaf = 'python.cmd') {
+        New-Item -ItemType Directory -Force -Path $Dir | Out-Null
+        $f = Join-Path $Dir $Leaf
+        if (-not $Ver) { [IO.File]::WriteAllText($f, "@echo off`r`nexit /b 9009`r`n"); return $f }
+        $p = $Ver.Split('.')
+        $t = "@echo off`r`necho %* | findstr /c:`"tkinter`" >nul`r`nif not errorlevel 1 exit /b $TkRc`r`n" +
+            "echo %* | findstr /c:`"version_info`" >nul`r`nif errorlevel 1 goto run`r`necho $($p[0])`r`necho $($p[1])`r`nexit /b 0`r`n" +
+            ":run`r`necho ran %*>>`"$ranLog`"`r`nexit /b $GuiRc`r`n"
+        [IO.File]::WriteAllText($f, $t)
+        return $f
+    }
+    function Cands { return @(GuiPyCandidates $lad $pf $pf86 'python.cmd' -NoPath) }
+
+    Check 'find: an empty machine'       (Cands).Count 0
+    $r = GuiPyFind (Cands)
+    Check 'find: nothing'                "$($null -eq $r.Python) $($null -eq $r.NoTk) $($null -eq $r.Old)" 'True True True'
+
+    # python.org / winget for this user, newest first: 3.13 before 3.9 (by the number, not by the text)
+    $p39 = StubPython (Join-Path $lad 'Programs\Python\Python39') '3.9' 0
+    $p313 = StubPython (Join-Path $lad 'Programs\Python\Python313') '3.13' 0
+    $c = Cands
+    Check 'find: the user installs, newest first' (($c | ForEach-Object { $_.Exe }) -join '|') "$p313|$p39"
+    $r = GuiPyFind $c
+    Check 'find: the newest with tkinter'  "$($r.Python.Exe) $($r.Python.Version)" "$p313 3.13"
+    $pr = GuiPyProbe @{ Exe = $p313; Pre = @() }
+    Check 'probe: runs, version, tkinter'  "$($pr.Runs) $($pr.Version) $($pr.Old) $($pr.Tk)" 'True 3.13 False True'
+
+    # the newest was set up without tcl/tk: the next one is taken
+    StubPython (Join-Path $lad 'Programs\Python\Python313') '3.13' 1 | Out-Null
+    $r = GuiPyFind (Cands)
+    Check 'find: past one without tkinter' "$($r.Python.Exe) $($r.Python.Version)" "$p39 3.9"
+    $pr = GuiPyProbe @{ Exe = $p313; Pre = @() }
+    Check 'probe: no tkinter'              "$($pr.Runs) $($pr.Version) $($pr.Tk)" 'True 3.13 False'
+    # none has it: the one without is named, so the message can say which is missing
+    StubPython (Join-Path $lad 'Programs\Python\Python39') '3.9' 1 | Out-Null
+    $r = GuiPyFind (Cands)
+    Check 'find: only without tkinter'     "$($null -eq $r.Python) $($r.NoTk.Exe) $($r.NoTk.Version)" "True $p313 3.13"
+    Remove-Item -Recurse -Force (Join-Path $lad 'Programs')
+
+    # for all users, 64 and 32 bit; the user's own comes first
+    $pAll = StubPython (Join-Path $pf 'Python312') '3.12' 0
+    $p86 = StubPython (Join-Path $pf86 'Python311-32') '3.11' 0
+    New-Item -ItemType Directory -Force -Path (Join-Path $pf 'PythonSoftwareFoundation'), (Join-Path $pf 'Python27') | Out-Null
+    Check 'find: for all users'           ((Cands | ForEach-Object { $_.Exe }) -join '|') "$pAll|$p86"
+    $pUser = StubPython (Join-Path $lad 'Programs\Python\Python310') '3.10' 0
+    Check 'find: the user install first'  ((Cands | ForEach-Object { $_.Exe }) -join '|') "$pUser|$pAll|$p86"
+    Remove-Item -Recurse -Force (Join-Path $lad 'Programs'), (Join-Path $pf 'Python312'), (Join-Path $pf86 'Python311-32')
+
+    # too old, and what is no Python at all
+    $pOld = StubPython (Join-Path $pf 'Python37') '3.7' 0
+    $r = GuiPyFind (Cands)
+    Check 'find: too old is named'        "$($null -eq $r.Python) $($r.Old.Exe) $($r.Old.Version)" "True $pOld 3.7"
+    $pr = GuiPyProbe @{ Exe = $pOld; Pre = @() }
+    Check 'probe: too old'                "$($pr.Runs) $($pr.Old) $($pr.Tk)" 'True True False'
+    Remove-Item -Recurse -Force (Join-Path $pf 'Python37')
+    # the Microsoft Store's alias with no Python behind it: found as a file, never taken for a Python
+    $store = StubPython (Join-Path $lad 'Microsoft\WindowsApps') '' 0
+    Check 'find: the Store alias is a candidate' ((Cands | ForEach-Object { $_.Exe }) -join '|') $store
+    $pr = GuiPyProbe @{ Exe = $store; Pre = @() }
+    Check 'probe: the Store stub does not run' "$($pr.Runs) [$($pr.Version)]" 'False []'
+    $r = GuiPyFind (Cands)
+    Check 'find: the Store stub is no Python' "$($null -eq $r.Python) $($null -eq $r.NoTk) $($null -eq $r.Old)" 'True True True'
+    # ... and the Store's real Python, in the same place, is one
+    StubPython (Join-Path $lad 'Microsoft\WindowsApps') '3.12' 0 | Out-Null
+    Check 'find: the Store Python'        (GuiPyFind (Cands)).Python.Version '3.12'
+    $pr = GuiPyProbe @{ Exe = (Join-Path $gx 'no-such-python.cmd'); Pre = @() }
+    Check 'probe: a file that is not there' $pr.Runs $false
+    # the launcher's -3 goes in front of the other arguments
+    $py3 = StubPython (Join-Path $gx 'launcher') '3.11' 0 0 'py.cmd'
+    $pr = GuiPyProbe @{ Exe = $py3; Pre = @('-3') }
+    Check 'probe: the launcher'           "$($pr.Runs) $($pr.Version) $($pr.Tk)" 'True 3.11 True'
+    Remove-Item -Recurse -Force (Join-Path $lad 'Microsoft')
+
+    # a python.exe named by hand: the file, its folder, with quotes; nothing for what is not there
+    $hand = StubPython (Join-Path $gx 'by hand') '3.12' 0 0 'python.exe.cmd'
+    Check 'by hand: the file'             (GuiPyByHand $hand).Exe $hand
+    Check 'by hand: quoted'               (GuiPyByHand "  `"$hand`" ").Exe $hand
+    Check 'by hand: not there'            ($null -eq (GuiPyByHand (Join-Path $gx 'nope\python.exe'))) $true
+    Check 'by hand: nothing'              ($null -eq (GuiPyByHand '   ')) $true
+    [IO.File]::WriteAllText((Join-Path (Join-Path $gx 'by hand') 'python.exe'), '')
+    Check 'by hand: its folder'           (GuiPyByHand (Join-Path $gx 'by hand')).Exe (Join-Path (Join-Path $gx 'by hand') 'python.exe')
+
+    # the whole offer, with the search and the console replaced: what is asked, what is run, and that every way
+    # that is not a started window comes back for the text installer
+    $script:glines = New-Object System.Collections.ArrayList
+    $script:gasked = New-Object System.Collections.ArrayList
+    $script:ganswers = New-Object 'System.Collections.Generic.Queue[string]'
+    function Write-Host { if ("$($args[0])" -like 'FAIL *') { [Console]::Out.WriteLine([string]$args[0]) } else { [void]$script:glines.Add([string]$args[0]) } }
+    function Say($m) { [void]$script:glines.Add("==> $m") }
+    function Ask($question, $default, $Id) {
+        [void]$script:gasked.Add("$Id=$default")
+        if ($script:ganswers.Count -eq 0) { return $default }
+        $a = [string]$script:ganswers.Dequeue()
+        if ([string]::IsNullOrWhiteSpace($a)) { return $default } else { return (NormalizeAnswer $a.Trim()) }
+    }
+    function GuiConsole { return $true }
+    $script:gfound = @{ Python = $null; NoTk = $null; Old = $null }
+    function GuiPySearch { return $script:gfound }
+    function Offer([string[]]$Answers) {
+        $script:glines.Clear(); $script:gasked.Clear(); $script:ganswers.Clear()
+        foreach ($a in @($Answers)) { $script:ganswers.Enqueue($a) }
+        Remove-Item $ranLog -ErrorAction SilentlyContinue
+        GuiOffer $false
+        return 'the text installer goes on'
+    }
+    $realTop = $Top; $Top = Join-Path $gx 'top'; $Lang = 'tr'
+    New-Item -ItemType Directory -Force -Path (Join-Path $Top 'gui') | Out-Null
+    [IO.File]::WriteAllText((Join-Path (Join-Path $Top 'gui') 'mu300-gui.py'), '# stands for the window')
+    $saveGui = $env:MU300_GUI; $saveFrom = $env:MU300_FROM_GUI; $saveLang = $env:MU300_LANG
+    $env:MU300_GUI = ''; $env:MU300_FROM_GUI = ''
+
+    Check 'offer: no'                     (Offer @('no')) 'the text installer goes on'
+    Check 'offer: no - one question'      ($script:gasked -join ' ') 'MU300_GUI=yes'
+    Check 'offer: no - nothing said'      $script:glines.Count 0
+    GuiOffer $true
+    Check 'offer: scripted - not asked'   $script:gasked.Count 1
+
+    # no Python: the default of the next question is the text installer
+    Check 'offer: no Python'              (Offer @('yes', '')) 'the text installer goes on'
+    Check 'offer: no Python - asked'      ($script:gasked -join ' ') 'MU300_GUI=yes MU300_GUI_PYTHON=no'
+    Check 'offer: no Python - said'       ($script:glines -join '|') '  No Python 3 was found for the window.|  Continuing with the text installer.'
+    # a path that is no Python
+    Check 'offer: a wrong path'           (Offer @('yes', (Join-Path $gx 'nope\python.exe'))) 'the text installer goes on'
+    Check 'offer: a wrong path - said'    ($script:glines -contains '  That is not a Python 3.8 or newer with tkinter.') $true
+    # tkinter missing, too old: the message says which
+    $script:gfound = @{ Python = $null; NoTk = @{ Exe = 'C:\Py\python.exe'; Pre = @(); Version = '3.12' }; Old = $null }
+    Offer @('yes', 'no') | Out-Null
+    Check 'offer: no tkinter - said'      $script:glines[0] '  Python 3.12 is there (C:\Py\python.exe), but without tkinter, which the window is made with.'
+    $script:gfound = @{ Python = $null; NoTk = $null; Old = @{ Exe = 'C:\Py\python.exe'; Pre = @(); Version = '3.6' } }
+    Offer @('yes', 'no') | Out-Null
+    Check 'offer: too old - said'         $script:glines[0] '  Python 3.6 is there (C:\Py\python.exe), but the window needs Python 3.8 or newer.'
+
+    # winget: the command is shown first and runs only with a yes; a stub winget.cmd first on PATH stands for it
+    $wg = Join-Path $gx 'winget'; New-Item -ItemType Directory -Path $wg | Out-Null
+    $wgLog = Join-Path $gx 'winget.txt'
+    [IO.File]::WriteAllText((Join-Path $wg 'winget.cmd'), "@echo off`r`necho winget %*>>`"$wgLog`"`r`nexit /b 0`r`n")
+    $savePath = $env:PATH; $env:PATH = "$wg;$env:PATH"
+    $script:gfound = @{ Python = $null; NoTk = $null; Old = $null }
+    Check 'offer: winget, then no'        (Offer @('yes', 'winget', '')) 'the text installer goes on'
+    Check 'offer: winget - asked'         ($script:gasked -join ' ') 'MU300_GUI=yes MU300_GUI_PYTHON=no MU300_GUI_INSTALL_PYTHON=no'
+    Check 'offer: winget - shown'         ($script:glines -contains '    winget install -e --id Python.Python.3.12 --scope user') $true
+    Check 'offer: winget - not run'       (Test-Path $wgLog) $false
+    Offer @('yes', 'winget', 'yes') | Out-Null
+    Check 'offer: winget - run as shown'  ((Get-Content $wgLog) -join '|').Trim() 'winget install -e --id Python.Python.3.12 --scope user'
+    $env:PATH = $savePath
+
+    # a Python that can: the window is started with it, in the language chosen; one that ends with an error comes back
+    $guiPy = StubPython (Join-Path $gx 'gui-python') '3.12' 0 3
+    $script:gfound = @{ Python = @{ Exe = $guiPy; Pre = @(); Version = '3.12' }; NoTk = $null; Old = $null }
+    Check 'offer: a window that fails'    (Offer @('yes')) 'the text installer goes on'
+    Check 'offer: started'                $script:glines[0] '==> Starting the graphical installer (Python 3.12)'
+    Check 'offer: with the window file'   (((Get-Content $ranLog) -join '').Trim()) "ran $(Join-Path (Join-Path $Top 'gui') 'mu300-gui.py')"
+    Check 'offer: in the language chosen' $env:MU300_LANG 'tr'
+    Check 'offer: says why it came back'  $script:glines[1] '  The graphical installer could not start or stopped with an error (3).'
+    Check 'offer: one question'           ($script:gasked -join ' ') 'MU300_GUI=yes'
+    # MU300_GUI=1: not asked, started
+    $env:MU300_GUI = '1'
+    Offer @() | Out-Null
+    Check 'offer: MU300_GUI=1 asks nothing' $script:gasked.Count 0
+    Check 'offer: MU300_GUI=1 starts it'  (Test-Path $ranLog) $true
+    $env:MU300_GUI = '0'
+    Offer @() | Out-Null
+    Check 'offer: MU300_GUI=0 does nothing' "$($script:gasked.Count) $($script:glines.Count) $(Test-Path $ranLog)" '0 0 False'
+
+    $env:MU300_GUI = $saveGui; $env:MU300_FROM_GUI = $saveFrom; $env:MU300_LANG = $saveLang
+    $Top = $realTop
+    Remove-Item function:Write-Host
+    Remove-Item -Recurse -Force $gx -ErrorAction SilentlyContinue
+}
+
+# ---- a package: an unpacked Magisk zip (tools/package.sh is the same for install.sh) ------------------------------------
+$px = Join-Path ([IO.Path]::GetTempPath()) ('mu300-package-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Force -Path (Join-Path $px 'computer'), (Join-Path $px 'mu300'), (Join-Path $px 'payload') | Out-Null
+Check 'package: none'           (PackageDir '' (Join-Path $px 'computer')) ''
+[IO.File]::WriteAllText((Join-Path $px 'computer\.mu300-package'), "x`n")
+Check 'package: by the mark'    (PackageDir '' (Join-Path $px 'computer')) $px
+Check 'package: named'          (PackageDir 'D:\other' (Join-Path $px 'computer')) 'D:\other'
+[IO.File]::WriteAllText((Join-Path $px 'payload\mu300-kernel-6.18.tar.gz'), 'kernel bundle')
+[IO.File]::WriteAllText((Join-Path $px 'payload\mu300-openwrt-rootfs.tar.gz'), 'openwrt system')
+$hk = (Get-FileHash (Join-Path $px 'payload\mu300-kernel-6.18.tar.gz') -Algorithm SHA256).Hash.ToLower()
+$hr = (Get-FileHash (Join-Path $px 'payload\mu300-openwrt-rootfs.tar.gz') -Algorithm SHA256).Hash.ToLower()
+function PkgManifest([hashtable]$Over) {
+    $m = [ordered]@{ TAG = 'v2026.10.27'; SYSTEM = 'openwrt'; OS = 'openwrt'; UBUNTU = ''; KERNEL = '6.18'; KERNEL_ASSET = 'mu300-kernel-6.18.tar.gz'
+        ROOTFS_ASSET = 'mu300-openwrt-rootfs.tar.gz'; SHA256_KERNEL = $hk; SHA256_ROOTFS = $hr }
+    if ($Over) { foreach ($k in $Over.Keys) { $m[$k] = $Over[$k] } }
+    [IO.File]::WriteAllText((Join-Path $px 'mu300\manifest'), (($m.Keys | ForEach-Object { "$_=$($m[$_])" }) -join "`r`n") + "`r`n")
+    return (PackageManifest $px)
+}
+$pm = PkgManifest
+Check 'package: read'           "$($pm.TAG) $($pm.SYSTEM) $($pm.OS) [$($pm.UBUNTU)] $($pm.KERNEL) $($pm.KERNEL_ASSET) $($pm.ROOTFS_ASSET)" 'v2026.10.27 openwrt openwrt [] 6.18 mu300-kernel-6.18.tar.gz mu300-openwrt-rootfs.tar.gz'
+foreach ($bad in @(@{ TAG = '2026.10.27' }, @{ TAG = 'v1..2' }, @{ TAG = 'v1;x' }, @{ SYSTEM = 'ubuntu' }, @{ ROOTFS_ASSET = '..\..\x' },
+                   @{ KERNEL = '6.19' }, @{ KERNEL_ASSET = 'mu300-kernel.tar.gz' }, @{ SHA256_KERNEL = ('X' * 64) }, @{ SHA256_ROOTFS = 'ab' },
+                   @{ SYSTEM = 'ubuntu-26.04'; OS = 'ubuntu'; UBUNTU = '26.04'; ROOTFS_ASSET = 'mu300-ubuntu-26.04-rootfs.tar.gz'; KERNEL = '5.4'; KERNEL_ASSET = 'mu300-kernel.tar.gz' })) {
+    Check "package: refused $(@($bad.Keys) -join ',')=$(@($bad.Values) -join ',')" ($null -eq (PkgManifest $bad)) $true
+}
+# a key in another case is not one of the manifest's (the installer on the device reads TAG, not tag)
+[IO.File]::WriteAllText((Join-Path $px 'mu300\manifest'), "tag=v2026.10.27`n")
+Check 'package: keys are exact' ($null -eq (PackageManifest $px)) $true
+$pm = PkgManifest
+[IO.File]::WriteAllText((Join-Path $px 'mu300\SHA256SUMS'), "$hk  mu300-kernel-6.18.tar.gz`n$hr *mu300-openwrt-rootfs.tar.gz`n")
+Check 'package: both match'     "[$(PackageCheck $px 'mu300-kernel-6.18.tar.gz' $hk)][$(PackageCheck $px 'mu300-openwrt-rootfs.tar.gz' $hr)]" '[][]'
+Check 'package: not the manifest''s' (PackageCheck $px 'mu300-openwrt-rootfs.tar.gz' ('0' * 64)) 'mismatch'
+[IO.File]::WriteAllText((Join-Path $px 'mu300\SHA256SUMS'), "$hk  mu300-kernel-6.18.tar.gz`n$('0' * 64)  mu300-openwrt-rootfs.tar.gz`n")
+Check 'package: not SHA256SUMS''s' (PackageCheck $px 'mu300-openwrt-rootfs.tar.gz' $hr) 'mismatch'
+[IO.File]::WriteAllText((Join-Path $px 'mu300\SHA256SUMS'), "$hk  mu300-kernel-6.18.tar.gz`n")
+Check 'package: not in SHA256SUMS' (PackageCheck $px 'mu300-openwrt-rootfs.tar.gz' $hr) 'mismatch'
+Remove-Item (Join-Path $px 'payload\mu300-kernel-6.18.tar.gz')
+Check 'package: missing'        (PackageCheck $px 'mu300-kernel-6.18.tar.gz' $hk) 'missing'
+Remove-Item -Recurse -Force $px -ErrorAction SilentlyContinue
 
 Write-Host "$script:passed passed, $script:failed failed"
 exit $script:failed

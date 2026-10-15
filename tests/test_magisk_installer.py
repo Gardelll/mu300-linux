@@ -4,6 +4,7 @@ already there, and a refusal or a dry run writes nothing; an installation writes
 and arms misc last."""
 import hashlib
 import io
+import json
 import os
 import re
 import shutil
@@ -234,7 +235,7 @@ class Conf(ShellTest):
             ex = (sd / 'mu300-install.conf.example').read_text()
             lines = ex.splitlines()
             keys = [l for l in lines if re.match(r'#MU300_[A-Z_]+=', l)]
-            self.assertEqual(len(keys), 16, ex)
+            self.assertEqual(len(keys), 17, ex)
             for line in keys:
                 i = lines.index(line)
                 self.assertTrue(lines[i - 1].startswith('# '), line)          # its explanation, on a line of its own
@@ -642,6 +643,46 @@ class Plan(InstallerCase):
         self.assertEqual(self.run_installer(conf='MU300_DEVICE=f50\nMU300_DRY_RUN=1\n').returncode, 1)
         self.assertEqual(self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_DEVICE=f50\n').returncode, 3)
 
+    def test_v50(self):
+        """The ZTE V50 (FINDINGS 95): exactly V50 / MU3351 on ums9620, said to be experimental, only with a kernel
+        that names it; never under another name, and nothing else is ever taken for one."""
+        self.zip(devices='f50 u30air v50')
+        self.device(model='V50', product='MU3351', platform='ums9620')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout)
+        self.assertIn('ZTE V50: EXPERIMENTAL', r.stdout)
+        self.assertTrue(self.nothing_written())
+        # a kernel that does not name it (5.4, a release from before): refused with the way out
+        self.zip(devices='f50 u30air')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('The ZTE V50 runs only a mainline kernel', r.stdout)
+        self.assertTrue(self.nothing_written())
+        # it cannot be installed as another device
+        self.zip(devices='f50 u30air v50')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_DEVICE=f50\n')
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('MU300_DEVICE=f50 is not valid', r.stdout)
+        # a V50 that is not all three, or no V50 at all with one of its names: refused outright
+        for model, product, platform in (('V50', 'MU3351', 'mt6789'), ('V50', 'P671F60', 'ums9620'),
+                                         ('ZTE MU3351', 'MU3351', 'ums9620'), ('V50', 'MU3351', None)):
+            self.device(model=model, product=product, platform=platform)
+            r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+            self.assertEqual(r.returncode, 1, (model, product, platform))
+            self.assertIn('looks like a ZTE V50', r.stdout)
+            self.assertTrue(self.nothing_written())
+        # nothing is a v50 by the settings file either
+        self.device(model='Pixel 7')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_DEVICE=v50\n')
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('MU300_DEVICE=v50 is not valid', r.stdout)
+        # the F50 and the U30 Air with a kernel that names the V50 too: as before
+        for model in ('ZTE MU300', 'U30 Air'):
+            self.device(model=model)
+            r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+            self.assertEqual(r.returncode, 3, (model, r.stdout))
+            self.assertNotIn('V50', r.stdout)
+
     def test_android_on_slot_b_puts_linux_on_a(self):
         self.device(slot='_b')
         r = self.run_installer(conf='MU300_DRY_RUN=1\n')
@@ -809,6 +850,17 @@ class Install(InstallerCase):
         f = self.fake.root / pw_file
         self.assertIn(self.NOTE[kind], f.read_text())
         self.assertEqual(f.stat().st_mode & 0o777, 0o600)
+
+    def test_v50_install(self):
+        # the ZTE V50 (FINDINGS 95): its boot image names it, so init takes it as one; its own USB address
+        self.zip(devices='f50 u30air v50')
+        self.device(model='V50', product='MU3351', platform='ums9620')
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        files = self.linux_image('b')
+        self.assertEqual(files['etc/mu300-device'][1], b'v50\n')
+        self.assertIn('192.168.79.1', r.stdout)
+        self.assertNotIn('192.168.77.1', r.stdout)
 
     def test_full_install_internal(self):
         r = self.run_installer()
@@ -1308,6 +1360,185 @@ class Install(InstallerCase):
         self.assertEqual((self.fake.root / 'fs/home/precious').read_text(), 'a user file')
         self.assertEqual((self.fake.root / 'mounts').read_text(), '')                 # unmounted again
         self.assertEqual(self.work_dirs(), [])
+
+
+class WebCaller(InstallerCase):
+    """what a caller other than Magisk gets (tools/android-web.sh, for the web installer): its answers from one
+    file and no other, stages and the plan as lines a program reads, extras beside the scripts, an adb key"""
+
+    ADB_KEY = json.loads((TOP / 'tests/web/fixtures/adbkey.json').read_text())['pub'] + ' web-browser'
+
+    def answers(self, text, mode=0o600):
+        f = self.fake.root / 'data/adb/answers.conf'
+        f.write_text(text)
+        f.chmod(mode)
+        return f
+
+    def web(self, text, mode=0o600, progress=True, **kw):
+        env = {'MU300_ANSWERS': self.answers(text, mode)}
+        if progress:
+            env['MU300_PROGRESS'] = 1
+        return self.run_installer(extra_env=env, **kw)
+
+    @staticmethod
+    def plan(out):
+        return dict(l[len('MU300-PLAN '):].split('=', 1) for l in out.splitlines() if l.startswith('MU300-PLAN '))
+
+    @staticmethod
+    def steps(out):
+        return [l[len('MU300-STEP '):] for l in out.splitlines() if l.startswith('MU300-STEP ')]
+
+    def test_the_answers_file_is_the_only_one_read(self):
+        r = self.web('MU300_DRY_RUN=1\nMU300_BOOT_ATTEMPTS=3\n', conf='MU300_BOOT=android\nMU300_HOTSPOT=no\n',
+                     trusted='MU300_BOOT_ATTEMPTS=2\nMU300_GPU=no\nMU300_PASSWORD=from-data-adb\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        p = self.plan(r.stdout)
+        self.assertEqual((p['boot_attempts'], p['default_linux'], p['hotspot'], p['gpu'], p['password']),
+                         ('3', '1', '1', 'yes', 'image'))
+        self.assertIn(f'settings from {self.fake.root}/data/adb/answers.conf: MU300_DRY_RUN MU300_BOOT_ATTEMPTS', r.stdout)
+        self.assertNotIn('sdcard/mu300-install.conf:', r.stdout)
+        self.assertNotIn('data/adb/mu300-install.conf:', r.stdout)
+        self.assertTrue(self.nothing_written())
+
+    def test_an_answers_file_others_can_change_is_refused(self):
+        for mode in (0o666, 0o620, 0o602):
+            r = self.web('MU300_MODE=wipe\n', mode=mode)
+            self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+            self.assertIn('is not a file that only root can change; nothing was changed', r.stdout)
+            self.assertTrue(self.nothing_written())
+        r = self.run_installer(extra_env={'MU300_ANSWERS': self.fake.root / 'data/adb/missing.conf'})
+        self.assertEqual(r.returncode, 1)
+        self.assertTrue(self.nothing_written())
+        # and one of another user (the fake root is this user: any other uid is "not root")
+        r = self.run_installer(extra_env={'MU300_ANSWERS': self.answers('MU300_DRY_RUN=1\n'),
+                                          'MU300_TRUSTED_UID': os.getuid() + 1})
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('is not a file that only root can change', r.stdout)
+
+    def test_the_answers_file_may_erase(self):
+        self.device(card=bytes(1 << 20))
+        r = self.web('MU300_STORAGE=sd\nMU300_SD_ERASE=yes\nMU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        p = self.plan(r.stdout)
+        self.assertEqual((p['storage'], p['format'], p['sd_dev']),
+                         ('sd', '1', str(self.fake.root / 'dev/block/mmcblk1')))
+
+    def test_dry_run_stages_and_plan(self):
+        r = self.web('MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertEqual(self.steps(r.stdout), ['1/9 check', '2/9 unpack', '3/9 plan'])
+        p = self.plan(r.stdout)
+        self.assertEqual(p, {'tag': 'v2026.10.06', 'system': 'openwrt', 'os': 'openwrt', 'ubuntu': '', 'kernel': '6.18',
+                             'device': 'f50', 'storage': 'internal', 'sd_dev': '', 'offset': p['offset'],
+                             'size': p['size'], 'format': '1', 'update': '0', 'have': '', 'boot_os': 'openwrt',
+                             'default_linux': '1', 'boot_attempts': '5', 'hotspot': '1', 'gpu': 'yes',
+                             'password': 'image', 'extras': '', 'adb': '0', 'linux_slot': 'b', 'android_slot': 'a',
+                             'sync_bootchain': '1', 'bootchain': '', 'dry_run': '1'})
+        self.assertRegex(p['offset'], r'^\d+$')
+        self.assertGreater(int(p['size']), 700 << 20)
+        # the plan for people is still there, before the lines for the program
+        self.assertLess(r.stdout.index('- Plan'), r.stdout.index('MU300-PLAN tag='))
+        self.assertTrue(self.nothing_written())
+
+    def test_no_machine_lines_unless_asked(self):
+        r = self.web('MU300_DRY_RUN=1\n', progress=False)
+        self.assertEqual(r.returncode, 3)
+        self.assertNotIn('MU300-STEP', r.stdout)
+        self.assertNotIn('MU300-PLAN', r.stdout)
+        # and Magisk's own run (no MU300_ANSWERS) prints none either
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertNotIn('MU300-STEP', r.stdout)
+        self.assertNotIn('MU300-PLAN', r.stdout)
+
+    def test_an_install_names_every_stage_in_order(self):
+        r = self.web('MU300_BOOT_ATTEMPTS=4\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.steps(r.stdout), ['1/9 check', '2/9 unpack', '3/9 plan', '4/9 vendor', '5/9 image',
+                                                '6/9 systems', '7/9 boot', '8/9 arm', '9/9 done'])
+        out = r.stdout
+        # the stage lines stand where the work happens: boot_b is written after "boot", misc after "arm"
+        self.assertLess(out.index('MU300-STEP 6/9 systems'), out.index('MU300-INSTALL-OK'))
+        self.assertLess(out.index('MU300-INSTALL-OK'), out.index('MU300-STEP 7/9 boot'))
+        self.assertLess(out.index('MU300-STEP 7/9 boot'), out.index('Writing and verifying boot_b'))
+        self.assertLess(out.index('Writing and verifying boot_b'), out.index('MU300-STEP 8/9 arm'))
+        self.assertEqual(self.plan(out)['dry_run'], '0')
+        self.assertIn('BOOT_ATTEMPTS=4', (self.fake.root / 'install.env').read_text())
+
+    def test_a_refusal_stops_at_its_stage(self):
+        self.device(model='Pixel 9')
+        r = self.web('')
+        self.assertEqual(r.returncode, 1)
+        self.assertEqual(self.steps(r.stdout), ['1/9 check'])
+        self.assertTrue(self.nothing_written())
+        self.reset()
+        self.fake_install_hook('exit 1')
+        r = self.web('')
+        self.assertEqual(r.returncode, 1)
+        self.assertEqual(self.steps(r.stdout)[-1], '6/9 systems')
+        # the device's log is kept in /data/adb; the boot partitions and misc are as they were
+        now = self.snapshot()
+        for part in ('boot_a', 'boot_b', 'misc'):
+            self.assertEqual(now[part], self.before[part], part)
+
+    def test_extras_beside_the_scripts_reach_android_install(self):
+        ex = self.mu300 / 'extras'
+        ex.mkdir()
+        (ex / 'mu300-extra-vpn.tar.gz').write_bytes(tar_gz({'VERSION': b'2.0.1\n'}))
+        (ex / 'mu300-extra-other.tar.gz').write_bytes(b'not one of ours')
+        (ex / 'mu300-extra-panel.tar.gz').symlink_to(ex / 'mu300-extra-vpn.tar.gz')
+        self.fake_install_hook('ls "$MU300_DEVICE_WORK" > "$FAKE/work-ls"; sha256sum "$MU300_DEVICE_WORK/mu300-extra-vpn.tar.gz" > "$FAKE/extra.sha"')
+        r = self.web('')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.plan(r.stdout)['extras'], 'vpn')
+        self.assertIn('extras:         vpn', r.stdout)
+        names = (self.fake.root / 'work-ls').read_text().split()
+        self.assertIn('mu300-extra-vpn.tar.gz', names)
+        self.assertNotIn('mu300-extra-other.tar.gz', names)
+        self.assertNotIn('mu300-extra-panel.tar.gz', names)
+        self.assertEqual((self.fake.root / 'extra.sha').read_text().split()[0], sha(ex / 'mu300-extra-vpn.tar.gz'))
+        # none there: nothing is said and nothing is copied
+        self.reset()
+        r = self.web('MU300_DRY_RUN=1\n')
+        self.assertEqual(self.plan(r.stdout)['extras'], '')
+        self.assertNotIn('extras:', r.stdout)
+
+    def test_adb_key_turns_adb_on_for_that_key(self):
+        r = self.web(f'MU300_ADB_KEY={self.ADB_KEY}\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        env = (self.fake.root / 'install.env').read_text()
+        self.assertIn('\nADB=1\n', env)
+        self.assertIn(f"\nADB_KEY='{self.ADB_KEY}'\n", env)
+        self.assertIn('adb to Linux:   on, for web-browser', r.stdout)
+        self.assertEqual(self.plan(r.stdout)['adb'], '1')
+        # the key itself is in no line for people or programs
+        self.assertNotIn(self.ADB_KEY[:40], r.stdout)
+        # without one, adb is not touched
+        self.reset()
+        r = self.web('')
+        env = (self.fake.root / 'install.env').read_text()
+        self.assertIn('\nADB=0\n', env)
+        self.assertIn("\nADB_KEY=''\n", env)
+        self.assertNotIn('adb to Linux', r.stdout)
+
+    def test_adb_key_only_from_a_trusted_file_and_only_a_key(self):
+        r = self.run_installer(conf=f'MU300_ADB_KEY={self.ADB_KEY}\nMU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn('MU300_ADB_KEY is taken only from', r.stdout)
+        self.assertNotIn('adb to Linux', r.stdout)
+        key = self.ADB_KEY.split()[0]
+        for bad in (key, key + ' ', key[:-1] + ' name', 'X' + key[1:] + ' name', key + " na'me", key + ' a b',
+                    key + ' $(reboot)', key.replace('A', "'", 1) + ' name', key + ' ' + 'n' * 65):
+            r = self.web(f'MU300_ADB_KEY={bad}\nMU300_DRY_RUN=1\n')
+            self.assertEqual(r.returncode, 1, (bad[-30:], r.stdout))
+            self.assertIn('is not valid', r.stdout)
+            self.assertNotIn(key[20:60], r.stdout)
+            self.assertTrue(self.nothing_written())
+
+    def test_a_password_is_in_no_machine_line(self):
+        r = self.web('MU300_PASSWORD=hunter2-hunter2\n')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.plan(r.stdout)['password'], 'given')
+        self.assertNotIn('hunter2', r.stdout + r.stderr)
 
 
 class Bootchain(InstallerCase):

@@ -9,6 +9,10 @@ msgstr "Durum paneli"
 msgid "Cellular"
 msgstr "Hücresel"
 
+# Dual SIM controls.
+msgid "Dual SIM"
+msgstr "Çift SIM"
+
 msgid "Network locks"
 msgstr "Ağ kilitleri"
 
@@ -32,6 +36,9 @@ msgstr "Veri kullanımı"
 
 msgid "Device management"
 msgstr "Cihaz yönetimi"
+
+msgid "Update"
+msgstr "Güncelle"
 
 msgid "Languages"
 msgstr "Diller"
@@ -576,6 +583,9 @@ msgstr "Kayıtlı: %s"
 msgid "Remove the saved value"
 msgstr "Kayıtlı değeri sil"
 
+msgid "Presets"
+msgstr "Hazır ayarlar"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Gelen mesajlar SMS havuzuna ulaştıkça iletilir. Başarısız bir gönderim 30 sn sonra, ardından her seferinde iki kat sonra (en fazla bir saat) yeniden denenir; toplam on kez."
 
@@ -632,6 +642,12 @@ msgstr "Boş: standart alanlar (düz metin: ileti). Yer tutucular: {sender}, {ti
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Ek başlıklar (satır başına bir \"Ad: değer\")"
+
+msgid "The answer must contain"
+msgstr "Yanıtta bulunması gereken"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "Boş: her HTTP 2xx yanıtı teslim edilmiş sayılır. anahtar=değer ile (örneğin errcode=0) yanıt ayrıca, en üst düzeyinde bu anahtarın altında bu değeri taşıyan bir JSON nesnesi olmalıdır; aksi halde gönderim başarısız sayılır. Günlüğe yalnızca denetimin sonucu yazılır, yanıtın kendisi asla."
 
 msgid "Bot token"
 msgstr "Bot belirteci"
@@ -698,6 +714,9 @@ msgstr "Filtrelendi"
 
 msgid "Dropped"
 msgstr "Atıldı"
+
+msgid "Clear"
+msgstr "Temizle"
 
 msgid "Test"
 msgstr "Test"
@@ -797,6 +816,9 @@ msgstr "Oturum süresi"
 
 msgid "Registration"
 msgstr "Kayıt durumu"
+
+msgid "Data roaming"
+msgstr "Veri dolaşımı"
 
 msgid "Bandwidth"
 msgstr "Bant genişliği"
@@ -933,6 +955,18 @@ msgstr "Hücresel radyoyu aç"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN açılış sırası çalışacak (yaklaşık 1 dakikaya kadar)."
 
+msgid "Turn data roaming off"
+msgstr "Veri dolaşımını kapat"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "SIM bir dolaşım ağına kayıtlıyken mobil veri kapalı kalır; SMS, aramalar ve ağ kaydı etkilenmez. Bazı SIM'ler yurt içinde de dolaşım bildirir (bir MVNO, ulusal dolaşım): orada da veri durur."
+
+msgid "Allow data roaming"
+msgstr "Veri dolaşımına izin ver"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobil veri dolaşım ağlarında da kullanılır; bu ek ücrete yol açabilir. Bazı SIM'ler yurt içinde de dolaşım bildirir (bir MVNO, ulusal dolaşım) ve veri için buna ihtiyaç duyar."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Hücresel bağlantı 1–2 dakika kesilebilir."
 
@@ -1038,6 +1072,9 @@ msgstr "Ankraj hücresi B%s"
 msgid "No serving cell"
 msgstr "Bağlı olunan hücre yok"
 
+msgid "Version %s is out: update"
+msgstr "%s sürümü çıktı: güncelleyin"
+
 msgid "Not registered"
 msgstr "Kayıtlı değil"
 
@@ -1058,6 +1095,15 @@ msgstr "Yalnızca acil arama"
 
 msgid "Status %s"
 msgstr "Durum %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Kapalı: dolaşımda veri durduruldu"
+
+msgid "Allowed"
+msgstr "İzin verildi"
+
+msgid "Off"
+msgstr "Kapalı"
 
 msgid "LTE anchor"
 msgstr "LTE ankraj hücresi"
@@ -1584,9 +1630,6 @@ msgstr "Olduğu gibi bırak"
 msgid "LTE only (5G off)"
 msgstr "Yalnızca LTE (5G kapalı)"
 
-msgid "Off"
-msgstr "Kapalı"
-
 msgid "On"
 msgstr "Açık"
 
@@ -1677,6 +1720,104 @@ msgstr "Yalnızca ana panonun yenileme hızını kontrol eder; 0,5–60 saniye. 
 msgid "Persistent state directory"
 msgstr "Kalıcı durum dizini"
 
+# Dual SIM controls.
+msgid "Switching SIM. Mobile data will disconnect briefly."
+msgstr "SIM değiştiriliyor. Mobil veri kısa süreliğine kesilecek."
+
+# Dual SIM controls.
+msgid "SIM switch failed; check SIM readiness and hot switching."
+msgstr "SIM geçişi başarısız; SIM durumunu ve canlı geçiş ayarını kontrol edin."
+
+# Dual SIM controls.
+msgid "Ready"
+msgstr "Ready"
+
+# Dual SIM controls.
+msgid "Switching SIM"
+msgstr "SIM değiştiriliyor"
+
+# Dual SIM controls.
+msgid "SIM switched; saved as boot default"
+msgstr "SIM değiştirildi ve başlatma varsayılanı olarak kaydedildi"
+
+# Dual SIM controls.
+msgid "Switch failed; previous SIM restored"
+msgstr "Geçiş başarısız; önceki SIM geri yüklendi"
+
+msgid "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
+msgstr "Hedef SIM mobil veri alamadı; önceki SIM geri yüklendi ve kayıtlı açılış tercihi değişmedi."
+
+msgid "The target SIM has no mobile data yet, and the previous SIM had none either: the device stays on the target. The saved boot preference is unchanged."
+msgstr "Hedef SIM henüz mobil veri alamadı, önceki SIM de alamıyordu: cihaz hedef SIM'de kalıyor. Kayıtlı açılış tercihi değişmedi."
+
+# Dual SIM controls.
+msgid "Radio state unknown; reboot required"
+msgstr "Radyo durumu bilinmiyor; yeniden başlatma gerekiyor"
+
+msgid "Radio state unknown; the device is restarting."
+msgstr "Radyo durumu bilinmiyor; cihaz yeniden başlatılıyor."
+
+msgid "Dual SIM control is only for the U30 Air on OpenWrt."
+msgstr "Çift SIM denetimi yalnızca OpenWrt çalıştıran U30 Air içindir."
+
+msgid "The chosen SIM could not be started at the last boot (no card, PIN, or the modem refused it)."
+msgstr "Seçilen SIM son açılışta başlatılamadı (kart yok, PIN gerekli ya da modem reddetti)."
+
+msgid "No card answered in the chosen SIM position at the last boot."
+msgstr "Son açılışta seçilen SIM konumunda hiçbir kart yanıt vermedi."
+
+msgid "The chosen SIM is locked by its PIN."
+msgstr "Seçilen SIM, PIN koduyla kilitli."
+
+msgid "The chosen SIM got no mobile data within the time at its first boot."
+msgstr "Seçilen SIM ilk açılışında süre içinde mobil veri alamadı."
+
+msgid "The second SIM's modem channels did not come up at the last boot."
+msgstr "İkinci SIM'in modem kanalları son açılışta gelmedi."
+
+msgid "The last dual-SIM boot never confirmed itself."
+msgstr "Son çift SIM açılışı kendini hiç doğrulamadı."
+
+msgid "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
+msgstr "Canlı geçiş, hedef SIM mobil veri aldıktan sonra onu sonraki açılış için kaydeder. Veri yoksa önceki SIM geri yüklenir ve kayıtlı açılış tercihi değişmez. Her SIM, WAN ayarlarındaki kendi APN/PDP profilini kullanır."
+
+# Dual SIM controls.
+msgid "Active SIM"
+msgstr "Etkin SIM"
+
+# Dual SIM controls.
+msgid "Cold-boot default"
+msgstr "Soğuk başlatma varsayılanı"
+
+# Dual SIM controls.
+msgid "SIM control unavailable"
+msgstr "SIM denetimi kullanılamıyor"
+
+msgid "The device is back on SIM1 without live switching; choose again below to try once more."
+msgstr "Cihaz canlı geçiş kapalı olarak SIM1'e döndü; yeniden denemek için aşağıdan tekrar seçin."
+
+msgid "Waiting for the first mobile data on SIM2: %d s left. Without data the device goes back to SIM1 and restarts."
+msgstr "SIM2'de ilk mobil veri bekleniyor: %d sn kaldı. Veri gelmezse cihaz SIM1'e döner ve yeniden başlar."
+
+# Dual SIM controls.
+msgid "Enable hot switching"
+msgstr "Canlı SIM geçişini etkinleştir"
+
+msgid "This device supports next-boot SIM selection only; live switching is unavailable."
+msgstr "Bu cihaz yalnızca sonraki açılışın SIM seçimini destekler; canlı geçiş kullanılamaz."
+
+# Dual SIM controls.
+msgid "Reboot after enabling hot switching to prepare both SIM channels."
+msgstr "İki SIM kanalını hazırlamak için canlı geçişi etkinleştirdikten sonra yeniden başlatın."
+
+# Dual SIM controls.
+msgid "Switch to SIM%d"
+msgstr "SIM%d kartına geç"
+
+# Dual SIM controls.
+msgid "Use SIM%d at next boot"
+msgstr "Sonraki başlatmada SIM%d kullan"
+
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Alıcı: numara, ör. 10086 veya +86..."
 
@@ -1715,9 +1856,6 @@ msgstr "Yerel SMS havuzunu temizle"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "Yalnızca yerel dosyalar silinir; SIM’deki mesajlar korunur."
-
-msgid "Clear"
-msgstr "Temizle"
 
 msgid "Delete this SMS"
 msgstr "Bu SMS’i sil"
@@ -1929,6 +2067,396 @@ msgstr "Kapat"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "64, her paketin cihazın kendi trafiği gibi çıkmasını sağlar"
 
+msgid "Check for updates"
+msgstr "Güncellemeleri denetle"
+
+msgid "Checking the file"
+msgstr "Dosya denetleniyor"
+
+msgid "Update from a file"
+msgstr "Dosyadan güncelle"
+
+msgid "Back to the previous version"
+msgstr "Önceki sürüme dön"
+
+msgid "Back to the previous boot image"
+msgstr "Önceki önyükleme imajına dön"
+
+msgid "Remove the previous version"
+msgstr "Önceki sürümü kaldır"
+
+msgid "Kernel change"
+msgstr "Çekirdek değişikliği"
+
+msgid "Starting…"
+msgstr "Başlatılıyor…"
+
+msgid "Downloading"
+msgstr "İndiriliyor"
+
+msgid "All files are here and verified"
+msgstr "Tüm dosyalar indirildi ve doğrulandı"
+
+msgid "Unpacking the new system"
+msgstr "Yeni sistem açılıyor"
+
+msgid "Carrying over your settings"
+msgstr "Ayarlarınız aktarılıyor"
+
+msgid "Writing down the packages you installed"
+msgstr "Kurduğunuz paketler not ediliyor"
+
+msgid "Switching to the new system"
+msgstr "Yeni sisteme geçiliyor"
+
+msgid "Kernel and boot image"
+msgstr "Çekirdek ve önyükleme imajı"
+
+msgid "Restart the device?"
+msgstr "Cihaz yeniden başlatılsın mı?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "Cihaz şimdi yeniden başlıyor. Varsayılan açılış Android olduğu için Android açılır: güncellenen sistemi başlatmak için oradan Linux'a geçin."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "Cihaz şimdi yeniden başlıyor ve yaklaşık bir dakika erişilemez olacak. Yeni sistem açılmazsa cihaz, başarısız denemelerden sonra kendiliğinden Android'e döner."
+
+msgid "Restart"
+msgstr "Yeniden başlat"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "Yeniden başlatılıyor… bu sayfayı yaklaşık bir dakika sonra yeniden açın."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "%s süredir çalışıyor. Bu sayfa kapatılsa da sürer; cihazı kapatmayın."
+
+msgid "Done. Restart the device to start it."
+msgstr "Tamamlandı. Başlatmak için cihazı yeniden başlatın."
+
+msgid "Done. Nothing needs a restart."
+msgstr "Tamamlandı. Yeniden başlatma gerekmiyor."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "Tamamlanmadı ve bir kısmı yapıldı: yeniden başlatmadan önce günlüğü okuyun."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "Tamamlanmadı. Hiçbir şey değiştirilmedi; nedeni günlükte yazıyor."
+
+msgid "Log"
+msgstr "Günlük"
+
+msgid "Restart now"
+msgstr "Şimdi yeniden başlat"
+
+msgid "Later"
+msgstr "Sonra"
+
+msgid "Close"
+msgstr "Kapat"
+
+msgid "Updating is not available on this system"
+msgstr "Güncelleme bu sistemde kullanılamıyor"
+
+msgid "Another update is running on the device"
+msgstr "Cihazda başka bir güncelleme çalışıyor"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "Bu sayfanın dışından başlatıldı (bir terminal, araç seti). Bitene kadar buradan hiçbir şey başlatılamaz."
+
+msgid "Restart needed"
+msgstr "Yeniden başlatma gerekli"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "Bu sistem güncellendi ama hâlâ eski sürümü çalıştırıyor. Yenisi bir sonraki yeniden başlatmada açılır."
+
+msgid "Installed"
+msgstr "Kurulu"
+
+msgid "This system"
+msgstr "Bu sistem"
+
+msgid "Also on this device"
+msgstr "Bu cihazda ayrıca"
+
+msgid "Kernel"
+msgstr "Çekirdek"
+
+msgid "choice %s"
+msgstr "seçim %s"
+
+msgid "Boot image"
+msgstr "Önyükleme imajı"
+
+msgid "from the installer"
+msgstr "kurulum aracından"
+
+msgid "Default boot"
+msgstr "Varsayılan açılış"
+
+msgid "Free space"
+msgstr "Boş alan"
+
+msgid "Release signatures"
+msgstr "Sürüm imzaları"
+
+msgid "checked with the project's key"
+msgstr "projenin anahtarıyla denetlenir"
+
+msgid "this system has no release key"
+msgstr "bu sistemde sürüm anahtarı yok"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "Varsayılan açılış Android: yeniden başlatma Android'i açar, Linux oradan başlatılır."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux varsayılan açılış olarak kilitli: yeni bir önyükleme imajının ilk açılışları dışında, başarısız bir açılış cihazı kendiliğinden Android'e göndermez."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Linux art arda %d kez açılamazsa cihaz kendiliğinden Android'i başlatır."
+
+msgid "Report of the last update"
+msgstr "Son güncellemenin raporu"
+
+msgid "Online update"
+msgstr "Çevrimiçi güncelleme"
+
+msgid "Asking GitHub…"
+msgstr "GitHub'a soruluyor…"
+
+msgid "Checked %s ago"
+msgstr "%s önce denetlendi"
+
+msgid "Not checked yet"
+msgstr "Henüz denetlenmedi"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "Eklediğim paketleri güncellemeden sonra yeniden kur (ilk açılışta cihazın çevrimiçi olması gerekir)"
+
+msgid "Pre-release"
+msgstr "Ön sürüm"
+
+msgid "Newest release"
+msgstr "En yeni sürüm"
+
+msgid "Release notes"
+msgstr "Sürüm notları"
+
+msgid "Download"
+msgstr "İndirme"
+
+msgid "Free space needed"
+msgstr "Gereken boş alan"
+
+msgid "not enough: remove the previous version first"
+msgstr "yetersiz: önce önceki sürümü kaldırın"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "Ön sürüm, hâlâ denenmekte olan bir sürümdür: bir sürümde olmayan hatalar içerebilir. Önceki sürüm yine de saklanır."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "Bu sistem en yeni sürümden daha yeni (bir test sürümü)."
+
+msgid "Up to date."
+msgstr "Güncel."
+
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Bu sürüm imzalı değil ve bu sistem imzaları denetliyor: buradan kurulmaz. Aşağıdan dosyasıyla güncelleyin; orada onayınız istenir."
+
+msgid "Update to %s"
+msgstr "%s sürümüne güncelle"
+
+msgid "Choose at least one system"
+msgstr "En az bir sistem seçin"
+
+msgid "Update to %s?"
+msgstr "%s sürümüne güncellensin mi?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Cihaz %s indirir, yeni sistemi çalışan sistemin yanına yerleştirir ve bir sonraki yeniden başlatmada ona geçer. Ayarlarınız aktarılır ve önceki sürüm saklanır. Birkaç dakika sürer; cihazı kapatmayın."
+
+msgid "Also offer the pre-release %s"
+msgstr "%s ön sürümünü de sun"
+
+msgid "Systems to update:"
+msgstr "Güncellenecek sistemler:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "GitHub'a ulaşılamadı: cihazın internet bağlantısı yok ya da GitHub yanıt vermedi. İnternet yoksa aşağıdan bir dosyadan güncelleyin."
+
+msgid "release"
+msgstr "sürüm"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "İnterneti olmayan bir cihaz için: bu sisteme ve bu çekirdeğe ait bir sürümün Magisk zip dosyasını başka bir bilgisayarda, GitHub'daki sürüm sayfasından indirin ve buraya yükleyin. Bu cihaz için o dosya:"
+
+msgid "Uploaded file"
+msgstr "Yüklenen dosya"
+
+msgid "Checking the file…"
+msgstr "Dosya denetleniyor…"
+
+msgid "It says it is"
+msgstr "Dosyaya göre içeriği"
+
+msgid "kernel %s"
+msgstr "çekirdek %s"
+
+msgid "Signature"
+msgstr "İmza"
+
+msgid "signed with the project's release key"
+msgstr "projenin sürüm anahtarıyla imzalı"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "YANLIŞ: projenin sürüm anahtarıyla eşleşmiyor"
+
+msgid "not signed"
+msgstr "imzalı değil"
+
+msgid "cannot be checked on this system"
+msgstr "bu sistemde denetlenemiyor"
+
+msgid "Its system is not installed on this device."
+msgstr "İçindeki sistem bu cihazda kurulu değil."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "Bu, kurulu olan değil, diğer Ubuntu sürümü."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "Bu cihazın kullandığından farklı bir çekirdek içeriyor. %s çekirdeği için olan zip dosyasını alın ya da önce çekirdeği değiştirin."
+
+msgid "Its kernel does not run on this model."
+msgstr "İçindeki çekirdek bu modelde çalışmaz."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "Dosya bozuk: içeriği sağlama toplamlarıyla eşleşmiyor."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "İmzası yanlış. Bu dosya bu hâliyle projeden gelmiyor; asla kurulmaz."
+
+msgid "This file cannot be used here."
+msgstr "Bu dosya burada kullanılamaz."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "SHA-256 değerini sürüm sayfasındaki SHA256SUMS-magisk içindeki değerle karşılaştırın: imzasız bir dosyanın nereden geldiğinin tek kanıtı budur."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "Bu sürüm zaten kurulu; güncelleme yalnızca önyükleme imajını yeniler."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "Bu dosyanın imzalı olmadığını biliyorum: projeden geldiğini hiçbir şey kanıtlamıyor. SHA-256 değerini kendim karşılaştırdım ve kurulmasını istiyorum."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "Bunun %s olduğunu, kurulu %s sürümünden eski olduğunu biliyorum ve ona geri dönmek istiyorum."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "Bu, bu projenin bir sürüm dosyası değil: bir sürümün Magisk zip dosyası bekleniyor."
+
+msgid "Update from this file"
+msgstr "Bu dosyadan güncelle"
+
+msgid "Tick the confirmations above first"
+msgstr "Önce yukarıdaki onay kutularını işaretleyin"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Cihaz bu dosyadaki sistemi çalışan sistemin yanına yerleştirir ve bir sonraki yeniden başlatmada ona geçer. Ayarlarınız aktarılır ve önceki sürüm saklanır. Birkaç dakika sürer; cihazı kapatmayın."
+
+msgid "Check the file"
+msgstr "Dosyayı denetle"
+
+msgid "Remove the file"
+msgstr "Dosyayı kaldır"
+
+msgid "Previous version"
+msgstr "Önceki sürüm"
+
+msgid "No previous version is kept on this device."
+msgstr "Bu cihazda saklanan bir önceki sürüm yok."
+
+msgid "replaced %s"
+msgstr "%s tarihinde değiştirildi"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "Önceki sistemi geri istiyorum; güncellemeden beri değiştirdiklerim bıraktığım sürümde kalır."
+
+msgid "Back to the previous version?"
+msgstr "Önceki sürüme dönülsün mü?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "Önceki sistem (%s), bir sonraki yeniden başlatmada açılan sistem olur. Bıraktığınız sürüm saklanmaz; güncellemeden beri değiştirdiğiniz ayarlar geri taşınmaz."
+
+msgid "Go back"
+msgstr "Geri dön"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "Şu anda çalışan zaten önceki sürüm: önce yeniden başlatın."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "Önceki çekirdeği ve önyükleme imajını geri istiyorum."
+
+msgid "Back to the previous boot image?"
+msgstr "Önceki önyükleme imajına dönülsün mü?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "Önceki önyükleme imajı (%s) Linux yuvasına yazılır ve bir sonraki yeniden başlatmada açılır. Açılmazsa cihaz kendiliğinden Android'e döner."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "Geri dönmem gerekmiyor: yer açmak için önceki sistemi sil."
+
+msgid "Remove the previous version?"
+msgstr "Önceki sürüm kaldırılsın mı?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "Önceki sistemin saklanan kopyası kalıcı olarak silinir. Bundan sonra bu sayfadan ona geri dönülemez."
+
+msgid "the vendor kernel"
+msgstr "üretici çekirdeği"
+
+msgid "mainline"
+msgstr "ana hat"
+
+msgid "not with Ubuntu 26.04"
+msgstr "Ubuntu 26.04 ile değil"
+
+msgid "Change the kernel"
+msgstr "Çekirdeği değiştir"
+
+msgid "This kernel is the one in use"
+msgstr "Kullanılan çekirdek zaten bu"
+
+msgid "Change the kernel to %s?"
+msgstr "Çekirdek %s olarak değiştirilsin mi?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "Cihaz bu çekirdeği en yeni sürümden indirir ve yeni bir önyükleme imajı yazar; bir sonraki yeniden başlatmada açılır. Önceki önyükleme imajı saklanır; yenisi açılmazsa cihaz kendiliğinden Android'e döner. Cihaz çevrimiçi olmalıdır."
+
+msgid "Start Android at the next restart"
+msgstr "Sonraki yeniden başlatmada Android'i başlat"
+
+msgid "Start Android at the next restart?"
+msgstr "Sonraki yeniden başlatmada Android başlatılsın mı?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "Bir sonraki yeniden başlatma ve ondan sonrakiler Linux yerine Android'i başlatır. Linux yeniden Android'den başlatılır (Magisk modülünün Action düğmesi ya da mu300-linux)."
+
+msgid "Start Android next"
+msgstr "Bir sonrakinde Android'i başlat"
+
+msgid "What an update keeps"
+msgstr "Güncelleme neleri korur"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "Güncelleme, yeni sürümün sistemini yerine koyar ve size ait olanları aktarır: ayarlar, hesaplar ve parolaları, cihazın anahtarları ve ev dizinleri. Kendi kurduğunuz paketler not edilir ve cihaz çevrimiçi olduğunda ilk açılışta yeniden kurulur. Önceki sürüm siz kaldırana kadar cihazda kalır; böylece geri dönebilirsiniz."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "Wiki'deki Güncelleme sayfası tam olarak nelerin korunduğunu listeler."
+
+msgid "Choose a file first"
+msgstr "Önce bir dosya seçin"
+
+msgid "Uploading: %s of %s"
+msgstr "Yükleniyor: %s / %s"
+
 msgid "running"
 msgstr "çalışıyor"
 
@@ -1962,9 +2490,6 @@ msgstr "Bu motoru kullanan profil yok."
 msgid "Removed"
 msgstr "Kaldırıldı"
 
-msgid "Check for updates"
-msgstr "Güncellemeleri denetle"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "Her motor ayrı bir ek pakettir: yalnızca profillerinizin ihtiyaç duyduklarını kurun. Xray vless, vmess, trojan ve ss bağlantılarını (hev-socks5-tunnel ile), sing-box aynı bağlantıları ve kendi JSON'unu, mihomo Clash aboneliklerini, dae ise yeni çekirdeklerde hysteria2, tuic ve diğerlerini çalıştırır. WireGuard ve OpenVPN sistemin paketleridir."
 
@@ -1973,9 +2498,6 @@ msgstr "İndirmeler motor başına onlarca MB'tır: mobil veride paketinizden d�
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "Mevcut sürümler VPN modülünün en son sürümünden gelir."
-
-msgid "Update"
-msgstr "Güncelle"
 
 msgid "system package"
 msgstr "sistem paketi"
@@ -2144,9 +2666,6 @@ msgstr "Başlat"
 
 msgid "Stop"
 msgstr "Durdur"
-
-msgid "Restart"
-msgstr "Yeniden başlat"
 
 msgid "Stop the VPN?"
 msgstr "VPN durdurulsun mu?"
@@ -2324,9 +2843,6 @@ msgstr "Bu profil bir abonelikten geliyor: bir sonraki yenileme değişiklikleri
 
 msgid "Config of %s"
 msgstr "%s yapılandırması"
-
-msgid "Close"
-msgstr "Kapat"
 
 msgid "Rename"
 msgstr "Yeniden adlandır"
@@ -2520,8 +3036,8 @@ msgstr "Yenileme, adı değişmeyen profilleri korur, yenileri ekler ve kalkanla
 msgid "Dashboard info failed"
 msgstr "Gösterge paneli bilgisi alınamadı"
 
-msgid "Applying network locks: no live signal right now"
-msgstr "Ağ kilitleri uygulanıyor: şu anda canlı sinyal yok"
+msgid "The modem is restarting (network locks or a SIM switch): no live signal right now"
+msgstr "Modem yeniden başlıyor (ağ kilitleri ya da SIM geçişi): şu an canlı sinyal yok"
 
 msgid "Live signal read failed"
 msgstr "Canlı sinyal okunamadı"
@@ -2553,8 +3069,11 @@ msgstr "\";\" ile komut zincirleme yapılamaz"
 msgid "Denied: this command wedges the AT port until a reboot"
 msgstr "Reddedildi: bu komut AT bağlantı noktasını yeniden başlatmaya kadar kilitler"
 
-msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
-msgstr "Ağ kilitleri uygulanıyor: modem yeniden başlıyor (yaklaşık yarım dakika), birazdan yeniden deneyin"
+msgid "Denied: this command moves the SIM selection or the data route; the SIM settings do that"
+msgstr "Reddedildi: bu komut SIM seçimini veya veri yolunu değiştirir; bunu SIM ayarları yapar"
+
+msgid "The modem is restarting (network locks or a SIM switch, about half a minute), try again shortly"
+msgstr "Modem yeniden başlıyor (ağ kilitleri ya da SIM geçişi, yaklaşık yarım dakika), biraz sonra tekrar deneyin"
 
 msgid "A long AT command is still running in the background; try again when it has finished"
 msgstr "Uzun bir AT komutu hâlâ arka planda çalışıyor; bittiğinde yeniden deneyin"
@@ -2696,6 +3215,30 @@ msgstr "Paket bağdaştırıcısı geçerli bir yanıt vermedi"
 
 msgid "Invalid packages operation"
 msgstr "Geçersiz paket işlemi"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "sizes parametresi 0 veya 1 olmalıdır"
+
+msgid "The update adapter gave no valid reply"
+msgstr "Güncelleme bağdaştırıcısı geçerli bir yanıt vermedi"
+
+msgid "Unknown update operation"
+msgstr "Bilinmeyen güncelleme işlemi"
+
+msgid "Invalid update request"
+msgstr "Geçersiz güncelleme isteği"
+
+# Dual SIM controls.
+msgid "Invalid SIM setting"
+msgstr "Geçersiz SIM ayarı"
+
+# Dual SIM controls.
+msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
+msgstr "Canlı SIM geçişini etkinleştirin; kanallar hazır değilse yeniden başlatın veya işlem bitene kadar bekleyin."
+
+# Dual SIM controls.
+msgid "SIM control failed"
+msgstr "SIM denetimi başarısız"
 
 msgid "Request too large"
 msgstr "İstek çok büyük"
@@ -2850,8 +3393,18 @@ msgstr "Satır sayısı 1 ile 1000 arasında olmalı"
 msgid "The log could not be read"
 msgstr "Günlük okunamadı"
 
+# Dual SIM controls.
+msgid "Use SIM control or reboot for managed dual-SIM radio"
+msgstr "Yönetilen çift SIM radyosu için SIM denetimini kullanın veya yeniden başlatın."
+
 msgid "Radio did not come up"
 msgstr "Radyo açılmadı"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Mobil veri entegrasyonu bu platformda sağlanmıyor"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Veri dolaşımı ayarı kaydedilemedi"
 
 msgid "Expected on or off"
 msgstr "on veya off bekleniyor"
@@ -2967,6 +3520,9 @@ msgstr "Webhook adresi http:// veya https:// ile başlayan bir URL olmalı"
 msgid "The webhook body is too long or contains a control character"
 msgstr "Webhook gövdesi çok uzun veya bir denetim karakteri içeriyor"
 
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "Yanıt denetimi anahtar=değer biçiminde olmalı, errcode=0 veya ok=true gibi (değer bir tam sayı ya da küçük harfler, en fazla 16)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Geçersiz başlık (satır başına bir \"Ad: değer\"; Host, Content-Type, Content-Length, Transfer-Encoding ve Connection cihaz tarafından ayarlanır)"
 
@@ -2996,6 +3552,12 @@ msgstr "Yönlendirme ayarları kaydedilemedi"
 
 msgid "SMS forwarding is not installed"
 msgstr "SMS yönlendirme kurulu değil"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Az önce bir test başlatıldı; birkaç saniye bekleyin"
+
+msgid "The delivery log could not be cleared"
+msgstr "Gönderim günlüğü temizlenemedi"
 
 msgid "Unknown forwarding operation"
 msgstr "Bilinmeyen yönlendirme işlemi"
@@ -3077,3 +3639,42 @@ msgstr "TTL ayarlanamadı"
 
 msgid "Unknown TTL operation"
 msgstr "Bilinmeyen TTL işlemi"
+
+msgid "An update task is already running"
+msgstr "Bir güncelleme görevi zaten çalışıyor"
+
+msgid "The task could not be started"
+msgstr "Görev başlatılamadı"
+
+msgid "The updater gave no valid reply"
+msgstr "Güncelleyici geçerli bir yanıt vermedi"
+
+msgid "This needs confirmation"
+msgstr "Bu işlem onay gerektiriyor"
+
+msgid "Check for updates first"
+msgstr "Önce güncellemeleri denetleyin"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "Yükleme dizini güvenli değil; hiçbir şey değiştirilmedi"
+
+msgid "Not enough memory for this upload"
+msgstr "Bu yükleme için yeterli bellek yok"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Linux bölümünde yeterli boş alan yok"
+
+msgid "The file was not checked; upload it again"
+msgstr "Dosya denetlenmedi; yeniden yükleyin"
+
+msgid "This file is not for this device"
+msgstr "Bu dosya bu cihaz için değil"
+
+msgid "The signature of this file is wrong"
+msgstr "Bu dosyanın imzası yanlış"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "Bu dosya imzalı değil: bunun için onay gerekiyor"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "Bu dosya kurulu olandan eski: bunun için onay gerekiyor"

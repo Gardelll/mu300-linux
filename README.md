@@ -38,7 +38,7 @@ that works on our boards may not work on yours.
 
 What you do with your device is your decision and your responsibility. In particular:
 
-* **Rooting, unlocking and recovery are not part of this project.** Getting a device rooted, flashing with Magisk,
+* **Rooting, unlocking, patching and recovery are not part of this project.** Getting a device rooted, flashing with Magisk,
   SPD/BROM or any other third-party tool, and anything you download from anywhere else to do so, is done at your own
   risk, following those tools' own instructions. We did not write them, we do not check them, and we cannot say
   what they do to your device, your data or your warranty.
@@ -83,6 +83,27 @@ Air's charger and LEDs, which its boot image loads in place of the F50's ([`kern
 Nothing about the device has to be chosen by hand: the installer reads it from Android, and the boot image, the
 LEDs and the default address follow. The U30 **Pro** is a different chip (UMS9632) and is not supported.
 
+### ZTE V50 (MU3351): experimental
+
+The ZTE **V50** (`ro.product.model` V50, `ro.product.device` MU3351, platform `ums9620`; not the Blade V50 phone) is
+the F50's platform with two SIM slots, NFC and three front lamps on an AW9523B LED controller. kano (kanoqwq) ported
+this project to it in his line of it; what he found and measured is in [FINDINGS 95](docs/FINDINGS.md). **Nobody in
+this project has a V50 or has tested one**: install it only if you can get back to Android on your own.
+
+| | ZTE V50 / MU3351 |
+|---|---|
+| Kernel | mainline only: 6.18 or 7.2 of a release that names the V50 (its kernel bundle lists `v50` in `devices`); 5.4 is refused |
+| What runs | what runs on an F50: the same systems, modules and settings, USB-powered (no battery) |
+| LEDs | NET1 lamp: blue 4G, white 5G, red no service; Wi-Fi lamp: white 5 GHz, blue 2.4 GHz; NET2 dark (`leds-aw9523b`, mainline) |
+| USB network | `192.168.79.1` (neither the F50's nor the U30 Air's subnet) |
+| Not yet | the second SIM (SIM 1 only), NFC, SIM selection; the eMMC host is kept awake (kano's fix for lost files, patch 0017) |
+
+The installers say so in one line and stop a V50 that is not exactly that (a model V50 with another device or
+platform). Linux tells the board by its device tree, as before for the other two: the V50's has the AW9523B, which no
+F50's or U30 Air's has, so `mu300-device` says `v50` even where an older installer had labelled it `f50` (after an
+update such an installation moves from `192.168.77.1` to `192.168.79.1` unless `/etc/mu300/lan.conf` or OpenWrt's
+LAN setting pins the address).
+
 ## What you get
 
 * **A real Linux system**, not an app or a container: Ubuntu 24.04 or 26.04 LTS with systemd and `apt`, OpenWrt
@@ -115,8 +136,13 @@ trying it costs you the server.
 
 ## Before you start
 
-Your device must already be **rooted and unlocked** (it must already boot a modified Android boot image), and you
-need `adb` on your computer. Getting to that point is not part of this project.
+Your device must already be **rooted, and able to boot a modified boot image**: an unlocked bootloader, or a locked
+one with a patched TrustOS. You also need `adb` on your computer. Getting to that point is not part of this project:
+it does not root, unlock or patch devices and gives no guide for it.
+
+The bootloader does not have to be unlocked. The installers do not refuse a locked one; they say so and ask "Did
+you patch TrustOS?". With a patched TrustOS Linux boots on a locked bootloader; without it the bootloader rejects
+the Linux boot image and the device goes back to Android by itself after the install.
 
 > **Warning.** Installing writes to the `boot_b` and `misc` partitions (`boot_a` instead of `boot_b` when Android
 > runs from slot b, as it often does after an OTA update). If something goes badly wrong you may need a
@@ -173,6 +199,30 @@ and it asks first. Back the device up with `tools/backup-device.sh` before sayin
 neither case, stop and open an issue with what `--check` printed; they identify the variant. With an SD card in the
 slot there is a way that erases nothing: `--check` says so, and the installer offers the card instead.
 
+**Making room is a reset, and the installation resumes afterwards (EXPERIMENTAL).** Android keeps its data
+encrypted (file-based encryption, with the metadata key in `/metadata`), and a data filesystem cleared from outside
+is one it cannot mount: it would stop in its recovery, waiting for a person at a screen these devices do not have.
+So the installer does what kano's desktop installer does (kanoqwq's branch `clean-tf-7.2`, commits `f6b0668d` and
+`0e19fe32`): before anything is written it saves a backup (the partition table, `misc`, `boot` and the boot chain of
+both slots - never the NV or calibration partitions) and a *transaction* on this computer, in `~/mu300-backups/<date>-<id>/`
+(`MU300_BACKUP_DIR` elsewhere). Then it shrinks `userdata` (the backup copy of the table first, both read back),
+writes a token to the first 4 KiB of the new region (outside every partition, where the reset does not reach) and
+asks Android's own recovery, through the bootloader message in `misc`, to format `userdata` on the next start.
+The device restarts, Android is reset - **all of its data is erased** - and starts as new.
+
+Then: set Android up again, turn USB debugging back on and bring root back (Magisk survives in the boot partition,
+but its app and its grants were in the erased data: install the Magisk app again and let Shell have root), and run
+`./install.sh` (or `.\install.ps1`, or the window) again. It finds the transaction and continues, when the device
+(serial, the eMMC's CID), Android's slot, `userdata`'s node, start and size, the partition table (both copies, every
+CRC), the region by the installers' own arithmetic, the token on the device and the installer's own tools (the GPT
+reader, the region's arithmetic, what formats and fills it, `boot/init`) are all still the ones it was prepared with;
+otherwise it stops, having written nothing, and says which. `--resume` insists on a transaction, `--no-resume`
+installs as if nothing had been prepared (the region is then space that holds data, and you type `overwrite`),
+`--transaction FILE` takes another one (`-Resume`, `-NoResume`, `-Transaction` for `install.ps1`). While a
+transaction waits the installer does not update itself. kano says he ran the stage after the reset's check against
+his V50's record ("passing the 8.00 GiB partition, identity, token and payload checks") and that the reset itself
+"still needs real MU300 validation"; this project has not run it on a device either (FINDINGS 112).
+
 **On the SD card.** With a card of at least 700 MiB in the slot the installer asks whether the Linux filesystem
 goes there instead of into the free eMMC space (`MU300_STORAGE=sd` answers it). The card is formatted (ext4,
 label `mu300sd`); on the eMMC only `boot_b` (or `boot_a`) and 32 bytes of `misc` are written, so a device with a small eMMC
@@ -201,6 +251,23 @@ It asks a few questions (internal storage or SD card; Ubuntu, OpenWrt or both, a
 which kernel; which one boots; whether Linux boots by default; a password; the VPN module), downloads the ready-made images,
 copies the Wi-Fi and modem files from your own device, shows exactly what it is about to write, and waits for you to
 type `INSTALL`. Then it reboots into Linux.
+
+**A window instead of a terminal.** Started by hand, the installer first asks whether you want the graphical
+installer: the same steps in a window, with the device, its storage and the progress shown rather than printed
+(`MU300_GUI=0` never asks, `MU300_GUI=1` starts it without asking). It needs a Python 3.8 or newer with tkinter
+(Tk 8.6 or newer); the installer looks for one, says what is missing, and installs nothing without showing the
+command and getting a yes. The window drives this same `install.sh` / `install.ps1`, so it installs nothing
+differently. It can also be started directly: `python3 gui/mu300-gui.py`.
+
+![The graphical installer: the device page](docs/images/gui/gui-01-device.png)
+
+**A beta, when there is one.** When GitHub has a prerelease newer than the newest release, the installer asks
+whether to install that beta instead and names both (default: no). `MU300_RELEASE=<tag>` / `-Release <tag>` picks a
+release and asks nothing.
+
+**Without a terminal.** `./install.sh --answers FILE` (`.\install.ps1 -AnswersFile FILE`) takes every answer from
+variables and asks nothing; a question without an answer stops the run and names its variable.
+`MU300_PROGRESS=1` adds a machine-readable progress stream. See [docs/INSTALLER-AUTOMATION.md](docs/INSTALLER-AUTOMATION.md).
 
 The installer speaks **English, Türkçe and 中文**: it asks at the start (English is the default; `MU300_LANG=tr`
 or `.\install.ps1 -Lang zh` skips the question). Adding a language is one file: see `i18n/README.md`. Before anything else it brings your copy of the project up to date
@@ -284,7 +351,9 @@ whenever OpenWrt is chosen (`MU300_OPENWRT=plain|luci` answers without asking), 
   extra headers; the standard fields or a body of your own with `{sender}`, `{time}`, `{text}`, `{device}`,
   `{message}`, each value escaped for the type), a Telegram chat, an e-mail address (only when the image has `msmtp`) and/or another phone by SMS, through a
   template (`{sender}`, `{time}`, `{text}`, `{device}`), with sender allow/deny lists and keywords. Failed deliveries
-  are retried (30 s, doubling, an hour at most, ten times); a delivery log and a "Send test" button. Tokens, passwords
+  are retried (30 s, doubling, an hour at most, ten times); a delivery log (with a "Clear" button) and a "Send test"
+  button. For services that answer HTTP 200 with their own error inside, the webhook can check the answer
+  (`errcode=0`, `code=0`, `ok=true`): the device keeps only the result, never the answer. Tokens, passwords
   and the webhook address and headers stay in `/etc/mu300/sms-forward.conf` (root only) and are never shown again.
 * **Cellular > AT terminal:** guarded AT commands over the same channel daemons the system uses. A command that scans,
   changes the radio, the APN, the SIM or a setting that persists into Android is explained and sent only after a
@@ -362,6 +431,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Test stability under load | `sudo mu300-toolkit stress all 10` |
 | Check the mobile connection | `sudo mobile-data status` |
 | Set the APN | Ubuntu: `/etc/mu300/mobile-data.conf` (`MU300_APN`, `MU300_PDP_TYPE`). OpenWrt: LuCI → Network → Interfaces → wan, or `uci set network.wan.apn='…'; uci commit network; ifup wan`. Leave it empty to keep the context the SIM defines, which is what most carriers expect |
+| No mobile data while roaming | `sudo mobile-data roaming off` (`on` allows it again, the default; `sudo mobile-data roaming` shows the setting, the network and whether data is held back). Ubuntu: `MU300_DATA_ROAMING=0` in `/etc/mu300/mobile-data.conf`; OpenWrt: `network.wan.roaming` (`roaming_internal` for the other SIM), the panel's dashboard or LuCI → Network → Interfaces → wan. SMS and calls are not affected. Some SIMs report roaming at home (an MVNO, national roaming): those need it on (FINDINGS 120) |
 | Use the F50's internal SIM instead of the card in the slot | `sudo mu300-sim select internal` (`external` goes back; it takes effect at the next boot, the external card is the default, and nothing is written to the modem or the SIM). OpenWrt: LuCI → Network → Interfaces → wan → SIM source, with that card's own APN; Ubuntu: its APN in `/etc/mu300/mobile-data.conf`. F50 only, and the device must have an internal SIM fitted (docs/SIM-SELECTION.md) |
 | Change the Wi-Fi name or password | Ubuntu: edit `/etc/mu300/hotspot.conf`, then `sudo systemctl restart mu300-hotspot`. OpenWrt: LuCI → Network → Wireless (that file is only read once, at the first boot) |
 | Change the hotspot's channel | Ubuntu: `CHANNEL=` in `/etc/mu300/hotspot.conf` (`auto`, or on 5 GHz 36-48 / 149-165). OpenWrt: LuCI → Network → Wireless. Never a DFS channel (52-144): the Wi-Fi driver cannot detect radar, so hostapd could not start there; a DFS channel is replaced by 36 (149 where 36-48 are not allowed) and the log says why (FINDINGS 42) |
@@ -381,35 +451,62 @@ the archive once online). `mu300-panel status` says where it is.
 | Save battery: profiles, radios that go idle when nobody is connected, a charge limit | `mu300-power status`, `sudo mu300-power profile battery` (`plugged`, `saver`, `auto`), `sudo mu300-power set battery.WIFI_IDLE 10`, `mu300-power log 5 /tmp/power.csv`; on `openwrt-luci` the page System -> Power. A boot that started from a charger stays a charging boot (LED blinking, hotspot and modem down) until the Wi-Fi key is pressed; see FINDINGS 36 |
 | Language of the web interface (OpenWrt) | System -> System -> Language and Style; more languages: see Languages below |
 | Find out which LED is which | `sudo mu300-led test` |
-| `adb shell`, `adb push`/`pull`, `adb forward` to Linux from a computer, as with Android | `sudo mu300-usb adb key adbkey.pub` (the computer's `~/.android/adbkey.pub`), then `sudo mu300-usb adb on`; see [adb to Linux](#adb-to-linux) |
+| `adb shell`, `adb push`/`pull`, `adb forward` to Linux from a computer, as with Android | on by default, for every computer (a root shell without a password for anyone with a cable); only your own computers: `sudo mu300-usb adb key adbkey.pub`, then `sudo mu300-usb adb auth keys`; not at all: `sudo mu300-usb adb off`; see [adb to Linux](#adb-to-linux) |
 
 ### adb to Linux
 
-Linux can offer adb over the USB cable, next to the USB network and the serial console, as Android does: `adb shell`
-(a root login shell), `adb push`/`pull`, `adb forward`/`reverse`. It is **off by default**. adb has no password:
-**anyone whose adb key is authorised gets a root shell**, so authorise only your own computers.
+Linux offers adb over the USB cable, next to the USB network and the serial console, as Android does: `adb shell`
+(a root login shell), `adb push`/`pull`, `adb forward`/`reverse`. From the release after v2026.10.23 it is **on by
+default and lets every computer in**, so that a browser (the web installer, over WebUSB) or a GUI can talk to the
+device without a key having been put on it first.
+
+> **What that means.** adb has no password. With the default, **anyone who can plug a USB cable into the device
+> gets a root shell**, also after you set passwords for `ubuntu` or `root`, and can read and change everything on
+> it. Nothing is reachable over Wi-Fi, the LAN or mobile data: adb is on the cable only. If the device is ever out
+> of your hands, close it with one of these:
 
 ```sh
-# on the computer: the key adb made for itself (adb keygen makes one where there is none)
-scp ~/.android/adbkey.pub ubuntu@192.168.77.1:      # root@ on OpenWrt; 192.168.78.1 on a U30 Air
-# on the device
-sudo mu300-usb adb key ~/adbkey.pub    # authorise it (/etc/mu300/adb_keys)
-sudo mu300-usb adb on                  # the USB connection drops for a moment and comes back with adb
-sudo mu300-usb adb keys                # the authorised keys; delete a line of /etc/mu300/adb_keys to take one back
-sudo mu300-usb adb off
+sudo mu300-usb adb auth keys           # only computers whose key you authorised get in (others: "unauthorized")
+sudo mu300-usb adb off                 # no adb at all
 ```
 
-The installers ask whether to turn it on for the computer they run on (`install.sh`, `install.ps1`). The device shows
-up in `adb devices` as `MU300LINUX-...`; a device in Android has another serial number. A computer whose key is not
-authorised sees it as `unauthorized` and gets nothing: there is no prompt to accept a key on the device, no TCP port
-(adb over Wi-Fi is left out) and no setting that turns the check off. Like Android's, the adb interface asks Windows
-for its WinUSB driver (MS OS descriptors; not tried on Windows yet - without it, Google's USB driver serves). The
-setting stays across reboots and updates; it needs a kernel with FunctionFS (5.4, and the mainline kernels from
-v2026.10.20 on). The daemon is AOSP's adbd (platform-tools 34.0.5), built static for both systems by
-`tools/adbd/build.sh`; see FINDINGS 43.
+Both stay across reboots and updates. The rest:
+
+```sh
+mu300-usb adb status                   # on or off, whom it lets in, the number of authorised keys
+# a computer's key, for "auth keys": the one adb made for itself (adb keygen makes one where there is none)
+scp ~/.android/adbkey.pub ubuntu@192.168.77.1:      # root@ on OpenWrt; 192.168.78.1 on a U30 Air
+sudo mu300-usb adb key ~/adbkey.pub    # authorise it (/etc/mu300/adb_keys)
+sudo mu300-usb adb keys                # the authorised keys; delete a line of /etc/mu300/adb_keys to take one back
+sudo mu300-usb adb auth open           # every computer again
+sudo mu300-usb adb on                  # after "off"; the USB connection drops for a moment and comes back with adb
+```
+
+* **A device that was set up before** keeps what it had: `adb off` stays off, and a device where adb was turned on
+  or a key was authorised under v2026.10.20-23 (when adb took keys only) stays keys-only until
+  `sudo mu300-usb adb auth open`. Every other device has adb on and open after `mu300-update apply`.
+* The installers (`install.sh`, `install.ps1`) ask whether to let in only the computer they run on, from the first
+  boot; the Magisk zip has no such question, its systems start open.
+* The device shows up in `adb devices` as `MU300LINUX-...`; a device in Android has another serial number, and the
+  installers tell the two apart (a device in Linux is sent back to Android first, over adb where it lets them in).
+  In keys mode a computer whose key is not authorised sees `unauthorized` and gets nothing: there is no prompt to
+  accept a key on the device.
+* There is no TCP port in either mode (adb over Wi-Fi and `adb tcpip` are left out of the daemon).
+* Where it is not there: a mainline kernel from before v2026.10.20 (no FunctionFS; `mu300-update kernel` brings one),
+  an image without adbd, and the U30 Air while its port is a USB host (`mu300-usb host`). `mu300-usb adb status`
+  says which.
+* Like Android's, the adb interface asks Windows for its WinUSB driver (MS OS descriptors; not tried on Windows yet -
+  without it, Google's USB driver serves).
+
+For programs that talk to the device over adb: [docs/ADB-INTERFACE.md](docs/ADB-INTERFACE.md). The daemon is AOSP's
+adbd (platform-tools 34.0.5), built static for both systems by `tools/adbd/build.sh`; see FINDINGS 43 and 70.
 
 
 ### Installing from Android with a Magisk zip
+
+**A zip has two ways in.** Installed as it is in Magisk, on the device, it installs its system and kernel there (this
+section). Unpacked on a computer, it is the computer's installer with that system and kernel in it, offline - see
+[A Magisk zip on a computer](#a-magisk-zip-on-a-computer) below.
 
 If the device already runs a rooted Android with Magisk 26 or newer, Linux can be installed from the device itself,
 without a computer: from the Magisk app (reached through scrcpy, a web panel or a phone running adb) or from
@@ -457,6 +554,31 @@ second one adds its system next to the first and becomes the one that boots; `mu
 After a successful install the zip stays as the Magisk module "MU300 Linux" (the switch module of
 [android/magisk/README.md](android/magisk/README.md), same id): its Action button and `su -c mu300-linux` start
 Linux from Android later.
+
+#### A Magisk zip on a computer
+
+Unpack the **whole** zip into a folder and start `start.cmd` (Windows) or `sh start.sh` (macOS, Linux);
+`start-gui.cmd` / `sh start-gui.sh` open the graphical installer's window straight away, and `uninstall-linux.cmd` /
+`sh uninstall-linux.sh` start the uninstaller. `START-HERE.md` in the zip says the same in English, Turkish and
+Chinese.
+
+* It is this project's `install.sh` / `install.ps1` and the graphical installer, in the zip's `computer/` folder, of
+  the release the zip belongs to. `computer/.mu300-package` tells them that the zip's payload is next to them
+  (`MU300_PACKAGE=DIR`, `./install.sh --package DIR` or `.\install.ps1 -Package DIR` name another unpacked zip;
+  `tools/package.sh`).
+* It installs exactly the system and the kernel of that zip, from its `payload/`, and downloads nothing: both files
+  must have the checksum the zip's `mu300/manifest` names and the one the release's `mu300/SHA256SUMS` names. There
+  is no question about the system, the kernel or the release, and the installer does not update itself. Everything
+  else is the installer as always: the device's own Wi-Fi and modem files are read, the summary is shown and nothing
+  is written before `INSTALL`.
+* The VPN module, when it is asked for, is still a download (it is not part of a zip), and the web panel for Ubuntu
+  is not offered (add it later: `sudo mu300-extra install panel`).
+* **adb is not in the zip**: Google's platform-tools are under the Android SDK licence, whose section 3.4 does not
+  allow passing them on. Download them from https://developer.android.com/tools/releases/platform-tools and unpack
+  them into the zip's folder (`platform-tools/adb` next to `START-HERE.md`), or have adb on the PATH. The computer
+  also needs Python 3.8+ and lz4 (Windows: the installer installs both when missing, which needs the internet once).
+* The computer's side adds about 0.33 MB to a zip (68 files); the payload is in it once. Magisk never sees it: its
+  `customize.sh` unpacks only `module.prop`, `mu300/`, the switch module and `system/` (FINDINGS 111).
 
 **What is written.** Linux goes to its own place: a free region of the internal storage behind the partitions, or an
 SD card (a card that already holds a Linux installation of this project is used first, as the device does when it
@@ -544,6 +666,7 @@ update - would wipe or erase again. For another erase, put the line back.
 | `MU300_LANG` | `en`, `tr`, `zh` | either | The language of the Android locale |
 | `MU300_DRY_RUN` | `1` | either | Not set |
 | `MU300_SYNC_BOOTCHAIN` | `0`, `1` | either | `1`: the Linux slot gets the boot chain of Android's slot where it differs (backed up first). `0`: left as it is, for experts |
+| `MU300_ADB_KEY` | the line of a computer's `~/.android/adbkey.pub` | `/data/adb` only | adb over USB to the installed Linux, on, for that one key (whoever holds it gets a root shell). Without it nothing about adb changes |
 
 Examples. Install to the card, formatting it (everything on it is erased), with a password of your own, from
 `adb shell` as root:
@@ -805,7 +928,7 @@ Like the installer, it offers to reboot the device from Linux into Android first
 | Web panels | ✅ OpenWrt: LuCI, and the MU300 control panel on `openwrt-luci` (with a terminal in the browser); Ubuntu: Cockpit with an MU300 page as the panel extra; adb to Linux over USB on both (off by default) |
 | Back to Android, automatic rollback | ✅ |
 | Screen output (HDMI over USB-C) | ✗ the USB-C power chip never answers, so no display |
-| Sound | ✗ the board has no speaker and no microphone. Call audio through the modem's audio DSP is work in progress and not in the releases (`kernel/build-audio.sh`, `mu300-audio-dsp`, `mu300-voice`): with those, the sound card comes up (`sprdphone-sc2730`, 19 PCM devices) and the DSP answers, but no audio moves in any scene, and a call without audio ends after about 20 seconds, as it does under Android on this board ([FINDINGS 24, 24b](docs/FINDINGS.md)). The kernels have USB audio drivers, not tried here |
+| Sound | ✗ the board has no speaker and no microphone. Call audio through the modem's audio DSP is work in progress and not in the releases (`kernel/build-audio.sh`, `mu300-audio-dsp`, `mu300-voice`): with those, the sound card comes up (`sprdphone-sc2730`, 19 PCM devices) and the DSP answers, but no audio moves in any scene, and a call without audio ends after about 20 seconds, as it does under Android on this board ([FINDINGS 24, 24b](docs/FINDINGS.md)). The call sequence and kernel fixes of kano's [e5-linux](https://github.com/kanoqwq/e5-linux) are ported, with a Bluetooth headset as the output (`mu300-voice audio start bt`, `tools/hfp`); the DSP image is yours to supply (`mu300-audio-dsp install`), and with it this is not yet measured ([FINDINGS 24c](docs/FINDINGS.md)). The kernels have USB audio drivers, not tried here |
 
 ## How it works, in short
 

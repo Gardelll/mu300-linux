@@ -9,6 +9,10 @@ msgstr "ステータスダッシュボード"
 msgid "Cellular"
 msgstr "セルラー"
 
+# Source-language fallback for untranslated new controls.
+msgid "Dual SIM"
+msgstr "Dual SIM"
+
 msgid "Network locks"
 msgstr "ネットワークロック"
 
@@ -32,6 +36,9 @@ msgstr "データ使用量"
 
 msgid "Device management"
 msgstr "デバイス管理"
+
+msgid "Update"
+msgstr "更新"
 
 msgid "Languages"
 msgstr "言語"
@@ -576,6 +583,9 @@ msgstr "保存済み: %s"
 msgid "Remove the saved value"
 msgstr "保存済みの値を削除"
 
+msgid "Presets"
+msgstr "プリセット"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "受信したメッセージは SMS プールに届きしだい転送されます。送信に失敗すると 30 秒後に再試行し、その後は毎回 2 倍の間隔（最大 1 時間）で、合計 10 回試みます。"
 
@@ -632,6 +642,12 @@ msgstr "空欄: 標準のフィールド（プレーンテキスト: メッセ�
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "追加ヘッダー（1 行に 1 つの \"Name: value\"）"
+
+msgid "The answer must contain"
+msgstr "応答に含まれるべき内容"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "空欄: HTTP 2xx の応答はすべて配信済みとみなします。キー=値（例: errcode=0）を指定すると、応答はさらに、最上位のそのキーにその値を持つ JSON オブジェクトでなければならず、そうでない場合は配信失敗になります。ログに記録されるのは確認の結果だけで、応答そのものは記録されません。"
 
 msgid "Bot token"
 msgstr "ボットトークン"
@@ -698,6 +714,9 @@ msgstr "フィルターで除外"
 
 msgid "Dropped"
 msgstr "破棄"
+
+msgid "Clear"
+msgstr "クリア"
 
 msgid "Test"
 msgstr "テスト"
@@ -797,6 +816,9 @@ msgstr "セッション時間"
 
 msgid "Registration"
 msgstr "登録"
+
+msgid "Data roaming"
+msgstr "データローミング"
 
 msgid "Bandwidth"
 msgstr "帯域幅"
@@ -933,6 +955,18 @@ msgstr "セルラー無線をオンにする"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN の電源投入シーケンスを実行します (最大約 1 分)。"
 
+msgid "Turn data roaming off"
+msgstr "データローミングをオフにする"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "SIM がローミングネットワークに登録されている間、モバイルデータはオフのままです。SMS、通話、登録には影響しません。一部の SIM は国内でもローミングと報告します (MVNO、国内ローミング)。その場合、そこでもデータが止まります。"
+
+msgid "Allow data roaming"
+msgstr "データローミングを許可"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "ローミングネットワークでもモバイルデータが使われ、追加料金がかかることがあります。一部の SIM は国内でもローミングと報告し (MVNO、国内ローミング)、データを使うにはこれが必要です。"
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "セルラー接続が 1～2 分間停止する場合があります。"
 
@@ -1038,6 +1072,9 @@ msgstr "アンカー B%s"
 msgid "No serving cell"
 msgstr "サービングセルなし"
 
+msgid "Version %s is out: update"
+msgstr "バージョン %s が公開されました: 更新する"
+
 msgid "Not registered"
 msgstr "未登録"
 
@@ -1058,6 +1095,15 @@ msgstr "緊急通報のみ"
 
 msgid "Status %s"
 msgstr "ステータス %s"
+
+msgid "Off: data held back while roaming"
+msgstr "オフ: ローミング中はデータを停止中"
+
+msgid "Allowed"
+msgstr "許可"
+
+msgid "Off"
+msgstr "オフ"
 
 msgid "LTE anchor"
 msgstr "LTE アンカー"
@@ -1584,9 +1630,6 @@ msgstr "そのまま"
 msgid "LTE only (5G off)"
 msgstr "LTE のみ（5G オフ）"
 
-msgid "Off"
-msgstr "オフ"
-
 msgid "On"
 msgstr "オン"
 
@@ -1677,6 +1720,109 @@ msgstr "ホームダッシュボードの更新頻度のみを制御します。
 msgid "Persistent state directory"
 msgstr "永続状態ディレクトリ"
 
+# Source-language fallback for untranslated new controls.
+msgid "Switching SIM. Mobile data will disconnect briefly."
+msgstr "Switching SIM. Mobile data will disconnect briefly."
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM switch failed; check SIM readiness and hot switching."
+msgstr "SIM switch failed; check SIM readiness and hot switching."
+
+# Source-language fallback for untranslated new controls.
+msgid "Ready"
+msgstr "Ready"
+
+# Source-language fallback for untranslated new controls.
+msgid "Switching SIM"
+msgstr "Switching SIM"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM switched; saved as boot default"
+msgstr "SIM switched; saved as boot default"
+
+# Source-language fallback for untranslated new controls.
+msgid "Switch failed; previous SIM restored"
+msgstr "Switch failed; previous SIM restored"
+
+msgid "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
+msgstr "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
+
+msgid "The target SIM has no mobile data yet, and the previous SIM had none either: the device stays on the target. The saved boot preference is unchanged."
+msgstr "The target SIM has no mobile data yet, and the previous SIM had none either: the device stays on the target. The saved boot preference is unchanged."
+
+# Source-language fallback for untranslated new controls.
+msgid "Radio state unknown; reboot required"
+msgstr "Radio state unknown; reboot required"
+
+msgid "Radio state unknown; the device is restarting."
+msgstr "Radio state unknown; the device is restarting."
+
+# Source-language fallback for untranslated new controls.
+msgid "Dual SIM control is only for the U30 Air on OpenWrt."
+msgstr "Dual SIM control is only for the U30 Air on OpenWrt."
+
+# Source-language fallback for untranslated new controls.
+msgid "The chosen SIM could not be started at the last boot (no card, PIN, or the modem refused it)."
+msgstr "The chosen SIM could not be started at the last boot (no card, PIN, or the modem refused it)."
+
+msgid "No card answered in the chosen SIM position at the last boot."
+msgstr "No card answered in the chosen SIM position at the last boot."
+
+msgid "The chosen SIM is locked by its PIN."
+msgstr "The chosen SIM is locked by its PIN."
+
+msgid "The chosen SIM got no mobile data within the time at its first boot."
+msgstr "The chosen SIM got no mobile data within the time at its first boot."
+
+# Source-language fallback for untranslated new controls.
+msgid "The second SIM's modem channels did not come up at the last boot."
+msgstr "The second SIM's modem channels did not come up at the last boot."
+
+# Source-language fallback for untranslated new controls.
+msgid "The last dual-SIM boot never confirmed itself."
+msgstr "The last dual-SIM boot never confirmed itself."
+
+msgid "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
+msgstr "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
+
+# Source-language fallback for untranslated new controls.
+msgid "Active SIM"
+msgstr "Active SIM"
+
+# Source-language fallback for untranslated new controls.
+msgid "Cold-boot default"
+msgstr "Cold-boot default"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM control unavailable"
+msgstr "SIM control unavailable"
+
+# Source-language fallback for untranslated new controls.
+msgid "The device is back on SIM1 without live switching; choose again below to try once more."
+msgstr "The device is back on SIM1 without live switching; choose again below to try once more."
+
+msgid "Waiting for the first mobile data on SIM2: %d s left. Without data the device goes back to SIM1 and restarts."
+msgstr "Waiting for the first mobile data on SIM2: %d s left. Without data the device goes back to SIM1 and restarts."
+
+# Source-language fallback for untranslated new controls.
+msgid "Enable hot switching"
+msgstr "Enable hot switching"
+
+msgid "This device supports next-boot SIM selection only; live switching is unavailable."
+msgstr "This device supports next-boot SIM selection only; live switching is unavailable."
+
+# Source-language fallback for untranslated new controls.
+msgid "Reboot after enabling hot switching to prepare both SIM channels."
+msgstr "Reboot after enabling hot switching to prepare both SIM channels."
+
+# Source-language fallback for untranslated new controls.
+msgid "Switch to SIM%d"
+msgstr "Switch to SIM%d"
+
+# Source-language fallback for untranslated new controls.
+msgid "Use SIM%d at next boot"
+msgstr "Use SIM%d at next boot"
+
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "宛先: 番号 (例: 10086 または +86...)"
 
@@ -1715,9 +1861,6 @@ msgstr "ローカル SMS プールをクリア"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "ローカルファイルのみ削除されます。SIM 上のメッセージは残ります。"
-
-msgid "Clear"
-msgstr "クリア"
 
 msgid "Delete this SMS"
 msgstr "この SMS を削除"
@@ -1929,6 +2072,396 @@ msgstr "オフにする"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "64 にすると、すべてのパケットがデバイス自身の通信と同じように送出されます"
 
+msgid "Check for updates"
+msgstr "更新を確認"
+
+msgid "Checking the file"
+msgstr "ファイルを確認中"
+
+msgid "Update from a file"
+msgstr "ファイルから更新"
+
+msgid "Back to the previous version"
+msgstr "前のバージョンに戻す"
+
+msgid "Back to the previous boot image"
+msgstr "前のブートイメージに戻す"
+
+msgid "Remove the previous version"
+msgstr "前のバージョンを削除"
+
+msgid "Kernel change"
+msgstr "カーネルの変更"
+
+msgid "Starting…"
+msgstr "開始しています…"
+
+msgid "Downloading"
+msgstr "ダウンロード中"
+
+msgid "All files are here and verified"
+msgstr "すべてのファイルが揃い、検証されました"
+
+msgid "Unpacking the new system"
+msgstr "新しいシステムを展開中"
+
+msgid "Carrying over your settings"
+msgstr "設定を引き継ぎ中"
+
+msgid "Writing down the packages you installed"
+msgstr "インストールしたパッケージを記録中"
+
+msgid "Switching to the new system"
+msgstr "新しいシステムに切り替え中"
+
+msgid "Kernel and boot image"
+msgstr "カーネルとブートイメージ"
+
+msgid "Restart the device?"
+msgstr "デバイスを再起動しますか?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "デバイスを再起動します。既定の起動先は Android なので Android が起動します: 更新後のシステムを起動するには、そこから Linux に切り替えてください。"
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "デバイスを再起動します。約 1 分間は接続できません。新しいシステムが起動しない場合は、何度か失敗したあと自動的に Android に戻ります。"
+
+msgid "Restart"
+msgstr "再起動"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "再起動中… 約 1 分後にこのページを開き直してください。"
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "%s 実行中です。このページを閉じても続行されます。デバイスの電源を切らないでください。"
+
+msgid "Done. Restart the device to start it."
+msgstr "完了しました。デバイスを再起動すると起動します。"
+
+msgid "Done. Nothing needs a restart."
+msgstr "完了しました。再起動は必要ありません。"
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "完了せず、一部だけ実行されました: 再起動する前にログを読んでください。"
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "完了しませんでした。何も変更されていません。理由はログにあります。"
+
+msgid "Log"
+msgstr "ログ"
+
+msgid "Restart now"
+msgstr "今すぐ再起動"
+
+msgid "Later"
+msgstr "あとで"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Updating is not available on this system"
+msgstr "このシステムでは更新を利用できません"
+
+msgid "Another update is running on the device"
+msgstr "デバイスで別の更新が実行中です"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "このページの外 (端末、ツールキット) から開始されました。終了するまで、ここからは何も開始できません。"
+
+msgid "Restart needed"
+msgstr "再起動が必要です"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "このシステムは更新されましたが、まだ古いバージョンで動作しています。新しいバージョンは次回の再起動で起動します。"
+
+msgid "Installed"
+msgstr "インストール済み"
+
+msgid "This system"
+msgstr "このシステム"
+
+msgid "Also on this device"
+msgstr "このデバイスにあるその他のシステム"
+
+msgid "Kernel"
+msgstr "カーネル"
+
+msgid "choice %s"
+msgstr "選択 %s"
+
+msgid "Boot image"
+msgstr "ブートイメージ"
+
+msgid "from the installer"
+msgstr "インストーラーによる"
+
+msgid "Default boot"
+msgstr "既定の起動先"
+
+msgid "Free space"
+msgstr "空き容量"
+
+msgid "Release signatures"
+msgstr "リリースの署名"
+
+msgid "checked with the project's key"
+msgstr "プロジェクトの鍵で確認"
+
+msgid "this system has no release key"
+msgstr "このシステムにはリリース鍵がありません"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "既定の起動先は Android です: 再起動すると Android になり、Linux はそこから起動します。"
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux が既定の起動先として固定されています: 起動に失敗しても自動的に Android にはなりません。ただし新しいブートイメージの最初の数回の起動は除きます。"
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Linux の起動に %d 回続けて失敗すると、デバイスは自動的に Android を起動します。"
+
+msgid "Report of the last update"
+msgstr "前回のアップデートのレポート"
+
+msgid "Online update"
+msgstr "オンラインアップデート"
+
+msgid "Asking GitHub…"
+msgstr "GitHub に問い合わせ中…"
+
+msgid "Checked %s ago"
+msgstr "%s前に確認"
+
+msgid "Not checked yet"
+msgstr "まだ確認していません"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "自分で追加したパッケージをアップデート後に再インストールする (最初の起動時にデバイスがオンラインである必要があります)"
+
+msgid "Pre-release"
+msgstr "プレリリース"
+
+msgid "Newest release"
+msgstr "最新のリリース"
+
+msgid "Release notes"
+msgstr "リリースノート"
+
+msgid "Download"
+msgstr "ダウンロード"
+
+msgid "Free space needed"
+msgstr "必要な空き容量"
+
+msgid "not enough: remove the previous version first"
+msgstr "不足: 先に前のバージョンを削除してください"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "プレリリースはまだ試験中のリリースです: リリースにはない不具合があるかもしれません。前のバージョンは同じように残されます。"
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "このシステムは最新のリリースより新しいものです (テスト版)。"
+
+msgid "Up to date."
+msgstr "最新です。"
+
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "このリリースは署名されておらず、このシステムは署名を確認します。ここからはインストールされません。下のファイルから更新してください。確認を求められます。"
+
+msgid "Update to %s"
+msgstr "%s に更新"
+
+msgid "Choose at least one system"
+msgstr "システムを 1 つ以上選んでください"
+
+msgid "Update to %s?"
+msgstr "%s に更新しますか?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "デバイスは %s をダウンロードし、新しいシステムを実行中のシステムの隣に置き、次回の再起動で切り替えます。設定は引き継がれ、前のバージョンは残されます。数分かかります。デバイスの電源を切らないでください。"
+
+msgid "Also offer the pre-release %s"
+msgstr "プレリリース %s も表示する"
+
+msgid "Systems to update:"
+msgstr "更新するシステム:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "GitHub に接続できませんでした: デバイスがインターネットに接続されていないか、GitHub が応答しませんでした。インターネットがない場合は、下のファイルからの更新を使ってください。"
+
+msgid "release"
+msgstr "リリース"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "インターネットのないデバイス向け: このシステムとこのカーネル用のリリースの Magisk zip を、別のコンピューターで GitHub のリリースページからダウンロードし、ここにアップロードしてください。このデバイスの場合は次のファイルです:"
+
+msgid "Uploaded file"
+msgstr "アップロードしたファイル"
+
+msgid "Checking the file…"
+msgstr "ファイルを確認中…"
+
+msgid "It says it is"
+msgstr "ファイルの自己申告"
+
+msgid "kernel %s"
+msgstr "カーネル %s"
+
+msgid "Signature"
+msgstr "署名"
+
+msgid "signed with the project's release key"
+msgstr "プロジェクトのリリース鍵で署名済み"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "不正: プロジェクトのリリース鍵と一致しません"
+
+msgid "not signed"
+msgstr "署名なし"
+
+msgid "cannot be checked on this system"
+msgstr "このシステムでは確認できません"
+
+msgid "Its system is not installed on this device."
+msgstr "このファイルのシステムは、このデバイスにインストールされていません。"
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "これはもう一方の Ubuntu リリースで、インストールされているものではありません。"
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "このデバイスが使っているものとは別のカーネルが入っています。カーネル %s 用の zip を使うか、先にカーネルを変更してください。"
+
+msgid "Its kernel does not run on this model."
+msgstr "このファイルのカーネルは、この機種では動作しません。"
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "ファイルが壊れています: 内容がチェックサムと一致しません。"
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "署名が正しくありません。このファイルはプロジェクトが配布したままのものではなく、インストールされることはありません。"
+
+msgid "This file cannot be used here."
+msgstr "このファイルはここでは使えません。"
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "SHA-256 を、リリースページの SHA256SUMS-magisk にある値と比べてください: 署名のないファイルの出どころを示す証拠はそれだけです。"
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "このリリースはすでにインストールされています。更新してもブートイメージが書き直されるだけです。"
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "このファイルに署名がないことを理解しています: プロジェクトのものであることを示す証拠はありません。SHA-256 は自分で比較済みで、インストールを希望します。"
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "これが %s で、インストール済みの %s より古いことを理解したうえで、このバージョンに戻します。"
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "これはこのプロジェクトのリリースファイルではありません: リリースの Magisk zip が必要です。"
+
+msgid "Update from this file"
+msgstr "このファイルから更新"
+
+msgid "Tick the confirmations above first"
+msgstr "先に上の確認事項にチェックを入れてください"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "デバイスはこのファイルのシステムを実行中のシステムの隣に置き、次回の再起動で切り替えます。設定は引き継がれ、前のバージョンは残されます。数分かかります。デバイスの電源を切らないでください。"
+
+msgid "Check the file"
+msgstr "ファイルを確認"
+
+msgid "Remove the file"
+msgstr "ファイルを削除"
+
+msgid "Previous version"
+msgstr "前のバージョン"
+
+msgid "No previous version is kept on this device."
+msgstr "このデバイスには前のバージョンが残されていません。"
+
+msgid "replaced %s"
+msgstr "%s に置き換え"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "前のシステムに戻します。アップデート後に変更した内容は、離れるほうのバージョンに残ります。"
+
+msgid "Back to the previous version?"
+msgstr "前のバージョンに戻しますか?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "前のシステム (%s) が、次回の再起動で起動するシステムになります。離れるほうのバージョンは残されません。アップデート後に変更した設定は引き継がれません。"
+
+msgid "Go back"
+msgstr "戻す"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "いま動作しているのが前のバージョンです: 先に再起動してください。"
+
+msgid "I want the previous kernel and boot image back."
+msgstr "前のカーネルとブートイメージに戻します。"
+
+msgid "Back to the previous boot image?"
+msgstr "前のブートイメージに戻しますか?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "前のブートイメージ (%s) が Linux スロットに書き込まれ、次回の再起動で起動します。起動しない場合、デバイスは自動的に Android に戻ります。"
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "戻す必要はありません: 前のシステムを削除して容量を空けます。"
+
+msgid "Remove the previous version?"
+msgstr "前のバージョンを削除しますか?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "残されている前のシステムのコピーは完全に削除されます。その後は、このページからそこへ戻すことはできません。"
+
+msgid "the vendor kernel"
+msgstr "ベンダーカーネル"
+
+msgid "mainline"
+msgstr "メインライン"
+
+msgid "not with Ubuntu 26.04"
+msgstr "Ubuntu 26.04 では不可"
+
+msgid "Change the kernel"
+msgstr "カーネルを変更"
+
+msgid "This kernel is the one in use"
+msgstr "このカーネルは現在使用中です"
+
+msgid "Change the kernel to %s?"
+msgstr "カーネルを %s に変更しますか?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "デバイスはそのカーネルを最新のリリースからダウンロードし、新しいブートイメージを書き込みます。次回の再起動で起動します。前のブートイメージは残され、新しいものが起動しない場合、デバイスは自動的に Android に戻ります。デバイスがオンラインである必要があります。"
+
+msgid "Start Android at the next restart"
+msgstr "次回の再起動で Android を起動"
+
+msgid "Start Android at the next restart?"
+msgstr "次回の再起動で Android を起動しますか?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "次回以降の再起動では、Linux ではなく Android が起動します。Linux は Android からもう一度起動できます (Magisk モジュールの Action ボタン、または mu300-linux)。"
+
+msgid "Start Android next"
+msgstr "次回は Android を起動"
+
+msgid "What an update keeps"
+msgstr "アップデートで残るもの"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "アップデートは新しいリリースのシステムを配置し、あなたのものを引き継ぎます: 設定、アカウントとそのパスワード、デバイスの鍵、ホームディレクトリです。自分でインストールしたパッケージは記録され、デバイスがオンラインになると最初の起動時に再インストールされます。前のバージョンは削除するまでデバイスに残るので、戻すことができます。"
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "何が残るかは、Wiki の「アップデート」ページに正確な一覧があります。"
+
+msgid "Choose a file first"
+msgstr "先にファイルを選んでください"
+
+msgid "Uploading: %s of %s"
+msgstr "アップロード中: %s / %s"
+
 msgid "running"
 msgstr "実行中"
 
@@ -1962,9 +2495,6 @@ msgstr "これで動作しているプロファイルはありません。"
 msgid "Removed"
 msgstr "削除しました"
 
-msgid "Check for updates"
-msgstr "更新を確認"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "各エンジンは独立したエクストラです: プロファイルに必要なものだけをインストールしてください。Xray は vless、vmess、trojan、ss のリンクを (hev-socks5-tunnel と併せて) 実行し、sing-box は同じリンクと独自の JSON、mihomo は Clash サブスクリプション、dae は新しいカーネルで hysteria2、tuic などを実行します。WireGuard と OpenVPN はシステムのパッケージです。"
 
@@ -1973,9 +2503,6 @@ msgstr "ダウンロードはエンジンごとに数十 MB です。モバイ�
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "利用可能なバージョンは VPN モジュールの最新リリースに基づきます。"
-
-msgid "Update"
-msgstr "更新"
 
 msgid "system package"
 msgstr "システムパッケージ"
@@ -2144,9 +2671,6 @@ msgstr "開始"
 
 msgid "Stop"
 msgstr "停止"
-
-msgid "Restart"
-msgstr "再起動"
 
 msgid "Stop the VPN?"
 msgstr "VPN を停止しますか?"
@@ -2324,9 +2848,6 @@ msgstr "このプロファイルはサブスクリプション由来です: 次�
 
 msgid "Config of %s"
 msgstr "%s の設定"
-
-msgid "Close"
-msgstr "閉じる"
 
 msgid "Rename"
 msgstr "名前を変更"
@@ -2520,8 +3041,9 @@ msgstr "更新では、名前が変わらないプロファイルは保持され
 msgid "Dashboard info failed"
 msgstr "ダッシュボード情報の取得に失敗しました"
 
-msgid "Applying network locks: no live signal right now"
-msgstr "ネットワークロックを適用中: 現在ライブ信号はありません"
+# Source-language fallback for untranslated new controls.
+msgid "The modem is restarting (network locks or a SIM switch): no live signal right now"
+msgstr "The modem is restarting (network locks or a SIM switch): no live signal right now"
 
 msgid "Live signal read failed"
 msgstr "ライブ信号の読み取りに失敗しました"
@@ -2553,8 +3075,12 @@ msgstr "\";\" によるコマンドの連結はできません"
 msgid "Denied: this command wedges the AT port until a reboot"
 msgstr "拒否: このコマンドは再起動するまで AT ポートを停止させます"
 
-msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
-msgstr "ネットワークロックを適用中: モデムが再起動しています (約 30 秒)。しばらくしてから再試行してください"
+msgid "Denied: this command moves the SIM selection or the data route; the SIM settings do that"
+msgstr "Denied: this command moves the SIM selection or the data route; the SIM settings do that"
+
+# Source-language fallback for untranslated new controls.
+msgid "The modem is restarting (network locks or a SIM switch, about half a minute), try again shortly"
+msgstr "The modem is restarting (network locks or a SIM switch, about half a minute), try again shortly"
 
 msgid "A long AT command is still running in the background; try again when it has finished"
 msgstr "長い AT コマンドがまだバックグラウンドで実行中です。終わってからもう一度お試しください"
@@ -2696,6 +3222,30 @@ msgstr "パッケージアダプターから有効な応答がありません"
 
 msgid "Invalid packages operation"
 msgstr "無効なパッケージ操作"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "sizes パラメーターは 0 か 1 でなければなりません"
+
+msgid "The update adapter gave no valid reply"
+msgstr "更新アダプターから有効な応答がありませんでした"
+
+msgid "Unknown update operation"
+msgstr "不明な更新操作です"
+
+msgid "Invalid update request"
+msgstr "無効な更新リクエストです"
+
+# Source-language fallback for untranslated new controls.
+msgid "Invalid SIM setting"
+msgstr "Invalid SIM setting"
+
+# Source-language fallback for untranslated new controls.
+msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
+msgstr "Enable hot switching; reboot if channels are unavailable or wait until idle"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM control failed"
+msgstr "SIM control failed"
 
 msgid "Request too large"
 msgstr "リクエストが大きすぎます"
@@ -2850,8 +3400,18 @@ msgstr "行数は 1〜1000 です"
 msgid "The log could not be read"
 msgstr "ログを読み取れませんでした"
 
+# Source-language fallback for untranslated new controls.
+msgid "Use SIM control or reboot for managed dual-SIM radio"
+msgstr "Use SIM control or reboot for managed dual-SIM radio"
+
 msgid "Radio did not come up"
 msgstr "無線を起動できませんでした"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "このプラットフォームではモバイルデータ連携が提供されていません"
+
+msgid "The data roaming setting could not be saved"
+msgstr "データローミングの設定を保存できませんでした"
 
 msgid "Expected on or off"
 msgstr "on または off を指定してください"
@@ -2967,6 +3527,9 @@ msgstr "Webhook のアドレスは http:// または https:// の URL である�
 msgid "The webhook body is too long or contains a control character"
 msgstr "Webhook の本文が長すぎるか、制御文字を含んでいます"
 
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "応答の確認は キー=値 の形式（例: errcode=0 や ok=true）で指定してください（値は整数または英小文字、16 文字まで）"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "無効なヘッダー（1 行に 1 つの \"Name: value\"。Host、Content-Type、Content-Length、Transfer-Encoding、Connection はデバイスが設定します）"
 
@@ -2996,6 +3559,12 @@ msgstr "転送設定を保存できませんでした"
 
 msgid "SMS forwarding is not installed"
 msgstr "SMS 転送はインストールされていません"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "テストを開始したばかりです。数秒待ってください"
+
+msgid "The delivery log could not be cleared"
+msgstr "配信ログを消去できませんでした"
 
 msgid "Unknown forwarding operation"
 msgstr "不明な転送操作"
@@ -3077,3 +3646,42 @@ msgstr "TTL を設定できませんでした"
 
 msgid "Unknown TTL operation"
 msgstr "不明な TTL 操作"
+
+msgid "An update task is already running"
+msgstr "更新タスクがすでに実行中です"
+
+msgid "The task could not be started"
+msgstr "タスクを開始できませんでした"
+
+msgid "The updater gave no valid reply"
+msgstr "アップデーターから有効な応答がありませんでした"
+
+msgid "This needs confirmation"
+msgstr "この操作には確認が必要です"
+
+msgid "Check for updates first"
+msgstr "先に更新を確認してください"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "アップロード先のディレクトリが安全ではありません。何も変更していません"
+
+msgid "Not enough memory for this upload"
+msgstr "このアップロードに必要なメモリが足りません"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Linux パーティションの空き容量が足りません"
+
+msgid "The file was not checked; upload it again"
+msgstr "ファイルが確認されていません。もう一度アップロードしてください"
+
+msgid "This file is not for this device"
+msgstr "このファイルはこのデバイス用ではありません"
+
+msgid "The signature of this file is wrong"
+msgstr "このファイルの署名が正しくありません"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "このファイルは署名なしです: 確認が必要です"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "このファイルはインストール済みのものより古いです: 確認が必要です"

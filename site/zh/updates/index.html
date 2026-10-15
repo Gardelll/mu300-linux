@@ -61,6 +61,7 @@
 <a class="brand" href="../../zh/"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="8" width="52" height="50" rx="12" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="22" cy="20" r="3.5" fill="#2259d6"/><circle cx="32" cy="20" r="3.5" fill="currentColor"/><circle cx="42" cy="20" r="3.5" fill="#f2b23a"/><path d="M17 32 l9 7 l-9 7" fill="none" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 47 h15" stroke="#f2b23a" stroke-width="4.5" stroke-linecap="round"/></svg>MU300 Linux</a>
 <nav class="site-nav" id="site-nav" aria-label="Main">
 <a href="../../zh/install/">安装</a>
+<a href="../../zh/web-installer/">网页安装器</a>
 <a href="../../zh/choose/">选择系统</a>
 <a href="../../zh/features/">功能</a>
 <a href="../../zh/updates/" aria-current="page">更新与安全</a>
@@ -109,6 +110,7 @@ sudo reboot</code></pre>
 <li>内核和启动镜像也一起更新。新内核的头几次启动照常按失败次数计算，所以起不来的内核会让设备自己回到 Android。</li>
 </ol>
 <p>换内核也是同样的方式：<code>sudo mu300-update kernel 6.18</code>（或 <code>5.4</code>、<code>7.2</code>），然后重启。见<a href="../choose/#kernels">选择内核</a>。</p>
+<p><strong>版本名称</strong>是版本构建的日期加上当天的序号：<code>v2026.10.16.1</code>、<code>v2026.10.16.2</code>。它们比所有旧的三段式名称（如 <code>v2026.10.27</code>，其“日期”只是一个计数器）都新。v2026.10.27 或更旧的设备照常用 <code>sudo mu300-update apply</code> 更新到这些版本，但在出现日期为 2026 年 10 月 27 日或更晚的版本之前，登录时不会显示更新提示（<a href="https://github.com/dikeckaan/mu300-linux/wiki/Updating#release-names">详情</a>）。</p>
 
 <div class="callout">
 <strong>从 v2026.09.27 或更早的版本更新</strong>

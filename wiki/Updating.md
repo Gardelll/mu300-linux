@@ -21,13 +21,55 @@ On OpenWrt you are already root, so leave out `sudo`. `mu300-toolkit` offers the
 **System -> Software update**. Reboot after `apply` to start the new system and kernel. Only one run at a time: a
 second `mu300-update` started while one is going is refused with the first one's pid (from v2026.10.21 on).
 
-The device looks for a new release at boot and every 6 hours and tells you at login and in `mu300-toolkit`. **It
-never installs one by itself.**
+The device looks for a new release at boot and every 6 hours and tells you at login, in `mu300-toolkit` and on the
+control panel's home page. **It never installs one by itself.**
+
+## From the browser (OpenWrt with the control panel)
+
+**System > Update** in the [control panel](Control-Panel-(LuCI)) does all of the above without a terminal (from the
+release after v2026.10.25 on). It runs the same `mu300-update`, so everything on this page applies to it too.
+
+* **Installed** shows the system that runs and its release, the other systems on the device, the kernel, the boot
+  image, whether a restart goes to Linux or Android, and the free space.
+* **Online update:** *Check for updates* asks GitHub and shows the newest release, how much the device would
+  download and how much free space the update wants. *Update* starts it. It runs on the device, not in your
+  browser: you can close the page, and when you open it again, from any device, it shows how far the update is. At
+  the end it offers *Restart now*. A pre-release (a release still being tried) is offered only when you tick it.
+* **Update from a file**, for a device without internet: on another computer, download the Magisk zip of the
+  release for your system and kernel from the release page (the page tells you its exact name, for example
+  `mu300-magisk-v2026.11.02-openwrt-luci-k5.4.zip`) and upload it. Before anything is installed the page shows the
+  file's SHA-256, the release, system and kernel it says it is, and whether the project's signature on it is valid.
+  A file for another system, kernel or model is refused. A file without a valid signature is installed only after
+  you tick that you know nothing proves where it comes from: compare its SHA-256 with `SHA256SUMS-magisk` on the
+  release page first. One whose signature is wrong is never installed.
+* **Previous version:** *Back to the previous version*, *Back to the previous boot image* and *Remove the previous
+  version* are `rollback`, `rollback-boot` and `clean`. Each takes a tick and a confirmation.
+* **Kernel:** switch between 5.4, 6.18 and 7.2 (`mu300-update kernel`), and *Start Android at the next restart*.
+
+Only one update runs at a time. If one was started in a terminal, the page shows it and waits.
+
+From a terminal the file works too: `mu300-update apply --from FILE.zip --unsigned` (`--unsigned` for a file that
+is not signed), or `--from DIR` for a folder with a release's files and their `SHA256SUMS`. `mu300-update inspect
+FILE.zip` only looks.
+
+**An older release is never installed by itself**, from GitHub, a mirror or a file: `mu300-update apply` refuses a
+release older than what is installed unless you add `--downgrade` (from the release after v2026.10.25 on; before,
+`MU300_RELEASE=<older tag>` went back without asking). `rollback` needs no such word: it puts back the copy your
+device kept.
+
+### Signed releases
+
+A release can carry a signature of its checksums (`SHA256SUMS.sig`). A system that has the project's release key
+(`/opt/mu300/lib/release.pub`) checks it on every update and refuses a release whose signature is wrong, and one
+that has none unless you say so (`--unsigned`). Systems up to v2026.10.25 have no key and update as they always did. Details:
+[FINDINGS 86](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md).
 
 ## What an update keeps
 
 * your settings (`/etc/mu300`: hotspot, VPN, toolkit), users and home directories, `/usr/local`, SSH host keys,
   OpenWrt's UCI configuration and services you enabled yourself;
+* the jobs of OpenWrt's **System -> Scheduled Tasks** (`/etc/crontabs`; an update used to drop them, and with the
+  directory empty `crond` did not start at all);
 * the vendor files copied from your device (Wi-Fi firmware, the Android modem userspace);
 * the installed extras: the lang extra is brought to the new release, the [VPN](VPN) module to its latest release;
 * packages you installed yourself (`apk add`, `apt install`): see below.
@@ -99,6 +141,25 @@ sudo MU300_UBUNTU=26.04 mu300-update apply   # or 24.04
 ```
 
 Settings and data are kept. Ubuntu 26.04 needs kernel 6.18 or 7.2.
+
+## Release names
+
+A release is named after the day it was built, then a number: **`vYYYY.MM.DD.N`**. `v2026.10.16.1` is the first
+release of 16 October 2026 (UTC), `v2026.10.16.2` the second one that day. The releases up to **v2026.10.27** had three
+parts (`vYYYY.MM.DD`), and their "day" was only a counter that ran ahead of the calendar: v2026.10.27 came out on
+15 October. So:
+
+* every four-part name is newer than every three-part one, whatever the dates say: `v2026.10.16.1` is newer than
+  `v2026.10.27`;
+* four-part names go by the date, then by the number: `v2026.10.16.10` is newer than `v2026.10.16.9`, and
+  `v2026.10.17.1` newer than both.
+
+`mu300-update`, the control panel, the installers and the web installer all compare them this way. A device that
+still runs **v2026.10.27 or older** updates to a four-part release as usual with `sudo mu300-update apply` (the new
+release's own updater takes over before anything is changed), but its old updater sorts the names as text: until there
+is a release dated 27 October 2026 or later, it does not show the "is out" note at login, and `mu300-update check`
+there says the device is "newer than the newest release" - run `sudo mu300-update apply` anyway. Details:
+[FINDINGS 125](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md).
 
 ## Updating with the computer installer instead
 

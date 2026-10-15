@@ -242,15 +242,21 @@ cpu_json() {
     _j=$(mu300-cpu status --json 2>/dev/null)
     case $_j in '{'*'}') printf '%s' "$_j" ;; *) echo null ;; esac
 }
+# data roaming (mobile-data roaming --json, docs/FINDINGS.md 120): the setting and whether data is held back; files
+# only, no modem question. null when there is no such command (an older system) or it says something else.
+roaming_json() {
+    _j=$(mobile-data roaming --json 2>/dev/null | head -n 1)
+    case $_j in '{"allowed":'*'}') printf '%s' "$_j" ;; *) echo null ;; esac
+}
 do_info() {
     md=$(systemctl is-active mu300-mobile-data 2>/dev/null) || true
     ip4=$(ip -4 -o addr show dev sipa_eth0 2>/dev/null | awk '{print $4; exit}')
     ssid=$(sed -n 's/^SSID=//p' "$HOTSPOT" 2>/dev/null | head -n1)
     # vpn: the VPN module is installed - its mu300-vpn in the vpn extra on the disk (mu300-extra's test, vpn_module_in)
     if [ -x "${MU300_DISK:-/mnt/mu300-disk}/extra/vpn/bin/mu300-vpn" ]; then vpn=true; else vpn=false; fi
-    printf '{"device":%s,"version":%s,"mobile_data":{"service":%s,"address":%s},"signal":%s,"battery":%s,' \
+    printf '{"device":%s,"version":%s,"mobile_data":{"service":%s,"address":%s,"roaming":%s},"signal":%s,"battery":%s,' \
         "$(js "$(mu300-device 2>/dev/null)")" "$(js "$(cat "$R/etc/mu300/image-version" 2>/dev/null)")" \
-        "$(js "${md:-unknown}")" "$(js "$ip4")" "$(signal_json)" "$(battery_json)"
+        "$(js "${md:-unknown}")" "$(js "$ip4")" "$(roaming_json)" "$(signal_json)" "$(battery_json)"
     printf '"temperatures":%s,"cpu":%s,"hotspot":{"ssid":%s},"vpn":%s,"lan":%s}\n' "$(temps_json)" "$(cpu_json)" \
         "$(js "$ssid")" "$vpn" "$(js "$(lan_ip)")"
 }

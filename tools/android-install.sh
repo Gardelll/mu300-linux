@@ -19,8 +19,9 @@
 #                      without a password, as the image ships it); 0 or not set (install.sh): as above
 #   IMPORT_HOTSPOT=0|1 copy Android's hotspot SSID/passphrase into each system
 #   KERNEL=5.4|6.18|7.2  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel)
-#   ADB=0|1 ADB_KEY    adb over USB to each system on (etc/mu300/adb), for the adb public key ADB_KEY ("BASE64 name",
-#                      etc/mu300/adb_keys)
+#   ADB=0|1 ADB_KEY    adb over USB to each system: 1 lets in only the adb public key ADB_KEY ("BASE64 name",
+#                      etc/mu300/adb_keys; "keys" in etc/mu300/adb_auth); 0 writes nothing, and a system that was
+#                      never told otherwise has adb on for every computer (mu300-adbd)
 # Extras pushed as $T/mu300-extra-<name>.tar.gz (the work directory, see below) go to extra/<name> on the Linux partition
 # (the VPN module, github.com/dikeckaan/mu300-linux-vpn, as mu300-extra-vpn.tar.gz; each system links it into itself
 # at its first boot: mu300-extra link runs the module's hooks/link).
@@ -115,6 +116,44 @@ stage_run() {
     return "$_rc"
 }
 # --- stage end
+# --- release-tag begin
+# The release tags (docs/FINDINGS.md 125): vYYYY.MM.DD up to v2026.10.27, where the "day" was a counter, and from then
+# on vYYYY.MM.DD.N: the real (UTC) day the release was built, N = 1..99 for the releases of that day. Every four-field
+# tag is newer than every three-field one; four-field tags compare by the date, then by N, as numbers. The same block,
+# word for word, is in tools/releases.sh (install.sh, make-release.sh), mu300-update and tools/android-install.sh
+# (tests/test_releases.py holds the copies to each other and to tests/fixtures/release-tags.tsv).
+# tag_ok TAG: TAG is a release tag (in the shell's own patterns: no grep, no locale, no regex engine to differ)
+tag_ok() {
+    case $1 in
+        v[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]) return 0 ;;
+        v[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9].[1-9]|v[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9].[1-9][0-9]) ;;
+        *) return 1 ;;
+    esac
+    case ${1#v?????} in 0[1-9].*|1[0-2].*) ;; *) return 1 ;; esac
+    case ${1#v????????} in 0[1-9].*|[12][0-9].*|3[01].*) ;; *) return 1 ;; esac
+}
+# tag_key TAG: a number in the order of the releases (1YYYYMMDD00 for vYYYY.MM.DD, 2YYYYMMDDNN for vYYYY.MM.DD.N);
+# nothing and status 1 for what is no release tag
+tag_key() {
+    tag_ok "$1" || return 1
+    case $1 in
+        *.*.*.*) _tn=${1##*.}; [ ${#_tn} = 2 ] || _tn=0$_tn; _tk=${1%.*}; _te=2 ;;
+        *) _tn=00; _tk=$1; _te=1 ;;
+    esac
+    _tk=${_tk#v}; _td=${_tk#*.}
+    echo "$_te${_tk%%.*}${_td%.*}${_td#*.}$_tn"
+}
+# newer A B: release A is newer than release B; false when either is no release tag. The key is compared in two
+# parts (the era and the date, nine digits; then N without its leading zero), so that no shell's integers overflow
+# and none reads 08 as octal.
+newer() {
+    _na=$(tag_key "$1") && _nb=$(tag_key "$2") || return 1
+    [ "${_na%??}" -gt "${_nb%??}" ] && return 0
+    [ "${_na%??}" = "${_nb%??}" ] || return 1
+    _na=${_na#?????????}; _nb=${_nb#?????????}
+    [ "${_na#0}" -gt "${_nb#0}" ]
+}
+# --- release-tag end
 # --- sd begin
 sd_ext4() {  # true when the device holds an ext4 filesystem, labelled or not
     [ "$(dd if="$1" bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d ' \n')" = 53ef ]
@@ -674,7 +713,7 @@ for os in $OSES; do
         image_own_save "$M/$os.new"
         case $os in
             ubuntu) keep="etc/mu300 etc/ssh etc/hostname etc/localtime etc/timezone etc/fstab home root srv usr/local var/lib/bluetooth" ;;
-            openwrt|openwrt-*) keep="etc/config etc/mu300 etc/dropbear etc/rc.local root" ;;
+            openwrt|openwrt-*) keep="etc/config etc/mu300 etc/unisoc-modem etc/dropbear etc/rc.local etc/crontabs root" ;;
         esac
         kept=
         for k in $keep; do
@@ -769,15 +808,18 @@ for os in $OSES; do
         umask 022
     fi
     if [ "$DEFAULT_LINUX" = 1 ]; then echo linux > $R/etc/mu300/default-boot; else rm -f $R/etc/mu300/default-boot; fi
-    # adb over USB to Linux, for the installing computer's key (whoever holds it gets a root shell); ADB=0 changes
-    # nothing (an update keeps etc/mu300 and with it the setting and the keys)
+    # adb over USB to Linux for the installing computer's key only (whoever holds it gets a root shell); ADB=0
+    # changes nothing (an update keeps etc/mu300 and with it the setting and the keys), and a system with nothing
+    # set has adb on for every computer
     if [ "${ADB:-0}" = 1 ] && [ -n "${ADB_KEY:-}" ]; then
+        # keys first: with only one of the two written, the system reads keys either way (mu300-adbd, auth_read)
+        echo keys > $R/etc/mu300/adb_auth
         echo on > $R/etc/mu300/adb
         umask 077
         grep -qF "${ADB_KEY%% *}" $R/etc/mu300/adb_keys 2>/dev/null || echo "$ADB_KEY" >> $R/etc/mu300/adb_keys
         umask 022
         chmod 600 $R/etc/mu300/adb_keys
-        say "$os: adb over USB on, for ${ADB_KEY#* }"
+        say "$os: adb over USB on, only for ${ADB_KEY#* }"
     fi
     rm -f $tarball
 done

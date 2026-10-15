@@ -9,6 +9,10 @@ msgstr "Panel de estado"
 msgid "Cellular"
 msgstr "Celular"
 
+# Source-language fallback for untranslated new controls.
+msgid "Dual SIM"
+msgstr "Dual SIM"
+
 msgid "Network locks"
 msgstr "Bloqueos de red"
 
@@ -32,6 +36,9 @@ msgstr "Uso de datos"
 
 msgid "Device management"
 msgstr "Administración del dispositivo"
+
+msgid "Update"
+msgstr "Actualizar"
 
 msgid "Languages"
 msgstr "Idiomas"
@@ -576,6 +583,9 @@ msgstr "Guardado: %s"
 msgid "Remove the saved value"
 msgstr "Eliminar el valor guardado"
 
+msgid "Presets"
+msgstr "Preajustes"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Los mensajes recibidos se reenvían en cuanto llegan al pool de SMS. Un envío fallido se reintenta tras 30 s y después cada vez tras el doble de tiempo (una hora como máximo), diez veces en total."
 
@@ -632,6 +642,12 @@ msgstr "Vacío: los campos estándar (texto sin formato: el mensaje). Marcadores
 
 msgid "Extra headers (one \"Name: value\" per line)"
 msgstr "Cabeceras adicionales (un \"Nombre: valor\" por línea)"
+
+msgid "The answer must contain"
+msgstr "La respuesta debe contener"
+
+msgid "Empty: every HTTP 2xx answer counts as delivered. With key=value (for example errcode=0), the answer must also be a JSON object that has this value under this key at its top level; otherwise the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "Vacío: toda respuesta HTTP 2xx cuenta como entregada. Con clave=valor (por ejemplo errcode=0), la respuesta debe ser además un objeto JSON que tenga ese valor bajo esa clave en su nivel superior; de lo contrario, el envío falla. Solo se registra el resultado de la comprobación, nunca la respuesta."
 
 msgid "Bot token"
 msgstr "Token del bot"
@@ -698,6 +714,9 @@ msgstr "Filtrado"
 
 msgid "Dropped"
 msgstr "Descartado"
+
+msgid "Clear"
+msgstr "Vaciar"
 
 msgid "Test"
 msgstr "Prueba"
@@ -797,6 +816,9 @@ msgstr "Duración de la sesión"
 
 msgid "Registration"
 msgstr "Registro"
+
+msgid "Data roaming"
+msgstr "Itinerancia de datos"
 
 msgid "Bandwidth"
 msgstr "Ancho de banda"
@@ -933,6 +955,18 @@ msgstr "Encender la radio celular"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Se ejecutará la secuencia de encendido SFUN (hasta 1 minuto aproximadamente)."
 
+msgid "Turn data roaming off"
+msgstr "Desactivar la itinerancia de datos"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Mientras la SIM esté registrada en una red de itinerancia, los datos móviles permanecen apagados; los SMS, las llamadas y el registro no se ven afectados. Algunas SIM indican itinerancia en su propio país (un OMV, itinerancia nacional): allí los datos también se detendrían."
+
+msgid "Allow data roaming"
+msgstr "Permitir la itinerancia de datos"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Los datos móviles también se usan en redes de itinerancia, lo que puede tener un coste adicional. Algunas SIM indican itinerancia en su propio país (un OMV, itinerancia nacional) y necesitan esto para tener datos."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "La conectividad celular puede detenerse durante 1–2 minutos."
 
@@ -1038,6 +1072,9 @@ msgstr "Ancla B%s"
 msgid "No serving cell"
 msgstr "Sin celda de servicio"
 
+msgid "Version %s is out: update"
+msgstr "Ha salido la versión %s: actualizar"
+
 msgid "Not registered"
 msgstr "No registrado"
 
@@ -1058,6 +1095,15 @@ msgstr "Solo emergencias"
 
 msgid "Status %s"
 msgstr "Estado %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Desactivada: datos retenidos en itinerancia"
+
+msgid "Allowed"
+msgstr "Permitida"
+
+msgid "Off"
+msgstr "Apagado"
 
 msgid "LTE anchor"
 msgstr "Ancla LTE"
@@ -1584,9 +1630,6 @@ msgstr "Dejar como está"
 msgid "LTE only (5G off)"
 msgstr "Solo LTE (5G desactivado)"
 
-msgid "Off"
-msgstr "Apagado"
-
 msgid "On"
 msgstr "Encendido"
 
@@ -1677,6 +1720,109 @@ msgstr "Controla solo la frecuencia de actualización del panel de inicio; 0,5�
 msgid "Persistent state directory"
 msgstr "Directorio de estado persistente"
 
+# Source-language fallback for untranslated new controls.
+msgid "Switching SIM. Mobile data will disconnect briefly."
+msgstr "Switching SIM. Mobile data will disconnect briefly."
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM switch failed; check SIM readiness and hot switching."
+msgstr "SIM switch failed; check SIM readiness and hot switching."
+
+# Source-language fallback for untranslated new controls.
+msgid "Ready"
+msgstr "Ready"
+
+# Source-language fallback for untranslated new controls.
+msgid "Switching SIM"
+msgstr "Switching SIM"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM switched; saved as boot default"
+msgstr "SIM switched; saved as boot default"
+
+# Source-language fallback for untranslated new controls.
+msgid "Switch failed; previous SIM restored"
+msgstr "Switch failed; previous SIM restored"
+
+msgid "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
+msgstr "The target SIM got no mobile data; the previous SIM is restored and the saved boot preference is unchanged."
+
+msgid "The target SIM has no mobile data yet, and the previous SIM had none either: the device stays on the target. The saved boot preference is unchanged."
+msgstr "The target SIM has no mobile data yet, and the previous SIM had none either: the device stays on the target. The saved boot preference is unchanged."
+
+# Source-language fallback for untranslated new controls.
+msgid "Radio state unknown; reboot required"
+msgstr "Radio state unknown; reboot required"
+
+msgid "Radio state unknown; the device is restarting."
+msgstr "Radio state unknown; the device is restarting."
+
+# Source-language fallback for untranslated new controls.
+msgid "Dual SIM control is only for the U30 Air on OpenWrt."
+msgstr "Dual SIM control is only for the U30 Air on OpenWrt."
+
+# Source-language fallback for untranslated new controls.
+msgid "The chosen SIM could not be started at the last boot (no card, PIN, or the modem refused it)."
+msgstr "The chosen SIM could not be started at the last boot (no card, PIN, or the modem refused it)."
+
+msgid "No card answered in the chosen SIM position at the last boot."
+msgstr "No card answered in the chosen SIM position at the last boot."
+
+msgid "The chosen SIM is locked by its PIN."
+msgstr "The chosen SIM is locked by its PIN."
+
+msgid "The chosen SIM got no mobile data within the time at its first boot."
+msgstr "The chosen SIM got no mobile data within the time at its first boot."
+
+# Source-language fallback for untranslated new controls.
+msgid "The second SIM's modem channels did not come up at the last boot."
+msgstr "The second SIM's modem channels did not come up at the last boot."
+
+# Source-language fallback for untranslated new controls.
+msgid "The last dual-SIM boot never confirmed itself."
+msgstr "The last dual-SIM boot never confirmed itself."
+
+msgid "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
+msgstr "A live switch saves the target as the next boot default only after it gets mobile data. Without data, the previous SIM is restored and the saved boot preference is unchanged. Each SIM uses its own APN/PDP profile from the WAN settings."
+
+# Source-language fallback for untranslated new controls.
+msgid "Active SIM"
+msgstr "Active SIM"
+
+# Source-language fallback for untranslated new controls.
+msgid "Cold-boot default"
+msgstr "Cold-boot default"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM control unavailable"
+msgstr "SIM control unavailable"
+
+# Source-language fallback for untranslated new controls.
+msgid "The device is back on SIM1 without live switching; choose again below to try once more."
+msgstr "The device is back on SIM1 without live switching; choose again below to try once more."
+
+msgid "Waiting for the first mobile data on SIM2: %d s left. Without data the device goes back to SIM1 and restarts."
+msgstr "Waiting for the first mobile data on SIM2: %d s left. Without data the device goes back to SIM1 and restarts."
+
+# Source-language fallback for untranslated new controls.
+msgid "Enable hot switching"
+msgstr "Enable hot switching"
+
+msgid "This device supports next-boot SIM selection only; live switching is unavailable."
+msgstr "This device supports next-boot SIM selection only; live switching is unavailable."
+
+# Source-language fallback for untranslated new controls.
+msgid "Reboot after enabling hot switching to prepare both SIM channels."
+msgstr "Reboot after enabling hot switching to prepare both SIM channels."
+
+# Source-language fallback for untranslated new controls.
+msgid "Switch to SIM%d"
+msgstr "Switch to SIM%d"
+
+# Source-language fallback for untranslated new controls.
+msgid "Use SIM%d at next boot"
+msgstr "Use SIM%d at next boot"
+
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Destinatario: número, p. ej. 10086 o +86..."
 
@@ -1715,9 +1861,6 @@ msgstr "Vaciar el almacén local de SMS"
 
 msgid "Only local files will be deleted; messages on the SIM remain."
 msgstr "Solo se eliminarán los archivos locales; los mensajes de la SIM se conservan."
-
-msgid "Clear"
-msgstr "Vaciar"
 
 msgid "Delete this SMS"
 msgstr "Eliminar este SMS"
@@ -1929,6 +2072,396 @@ msgstr "Desactivar"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "Con 64 cada paquete sale como el tráfico propio del dispositivo"
 
+msgid "Check for updates"
+msgstr "Buscar actualizaciones"
+
+msgid "Checking the file"
+msgstr "Comprobando el archivo"
+
+msgid "Update from a file"
+msgstr "Actualizar desde un archivo"
+
+msgid "Back to the previous version"
+msgstr "Volver a la versión anterior"
+
+msgid "Back to the previous boot image"
+msgstr "Volver a la imagen de arranque anterior"
+
+msgid "Remove the previous version"
+msgstr "Eliminar la versión anterior"
+
+msgid "Kernel change"
+msgstr "Cambio de kernel"
+
+msgid "Starting…"
+msgstr "Iniciando…"
+
+msgid "Downloading"
+msgstr "Descargando"
+
+msgid "All files are here and verified"
+msgstr "Todos los archivos están aquí y verificados"
+
+msgid "Unpacking the new system"
+msgstr "Descomprimiendo el nuevo sistema"
+
+msgid "Carrying over your settings"
+msgstr "Trasladando sus ajustes"
+
+msgid "Writing down the packages you installed"
+msgstr "Anotando los paquetes que instaló"
+
+msgid "Switching to the new system"
+msgstr "Cambiando al nuevo sistema"
+
+msgid "Kernel and boot image"
+msgstr "Kernel e imagen de arranque"
+
+msgid "Restart the device?"
+msgstr "¿Reiniciar el dispositivo?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "El dispositivo se reinicia ahora. El arranque predeterminado es Android, así que inicia Android: cambie a Linux desde allí para iniciar el sistema actualizado."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "El dispositivo se reinicia ahora y estará ausente cerca de un minuto. Si el nuevo sistema no arranca, el dispositivo vuelve a Android por sí solo tras los intentos fallidos."
+
+msgid "Restart"
+msgstr "Reiniciar"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "Reiniciando… vuelva a abrir esta página en cerca de un minuto."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "En marcha desde hace %s. Continúa aunque se cierre esta página; no apague el dispositivo."
+
+msgid "Done. Restart the device to start it."
+msgstr "Hecho. Reinicie el dispositivo para iniciarlo."
+
+msgid "Done. Nothing needs a restart."
+msgstr "Hecho. Nada requiere un reinicio."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "No terminó, y una parte sí se hizo: lea el registro antes de reiniciar."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "No terminó. No se cambió nada; el registro explica por qué."
+
+msgid "Log"
+msgstr "Registro"
+
+msgid "Restart now"
+msgstr "Reiniciar ahora"
+
+msgid "Later"
+msgstr "Más tarde"
+
+msgid "Close"
+msgstr "Cerrar"
+
+msgid "Updating is not available on this system"
+msgstr "La actualización no está disponible en este sistema"
+
+msgid "Another update is running on the device"
+msgstr "Hay otra actualización en ejecución en el dispositivo"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "Se inició fuera de esta página (un terminal, el kit de herramientas). Aquí no se puede iniciar nada hasta que termine."
+
+msgid "Restart needed"
+msgstr "Reinicio necesario"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "Este sistema se actualizó y aún ejecuta la versión antigua. La nueva se inicia en el próximo reinicio."
+
+msgid "Installed"
+msgstr "Instalado"
+
+msgid "This system"
+msgstr "Este sistema"
+
+msgid "Also on this device"
+msgstr "También en este dispositivo"
+
+msgid "Kernel"
+msgstr "Kernel"
+
+msgid "choice %s"
+msgstr "elección %s"
+
+msgid "Boot image"
+msgstr "Imagen de arranque"
+
+msgid "from the installer"
+msgstr "del instalador"
+
+msgid "Default boot"
+msgstr "Arranque predeterminado"
+
+msgid "Free space"
+msgstr "Espacio libre"
+
+msgid "Release signatures"
+msgstr "Firmas de las versiones"
+
+msgid "checked with the project's key"
+msgstr "comprobadas con la clave del proyecto"
+
+msgid "this system has no release key"
+msgstr "este sistema no tiene clave de publicación"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "El arranque predeterminado es Android: un reinicio lleva a Android, y Linux se inicia desde allí."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux está fijado como arranque predeterminado: un arranque fallido no envía el dispositivo a Android por sí solo, salvo en los primeros arranques de una nueva imagen de arranque."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Si Linux no arranca %d veces seguidas, el dispositivo inicia Android por sí solo."
+
+msgid "Report of the last update"
+msgstr "Informe de la última actualización"
+
+msgid "Online update"
+msgstr "Actualización en línea"
+
+msgid "Asking GitHub…"
+msgstr "Consultando a GitHub…"
+
+msgid "Checked %s ago"
+msgstr "Comprobado hace %s"
+
+msgid "Not checked yet"
+msgstr "Aún no comprobado"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "Volver a instalar tras la actualización los paquetes que añadí (el dispositivo debe estar en línea en el primer arranque)"
+
+msgid "Pre-release"
+msgstr "Versión preliminar"
+
+msgid "Newest release"
+msgstr "Versión más reciente"
+
+msgid "Release notes"
+msgstr "Notas de la versión"
+
+msgid "Download"
+msgstr "Descarga"
+
+msgid "Free space needed"
+msgstr "Espacio libre necesario"
+
+msgid "not enough: remove the previous version first"
+msgstr "insuficiente: elimine primero la versión anterior"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "Una versión preliminar es una versión que aún se está probando: puede tener fallos que una versión publicada no tiene. La versión anterior se conserva de todos modos."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "Este sistema es más nuevo que la versión más reciente (una versión de prueba)."
+
+msgid "Up to date."
+msgstr "Al día."
+
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Esta versión no está firmada y este sistema comprueba las firmas: no se instala desde aquí. Actualice desde su archivo más abajo, que le pide confirmación."
+
+msgid "Update to %s"
+msgstr "Actualizar a %s"
+
+msgid "Choose at least one system"
+msgstr "Elija al menos un sistema"
+
+msgid "Update to %s?"
+msgstr "¿Actualizar a %s?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "El dispositivo descarga %s, coloca el nuevo sistema junto al que está en ejecución y cambia a él en el próximo reinicio. Sus ajustes se trasladan y la versión anterior se conserva. Tarda varios minutos; no apague el dispositivo."
+
+msgid "Also offer the pre-release %s"
+msgstr "Ofrecer también la versión preliminar %s"
+
+msgid "Systems to update:"
+msgstr "Sistemas que actualizar:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "No se pudo contactar con GitHub: el dispositivo no tiene conexión a Internet, o GitHub no respondió. Sin Internet, actualice desde un archivo más abajo."
+
+msgid "release"
+msgstr "versión"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "Para un dispositivo sin Internet: descargue en otro ordenador el zip de Magisk de una versión para este sistema y este kernel, desde la página de versiones en GitHub, y súbalo aquí. Para este dispositivo es:"
+
+msgid "Uploaded file"
+msgstr "Archivo subido"
+
+msgid "Checking the file…"
+msgstr "Comprobando el archivo…"
+
+msgid "It says it is"
+msgstr "Dice ser"
+
+msgid "kernel %s"
+msgstr "kernel %s"
+
+msgid "Signature"
+msgstr "Firma"
+
+msgid "signed with the project's release key"
+msgstr "firmado con la clave de publicación del proyecto"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "INCORRECTA: no coincide con la clave de publicación del proyecto"
+
+msgid "not signed"
+msgstr "sin firmar"
+
+msgid "cannot be checked on this system"
+msgstr "no se puede comprobar en este sistema"
+
+msgid "Its system is not installed on this device."
+msgstr "Su sistema no está instalado en este dispositivo."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "Es la otra versión de Ubuntu, no la instalada."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "Lleva un kernel distinto del que usa este dispositivo. Use el zip para el kernel %s, o cambie primero de kernel."
+
+msgid "Its kernel does not run on this model."
+msgstr "Su kernel no funciona en este modelo."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "El archivo está dañado: su contenido no coincide con las sumas de verificación."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "Su firma es incorrecta. Este archivo no procede del proyecto tal como está; nunca se instala."
+
+msgid "This file cannot be used here."
+msgstr "Este archivo no se puede usar aquí."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "Compare el SHA-256 con el de SHA256SUMS-magisk en la página de versiones: es la única prueba de la procedencia de un archivo sin firmar."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "Esta versión ya está instalada; la actualización solo renovaría la imagen de arranque."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "Sé que este archivo no está firmado: nada prueba que proceda del proyecto. He comparado yo mismo su SHA-256 y quiero que se instale."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "Sé que esto es %s, más antigua que la %s instalada, y quiero volver a ella."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "Esto no es un archivo de versión de este proyecto: se espera un zip de Magisk de una versión."
+
+msgid "Update from this file"
+msgstr "Actualizar desde este archivo"
+
+msgid "Tick the confirmations above first"
+msgstr "Marque primero las confirmaciones de arriba"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "El dispositivo coloca el sistema de este archivo junto al que está en ejecución y cambia a él en el próximo reinicio. Sus ajustes se trasladan y la versión anterior se conserva. Tarda varios minutos; no apague el dispositivo."
+
+msgid "Check the file"
+msgstr "Comprobar el archivo"
+
+msgid "Remove the file"
+msgstr "Quitar el archivo"
+
+msgid "Previous version"
+msgstr "Versión anterior"
+
+msgid "No previous version is kept on this device."
+msgstr "No se conserva ninguna versión anterior en este dispositivo."
+
+msgid "replaced %s"
+msgstr "sustituida el %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "Quiero recuperar el sistema anterior; lo que cambié desde la actualización se queda en la versión que dejo."
+
+msgid "Back to the previous version?"
+msgstr "¿Volver a la versión anterior?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "El sistema anterior (%s) pasa a ser el que se inicia en el próximo reinicio. La versión que deja no se conserva; los ajustes que cambió desde la actualización no se trasladan de vuelta."
+
+msgid "Go back"
+msgstr "Volver atrás"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "La versión anterior es la que está en ejecución ahora: reinicie primero."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "Quiero recuperar el kernel y la imagen de arranque anteriores."
+
+msgid "Back to the previous boot image?"
+msgstr "¿Volver a la imagen de arranque anterior?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "La imagen de arranque anterior (%s) se escribe en la ranura de Linux y se inicia en el próximo reinicio. Si no arranca, el dispositivo vuelve a Android por sí solo."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "No necesito volver atrás: eliminar el sistema anterior para liberar su espacio."
+
+msgid "Remove the previous version?"
+msgstr "¿Eliminar la versión anterior?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "La copia conservada del sistema anterior se elimina definitivamente. Después ya no se puede volver a él desde esta página."
+
+msgid "the vendor kernel"
+msgstr "el kernel del fabricante"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "no con Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "Cambiar el kernel"
+
+msgid "This kernel is the one in use"
+msgstr "Este kernel es el que está en uso"
+
+msgid "Change the kernel to %s?"
+msgstr "¿Cambiar el kernel a %s?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "El dispositivo descarga ese kernel de la versión más reciente y escribe una nueva imagen de arranque; se inicia en el próximo reinicio. La imagen de arranque anterior se conserva, y si la nueva no arranca, el dispositivo vuelve a Android por sí solo. El dispositivo debe estar en línea."
+
+msgid "Start Android at the next restart"
+msgstr "Iniciar Android en el próximo reinicio"
+
+msgid "Start Android at the next restart?"
+msgstr "¿Iniciar Android en el próximo reinicio?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "El próximo reinicio, y los siguientes, inician Android en lugar de Linux. Linux se vuelve a iniciar desde Android (el botón Action del módulo de Magisk, o mu300-linux)."
+
+msgid "Start Android next"
+msgstr "Iniciar Android a continuación"
+
+msgid "What an update keeps"
+msgstr "Qué conserva una actualización"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "Una actualización coloca el sistema de la nueva versión y traslada lo que es suyo: los ajustes, las cuentas y sus contraseñas, las claves del dispositivo y los directorios personales. Los paquetes que instaló usted mismo se anotan y se vuelven a instalar en el primer arranque, en cuanto el dispositivo esté en línea. La versión anterior permanece en el dispositivo hasta que la elimine, para que pueda volver atrás."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "La página Updating de la wiki detalla exactamente qué se conserva."
+
+msgid "Choose a file first"
+msgstr "Elija primero un archivo"
+
+msgid "Uploading: %s of %s"
+msgstr "Subiendo: %s de %s"
+
 msgid "running"
 msgstr "en ejecución"
 
@@ -1962,9 +2495,6 @@ msgstr "Ningún perfil lo usa."
 msgid "Removed"
 msgstr "Eliminado"
 
-msgid "Check for updates"
-msgstr "Buscar actualizaciones"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "Cada motor es un extra aparte: instale solo los que necesiten sus perfiles. Xray ejecuta enlaces vless, vmess, trojan y ss (con hev-socks5-tunnel), sing-box los mismos enlaces y su propio JSON, mihomo suscripciones Clash, dae hysteria2, tuic y el resto en kernels más recientes. WireGuard y OpenVPN son paquetes del sistema."
 
@@ -1973,9 +2503,6 @@ msgstr "Las descargas son de decenas de MB por motor: con datos móviles cuentan
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "Las versiones disponibles proceden de la última versión del módulo VPN."
-
-msgid "Update"
-msgstr "Actualizar"
 
 msgid "system package"
 msgstr "paquete del sistema"
@@ -2144,9 +2671,6 @@ msgstr "Iniciar"
 
 msgid "Stop"
 msgstr "Detener"
-
-msgid "Restart"
-msgstr "Reiniciar"
 
 msgid "Stop the VPN?"
 msgstr "¿Detener la VPN?"
@@ -2324,9 +2848,6 @@ msgstr "Este perfil procede de una suscripción: su próxima actualización sust
 
 msgid "Config of %s"
 msgstr "Configuración de %s"
-
-msgid "Close"
-msgstr "Cerrar"
 
 msgid "Rename"
 msgstr "Renombrar"
@@ -2520,8 +3041,9 @@ msgstr "Al actualizar se conservan los perfiles cuyo nombre no cambia, se añade
 msgid "Dashboard info failed"
 msgstr "Error en la información del panel"
 
-msgid "Applying network locks: no live signal right now"
-msgstr "Aplicando bloqueos de red: sin señal en directo en este momento"
+# Source-language fallback for untranslated new controls.
+msgid "The modem is restarting (network locks or a SIM switch): no live signal right now"
+msgstr "The modem is restarting (network locks or a SIM switch): no live signal right now"
 
 msgid "Live signal read failed"
 msgstr "Error al leer la señal en directo"
@@ -2553,8 +3075,12 @@ msgstr "No se permite encadenar comandos con «;»"
 msgid "Denied: this command wedges the AT port until a reboot"
 msgstr "Denegado: este comando bloquea el puerto AT hasta reiniciar"
 
-msgid "Applying network locks: the modem is restarting (about half a minute), try again shortly"
-msgstr "Aplicando bloqueos de red: el módem se está reiniciando (cerca de medio minuto), inténtelo de nuevo en breve"
+msgid "Denied: this command moves the SIM selection or the data route; the SIM settings do that"
+msgstr "Denied: this command moves the SIM selection or the data route; the SIM settings do that"
+
+# Source-language fallback for untranslated new controls.
+msgid "The modem is restarting (network locks or a SIM switch, about half a minute), try again shortly"
+msgstr "The modem is restarting (network locks or a SIM switch, about half a minute), try again shortly"
 
 msgid "A long AT command is still running in the background; try again when it has finished"
 msgstr "Un comando AT largo sigue ejecutándose en segundo plano; inténtelo de nuevo cuando termine"
@@ -2696,6 +3222,30 @@ msgstr "El adaptador de paquetes no dio una respuesta válida"
 
 msgid "Invalid packages operation"
 msgstr "Operación de paquetes no válida"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "El parámetro sizes debe ser 0 o 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "El adaptador de actualización no dio una respuesta válida"
+
+msgid "Unknown update operation"
+msgstr "Operación de actualización desconocida"
+
+msgid "Invalid update request"
+msgstr "Solicitud de actualización no válida"
+
+# Source-language fallback for untranslated new controls.
+msgid "Invalid SIM setting"
+msgstr "Invalid SIM setting"
+
+# Source-language fallback for untranslated new controls.
+msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
+msgstr "Enable hot switching; reboot if channels are unavailable or wait until idle"
+
+# Source-language fallback for untranslated new controls.
+msgid "SIM control failed"
+msgstr "SIM control failed"
 
 msgid "Request too large"
 msgstr "Solicitud demasiado grande"
@@ -2850,8 +3400,18 @@ msgstr "El número de líneas es de 1 a 1000"
 msgid "The log could not be read"
 msgstr "No se pudo leer el registro"
 
+# Source-language fallback for untranslated new controls.
+msgid "Use SIM control or reboot for managed dual-SIM radio"
+msgstr "Use SIM control or reboot for managed dual-SIM radio"
+
 msgid "Radio did not come up"
 msgstr "La radio no se activó"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Esta plataforma no proporciona la integración de datos móviles"
+
+msgid "The data roaming setting could not be saved"
+msgstr "No se pudo guardar el ajuste de itinerancia de datos"
 
 msgid "Expected on or off"
 msgstr "Se esperaba on u off"
@@ -2967,6 +3527,9 @@ msgstr "La dirección del webhook debe ser una URL http:// o https://"
 msgid "The webhook body is too long or contains a control character"
 msgstr "El cuerpo del webhook es demasiado largo o contiene un carácter de control"
 
+msgid "The answer check must be key=value, like errcode=0 or ok=true (the value a whole number or lowercase letters, 16 at most)"
+msgstr "La comprobación de la respuesta debe ser clave=valor, como errcode=0 u ok=true (el valor, un número entero o letras minúsculas, 16 como máximo)"
+
 msgid "Invalid header (one \"Name: value\" per line; Host, Content-Type, Content-Length, Transfer-Encoding and Connection are set by the device)"
 msgstr "Cabecera no válida (un \"Nombre: valor\" por línea; Host, Content-Type, Content-Length, Transfer-Encoding y Connection los pone el dispositivo)"
 
@@ -2996,6 +3559,12 @@ msgstr "No se pudieron guardar los ajustes de reenvío"
 
 msgid "SMS forwarding is not installed"
 msgstr "El reenvío de SMS no está instalado"
+
+msgid "A test was started a moment ago; wait a few seconds"
+msgstr "Se acaba de iniciar una prueba; espere unos segundos"
+
+msgid "The delivery log could not be cleared"
+msgstr "No se pudo vaciar el registro de envíos"
 
 msgid "Unknown forwarding operation"
 msgstr "Operación de reenvío desconocida"
@@ -3077,3 +3646,42 @@ msgstr "No se pudo fijar el TTL"
 
 msgid "Unknown TTL operation"
 msgstr "Operación de TTL desconocida"
+
+msgid "An update task is already running"
+msgstr "Ya hay una tarea de actualización en ejecución"
+
+msgid "The task could not be started"
+msgstr "No se pudo iniciar la tarea"
+
+msgid "The updater gave no valid reply"
+msgstr "El actualizador no dio una respuesta válida"
+
+msgid "This needs confirmation"
+msgstr "Esto requiere confirmación"
+
+msgid "Check for updates first"
+msgstr "Busque actualizaciones primero"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "El directorio de subida no es seguro; no se cambió nada"
+
+msgid "Not enough memory for this upload"
+msgstr "No hay suficiente memoria para esta subida"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "No hay suficiente espacio libre en la partición de Linux"
+
+msgid "The file was not checked; upload it again"
+msgstr "El archivo no se comprobó; súbalo de nuevo"
+
+msgid "This file is not for this device"
+msgstr "Este archivo no es para este dispositivo"
+
+msgid "The signature of this file is wrong"
+msgstr "La firma de este archivo es incorrecta"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "Este archivo está sin firmar: eso requiere confirmación"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "Este archivo es más antiguo que lo instalado: eso requiere confirmación"

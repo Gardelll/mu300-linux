@@ -52,11 +52,42 @@ The installer recognises which device it is talking to. The **U30 Pro** is a dif
 ## What you get, and what you lose (spoiler: nothing)
 
 **You get:** Ubuntu 24.04 or 26.04 LTS, or OpenWrt 25.12 (plain or with a control panel for the modem); three
-kernels to choose from; 5G/LTE internet shared over Wi-Fi and USB; SSH, and `adb` over USB if you turn it on; Bluetooth;
+kernels to choose from; 5G/LTE internet shared over Wi-Fi and USB; SSH, and `adb` over USB; Bluetooth;
 SMS and USSD; an optional VPN module; a web panel on Ubuntu too (Cockpit with an MU300 page, optional); a
 `raspi-config`-like menu called `mu300-toolkit`; automatic fallback to Android; updates on the device.
 
 **Follow the project:** releases and news are announced on the Telegram channel, [t.me/mu300project](https://t.me/mu300project).
+
+## New in v2026.10.25
+
+The release of 2026-10-25 (a prerelease first, promoted once a board has run it; v2026.10.24 stayed a prerelease:
+its updater could stop with "another mu300-update is running", and its OpenWrt came up without adb). What it
+changes, and where to read on:
+
+* **adb to Linux is on by default, for every computer.** Plug the cable in and `adb shell` is a root shell, no key
+  needed; the graphical and web installers rely on it. **Anyone who can plug a cable into the device gets that
+  shell**, also after you set passwords. A device that never touched adb becomes open with this update; one where
+  you ran `mu300-usb adb off`, or turned adb on with a key, stays as it was. To close it: `mu300-usb adb auth keys`
+  (only authorised keys) or `mu300-usb adb off`. [Installation](Installation#adb-to-linux), [FAQ](FAQ)
+* **A web installer:** [kaandikec.com/mu300-linux/web-installer](https://kaandikec.com/mu300-linux/web-installer/)
+  installs from Chrome or Edge over USB, with nothing to install on the computer: you choose the system and the
+  kernel, and the device downloads the release itself. Run end to end on an F50 from Chrome on macOS; Windows, a
+  Linux computer and the U30 Air are not tested with it yet. [Installation](Installation)
+* **SMS forwarding: a service's own error counts.** "The answer must contain" (`errcode=0`, `code=0`, `ok=true`...)
+  makes an HTTP 200 with an error in it a failed delivery, and the delivery log has a Clear button (issue #171).
+  [SMS](SMS)
+* **Long SMS** from one sender under a reused reference number are no longer mixed or left in parts. [SMS](SMS)
+* **An APN with a user name and a password** (`AT+CGPCO`), on OpenWrt (`network.wan.username`/`password`/`auth`) and
+  on Ubuntu (`mobile-data.conf`). [Mobile Data and APN](Mobile-Data-and-APN)
+* **The panel's saved band and cell locks survive an update** (they were dropped; the modem kept the lock and the
+  panel showed none).
+* **Windows: the installer can make room** on a unit whose `userdata` fills the eMMC, as `install.sh` does, and says
+  the figures when it refuses (issue #32). [Installation](Installation)
+* **U30 Air, firmware variant ABSSV:** the mainline kernels look for the charger at a second address (an SGM41513
+  at 0x1a) when nothing answers at the first (issue #102; not confirmed on such a unit yet). [Kernels](Kernels)
+* **`mu300-update`** no longer stops with "another mu300-update is running" when the release brings a newer
+  updater. [Updating](Updating)
+* **Kernels:** 5.4 unchanged; 6.18.56 and 7.2.10 rebuilt with the charger change. [Kernels](Kernels)
 
 ## New in v2026.10.23
 
@@ -134,7 +165,7 @@ The release of 2026-10-20 (a prerelease first, promoted once a board has run it)
 * **U30 Air:** a charge limit of 0-100 % (`mu300-power charge-limit N`), and faster charging on Type-C ports that offer
   1.5 or 3 A (mainline kernels). [Hardware Notes](Hardware-Notes)
 * **The hotspot never lands on a DFS channel** any more (it used to fail to start there). [Wi-Fi Hotspot and Client](Wi-Fi-Hotspot-and-Client)
-* **adb to Linux over USB** (`mu300-usb adb on`; off by default, your computer's key must be authorised). [Installation](Installation#adb-to-linux)
+* **adb to Linux over USB**, on by default and open to every computer: anyone with a cable gets a root shell without a password. Close it with `sudo mu300-usb adb auth keys` (only authorised keys) or `sudo mu300-usb adb off`. [Installation](Installation#adb-to-linux)
 * **The installers copy the boot chain** of Android's slot to the Linux slot after an Android update (issue #86). [Installation](Installation#the-boot-chain-of-the-linux-slot)
 * **Hardening:** the Android modem daemons run under their own account (`mu300vnd`) and nothing in `/dev` belongs to
   the login user any more; `sms delete` sends only a message index to the modem. [Hardware Notes](Hardware-Notes), [SMS](SMS)

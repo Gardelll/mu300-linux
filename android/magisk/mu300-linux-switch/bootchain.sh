@@ -53,7 +53,10 @@ bc_setup() {
     _m="$(getprop ro.product.model) / $(getprop ro.product.device)"
     case $_m in
         *U30Air*|*U30_Air*|*"U30 Air"*|*MU300*|*F50*|*mu300*) ;;
-        *) bc_refuse "this is not a ZTE F50/MU300 or U30 Air ($_m)"; return 1 ;;
+        # the ZTE V50 (experimental, FINDINGS 95): exactly V50 / MU3351 on ums9620 (kano read its chain, both slots alike)
+        "V50 / MU3351")
+            [ "$(getprop ro.board.platform)" = ums9620 ] || { bc_refuse "a V50 that is not on the UMS9620 platform"; return 1; } ;;
+        *) bc_refuse "this is not a ZTE F50/MU300, U30 Air or V50 ($_m)"; return 1 ;;
     esac
     case $(getprop ro.boot.slot_suffix) in
         _a) BC_A=a; BC_L=b ;;
