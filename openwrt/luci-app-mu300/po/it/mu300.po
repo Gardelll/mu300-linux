@@ -37,6 +37,9 @@ msgstr "Consumo dati"
 msgid "Device management"
 msgstr "Gestione dispositivo"
 
+msgid "Update"
+msgstr "Aggiorna"
+
 msgid "Languages"
 msgstr "Lingue"
 
@@ -1054,6 +1057,9 @@ msgstr "Ancora B%s"
 msgid "No serving cell"
 msgstr "Nessuna cella di servizio"
 
+msgid "Version %s is out: update"
+msgstr "È uscita la versione %s: aggiorna"
+
 msgid "Not registered"
 msgstr "Non registrato"
 
@@ -2045,6 +2051,396 @@ msgstr "Disattiva"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "Con 64 ogni pacchetto esce come il traffico del dispositivo stesso"
 
+msgid "Check for updates"
+msgstr "Controlla aggiornamenti"
+
+msgid "Checking the file"
+msgstr "Controllo del file"
+
+msgid "Update from a file"
+msgstr "Aggiorna da un file"
+
+msgid "Back to the previous version"
+msgstr "Torna alla versione precedente"
+
+msgid "Back to the previous boot image"
+msgstr "Torna all'immagine di avvio precedente"
+
+msgid "Remove the previous version"
+msgstr "Rimuovi la versione precedente"
+
+msgid "Kernel change"
+msgstr "Cambio del kernel"
+
+msgid "Starting…"
+msgstr "Avvio…"
+
+msgid "Downloading"
+msgstr "Download in corso"
+
+msgid "All files are here and verified"
+msgstr "Tutti i file sono presenti e verificati"
+
+msgid "Unpacking the new system"
+msgstr "Estrazione del nuovo sistema"
+
+msgid "Carrying over your settings"
+msgstr "Trasferimento delle impostazioni"
+
+msgid "Writing down the packages you installed"
+msgstr "Annotazione dei pacchetti installati dall'utente"
+
+msgid "Switching to the new system"
+msgstr "Passaggio al nuovo sistema"
+
+msgid "Kernel and boot image"
+msgstr "Kernel e immagine di avvio"
+
+msgid "Restart the device?"
+msgstr "Riavviare il dispositivo?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "Il dispositivo si riavvia ora. L'avvio predefinito è Android, quindi parte Android: da lì passare a Linux per avviare il sistema aggiornato."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "Il dispositivo si riavvia ora e resta assente per circa un minuto. Se il nuovo sistema non parte, il dispositivo torna da solo ad Android dopo i tentativi falliti."
+
+msgid "Restart"
+msgstr "Riavvia"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "Riavvio… riaprire questa pagina tra circa un minuto."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "In corso da %s. Prosegue anche se questa pagina viene chiusa; non spegnere il dispositivo."
+
+msgid "Done. Restart the device to start it."
+msgstr "Fatto. Riavviare il dispositivo per avviarlo."
+
+msgid "Done. Nothing needs a restart."
+msgstr "Fatto. Non serve alcun riavvio."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "Non è terminato, e una parte è stata eseguita: leggere il log prima di riavviare."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "Non è terminato. Nulla è stato modificato; il log spiega perché."
+
+msgid "Log"
+msgstr "Log"
+
+msgid "Restart now"
+msgstr "Riavvia ora"
+
+msgid "Later"
+msgstr "Più tardi"
+
+msgid "Close"
+msgstr "Chiudi"
+
+msgid "Updating is not available on this system"
+msgstr "L'aggiornamento non è disponibile su questo sistema"
+
+msgid "Another update is running on the device"
+msgstr "Sul dispositivo è in esecuzione un altro aggiornamento"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "È stato avviato fuori da questa pagina (un terminale, il toolkit). Qui non si può avviare nulla finché non è terminato."
+
+msgid "Restart needed"
+msgstr "Riavvio necessario"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "Questo sistema è stato aggiornato ed esegue ancora la vecchia versione. La nuova parte al prossimo riavvio."
+
+msgid "Installed"
+msgstr "Installato"
+
+msgid "This system"
+msgstr "Questo sistema"
+
+msgid "Also on this device"
+msgstr "Anche su questo dispositivo"
+
+msgid "Kernel"
+msgstr "Kernel"
+
+msgid "choice %s"
+msgstr "scelta %s"
+
+msgid "Boot image"
+msgstr "Immagine di avvio"
+
+msgid "from the installer"
+msgstr "dall'installer"
+
+msgid "Default boot"
+msgstr "Avvio predefinito"
+
+msgid "Free space"
+msgstr "Spazio libero"
+
+msgid "Release signatures"
+msgstr "Firme delle release"
+
+msgid "checked with the project's key"
+msgstr "verificate con la chiave del progetto"
+
+msgid "this system has no release key"
+msgstr "questo sistema non ha una chiave di release"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "L'avvio predefinito è Android: un riavvio porta ad Android, e Linux si avvia da lì."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux è bloccato come avvio predefinito: un avvio fallito non manda da solo il dispositivo ad Android, tranne ai primi avvii di una nuova immagine di avvio."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Se Linux non parte per %d volte di seguito, il dispositivo avvia Android da solo."
+
+msgid "Report of the last update"
+msgstr "Resoconto dell'ultimo aggiornamento"
+
+msgid "Online update"
+msgstr "Aggiornamento online"
+
+msgid "Asking GitHub…"
+msgstr "Interrogazione di GitHub…"
+
+msgid "Checked %s ago"
+msgstr "Controllato %s fa"
+
+msgid "Not checked yet"
+msgstr "Non ancora controllato"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "Reinstallare dopo l'aggiornamento i pacchetti che ho aggiunto (il dispositivo deve essere online al primo avvio)"
+
+msgid "Pre-release"
+msgstr "Pre-release"
+
+msgid "Newest release"
+msgstr "Release più recente"
+
+msgid "Release notes"
+msgstr "Note di rilascio"
+
+msgid "Download"
+msgstr "Download"
+
+msgid "Free space needed"
+msgstr "Spazio libero necessario"
+
+msgid "not enough: remove the previous version first"
+msgstr "insufficiente: rimuovere prima la versione precedente"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "Una pre-release è una release ancora in prova: può avere difetti che una release non ha. La versione precedente viene comunque conservata."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "Questo sistema è più recente della release più recente (una release di prova)."
+
+msgid "Up to date."
+msgstr "Aggiornato."
+
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Questa versione non è firmata e questo sistema verifica le firme: non viene installata da qui. Aggiorna dal suo file qui sotto, che ti chiede di confermare."
+
+msgid "Update to %s"
+msgstr "Aggiorna a %s"
+
+msgid "Choose at least one system"
+msgstr "Scegliere almeno un sistema"
+
+msgid "Update to %s?"
+msgstr "Aggiornare a %s?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Il dispositivo scarica %s, mette il nuovo sistema accanto a quello in esecuzione e vi passa al prossimo riavvio. Le impostazioni vengono trasferite e la versione precedente viene conservata. Servono diversi minuti; non spegnere il dispositivo."
+
+msgid "Also offer the pre-release %s"
+msgstr "Proponi anche la pre-release %s"
+
+msgid "Systems to update:"
+msgstr "Sistemi da aggiornare:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "Impossibile raggiungere GitHub: il dispositivo non ha una connessione a Internet, oppure GitHub non ha risposto. Senza Internet, aggiornare da un file qui sotto."
+
+msgid "release"
+msgstr "release"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "Per un dispositivo senza Internet: scaricare su un altro computer lo zip Magisk di una release per questo sistema e questo kernel, dalla pagina delle release su GitHub, e caricarlo qui. Per questo dispositivo è:"
+
+msgid "Uploaded file"
+msgstr "File caricato"
+
+msgid "Checking the file…"
+msgstr "Controllo del file…"
+
+msgid "It says it is"
+msgstr "Dichiara di essere"
+
+msgid "kernel %s"
+msgstr "kernel %s"
+
+msgid "Signature"
+msgstr "Firma"
+
+msgid "signed with the project's release key"
+msgstr "firmato con la chiave di release del progetto"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "ERRATA: non corrisponde alla chiave di release del progetto"
+
+msgid "not signed"
+msgstr "non firmato"
+
+msgid "cannot be checked on this system"
+msgstr "non può essere verificata su questo sistema"
+
+msgid "Its system is not installed on this device."
+msgstr "Il suo sistema non è installato su questo dispositivo."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "È l'altra release di Ubuntu, non quella installata."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "Contiene un kernel diverso da quello usato da questo dispositivo. Prendere lo zip per il kernel %s, oppure cambiare prima il kernel."
+
+msgid "Its kernel does not run on this model."
+msgstr "Il suo kernel non funziona su questo modello."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "Il file è danneggiato: il contenuto non corrisponde ai checksum."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "La firma è errata. Questo file non proviene dal progetto così com'è; non viene mai installato."
+
+msgid "This file cannot be used here."
+msgstr "Questo file non può essere usato qui."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "Confrontare lo SHA-256 con quello in SHA256SUMS-magisk nella pagina della release: è l'unica prova della provenienza di un file non firmato."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "Questa release è già installata; l'aggiornamento rinnoverebbe solo l'immagine di avvio."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "So che questo file non è firmato: nulla prova che provenga dal progetto. Ho confrontato di persona il suo SHA-256 e voglio che venga installato."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "So che questa è la %s, più vecchia della %s installata, e voglio tornarvi."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "Questo non è un file di release di questo progetto: è atteso lo zip Magisk di una release."
+
+msgid "Update from this file"
+msgstr "Aggiorna da questo file"
+
+msgid "Tick the confirmations above first"
+msgstr "Spuntare prima le conferme qui sopra"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Il dispositivo mette il sistema di questo file accanto a quello in esecuzione e vi passa al prossimo riavvio. Le impostazioni vengono trasferite e la versione precedente viene conservata. Servono diversi minuti; non spegnere il dispositivo."
+
+msgid "Check the file"
+msgstr "Controlla il file"
+
+msgid "Remove the file"
+msgstr "Rimuovi il file"
+
+msgid "Previous version"
+msgstr "Versione precedente"
+
+msgid "No previous version is kept on this device."
+msgstr "Su questo dispositivo non è conservata alcuna versione precedente."
+
+msgid "replaced %s"
+msgstr "sostituita il %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "Voglio riavere il sistema precedente; ciò che ho modificato dopo l'aggiornamento resta nella versione che lascio."
+
+msgid "Back to the previous version?"
+msgstr "Tornare alla versione precedente?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "Il sistema precedente (%s) diventa quello che parte al prossimo riavvio. La versione che si lascia non viene conservata; le impostazioni modificate dopo l'aggiornamento non vengono riportate indietro."
+
+msgid "Go back"
+msgstr "Torna indietro"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "La versione precedente è quella in esecuzione ora: riavviare prima."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "Voglio riavere il kernel e l'immagine di avvio precedenti."
+
+msgid "Back to the previous boot image?"
+msgstr "Tornare all'immagine di avvio precedente?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "L'immagine di avvio precedente (%s) viene scritta nello slot Linux e parte al prossimo riavvio. Se non parte, il dispositivo torna da solo ad Android."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "Non ho bisogno di tornare indietro: eliminare il sistema precedente per liberarne lo spazio."
+
+msgid "Remove the previous version?"
+msgstr "Rimuovere la versione precedente?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "La copia conservata del sistema precedente viene eliminata per sempre. Dopo non sarà più possibile tornarvi da questa pagina."
+
+msgid "the vendor kernel"
+msgstr "il kernel vendor"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "non con Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "Cambia il kernel"
+
+msgid "This kernel is the one in use"
+msgstr "Questo kernel è quello in uso"
+
+msgid "Change the kernel to %s?"
+msgstr "Cambiare il kernel in %s?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "Il dispositivo scarica quel kernel dalla release più recente e scrive una nuova immagine di avvio; parte al prossimo riavvio. L'immagine di avvio precedente viene conservata, e se la nuova non parte il dispositivo torna da solo ad Android. Il dispositivo deve essere online."
+
+msgid "Start Android at the next restart"
+msgstr "Avvia Android al prossimo riavvio"
+
+msgid "Start Android at the next restart?"
+msgstr "Avviare Android al prossimo riavvio?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "Il prossimo riavvio, e quelli successivi, avviano Android invece di Linux. Linux si riavvia da Android (il pulsante Action del modulo Magisk, oppure mu300-linux)."
+
+msgid "Start Android next"
+msgstr "Avvia Android al prossimo avvio"
+
+msgid "What an update keeps"
+msgstr "Che cosa conserva un aggiornamento"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "Un aggiornamento installa il sistema della nuova release e trasferisce ciò che appartiene all'utente: le impostazioni, gli account e le loro password, le chiavi del dispositivo e le directory home. I pacchetti installati dall'utente vengono annotati e reinstallati al primo avvio, appena il dispositivo è online. La versione precedente resta sul dispositivo finché non viene rimossa, così si può tornare indietro."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "La pagina Updating del wiki elenca esattamente che cosa viene conservato."
+
+msgid "Choose a file first"
+msgstr "Scegliere prima un file"
+
+msgid "Uploading: %s of %s"
+msgstr "Caricamento: %s di %s"
+
 msgid "running"
 msgstr "in esecuzione"
 
@@ -2078,9 +2474,6 @@ msgstr "Nessun profilo lo usa."
 msgid "Removed"
 msgstr "Rimosso"
 
-msgid "Check for updates"
-msgstr "Controlla aggiornamenti"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "Ogni motore è un extra a sé: installa solo quelli che servono ai tuoi profili. Xray esegue link vless, vmess, trojan e ss (con hev-socks5-tunnel), sing-box gli stessi link e il proprio JSON, mihomo gli abbonamenti Clash, dae hysteria2, tuic e il resto sui kernel più recenti. WireGuard e OpenVPN sono pacchetti del sistema."
 
@@ -2089,9 +2482,6 @@ msgstr "I download pesano decine di MB per motore: con i dati mobili incidono su
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "Le versioni disponibili provengono dall'ultima release del modulo VPN."
-
-msgid "Update"
-msgstr "Aggiorna"
 
 msgid "system package"
 msgstr "pacchetto di sistema"
@@ -2260,9 +2650,6 @@ msgstr "Avvia"
 
 msgid "Stop"
 msgstr "Ferma"
-
-msgid "Restart"
-msgstr "Riavvia"
 
 msgid "Stop the VPN?"
 msgstr "Fermare la VPN?"
@@ -2440,9 +2827,6 @@ msgstr "Questo profilo proviene da un abbonamento: il prossimo aggiornamento sos
 
 msgid "Config of %s"
 msgstr "Configurazione di %s"
-
-msgid "Close"
-msgstr "Chiudi"
 
 msgid "Rename"
 msgstr "Rinomina"
@@ -2817,6 +3201,18 @@ msgstr "L'adattatore dei pacchetti non ha dato una risposta valida"
 
 msgid "Invalid packages operation"
 msgstr "Operazione sui pacchetti non valida"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "Il parametro sizes deve essere 0 o 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "L'adattatore di aggiornamento non ha dato una risposta valida"
+
+msgid "Unknown update operation"
+msgstr "Operazione di aggiornamento sconosciuta"
+
+msgid "Invalid update request"
+msgstr "Richiesta di aggiornamento non valida"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3223,3 +3619,42 @@ msgstr "Impossibile impostare il TTL"
 
 msgid "Unknown TTL operation"
 msgstr "Operazione TTL sconosciuta"
+
+msgid "An update task is already running"
+msgstr "Un'attività di aggiornamento è già in esecuzione"
+
+msgid "The task could not be started"
+msgstr "Impossibile avviare l'attività"
+
+msgid "The updater gave no valid reply"
+msgstr "Il programma di aggiornamento non ha dato una risposta valida"
+
+msgid "This needs confirmation"
+msgstr "È necessaria una conferma"
+
+msgid "Check for updates first"
+msgstr "Controllare prima gli aggiornamenti"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "La directory di caricamento non è sicura; nulla è stato modificato"
+
+msgid "Not enough memory for this upload"
+msgstr "Memoria insufficiente per questo caricamento"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Spazio libero insufficiente sulla partizione Linux"
+
+msgid "The file was not checked; upload it again"
+msgstr "Il file non è stato controllato; caricarlo di nuovo"
+
+msgid "This file is not for this device"
+msgstr "Questo file non è per questo dispositivo"
+
+msgid "The signature of this file is wrong"
+msgstr "La firma di questo file è errata"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "Questo file non è firmato: è necessaria una conferma"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "Questo file è più vecchio di quanto installato: è necessaria una conferma"

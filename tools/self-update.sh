@@ -65,5 +65,7 @@ self_update() {
         echo "  $(t '{1} files updated' "$_su_n")"
     fi
     echo "  $(t 'restarting the updated installer')"
+    # a secret answer was taken out of the environment (tools/answers.sh): the restarted installer needs it once more
+    for _su_k in ${ANSWERS_SECRET:-}; do eval "[ -z \"\${$_su_k+set}\" ] || export $_su_k"; done
     MU300_SELF_UPDATED=1 MU300_LANG=$MU300_LANG exec sh "$_su_script" "$@"
 }

@@ -187,6 +187,7 @@ the tab closed, and a two-system install by the device's own download were run o
 | Device download: probe, download, progress and speed | N, C | 41 MiB in about 4 s, 112 MiB in about 8 s (about 15 MiB/s, through the relay); checked on the device |
 | Device download: connection cut, cancelled, wrong checksum, no connection | N, C | Continued where it broke; partial kept and continued; `sha-mismatch`; "no connection" and the file picker offered |
 | Browser download from a mirror: a part cut short, then whole | C | "broke off before the file was complete", Try again, then pushed and planned (stand-in server) |
+| Browser download from the real mirror (2026-10-15, v2026.10.27, Ubuntu 24.04 on 7.2, a device with no internet) | N | `net` said no-network, the mirror was proposed; 3 parts, 114 MiB in 32 s, checked, pushed and checked on the device in 7 s; plan status 3 |
 | Plan, then INSTALL: OpenWrt with the panel on 7.2, a password, "only this browser" | N | 9 steps in 40 s; root's password set, adb in Linux takes the page's key only |
 | The tab closed / the client ended during the installation | N, C | The job finished without a watcher; a new connection found it running or done and replayed its log |
 | A second system added (Ubuntu 24.04), kept filesystem | N | Plan `format=0 update=1`, installed |
@@ -199,7 +200,7 @@ the tab closed, and a two-system install by the device's own download were run o
 Not run: Windows, Linux as the host, a U30 Air, an SD card as the target, KernelSU/APatch, an Android that is not
 rooted (the page's "not rooted" and "not granted" texts: the second was produced by taking Shell's grant away for
 100 s, the first is reasoned from the code), the device's download over a carrier's network, the real mirror host
-with real files, the VPN module, the secure erase.
+from a browser (it was run from Node, 2026-10-15), the VPN module, the secure erase.
 
 ## The protocol, for the next device or platform
 

@@ -57,6 +57,11 @@ Pick it at install ("Which OpenWrt?" -> 2, or `MU300_OPENWRT=luci`), or switch a
 * **Cellular > Device management:** USB role (device or host), the USB network mode (NCM, ECM or RNDIS, applied at the
   next boot), and host-mode adapters that can join the LAN bridge.
 * **Cellular > Adapter settings:** how the panel reaches the modem (AT backend, serial port, custom adapter).
+* **System > Update:** update the device from the browser: what is installed, the newest release on GitHub with its
+  download size, an update that keeps running when the page is closed, an update from an uploaded release file for a
+  device without internet, going back to the previous version, the kernel choice (see
+  [Updating](Updating#from-the-browser-openwrt-with-the-control-panel)). The home page says when a newer release is
+  out.
 * **System > Languages:** interface language, and the lang extra.
 * **System > Power:** the active power profile and why (in your language), battery, power source and the charger's
   input current, the idle settings of the three profiles, the saver threshold and the charge limit (0-100 %, U30 Air).
