@@ -144,6 +144,7 @@ what replaced it. The table below gives each section's state.
 | 93 | sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command (after kanoqwq's 0438ab01) | current (mainline kernels; eMMC soak on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: clean, HS400ES, throughput unchanged; the SD slot not tested, no card) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 | 100 | `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch (kanoqwq 1f8f03fb) | current (fixed; measured on the F50, Ubuntu 24.04, and the U30 Air, openwrt-luci, both v2026.10.27, 2026-10-15) |
+| 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; measured on the F50, Android with Magisk, 2026-10-15; the U30 Air's sysfs name read from Linux) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 
@@ -7054,3 +7055,57 @@ the release and of a test kernel:
     sudo flock /run/mu300/next-boot.lock sleep 10 & sleep 1; time sudo mu300-next-boot android   # ~9 s
     sudo mu300-next-boot linux; sudo reboot           # comes back to Linux; systemctl status mu300-boot-ok: success
     # OpenWrt: the panel's Switch to Android, then reboot: Android; mu300-linux from Android: Linux again
+### 101. The Magisk switch built its misc block under a fixed name in the adb shell user's directory
+
+Found while comparing our switch with kanoqwq's clean-tf-7.2 `1f8f03fb` (his one-time boot changes misc only; ours
+does too, §100), and narrowed by a security review of the first version of this fix. `mu300-linux`
+(`android/magisk/mu300-linux-switch/switch.sh`, run as root) wrote the 32-byte block to
+`${TMPDIR:-/data/local/tmp}/mu300-bc.bin`, checked its size, then `dd`'d it into misc. `/data/local/tmp` belongs to
+the adb `shell` user (2000, mode 0771, no sticky bit): that user, without root, could plant `mu300-bc.bin` as a
+symlink (root's `printf >` follows it and overwrites the target) or replace the file between the size check and
+`dd` (and so choose the bytes that go into misc; the read-back then fails, with misc already changed). A private
+`mktemp -d` directory there (the first version) is not enough: without the sticky bit the shell user can rename it
+away and put a directory of their own in its place between `mktemp` and the write. Apps cannot write there; the
+user at the adb shell can, and on a device where Magisk grants root only to chosen apps that is less than root.
+
+Changed:
+
+* **No file on the way.** The 64 hex digits are checked (hex only), the bytes `printf` makes are counted (32), and
+  `printf` goes straight into `dd ... bs=1 count=32 conv=notrunc`. Nothing is created in any directory.
+* **misc resolved once.** `by-name/misc` is followed once (`readlink -f`); the result has to be a block device under
+  `/dev/block` whose sysfs entry (`/sys/class/block/<name>/uevent`, written by nobody but the kernel) says
+  `PARTNAME=misc`. That one path is read (the live block), written and read back. A link that leads anywhere else
+  (another partition, a file) is refused before anything is written. (`MU300_SYSFS`, tests only, stands for `/sys`
+  and lets a regular file stand for the device.)
+
+**Bootability:** unchanged when misc is what by-name says: the same block, written and read back as before; every
+refusal exits before `dd`, and misc stays as it was (Android boots).
+
+**Unit tests:** `tests/test_magisk_switch.py` (real, non-dry runs against files standing in for
+the partitions): a symlink planted at the old name (it and its target untouched, nothing new in `TMPDIR`, the block
+in misc, 4096 bytes still); `by-name/misc` a link to a partition sysfs calls `boot_a`, then one with no sysfs entry
+(refused, the target unchanged), then one sysfs calls `misc` (written there, through the link resolved once);
+without the test switch, a regular file is refused (`outside /dev/block`). `test_android_web.BootLinux` gives its
+fake device the sysfs entry. Run in the `mu300-unit` container (busybox, as root).
+
+**Device checklist (before merge; Android with Magisk, Linux installed):**
+
+    su -c 'readlink -f /dev/block/by-name/misc; grep PARTNAME /sys/class/block/$(basename $(readlink -f /dev/block/by-name/misc))/uevent'
+    # PARTNAME=misc - if not, this change refuses to switch on that device: report it
+    su -c 'mu300-linux --dry-run'        # the block; nothing written
+    # the Action button or su -c mu300-linux: reboots into Linux; ls /data/local/tmp has nothing new
+    # the web installer's "Boot Linux" (android-web.sh boot-linux) the same
+
+**Measured on the F50** (Android with Magisk, the module of v2026.10.27 with this branch's `switch.sh`, 2026-10-15):
+
+* `by-name/misc` -> `/dev/block/mmcblk0p3`, whose `uevent` says `PARTNAME=misc`. The U30 Air was not taken to
+  Android (it cannot be brought back from there without a hand on it); under Linux its `mmcblk0p3` is `misc` too
+  (`/sys/class/block/mmcblk0p3/uevent`, the same GPT), as on the F50 under Linux.
+* `--dry-run` under Android's `sh` (the Magisk path) and under Magisk's busybox with `ASH_STANDALONE=1` (the web
+  installer's): the same block (`...9e002f...`, slot b with one try), nothing written. The web installer's own entry,
+  `android-web.sh boot-linux dry` with this `switch.sh` in its stage: the same.
+* With `MU300_BY_NAME` pointing at a directory of links: `misc` -> the `boot_a` partition: refused (`/dev/block/
+  mmcblk0p37 is not the misc partition (sysfs PARTNAME)`); `misc` -> a regular file: refused (`misc resolves
+  outside /dev/block`); `misc` -> `/dev/block/by-name/misc` (a second link): taken.
+* The real switch, `su -c mu300-linux`: `slot b armed for one boot`, rebooted into Linux; no `mu300-bc.bin` in
+  `/data/local/tmp`. The initramfs then restored Android's block, as for every one-shot trial.
