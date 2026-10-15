@@ -616,6 +616,7 @@ Two smaller differences from the same reference, both cheap to copy and neither 
 * Its `rx_errors` and `tx_errors` are equal and non-zero (81 each) on a link that works, so those counters are
   not by themselves a sign of trouble.
 
+**Read the IPA state before theorising - `/sys/kernel/debug/sipa/` answers most of it**, and two of its fields
 are easy to misread:
 
 * `nic`: `suspend_stage`, `rc` (resumes), `sc` (suspends), `is_bypass`, then one line per allocated nic. A fresh
