@@ -148,6 +148,10 @@ sha_ok() { [ ${#1} = 64 ] && case $1 in *[!0-9a-f]*) return 1 ;; esac; }
 detect() {
     MODEL=$(getprop ro.product.model); PRODUCT=$(getprop ro.product.device)
     case "$MODEL / $PRODUCT" in
+        # the ZTE V50 (experimental, FINDINGS 95): exactly V50 / MU3351 on ums9620; any other V50 is no device known
+        "V50 / MU3351"|*" / MU3351"|"V50 / "*)
+            DEVICE=
+            [ "$MODEL / $PRODUCT" = "V50 / MU3351" ] && [ "$(getprop ro.board.platform)" = ums9620 ] && DEVICE=v50 ;;
         *U30Air*|*U30_Air*|*"U30 Air"*) DEVICE=u30air ;;
         *MU300*|*F50*|*mu300*) DEVICE=f50 ;;
         *) DEVICE= ;;
@@ -667,7 +671,7 @@ ustep() {
 un_check() {
     detect
     mkdir -p "$R" && chmod 700 "$R" || die "cannot use $R; nothing was changed"
-    [ -n "$DEVICE" ] || die "this does not look like a ZTE F50/MU300 or U30 Air; nothing was changed"
+    [ -n "$DEVICE" ] || die "this does not look like a ZTE F50/MU300, U30 Air or V50; nothing was changed"
     slots_ok || die "cannot tell which slot Android runs from, or boot_a and boot_b are the same partition; nothing was changed"
     say "Android runs from slot $ANDROID_SLOT; Linux is on slot $LINUX_SLOT (boot_$LINUX_SLOT)"
     region_probe || die "could not read the partition table; nothing was changed"
