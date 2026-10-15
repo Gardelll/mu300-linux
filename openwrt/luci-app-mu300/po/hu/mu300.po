@@ -817,6 +817,9 @@ msgstr "Munkamenet időtartama"
 msgid "Registration"
 msgstr "Regisztráció"
 
+msgid "Data roaming"
+msgstr "Adatroaming"
+
 msgid "Bandwidth"
 msgstr "Sávszélesség"
 
@@ -952,6 +955,18 @@ msgstr "Mobilrádió bekapcsolása"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Lefut az SFUN bekapcsolási sorozat (legfeljebb kb. 1 perc)."
 
+msgid "Turn data roaming off"
+msgstr "Adatroaming kikapcsolása"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Amíg a SIM roaminghálózatban van regisztrálva, a mobiladat kikapcsolva marad; az SMS-t, a hívásokat és a regisztrációt ez nem érinti. Egyes SIM-ek otthon is roamingot jeleznek (MVNO, belföldi roaming): ott is leállna az adatforgalom."
+
+msgid "Allow data roaming"
+msgstr "Adatroaming engedélyezése"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "A mobiladat roaminghálózatokon is használatban van, ami többletköltséggel járhat. Egyes SIM-ek otthon is roamingot jeleznek (MVNO, belföldi roaming), és ehhez erre van szükségük, hogy egyáltalán legyen adat."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "A mobilkapcsolat 1–2 percre leállhat."
 
@@ -1080,6 +1095,15 @@ msgstr "Csak segélyhívás"
 
 msgid "Status %s"
 msgstr "Állapot: %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Ki: adatforgalom visszatartva roamingban"
+
+msgid "Allowed"
+msgstr "Engedélyezve"
+
+msgid "Off"
+msgstr "Ki"
 
 msgid "LTE anchor"
 msgstr "LTE-horgony"
@@ -1605,9 +1629,6 @@ msgstr "Változatlanul hagyás"
 
 msgid "LTE only (5G off)"
 msgstr "Csak LTE (5G kikapcsolva)"
-
-msgid "Off"
-msgstr "Ki"
 
 msgid "On"
 msgstr "Be"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "A rádió nem kapcsolt be"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "A mobiladat-integráció ezen a platformon nem érhető el"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Az adatroaming beállítását nem sikerült menteni"
 
 msgid "Expected on or off"
 msgstr "on vagy off érték szükséges"

@@ -817,6 +817,9 @@ msgstr "Sitzungsdauer"
 msgid "Registration"
 msgstr "Registrierung"
 
+msgid "Data roaming"
+msgstr "Datenroaming"
+
 msgid "Bandwidth"
 msgstr "Bandbreite"
 
@@ -952,6 +955,18 @@ msgstr "Mobilfunkmodul einschalten"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Die SFUN-Einschaltsequenz wird ausgeführt (bis etwa 1 Minute)."
 
+msgid "Turn data roaming off"
+msgstr "Datenroaming ausschalten"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Solange die SIM in einem Roaming-Netz registriert ist, bleiben mobile Daten aus; SMS, Anrufe und die Registrierung sind nicht betroffen. Manche SIMs melden auch im Heimatland Roaming (ein MVNO, nationales Roaming): dort würden die Daten ebenfalls stoppen."
+
+msgid "Allow data roaming"
+msgstr "Datenroaming erlauben"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobile Daten werden auch in Roaming-Netzen genutzt, was zusätzlich kosten kann. Manche SIMs melden auch im Heimatland Roaming (ein MVNO, nationales Roaming) und brauchen dies, um überhaupt Daten zu haben."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Die Mobilfunkverbindung kann für 1–2 Minuten ausfallen."
 
@@ -1080,6 +1095,15 @@ msgstr "Nur Notrufe"
 
 msgid "Status %s"
 msgstr "Status %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Aus: Daten beim Roaming angehalten"
+
+msgid "Allowed"
+msgstr "Erlaubt"
+
+msgid "Off"
+msgstr "Aus"
 
 msgid "LTE anchor"
 msgstr "LTE-Anker"
@@ -1605,9 +1629,6 @@ msgstr "Unverändert lassen"
 
 msgid "LTE only (5G off)"
 msgstr "Nur LTE (5G aus)"
-
-msgid "Off"
-msgstr "Aus"
 
 msgid "On"
 msgstr "Ein"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Funkmodul ist nicht hochgefahren"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Die Mobilfunkdaten-Integration ist auf dieser Plattform nicht vorhanden"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Die Datenroaming-Einstellung konnte nicht gespeichert werden"
 
 msgid "Expected on or off"
 msgstr "on oder off erwartet"

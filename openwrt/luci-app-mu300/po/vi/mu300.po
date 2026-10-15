@@ -817,6 +817,9 @@ msgstr "Thời lượng phiên"
 msgid "Registration"
 msgstr "Đăng ký"
 
+msgid "Data roaming"
+msgstr "Chuyển vùng dữ liệu"
+
 msgid "Bandwidth"
 msgstr "Băng thông"
 
@@ -952,6 +955,18 @@ msgstr "Bật radio di động"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Trình tự bật nguồn SFUN sẽ chạy (tối đa khoảng 1 phút)."
 
+msgid "Turn data roaming off"
+msgstr "Tắt chuyển vùng dữ liệu"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Khi SIM đang đăng ký trên mạng chuyển vùng, dữ liệu di động vẫn tắt; SMS, cuộc gọi và việc đăng ký không bị ảnh hưởng. Một số SIM báo chuyển vùng ngay cả trong nước (một MVNO, chuyển vùng quốc gia): ở đó dữ liệu cũng sẽ dừng."
+
+msgid "Allow data roaming"
+msgstr "Cho phép chuyển vùng dữ liệu"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Dữ liệu di động cũng được dùng trên mạng chuyển vùng, có thể tốn thêm phí. Một số SIM báo chuyển vùng ngay cả trong nước (một MVNO, chuyển vùng quốc gia) và cần tùy chọn này mới có dữ liệu."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Kết nối di động có thể dừng trong 1–2 phút."
 
@@ -1080,6 +1095,15 @@ msgstr "Chỉ cuộc gọi khẩn cấp"
 
 msgid "Status %s"
 msgstr "Trạng thái %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Tắt: dữ liệu bị giữ lại khi chuyển vùng"
+
+msgid "Allowed"
+msgstr "Được phép"
+
+msgid "Off"
+msgstr "Tắt"
 
 msgid "LTE anchor"
 msgstr "Neo LTE"
@@ -1605,9 +1629,6 @@ msgstr "Giữ nguyên"
 
 msgid "LTE only (5G off)"
 msgstr "Chỉ LTE (tắt 5G)"
-
-msgid "Off"
-msgstr "Tắt"
 
 msgid "On"
 msgstr "Bật"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio không bật lên được"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Nền tảng này không cung cấp tích hợp dữ liệu di động"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Không thể lưu cài đặt chuyển vùng dữ liệu"
 
 msgid "Expected on or off"
 msgstr "Cần giá trị on hoặc off"

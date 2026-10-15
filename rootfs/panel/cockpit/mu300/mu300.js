@@ -132,6 +132,20 @@
                 act(b, [ 'systemctl', on ? 'stop' : 'start', 'mu300-mobile-data' ], undefined, refresh);
             });
             dataBody.appendChild(b);
+            /* data roaming (mobile-data roaming, FINDINGS 120): off keeps data down while the SIM is registered as
+             * roaming; the dial and its watchdog act on a change within half a minute */
+            var ro = md.roaming;
+            if (ro) {
+                dataBody.appendChild(row(_('Data roaming'), ro.held ? _('Off: data held back while roaming')
+                    : ro.allowed ? _('Allowed') : _('Off')));
+                var rb = button(ro.allowed ? _('Turn data roaming off') : _('Allow data roaming'), function () {
+                    if (!window.confirm(ro.allowed
+                        ? _('While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well.')
+                        : _('Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all.'))) return;
+                    act(rb, [ 'mobile-data', 'roaming', ro.allowed ? 'off' : 'on' ], undefined, refresh);
+                });
+                dataBody.appendChild(rb);
+            }
 
             clear(devBody).appendChild(row(_('Device'), { f50: 'ZTE F50', u30air: 'ZTE U30 Air' }[info.device] || info.device));
             devBody.appendChild(row(_('Release'), info.version));

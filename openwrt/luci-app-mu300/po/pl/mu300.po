@@ -817,6 +817,9 @@ msgstr "Czas sesji"
 msgid "Registration"
 msgstr "Rejestracja"
 
+msgid "Data roaming"
+msgstr "Roaming danych"
+
 msgid "Bandwidth"
 msgstr "Szerokość pasma"
 
@@ -952,6 +955,18 @@ msgstr "Włącz radio komórkowe"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Zostanie wykonana sekwencja włączania SFUN (do około 1 minuty)."
 
+msgid "Turn data roaming off"
+msgstr "Wyłącz roaming danych"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Dopóki karta SIM jest zarejestrowana w sieci roamingowej, dane komórkowe pozostają wyłączone; SMS-y, połączenia i rejestracja nie są objęte. Niektóre karty SIM zgłaszają roaming także w kraju (MVNO, roaming krajowy): tam dane również by się zatrzymały."
+
+msgid "Allow data roaming"
+msgstr "Zezwól na roaming danych"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Dane komórkowe są używane także w sieciach roamingowych, co może kosztować dodatkowo. Niektóre karty SIM zgłaszają roaming także w kraju (MVNO, roaming krajowy) i potrzebują tego, aby w ogóle mieć dane."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Łączność komórkowa może zostać przerwana na 1–2 minuty."
 
@@ -1080,6 +1095,15 @@ msgstr "Tylko połączenia alarmowe"
 
 msgid "Status %s"
 msgstr "Stan %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Wyłączony: dane wstrzymane w roamingu"
+
+msgid "Allowed"
+msgstr "Dozwolony"
+
+msgid "Off"
+msgstr "Wyłączony"
 
 msgid "LTE anchor"
 msgstr "Kotwica LTE"
@@ -1605,9 +1629,6 @@ msgstr "Bez zmian"
 
 msgid "LTE only (5G off)"
 msgstr "Tylko LTE (5G wyłączone)"
-
-msgid "Off"
-msgstr "Wyłączony"
 
 msgid "On"
 msgstr "Włączony"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio nie uruchomiło się"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Integracja danych komórkowych nie jest dostępna na tej platformie"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Nie udało się zapisać ustawienia roamingu danych"
 
 msgid "Expected on or off"
 msgstr "Oczekiwano on lub off"
