@@ -549,7 +549,7 @@ if (-not $py) {
     Check 'shrink: reboots'         $script:dev.rebooted $true
     Check 'shrink: the last thing'  ($script:dev.cmds[$script:dev.cmds.Count - 1]) 'adb: reboot'
     # no partition but userdata is named, and nothing but the partition table is read
-    Check 'shrink: no other partition' (@($script:dev.cmds | Where-Object { $_ -match 'by-name/(?!(misc|boot_[ab]|uboot_[ab]|sml_[ab]|teecfg_[ab]|trustos_[ab]|vbmeta_[ab])\b)|nvram|fixnv|runtimenv|prodnv|persist|miscdata' }).Count) 0
+    Check 'shrink: no other partition' (@($script:dev.cmds | Where-Object { $_ -match 'by-name/(?!(misc|userdata|boot_[ab]|uboot_[ab]|sml_[ab]|teecfg_[ab]|trustos_[ab]|vbmeta_[ab])\b)|nvram|fixnv|runtimenv|prodnv|persist|miscdata' }).Count) 0
     Check 'shrink: reads'           (@($script:dev.cmds | Where-Object { $_ -like 'pull:*' } | Sort-Object -Unique).Count) 15
     Remove-Item -Recurse -Force $BackupDir
 
