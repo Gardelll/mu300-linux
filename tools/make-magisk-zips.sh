@@ -6,6 +6,10 @@
 # the installer, the switch module, the 5.4 bundle's static busybox and the two assets of their combination - no file
 # from any device: the installer reads those on the device it runs on. Every zip is checked against an exact list
 # of names before it counts.
+# A zip is also what a device without internet is updated from (mu300-update apply --from ZIP, the panel's System >
+# Update): for that it carries the release's SHA256SUMS and, when the release is signed, SHA256SUMS.sig - the
+# signature covers the SHA256SUMS, and the SHA256SUMS the two assets of the payload, so a zip can be checked against
+# the project's release key wherever it came from (docs/FINDINGS.md 86). The installer does not read either.
 set -eu
 USAGE='usage: tools/make-magisk-zips.sh RELEASE_DIR OUT_DIR [TAG]'
 TOP=$(cd "$(dirname "$0")/.." && pwd)
@@ -36,7 +40,9 @@ tar -xzOf "$R/mu300-kernel.tar.gz" ./busybox > "$W/busybox"
 COMMON='META-INF/com/google/android/update-binary META-INF/com/google/android/updater-script module.prop customize.sh
 action.sh switch.sh bootchain.sh system/bin/mu300-linux mu300/install.sh mu300/android-boot-image.sh mu300/mu300-update
 mu300/android-install.sh mu300/android-bootchain.sh mu300/android-mount-mu300root.sh mu300/storage.sh mu300/i18n.sh mu300/i18n/tr.tsv
-mu300/i18n/zh.tsv mu300/subset-files.txt mu300/gpu-files.txt mu300/busybox mu300/manifest'
+mu300/i18n/zh.tsv mu300/subset-files.txt mu300/gpu-files.txt mu300/busybox mu300/manifest mu300/SHA256SUMS'
+# (the signature of a signed release)
+[ ! -s "$R/SHA256SUMS.sig" ] || COMMON="$COMMON mu300/SHA256SUMS.sig"
 stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     S=$1
     mkdir -p "$S/META-INF/com/google/android" "$S/system/bin" "$S/mu300/i18n" "$S/payload"
@@ -54,6 +60,8 @@ stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     cp "$TOP/i18n/tr.tsv" "$TOP/i18n/zh.tsv" "$S/mu300/i18n/"
     cp "$TOP/android-vendor/subset-files.txt" "$TOP/android-vendor/gpu-files.txt" "$S/mu300/"
     cp "$W/busybox" "$S/mu300/busybox"
+    cp "$R/SHA256SUMS" "$S/mu300/SHA256SUMS"
+    [ ! -s "$R/SHA256SUMS.sig" ] || cp "$R/SHA256SUMS.sig" "$S/mu300/SHA256SUMS.sig"
     cp "$R/$4" "$R/$5" "$S/payload/"
     printf 'TAG=%s\nSYSTEM=%s\nOS=%s\nUBUNTU=%s\nKERNEL=%s\nKERNEL_ASSET=%s\nROOTFS_ASSET=%s\nSHA256_KERNEL=%s\nSHA256_ROOTFS=%s\n' \
         "$TAG" "$2" "$6" "$7" "$3" "$5" "$4" "$(sha "$R/$5")" "$(sha "$R/$4")" > "$S/mu300/manifest"
