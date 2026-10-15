@@ -71,8 +71,12 @@ linux_mode_to_android() {
     # Only where the address can be no other device: with two boards in Linux on adb, 192.168.77.1 or .78.1 may
     # well be the other one (measured: the F50 named by ANDROID_SERIAL next to a U30 Air in Linux at .78.1).
     # MU300_IP, given by the user, is the one exception.
+    # The same when the board ANDROID_SERIAL named is not on adb at all but another one in Linux is.
     _lm_ssh_ok=1
-    [ -n "${MU300_IP:-}" ] || ! linux_adb_many || _lm_ssh_ok=0
+    if [ -z "${MU300_IP:-}" ]; then
+        ! linux_adb_many || _lm_ssh_ok=0
+        [ -z "$LINUX_WANTED" ] || linux_adb_listed "$LINUX_WANTED" || ! linux_adb_listed || _lm_ssh_ok=0
+    fi
     if [ $_lm_gone = 0 ] && [ $_lm_ssh_ok = 0 ]; then
         die "$(t 'more than one device runs MU300 Linux and adb could not reboot this one: boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot), or give its address with MU300_IP')"
     fi

@@ -197,6 +197,13 @@ exit 0''')
             out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
             self.assertIn('DIE more than one device runs MU300 Linux', out)
             self.assertNotIn('ssh', log)
+            # the named one is not on adb at all, the other one is: no SSH to an address that may be the other's
+            self.devices('adb.out', [other])
+            out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
+            self.assertIn('DIE more than one device runs MU300 Linux', out)
+            self.assertNotIn('ssh', log)
+            self.assertNotIn('reboot', log)
+            self.devices('adb.out', [other, LINUX])
             # none named: neither is picked over adb, and SSH is not guessed either
             (self.tmp / 'reboot-fails').unlink()
             out, log = self.run_sh(shell, 'require_android')

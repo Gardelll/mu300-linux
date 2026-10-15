@@ -199,7 +199,9 @@ FindAdb
 if (-not (Get-Command adb -ErrorAction SilentlyContinue)) { Die 'adb not found' }
 # the device in Linux, and only a phone or tablet in Android: that is not the one to touch - reboot the device first
 # (ANDROID_SERIAL naming the device in Linux: that is the one to send back to Android, not one to work on)
-if ($env:ANDROID_SERIAL -like 'MU300LINUX*') { Remove-Item Env:ANDROID_SERIAL }
+# (kept in $LinuxWanted: with two boards in Linux it is the one that is rebooted, never the other)
+$LinuxWanted = ''
+if ($env:ANDROID_SERIAL -like 'MU300LINUX*') { $LinuxWanted = $env:ANDROID_SERIAL; Remove-Item Env:ANDROID_SERIAL }
 $devs = @(Quiet { adb devices -l })
 $target = @(AndroidLines $devs | Where-Object { $_ -match 'model:F50|product:MU300|device:MU300|device:U30Air' })
 $linuxAdb = @(LinuxAdbSerials $devs)
@@ -215,8 +217,9 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
     # type, and it works where the USB network does not. The marker file first: only our Linux is told to reboot.
     $gone = $false; $sshTried = $false
     $open = @(LinuxAdbSerials (Quiet { adb devices -l }) -Open)
+    if ($LinuxWanted) { $open = @($open | Where-Object { $_ -eq $LinuxWanted }) }
+    $s = $(if ($open.Count -eq 1) { $open[0] } else { $LinuxWanted })
     if ($open.Count -eq 1) {
-        $s = $open[0]
         if (("" + (Quiet { adb -s $s shell 'test -x /opt/mu300/bin/mu300-next-boot && echo mu300' })).Trim() -eq 'mu300') {
             Write-Host ('  ' + "asking it over adb ($s)")
             Quiet { adb -s $s shell '/opt/mu300/bin/mu300-next-boot android && sync && reboot' } | Out-Null
@@ -226,6 +229,13 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
             }
             if ($gone) { Write-Host ('  ' + 'rebooting') }
         }
+    }
+    # Only where the address can be no other device: with two boards in Linux on adb (or the one named not on adb
+    # while another one in Linux is), 192.168.77.1 or .78.1 may well be the other one (measured: the F50 named by
+    # ANDROID_SERIAL next to a U30 Air in Linux at .78.1).
+    $inLinux = @(LinuxAdbSerials (Quiet { adb devices -l }))
+    if (-not $gone -and ($inLinux.Count -gt 1 -or ($LinuxWanted -and $inLinux.Count -gt 0 -and $inLinux -notcontains $LinuxWanted))) {
+        Die 'more than one device runs MU300 Linux and adb could not reboot this one: boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot), or give its address with MU300_IP'
     }
     # -t: sudo needs a terminal to ask for the device password; reboot cuts the connection, so watch the port
     foreach ($u in 'ubuntu', 'root') {
@@ -246,11 +256,18 @@ if ($linuxFirst -or (AdbState) -notmatch 'device') {
         Die 'boot Android yourself (in Linux: sudo mu300-next-boot android && sudo reboot)'
     }
     Write-Host '  waiting for Android'
+    # Which device comes back: the serial number of our Linux is MU300LINUX-<Android's serial>-<eMMC id> (boot/init).
+    # Never "whatever single device adb lists": while the F50 rebooted, a Pixel next to it was the only one, and the
+    # check went on with the Pixel (measured with install.sh).
+    $lmBack = (($s -replace '^MU300LINUX-?', '') -split '-')[0]
+    $lmUp = $false
     for ($i = 0; $i -lt 60; $i++) {
-        if ((AdbState) -match 'device') { break }
+        if ($lmBack -and @(AndroidLines (Quiet { adb devices -l }) | Where-Object { ($_ -split '\s+')[0] -eq $lmBack }).Count -gt 0) { $env:ANDROID_SERIAL = $lmBack }
+        $lmState = AdbState
+        if ($env:ANDROID_SERIAL -and $lmState -match 'device') { $lmUp = $true; break }
         Start-Sleep 5
     }
-    if ((AdbState) -notmatch 'device') { Die 'the device did not come back as Android' }
+    if (-not $lmUp) { Die 'the device did not come back as Android' }
 }
 # whatever its serial number says: a root shell of our Linux must never be taken for a rooted Android
 if (("" + (Quiet { adb shell 'ls -d /opt/mu300/bin 2>/dev/null' })).Trim()) {

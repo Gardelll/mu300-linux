@@ -116,6 +116,19 @@ Check 'check: partitions'       (@(([string]$r.Facts['partitions']).Trim() -spli
 Check 'check: the text is there' ($r.Out -match 'result: OK: free and empty, same layout as the tested device') $true
 Check "check: nothing written: $(UntouchedWhy)"  (Untouched) 0
 
+# Two boards in Linux on adb, ANDROID_SERIAL names one (measured with install.sh: the F50 next to a U30 Air in Linux).
+# Only the named one is asked to reboot; when it does not go, there is no SSH to 192.168.77.1/.78.1, which may be the
+# other one. (The fake's reboot changes nothing, so the named one stays.)
+$named = 'MU300LINUX-324950664950-203d8329'
+foreach ($sc in 'install.ps1', 'uninstall.ps1') {
+    Device 'serial' $named 'extra_devices' @('MU300LINUX-323960377386-203edc81 device usb:2 transport_id:2')
+    $r = RunScript $sc $(if ($sc -eq 'install.ps1') { '-Check -NonInteractive' } else { '-NonInteractive' }) @{ ANDROID_SERIAL = $named; MU300_ANS_REBOOT_ANDROID = 'yes' }
+    Check "two boards, $sc`: refused" ((LastEvent $r).message -like 'more than one device runs MU300 Linux and adb could not reboot this one*') $true
+    if ((LastEvent $r).event -ne 'error') { Write-Host $r.Out }
+    Check "two boards, $sc`: one reboot asked" @(Calls 'write' | Where-Object { $_.cmd -match 'mu300-next-boot android' }).Count 1
+    Check "two boards, $sc`: no SSH" ($r.Out -match 'enter the device password') $false
+}
+
 Device 'model' 'U30_Air' 'device' 'U30Air' 'slot' 'b' 'locked' '1' 'verified' 'green'
 $r = RunScript 'install.ps1' '-Check -NonInteractive'
 Check 'u30: kind'               $r.Facts['device.kind'] 'u30air'
