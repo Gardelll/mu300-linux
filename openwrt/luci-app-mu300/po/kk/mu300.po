@@ -817,6 +817,9 @@ msgstr "Сеанс ұзақтығы"
 msgid "Registration"
 msgstr "Тіркелу"
 
+msgid "Data roaming"
+msgstr "Деректер роумингі"
+
 msgid "Bandwidth"
 msgstr "Өткізу жолағының ені"
 
@@ -952,6 +955,18 @@ msgstr "Ұялы радиомодульді қосу"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN қосу реті орындалады (шамамен 1 минутқа дейін)."
 
+msgid "Turn data roaming off"
+msgstr "Деректер роумингін өшіру"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "SIM роуминг желісінде тіркелгенше мобильді деректер өшірулі тұрады; SMS, қоңыраулар және тіркелу әсер етпейді. Кейбір SIM-карталар үйде де роуминг туралы хабарлайды (MVNO, ұлттық роуминг): онда да деректер тоқтайды."
+
+msgid "Allow data roaming"
+msgstr "Деректер роумингіне рұқсат беру"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Мобильді деректер роуминг желілерінде де қолданылады, бұл қосымша ақы алуы мүмкін. Кейбір SIM-карталар үйде де роуминг туралы хабарлайды (MVNO, ұлттық роуминг) және деректер болуы үшін осыны қажет етеді."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Ұялы байланыс 1–2 минутқа тоқтауы мүмкін."
 
@@ -1080,6 +1095,15 @@ msgstr "Тек шұғыл қоңыраулар"
 
 msgid "Status %s"
 msgstr "Күйі %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Өшірулі: роумингте деректер тоқтатылды"
+
+msgid "Allowed"
+msgstr "Рұқсат етілген"
+
+msgid "Off"
+msgstr "Өшірулі"
 
 msgid "LTE anchor"
 msgstr "LTE тірек ұяшығы"
@@ -1605,9 +1629,6 @@ msgstr "Өзгеріссіз қалдыру"
 
 msgid "LTE only (5G off)"
 msgstr "Тек LTE (5G өшірулі)"
-
-msgid "Off"
-msgstr "Өшірулі"
 
 msgid "On"
 msgstr "Қосулы"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Радио қосылмады"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Бұл платформада мобильді деректер интеграциясы жоқ"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Деректер роумингі параметрін сақтау мүмкін болмады"
 
 msgid "Expected on or off"
 msgstr "on немесе off күтіледі"

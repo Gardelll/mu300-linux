@@ -817,6 +817,9 @@ msgstr "Durée de la session"
 msgid "Registration"
 msgstr "Enregistrement"
 
+msgid "Data roaming"
+msgstr "Itinérance des données"
+
 msgid "Bandwidth"
 msgstr "Bande passante"
 
@@ -952,6 +955,18 @@ msgstr "Activer la radio cellulaire"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "La séquence de mise sous tension SFUN va s'exécuter (environ 1 minute au maximum)."
 
+msgid "Turn data roaming off"
+msgstr "Désactiver l'itinérance des données"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Tant que la SIM est enregistrée sur un réseau en itinérance, les données mobiles restent coupées ; les SMS, les appels et l'enregistrement ne sont pas affectés. Certaines SIM signalent l'itinérance même chez elles (un MVNO, l'itinérance nationale) : là aussi, les données s'arrêteraient."
+
+msgid "Allow data roaming"
+msgstr "Autoriser l'itinérance des données"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Les données mobiles sont aussi utilisées sur les réseaux en itinérance, ce qui peut coûter plus cher. Certaines SIM signalent l'itinérance même chez elles (un MVNO, l'itinérance nationale) et en ont besoin pour avoir des données."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "La connectivité cellulaire peut s'interrompre pendant 1 à 2 minutes."
 
@@ -1080,6 +1095,15 @@ msgstr "Urgence uniquement"
 
 msgid "Status %s"
 msgstr "État %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Désactivée : données suspendues en itinérance"
+
+msgid "Allowed"
+msgstr "Autorisée"
+
+msgid "Off"
+msgstr "Désactivé"
 
 msgid "LTE anchor"
 msgstr "Ancre LTE"
@@ -1605,9 +1629,6 @@ msgstr "Laisser tel quel"
 
 msgid "LTE only (5G off)"
 msgstr "LTE seul (5G désactivée)"
-
-msgid "Off"
-msgstr "Désactivé"
 
 msgid "On"
 msgstr "Activé"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "La radio ne s'est pas activée"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "L'intégration des données mobiles n'est pas fournie par cette plateforme"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Le réglage de l'itinérance des données n'a pas pu être enregistré"
 
 msgid "Expected on or off"
 msgstr "Valeur attendue : on ou off"

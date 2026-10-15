@@ -817,6 +817,9 @@ msgstr "משך ההפעלה"
 msgid "Registration"
 msgstr "רישום"
 
+msgid "Data roaming"
+msgstr "נדידת נתונים"
+
 msgid "Bandwidth"
 msgstr "רוחב פס"
 
@@ -952,6 +955,18 @@ msgstr "הפעלת הרדיו הסלולרי"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "רצף ההפעלה SFUN יורץ (עד כדקה אחת)."
 
+msgid "Turn data roaming off"
+msgstr "כיבוי נדידת נתונים"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "כל עוד כרטיס ה-SIM רשום ברשת נדידה, הנתונים הסלולריים נשארים כבויים; הודעות SMS, שיחות והרישום אינם מושפעים. חלק מכרטיסי ה-SIM מדווחים על נדידה גם בבית (MVNO, נדידה לאומית): שם הנתונים ייעצרו גם כן."
+
+msgid "Allow data roaming"
+msgstr "התרת נדידת נתונים"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "נתונים סלולריים משמשים גם ברשתות נדידה, מה שעלול לעלות יותר. חלק מכרטיסי ה-SIM מדווחים על נדידה גם בבית (MVNO, נדידה לאומית) וזקוקים לכך כדי לקבל נתונים בכלל."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "הקישוריות הסלולרית עלולה להיפסק ל-1–2 דקות."
 
@@ -1080,6 +1095,15 @@ msgstr "חירום בלבד"
 
 msgid "Status %s"
 msgstr "מצב %s"
+
+msgid "Off: data held back while roaming"
+msgstr "כבוי: הנתונים מושהים בזמן נדידה"
+
+msgid "Allowed"
+msgstr "מותר"
+
+msgid "Off"
+msgstr "כבוי"
 
 msgid "LTE anchor"
 msgstr "עוגן LTE"
@@ -1605,9 +1629,6 @@ msgstr "ללא שינוי"
 
 msgid "LTE only (5G off)"
 msgstr "LTE בלבד (5G כבוי)"
-
-msgid "Off"
-msgstr "כבוי"
 
 msgid "On"
 msgstr "פועל"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "הרדיו לא עלה"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "שילוב הנתונים הסלולריים אינו זמין בפלטפורמה זו"
+
+msgid "The data roaming setting could not be saved"
+msgstr "לא ניתן היה לשמור את הגדרת נדידת הנתונים"
 
 msgid "Expected on or off"
 msgstr "נדרש on או off"

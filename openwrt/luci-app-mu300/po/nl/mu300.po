@@ -817,6 +817,9 @@ msgstr "Sessieduur"
 msgid "Registration"
 msgstr "Registratie"
 
+msgid "Data roaming"
+msgstr "Dataroaming"
+
 msgid "Bandwidth"
 msgstr "Bandbreedte"
 
@@ -952,6 +955,18 @@ msgstr "Mobiele radio inschakelen"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "De SFUN-inschakelprocedure wordt uitgevoerd (tot ongeveer 1 minuut)."
 
+msgid "Turn data roaming off"
+msgstr "Dataroaming uitzetten"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Zolang de simkaart op een roamingnetwerk is geregistreerd, blijft mobiele data uit; sms, gesprekken en de registratie worden niet beïnvloed. Sommige simkaarten melden ook thuis roaming (een MVNO, nationale roaming): daar zou data ook stoppen."
+
+msgid "Allow data roaming"
+msgstr "Dataroaming toestaan"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobiele data wordt ook op roamingnetwerken gebruikt, wat extra kan kosten. Sommige simkaarten melden ook thuis roaming (een MVNO, nationale roaming) en hebben dit nodig om überhaupt data te hebben."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "De mobiele verbinding kan 1–2 minuten wegvallen."
 
@@ -1080,6 +1095,15 @@ msgstr "Alleen noodoproepen"
 
 msgid "Status %s"
 msgstr "Status %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Uit: data tegengehouden tijdens roaming"
+
+msgid "Allowed"
+msgstr "Toegestaan"
+
+msgid "Off"
+msgstr "Uit"
 
 msgid "LTE anchor"
 msgstr "LTE-anker"
@@ -1605,9 +1629,6 @@ msgstr "Ongewijzigd laten"
 
 msgid "LTE only (5G off)"
 msgstr "Alleen LTE (5G uit)"
-
-msgid "Off"
-msgstr "Uit"
 
 msgid "On"
 msgstr "Aan"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio is niet opgestart"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Integratie van mobiele data wordt op dit platform niet geboden"
+
+msgid "The data roaming setting could not be saved"
+msgstr "De instelling voor dataroaming kon niet worden opgeslagen"
 
 msgid "Expected on or off"
 msgstr "on of off verwacht"

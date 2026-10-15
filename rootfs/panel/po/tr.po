@@ -89,6 +89,27 @@ msgstr "Mobil veriyi aç"
 msgid "Turn mobile data off? Clients of the device lose the internet until it is on again."
 msgstr "Mobil veri kapatılsın mı? Cihaza bağlı istemciler, yeniden açılana kadar internetsiz kalır."
 
+msgid "Data roaming"
+msgstr "Veri dolaşımı"
+
+msgid "Off: data held back while roaming"
+msgstr "Kapalı: dolaşımda veri durduruldu"
+
+msgid "Allowed"
+msgstr "İzin verildi"
+
+msgid "Turn data roaming off"
+msgstr "Veri dolaşımını kapat"
+
+msgid "Allow data roaming"
+msgstr "Veri dolaşımına izin ver"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "SIM bir dolaşım ağına kayıtlıyken mobil veri kapalı kalır; SMS, aramalar ve ağ kaydı etkilenmez. Bazı SIM'ler yurt içinde de dolaşım bildirir (bir MVNO, ulusal dolaşım): orada da veri durur."
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobil veri dolaşım ağlarında da kullanılır; bu ek ücrete yol açabilir. Bazı SIM'ler yurt içinde de dolaşım bildirir (bir MVNO, ulusal dolaşım) ve veri için buna ihtiyaç duyar."
+
 msgid "Release"
 msgstr "Sürüm"
 

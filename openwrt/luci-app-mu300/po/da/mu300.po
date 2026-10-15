@@ -817,6 +817,9 @@ msgstr "Sessionsvarighed"
 msgid "Registration"
 msgstr "Registrering"
 
+msgid "Data roaming"
+msgstr "Dataroaming"
+
 msgid "Bandwidth"
 msgstr "Båndbredde"
 
@@ -952,6 +955,18 @@ msgstr "Slå mobilradio til"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN-opstartssekvensen køres (op til ca. 1 minut)."
 
+msgid "Turn data roaming off"
+msgstr "Slå dataroaming fra"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Så længe SIM-kortet er registreret på et roamingnetværk, forbliver mobildata slået fra; SMS, opkald og registreringen påvirkes ikke. Nogle SIM-kort melder roaming selv derhjemme (en MVNO, national roaming): der ville data også stoppe."
+
+msgid "Allow data roaming"
+msgstr "Tillad dataroaming"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobildata bruges også på roamingnetværk, hvilket kan koste ekstra. Nogle SIM-kort melder roaming selv derhjemme (en MVNO, national roaming) og har brug for dette for overhovedet at få data."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Mobilforbindelsen kan stoppe i 1–2 minutter."
 
@@ -1080,6 +1095,15 @@ msgstr "Kun nødopkald"
 
 msgid "Status %s"
 msgstr "Status %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Fra: data holdt tilbage under roaming"
+
+msgid "Allowed"
+msgstr "Tilladt"
+
+msgid "Off"
+msgstr "Fra"
 
 msgid "LTE anchor"
 msgstr "LTE-anker"
@@ -1605,9 +1629,6 @@ msgstr "Lad være som det er"
 
 msgid "LTE only (5G off)"
 msgstr "Kun LTE (5G fra)"
-
-msgid "Off"
-msgstr "Fra"
 
 msgid "On"
 msgstr "Til"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radioen startede ikke"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Integration af mobildata findes ikke på denne platform"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Indstillingen for dataroaming kunne ikke gemmes"
 
 msgid "Expected on or off"
 msgstr "Forventede on eller off"

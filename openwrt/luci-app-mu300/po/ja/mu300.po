@@ -817,6 +817,9 @@ msgstr "セッション時間"
 msgid "Registration"
 msgstr "登録"
 
+msgid "Data roaming"
+msgstr "データローミング"
+
 msgid "Bandwidth"
 msgstr "帯域幅"
 
@@ -952,6 +955,18 @@ msgstr "セルラー無線をオンにする"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN の電源投入シーケンスを実行します (最大約 1 分)。"
 
+msgid "Turn data roaming off"
+msgstr "データローミングをオフにする"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "SIM がローミングネットワークに登録されている間、モバイルデータはオフのままです。SMS、通話、登録には影響しません。一部の SIM は国内でもローミングと報告します (MVNO、国内ローミング)。その場合、そこでもデータが止まります。"
+
+msgid "Allow data roaming"
+msgstr "データローミングを許可"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "ローミングネットワークでもモバイルデータが使われ、追加料金がかかることがあります。一部の SIM は国内でもローミングと報告し (MVNO、国内ローミング)、データを使うにはこれが必要です。"
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "セルラー接続が 1～2 分間停止する場合があります。"
 
@@ -1080,6 +1095,15 @@ msgstr "緊急通報のみ"
 
 msgid "Status %s"
 msgstr "ステータス %s"
+
+msgid "Off: data held back while roaming"
+msgstr "オフ: ローミング中はデータを停止中"
+
+msgid "Allowed"
+msgstr "許可"
+
+msgid "Off"
+msgstr "オフ"
 
 msgid "LTE anchor"
 msgstr "LTE アンカー"
@@ -1605,9 +1629,6 @@ msgstr "そのまま"
 
 msgid "LTE only (5G off)"
 msgstr "LTE のみ（5G オフ）"
-
-msgid "Off"
-msgstr "オフ"
 
 msgid "On"
 msgstr "オン"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "無線を起動できませんでした"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "このプラットフォームではモバイルデータ連携が提供されていません"
+
+msgid "The data roaming setting could not be saved"
+msgstr "データローミングの設定を保存できませんでした"
 
 msgid "Expected on or off"
 msgstr "on または off を指定してください"

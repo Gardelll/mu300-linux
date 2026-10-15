@@ -139,6 +139,7 @@ what replaced it. The table below gives each section's state.
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests only; nothing measured on a device: the checklist is in the section) |
 
 ## Hardware and firmware facts
 
@@ -6527,3 +6528,109 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+## Data roaming
+
+### 120. Data roaming: a switch of our own in the dial and its watchdog, the network's word for roaming, and a test hook
+
+**What was missing.** Mobile data dialled whatever network the card registered on. Data roaming was always on and no
+front end could turn it off; the panels showed "Registered (roaming)" and nothing else. Android has "allow data
+roaming" per SIM; this is that.
+
+**How "roaming" is known.** From the card's registration, which the modem reports on the card's own AT channels (§74:
+the dial's channel, nr2 for slot 0 and nr5 for the U30 Air's SIM2 or the F50's internal card, answers for its card
+alone, so no `AT+SPACTCARD=<n>;` prefix is needed and none is sent; the panel's terminal refuses that form anyway).
+`<stat>` of `AT+CEREG?` (query form `+CEREG: <n>,<stat>[,...]`), and of `AT+C5GREG?` only when LTE's says neither
+home nor roaming (5G SA). 3GPP TS 27.007: 1 registered home, 5 registered roaming, 9 and 10 the same two for "CSFB not
+preferred" (EPS); 6/7 (SMS only) and 8 (emergency only) are not counted as either. The dashboard's table shows 10 as
+"Registered" (it is roaming): left as it is, the data decision does not use that table. No `AT+CREG?`/`AT+CGREG?`: the
+modem's data registration on LTE and NR is CEREG/C5GREG, and those are the ones measured answering on this modem (the
+dial waits on CEREG since the beginning, the panel's collector reads both every 1.5 s).
+
+**"Roaming" at home.** Stat 5 is the network's word. An MVNO on a host operator's network, or national roaming,
+reports 5 in its own country. So the setting is the user's answer, never a guess of ours, and every front end says
+"some SIMs report roaming at home (an MVNO, national roaming)".
+
+**A switch of the modem's own: none known.** Looked for and not found: the repository has no RIL binaries
+(`android-vendor/` holds the extraction lists; the extracted vendor subsets on the build host carry the GPU and
+modem-control files, no `libril*`), no Unisoc AT reference names one, the AT commands seen from this modem (`AT+SP*`
+in every log and script here) have none, and a web search for `SPDATAROAM`/`SPROAM`/Unisoc RIL data roaming found
+nothing. On Android the decision is the framework's (its data network controller checks the service state's data
+roaming flag against the user's setting before it asks the RIL for a data call); the RIL only gets the call, with the
+APN's roaming protocol. So nothing new is sent to the modem: the switch is the policy of `mobile-data`'s dial and its
+watchdog.
+
+**The default: allowed.** Every release so far used data while roaming; an update must not take anybody's data away
+(think of an MVNO SIM at home). Turning it off is one switch.
+
+**Where it is stored.** OpenWrt: `network.wan.roaming` for slot 0 (the external card / SIM1), `network.wan.
+roaming_internal` for slot 1 (the F50's internal card, the U30 Air's SIM2): per card, as the APN is (`apn`,
+`apn_internal`), since the second card is often the travel SIM that is meant to roam. Ubuntu: `MU300_DATA_ROAMING` in
+`/etc/mu300/mobile-data.conf`, one for both cards, as Ubuntu has one APN. Values 1/on/yes/true and 0/off/no/false;
+unset or anything else is allowed (`mobile-data roaming` says when a stored value is neither). The file is read as
+KEY=VALUE lines, never executed. The value is read again at every decision: a front end writes it, nothing is
+restarted, and the dial or the watchdog acts on it within half a minute (the watchdog's interval). The one writer is
+`mobile-data roaming on|off [--slot 0|1]`: on Ubuntu the file is rewritten with its other lines kept, root's alone
+(it may hold the APN password), a new file renamed over the old one; on OpenWrt `uci set` and `uci commit network`
+(no reload: netifd is not restarted by it).
+
+**Enforcement.**
+
+* The dial (`up`), after the registration and before anything of a data context (the IPA delegate, `AT+CGDCONT`,
+  `AT+CGACT`): with data roaming off it asks the registration once. Roaming: no context; `$ROAM_HELD`
+  (`/run/mu300/data-roaming-held`, its line the slot) is written, one line goes to `radio.log`, syslog and stderr -
+  only when the hold begins - and the "down on purpose" marker (`/run/mu300-mobile-data-down`) is set, so the data
+  cap's count of "data is up" stays right. Under netifd it exits 4: `mu300cell` reports `DATA_ROAMING` and netifd
+  tries again after 60 s (`MU300_ROAM_RETRY`), which is how data comes back at home; a held try costs the radio-on
+  check, `AT+CAVIMS=1` and two registration reads, and activates nothing. On Ubuntu it returns 0 (the service is not
+  "failed" and systemd does not restart it every 30 s), and the watchdog brings data back. Home, or allowed: the hold
+  ends (one line) and the dial goes on. The registration unreadable with data roaming off: a failed dial ("could not
+  tell"), retried like any other, and no hold.
+* The watchdog, while held: no reconnect and no "mobile data lost". OpenWrt: nothing is dialled (netifd's retries
+  own it); a wan somebody took down (netifd's `autostart` false: `ifdown`, the panel's button, the data cap) ends the
+  hold. Ubuntu: one `AT+CEREG?` a round; home or allowed ends the hold and dials once. `mobile-data down` (the service
+  stopped by hand, from Cockpit, by the data cap) ends the hold first, so data that somebody turned off is not
+  brought back. While mu300-power holds the modem down (suspend) the round does nothing.
+* The watchdog, a live connection: with data roaming off it asks the registration once a round (one more AT
+  command; with the default nothing more is asked than before). Roaming: the hold begins and the data goes down once
+  - OpenWrt `ifup wan` (netifd's own teardown, then its dial holds), Ubuntu the `down` path (`AT+CGACT=0`, routes,
+  NAT). The next rounds see the hold: no loop.
+* The U30 Air's first-data check for SIM2 (§74, `sim_data_wait`) gives no verdict while data is held for roaming
+  (registered, no data on purpose), so a roaming SIM2 is not sent back to SIM1 with a restart.
+* Not touched: the radio, the registration, `AT+CAVIMS=1` (IMS, sent before the gate), SMS, USSD, calls, emergency.
+
+**Status.** `mobile-data roaming`: the setting, the network (home, roaming, unknown; asks the modem) and "mobile data
+held back: roaming, and data roaming is off". `mobile-data roaming --json`: `{"allowed","held","slot","per_sim",
+"slots":[slot 0, slot 1]}`, files only. `mobile-data status` adds "roaming: yes, data not allowed while roaming".
+
+**Front ends.** OpenWrt panel: the dashboard's Data roaming row (Allowed / Off / "Off: data held back while
+roaming"), a Data roaming button in Quick controls (the card in use; `mu300dash act roaming on|off`, nothing else
+accepted, which runs `mobile-data roaming`), and LuCI's wan page (one flag per card next to its APN). Ubuntu: Cockpit's
+MU300 page (Mobile data card: the row and a button, `mobile-data roaming on|off` through Cockpit's administrative
+access, argument by argument). Both: `mu300-toolkit` -> Network -> Mobile data: data roaming. The web device manager
+(PR #244) reads and writes the same command.
+
+**Test hook (device tests only).** A regular file `/run/mu300/roaming-test`, owned by the user `mobile-data` runs
+as (root), not a link, whose line is `home-as-roaming`, makes stat 1 and 9 count as roaming. `/run` is RAM, so it is
+gone at the next boot. No front end writes it and nothing a front end sends reaches the name.
+
+**Device checklist** (not run yet; report on the issue or the PR):
+
+1. A home SIM, nothing set: `sudo mobile-data roaming` says "data roaming allowed", "network home"; data as before.
+2. `sudo mobile-data roaming off`: with the home SIM the data stays up (the watchdog asks CEREG and finds 1); the
+   dashboard says Off.
+3. Force the roaming branch: `echo home-as-roaming | sudo tee /run/mu300/roaming-test`. Within 30 s: one line
+   "registered on a roaming network and data roaming is off" in `/run/mu300/radio.log` and the log, data down
+   (OpenWrt: the wan shows `DATA_ROAMING` and retries each minute; Ubuntu: `systemctl is-active mu300-mobile-data`
+   still active), the dashboard "Off: data held back while roaming", SMS still send and arrive. No second line in
+   five minutes.
+4. `sudo mobile-data roaming on` (or remove the hook file): data back within a minute, one line "mobile data comes
+   back". Then `off` again with the hook and `sudo rm /run/mu300/roaming-test`: data back at "home" the same way.
+5. While held: `ifdown wan` / `systemctl stop mu300-mobile-data`, then remove the hook: data stays down (somebody
+   turned it off). U30 Air: the same on SIM2, with `roaming_internal`.
+6. Abroad, or with a SIM that really roams: the network row says roaming; off holds, on dials.
+
+**Not verified.** Everything above runs only in the unit tests (a stub modem answering stat 1 and 5, both
+transitions, the watchdog's rounds, the dual-SIM channel, the setting's values and its writer, the panel's and
+Cockpit's backends). Whether this modem reports 5 for national roaming or an MVNO at home, and the time from a
+registration change to the watchdog's round (up to 30 s) on hardware.
