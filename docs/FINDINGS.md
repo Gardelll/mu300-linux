@@ -139,7 +139,7 @@ what replaced it. The table below gives each section's state.
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
-| 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; his measurements on an F50 with 7.2.8; here built for 6.18.56 and 7.2.10 and source tests only) |
+| 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
 
 ## Hardware and firmware facts
 
@@ -6586,3 +6586,31 @@ for each point. Nothing run on a device (both test devices were in use); his mea
     # a long download and upload on the phone (iperf3 -R and normal), 10 min: no 'tx return err', no flush,
     # no firmware assert, throughput not lower than before; IPv4 and IPv6 browsing, AirPlay/Chromecast between
     # two phones still found (mDNS between clients, §92); a second client joins and gets DHCPv4 and an IPv6 address
+
+**Measured on both boards** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day
+plus the four branches): the F50 (Ubuntu 24.04, 7.2.10) and the U30 Air (openwrt-luci, 6.18.56), a MacBook on the
+5 GHz hotspot (802.11ac, 80 MHz) as the one Wi-Fi client and on the USB side as the sender of the replay; against
+the v2026.10.27 kernels on the same devices.
+
+* **kanoqwq's replay:** six bursts of eight 12-byte mDNS queries to `ff02::fb`, one burst a second, sent by the
+  Mac on its USB link to the device, which bridges them to the Wi-Fi client:
+
+  | | release kernel | test kernel |
+  |---|---|---|
+  | F50: `CMD_TX_DATA ... SPRD_CMD_STATUS_ERROR` | 8 | 0 |
+  | F50: wlan0 `tx_packets` during the replay | +13 | +50 |
+  | U30 Air: `CMD_TX_DATA ... SPRD_CMD_STATUS_ERROR` | 12 (two per burst of eight, as he saw) | 0 |
+  | U30 Air: wlan0 `tx_packets` during the replay | +3 | +59 |
+
+  (On the release kernel the command path does not count in `tx_packets`; on this one the 48 frames are data.)
+* `ping ff02::1` on the bridge: the Mac's Wi-Fi address answered (4 of 5; its USB address the same, the first
+  one lost to neighbour discovery) on both boards.
+* **A full EDMA ring:** under 300 MiB transfers to the Mac, `edma_pending_q_buffer(10) full` with `push link fail:
+  -11` (rate limited) 140-170 times on the F50 and 80 on the U30 Air; `tx return err` 0 (the U30 Air's release
+  kernel had logged 8738 of them in its two hours before the test), no flush of queued frames (the only `flush`
+  lines are a client leaving), no firmware assert, no oops. TX to the Mac 300-590 Mbit/s on the F50 and 210-500 on
+  the U30 Air, the same spread as on the release kernels; 6 GiB in one stream at 594 Mbit/s on the F50.
+* **The client leaving during a transfer:** no oops, no use-after-free report (the kernel has no KASAN), the
+  hotspot took the Mac back (§92 has the log lines).
+* Not covered: two Wi-Fi clients (mDNS between them, a second client's DHCPv6), an SDIO board, and the skb
+  short-headroom path, which no log line shows; nothing here proves the use-after-free case was reached.
