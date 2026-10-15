@@ -12,6 +12,10 @@ network), not both at the same time. The hotspot is the default.
 * By default it uses the **name and password copied from Android** (the installer asks). Without that, a random
   password is generated and shown at login.
 * Wi-Fi clients and USB clients share one LAN, so they can see each other and the device.
+* The hotspot is **WPA2**. WPA3 is not in the images: on this chip the firmware does the WPA3 exchange itself, and the
+  only way to use it is an experimental build of your own for the U30 Air on OpenWrt, with an open security question
+  ([U30AIR-SAE.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md)). Choosing WPA3 in LuCI
+  on a normal image gives a hotspot that nothing can join.
 
 ### Change the name, password or band
 

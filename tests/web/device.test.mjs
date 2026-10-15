@@ -257,6 +257,9 @@ test("Linux: mu300-device --json (docs/ADB-INTERFACE.md, format 1) says who it i
   const h = await new LinuxDevice(hostile.conn).info();
   assert.deepEqual([h.device, h.os, h.version, h.kernel, h.isRoot, h.adb], ["", "", "", "", false, ""]);
   assert.equal(normalizeLinuxInfo({ device: "x; rm -rf /", version: "a\u0000b", systems: "ubuntu;reboot" }, "json").device, "");
+  // the three devices (the ZTE V50: FINDINGS 95), and nothing else
+  for (const d of ["f50", "u30air", "v50"]) assert.equal(normalizeLinuxInfo({ device: d }, "json").device, d);
+  assert.equal(normalizeLinuxInfo({ device: "v500" }, "json").device, "");
   assert.deepEqual(normalizeLinuxInfo({ version: "v1 <b>" }, "json").version, "");
 });
 

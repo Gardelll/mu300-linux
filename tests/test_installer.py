@@ -13,6 +13,7 @@ from helpers import TOP, ShellTest
 
 F50 = '324950664950           device usb:1 product:MU300 model:F50 device:MU300 transport_id:1'
 U30 = '323960377386           device usb:2 product:U30Air model:U30_Air device:U30Air transport_id:2'
+V50 = '9a8b7c6d5e4f           device usb:6 product:MU3351 model:V50 device:MU3351 transport_id:6'
 TABLET = 'd16d93c5               device usb:3 product:nabu_global model:21051182G device:nabu transport_id:3'
 OFFLINE = '192.168.31.1:55555     offline product:MU5358 model:MU5358 device:MU5358 transport_id:4'
 # a device running MU300 Linux: adb is on there by default, and its USB serial number says which system answers
@@ -49,6 +50,15 @@ class SelectDevice(ShellTest):
             out = self.run_select(shell, [F50, U30])       # two targets: ask, first is the default
             self.assertIn('ASKED[1]', out)
 
+    def test_v50_is_a_target_too(self):
+        # the ZTE V50 (FINDINGS 95) is picked like the other two; install.sh then checks it is exactly one
+        for shell in self.each_shell():
+            out = self.run_select(shell, [V50])
+            self.assertNotIn('ASKED', out)
+            self.assertIn('serial=9a8b7c6d5e4f', out)
+            out = self.run_select(shell, [TABLET, V50])
+            self.assertIn('ASKED[2]', out)
+
     def test_only_a_tablet_asks(self):
         # the F50 was in Linux and a tablet was the only adb device: it must not be taken silently
         for shell in self.each_shell():
@@ -80,7 +90,7 @@ class LinuxOverAdb(ShellTest):
 echo "adb $*" >> "$STUBLOG/adb.log"
 case "$1 $2" in
     "devices -l") cat "$STUBLOG/adb.out"; exit 0 ;;
-    "get-state ") n=$(awk 'NR > 1 && $2 == "device"' "$STUBLOG/adb.out" | grep -c .)
+    "get-state ") n=$(awk -v s="${ANDROID_SERIAL:-}" 'NR > 1 && $2 == "device" && (s == "" || $1 == s)' "$STUBLOG/adb.out" | grep -c .)
         [ "$n" = 1 ] && echo device || echo "error: more than one or no device" >&2; exit 0 ;;
 esac
 [ "$1" = -s ] && { serial=$2; shift 2; } || serial=${ANDROID_SERIAL:-}
@@ -102,8 +112,9 @@ exit 0''')
 
     def run_sh(self, shell, call, answer='', serial=None):
         (self.tmp / 'adb.log').unlink(missing_ok=True)
+        # sleep as a function: busybox ash may run its own sleep applet before the stub on PATH (CI: 60 waits of 5 s)
         code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; '
-                'say() { echo "SAY $*"; }; die() { echo "DIE $*"; exit 1; }; '
+                'say() { echo "SAY $*"; }; sleep() { :; }; die() { echo "DIE $*"; exit 1; }; '
                 'ask() { printf "ASKED[%s] " "$3"; read -r _a; [ -n "$_a" ] || _a=$3; eval "$1=\\$_a"; }; '
                 f'. "$TOP/tools/linux-mode.sh"; {"ANDROID_SERIAL=" + serial + "; export ANDROID_SERIAL" if serial else "unset ANDROID_SERIAL"}; '
                 f'{call}; echo "rc=$? serial=${{ANDROID_SERIAL:-none}}"')
@@ -177,6 +188,55 @@ exit 0''')
             out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
             self.assertIn('rc=0 serial=324950664950', out)
             self.assertNotIn("su -c", log)
+
+    def test_two_boards_in_linux_the_named_one_is_rebooted_never_the_other(self):
+        # measured on the Mac with F50-B and a U30 Air both in Linux: linux_adb picked none of the two, and the SSH
+        # fallback went to 192.168.77.1/78.1 - where the U30 Air, not the F50 named by ANDROID_SERIAL, answered
+        other = LINUX.replace('324950664950', '323960377386')
+        for shell in self.each_shell():
+            self.devices('adb.out', [other, LINUX])
+            self.devices('adb.after', [other, F50])
+            (self.tmp / 'ssh-up').write_text('')
+            out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
+            self.assertIn(f'asking it over adb ({LINUX_SERIAL})', out)
+            self.assertIn('rc=0 serial=324950664950', out)
+            self.assertNotIn('ssh', log)
+            self.assertNotIn('323960377386', log)
+            # adb cannot reboot it: no SSH to an address that may be the other board's
+            self.devices('adb.out', [other, LINUX])
+            (self.tmp / 'reboot-fails').write_text('')
+            out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
+            self.assertIn('DIE more than one device runs MU300 Linux', out)
+            self.assertNotIn('ssh', log)
+            # the named one is not on adb at all, the other one is: no SSH to an address that may be the other's
+            self.devices('adb.out', [other])
+            out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
+            self.assertIn('DIE more than one device runs MU300 Linux', out)
+            self.assertNotIn('ssh', log)
+            self.assertNotIn('reboot', log)
+            self.devices('adb.out', [other, LINUX])
+            # none named: neither is picked over adb, and SSH is not guessed either
+            (self.tmp / 'reboot-fails').unlink()
+            out, log = self.run_sh(shell, 'require_android')
+            self.assertIn('DIE more than one device runs MU300 Linux', out)
+            self.assertNotIn('reboot', log)
+            self.assertNotIn('ssh', log)
+            (self.tmp / 'ssh-up').unlink()
+
+    def test_waiting_for_android_never_takes_the_phone_next_to_it(self):
+        # measured: while the F50 rebooted, a Pixel was the only adb device; "adb get-state" said "device" and the
+        # check went on with the Pixel. Now only the board that was rebooted (its serial is in MU300LINUX-<serial>-...)
+        for shell in self.each_shell():
+            self.devices('adb.out', [LINUX, TABLET])
+            self.devices('adb.after', [TABLET])          # the F50 never comes back
+            out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
+            self.assertNotIn('Android is up', out)
+            self.assertIn('DIE the device did not come back as Android', out)
+            self.assertNotIn('d16d93c5 shell', log)
+            self.devices('adb.out', [LINUX, TABLET])
+            self.devices('adb.after', [TABLET, F50])
+            out, _ = self.run_sh(shell, 'require_android')
+            self.assertIn('rc=0 serial=324950664950', out)
 
     def test_the_answer_no_touches_nothing(self):
         for shell in self.each_shell():
@@ -770,6 +830,47 @@ def bc_block(suffix, a, b):
     return bytes(x)
 
 
+class Model(ShellTest):
+    """install.sh's model block: the F50 and the U30 Air as before, the ZTE V50 (FINDINGS 95) exactly V50 / MU3351 on
+    ums9620 and said to be experimental, any other V50 refused without a question, an unknown model asked about."""
+    SRC = (TOP / 'install.sh').read_text()
+
+    def decide(self, shell, model, platform='ums9620', mode='prebuilt', answer='no'):
+        m = re.search(r'# --- model begin\n(.*?)# --- model end', self.SRC, re.S)
+        self.assertIsNotNone(m, 'install.sh has no model block')
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; MODE={mode}; '
+                'die() { echo "DIE $*"; exit 1; }; '
+                'ask() { printf "ASKED "; read -r _a; eval "$1=\\$_a"; }; '
+                'info() { :; }; '
+                f'su_do() {{ [ "$1" = "getprop ro.board.platform" ] && echo "{platform}"; }}; '
+                f'model="{model}"\n' + m.group(1) + 'echo "DEVICE=$DEVICE"')
+        return self.sh(shell, code, stdin=answer + '\n').stdout
+
+    def test_three_devices(self):
+        for shell in self.each_shell():
+            for model, want in (('F50 / MU300', 'f50'), ('ZTE MU300 / mu300', 'f50'), ('U30_Air / U30Air', 'u30air'),
+                                ('V50 / MU3351', 'v50')):
+                out = self.decide(shell, model)
+                self.assertIn(f'DEVICE={want}', out, model)
+                self.assertNotIn('ASKED', out)
+                self.assertEqual('EXPERIMENTAL' in out, want == 'v50', model)
+
+    def test_no_other_v50(self):
+        for shell in self.each_shell():
+            for model, platform in (('V50 / MU3351', 'mt6789'), ('V50 / MU3351', ''), ('V50 / P671F60', 'ums9620'),
+                                    ('ZTE MU3351 / MU3351', 'ums9620')):
+                out = self.decide(shell, model, platform)
+                self.assertIn('DIE This looks like a ZTE V50', out, (model, platform))
+                self.assertNotIn('ASKED', out)          # never offered as an F50
+            # a V50 runs a mainline kernel: no local build of 5.4 for it
+            self.assertIn('DIE The ZTE V50 runs a mainline kernel only', self.decide(shell, 'V50 / MU3351', mode='build'))
+            # a Blade V50 phone is no V50: an unknown model, asked about as ever
+            out = self.decide(shell, 'ZTE Blade V50 Design / P671F60')
+            self.assertIn('ASKED', out)
+            self.assertNotIn('DEVICE=', out)
+            self.assertIn('DEVICE=f50', self.decide(shell, 'Pixel 7 / panther', answer='yes'))
+
+
 class InstallSlot(ShellTest):
     """install.sh's slot block, cut out between its markers (issue #86): Linux goes on the slot Android is not on,
     boot_<that slot> is written with the image built for it and misc gets that slot's trial block - and the boot
@@ -917,7 +1018,10 @@ class InstallSlot(ShellTest):
         self.assertIn('--out "$WORK/boot-linux-slot$LINUX_SLOT.img"', build)
         self.assertIn('dev_pull /dev/block/by-name/boot_$ANDROID_SLOT "$WORK/dumps/boot_$ANDROID_SLOT.img"', src)
         self.assertIn('write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"', src)
-        self.assertLess(src.index('\nslot_setup\n'), src.index('dev_pull /dev/block/by-name/boot_'))
+        # (the pull is a function now, shared with --backup: both of its calls come after the slot is known)
+        self.assertLess(src.index('\nslot_setup\n'), src.index('\npull_boot_and_misc\n'))
+        self.assertLess(src.index('\nslot_setup\n'), src.index('[ $BACKUP_ONLY = 0 ] || backup_only'))
+        self.assertEqual(src.count('pull_boot_and_misc\n'), 2)
         self.assertLess(src.index('slot_release_ok "$RELEASE"'), src.index("say \"$(t 'Downloading release {1}'"))
         # no slot is named by hand outside the slot block any more
         rest = src.replace(re.search(r'# --- slot begin\n.*?# --- slot end', src, re.S).group(0), '')

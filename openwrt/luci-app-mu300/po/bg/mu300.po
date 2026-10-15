@@ -37,6 +37,9 @@ msgstr "Използване на данни"
 msgid "Device management"
 msgstr "Управление на устройството"
 
+msgid "Update"
+msgstr "Обнови"
+
 msgid "Languages"
 msgstr "Езици"
 
@@ -1054,6 +1057,9 @@ msgstr "Котва B%s"
 msgid "No serving cell"
 msgstr "Няма обслужваща клетка"
 
+msgid "Version %s is out: update"
+msgstr "Излезе версия %s: обновете"
+
 msgid "Not registered"
 msgstr "Не е регистрирано"
 
@@ -2045,6 +2051,396 @@ msgstr "Изключи"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "С 64 всеки пакет излиза като собствения трафик на устройството"
 
+msgid "Check for updates"
+msgstr "Провери за обновления"
+
+msgid "Checking the file"
+msgstr "Проверка на файла"
+
+msgid "Update from a file"
+msgstr "Обновяване от файл"
+
+msgid "Back to the previous version"
+msgstr "Връщане към предишната версия"
+
+msgid "Back to the previous boot image"
+msgstr "Връщане към предишния стартов образ"
+
+msgid "Remove the previous version"
+msgstr "Премахване на предишната версия"
+
+msgid "Kernel change"
+msgstr "Смяна на ядрото"
+
+msgid "Starting…"
+msgstr "Стартиране…"
+
+msgid "Downloading"
+msgstr "Изтегляне"
+
+msgid "All files are here and verified"
+msgstr "Всички файлове са тук и са проверени"
+
+msgid "Unpacking the new system"
+msgstr "Разопаковане на новата система"
+
+msgid "Carrying over your settings"
+msgstr "Пренасяне на вашите настройки"
+
+msgid "Writing down the packages you installed"
+msgstr "Записване на пакетите, които сте инсталирали"
+
+msgid "Switching to the new system"
+msgstr "Превключване към новата система"
+
+msgid "Kernel and boot image"
+msgstr "Ядро и стартов образ"
+
+msgid "Restart the device?"
+msgstr "Да се рестартира ли устройството?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "Устройството се рестартира сега. Стартирането по подразбиране е Android, затова се стартира Android: превключете оттам към Linux, за да стартирате обновената система."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "Устройството се рестартира сега и няма да е достъпно около минута. Ако новата система не стартира, устройството само се връща към Android след неуспешните опити."
+
+msgid "Restart"
+msgstr "Рестартирай"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "Рестартиране… отворете тази страница отново след около минута."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "Работи от %s. Продължава и когато тази страница е затворена; не изключвайте устройството."
+
+msgid "Done. Restart the device to start it."
+msgstr "Готово. Рестартирайте устройството, за да влезе в сила."
+
+msgid "Done. Nothing needs a restart."
+msgstr "Готово. Не е нужно рестартиране."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "Не завърши, а част от работата е извършена: прочетете дневника, преди да рестартирате."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "Не завърши. Нищо не е променено; причината е в дневника."
+
+msgid "Log"
+msgstr "Дневник"
+
+msgid "Restart now"
+msgstr "Рестартирай сега"
+
+msgid "Later"
+msgstr "По-късно"
+
+msgid "Close"
+msgstr "Затвори"
+
+msgid "Updating is not available on this system"
+msgstr "Обновяването не е налично на тази система"
+
+msgid "Another update is running on the device"
+msgstr "На устройството работи друго обновяване"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "Стартирано е извън тази страница (терминал, toolkit). Тук не може да се стартира нищо, докато не приключи."
+
+msgid "Restart needed"
+msgstr "Нужно е рестартиране"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "Тази система е обновена, но все още работи старата версия. Новата стартира при следващото рестартиране."
+
+msgid "Installed"
+msgstr "Инсталирано"
+
+msgid "This system"
+msgstr "Тази система"
+
+msgid "Also on this device"
+msgstr "Също на това устройство"
+
+msgid "Kernel"
+msgstr "Ядро"
+
+msgid "choice %s"
+msgstr "избор %s"
+
+msgid "Boot image"
+msgstr "Стартов образ"
+
+msgid "from the installer"
+msgstr "от инсталатора"
+
+msgid "Default boot"
+msgstr "Стартиране по подразбиране"
+
+msgid "Free space"
+msgstr "Свободно място"
+
+msgid "Release signatures"
+msgstr "Подписи на изданията"
+
+msgid "checked with the project's key"
+msgstr "проверяват се с ключа на проекта"
+
+msgid "this system has no release key"
+msgstr "тази система няма ключ за издания"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "Стартирането по подразбиране е Android: рестартирането води към Android, а Linux се стартира оттам."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux е заключен като стартиране по подразбиране: неуспешно стартиране не изпраща устройството само към Android, освен при първите стартирания на нов стартов образ."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Ако Linux не успее да стартира %d пъти поред, устройството само стартира Android."
+
+msgid "Report of the last update"
+msgstr "Отчет за последното обновяване"
+
+msgid "Online update"
+msgstr "Онлайн обновяване"
+
+msgid "Asking GitHub…"
+msgstr "Запитване към GitHub…"
+
+msgid "Checked %s ago"
+msgstr "Проверено преди %s"
+
+msgid "Not checked yet"
+msgstr "Още не е проверено"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "След обновяването да се инсталират отново пакетите, които съм добавил (устройството трябва да е онлайн при първото стартиране)"
+
+msgid "Pre-release"
+msgstr "Предварително издание"
+
+msgid "Newest release"
+msgstr "Най-ново издание"
+
+msgid "Release notes"
+msgstr "Бележки към изданието"
+
+msgid "Download"
+msgstr "Изтегляне"
+
+msgid "Free space needed"
+msgstr "Нужно свободно място"
+
+msgid "not enough: remove the previous version first"
+msgstr "недостатъчно: първо премахнете предишната версия"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "Предварителното издание е издание, което още се изпробва: може да има неизправности, каквито едно редовно издание няма. Предишната версия се запазва и в този случай."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "Тази система е по-нова от най-новото издание (тестово издание)."
+
+msgid "Up to date."
+msgstr "Актуална е."
+
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Тази версия не е подписана, а тази система проверява подписите: тя не се инсталира оттук. Обновете от нейния файл по-долу, който иска потвърждение."
+
+msgid "Update to %s"
+msgstr "Обнови до %s"
+
+msgid "Choose at least one system"
+msgstr "Изберете поне една система"
+
+msgid "Update to %s?"
+msgstr "Обновяване до %s?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Устройството изтегля %s, поставя новата система до работещата и превключва към нея при следващото рестартиране. Вашите настройки се пренасят, а предишната версия се запазва. Отнема няколко минути; не изключвайте устройството."
+
+msgid "Also offer the pre-release %s"
+msgstr "Предлагай и предварителното издание %s"
+
+msgid "Systems to update:"
+msgstr "Системи за обновяване:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "Няма връзка с GitHub: устройството няма интернет връзка или GitHub не отговори. Без интернет обновете от файл по-долу."
+
+msgid "release"
+msgstr "издание"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "За устройство без интернет: изтеглете на друг компютър Magisk zip файла на издание за тази система и това ядро от страницата на изданието в GitHub и го качете тук. За това устройство това е:"
+
+msgid "Uploaded file"
+msgstr "Качен файл"
+
+msgid "Checking the file…"
+msgstr "Проверка на файла…"
+
+msgid "It says it is"
+msgstr "Според файла това е"
+
+msgid "kernel %s"
+msgstr "ядро %s"
+
+msgid "Signature"
+msgstr "Подпис"
+
+msgid "signed with the project's release key"
+msgstr "подписан с ключа за издания на проекта"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "ГРЕШЕН: не съответства на ключа за издания на проекта"
+
+msgid "not signed"
+msgstr "неподписан"
+
+msgid "cannot be checked on this system"
+msgstr "не може да бъде проверен на тази система"
+
+msgid "Its system is not installed on this device."
+msgstr "Системата му не е инсталирана на това устройство."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "Това е другото издание на Ubuntu, а не инсталираното."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "Съдържа различно ядро от това, което устройството използва. Вземете zip файла за ядро %s или първо сменете ядрото."
+
+msgid "Its kernel does not run on this model."
+msgstr "Ядрото му не работи на този модел."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "Файлът е повреден: съдържанието му не съвпада с контролните суми."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "Подписът му е грешен. Този файл не идва от проекта в този си вид; той никога не се инсталира."
+
+msgid "This file cannot be used here."
+msgstr "Този файл не може да се използва тук."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "Сравнете SHA-256 с този в SHA256SUMS-magisk на страницата на изданието: това е единственото доказателство за произхода на неподписан файл."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "Това издание вече е инсталирано; обновяването само би опреснило стартовия образ."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "Знам, че този файл не е подписан: нищо не доказва, че идва от проекта. Сам сравних неговия SHA-256 и искам да бъде инсталиран."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "Знам, че това е %s, по-старо от инсталираното %s, и искам да се върна към него."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "Това не е файл с издание на този проект: очаква се Magisk zip файл на издание."
+
+msgid "Update from this file"
+msgstr "Обнови от този файл"
+
+msgid "Tick the confirmations above first"
+msgstr "Първо отметнете потвържденията по-горе"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Устройството поставя системата от този файл до работещата и превключва към нея при следващото рестартиране. Вашите настройки се пренасят, а предишната версия се запазва. Отнема няколко минути; не изключвайте устройството."
+
+msgid "Check the file"
+msgstr "Провери файла"
+
+msgid "Remove the file"
+msgstr "Премахни файла"
+
+msgid "Previous version"
+msgstr "Предишна версия"
+
+msgid "No previous version is kept on this device."
+msgstr "На това устройство няма запазена предишна версия."
+
+msgid "replaced %s"
+msgstr "заменена на %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "Искам предишната система обратно; каквото съм променил след обновяването, остава във версията, която напускам."
+
+msgid "Back to the previous version?"
+msgstr "Връщане към предишната версия?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "Предишната система (%s) става тази, която стартира при следващото рестартиране. Версията, която напускате, не се запазва; настройките, променени след обновяването, не се пренасят обратно."
+
+msgid "Go back"
+msgstr "Върни се"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "Предишната версия е тази, която работи сега: първо рестартирайте."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "Искам предишното ядро и стартов образ обратно."
+
+msgid "Back to the previous boot image?"
+msgstr "Връщане към предишния стартов образ?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "Предишният стартов образ (%s) се записва в слота на Linux и стартира при следващото рестартиране. Ако не стартира, устройството само се връща към Android."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "Не ми е нужно да се връщам: изтрий предишната система, за да се освободи мястото ѝ."
+
+msgid "Remove the previous version?"
+msgstr "Премахване на предишната версия?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "Запазеното копие на предишната система се изтрива завинаги. След това от тази страница няма връщане към нея."
+
+msgid "the vendor kernel"
+msgstr "ядрото на производителя"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "не с Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "Смени ядрото"
+
+msgid "This kernel is the one in use"
+msgstr "Това ядро се използва в момента"
+
+msgid "Change the kernel to %s?"
+msgstr "Смяна на ядрото на %s?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "Устройството изтегля това ядро от най-новото издание и записва нов стартов образ; той стартира при следващото рестартиране. Предишният стартов образ се запазва, а ако новият не стартира, устройството само се връща към Android. Устройството трябва да е онлайн."
+
+msgid "Start Android at the next restart"
+msgstr "Стартирай Android при следващото рестартиране"
+
+msgid "Start Android at the next restart?"
+msgstr "Да се стартира ли Android при следващото рестартиране?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "Следващото рестартиране и тези след него стартират Android вместо Linux. Linux се стартира отново от Android (бутонът „Действие“ на модула на Magisk или mu300-linux)."
+
+msgid "Start Android next"
+msgstr "Следващия път стартирай Android"
+
+msgid "What an update keeps"
+msgstr "Какво запазва едно обновяване"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "Обновяването поставя системата от новото издание и пренася това, което е ваше: настройките, акаунтите и паролите им, ключовете на устройството и домашните директории. Пакетите, които сами сте инсталирали, се записват и се инсталират отново при първото стартиране, щом устройството е онлайн. Предишната версия остава на устройството, докато не я премахнете, за да можете да се върнете."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "Страницата за обновяване в уикито изброява точно какво се запазва."
+
+msgid "Choose a file first"
+msgstr "Първо изберете файл"
+
+msgid "Uploading: %s of %s"
+msgstr "Качване: %s от %s"
+
 msgid "running"
 msgstr "работи"
 
@@ -2078,9 +2474,6 @@ msgstr "Няма профил, който да работи с него."
 msgid "Removed"
 msgstr "Премахнат"
 
-msgid "Check for updates"
-msgstr "Провери за обновления"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "Всеки двигател е отделно допълнение: инсталирайте само тези, от които се нуждаят профилите ви. Xray изпълнява връзки vless, vmess, trojan и ss (с hev-socks5-tunnel), sing-box същите връзки и собствен JSON, mihomo абонаменти за Clash, dae hysteria2, tuic и останалите при по-нови ядра. WireGuard и OpenVPN са пакети на системата."
 
@@ -2089,9 +2482,6 @@ msgstr "Изтеглянията са десетки MB за двигател: �
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "Наличните версии идват от последната версия на VPN модула."
-
-msgid "Update"
-msgstr "Обнови"
 
 msgid "system package"
 msgstr "системен пакет"
@@ -2260,9 +2650,6 @@ msgstr "Старт"
 
 msgid "Stop"
 msgstr "Спри"
-
-msgid "Restart"
-msgstr "Рестартирай"
 
 msgid "Stop the VPN?"
 msgstr "Да се спре ли VPN?"
@@ -2440,9 +2827,6 @@ msgstr "Този профил идва от абонамент: следващо
 
 msgid "Config of %s"
 msgstr "Конфигурация на %s"
-
-msgid "Close"
-msgstr "Затвори"
 
 msgid "Rename"
 msgstr "Преименувай"
@@ -2817,6 +3201,18 @@ msgstr "Адаптерът за пакети не върна валиден от
 
 msgid "Invalid packages operation"
 msgstr "Невалидна операция с пакети"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "Параметърът sizes трябва да е 0 или 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "Адаптерът за обновяване не върна валиден отговор"
+
+msgid "Unknown update operation"
+msgstr "Непозната операция за обновяване"
+
+msgid "Invalid update request"
+msgstr "Невалидна заявка за обновяване"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3223,3 +3619,42 @@ msgstr "TTL не можа да бъде зададен"
 
 msgid "Unknown TTL operation"
 msgstr "Неизвестна операция с TTL"
+
+msgid "An update task is already running"
+msgstr "Вече работи задача за обновяване"
+
+msgid "The task could not be started"
+msgstr "Задачата не можа да бъде стартирана"
+
+msgid "The updater gave no valid reply"
+msgstr "Програмата за обновяване не върна валиден отговор"
+
+msgid "This needs confirmation"
+msgstr "Това изисква потвърждение"
+
+msgid "Check for updates first"
+msgstr "Първо проверете за обновления"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "Директорията за качване не е безопасна; нищо не е променено"
+
+msgid "Not enough memory for this upload"
+msgstr "Няма достатъчно памет за това качване"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Няма достатъчно свободно място на дяла на Linux"
+
+msgid "The file was not checked; upload it again"
+msgstr "Файлът не е проверен; качете го отново"
+
+msgid "This file is not for this device"
+msgstr "Този файл не е за това устройство"
+
+msgid "The signature of this file is wrong"
+msgstr "Подписът на този файл е грешен"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "Този файл е неподписан: това изисква потвърждение"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "Този файл е по-стар от инсталираното: това изисква потвърждение"
