@@ -1199,15 +1199,24 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
 
     while ($true) {
         $lin = RepartitionSectors (Ask (T 'How many GiB for Linux? (the rest stays with Android)') '4' 'MU300_ANS_LINUX_GIB') $plan.MinLinux $plan.MaxLinux
-        if ($lin.State -eq 'ok') { break }
+        if ($lin.State -eq 'ok') {
+            # userdata ends where the region the installers find behind it (FreeRegion) is the size asked for: it
+            # starts one 2 MiB block after userdata and stops one block short of the disk's end, so a userdata that
+            # ended that many sectors before the usable end left 4 MiB or more less (install.sh; FINDINGS 112)
+            [int64]$newEnd = [math]::Floor(($Disk - 34) / 4096 - 1) * 4096 - $lin.Sectors - 4096 - 1
+            if ($newEnd -gt $info.UsableEnd) { $newEnd = $info.UsableEnd - $lin.Sectors }
+            $linRegion = FreeRegion ($newEnd + 1) $Disk
+            if (($linRegion.End - $linRegion.Start) -lt $plan.MinLinux) { $lin.State = 'small' }
+            elseif (($newEnd - $info.First + 1) -lt $plan.MinAndroid) { $lin.State = 'large' }
+            else { break }
+        }
         if ($lin.State -eq 'nan') { Write-Host ('  ' + (T 'give a number, like 4 or 2.5')) }
         elseif ($lin.State -eq 'small') { Write-Host ('  ' + (T 'too small: Linux needs at least {1}' (Gib ($plan.MinLinux * 512)))) }
         else { Write-Host ('  ' + (T 'too large: Android would be left with less than {1}' (Gib ($plan.MinAndroid * 512)))) }
     }
-    [int64]$newEnd = $info.UsableEnd - $lin.Sectors
     Write-Host ''
     Write-Host ('  ' + (T 'userdata (Android):   {1}' (Gib (($newEnd - $info.First + 1) * 512))))
-    Write-Host ('  ' + (T 'Linux region:         {1}' (Gib ($lin.Sectors * 512))))
+    Write-Host ('  ' + (T 'Linux region:         {1}' (Gib (($linRegion.End - $linRegion.Start) * 512))))
     Write-Host ''
     # the word itself, in capitals, in every language
     if ((Ask (T 'Type ERASE to rewrite the partition table and wipe Android''s data') '' 'MU300_ANS_ERASE_ANDROID') -cne 'ERASE') { Die (T 'nothing was changed.') }

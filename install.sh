@@ -484,10 +484,12 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
 
     echo
     echo "  eMMC:                 $(gib $((disk * 512)))"
-    echo "  $(t 'userdata now:         {1} (sectors {2}..{3})' "$(gib $((LAST_END - LAST_FIRST + 1)))" "$LAST_FIRST" "$LAST_END")"
+    echo "  $(t 'userdata now:         {1} (sectors {2}..{3})' "$(gib $(( (LAST_END - LAST_FIRST + 1) * 512 )))" "$LAST_FIRST" "$LAST_END")"
     echo "  $(t 'free behind it:       {1}' "$(gib $(( (USABLE_END - LAST_END) * 512 )))")"
     echo "  $(t 'to share:             {1}' "$(gib $((total * 512)))")"
-    echo "  $(t "Android's data:       {1} ({2})" "$(case $CRYPTO in yes) t 'encrypted' ;; no) t 'not encrypted' ;; *) t 'unknown' ;; esac)" "${CRYPTO_STATE:-?}${CRYPTO_TYPE:+/$CRYPTO_TYPE}")"
+    # (not a case inside $(...): macOS's bash 3.2 takes its first ")" for the end of the substitution)
+    crypto_text=$(t 'unknown'); [ "$CRYPTO" = yes ] && crypto_text=$(t 'encrypted'); [ "$CRYPTO" = no ] && crypto_text=$(t 'not encrypted')
+    echo "  $(t "Android's data:       {1} ({2})" "$crypto_text" "${CRYPTO_STATE:-?}${CRYPTO_TYPE:+/$CRYPTO_TYPE}")"
     echo
     echo "  $(t 'Linux needs at least  {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (both)' "$(gib $((MIN_LINUX * 512)))")"
     echo "  $(t 'Android keeps at least {1}' "$(gib $((MIN_ANDROID * 512)))")"
@@ -517,18 +519,25 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
         case "$lin" in ''|*[!0-9.]*) echo "  $(t 'give a number, like 4 or 2.5')"; continue ;; esac
         lin_s=$(awk -v g="$lin" 'BEGIN { printf "%d", (g * 1073741824) / 512 }')
         lin_s=$(( (lin_s / 4096) * 4096 ))   # keep the boundary on a 2 MiB alignment
-        if [ "$lin_s" -lt $MIN_LINUX ]; then
+        # userdata ends where the region the installers find behind it (region_probe, resume_region) is lin_s
+        # sectors: that region starts one 2 MiB block after userdata's end and stops one block short of the
+        # disk's end, so a userdata that ended lin_s before the usable end left a region 4 MiB or more smaller
+        # than asked - 0.79 GiB for OpenWrt's 0.78 was 804 MiB, 0.78125 would have been 796 and the resumed run
+        # would have refused it after the reset (FINDINGS 112, the first device run)
+        new_end=$(( ((disk - 34) / 4096 - 1) * 4096 - lin_s - 4096 - 1 ))
+        [ $new_end -le "$USABLE_END" ] || new_end=$((USABLE_END - lin_s))
+        resume_region $((new_end + 1))
+        if [ $((RG_END - RG_START)) -lt $MIN_LINUX ]; then
             echo "  $(t 'too small: Linux needs at least {1}' "$(gib $((MIN_LINUX * 512)))")"
-        elif [ "$lin_s" -gt $max_linux ]; then
+        elif [ "$lin_s" -gt $max_linux ] || [ $((new_end - LAST_FIRST + 1)) -lt $MIN_ANDROID ]; then
             echo "  $(t 'too large: Android would be left with less than {1}' "$(gib $((MIN_ANDROID * 512)))")"
         else
             break
         fi
     done
-    new_end=$((USABLE_END - lin_s))
     echo
     echo "  $(t 'userdata (Android):   {1}' "$(gib $(( (new_end - LAST_FIRST + 1) * 512 )))")"
-    echo "  $(t 'Linux region:         {1}' "$(gib $((lin_s * 512)))")"
+    echo "  $(t 'Linux region:         {1}' "$(gib $(( (RG_END - RG_START) * 512 )))")"
     echo
     ask sure "$(t "Type ERASE to rewrite the partition table and wipe Android's data")" "" MU300_ANS_ERASE_ANDROID
     [ "$sure" = ERASE ] || die "$(t 'nothing was changed.')"
