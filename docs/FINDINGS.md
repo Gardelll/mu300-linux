@@ -6614,7 +6614,7 @@ access, argument by argument). Both: `mu300-toolkit` -> Network -> Mobile data: 
 as (root), not a link, whose line is `home-as-roaming`, makes stat 1 and 9 count as roaming. `/run` is RAM, so it is
 gone at the next boot. No front end writes it and nothing a front end sends reaches the name.
 
-**Device checklist** (not run yet; report on the issue or the PR):
+**Device checklist** (items 1-5 run on 2026-10-15, below; item 6 not yet):
 
 1. A home SIM, nothing set: `sudo mobile-data roaming` says "data roaming allowed", "network home"; data as before.
 2. `sudo mobile-data roaming off`: with the home SIM the data stays up (the watchdog asks CEREG and finds 1); the
@@ -6630,7 +6630,30 @@ gone at the next boot. No front end writes it and nothing a front end sends reac
    turned it off). U30 Air: the same on SIM2, with `roaming_internal`.
 6. Abroad, or with a SIM that really roams: the network row says roaming; off holds, on dials.
 
-**Not verified.** Everything above runs only in the unit tests (a stub modem answering stat 1 and 5, both
-transitions, the watchdog's rounds, the dual-SIM channel, the setting's values and its writer, the panel's and
-Cockpit's backends). Whether this modem reports 5 for national roaming or an MVNO at home, and the time from a
-registration change to the watchdog's round (up to 30 s) on hardware.
+**On the devices (2026-10-15).** The branch's `mobile-data`, `mu300cell.sh`, `mu300dash`, the dashboard's
+`action`/`dashboard-info`, `mu300cell.js`, `mu300-sim2-warmup` and `mu300-toolkit` copied over v2026.10.27 on a U30
+Air (OpenWrt 25.12.5, kernel 6.18.56, SIM1 in use with data, the VPN up over it) and the Ubuntu files on an F50
+(Ubuntu 24.04, kernel 7.2.10, its card with data); the watchdog restarted on each.
+
+| item | U30 Air (OpenWrt) | F50 (Ubuntu) |
+|---|---|---|
+| 1. nothing set | "data roaming allowed", "network home"; `--json` `per_sim: true`, slots `[true,true]`; data and the VPN as before | the same, `per_sim: false`; no `mobile-data.conf` was there |
+| 2. `off` | `network.wan.roaming='0'`; the wan stays up (45 s, the watchdog's rounds asking CEREG); the dashboard's `wan.roaming` `{"allowed":0,"held":0}`; the exit IP through the VPN unchanged from the Mac | the file `MU300_DATA_ROAMING=0`, mode 600; data stays up |
+| 3. the hook | the line in `radio.log` and syslog 6 s after the hook; the wan `DATA_ROAMING`, pending, set up again every 60 s by netifd; the dashboard `{"allowed":0,"held":1}`; `mu300-sms send 7000 KALAN` sent and the carrier's answer arrived while held; one line in 4.5 min (5 netifd retries) | the line 6 s after the hook; no default route, no address; `mu300-mobile-data` still active, 0 restarts; `mobile-data status` "roaming: yes, data not allowed..."; no second hold in 7 min |
+| 4. `on`; `off` + hook, then the hook removed | wan up 21 s after `on` ("allowed, mobile data comes back"); with `off` down in 15 s; the hook removed: up in 64 s ("on the home network, mobile data comes back"), VPN exit IP back | up 28 s after `on`; down 36 s after `off`; up 33 s after the hook went ("on the home network") |
+| 5. taken down while held | `ifdown wan`, hook removed: 100 s later still down, `autostart: false`, the hold file gone, no "comes back"; `ifup wan` brought it back | `systemctl stop mu300-mobile-data`, hook removed: 100 s later no default route, the service inactive, the down marker there |
+
+The panel's action through ubus: `act roaming off` / `on` wrote `network.wan.roaming`, `act roaming bogus` was
+refused ("Invalid argument for this op"). `mobile-data roaming off|on --slot 1` wrote `roaming_internal` alone and
+`--json` showed it per slot. Everything set was unset again afterwards (`uci delete`, the F50's file removed).
+
+One defect, fixed: on Ubuntu the hold's line was twice in the journal (logger's, and the same line on stderr of the
+watchdog, whose stderr is the journal). stderr now gets it only when `JOURNAL_STREAM` is not set (a dial by hand);
+`test_the_hold_is_said_once_in_the_journal`.
+
+**Not verified.** Item 6: no SIM that really roams was at hand, so whether this modem reports 5 for national roaming
+or an MVNO at home is not known; the roaming branch was reached only through the test hook (stat 1 read as 5). The
+U30 Air's SIM2: its card in this unit registers for emergency service only (stat 8, §74) and never gets data, so
+the hold on SIM2 and `sim_data_wait`'s "no verdict while held" were not run (a switch to it goes back to SIM1 by
+design); only its setting (`roaming_internal`) was. Cockpit's MU300 page (the panel extra was not installed on the
+F50) and LuCI's wan page were not opened; the panel's backend was driven through ubus.
