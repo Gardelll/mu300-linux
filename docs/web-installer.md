@@ -253,7 +253,11 @@ mu300-api. Testing without a device: `python3 tests/test_api.py` (the device sid
 
 ## The device manager on a device
 
-Not run yet. Run it for each system (Ubuntu, openwrt-luci; plain OpenWrt for the parts it has) on an F50 and on a
+Run on 2026-10-16 on a U30 Air (openwrt-luci) and an F50 (Ubuntu) with the page's modules from Node over WebUSB:
+FINDINGS 110 has what each row showed and what was fixed. On OpenWrt row 14 ends the page's connection (the gadget
+is re-enumerated on every LAN ifup) and the page reconnects.
+
+Run it for each system (Ubuntu, openwrt-luci; plain OpenWrt for the parts it has) on an F50 and on a
 U30 Air, with a release that has mu300-api, from Chrome on a computer. Keep a terminal with SSH (or the serial
 console) to the device for the checks in the third column, and save the page's log at the end of each run. Stop at
 the first row that does not match.

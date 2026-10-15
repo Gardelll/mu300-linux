@@ -40,7 +40,9 @@ export const check = {
 // page expects to lose the device and says so instead of reporting an error). null: nothing to confirm.
 export function consequence(method, req = {}, ctx = {}) {
   switch (method) {
-    case "lan.set": return { key: "mgr.confirm.lan", args: [req.ip] };
+    // OpenWrt re-enumerates the USB gadget whenever the LAN comes up (hotplug.d/iface/10-mu300-usb, for macOS's DHCP):
+    // the page's own connection goes and comes back (seen on a U30 Air)
+    case "lan.set": return String(ctx.system || "").startsWith("openwrt") ? { key: "mgr.confirm.lan-usb", args: [req.ip], leaves: true } : { key: "mgr.confirm.lan", args: [req.ip] };
     case "usb.role": return req.role === "host" ? { key: "mgr.confirm.usb-host", leaves: true } : null;
     case "adb.auth": return { key: req.mode === "keys" ? "mgr.confirm.adb-keys" : "mgr.confirm.adb-open", leaves: true };
     case "data.power": return req.state === "off" ? { key: ctx.wifiUplink ? "mgr.confirm.data-off" : "mgr.confirm.data-off-only" } : null;
@@ -275,7 +277,7 @@ export function renderManager(ui, M) {
   function fail(e) { M.busy = ""; M.note = { kind: "bad", title: t("mgr.failed"), text: ui.errorText(e) }; ui.render(); }
   // run(method, req, after): asks first when the action has a consequence; then the request, the note, a new read
   async function run(method, req, options = {}) {
-    const c = consequence(method, req, options.ctx || {});
+    const c = consequence(method, req, { system: M.hello && M.hello.system, ...(options.ctx || {}) });
     if (c && !window.confirm(t(c.key, ...(c.args || [])))) return null;
     M.busy = method; M.note = null; ui.render();
     if (c && c.leaves) ui.leaving();

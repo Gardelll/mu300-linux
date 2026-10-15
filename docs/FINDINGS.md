@@ -6601,6 +6601,57 @@ update.
 **Tested**: `tests/test_api.py` (every method's validation and its calls into stub tools, hostile values, the
 secrets in no argv, reply or file but their own, the job; dash, bash and busybox sh, busybox's awk where there is
 busybox), `tests/web/manager.test.mjs` (the page's adapter and the Manager against a fake adbd whose shell runs the
-real mu300-api), the strings test across en/tr/zh. **Not run on a device**: both test devices were in use. The device
-protocol is in `docs/web-installer.md` ("The device manager on a device"); until it has been run, the manager is
-untested on hardware, OpenWrt's `uci batch` quoting and `ifstatus` included.
+real mu300-api), the strings test across en/tr/zh.
+
+**On the devices (2026-10-16).** The protocol of `docs/web-installer.md` ran with the page's own modules from Node over
+WebUSB (the `usb` package; device.js `LinuxDevice`, manager.js `Manager`, the device picked by its full serial; no
+browser) on a U30 Air (openwrt-luci, OpenWrt 25.12.5, v2026.10.27, kernel 6.18.56, the owner's VPN up with its kill
+switch) and an F50 (Ubuntu 24.04, v2026.10.27, kernel 7.2.10), with this branch's mu300-api, json.awk, path-commands
+and hotspot-start copied over the release (and #248's data roaming files, which data.get reads). Every setting
+changed was set back afterwards from a copy taken first.
+
+| # | U30 Air (openwrt-luci) | F50 (Ubuntu) |
+|---|---|---|
+| 1-2 | hello, every tab read; the overview, locks, VPN (the owner's profile, kill switch, engine), SMS pool and forwarding summary as LuCI has them | every tab read; locks `unsupported` (as designed) |
+| 3 | SSID `Test "1" $(x) it's` and a password with a quote, a double quote, `$( )`, a backtick, a semicolon, a pipe, an ampersand and a backslash: **two defects** (below), fixed; then uci and hostapd byte for byte as sent, encryption psk2 kept; 2.4 GHz ch 11 (**a defect**, fixed), 5 GHz back on 36/VHT80, ch 44 and back | the same values byte for byte in hotspot.conf (0600) and hostapd.conf; 2.4 ch 11, 5 back (`iw dev`); **"off" for 20 s after each change** (fixed) |
+| 4 | hidden: `ignore_broadcast_ssid=1`, back to 0 | the same (`HIDDEN=1`; hostapd.conf rewritten about 7 s after the answer) |
+| 5 | `wireless.radio0.disabled=1`, no interface; on again | `mu300-hotspot` disabled and stopped; enabled and running again |
+| 6 | - | scan refused in AP mode by wifi-client (this driver): the reason was its last hint line, now the whole message (fixed); no join (no network whose password was at hand) |
+| 7 | `ifdown`/`ifup wan` (autostart false/true), the VPN back on the same exit address | the service stopped (no address) and started (address back) |
+| 8 | APN `internet`, PAP, a user and a password with `$`, a backtick, a semicolon, a pipe, an ampersand and spaces: uci byte for byte (after the fix), the page shows the user, never the password; cleared again (`apn` empty deletes the option) | the same in mobile-data.conf (0600), the dial restarted with it; credentials cleared; bad APN/user/password values refused |
+| 9-10 | sim.get; lock.get; lock.set LTE `1,3` (the owner's own setting, set again: queued and applied) - the bands were not changed | sim.get; lock.get `unsupported` |
+| 12 | a made-up VLESS link beside the owner's profile: added, renamed (quotes), listed, removed; the owner's profile active throughout | the module installed by the job (v2.0.1 with vpn-xray), a made-up link added, renamed, removed; a link with `-o` and an `http://` one refused; the extras removed again |
+| 13 | `7000 KALAN` through the panel's pool: sent, the carrier's answer arrived | the same through `sms`; the answer deleted by id |
+| 14 | 192.168.90.1 and back: **the page lost the device** (below) | 192.168.90.1 and back: **the old address stayed on br-lan** (fixed); the Mac kept its old lease (no new address without reconnecting) |
+| 15 | keys only with the page's key: the connection dropped, came back signed with it, `auth: keys`, one key; open again (the key file removed by hand) | the same |
+| 16 | not run: the host role would take the USB connection away, and this unit must not be reached any other way | - |
+| 17 | hostname and back; a time zone is refused as `unsupported` ("zoneinfo for ...", even the current one: OpenWrt has no zoneinfo, as designed); the same password set again and SSH login with it; SSH off (refused) and on | hostname, time zone Europe/Berlin and back; the same password again, SSH login; SSH off (refused) and on; /etc/shadow restored afterwards |
+| 18 | update.check: "Up to date." | the same |
+| 19 | not run (this unit must not fall back to Android) | 6.18 by the job and a restart: 6.18.56; 7.2 by the job failed with the job's "could not reach GitHub" (the carrier passed no traffic without the VPN by then) and was put back from the release's files by hand |
+| 20 | `lang` installed and removed by the job | not run (the panel extra installs Cockpit from the archive) |
+| 21 | logs read | logs read; the page's log never had a password |
+| 22 | Android as the default and Linux again (no restart: this unit must stay in Linux) | the same (no restart) |
+
+Defects found and fixed on this branch:
+* **busybox awk (OpenWrt 25.12, busybox 1.37) and gsub**: json.awk's `gsub(/\\/, "\\\\")` gave one backslash there, so a
+  string's quote came out unescaped and a backslash was lost. On the U30 Air every answer with an SSID holding a quote
+  was no JSON (`wifi.get`: `bad-answer`), `\n` in a tool's text became `n`, and a request's backslash vanished on the
+  way to uci (a hotspot password stored without it). json.awk now replaces literally (`rep`); a static test keeps
+  backslashes out of every gsub replacement in json.awk and mu300-api (the unit tests use busybox only where the
+  machine has one, and an older one at that).
+* **A band with a channel on OpenWrt**: the channel was dropped (mu300-wifi-band puts a new band on auto): "2.4 GHz,
+  channel 11" came up on 6. The channel is set after the band now.
+* **Ubuntu's hotspot "off" right after a change**: `systemctl is-active` says `activating` for about 20 s (its
+  ExecStartPost checks); `activating` counts as on.
+* **lan-start kept the old LAN address** on br-lan (`ip addr replace` adds): both until the next boot. The old one is
+  removed now. Clients keep their lease until they reconnect: the page's note says so now.
+* **OpenWrt re-enumerates the USB gadget on every LAN ifup** (`hotplug.d/iface/10-mu300-usb`, for macOS's DHCP), so a
+  LAN change ends the page's connection there: the page asks with its own text for OpenWrt and expects to lose the
+  device (`leaves`), as for adb's mode.
+* **A tool's refusal** was its last line only; it is the last message with its indented lines now.
+
+Seen and left: the job box shows curl's progress meter as lines (`mu300-extra`, `mu300-update`); `wificlient.status`'s
+text named the old SSID on OpenWrt after a change (wifi-client's own reading). **Not run**: a Wi-Fi join (6), the SIM
+switch (9: the U30's second card registers for emergency only, the F50's needs a restart), the USB host role (16),
+Update now (18: the update itself is #224's test), the restart into Android (22), the real page in Chrome (the
+chooser and the folder picker are browser UI), plain OpenWrt and a V50.

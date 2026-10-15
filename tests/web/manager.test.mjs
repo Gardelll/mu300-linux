@@ -139,6 +139,9 @@ test("what an action does to the page's own connection", () => {
   assert.equal(consequence("system.reboot", {}).leaves, true);
   assert.equal(consequence("lan.set", { ip: "10.0.0.1" }).args[0], "10.0.0.1");
   assert.ok(!consequence("lan.set", { ip: "10.0.0.1" }).leaves);
+  assert.equal(consequence("lan.set", { ip: "10.0.0.1" }, { system: "openwrt-luci" }).leaves, true);
+  assert.equal(consequence("lan.set", { ip: "10.0.0.1" }, { system: "openwrt" }).key, "mgr.confirm.lan-usb");
+  assert.ok(!consequence("lan.set", { ip: "10.0.0.1" }, { system: "ubuntu" }).leaves);
   assert.equal(consequence("data.power", { state: "off" }).key, "mgr.confirm.data-off-only");
   // data roaming alone restarts nothing: its own sentence; with an APN change it is the restart's
   assert.equal(consequence("data.set", { roaming: false }).key, "mgr.confirm.roaming-off");
