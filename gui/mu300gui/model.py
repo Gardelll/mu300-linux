@@ -181,6 +181,7 @@ class Choices:
         self.erase_sd_word = ''             # "ERASE": a new filesystem on the card
         self.internal_word = ''             # "internal": internal storage although the card holds an installation
         self.unknown_model = False          # advanced: go on with a device that is no F50/U30 Air
+        self.device = ''                    # the kind the last check found (f50, u30air, v50): not a choice
         self.sync_bootchain = True          # advanced: MU300_SYNC_BOOTCHAIN
         self.fetch_jobs = 8                 # advanced: MU300_FETCH_JOBS
         self.vpn_url = ''                   # advanced: MU300_VPN_URL
@@ -207,8 +208,11 @@ class Choices:
         return facts.need('ubuntu') if self.ubuntu else facts.need('openwrt')
 
     def kernel_ok(self, kernel=None):
-        """Ubuntu 26.04 needs a mainline kernel: its programs use system calls 5.4 does not have."""
+        """Ubuntu 26.04 needs a mainline kernel: its programs use system calls 5.4 does not have. The ZTE V50 runs a
+        mainline kernel only (device: the kind the check found)."""
         kernel = self.kernel if kernel is None else kernel
+        if kernel == '5.4' and self.device == 'v50':
+            return False
         return not (self.ubuntu and self.ubuntu_version == '26.04' and kernel == '5.4')
 
     def formats(self, facts):
@@ -262,7 +266,9 @@ def problems(c, facts):
             out.append(('storage', _('The free space is not empty. Type overwrite to use it anyway.')))
     if (c.ubuntu or c.openwrt) and c.place_bytes(facts) and c.place_bytes(facts) < c.needs(facts):
         out.append(('systems', _('That choice needs about {1} and the place has {2}.', size(c.needs(facts)), size(c.place_bytes(facts)))))
-    if not c.kernel_ok():
+    if c.kernel == '5.4' and c.device == 'v50':
+        out.append(('kernel', _('The ZTE V50 runs a mainline kernel only (6.18 or 7.2).')))
+    elif not c.kernel_ok():
         out.append(('kernel', _('Ubuntu 26.04 needs a mainline kernel: choose 6.18 or 7.2.')))
     if c.kernel not in KERNELS:
         out.append(('kernel', _('Choose a kernel.')))
@@ -410,7 +416,7 @@ def summary(c, facts, release):
 
 def connect(kind, boot_system, systems=(), panel=False):
     """How to reach the device once Linux runs: its address on the USB network, the SSH login, the web pages."""
-    ip = '192.168.78.1' if kind == 'u30air' else '192.168.77.1'
+    ip = {'u30air': '192.168.78.1', 'v50': '192.168.79.1'}.get(kind, '192.168.77.1')
     ubuntu = boot_system == 'ubuntu'
     info = {'ip': ip, 'user': 'ubuntu' if ubuntu else 'root', 'ssh': '%s@%s' % ('ubuntu' if ubuntu else 'root', ip), 'web': []}
     if not ubuntu:

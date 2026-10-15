@@ -295,13 +295,23 @@ echo "$(t 'device: {1}' "$model")"
 [ $BL_STATE != locked ] || echo "$(t 'WARNING: {1}' "$BL_WARN")"
 # The U30 Air is the F50's board with a battery: the same kernel and images, a few modules of its own (init
 # loads them; the boot image says which device it is for)
+# The ZTE V50 (model V50, device MU3351, platform ums9620) is experimental (FINDINGS 95): only exactly that, never
+# taken for an F50 (a V50 that is not all three is refused, not asked about), and only with a mainline kernel.
+# --- model begin
 case "$model" in
+    "V50 / MU3351"|*" / MU3351"|"V50 / "*)
+        [ "$model" = "V50 / MU3351" ] && [ "$(su_do 'getprop ro.board.platform')" = ums9620 ] ||
+            die "$(t 'This looks like a ZTE V50 but is not one this installer knows (model V50, device MU3351, platform ums9620): {1}' "$model")"
+        DEVICE=v50
+        echo "$(t 'ZTE V50: EXPERIMENTAL, tested by nobody in this project (kano ported it); mainline kernel only; no second SIM, no NFC; USB network 192.168.79.1')" ;;
     *U30Air*|*U30_Air*|*"U30 Air"*) DEVICE=u30air ;;
     *MU300*|*F50*|*mu300*) DEVICE=f50 ;;
     *) info device.kind unknown
        ask go "$(t 'This does not look like a ZTE F50/MU300 or U30 Air. Continue anyway? (yes/no)')" no MU300_ANS_UNKNOWN_MODEL; [ "$go" = yes ] || exit 1
        DEVICE=f50; MODEL_KNOWN=0 ;;
 esac
+[ "$DEVICE" != v50 ] || [ "$MODE" != build ] || die "$(t 'The ZTE V50 runs a mainline kernel only: install a prebuilt release (without --build)')"
+# --- model end
 [ "${MODEL_KNOWN:-1}" = 0 ] || info device.kind $DEVICE
 # --- slot begin
 # Linux goes on the slot Android is not on: b next to an Android on a, a next to an Android on b (after an OTA the
@@ -725,9 +735,14 @@ if [ $MODE = prebuilt ]; then
     echo "  $(t '         as 6.18; tested less than 6.18')"
     echo "  $(t 'This can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2')"
     while :; do
-        ask kchoice "$(t 'Kernel')" 1 MU300_ANS_KERNEL
+        kdefault=1; [ "$DEVICE" != v50 ] || kdefault=2
+        ask kchoice "$(t 'Kernel')" $kdefault MU300_ANS_KERNEL
         case $kchoice in
-            1|5.4) if [ "${UBUNTU:-}" = 26.04 ]; then
+            1|5.4) if [ "$DEVICE" = v50 ]; then
+                       echo "  $(t 'The ZTE V50 runs a mainline kernel only (6.18 or 7.2).')"
+                       continue
+                   fi
+                   if [ "${UBUNTU:-}" = 26.04 ]; then
                        echo "  $(t 'Ubuntu 26.04 needs a mainline kernel (6.18 or 7.2): its programs use system calls that 5.4 does not have (tar, for one, cannot unpack folders there).')"
                        continue
                    fi
@@ -837,7 +852,9 @@ done
 [ -z "$VPN_FROM_MODULE" ] || fetch_vpn_module
 rm -rf "$REL/kernel" && mkdir -p "$REL/kernel" && tar -xzf "$REL/mu300-kernel.tar.gz" -C "$REL/kernel"
 KOUT=$REL/kernel
-[ $DEVICE = f50 ] || [ -d "$KOUT/modules-$DEVICE" ] || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")"
+# the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline kernel is
+# checked below)
+case $DEVICE in f50|v50) ;; *) [ -d "$KOUT/modules-$DEVICE" ] || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")" ;; esac
 BUSYBOX=$KOUT/busybox; LOGDW=$KOUT/logdw
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 KMAIN=
@@ -986,7 +1003,7 @@ sh "$TOP/tools/install-magisk-module.sh" || echo "  $(t '(skipped; the installer
 
 step done 100
 say "$(t 'Done. Rebooting into {1}' "$BOOT_OS")"
-IP=192.168.77.1; [ $DEVICE = u30air ] && IP=192.168.78.1
+IP=192.168.77.1; [ $DEVICE = u30air ] && IP=192.168.78.1; [ $DEVICE = v50 ] && IP=192.168.79.1
 progress done result ok boot_os "$BOOT_OS" systems "$OSES" ip "$IP" release "${RELEASE:-}" kernel "$KERNEL"
 echo "  $(t 'USB network: {1}   SSH: {2}' $IP "$([ "$BOOT_OS" = ubuntu ] && echo ubuntu@$IP || echo root@$IP, LuCI http://$IP)")"
 echo "  $(t 'switch systems: mu300-os {1}   back to Android: mu300-next-boot android' "$(echo "$OSES" | tr ' ' '|')")"

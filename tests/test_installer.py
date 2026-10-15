@@ -13,6 +13,7 @@ from helpers import TOP, ShellTest
 
 F50 = '324950664950           device usb:1 product:MU300 model:F50 device:MU300 transport_id:1'
 U30 = '323960377386           device usb:2 product:U30Air model:U30_Air device:U30Air transport_id:2'
+V50 = '9a8b7c6d5e4f           device usb:6 product:MU3351 model:V50 device:MU3351 transport_id:6'
 TABLET = 'd16d93c5               device usb:3 product:nabu_global model:21051182G device:nabu transport_id:3'
 OFFLINE = '192.168.31.1:55555     offline product:MU5358 model:MU5358 device:MU5358 transport_id:4'
 # a device running MU300 Linux: adb is on there by default, and its USB serial number says which system answers
@@ -48,6 +49,15 @@ class SelectDevice(ShellTest):
             self.assertIn('serial=d16d93c5', out)          # the user's choice counts
             out = self.run_select(shell, [F50, U30])       # two targets: ask, first is the default
             self.assertIn('ASKED[1]', out)
+
+    def test_v50_is_a_target_too(self):
+        # the ZTE V50 (FINDINGS 95) is picked like the other two; install.sh then checks it is exactly one
+        for shell in self.each_shell():
+            out = self.run_select(shell, [V50])
+            self.assertNotIn('ASKED', out)
+            self.assertIn('serial=9a8b7c6d5e4f', out)
+            out = self.run_select(shell, [TABLET, V50])
+            self.assertIn('ASKED[2]', out)
 
     def test_only_a_tablet_asks(self):
         # the F50 was in Linux and a tablet was the only adb device: it must not be taken silently
@@ -818,6 +828,47 @@ def bc_block(suffix, a, b):
     x[14] = b
     x[28:32] = struct.pack('<I', zlib.crc32(bytes(x[:28])))
     return bytes(x)
+
+
+class Model(ShellTest):
+    """install.sh's model block: the F50 and the U30 Air as before, the ZTE V50 (FINDINGS 95) exactly V50 / MU3351 on
+    ums9620 and said to be experimental, any other V50 refused without a question, an unknown model asked about."""
+    SRC = (TOP / 'install.sh').read_text()
+
+    def decide(self, shell, model, platform='ums9620', mode='prebuilt', answer='no'):
+        m = re.search(r'# --- model begin\n(.*?)# --- model end', self.SRC, re.S)
+        self.assertIsNotNone(m, 'install.sh has no model block')
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; MODE={mode}; '
+                'die() { echo "DIE $*"; exit 1; }; '
+                'ask() { printf "ASKED "; read -r _a; eval "$1=\\$_a"; }; '
+                'info() { :; }; '
+                f'su_do() {{ [ "$1" = "getprop ro.board.platform" ] && echo "{platform}"; }}; '
+                f'model="{model}"\n' + m.group(1) + 'echo "DEVICE=$DEVICE"')
+        return self.sh(shell, code, stdin=answer + '\n').stdout
+
+    def test_three_devices(self):
+        for shell in self.each_shell():
+            for model, want in (('F50 / MU300', 'f50'), ('ZTE MU300 / mu300', 'f50'), ('U30_Air / U30Air', 'u30air'),
+                                ('V50 / MU3351', 'v50')):
+                out = self.decide(shell, model)
+                self.assertIn(f'DEVICE={want}', out, model)
+                self.assertNotIn('ASKED', out)
+                self.assertEqual('EXPERIMENTAL' in out, want == 'v50', model)
+
+    def test_no_other_v50(self):
+        for shell in self.each_shell():
+            for model, platform in (('V50 / MU3351', 'mt6789'), ('V50 / MU3351', ''), ('V50 / P671F60', 'ums9620'),
+                                    ('ZTE MU3351 / MU3351', 'ums9620')):
+                out = self.decide(shell, model, platform)
+                self.assertIn('DIE This looks like a ZTE V50', out, (model, platform))
+                self.assertNotIn('ASKED', out)          # never offered as an F50
+            # a V50 runs a mainline kernel: no local build of 5.4 for it
+            self.assertIn('DIE The ZTE V50 runs a mainline kernel only', self.decide(shell, 'V50 / MU3351', mode='build'))
+            # a Blade V50 phone is no V50: an unknown model, asked about as ever
+            out = self.decide(shell, 'ZTE Blade V50 Design / P671F60')
+            self.assertIn('ASKED', out)
+            self.assertNotIn('DEVICE=', out)
+            self.assertIn('DEVICE=f50', self.decide(shell, 'Pixel 7 / panther', answer='yes'))
 
 
 class InstallSlot(ShellTest):

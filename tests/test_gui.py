@@ -183,6 +183,19 @@ class Devices(unittest.TestCase):
         self.assertIs(adb.pick([f50, u30], current='323960377386'), u30)  # what the user chose stays chosen
         self.assertIs(adb.pick([f50], current='gone'), f50)
 
+    def test_the_v50_is_one_of_ours_with_a_mainline_kernel_only(self):
+        # the installers' rule since the ZTE V50 (FINDINGS 95): device MU3351, USB network 192.168.79.1, no 5.4
+        v50 = adb.parse_devices('List of devices attached\n3249506649 device usb:1 product:MU3351 model:V50 device:MU3351 transport_id:1\n')[0]
+        self.assertTrue(v50.target)
+        self.assertEqual(v50.kind, 'v50')
+        self.assertEqual(model.connect('v50', 'ubuntu')['ip'], '192.168.79.1')
+        c = model.Choices()
+        c.device = 'v50'
+        self.assertFalse(c.kernel_ok('5.4'))
+        self.assertTrue(c.kernel_ok('6.18'))
+        c.device = 'f50'
+        self.assertTrue(c.kernel_ok('5.4'))
+
     def test_the_board_worked_on_comes_back_and_no_other_takes_its_place(self):
         # measured: while the F50 restarted into Linux after an installation, a U30 Air in Linux was the only device,
         # and the window went on with it (its Manage page would have restarted that one)
@@ -344,7 +357,9 @@ class Model(unittest.TestCase):
         self.assertEqual(c.openwrt_flavor, 'plain')
         self.assertIn('ask uv "$(t \'Ubuntu\')" 1 MU300_ANS_UBUNTU', src)
         self.assertEqual(c.ubuntu_version, '24.04')
-        self.assertIn('ask kchoice "$(t \'Kernel\')" 1 MU300_ANS_KERNEL', src)
+        # (1, 5.4; on the ZTE V50 2, 6.18, which the window takes after the check: its kernel_ok refuses 5.4 there)
+        self.assertIn('kdefault=1; [ "$DEVICE" != v50 ] || kdefault=2', src)
+        self.assertIn('ask kchoice "$(t \'Kernel\')" $kdefault MU300_ANS_KERNEL', src)
         self.assertEqual(c.kernel, '5.4')
         self.assertIn("? (yes/no)')\" yes MU300_ANS_DEFAULT_LINUX", src)
         self.assertIn("(1-6)')\" 5 MU300_ANS_BOOT_ATTEMPTS", src)

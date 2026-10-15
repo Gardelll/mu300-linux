@@ -11,6 +11,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from . import ISSUES, RELEASES, SITE, TELEGRAM, TOP, WIKI, desktop
+from . import adb as adbmod
 from .controller import Controller
 from .i18n import LANGUAGES, N_, _, language, os_language, set_language
 from .masking import short_serial
@@ -21,7 +22,7 @@ from .widgets import DiskBar, Scroll, StepList, Stepper, banner, card, facts, li
 WIZARD = (('device', N_('Device')), ('storage', N_('Storage')), ('choose', N_('What to install')), ('backup', N_('Backup')),
           ('install', N_('Install')), ('done', N_('Finish')))
 SECTIONS = (('install', N_('Install')), ('manage', N_('Manage')), ('help', N_('Help')))
-MODELS = {'f50': 'ZTE F50 / MU300', 'u30air': 'ZTE U30 Air'}
+MODELS = {'f50': 'ZTE F50 / MU300', 'u30air': 'ZTE U30 Air', 'v50': 'ZTE V50'}
 PLATFORM_TOOLS = 'https://developer.android.com/tools/releases/platform-tools'
 
 
@@ -695,7 +696,8 @@ class App:
         o, i = card(body, _('Kernel'), _('It can be changed later on the device: sudo mu300-update kernel 5.4|6.18|7.2'))
         add(o)
         radio(i, _('5.4  —  the vendor kernel: the longest tested, everything this project supports'), 'kernel', '5.4', enabled=ch.kernel_ok('5.4'),
-              note=None if ch.kernel_ok('5.4') else _('Not with Ubuntu 26.04: its programs use system calls that 5.4 does not have.'))
+              note=None if ch.kernel_ok('5.4') else _('The ZTE V50 runs a mainline kernel only (6.18 or 7.2).') if ch.device == 'v50'
+              else _('Not with Ubuntu 26.04: its programs use system calls that 5.4 does not have.'))
         radio(i, _('6.18  —  mainline Linux, long-term release: newer drivers and security fixes; no USB-C video output yet'), 'kernel', '6.18')
         radio(i, _('7.2  —  the newest stable mainline Linux; tested less than 6.18'), 'kernel', '7.2')
 
@@ -1239,7 +1241,7 @@ class App:
         else:
             info = ctl.linux
             kind = ctl.kind()
-            ip = ctl.linux_ip or ('192.168.78.1' if kind == 'u30air' else '192.168.77.1')
+            ip = ctl.linux_ip or adbmod.USB_IPS.get(kind, '192.168.77.1')
             ubuntu = info.get('system', '') == 'ubuntu' or not info.get('system', '').startswith('openwrt')
             user = 'ubuntu' if (ubuntu and info) else ('root' if info else 'ubuntu')
             o, i = card(body, _('The device is running MU300 Linux'))

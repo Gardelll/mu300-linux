@@ -239,7 +239,7 @@ class Controller:
     def kind(self):
         """f50 or u30air, from whatever has said so: the check, the Linux on the device, adb's list."""
         d = self.device
-        return (self.facts.kind if self.facts.kind in ('f50', 'u30air') else '') or self.linux.get('device', '') or (d.kind if d else '')
+        return (self.facts.kind if self.facts.kind in ('f50', 'u30air', 'v50') else '') or self.linux.get('device', '') or (d.kind if d else '')
 
     def problems(self):
         return problems(self.choices, self.facts)
@@ -394,6 +394,7 @@ class Controller:
     def _after_check(self):
         """Fit the choices to the device that was checked: only what the installer itself would default."""
         c, f = self.choices, self.facts
+        c.device = f.kind
         sd = f.sd
         if not sd:
             c.storage = 'internal'

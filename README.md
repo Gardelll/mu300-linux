@@ -83,6 +83,27 @@ Air's charger and LEDs, which its boot image loads in place of the F50's ([`kern
 Nothing about the device has to be chosen by hand: the installer reads it from Android, and the boot image, the
 LEDs and the default address follow. The U30 **Pro** is a different chip (UMS9632) and is not supported.
 
+### ZTE V50 (MU3351): experimental
+
+The ZTE **V50** (`ro.product.model` V50, `ro.product.device` MU3351, platform `ums9620`; not the Blade V50 phone) is
+the F50's platform with two SIM slots, NFC and three front lamps on an AW9523B LED controller. kano (kanoqwq) ported
+this project to it in his line of it; what he found and measured is in [FINDINGS 95](docs/FINDINGS.md). **Nobody in
+this project has a V50 or has tested one**: install it only if you can get back to Android on your own.
+
+| | ZTE V50 / MU3351 |
+|---|---|
+| Kernel | mainline only: 6.18 or 7.2 of a release that names the V50 (its kernel bundle lists `v50` in `devices`); 5.4 is refused |
+| What runs | what runs on an F50: the same systems, modules and settings, USB-powered (no battery) |
+| LEDs | NET1 lamp: blue 4G, white 5G, red no service; Wi-Fi lamp: white 5 GHz, blue 2.4 GHz; NET2 dark (`leds-aw9523b`, mainline) |
+| USB network | `192.168.79.1` (neither the F50's nor the U30 Air's subnet) |
+| Not yet | the second SIM (SIM 1 only), NFC, SIM selection; the eMMC host is kept awake (kano's fix for lost files, patch 0017) |
+
+The installers say so in one line and stop a V50 that is not exactly that (a model V50 with another device or
+platform). Linux tells the board by its device tree, as before for the other two: the V50's has the AW9523B, which no
+F50's or U30 Air's has, so `mu300-device` says `v50` even where an older installer had labelled it `f50` (after an
+update such an installation moves from `192.168.77.1` to `192.168.79.1` unless `/etc/mu300/lan.conf` or OpenWrt's
+LAN setting pins the address).
+
 ## What you get
 
 * **A real Linux system**, not an app or a container: Ubuntu 24.04 or 26.04 LTS with systemd and `apt`, OpenWrt
