@@ -138,7 +138,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
-| 91 | The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst (after kanoqwq's 3cbf37fc) | current (fixed; unit tests only, not measured on a device) |
+| 91 | The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst (after kanoqwq's 3cbf37fc) | current (fixed; SIM1 measured on the U30 Air, openwrt-luci v2026.10.27, relay mode, 2026-10-15; the SIM2 choice only under the device's shell, no dual-SIM boot) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 
 ## Hardware and firmware facts
@@ -6569,12 +6569,33 @@ Unit tests: `tests/test_mu300cell.py` class `RelayMonitorBearer` (the monitor so
 the channels and log per slot and dual-SIM state, `mask2prefix`, `valid_ipv4`, `read_bearer`, add-before-delete,
 failure and retry, the lost kernel address, the hint patterns. Under dash and bash locally, busybox sh in CI.
 
+**Measured on the U30 Air** (openwrt-luci v2026.10.27, kernel 6.18.56, SIM1, `option ipv6 'relay'`, 2026-10-15),
+this branch's monitor in place of the release's and `ifup wan` to start it:
+
+* The monitor tails `/run/mu300-at/urc/stty_nr0.log`. `ubus call network.interface.wan renew`: `manual-renew:
+  bearer unchanged`. `ip -4 addr flush dev sipa_eth0 scope global` and a renew: `manual-renew: bearer updated to
+  <the same address>/8`, the address and the default route back, no ifdown, no redial.
+* **The checklist's `AT+CGACT` cycle on the panel's terminal does not reach the monitor**, on this branch or the
+  release's: the `+CGEV: ME PDN DEACT/ACT` of a command sent on nr6 are answered on nr6 only (they came back with
+  the command's own reply) and never reach nr0's URC log, which only has what the modem announces there. So the
+  hint path was driven by appending lines to that log: six hints at once (`NW PDN DEACT`, `NW DETACH`, `NW PDN
+  ACT`, `+SPPCODATA`, `NW MODIFY`, `ME PDN ACT 1,0`) gave one read (`cgev: bearer unchanged`); a hint and another
+  2 s later gave two reads, 2 and 5 s after the first (the release's monitor drops the second); lines that are not
+  hints, none.
+* **SIM2 not run as a boot:** this unit's second card registers for emergency service only (§74), so a boot on it
+  has no bearer, `mu300cell` never connects and the monitor never starts. The choice of channels and log was run
+  under the device's own busybox sh instead (a copy of the monitor, `mu300-sim` stubbed, the freeze flag a file):
+  slot 0 `/run/mu300-at6 /run/mu300-at7 /run/mu300-at` + `stty_nr0.log` with or without the flag; slot 1 without it
+  `/run/mu300-at` + `stty_nr3.log`; slot 1 with it `/run/mu300-at4` + `/run/mu300-at4/urc/stty_nr3.log`.
+* Seen on the way, not this change: after the WAN was redialled several times by these tests, the VPN's sing-box
+  logged `network: missing default interface` and stayed without an exit until `/etc/init.d/mu300-vpn restart`.
+
 Device checklist (openwrt-luci, relay mode):
 
     # 1. F50 or U30 Air on SIM1: the monitor runs and follows a change
     ps w | grep [m]u300cell-v6; logread -f | grep mu300cell-renew
-    #    on the panel's AT terminal: AT+CGACT=0,1 then AT+CGACT=1,1 - one "bearer updated"/"unchanged" line per burst,
-    #    no ifdown; ping 1.1.1.1 resumes on the new address
+    #    a network-side change (or URC lines appended to /run/mu300-at/urc/stty_nr0.log): one "bearer updated"/
+    #    "unchanged" line per burst, no ifdown. AT+CGACT on the panel's terminal (nr6) is answered on nr6 only.
     ubus call network.interface.wan renew        # "manual-renew: bearer unchanged"
     # 2. U30 Air, a dual-SIM boot on SIM2: the monitor's tail is on /run/mu300-at4/urc/stty_nr3.log and its reads
     #    go to /run/mu300-at4 (ps w | grep 'tail -n 0 -F'); the same AT+CGACT cycle on SIM2
