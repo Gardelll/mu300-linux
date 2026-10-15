@@ -89,7 +89,11 @@ class Customize(ShellTest):
 
 
 ALLOWED = {'META-INF/com/google/android/update-binary', 'META-INF/com/google/android/updater-script',
-           'module.prop', 'customize.sh', 'action.sh', 'switch.sh', 'bootchain.sh', 'system/bin/mu300-linux'} | set(MU300_FILES)
+           'module.prop', 'customize.sh', 'action.sh', 'switch.sh', 'bootchain.sh', 'system/bin/mu300-linux',
+           # the release's own checksums: what an update from the zip is checked against (mu300-update apply --from)
+           'mu300/SHA256SUMS'} | set(MU300_FILES)
+# a signed release's zips carry its signature too
+SIGNATURE = 'mu300/SHA256SUMS.sig'
 ASSETS = ('mu300-kernel.tar.gz', 'mu300-kernel-6.18.tar.gz', 'mu300-kernel-7.2.tar.gz', 'mu300-openwrt-rootfs.tar.gz',
           'mu300-openwrt-luci-rootfs.tar.gz', 'mu300-ubuntu-rootfs.tar.gz', 'mu300-ubuntu-26.04-rootfs.tar.gz')
 
@@ -162,6 +166,19 @@ class Builder(unittest.TestCase):
         self.assertIn('versionCode=20261006', z.read('module.prop').decode())
         self.assertNotIn('@', z.read('module.prop').decode())
         self.assertEqual(z.read('mu300/busybox'), b'#!busybox\n')
+        self.assertEqual(z.read('mu300/SHA256SUMS'), (self.rel / 'SHA256SUMS').read_bytes())
+        self.assertNotIn(SIGNATURE, names)
+
+    def test_a_signed_release_puts_its_signature_into_every_zip(self):
+        (self.rel / 'SHA256SUMS.sig').write_text('untrusted comment: signed by key 0102030405060708\nRWQx\n')
+        r = self.build()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        zips = sorted((self.tmp / 'out').glob('*.zip'))
+        self.assertEqual(len(zips), 11)
+        for zp in zips:
+            z = zipfile.ZipFile(zp)
+            self.assertEqual(z.read(SIGNATURE), (self.rel / 'SHA256SUMS.sig').read_bytes(), zp.name)
+            self.assertEqual(z.read('mu300/SHA256SUMS'), (self.rel / 'SHA256SUMS').read_bytes())
         for entry, src in MU300_FILES.items():     # the helper that stages the installer for its tests agrees
             if src:
                 self.assertEqual(z.read(entry), (TOP / src).read_bytes(), entry)
@@ -231,7 +248,7 @@ class ReleaseZips(ShellTest):
                 names = set(z.namelist())
                 m = dict(l.split('=', 1) for l in z.read('mu300/manifest').decode().split('\n') if '=' in l)
                 payload = {f'payload/{m["KERNEL_ASSET"]}', f'payload/{m["ROOTFS_ASSET"]}'}
-                self.assertEqual(names, ALLOWED | payload, zp.name)
+                self.assertEqual(names - {SIGNATURE}, ALLOWED | payload, zp.name)
                 for n, key in ((m['KERNEL_ASSET'], 'SHA256_KERNEL'), (m['ROOTFS_ASSET'], 'SHA256_ROOTFS')):
                     h = hashlib.sha256()
                     with z.open(f'payload/{n}') as f:

@@ -14,19 +14,44 @@
 #     first 64 MiB are overwritten, and a card with any other filesystem is never touched,
 #   * removes the installer leftovers in /data/local/tmp.
 # Android's boot partition, the GPT, userdata and every other partition stay untouched. Needs adb and python3.
+#
+#   ./uninstall.sh --answers FILE   ask nothing: every question is answered by its variable, from FILE (NAME=value
+#                                   lines) or the environment (MU300_NONINTERACTIVE=1); a question without an answer
+#                                   is an error that names the variable. MU300_PROGRESS=1 adds the progress stream
+#                                   (tools/answers.sh, docs/INSTALLER-AUTOMATION.md). The variables:
+#     ANDROID_SERIAL=<serial>            the adb device, with more than one attached (or MU300_ANS_DEVICE=<number>)
+#     MU300_ANS_REBOOT_ANDROID=yes|no    the device runs Linux: reboot it into Android over SSH
+#     MU300_ANS_WIPE=secure|quick|keep   the Linux filesystem on the eMMC
+#     MU300_ANS_SD_WIPE=erase|keep       the Linux filesystem on the SD card
+#     MU300_ANS_CONFIRM=UNINSTALL        the summary's question; @stdin waits for it on standard input
+#     MU300_ANS_GROW=yes|no              give the space behind userdata back to it (erases Android's data), and
+#     MU300_ANS_ERASE_ANDROID=ERASE        the word that allows it
 set -eu
 T=/data/local/tmp
 TOP=$(cd "$(dirname "$0")" && pwd)
-say() { printf '\n==> %s\n' "$*"; }
-die() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
-ask() { printf '%s [%s]: ' "$2" "$3"; read -r _a; [ -n "$_a" ] || _a=$3; eval "$1=\$_a"; }
+ANSWERS_FILE=; _opt=
+for a in "$@"; do
+    if [ "$_opt" = answers ]; then ANSWERS_FILE=$a; _opt=; continue; fi
+    case $a in
+        --answers) _opt=answers ;;
+        --answers=*) ANSWERS_FILE=${a#--answers=} ;;
+        -h|--help) sed -n '2,/^set -eu/{/^set -eu/d;s/^# \{0,1\}//p;}' "$0"; exit 0 ;;
+        *) echo "unknown option $a (see --help)" >&2; exit 2 ;;
+    esac
+done
+[ -z "$_opt" ] || { echo "--answers needs a file (see --help)" >&2; exit 2; }
+. "$TOP/tools/answers.sh"    # say, die, ask; the answers mode and the progress stream
+answers_setup
 su_do() { adb shell "su -c '$1'" </dev/null | tr -d '\r'; }
-# tools/storage.sh finds the SD card; this script is English only, so its messages need no translation
-t() { printf '%s' "$1"; }
+# tools/storage.sh finds the SD card; this script is English only: t() only fills in the {1} of its messages
+. "$TOP/tools/i18n.sh"
+MU300_LANG=en
+progress hello script uninstall.sh version 1 mode uninstall
 gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 . "$TOP/tools/storage.sh"
 hex32() { su_do "dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v" | tr -d ' \n'; }
 
+step preflight 5
 say "Checking host tools and device"
 for c in adb python3; do command -v $c >/dev/null || die "$c not found"; done
 . "$TOP/tools/linux-mode.sh"
@@ -34,7 +59,8 @@ require_android
 [ "$(su_do 'id -u')" = 0 ] || die "su does not work on the device"
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "device: $model"
-case "$model" in *MU300*|*F50*|*mu300*|*U30Air*|*U30_Air*) ;; *) die "this does not look like a ZTE F50/MU300 or U30 Air" ;; esac
+# (the ZTE V50, experimental: FINDINGS 95, as install.sh takes it)
+case "$model" in *MU300*|*F50*|*mu300*|*U30Air*|*U30_Air*|"V50 / MU3351") ;; *) die "this does not look like a ZTE F50/MU300, U30 Air or V50" ;; esac
 # Linux is on the slot Android is not on (install.sh): b next to an Android on a, a next to an Android on b
 case $(su_do 'getprop ro.boot.slot_suffix') in
     _a) ANDROID_SLOT=a; LINUX_SLOT=b ;;
@@ -44,7 +70,9 @@ esac
 [ "$(su_do "readlink -f /dev/block/by-name/boot_a")" != "$(su_do "readlink -f /dev/block/by-name/boot_b")" ] ||
     die "boot_a and boot_b are the same partition"
 echo "Android runs from slot $ANDROID_SLOT; Linux is on slot $LINUX_SLOT (boot_$LINUX_SLOT)"
+info device.model "$model"; info slot.android $ANDROID_SLOT; info slot.linux $LINUX_SLOT
 
+step find 15
 say "Looking for the Linux installation"
 set -- $(su_do 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)')
 [ $# -eq 2 ] || die "could not read the partition table from the device (is su granted? try again)"
@@ -72,9 +100,12 @@ fi
 sd_probe; SD_HAS=no
 [ -n "$SD_DEV" ] && SD_HAS=$(sd_existing)
 [ "$SD_HAS" = yes ] && echo "Linux filesystem on the SD card: $SD_DEV, $(gib "$SD_BYTES")"
+info region.existing "$([ -n "$OFF" ] && echo yes || echo no)"; info region.offset "$OFF"; info region.size "$SIZE"
+info sd.device "$SD_DEV"; info sd.bytes "$SD_BYTES"; info sd.state "$SD_HAS"
 BC=$(hex32)
 echo "boot control in misc: slot $(python3 -c 'import sys; print(bytes.fromhex(sys.argv[1][:4]).decode(errors="replace"))' "$BC")"
 
+step choices 25
 say "What should be removed?"
 wipe=keep
 if [ -n "$OFF" ]; then
@@ -82,7 +113,7 @@ if [ -n "$OFF" ]; then
     echo "          minutes; your files are really gone afterwards)"
     echo "  quick   only erase the filesystem headers (fast, but the files stay readable on the flash)"
     echo "  keep    leave the Linux filesystem in place (it just never boots again)"
-    ask wipe "Erase the Linux filesystem: secure / quick / keep" secure
+    ask wipe "Erase the Linux filesystem: secure / quick / keep" secure MU300_ANS_WIPE
     case $wipe in secure|quick|keep) ;; full) wipe=secure ;; *) die "invalid choice" ;; esac
 fi
 sdwipe=keep
@@ -91,9 +122,10 @@ if [ "$SD_HAS" = yes ]; then
     echo "  erase   remove the filesystem from the card (its first 64 MiB are overwritten: fast, but the files"
     echo "          stay readable on the card until the space is reused)"
     echo "  keep    leave the card as it is (it does not boot once boot_$LINUX_SLOT is restored)"
-    ask sdwipe "Linux filesystem on the SD card: erase / keep" erase
+    ask sdwipe "Linux filesystem on the SD card: erase / keep" erase MU300_ANS_SD_WIPE
     case $sdwipe in erase|keep) ;; *) die "invalid choice" ;; esac
 fi
+progress step id confirm percent 30 title "What will be done"
 echo
 echo "  misc:     boot slot $ANDROID_SLOT (Android), Linux boot disabled"
 echo "  boot_$LINUX_SLOT:   replaced with a copy of boot_$ANDROID_SLOT (stock Android boot image)"
@@ -110,11 +142,12 @@ else
     echo "  SD card:  no installation"
 fi
 echo "  untouched: boot_$ANDROID_SLOT, GPT, userdata and all other partitions"
-ask confirm "Type UNINSTALL to continue" no
+ask confirm "Type UNINSTALL to continue" no MU300_ANS_CONFIRM
 [ "$confirm" = UNINSTALL ] || die "cancelled"
 
 # Android still runs from the slot it ran from at the start: its partition is never the one written below
 [ "$(su_do 'getprop ro.boot.slot_suffix')" = "_$ANDROID_SLOT" ] || die "Android no longer runs from slot $ANDROID_SLOT; nothing was changed"
+step misc 40
 say "Making slot $ANDROID_SLOT the boot slot"
 MISC_TMP=$(mktemp)
 adb shell "su -c 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null > /data/local/tmp/mu300-pull.bin'" </dev/null >/dev/null
@@ -148,6 +181,7 @@ else
     echo "already on slot $ANDROID_SLOT"
 fi
 
+step boot 55
 say "Restoring boot_$LINUX_SLOT from boot_$ANDROID_SLOT"
 A=$(su_do "sha256sum /dev/block/by-name/boot_$ANDROID_SLOT" | cut -d' ' -f1)
 su_do "dd if=/dev/block/by-name/boot_$ANDROID_SLOT of=/dev/block/by-name/boot_$LINUX_SLOT bs=4M 2>/dev/null && sync"
@@ -155,6 +189,7 @@ su_do "dd if=/dev/block/by-name/boot_$ANDROID_SLOT of=/dev/block/by-name/boot_$L
 echo "boot_$LINUX_SLOT = boot_$ANDROID_SLOT"
 
 if [ $wipe != keep ]; then
+    step erase 65
     say "Erasing the Linux filesystem ($wipe)"
     # nothing may still use the region (a leftover loop device from the installer)
     busy=$(su_do "for o in /sys/block/loop*/loop/offset; do [ \"\$(cat \$o 2>/dev/null)\" = $OFF ] && echo \${o%/loop/offset}; done")
@@ -183,6 +218,7 @@ if [ $wipe != keep ]; then
 fi
 
 if [ $sdwipe = erase ]; then
+    step sd 80
     say "Erasing the Linux filesystem on the SD card"
     # sd_erase checks the card again on the device (never mmcblk0, an SD card, still mu300sd) before it writes
     sd_erase
@@ -197,13 +233,15 @@ if [ -n "$OFF" ] && [ $wipe = keep ] && { [ $sdwipe = erase ] || [ "$SD_HAS" != 
 fi
 
 # never delete through a still mounted Linux filesystem
-su_do "grep -q \" $T/mu300root \" /proc/mounts || rm -rf $T/mu300root; rm -f $T/mu300-* $T/android-install.sh $T/android-mount-mu300root.sh" >/dev/null
+# (files only: /data/local/tmp/mu300-web is the web installer's directory, and "rm -f mu300-*" said "Is a directory")
+su_do "grep -q \" $T/mu300root \" /proc/mounts || rm -rf $T/mu300root; for f in $T/mu300-*; do [ -d \$f ] || rm -f \$f; done; rm -f $T/android-install.sh $T/android-mount-mu300root.sh" >/dev/null
 
 # ---------------------------------------------------------------- giving the space back (EXPERIMENTAL)
 # Only for a device where the installer shrank userdata to make room (the 32 GB variant). Growing it back is
 # the same one-entry edit in reverse: userdata is the last partition, so its end moves and nothing else does.
 # Off by default, because on a device that was never shrunk this would hand the factory gap to Android - the
 # numbers below are printed so the choice is made on what is actually there.
+step userdata 88
 say "Checking whether userdata was shrunk to make room"
 GPTW=$(mktemp -d)
 su_do "dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
@@ -220,13 +258,14 @@ if [ -s "$GPTW/gpt.head" ] && [ -s "$GPTW/gpt.tail" ] &&
     free_gib=$(awk -v s=$((u_usable - u_end)) 'BEGIN { printf "%.1f", s * 512 / 1073741824 }')
     echo "  userdata: sectors $u_first..$u_end ($(awk -v s=$((u_end - u_first + 1)) 'BEGIN { printf "%.1f GiB", s * 512 / 1073741824 }'))"
     echo "  unused after it: $free_gib GiB"
+    info userdata.first "$u_first"; info userdata.end "$u_end"; info userdata.usable_end "$u_usable"
     echo
     echo "  On the 64 GB variant about 32 GiB behind userdata is free from the factory - growing userdata"
     echo "  there changes the device away from its original layout. Say yes only if this installer shrank it."
     echo "  EXPERIMENTAL, and it erases Android's data again (the filesystem has to be recreated)."
-    ask grow "Grow userdata back over the freed space? (yes/no)" no
+    ask grow "Grow userdata back over the freed space? (yes/no)" no MU300_ANS_GROW
     if [ "$grow" = yes ]; then
-        ask sure2 "Type ERASE to rewrite the partition table and wipe Android's data" ""
+        ask sure2 "Type ERASE to rewrite the partition table and wipe Android's data" "" MU300_ANS_ERASE_ANDROID
         [ "$sure2" = ERASE ] || die "nothing was changed."
         python3 "$TOP/tools/resize-last-partition.py" "$GPTW/gpt.head,$GPTW/gpt.tail" \
             --disk-sectors "$disk" --name userdata --fill --out "$GPTW/new" || die "the resize was refused; nothing is changed"
@@ -256,7 +295,10 @@ fi
 rm -rf "$GPTW"
 
 # the on-device switch would point at a Linux slot that holds Android again
+step switch 95
 say "Removing the on-device switch (Magisk module)"
 sh "$TOP/tools/install-magisk-module.sh" --remove || true
 
+step done 100
 say "Done. The device boots stock Android; reboot it once to check."
+progress done result ok

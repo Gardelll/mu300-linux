@@ -7,8 +7,9 @@
 # Uses: say(), die(), ask(), and t() from tools/i18n.sh (loaded here when the caller has not)
 command -v t >/dev/null 2>&1 || . "$TOP/tools/i18n.sh"
 
-# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1 (MU300_IP: another address)
-MU300_IPS=${MU300_IP:-192.168.77.1 192.168.78.1}
+# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1, V50 192.168.79.1 (MU300_IP: another
+# address)
+MU300_IPS=${MU300_IP:-192.168.77.1 192.168.78.1 192.168.79.1}
 
 # true when something answers on the Linux SSH port of the USB network; MU300_IP is then that device, and only it
 # is watched from here on (another device may still be running Linux next to it)
@@ -27,10 +28,16 @@ android_lines() { adb devices -l 2>/dev/null | awk 'NR > 1 && $2 == "device" && 
 linux_adb_listed() {  # linux_adb_listed [SERIAL]
     adb devices -l 2>/dev/null | awk -v s="${1:-}" 'NR > 1 && $1 ~ /^MU300LINUX/ && (s == "" || $1 == s) {f = 1} END {exit !f}'
 }
-# the serial number of the one device in Linux that lets this computer in; status 1: none, or more than one
+# the serial number of the device in Linux that lets this computer in: the one ANDROID_SERIAL named (LINUX_WANTED,
+# kept by require_android), else the only one; status 1: none, the named one is not there, or more than one
+LINUX_WANTED=
 linux_adb() {
-    _la=$(adb devices -l 2>/dev/null | awk 'NR > 1 && $2 == "device" && $1 ~ /^MU300LINUX/ {print $1}')
+    _la=$(adb devices -l 2>/dev/null | awk -v s="$LINUX_WANTED" 'NR > 1 && $2 == "device" && $1 ~ /^MU300LINUX/ && (s == "" || $1 == s) {print $1}')
     [ -n "$_la" ] && [ "$(printf '%s\n' "$_la" | wc -l | tr -d ' ')" = 1 ] && echo "$_la"
+}
+# more than one device in Linux among the adb devices
+linux_adb_many() {
+    [ "$(adb devices -l 2>/dev/null | awk 'NR > 1 && $1 ~ /^MU300LINUX/' | wc -l | tr -d ' ')" -gt 1 ]
 }
 # "adb get-state" for the Android to work on: nothing when the only adb devices are in Linux, "linux" when
 # ANDROID_SERIAL names one of those
@@ -44,7 +51,7 @@ android_state() {
 linux_mode_to_android() {
     say "$(t 'The device is running MU300 Linux, not Android')"
     echo "  $(t 'Installing and uninstalling happen from Android, so the device has to reboot first.')"
-    ask go "$(t 'Reboot the device into Android now? (yes/no)')" yes
+    ask go "$(t 'Reboot the device into Android now? (yes/no)')" yes MU300_ANS_REBOOT_ANDROID
     [ "$go" = yes ] || die "$(t 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)')"
     # Over adb where the Linux lets this computer in (every computer, by default): a root shell, no password to
     # type, and it works where the USB network does not (RNDIS on a Mac). The marker file first: only our Linux
@@ -62,6 +69,18 @@ linux_mode_to_android() {
     fi
     # -t: sudo needs a terminal to ask for the device password, and everything runs in one sudo call so it is
     # asked only once. reboot cuts the connection, so ssh's exit status says nothing: watch the port instead.
+    # Only where the address can be no other device: with two boards in Linux on adb, 192.168.77.1 or .78.1 may
+    # well be the other one (measured: the F50 named by ANDROID_SERIAL next to a U30 Air in Linux at .78.1).
+    # MU300_IP, given by the user, is the one exception.
+    # The same when the board ANDROID_SERIAL named is not on adb at all but another one in Linux is.
+    _lm_ssh_ok=1
+    if [ -z "${MU300_IP:-}" ]; then
+        ! linux_adb_many || _lm_ssh_ok=0
+        [ -z "$LINUX_WANTED" ] || linux_adb_listed "$LINUX_WANTED" || ! linux_adb_listed || _lm_ssh_ok=0
+    fi
+    if [ $_lm_gone = 0 ] && [ $_lm_ssh_ok = 0 ]; then
+        die "$(t 'more than one device runs MU300 Linux and adb could not reboot this one: boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot), or give its address with MU300_IP')"
+    fi
     for user in ubuntu root; do
         [ $_lm_gone = 0 ] && linux_mode_running || break
         _lm_ssh=1
@@ -83,10 +102,18 @@ linux_mode_to_android() {
     [ $_lm_gone = 1 ] || [ $_lm_ssh = 1 ] || ! linux_adb_listed ||
         die "$(t 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)')"
     echo "  $(t 'waiting for Android')"
+    # Which device comes back: the serial number of our Linux is MU300LINUX-<Android's serial>-<eMMC id> (boot/init).
+    # Never "whatever single device adb lists": while the F50 rebooted, a Pixel next to it was the only one, and the
+    # check went on with the Pixel (measured; nothing was written, su failed there).
+    _lm_back=${_lm_s:-$LINUX_WANTED}; _lm_back=${_lm_back#MU300LINUX}; _lm_back=${_lm_back#-}; _lm_back=${_lm_back%%-*}
     n=0
     while [ $n -lt 60 ]; do
-        select_device quiet
-        [ "$(android_state)" = device ] && { echo "  $(t 'Android is up')"; return 0; }
+        if [ -n "$_lm_back" ] && android_lines | awk -v s="$_lm_back" '$1 == s {f = 1} END {exit !f}'; then
+            export ANDROID_SERIAL=$_lm_back
+        else
+            select_device quiet || true
+        fi
+        [ -n "${ANDROID_SERIAL:-}" ] && [ "$(android_state)" = device ] && { echo "  $(t 'Android is up')"; return 0; }
         n=$((n + 1)); sleep 5
     done
     die "$(t 'the device did not come back as Android; boot it yourself (mu300-next-boot android)')"
@@ -99,7 +126,7 @@ select_device() {  # select_device [quiet]: quiet never asks, it only picks what
     [ -n "${ANDROID_SERIAL:-}" ] && return 0
     _sd_all=$(android_lines)
     [ -n "$_sd_all" ] || return 0
-    _sd_f50=$(printf '%s\n' "$_sd_all" | grep -E 'model:F50|product:MU300|device:MU300|device:U30Air' | awk '{print $1}')
+    _sd_f50=$(printf '%s\n' "$_sd_all" | grep -E 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' | awk '{print $1}')
     _sd_one=
     [ -n "$_sd_f50" ] && [ "$(printf '%s\n' "$_sd_f50" | wc -l | tr -d ' ')" = 1 ] && _sd_one=$_sd_f50
     # the only adb device, and an F50/U30 Air: nothing to ask
@@ -117,7 +144,7 @@ select_device() {  # select_device [quiet]: quiet never asks, it only picks what
     printf '%s\n' "$_sd_all" | awk '{ m = ""; for (i = 3; i <= NF; i++) if ($i ~ /^model:/) m = substr($i, 7); printf "    %d) %s %s\n", NR, $1, m }'
     _sd_def=1
     [ -n "$_sd_one" ] && _sd_def=$(printf '%s\n' "$_sd_all" | awk -v s="$_sd_one" '$1 == s {print NR}')
-    ask _sd_n "$(t 'Device')" "$_sd_def"
+    ask _sd_n "$(t 'Device')" "$_sd_def" MU300_ANS_DEVICE
     _sd_s=$(printf '%s\n' "$_sd_all" | awk -v n="$_sd_n" 'NR == n {print $1}')
     [ -n "$_sd_s" ] || die "$(t 'invalid choice')"
     export ANDROID_SERIAL=$_sd_s
@@ -125,11 +152,12 @@ select_device() {  # select_device [quiet]: quiet never asks, it only picks what
 
 # call before anything else that needs adb
 # is one of the adb devices an F50/U30 Air?
-target_attached() { android_lines | grep -q -E 'model:F50|product:MU300|device:MU300|device:U30Air'; }
+target_attached() { android_lines | grep -q -E 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351'; }
 
 require_android() {
     # ANDROID_SERIAL naming the device in Linux: that is the one to send back to Android, not one to work on
-    case ${ANDROID_SERIAL:-} in MU300LINUX*) unset ANDROID_SERIAL ;; esac
+    # (kept in LINUX_WANTED: with two boards in Linux it is the one that is rebooted, never the other)
+    case ${ANDROID_SERIAL:-} in MU300LINUX*) LINUX_WANTED=$ANDROID_SERIAL; unset ANDROID_SERIAL ;; esac
     # The device in Linux, and only a phone or tablet in Android: that is not the one to install to - offer to
     # send the device back to Android first
     if [ -z "${ANDROID_SERIAL:-}" ] && ! target_attached && { linux_adb_listed || linux_mode_running; }; then

@@ -14,8 +14,10 @@ The ZTE F50 / MU300 and the ZTE U30 Air (same board, with a battery). The U30 **
 and is not supported.
 
 ### Do I need to root the device?
-Yes. The device must already be rooted and unlocked (booting a modified Android boot image) before you start. How to do
-that is not part of this project, and it is done at your own risk.
+Yes. The device must already be rooted, and able to boot a modified boot image: an unlocked bootloader, or a locked
+one with a patched TrustOS. The bootloader does not have to be unlocked; on a locked one the installer only warns
+and asks whether TrustOS is patched. How to root, unlock or patch a device is not part of this project, it gives no
+guide for it, and it is done at your own risk.
 
 ### Does it work from Windows?
 Yes: `install.ps1` (PowerShell) or `install.cmd` (cmd.exe) on Windows 10/11. macOS and Linux use `install.sh`. You need

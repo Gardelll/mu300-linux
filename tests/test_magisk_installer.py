@@ -643,6 +643,46 @@ class Plan(InstallerCase):
         self.assertEqual(self.run_installer(conf='MU300_DEVICE=f50\nMU300_DRY_RUN=1\n').returncode, 1)
         self.assertEqual(self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_DEVICE=f50\n').returncode, 3)
 
+    def test_v50(self):
+        """The ZTE V50 (FINDINGS 95): exactly V50 / MU3351 on ums9620, said to be experimental, only with a kernel
+        that names it; never under another name, and nothing else is ever taken for one."""
+        self.zip(devices='f50 u30air v50')
+        self.device(model='V50', product='MU3351', platform='ums9620')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 3, r.stdout)
+        self.assertIn('ZTE V50: EXPERIMENTAL', r.stdout)
+        self.assertTrue(self.nothing_written())
+        # a kernel that does not name it (5.4, a release from before): refused with the way out
+        self.zip(devices='f50 u30air')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('The ZTE V50 runs only a mainline kernel', r.stdout)
+        self.assertTrue(self.nothing_written())
+        # it cannot be installed as another device
+        self.zip(devices='f50 u30air v50')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_DEVICE=f50\n')
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('MU300_DEVICE=f50 is not valid', r.stdout)
+        # a V50 that is not all three, or no V50 at all with one of its names: refused outright
+        for model, product, platform in (('V50', 'MU3351', 'mt6789'), ('V50', 'P671F60', 'ums9620'),
+                                         ('ZTE MU3351', 'MU3351', 'ums9620'), ('V50', 'MU3351', None)):
+            self.device(model=model, product=product, platform=platform)
+            r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+            self.assertEqual(r.returncode, 1, (model, product, platform))
+            self.assertIn('looks like a ZTE V50', r.stdout)
+            self.assertTrue(self.nothing_written())
+        # nothing is a v50 by the settings file either
+        self.device(model='Pixel 7')
+        r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_DEVICE=v50\n')
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('MU300_DEVICE=v50 is not valid', r.stdout)
+        # the F50 and the U30 Air with a kernel that names the V50 too: as before
+        for model in ('ZTE MU300', 'U30 Air'):
+            self.device(model=model)
+            r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+            self.assertEqual(r.returncode, 3, (model, r.stdout))
+            self.assertNotIn('V50', r.stdout)
+
     def test_android_on_slot_b_puts_linux_on_a(self):
         self.device(slot='_b')
         r = self.run_installer(conf='MU300_DRY_RUN=1\n')
@@ -810,6 +850,17 @@ class Install(InstallerCase):
         f = self.fake.root / pw_file
         self.assertIn(self.NOTE[kind], f.read_text())
         self.assertEqual(f.stat().st_mode & 0o777, 0o600)
+
+    def test_v50_install(self):
+        # the ZTE V50 (FINDINGS 95): its boot image names it, so init takes it as one; its own USB address
+        self.zip(devices='f50 u30air v50')
+        self.device(model='V50', product='MU3351', platform='ums9620')
+        r = self.run_installer()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        files = self.linux_image('b')
+        self.assertEqual(files['etc/mu300-device'][1], b'v50\n')
+        self.assertIn('192.168.79.1', r.stdout)
+        self.assertNotIn('192.168.77.1', r.stdout)
 
     def test_full_install_internal(self):
         r = self.run_installer()
