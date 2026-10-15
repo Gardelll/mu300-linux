@@ -137,6 +137,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; his measurements on an F50 with 7.2.8; here built for 6.18.56 and 7.2.10 and source tests only) |
 
 ## Hardware and firmware facts
 
@@ -5896,3 +5897,61 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+### 103. Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure
+
+From kanoqwq's clean-tf-7.2 `149c9d2a`. His notes (`docs/WIFI-TX-RETRY-20261015.zh-CN.md` there) are measurements on
+an F50 with OpenWrt 25.12.5 and 7.2.8, with kprobes on the command path; our `upstream/modules/sprd_wlan_combo`
+and `wcn_bsp` have the same code at each point. Ported in our own words; his tests, docs and his 5.4 patches not
+taken (the 5.4 driver is built from `kernel/patches/wlan_combo-*`, against a vendor tree, as in §92).
+
+* **A freed skb used on (both transports).** `sc2355_pcie_hif_fill_msdu_dscr()` / `sc2355_hif_fill_msdu_dscr()`,
+  when the headroom was short, replaced the skb with `skb_realloc_headroom()` and `kfree_skb()`'d the original - but
+  only their own copy of the pointer changed: `sc2355_send_data()` and `sprd_xmit_data2cmd_wq()` then filled the
+  message from, or copied and freed, the freed skb (and on an allocation failure freed it a second time). The
+  descriptor was also written into a header shared with clones (a bridge flooding a frame to several ports clones
+  it). Now `skb_cow_head()` (also when `skb_header_cloned()`), sized with the `offset` the push adds; the skb stays
+  the caller's, a failure returns `-ENOMEM` and the caller frees as before; `ethhdr` is read again afterwards (the
+  checksum-offload branch uses it). How often the short-headroom case happens on our boards is not known.
+* **The group TID never set on PCIe.** `sprd_xmit_data2cmd_wq()` sends a frame as a firmware command and, for an
+  AP's group frames, sets the BK TID "to avoid FW hang". It read the descriptor at `skb->data`; on PCIe that is the
+  5-byte address prefix the fill puts in front, so the "LUT index" it tested was the descriptor's offset byte (11)
+  and the branch never ran (kanoqwq's probe: `off=11, lut=4, tid=0`). The descriptor is now taken behind the prefix,
+  before SDIO's flag is pushed (as his E5 SDIO driver does); the per-frame `pr_info` is a rate-limited debug line.
+* **AP IPv6 multicast through the command path.** `tx_mc_pkt()` sent every IPv6 multicast frame of the access point
+  (neighbour discovery, router advertisements, mDNS) as `CMD_TX_DATA`. kanoqwq replayed bursts of eight 12-byte mDNS
+  queries (`ff02::fb`, one burst a second, six bursts) from the USB side of an F50: in each burst the first six
+  were answered OK and the last two `SPRD_CMD_STATUS_ERROR` (-6), twelve in all, identical bytes succeeding and
+  failing; the command worker had already given the frame up. On PCIe these frames now take the data queue, as IPv4
+  multicast always has (firmware credits, EDMA backpressure, the group LUT entry); `tx_filter_ip_pkt()` after it still
+  sends DHCPv6, DNS and VoWiFi by command, EAPOL never comes here. His check after the change: 112 replayed frames all
+  on the data path, no command error, a phone's IPv6 neighbour entry learnt again over multicast ND and its IPv6
+  ping answered. SDIO (no board of ours) keeps the vendor's path.
+  This is the TX side. §92 (the AP RX "endian fix", not taken) is about frames *from* a client being copied back to
+  the BSS; nothing here changes that, and mDNS/ND between clients keeps working the way §92 describes.
+* **A full EDMA pending ring.** The PCIe TX data channel queues at most three submissions behind the running one
+  (`edma_pending_q_buffer`, four slots); a fourth was refused with `ERROR` (-1), counted by the WLAN side like a hard
+  push failure (`pushfail_count`: more than 100 in a row flushed the frames waiting; `failcount`: more than 50), and
+  nothing woke the TX thread when room came back. Now the ring returns `-EAGAIN` (nothing was taken; every other
+  user of `mchn_push_link` - Bluetooth, the RX refill - only tests for non-zero), the WLAN side keeps the frames
+  without counting, and both TX data channels register a `tx_complete` callback that wakes the TX thread when the
+  bus finishes a transfer; the wait flag is armed before the submission, since the completion can come before the
+  push returns. His F50 run afterwards: 128 refusals in 30 min, all `-EAGAIN`, TX kept growing (up to 40.8 Mbit/s in
+  5 s samples), no `tx return err`, no flush, no firmware assert.
+
+`wcn_bsp` and `sprd_wlan_combo` change together (the new return value): the release builds both from this tree.
+
+**Measured here:** built for 7.2.10 and 6.18.56 (`wcn_bsp`, `sprd_wlan_combo`) against the `mu300-mainline`
+volume's trees, compared with the same build of `main`: no new warning. `tests/test_wifi_tx_path.py` reads the source
+for each point. Nothing run on a device (both test devices were in use); his measurements above are on his F50.
+
+**Device checklist (before merge; F50 and U30 Air, 6.18 and 7.2, the hotspot on 5 GHz):**
+
+    # before/after: dmesg -C; a phone on the hotspot
+    ping6 -c3 ff02::1%br-lan            # (OpenWrt; Ubuntu: the hotspot bridge) every client answers
+    # from a computer on USB, a burst of mDNS: for i in $(seq 8); do avahi-resolve -n x$i.local & done
+    dmesg | grep -i 'CMD_TX_DATA' | grep -ci err      # 0 after (before: errors in bursts)
+    dmesg | grep -c 'push link fail'                         # may be > 0 (rate limited); no 'tx return err'
+    # a long download and upload on the phone (iperf3 -R and normal), 10 min: no 'tx return err', no flush,
+    # no firmware assert, throughput not lower than before; IPv4 and IPv6 browsing, AirPlay/Chromecast between
+    # two phones still found (mDNS between clients, §92); a second client joins and gets DHCPv4 and an IPv6 address
