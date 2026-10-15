@@ -6626,8 +6626,8 @@ launchers are CRLF and need no exec bit there; macOS and Linux keep the bits, an
 
 ### 112. Making room by a reset, and the installation that resumes afterwards (EXPERIMENTAL; kano's flow, ported)
 
-**Status: experimental. Unit tests and tests against fakes only. Nobody in this project has run any of it on a
-device, and neither has kano run its reset part (below).** The owner asked for kano's reset-and-resume flow (kanoqwq,
+**Status: experimental. Run end to end once, on one F50 (2026-10-15/16, below): prepare, reset, resume, boot. kano
+has not run its reset part (below).** The owner asked for kano's reset-and-resume flow (kanoqwq,
 branch `clean-tf-7.2`, MIT; commits `f6b0668d` 2026-10-14 "add desktop deployment", which brought
 `desktop/installer.py`'s transaction, `validate_resume`, `resume_payload_id` and `desktop/boot/part-prepare.sh`, and
 `0e19fe32` 2026-10-15, which added the GUI's journal around it). The owner's word (2026-10-15): "if kano did it, we
@@ -6787,6 +6787,73 @@ started (every exec `I/O error`, even the SSH password check). A reboot through 
 -84`, `Failed to initialize a non-removable card`); a normal `reboot` after it did. And while Linux runs from the card,
 `boot_b` and the two `runtimenv` partitions are written now and then (the boot log, the modem's NV server), so an
 image taken from a running Linux is consistent everywhere but there.
+
+**The same F50, 2026-10-16: checks 3 to 5, the resumed run and the first boot (the installer of 70a21b24, the
+commit that prepared it).** The owner turned USB debugging on again and gave the shell Magisk's root by hand (check
+4: it can be done; how, on a screenless unit, is his). Then, read from Android as root:
+* **Check 3 holds.** `mmcblk0p75` starts at 12275712 and is 108224512 sectors (ends at 120500223, the prepared end),
+  `/data` is a new f2fs on `dm-39` of 51.6 GiB (13527552 blocks of 4 KiB; it was a 20 GiB f2fs on the grown partition
+  the day before), `ro.crypto.state=encrypted`, `ro.crypto.type=file`, `sys.boot_completed=1`, the eMMC CID the
+  transaction's.
+* **Check 5 holds.** The 4 KiB at sector 120504320 are `MU300-PREPARED-V1 <the transaction's token>` and zeros.
+* misc: recovery cleared the first 2 KiB in full (zeros; the leftover `bootonce-bootloader` went with them), and the
+  A/B block at 2048 is byte for byte the one of the prepare's backup (sha256 of 2048..4095 the same).
+
+`install.sh --check` (`ANDROID_SERIAL`, the SD card still in): "A prepared installation is waiting", `resume.check`
+`RESUME-OK`, region 61698211840 (sector 120504320), 843055104 bytes, `verdict.code` `resume`, nothing written.
+
+**The resumed run** (answers: OpenWrt plain, kernel 6.18, Android by default, the confirmation `@stdin` to read the
+summary first). It found the transaction by serial and CID by itself, asked no storage or overwrite question, said
+"this device has 0.8 GiB: only OpenWrt fits" and took release v2026.10.27. The first try stopped at "Building the
+boot image": `TypeError: object of type 'PosixPath' has no len()` in `boot/build-boot-image.py`. That is not of this
+path: the boot image's manifest (`edb57d80`, 2026-10-15) counts `len(order)`, and the U30 Air's `--device-modules`
+loop reuses `order` for its order file's path, so **every install from a computer since that commit stopped there**
+(`install.sh` and `install.ps1` pass `--device-modules` whenever the 5.4 bundle has `modules-u30air`, and the
+release's always does). Nothing had been written; the transaction stayed `prepared`. Fixed with a test
+(`tests/test_boot_image.py`), the fix put on the 70a21b24 checkout (the file is not one the transaction is bound to),
+and the run again: the summary said `writes: Linux region at offset 61698211840, boot_b, 32 bytes of misc (boot_a, GPT
+and userdata are not touched)`; then `mke2fs` of an 804 MiB `mu300root`, OpenWrt with the hotspot's name imported,
+`MU300-INSTALL-OK`, boot_b written and read back (the sha256 the image's), slot b armed for one boot, the Magisk
+switch, `done result ok`, the transaction `installed`. The events in order: `hello` (prebuilt), `preflight`,
+`storage`, `resume.transaction`, `resume.check RESUME-OK`, `storage internal`, `verdict.code resume`, `release`,
+`choices` and the questions, `pull`, the downloads and `verify ok` x3, `vendor`, `bootimage`, `confirm` (`waiting`,
+then `INSTALL`), `copy`, `device`, `boot`, `switch`, `done`. The ext4 superblock now covers the token (it is gone, as
+it should be after the install).
+
+**The first boot.** The installer's reboot, with the card still in: boot_b's new image (6.18.56) started and took
+the SD card's OpenWrt as root (`stage=sd-root dev=/dev/mmcblk1p1`), as it prefers the card; misc went back to
+Android's slot. The owner then took the card out, and from Android `su -c mu300-linux`: 22 s later the unit was
+`MU300LINUX-324950664950-2128e853` on USB, 192.168.77.1 answered, `/etc/mu300/image-version` v2026.10.27, OpenWrt
+25.12.5, kernel 6.18.56, `/run/mu300-root-dev` `mmcblk0@61698211840`, `/` on `loop0` (775 MiB, 18 % used), no
+`mmcblk1`, SSH as root with the password of the answers. `mu300-next-boot android` and `reboot`: Android back, adb
+`324950664950`, root.
+
+**What the copies of the transaction showed** (`--transaction` on copies, the real file and the copies unchanged
+afterwards, sha256 before and after):
+* the CID changed: refused, "the device or its slot differs from the saved transaction (cid)";
+* the slot changed, a real run: refused, the `error` event, stopped after `storage`: nothing written;
+* `target` 2048 sectors smaller, a real run: "the prepared partition geometry differs (userdata is 108224512 sectors,
+  the transaction made it 108222464)";
+* the state put back to `prepared`, a real run: "preparation token mismatch; refusing to overwrite the region" (the
+  ext4 has the token's place): a resume cannot run twice;
+* a `prepared` copy in `MU300_BACKUP_DIR`: `--check` finds it and refuses it (token), `--check --no-resume` ignores
+  it and says "a MU300 Linux installation is already present";
+* an `installed` copy, unchanged: `RESUME-OK` (kano's rule: an installed record is not asked for its token), and the
+  same copy with the installer of current `main`: "this installer's tools or the package differ from the ones that
+  prepared the installation", because `tools/android-install.sh` changed since (the release-tag block). That is the
+  design: a transaction is resumed with the installer that prepared it, and the installer does not update itself
+  while one waits; one prepared before an update of these tools has to be finished with the old checkout.
+
+**One more defect, of every installer, found on the way.** During one `--check --no-resume` another session
+restarted adb's server; every read of the region came back empty, and the installer said "existing mu300root
+filesystem: no", "data check:  of 16 samples", `[: : integer expression expected`, and "OK: free and empty" for a
+region that held the Linux just installed. A real run would have skipped the update-or-wipe question and the
+overwrite one. `region_find_existing` and `region_dirty` (and `install.ps1`'s copy) now take no answer for no
+answer and stop ("no answer from the device"), with a test. `tools/storage.sh` is one of the files a transaction is
+bound to, so this fix, too, refuses a transaction prepared before it.
+
+Not changed, noted: `--check` reports a refused transaction and goes on to the ordinary verdict (`exit 0`); only a
+real run stops on it. The systems question offers "3" as its default where only OpenWrt fits.
 
 ### 90. The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection
 
