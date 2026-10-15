@@ -140,6 +140,7 @@ what replaced it. The table below gives each section's state.
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 90 | The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection (after kanoqwq's 3cbf37fc) | current (fixed; measured on the U30 Air, openwrt-luci v2026.10.27, 6.18.56, 2026-10-15; the OpenWrt watchdog's messages now reach the log) |
 | 91 | The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst (after kanoqwq's 3cbf37fc) | current (fixed; SIM1 measured on the U30 Air, openwrt-luci v2026.10.27, relay mode, 2026-10-15; the SIM2 choice only under the device's shell, no dual-SIM boot) |
+| 92 | Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken (after kanoqwq's 3cbf37fc) | current (mainline module only; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15; the multicast question not measured) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
@@ -6860,3 +6861,61 @@ Device checklist (openwrt-luci, relay mode):
     #    go to /run/mu300-at4 (ps w | grep 'tail -n 0 -F'); the same AT+CGACT cycle on SIM2
     # 3. a lost address: ip -4 addr flush dev sipa_eth0 scope global; ubus call network.interface.wan renew
     #    - the address is back without a redial
+### 92. Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken
+
+kanoqwq's clean-tf-7.2 `3cbf37fc` brought two Wi-Fi changes from his T551M work to the SC2355 driver. Both were
+compared with our `upstream/modules/sprd_wlan_combo` (the mainline kernels' module) and with what our bridge does.
+
+**Taken: per-frame logs bounded.** In AP mode the TX path wrote, for every frame, `pr_info("... group
+lut_index=...")` when a group-addressed frame found its LUT entry (every broadcast and multicast frame sent), and
+`pr_err("... sta disconn, no data tx!")` for each frame still queued for a client that has left; every frame
+`sprd_send_data` refused was `netdev_err(... drop msg due to TX Err)` on top. The first two are now
+`pr_debug_ratelimited` (as the module's other per-frame lines already are, `pcie.c` `free_num`, `tx.c` "no
+credit"), the third is under `net_ratelimit()`. Nothing else changes: the frame is still refused with `-EPERM`,
+still freed with its message (`dev_kfree_skb`, `sprd_chip_free_msg`), the same return values. Both `pcie.c` and
+`sdio.c` (only the PCIe path runs on the F50 and the U30 Air). Not measured: how much of the kernel log these lines
+filled on our boards (no report of it); kanoqwq's concern is the CPU a burst of them costs when a busy client
+drops off. The 5.4 driver (`kernel/patches/wlan_combo-*`) is not changed here: his 5.4 patch was written against
+the realme source, which is not in this repository to check that it applies, and a hunk that fails stops the
+release build.
+
+**Not taken: the AP/GO multicast "endian fix".** In `sc2355/rx.c` the AP's receive path compares `eth->h_proto`
+(big endian) with `ETH_P_IP`/`ETH_P_IPV6` (host order), so on this CPU the "not IP" test is always true and every
+group frame a client sends is copied back to the BSS by the driver *and* handed to the stack. His fix (`htons()`)
+makes IP multicast go to the stack only. That is a behaviour change, not a bug fix, for us: a Linux bridge never
+sends a frame back out of the port it came from unless that port has hairpin mode, and nothing in this tree sets
+hairpin on `wlan0`. Without the driver's copy, mDNS, SSDP, LLMNR, IPv4 broadcasts and IPv6 ND multicast from one
+Wi-Fi client would no longer reach the other clients of the same radio (a phone casting to a TV on the same
+hotspot). Where hairpin *is* on (OpenWrt's netifd turns it on for a wireless port with `multicast_to_unicast`), the
+present code gives a duplicate, which is harmless for these protocols. A comment at the branch says so, so it is
+not "fixed" blindly. Measure before changing it:
+
+    cat /sys/class/net/wlan0/brport/hairpin_mode /sys/class/net/wlan0/brport/multicast_to_unicast 2>/dev/null
+    # two phones on the same band: mDNS between them (e.g. a Chromecast/AirPlay target, or `avahi-browse -a`),
+    # tcpdump -ni wlan0 udp port 5353 on the device: one copy or two per query
+
+Device checklist for the taken part (either board, 6.18 or 7.2):
+
+    dmesg -C; # a busy client (a download) on Wi-Fi, then switch its Wi-Fi off
+    dmesg | grep -c 'sta disconn'              # 0 (debug only) - before: one line per queued frame
+    dmesg | grep -c 'group lut_index'          # 0 - before: one line per broadcast/multicast frame
+    echo 'module sprd_wlan_combo +p' > /sys/kernel/debug/dynamic_debug/control   # the lines are there, bounded
+    # the hotspot keeps working: a second client, ping and a download
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches): the F50 on Ubuntu 24.04 with 7.2.10, the U30 Air on openwrt-luci with 6.18.56, a MacBook on the 5 GHz
+hotspot (802.11ac, 80 MHz) as the client; against the release kernels of v2026.10.27 on the same devices. The
+device sent to the Mac (bash `/dev/tcp`) and the Mac's Wi-Fi was switched off 4 s into it; the log then:
+
+| | release kernel | test kernel |
+|---|---|---|
+| F50, `sta disconn, no data tx!` | 13 (error level, one per frame) | 0 |
+| F50, `drop msg due to TX Err` | 13 | 12, with `net_ratelimit: 1 callbacks suppressed` |
+| U30 Air, the same two | 10 and 10 | 0 and 12 (rate limited) |
+| `group lut_index` | 0 | 0 |
+
+`group lut_index` never appeared in any run on either kernel, so the first of the three lines is not one our
+boards write in these tests. The hotspot carried on as before: TX to the Mac 300-590 Mbit/s on the F50 and 210-500
+on the U30 Air on both kernels (two clusters, about 320 and 570, on both: the Mac, not the kernel), 6 GiB in one
+stream at 594 Mbit/s on the F50, IPv6 multicast (`ping ff02::1`) answered by the Mac over Wi-Fi. The hairpin
+measurement above needs two Wi-Fi clients and was not made.
