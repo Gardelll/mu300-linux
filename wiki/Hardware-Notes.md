@@ -1,6 +1,6 @@
 # Hardware Notes
 
-**In one sentence:** the F50 and the U30 Air are the same small Unisoc computer inside, and getting Linux to run on it
+**In one sentence:** the F50 and the U30 Air (and the experimental V50) are the same small Unisoc computer inside, and getting Linux to run on it
 meant borrowing a few of Android's own programs and working around some quirky hardware.
 
 This is a friendly summary of [docs/FINDINGS.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md), the
@@ -19,6 +19,7 @@ project's lab notebook (symptom, cause, fix for every problem met). Section numb
 | GPU | Mali-G57 |
 | Bootloader | Unisoc LK, Trusty TEE, A/B slots |
 | U30 Air extras | 4050 mAh battery, SGM41511 (bq25601) charger, fuel gauge, NFC tag, Wi-Fi key |
+| V50 extras (experimental, §95) | two SIM slots, NFC, AW9523B LED controller; no battery |
 
 ## Where the memory goes (§27)
 
@@ -116,6 +117,23 @@ the device lands in Android about 20 minutes later. The cause is still open.
 * USB only (no battery); its USB port is its power supply, so no USB host mode.
 * LEDs: network (blue 4G, white 5G, red no service) and Wi-Fi (on while the hotspot is up).
 * An SD card slot that can hold the Linux filesystem.
+
+## ZTE V50 (MU3351): experimental (§95)
+
+The V50 is the F50's platform (`ums9620_2h10_feimao`, T760) with two SIM slots, NFC and three front lamps. kano
+(kanoqwq) ported the project to it in his line; **nobody here has a V50 or has tested one**.
+
+* **How Linux tells it:** its device tree has an AW9523B LED controller at 0x5b on I2C3, which no F50's or U30 Air's
+  has (both checked: no such node). The installers take only model `V50`, device `MU3351`, platform `ums9620`.
+* **Kernel:** mainline (6.18 or 7.2) of a release whose bundle names the V50; never 5.4. It runs as an F50 does
+  otherwise, USB-powered, no battery: no charger is bound (patch 0016 binds the 0x1a charger only with the U30 Air's
+  charger policy service, which the V50 lacks).
+* **LEDs:** NET1 is the network lamp (blue 4G, white 5G, red no service), the Wi-Fi lamp white on 5 GHz and blue on
+  2.4 GHz, NET2 dark; `sudo mu300-led test` lights each, the raw channels are `aw9523b:pin0`-`15`.
+* **eMMC:** its host is kept awake (patch 0017): kano lost files under mainline until he did that.
+* **Not yet:** the second SIM (the dual-SIM code is the U30 Air's), NFC (another reset line than the U30 Air's), SIM
+  selection.
+* **Address:** `192.168.79.1`.
 
 ## Odd numbers that are normal
 

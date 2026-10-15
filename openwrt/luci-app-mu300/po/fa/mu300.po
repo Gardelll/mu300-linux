@@ -37,6 +37,9 @@ msgstr "مصرف داده"
 msgid "Device management"
 msgstr "مدیریت دستگاه"
 
+msgid "Update"
+msgstr "به‌روزرسانی"
+
 msgid "Languages"
 msgstr "زبان‌ها"
 
@@ -1054,6 +1057,9 @@ msgstr "لنگر B%s"
 msgid "No serving cell"
 msgstr "سلول سرویس‌دهنده‌ای نیست"
 
+msgid "Version %s is out: update"
+msgstr "نسخهٔ %s منتشر شده است: به‌روزرسانی کنید"
+
 msgid "Not registered"
 msgstr "ثبت نشده"
 
@@ -2045,6 +2051,396 @@ msgstr "خاموش کردن"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "با 64 هر بسته مانند ترافیک خود دستگاه خارج می‌شود"
 
+msgid "Check for updates"
+msgstr "بررسی به‌روزرسانی‌ها"
+
+msgid "Checking the file"
+msgstr "در حال بررسی فایل"
+
+msgid "Update from a file"
+msgstr "به‌روزرسانی از فایل"
+
+msgid "Back to the previous version"
+msgstr "بازگشت به نسخهٔ قبلی"
+
+msgid "Back to the previous boot image"
+msgstr "بازگشت به ایمیج راه‌اندازی قبلی"
+
+msgid "Remove the previous version"
+msgstr "حذف نسخهٔ قبلی"
+
+msgid "Kernel change"
+msgstr "تغییر هسته"
+
+msgid "Starting…"
+msgstr "در حال شروع…"
+
+msgid "Downloading"
+msgstr "در حال دانلود"
+
+msgid "All files are here and verified"
+msgstr "همهٔ فایل‌ها موجودند و تأیید شده‌اند"
+
+msgid "Unpacking the new system"
+msgstr "در حال باز کردن سیستم جدید"
+
+msgid "Carrying over your settings"
+msgstr "در حال انتقال تنظیمات شما"
+
+msgid "Writing down the packages you installed"
+msgstr "در حال یادداشت بسته‌هایی که نصب کرده‌اید"
+
+msgid "Switching to the new system"
+msgstr "در حال رفتن به سیستم جدید"
+
+msgid "Kernel and boot image"
+msgstr "هسته و ایمیج راه‌اندازی"
+
+msgid "Restart the device?"
+msgstr "دستگاه دوباره راه‌اندازی شود؟"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "دستگاه اکنون دوباره راه‌اندازی می‌شود. راه‌اندازی پیش‌فرض Android است، پس Android بالا می‌آید: برای شروع سیستم به‌روزشده از همان‌جا به Linux بروید."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "دستگاه اکنون دوباره راه‌اندازی می‌شود و حدود یک دقیقه در دسترس نیست. اگر سیستم جدید بالا نیاید، دستگاه پس از تلاش‌های ناموفق خودش به Android برمی‌گردد."
+
+msgid "Restart"
+msgstr "راه‌اندازی مجدد"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "در حال راه‌اندازی مجدد… حدود یک دقیقهٔ دیگر این صفحه را دوباره باز کنید."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "%s است که در حال اجراست. با بستن این صفحه هم ادامه پیدا می‌کند؛ دستگاه را خاموش نکنید."
+
+msgid "Done. Restart the device to start it."
+msgstr "انجام شد. برای اعمال تغییرات دستگاه را دوباره راه‌اندازی کنید."
+
+msgid "Done. Nothing needs a restart."
+msgstr "انجام شد. نیازی به راه‌اندازی مجدد نیست."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "تمام نشد و بخشی از آن انجام شده است: پیش از راه‌اندازی مجدد گزارش را بخوانید."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "تمام نشد. چیزی تغییر نکرده است؛ علت در گزارش آمده است."
+
+msgid "Log"
+msgstr "گزارش"
+
+msgid "Restart now"
+msgstr "اکنون راه‌اندازی مجدد شود"
+
+msgid "Later"
+msgstr "بعداً"
+
+msgid "Close"
+msgstr "بستن"
+
+msgid "Updating is not available on this system"
+msgstr "به‌روزرسانی در این سیستم در دسترس نیست"
+
+msgid "Another update is running on the device"
+msgstr "به‌روزرسانی دیگری روی دستگاه در حال اجراست"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "بیرون از این صفحه شروع شده است (از ترمینال یا جعبه‌ابزار). تا تمام نشود، این‌جا نمی‌توان چیزی را شروع کرد."
+
+msgid "Restart needed"
+msgstr "راه‌اندازی مجدد لازم است"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "این سیستم به‌روزرسانی شده و هنوز نسخهٔ قدیمی را اجرا می‌کند. نسخهٔ جدید در راه‌اندازی مجدد بعدی شروع می‌شود."
+
+msgid "Installed"
+msgstr "نصب‌شده"
+
+msgid "This system"
+msgstr "این سیستم"
+
+msgid "Also on this device"
+msgstr "همچنین روی این دستگاه"
+
+msgid "Kernel"
+msgstr "هسته"
+
+msgid "choice %s"
+msgstr "انتخاب %s"
+
+msgid "Boot image"
+msgstr "ایمیج راه‌اندازی"
+
+msgid "from the installer"
+msgstr "از نصب‌کننده"
+
+msgid "Default boot"
+msgstr "راه‌اندازی پیش‌فرض"
+
+msgid "Free space"
+msgstr "فضای خالی"
+
+msgid "Release signatures"
+msgstr "امضای نسخه‌های انتشار"
+
+msgid "checked with the project's key"
+msgstr "با کلید پروژه بررسی می‌شود"
+
+msgid "this system has no release key"
+msgstr "این سیستم کلید انتشار ندارد"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "راه‌اندازی پیش‌فرض Android است: راه‌اندازی مجدد به Android می‌رود و Linux از آن‌جا شروع می‌شود."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux به‌عنوان راه‌اندازی پیش‌فرض قفل شده است: شروع ناموفق دستگاه را خودبه‌خود به Android نمی‌فرستد، مگر در نخستین شروع‌های یک ایمیج راه‌اندازی جدید."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "اگر Linux %d بار پیاپی بالا نیاید، دستگاه خودش Android را شروع می‌کند."
+
+msgid "Report of the last update"
+msgstr "گزارش آخرین به‌روزرسانی"
+
+msgid "Online update"
+msgstr "به‌روزرسانی آنلاین"
+
+msgid "Asking GitHub…"
+msgstr "در حال پرسیدن از GitHub…"
+
+msgid "Checked %s ago"
+msgstr "%s پیش بررسی شد"
+
+msgid "Not checked yet"
+msgstr "هنوز بررسی نشده"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "بسته‌هایی که افزوده‌ام پس از به‌روزرسانی دوباره نصب شوند (دستگاه در نخستین شروع باید آنلاین باشد)"
+
+msgid "Pre-release"
+msgstr "نسخهٔ پیش‌انتشار"
+
+msgid "Newest release"
+msgstr "جدیدترین نسخهٔ انتشار"
+
+msgid "Release notes"
+msgstr "یادداشت‌های انتشار"
+
+msgid "Download"
+msgstr "دانلود"
+
+msgid "Free space needed"
+msgstr "فضای خالی لازم"
+
+msgid "not enough: remove the previous version first"
+msgstr "کافی نیست: ابتدا نسخهٔ قبلی را حذف کنید"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "نسخهٔ پیش‌انتشار نسخه‌ای است که هنوز در حال آزمایش است: ممکن است ایرادهایی داشته باشد که نسخهٔ انتشار ندارد. نسخهٔ قبلی در هر حال نگه داشته می‌شود."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "این سیستم از جدیدترین نسخهٔ انتشار جدیدتر است (نسخهٔ آزمایشی)."
+
+msgid "Up to date."
+msgstr "به‌روز است."
+
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "این نسخه امضا نشده است و این سیستم امضاها را بررسی می‌کند: از اینجا نصب نمی‌شود. از فایل آن در پایین به‌روزرسانی کنید که از شما تأیید می‌خواهد."
+
+msgid "Update to %s"
+msgstr "به‌روزرسانی به %s"
+
+msgid "Choose at least one system"
+msgstr "دست‌کم یک سیستم را انتخاب کنید"
+
+msgid "Update to %s?"
+msgstr "به %s به‌روزرسانی شود؟"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "دستگاه %s را دانلود می‌کند، سیستم جدید را کنار سیستم در حال اجرا می‌گذارد و در راه‌اندازی مجدد بعدی به آن می‌رود. تنظیمات شما منتقل می‌شود و نسخهٔ قبلی نگه داشته می‌شود. چند دقیقه طول می‌کشد؛ دستگاه را خاموش نکنید."
+
+msgid "Also offer the pre-release %s"
+msgstr "نسخهٔ پیش‌انتشار %s هم پیشنهاد شود"
+
+msgid "Systems to update:"
+msgstr "سیستم‌هایی که به‌روزرسانی می‌شوند:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "دسترسی به GitHub ممکن نشد: دستگاه به اینترنت وصل نیست یا GitHub پاسخ نداد. بدون اینترنت، در پایین از فایل به‌روزرسانی کنید."
+
+msgid "release"
+msgstr "انتشار"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "برای دستگاه بدون اینترنت: در رایانه‌ای دیگر، فایل zip مربوط به Magisk از یک نسخهٔ انتشار برای این سیستم و این هسته را از صفحهٔ انتشار در GitHub دانلود و این‌جا بارگذاری کنید. برای این دستگاه چنین است:"
+
+msgid "Uploaded file"
+msgstr "فایل بارگذاری‌شده"
+
+msgid "Checking the file…"
+msgstr "در حال بررسی فایل…"
+
+msgid "It says it is"
+msgstr "خودش می‌گوید"
+
+msgid "kernel %s"
+msgstr "هسته %s"
+
+msgid "Signature"
+msgstr "امضا"
+
+msgid "signed with the project's release key"
+msgstr "با کلید انتشار پروژه امضا شده"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "نادرست: با کلید انتشار پروژه مطابقت ندارد"
+
+msgid "not signed"
+msgstr "امضا نشده"
+
+msgid "cannot be checked on this system"
+msgstr "در این سیستم قابل بررسی نیست"
+
+msgid "Its system is not installed on this device."
+msgstr "سیستم آن روی این دستگاه نصب نیست."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "این نسخهٔ دیگر Ubuntu است، نه نسخه‌ای که نصب است."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "هسته‌ای غیر از هستهٔ این دستگاه دارد. فایل zip هستهٔ %s را بگیرید یا ابتدا هسته را تغییر دهید."
+
+msgid "Its kernel does not run on this model."
+msgstr "هستهٔ آن روی این مدل اجرا نمی‌شود."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "فایل خراب است: محتوای آن با چک‌سام‌ها مطابقت ندارد."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "امضای آن نادرست است. این فایل به این شکل از پروژه نیامده است؛ هرگز نصب نمی‌شود."
+
+msgid "This file cannot be used here."
+msgstr "این فایل را این‌جا نمی‌توان به کار برد."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "مقدار SHA-256 را با مقدار موجود در SHA256SUMS-magisk در صفحهٔ انتشار مقایسه کنید: این تنها گواهِ منشأ یک فایل امضانشده است."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "این نسخهٔ انتشار از قبل نصب است؛ به‌روزرسانی فقط ایمیج راه‌اندازی را تازه می‌کند."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "می‌دانم این فایل امضا نشده است: هیچ‌چیز ثابت نمی‌کند که از پروژه آمده باشد. SHA-256 آن را خودم مقایسه کرده‌ام و می‌خواهم نصب شود."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "می‌دانم این %s است و از نسخهٔ نصب‌شدهٔ %s قدیمی‌تر است و می‌خواهم به آن برگردم."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "این فایلِ انتشار این پروژه نیست: فایل zip مربوط به Magisk از یک نسخهٔ انتشار لازم است."
+
+msgid "Update from this file"
+msgstr "به‌روزرسانی از این فایل"
+
+msgid "Tick the confirmations above first"
+msgstr "ابتدا تأییدهای بالا را تیک بزنید"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "دستگاه سیستم این فایل را کنار سیستم در حال اجرا می‌گذارد و در راه‌اندازی مجدد بعدی به آن می‌رود. تنظیمات شما منتقل می‌شود و نسخهٔ قبلی نگه داشته می‌شود. چند دقیقه طول می‌کشد؛ دستگاه را خاموش نکنید."
+
+msgid "Check the file"
+msgstr "بررسی فایل"
+
+msgid "Remove the file"
+msgstr "حذف فایل"
+
+msgid "Previous version"
+msgstr "نسخهٔ قبلی"
+
+msgid "No previous version is kept on this device."
+msgstr "هیچ نسخهٔ قبلی‌ای روی این دستگاه نگه داشته نشده است."
+
+msgid "replaced %s"
+msgstr "جایگزین‌شده در %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "سیستم قبلی را می‌خواهم؛ آنچه پس از به‌روزرسانی تغییر داده‌ام در نسخه‌ای که ترک می‌کنم می‌ماند."
+
+msgid "Back to the previous version?"
+msgstr "به نسخهٔ قبلی برگردید؟"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "سیستم قبلی (%s) همان سیستمی می‌شود که در راه‌اندازی مجدد بعدی شروع می‌شود. نسخه‌ای که ترک می‌کنید نگه داشته نمی‌شود؛ تنظیماتی که پس از به‌روزرسانی تغییر داده‌اید برگردانده نمی‌شود."
+
+msgid "Go back"
+msgstr "بازگشت"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "نسخهٔ قبلی همین حالا در حال اجراست: ابتدا راه‌اندازی مجدد کنید."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "هسته و ایمیج راه‌اندازی قبلی را می‌خواهم."
+
+msgid "Back to the previous boot image?"
+msgstr "به ایمیج راه‌اندازی قبلی برگردید؟"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "ایمیج راه‌اندازی قبلی (%s) در اسلات Linux نوشته می‌شود و در راه‌اندازی مجدد بعدی شروع می‌شود. اگر بالا نیاید، دستگاه خودش به Android برمی‌گردد."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "نیازی به بازگشت ندارم: سیستم قبلی حذف شود تا فضای آن آزاد شود."
+
+msgid "Remove the previous version?"
+msgstr "نسخهٔ قبلی حذف شود؟"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "نسخهٔ نگه‌داشته‌شدهٔ سیستم قبلی برای همیشه حذف می‌شود. پس از آن دیگر نمی‌توان از این صفحه به آن برگشت."
+
+msgid "the vendor kernel"
+msgstr "هستهٔ سازنده"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "نه با Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "تغییر هسته"
+
+msgid "This kernel is the one in use"
+msgstr "همین هسته در حال استفاده است"
+
+msgid "Change the kernel to %s?"
+msgstr "هسته به %s تغییر کند؟"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "دستگاه آن هسته را از جدیدترین نسخهٔ انتشار دانلود می‌کند و یک ایمیج راه‌اندازی جدید می‌نویسد؛ این ایمیج در راه‌اندازی مجدد بعدی شروع می‌شود. ایمیج راه‌اندازی قبلی نگه داشته می‌شود و اگر ایمیج جدید بالا نیاید، دستگاه خودش به Android برمی‌گردد. دستگاه باید آنلاین باشد."
+
+msgid "Start Android at the next restart"
+msgstr "شروع Android در راه‌اندازی مجدد بعدی"
+
+msgid "Start Android at the next restart?"
+msgstr "در راه‌اندازی مجدد بعدی Android شروع شود؟"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "راه‌اندازی مجدد بعدی و پس از آن، به‌جای Linux، Android را شروع می‌کند. Linux دوباره از داخل Android شروع می‌شود (دکمهٔ «Action» ماژول Magisk یا mu300-linux)."
+
+msgid "Start Android next"
+msgstr "دفعهٔ بعد Android شروع شود"
+
+msgid "What an update keeps"
+msgstr "به‌روزرسانی چه چیزهایی را نگه می‌دارد"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "به‌روزرسانی سیستم نسخهٔ انتشار جدید را جایگزین می‌کند و آنچه مال شماست را منتقل می‌کند: تنظیمات، حساب‌ها و گذرواژه‌هایشان، کلیدهای دستگاه و پوشه‌های خانگی. بسته‌هایی که خودتان نصب کرده‌اید یادداشت می‌شوند و در نخستین شروع، همین که دستگاه آنلاین شد، دوباره نصب می‌شوند. نسخهٔ قبلی تا وقتی حذفش نکنید روی دستگاه می‌ماند تا بتوانید برگردید."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "صفحهٔ «به‌روزرسانی» در ویکی دقیقاً فهرست می‌کند چه چیزهایی نگه داشته می‌شود."
+
+msgid "Choose a file first"
+msgstr "ابتدا یک فایل انتخاب کنید"
+
+msgid "Uploading: %s of %s"
+msgstr "در حال بارگذاری: %s از %s"
+
 msgid "running"
 msgstr "در حال اجرا"
 
@@ -2078,9 +2474,6 @@ msgstr "هیچ پروفایلی از آن استفاده نمی‌کند."
 msgid "Removed"
 msgstr "حذف شد"
 
-msgid "Check for updates"
-msgstr "بررسی به‌روزرسانی‌ها"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "هر موتور یک افزونه مستقل است: فقط آنچه پروفایل‌هایتان لازم دارند نصب کنید. Xray پیوندهای vless، vmess، trojan و ss را اجرا می‌کند (با hev-socks5-tunnel)، sing-box همان پیوندها و JSON خودش را، mihomo اشتراک‌های Clash را، و dae پروتکل‌های hysteria2، tuic و بقیه را روی هسته‌های جدیدتر. WireGuard و OpenVPN بسته‌های سیستم هستند."
 
@@ -2089,9 +2482,6 @@ msgstr "دریافت‌ها برای هر موتور ده‌ها MB است: رو
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "نسخه‌های موجود از آخرین انتشار ماژول VPN می‌آیند."
-
-msgid "Update"
-msgstr "به‌روزرسانی"
 
 msgid "system package"
 msgstr "بسته سیستم"
@@ -2260,9 +2650,6 @@ msgstr "شروع"
 
 msgid "Stop"
 msgstr "توقف"
-
-msgid "Restart"
-msgstr "راه‌اندازی مجدد"
 
 msgid "Stop the VPN?"
 msgstr "VPN متوقف شود؟"
@@ -2440,9 +2827,6 @@ msgstr "این پروفایل از یک اشتراک آمده است: تازه�
 
 msgid "Config of %s"
 msgstr "پیکربندی %s"
-
-msgid "Close"
-msgstr "بستن"
 
 msgid "Rename"
 msgstr "تغییر نام"
@@ -2817,6 +3201,18 @@ msgstr "آداپتور بسته‌ها پاسخ معتبری نداد"
 
 msgid "Invalid packages operation"
 msgstr "عملیات بسته نامعتبر"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "پارامتر sizes باید 0 یا 1 باشد"
+
+msgid "The update adapter gave no valid reply"
+msgstr "آداپتور به‌روزرسانی پاسخ معتبری نداد"
+
+msgid "Unknown update operation"
+msgstr "عملیات به‌روزرسانی ناشناخته"
+
+msgid "Invalid update request"
+msgstr "درخواست به‌روزرسانی نامعتبر"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3223,3 +3619,42 @@ msgstr "TTL تنظیم نشد"
 
 msgid "Unknown TTL operation"
 msgstr "عملیات TTL ناشناخته"
+
+msgid "An update task is already running"
+msgstr "یک وظیفهٔ به‌روزرسانی هم‌اکنون در حال اجراست"
+
+msgid "The task could not be started"
+msgstr "وظیفه شروع نشد"
+
+msgid "The updater gave no valid reply"
+msgstr "برنامهٔ به‌روزرسانی پاسخ معتبری نداد"
+
+msgid "This needs confirmation"
+msgstr "این کار به تأیید نیاز دارد"
+
+msgid "Check for updates first"
+msgstr "ابتدا به‌روزرسانی‌ها را بررسی کنید"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "پوشهٔ بارگذاری امن نیست؛ چیزی تغییر نکرد"
+
+msgid "Not enough memory for this upload"
+msgstr "حافظهٔ کافی برای این بارگذاری نیست"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "فضای خالی کافی روی پارتیشن Linux نیست"
+
+msgid "The file was not checked; upload it again"
+msgstr "فایل بررسی نشده است؛ دوباره آن را بارگذاری کنید"
+
+msgid "This file is not for this device"
+msgstr "این فایل برای این دستگاه نیست"
+
+msgid "The signature of this file is wrong"
+msgstr "امضای این فایل نادرست است"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "این فایل امضا نشده است: این به تأیید نیاز دارد"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "این فایل از نسخهٔ نصب‌شده قدیمی‌تر است: این به تأیید نیاز دارد"

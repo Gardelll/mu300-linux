@@ -217,3 +217,20 @@ Fixes needed on top of the port:
   The WCN modules cannot be unloaded and reloaded (same as on 5.4).
 
 Not yet on mainline: modem (sipc/sipa/modem loader), GPU, audio; Bluetooth is built but untested.
+
+### Kernel configuration and module audit
+
+Both mainline bundles use `mu300-mainline.config`, including built-in KVM, container support,
+virtio/9p, multicast/MPLS/MPTCP, traffic control, NFS/SMB, encrypted filesystems, LVM/RAID,
+USB/IP and UVC webcams. Optional drivers are modules where possible. CBC and XTS are built
+in because filesystem encryption requires them. Kernel tracing options associated with the
+boot failures in FINDINGS 31p remain disabled.
+
+`make-bundle.sh` checks the configuration embedded in the actual Image against the requested
+fragment and requires every module recorded by `build-modules.sh`. Each bundle includes
+`kernel.config`, `modules.in-tree` and `modules.list` for inspection. On arm64 KVM is built
+in (`CONFIG_KVM=y`), so there is no `kvm.ko`; check `/dev/kvm` and the boot log on the device.
+
+An audit of the published v2026.10.18 (7.2.9) and v2026.10.25 (7.2.10) bundles found KVM
+built in to both, and all 376 older modules present in the latter, plus `mu300_thermal.ko`.
+The expanded set adds capabilities to that baseline; it does not repair a missing KVM module.

@@ -6,7 +6,7 @@ it again to install, answer a few questions, type `INSTALL`, and the device rest
 **The simple version:** the installer is a careful mover. It measures the empty room first (`--check`), tells you
 exactly which boxes it will put where, waits for you to say yes, and never moves Android's furniture.
 
-> **Hobby project, no warranty.** Rooting and unlocking are not part of this project and happen at your own risk.
+> **Hobby project, no warranty.** Rooting, unlocking and patching are not part of this project and happen at your own risk.
 > A wrong step, a power cut or a bad cable can still leave a device unusable. Keep a backup. See the
 > [full notice](https://github.com/dikeckaan/mu300-linux#a-hobby-project-at-your-own-risk).
 
@@ -25,8 +25,12 @@ flowchart TD
 
 ## What you need
 
-* A **ZTE F50 / MU300** or **ZTE U30 Air** that is already **rooted and unlocked**: it must already boot a modified
-  Android boot image. Getting there is not part of this project.
+* A **ZTE F50 / MU300** or **ZTE U30 Air** that is already **rooted, and able to boot a modified boot image**: an
+  unlocked bootloader, or a locked one with a patched TrustOS. Getting there is not part of this project: it does
+  not root, unlock or patch devices and gives no guide for it.
+  * A **locked bootloader is not refused.** `--check` and the installer print a warning - "The bootloader is
+    locked. Did you patch TrustOS?" - and go on. With a patched TrustOS Linux boots on a locked bootloader; without
+    it the device goes back to Android by itself after the install.
 * **USB debugging** enabled, and the device connected by USB.
 * A computer with **`adb`**:
   * **macOS or Linux:** also Python 3, `lz4` and `curl` (usually already there).
@@ -129,9 +133,22 @@ system of their own from a card. The U30 Air has no card slot.
 install.cmd                   # Windows (cmd)
 ```
 
+### Two questions before the device is looked at
+
+* **The language**: English, Türkçe or 中文 (`MU300_LANG=tr` or `.\install.ps1 -Lang zh` skips the question).
+* **"Use the graphical installer?"** - see [The graphical installer](#the-graphical-installer) below. Answer no for
+  the text installer this page describes; `MU300_GUI=0` never asks.
+
+And one more, only when it applies:
+
+* **"Install the beta ... instead of ...?"** When GitHub has a prerelease that is newer than the newest full
+  release, the installer names both and asks. The default is no: a beta has not run on a device as long as a
+  release. Nothing is asked when there is no such prerelease, when you named a release yourself
+  (`MU300_RELEASE=<tag>`, `.\install.ps1 -Release <tag>`), or when GitHub's list cannot be read (offline, its rate
+  limit): then it is the newest release, as before.
+
 First it brings your copy of the project up to date from GitHub and restarts itself if anything changed
-(`MU300_NO_SELF_UPDATE=1` / `-NoSelfUpdate` skips that). Then it asks the language: English, Türkçe or 中文
-(`MU300_LANG=tr` or `.\install.ps1 -Lang zh` skips the question).
+(`MU300_NO_SELF_UPDATE=1` / `-NoSelfUpdate` skips that).
 
 ### The questions, one by one
 
@@ -179,6 +196,47 @@ so you can start Linux from Android later, then reboots into Linux.
 If the device is running Linux rather than Android when you start, the installer notices and offers to reboot it into
 Android for you: over adb where the device lets the computer in (the default; no password to type), else over SSH.
 A device in Linux is in `adb devices` too, as `MU300LINUX-...`, and is never installed to as it is.
+
+## The graphical installer
+
+The same installation in a window: `install.sh` and `install.ps1` offer it when you start them by hand, and it can be
+started directly with `python3 gui/mu300-gui.py` (Windows: `py gui\mu300-gui.py`).
+
+![The graphical installer: storage](https://raw.githubusercontent.com/dikeckaan/mu300-linux/main/docs/images/gui/gui-02-storage.png)
+
+It needs **Python 3.8 or newer with tkinter, Tk 8.6 or newer**. The installer looks for one in every usual place,
+not only on `PATH`, and says which part is missing:
+
+| | where it looks | when tkinter is missing |
+|---|---|---|
+| Windows | `python`, `python3`, `py -3`; `%LOCALAPPDATA%\Programs\Python\Python3*`; `%ProgramFiles%\Python3*`; the Microsoft Store's Python | it asks for the path of a `python.exe`, or installs Python 3.12 with `winget` after showing the command and getting a yes |
+| macOS | `python3` on `PATH`, Homebrew (`/opt/homebrew/bin`, `/usr/local/bin`), python.org's builds, `/usr/bin/python3` | `brew install python-tk@3.x` for a Homebrew Python (shown first, run after a yes); or Python from python.org. **macOS's own Python has Tk 8.5, which cannot draw the window on current macOS: it is not used** |
+| Linux | `python3` on `PATH`, `/usr/bin`, `/usr/local/bin` | `sudo apt-get install -y python3-tk` (Debian, Ubuntu), `sudo dnf install -y python3-tkinter` (Fedora), `sudo pacman -S --noconfirm tk` (Arch), `sudo zypper install -y python3-tk` (openSUSE) - shown first, run after a yes |
+
+Nothing is installed without a yes, and a no or a failure simply goes on with the text installer.
+
+What the window does:
+
+* **Device**: the adb devices as they come and go, the model, Android's build, whether USB debugging is authorised,
+  **root** and the **bootloader** each for itself. Only missing root stops an installation; a locked bootloader is
+  shown as a warning with the question whether TrustOS is patched, and again in the summary before the start. This
+  project does not root, unlock or patch devices and gives no help with it; the window says so too.
+* **Storage**: the internal storage as a bar - Android's partitions, `userdata`, the free space Linux goes into -
+  with the figures of `--check`, the SD card, and on a device without free space what making room would do.
+* **What to install**: every question of the table above, with the same defaults.
+* **Backup**: what is copied to the computer before anything is written (Android's boot image and the first block of
+  `misc`), where it goes, and a button that only makes that copy. The NV and calibration partitions are never copied.
+* **Install**: the stages, the download with its speed, the SHA256 checks, and the installer's own summary in a
+  dialog - only "Install now" there sends `INSTALL`. Stopping is offered while nothing has been written to the
+  device, and not after.
+* **Finish**: the SSH address and login for your device and system, and what happens if Linux does not start.
+* **Manage**: start Linux from Android, uninstall; for a device that runs Linux, its release, kernel and system, an
+  update, another kernel, back to Android. **Help**: the links, and a diagnostics report for an issue.
+
+The window is in English, Türkçe and 中文 (switch at the bottom left), light or dark as the system is. Logs it shows,
+copies or saves have serial numbers, IMEI, IMSI, ICCID and passwords masked. It installs nothing by itself: it runs
+`install.sh` / `install.ps1` with your answers ([how](https://github.com/dikeckaan/mu300-linux/blob/main/docs/INSTALLER-AUTOMATION.md)),
+so everything on this page about what is written and what is not holds for it too.
 
 ## Step 3: log in
 
@@ -234,22 +292,34 @@ The device shows up in `adb devices` as `MU300LINUX-...`. In keys mode a compute
 with FunctionFS: 5.4, or the mainline kernels of v2026.10.20 or newer; it is not there while a U30 Air's port is a
 USB host.
 
-## Installing from the browser: the web installer (beta)
+## Installing from the browser: the web installer
 
 https://kaandikec.com/mu300-linux/web-installer/ installs, updates and removes Linux from **Chrome or Edge** over
-USB, with no adb, Python or script on the computer. It is **experimental**: its parts are tested without a device,
-but it has not yet been run end to end on an F50 or U30 Air, so the installers above stay the supported way.
+USB, with no adb, Python or script on the computer. **Tested** (2026-10-13, release v2026.10.25): from start to
+finish on an F50 (64 GB, Magisk 30.6) from Chrome 155 on macOS - one system and two, a tab closed in the middle,
+Linux started and managed, back to Android, uninstalled. **Not tested yet:** Windows (the adb interface needs the
+WinUSB driver), a Linux computer (it needs a udev rule), a U30 Air, an SD card as the target, a root manager other
+than Magisk, and the device's own download over real mobile data. The installers above cover those.
 
 * It needs a device rooted with **Magisk 26 or newer**, USB debugging on, and a release newer than `v2026.10.23`.
-  It shows whether the device is rooted and what its bootloader says about its lock, and changes neither.
-* The browser downloads the release's Magisk zip as an ordinary download and you hand it to the page (GitHub does
-  not let a page read release files); the device checks it against the release's checksum. The page then starts the
-  **zip's own installer** on the device with your answers and shows its progress. Closing the tab does not stop it.
+  It shows whether the device is rooted and what its bootloader says about its lock, and changes neither. An F50
+  has no screen: its Android lets every computer's adb in without asking, and Magisk must already allow "Shell"
+  root, as the installer for computers needs it too (if it does not: the Magisk app through scrcpy, Superuser).
+* You choose the system, the kernel and the release; the page names the file and its size and has the **device
+  download it itself** from the release on GitHub, over the device's own internet connection (39 to 124 MB of
+  mobile data per system; a download that breaks continues). A device without a connection is told apart, and the
+  page then takes a file you download (GitHub does not let a page read release files). Either way the device uses
+  the file only with the checksum GitHub publishes for it. The page then starts the **zip's own installer** on the
+  device with your answers and shows its progress. Closing the tab does not stop it: connect again and the page
+  shows where it is.
 * It can back up what an installation writes (not the IMEI/calibration partitions: use `tools/backup-device.sh` for
   those), uninstall, and manage a device that runs Linux with adb on (updates, kernel, restart, logs).
 * It does not shrink `userdata` on the 32 GB variant.
-* If the browser cannot open the device: stop a running adb server (`adb kill-server`); on Windows the adb
-  interface needs the WinUSB driver; on Linux a udev rule. The page says which, and has the details.
+* If the browser cannot open the device: another program has it - stop a running adb server (`adb kill-server`)
+  and close any other browser window or tab that has the page open and connected; on Windows the adb interface
+  needs the WinUSB driver; on Linux a udev rule. The page says which, and has the details.
+* "Restart into Android" in the page makes Android the default boot (it is `mu300-next-boot android`); "Make Linux
+  the default again" in the page's Linux view, or `mu300-next-boot linux`, undoes it.
 
 How it is built and how to test it: [docs/web-installer.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/web-installer.md).
 
