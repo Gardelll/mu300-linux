@@ -916,7 +916,7 @@ class InstallSlot(ShellTest):
     def run_slot(self, shell, tail):
         m = re.search(r'# --- slot begin\n(.*?)# --- slot end', self.SRC, re.S)
         self.assertIsNotNone(m, 'install.sh has no slot block')
-        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; T=/data/local/tmp; '
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; . "$TOP/tools/releases.sh"; MU300_LANG=en; T=/data/local/tmp; '
                 'say() { echo "SAY $*"; }; die() { echo "DIE $*"; exit 1; }; '
                 'su_do() { printf "%s\\n" "$1" >> "$STUBLOG/su.log"; case $1 in '
                 '"getprop ro.boot.slot_suffix") n=$(( $(cat "$STUBLOG/n" 2>/dev/null || echo 0) + 1 )); '
@@ -1003,7 +1003,9 @@ class InstallSlot(ShellTest):
         for shell in self.each_shell():
             for slot, rel, ok in (('a', 'v2026.10.09', False), ('a', 'v2026.09.28', False), ('a', 'v2026.10.10', True),
                                   ('a', 'v2026.10.14', True), ('a', 'v2027.01.01', True), ('a', 'custom', True),
-                                  ('b', 'v2026.09.28', True)):
+                                  ('b', 'v2026.09.28', True),
+                                  # the new names (FINDINGS 125): newer than every three-field tag, whatever the date
+                                  ('a', 'v2026.10.16.1', True), ('a', 'v2026.10.01.1', True), ('a', 'v2026.10.16.0', True)):
                 out = self.run_slot(shell, f'LINUX_SLOT={slot}; slot_release_ok {rel}; echo SURVIVED')
                 self.assertEqual('SURVIVED' in out, ok, (slot, rel, out))
                 if not ok:
@@ -1222,7 +1224,7 @@ class VpnOnInTheReplacedSystem(ShellTest):
             (root / o / 'etc/mu300/vpn.conf').write_text(f'ENABLE={1 if o in on else 0}\nKILL_SWITCH={1 if o in ks else 0}\n')
         lib = TOP / 'rootfs/overlay/opt/mu300/lib/vpn-orphan.sh'
         self.stub('adb', 'echo "adb $*" >> "$STUBLOG/calls"')
-        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; T=/data/local/tmp; '
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; . "$TOP/tools/releases.sh"; MU300_LANG=en; T=/data/local/tmp; '
                 'say() { :; }; die() { echo "DIE $*"; exit 1; }; '
                 f'su_do() {{ echo "$1" > "{self.tmp}/su"; '
                 f'eval "$(printf "%s" "$1" | sed "s|^.*&& {{|{{|; s|/data/local/tmp/vpn-orphan.sh|{lib}|; '

@@ -184,6 +184,17 @@ class Builder(unittest.TestCase):
                 h, n = line.split('  ')
                 self.assertEqual(h, hashlib.sha256((self.tmp / 'out' / n).read_bytes()).hexdigest())
 
+    def test_the_version_code_grows_with_the_release(self):
+        # Magisk's versionCode: the date of a three-field tag, the date and N of a four-field one (FINDINGS 125)
+        for tag, code in (('v2026.10.27', '20261027'), ('v2026.10.16.1', '2026101601'), ('v2026.10.16.10', '2026101610'),
+                          ('v2026.10.23-fix1', '202610231')):
+            shutil.rmtree(self.tmp / 'out', ignore_errors=True)
+            r = self.build(tag)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            z = zipfile.ZipFile(self.tmp / f'out/mu300-magisk-{tag}-openwrt-k5.4.zip')
+            self.assertIn(f'versionCode={code}\n', z.read('module.prop').decode(), tag)
+            self.assertIn(f'TAG={tag}\n', z.read('mu300/manifest').decode())
+
     def test_layout_manifest_and_stored_payload(self):
         self.build()
         z = zipfile.ZipFile(self.tmp / 'out/mu300-magisk-v2026.10.06-ubuntu-24.04-k7.2.zip')

@@ -800,6 +800,11 @@ class BootLinux(WebCase):
         img = bytearray((by / 'boot_b').read_bytes())
         img[44:55] = b'loglevel=5\0'; img[9000:9005] = b'linux'
         (by / 'boot_b').write_bytes(bytes(img))
+        # switch.sh takes misc only where sysfs names it so (FINDINGS 101)
+        misc = os.path.realpath(by / 'misc')
+        ue = self.fake.root / 'sys/class/block' / os.path.basename(misc)
+        ue.mkdir(parents=True, exist_ok=True)
+        (ue / 'uevent').write_text('PARTNAME=misc\n')
         before = self.parts()
         r = self.web('boot-linux', 'dry', MU300_BUSYBOX=BUSYBOX, MU300_SLOT_SUFFIX='_a')
         if os.getuid() != 0:

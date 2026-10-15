@@ -1464,6 +1464,24 @@ function ReleaseList {
     } catch { return $none }
     finally { Remove-Item $f -ErrorAction SilentlyContinue }
 }
+# The release tags (docs/FINDINGS.md 125): vYYYY.MM.DD up to v2026.10.27, where the "day" was a counter, and from then
+# on vYYYY.MM.DD.N, the real (UTC) day the release was built and N = 1..99 for the releases of that day. Every
+# four-field tag is newer than every three-field one; four-field tags compare by the date, then by N, as numbers. The
+# rule of tools/releases.sh and tools/release_pick.py, held to the same table (tests/fixtures/release-tags.tsv).
+# TagKey: a number in the order of the releases (1YYYYMMDD00, 2YYYYMMDDNN), or $null for what is no release tag
+function TagKey([string]$Tag) {
+    # ([0-9], not \d: .NET's \d takes every script's digits; \z, not $: $ lets a newline at the end through)
+    if ($Tag -cmatch '^v([0-9]{4})\.([0-9]{2})\.([0-9]{2})\z') { return [long]('1' + $Matches[1] + $Matches[2] + $Matches[3] + '00') }
+    if ($Tag -cmatch '^v([0-9]{4})\.(0[1-9]|1[0-2])\.(0[1-9]|[12][0-9]|3[01])\.([1-9][0-9]?)\z') {
+        return [long]('2' + $Matches[1] + $Matches[2] + $Matches[3] + $Matches[4].PadLeft(2, '0'))
+    }
+    return $null
+}
+# TagNewer A B: release A is newer than release B; false when either is no release tag
+function TagNewer([string]$A, [string]$B) {
+    $ka = TagKey $A; $kb = TagKey $B
+    return [bool]($null -ne $ka -and $null -ne $kb -and $ka -gt $kb)
+}
 # BetaAsked: whether the beta question is put. Not with -Answers: that file holds one answer per question in a fixed
 # order, and a question that comes and goes with GitHub's releases would shift every answer behind it.
 function BetaAsked([string]$Latest, [string]$Beta, [bool]$Positional) { return [bool]($Latest -and $Beta -and $Beta -ne $Latest -and -not $Positional) }
@@ -1697,8 +1715,8 @@ if ($gpu -eq 'yes') {
 }
 
 # ($Release: looked up before the questions, see ReleaseList)
-# Linux on a needs systems that know it (release v2026.10.10 on); a tag that is not a release date is not judged
-if ($LINUX_SLOT -eq 'a' -and $Release -match '^v\d{4}\.\d{2}\.\d{2}' -and [string]::CompareOrdinal($Release, 'v2026.10.10') -lt 0) {
+# Linux on a needs systems that know it (release v2026.10.10 on); a tag that is not a release tag is not judged
+if ($LINUX_SLOT -eq 'a' -and (TagKey $Release) -and (TagNewer 'v2026.10.10' $Release)) {
     Die (T 'Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer' $Release 'v2026.10.10')
 }
 Step 'download' 20
