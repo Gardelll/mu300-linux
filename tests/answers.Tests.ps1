@@ -316,6 +316,39 @@ Check 'environment: the password is never shown' ($r.Out -match 'hunter2') $fals
 Check 'environment: adb sees the answers' (@(Calls '' | Where-Object { @($_.answers | ForEach-Object { "$_".ToUpper() }) -contains 'MU300_ANS_KERNEL' }).Count -gt 0) $true
 Check 'environment: adb never sees the password' (@(Calls '' | Where-Object { @($_.answers | ForEach-Object { "$_".ToUpper() }) -contains 'MU300_ANS_PASSWORD' }).Count) 0
 
+# ---- an unpacked Magisk zip (-Package / MU300_PACKAGE): its system, kernel and release; nothing asked about them -----
+$pk = Join-Path $fx 'package'
+New-Item -ItemType Directory -Force -Path (Join-Path $pk 'mu300'), (Join-Path $pk 'payload') | Out-Null
+[IO.File]::WriteAllText((Join-Path $pk 'payload\mu300-kernel-7.2.tar.gz'), 'kernel bundle')
+[IO.File]::WriteAllText((Join-Path $pk 'payload\mu300-ubuntu-26.04-rootfs.tar.gz'), 'ubuntu system')
+$hk = (Get-FileHash (Join-Path $pk 'payload\mu300-kernel-7.2.tar.gz') -Algorithm SHA256).Hash.ToLower()
+$hr = (Get-FileHash (Join-Path $pk 'payload\mu300-ubuntu-26.04-rootfs.tar.gz') -Algorithm SHA256).Hash.ToLower()
+$pkManifest = "TAG=v2026.10.27`nSYSTEM=ubuntu-26.04`nOS=ubuntu`nUBUNTU=26.04`nKERNEL=7.2`nKERNEL_ASSET=mu300-kernel-7.2.tar.gz`nROOTFS_ASSET=mu300-ubuntu-26.04-rootfs.tar.gz`nSHA256_KERNEL=$hk`nSHA256_ROOTFS=$hr`n"
+[IO.File]::WriteAllText((Join-Path $pk 'mu300\manifest'), $pkManifest)
+[IO.File]::WriteAllText((Join-Path $pk 'mu300\SHA256SUMS'), "$hk  mu300-kernel-7.2.tar.gz`n$hr  mu300-ubuntu-26.04-rootfs.tar.gz`n")
+$pkAnswers = [ordered]@{ MU300_ANS_DEFAULT_LINUX = 'yes'; MU300_ANS_BOOT_ATTEMPTS = '5'; MU300_ANS_HOTSPOT = 'yes'; MU300_ANS_GPU = 'no'
+    MU300_ANS_VPN = 'no'; MU300_ANS_ADB = 'no'; MU300_ANS_PASSWORD = 'hunter2secret'; MU300_ANS_CONFIRM = 'INSTALL' }
+Device 'pull' $false
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $pkAnswers)`"" @{ MU300_PACKAGE = $pk; MU300_RELEASE = '' }
+Check 'package: no question about the system, the kernel or the release' ($r.Asked -join ' ') 'MU300_ANS_DEFAULT_LINUX=yes MU300_ANS_BOOT_ATTEMPTS=5 MU300_ANS_HOTSPOT=yes MU300_ANS_GPU=no MU300_ANS_VPN=no MU300_ANS_ADB=no MU300_ANS_PASSWORD='
+if ($r.Asked.Count -ne 7) { Write-Host $r.Out }
+Check 'package: what it is'     "$($r.Facts['package.system']) $($r.Facts['package.kernel']) $($r.Facts['package.release']) $($r.Facts['release'])" 'ubuntu-26.04 7.2 v2026.10.27 v2026.10.27'
+Check 'package: says so'        ($r.Out -match 'This package installs ubuntu-26.04 with kernel 7.2 \(release v2026.10.27\); nothing is downloaded.') $true
+Check 'package: no web panel'   ($r.Out -match 'It is not part of this package.') $true
+Check 'package: stops at the pull' (LastEvent $r).message 'pulling boot_a failed'
+Check "package: nothing written: $(UntouchedWhy)"  (Untouched) 0
+# a manifest that is not one of a release's: stopped before the device is asked anything
+[IO.File]::WriteAllText((Join-Path $pk 'mu300\manifest'), $pkManifest.Replace('KERNEL=7.2', 'KERNEL=9.9'))
+Device 'pull' $false
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $pkAnswers)`"" @{ MU300_PACKAGE = $pk }
+Check 'package, bad manifest: stops' "$($r.Rc) $((LastEvent $r).message)" '1 the package is incomplete or damaged (its manifest is not valid)'
+Check 'package, bad manifest: the device was not asked' @(Calls '').Count 0
+# the same with -Package
+[IO.File]::WriteAllText((Join-Path $pk 'mu300\manifest'), $pkManifest)
+Device 'pull' $false
+$r = RunScript 'install.ps1' "-Package `"$pk`" -AnswersFile `"$(AnswersFileOf $pkAnswers)`""
+Check 'package by -Package'     $r.Facts['package.kernel'] '7.2'
+
 # ---- -AdbPath: asks the device nothing -----------------------------------------------------------------------------
 Device
 New-Item -ItemType Directory -Force -Path (Join-Path $fx 'platform-tools') | Out-Null

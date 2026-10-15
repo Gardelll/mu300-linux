@@ -1,9 +1,14 @@
 """The zip: customize.sh in a fake Magisk installer environment, tools/make-magisk-zips.sh and, on a release's real
-zips (MU300_MAGISK_ZIPS), the allow-list, the manifest against the payload and a dry run of each zip's installer."""
+zips (MU300_MAGISK_ZIPS), the allow-list, the manifest against the payload and a dry run of each zip's installer.
+A zip is also an installer for a computer once unpacked (computer/, START-HERE.md, the launchers): what that adds, and
+that the Magisk side of a zip installs exactly as it does without it."""
 import hashlib
 import io
 import os
+import re
 import shutil
+import stat
+import struct
 import subprocess
 import tarfile
 import tempfile
@@ -13,8 +18,36 @@ from pathlib import Path
 
 from fakedevice import FakeDevice
 from helpers import TOP, ShellTest, shells
-from test_android_boot_image import MAGISKBOOT, fake_android_root
-from test_magisk_installer import MU300_FILES
+from test_android_boot_image import MAGISKBOOT, cpio_all, fake_android_root, leaves, ramdisk_of
+from test_boot_image import unlz4_legacy
+from test_magisk_installer import MU300_FILES, generic_ramdisk, tar_gz
+
+COMPUTER_DIR = TOP / 'android/magisk/computer'
+LAUNCHERS = ('START-HERE.md', 'start.sh', 'start.cmd', 'start-gui.sh', 'start-gui.cmd', 'uninstall-linux.sh',
+             'uninstall-linux.cmd')
+
+
+def computer_files():
+    """The project's files that go into a zip as computer/<path> (android/magisk/computer/files.txt, a directory
+    standing for its files, never a cache of Python's or a hidden file), as make-magisk-zips.sh expands it."""
+    out = set()
+    for line in (COMPUTER_DIR / 'files.txt').read_text().splitlines():
+        line = line.split('#', 1)[0].strip()
+        if not line:
+            continue
+        p = TOP / line
+        if p.is_dir():
+            for f in p.rglob('*'):
+                rel = f.relative_to(TOP).as_posix()
+                if f.is_file() and not f.name.startswith('.') and not f.name.endswith('.pyc') and '__pycache__' not in rel:
+                    out.add(rel)
+        else:
+            out.add(line)
+    return out
+
+
+# what a zip holds for a computer, beside what it holds for Magisk
+COMPUTER = set(LAUNCHERS) | {'computer/.mu300-package'} | {'computer/' + f for f in computer_files()}
 
 MAGISK_ENV = r'''
 ui_print() { echo "$1"; }
@@ -88,10 +121,11 @@ class Customize(ShellTest):
             self.assertNotIn('ran', r.stdout)
 
 
-ALLOWED = {'META-INF/com/google/android/update-binary', 'META-INF/com/google/android/updater-script',
-           'module.prop', 'customize.sh', 'action.sh', 'switch.sh', 'bootchain.sh', 'system/bin/mu300-linux',
-           # the release's own checksums: what an update from the zip is checked against (mu300-update apply --from)
-           'mu300/SHA256SUMS'} | set(MU300_FILES)
+MAGISK = {'META-INF/com/google/android/update-binary', 'META-INF/com/google/android/updater-script',
+          'module.prop', 'customize.sh', 'action.sh', 'switch.sh', 'bootchain.sh', 'system/bin/mu300-linux',
+          # the release's own checksums: what an update from the zip is checked against (mu300-update apply --from)
+          'mu300/SHA256SUMS'} | set(MU300_FILES)
+ALLOWED = MAGISK | COMPUTER
 # a signed release's zips carry its signature too
 SIGNATURE = 'mu300/SHA256SUMS.sig'
 ASSETS = ('mu300-kernel.tar.gz', 'mu300-kernel-6.18.tar.gz', 'mu300-kernel-7.2.tar.gz', 'mu300-openwrt-rootfs.tar.gz',
@@ -230,6 +264,218 @@ class Builder(unittest.TestCase):
         self.assertEqual(self.build().returncode, 0)
         for zp in (self.tmp / 'out').glob('*.zip'):
             self.assertFalse([n for n in zipfile.ZipFile(zp).namelist() if n.endswith('mu300-install.conf')])
+
+
+
+class ComputerSide(unittest.TestCase):
+    """Unpacked on a computer a zip is an installer: computer/ is the project's installers, START-HERE.md and the
+    launchers are at the top, and computer/.mu300-package tells install.sh that the payload is next to it."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = Path(tempfile.mkdtemp(prefix='mu300-zips-computer-'))
+        fake_release(cls.tmp / 'v2026.10.06')
+        r = subprocess.run(['sh', str(TOP / 'tools/make-magisk-zips.sh'), str(cls.tmp / 'v2026.10.06'), str(cls.tmp / 'out')],
+                           capture_output=True, text=True)
+        assert r.returncode == 0, r.stderr
+        cls.zip = zipfile.ZipFile(cls.tmp / 'out/mu300-magisk-v2026.10.06-ubuntu-26.04-k7.2.zip')
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.zip.close()
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_the_installers_of_this_checkout(self):
+        names = set(self.zip.namelist())
+        self.assertEqual(COMPUTER - names, set())
+        for f in computer_files():
+            data = self.zip.read('computer/' + f)
+            want = (TOP / f).read_bytes()
+            if f.endswith('.cmd'):           # for cmd.exe: CRLF, whatever the checkout has
+                want = want.replace(b'\r\n', b'\n').replace(b'\n', b'\r\n')
+            self.assertEqual(data, want, f)
+        # the essentials, by name: a list that lost one would not be noticed until a computer ran it
+        for f in ('install.sh', 'install.ps1', 'uninstall.sh', 'uninstall.ps1', 'tools/package.sh', 'tools/answers.sh',
+                  'boot/build-boot-image.py', 'boot/init', 'gui/mu300-gui.py', 'gui/mu300gui/package.py',
+                  'android/magisk/mu300-linux-switch/switch.sh', 'i18n/tr.tsv'):
+            self.assertIn('computer/' + f, names)
+        self.assertFalse([n for n in names if '__pycache__' in n or n.endswith('.pyc')])
+
+    def test_the_payload_is_there_once(self):
+        # the computer's installers use payload/ where it is: no second copy of a system or a kernel
+        tars = [n for n in self.zip.namelist() if n.endswith('.tar.gz')]
+        self.assertEqual(sorted(tars), ['payload/mu300-kernel-7.2.tar.gz', 'payload/mu300-ubuntu-26.04-rootfs.tar.gz'])
+
+    def test_start_here_names_this_zip(self):
+        text = self.zip.read('START-HERE.md').decode()
+        self.assertIn('ubuntu-26.04', text)
+        self.assertIn('7.2', text)
+        self.assertIn('v2026.10.06', text)
+        self.assertNotRegex(text, r'@[A-Z]+@')
+        for word in ('Türkçe', '中文', 'start.cmd', 'start-gui.sh', 'platform-tools', 'magisk --install-module'):
+            self.assertIn(word, text)
+
+    def test_launchers(self):
+        for name in LAUNCHERS:
+            info = self.zip.getinfo(name)
+            data = self.zip.read(name)
+            if name.endswith('.cmd'):
+                self.assertNotIn(b'\n', data.replace(b'\r\n', b''), name)
+                self.assertTrue(data.startswith(b'@echo off\r\n'), name)
+            if name.endswith('.sh'):
+                self.assertEqual(stat.S_IMODE(info.external_attr >> 16) & 0o111, 0o111, name)
+                self.assertNotIn(b'\r', data, name)
+        for name in ('start.sh', 'start-gui.sh', 'start.cmd', 'start-gui.cmd'):
+            self.assertIn(b'MU300_PACKAGE', self.zip.read(name), name)
+        for name in ('start-gui.sh', 'start-gui.cmd'):
+            self.assertIn(b'MU300_GUI=1', self.zip.read(name), name)
+        self.assertEqual(stat.S_IMODE(self.zip.getinfo('computer/install.sh').external_attr >> 16) & 0o111, 0o111)
+        self.assertIn('computer/.mu300-package', self.zip.namelist())
+
+    def test_no_platform_tools(self):
+        # Google's SDK licence (3.4) does not allow passing them on: START-HERE.md says where to get them
+        self.assertFalse([n for n in self.zip.namelist() if re.search(r'(^|/)(adb|adb\.exe|AdbWinApi\.dll|fastboot)$', n)])
+
+    def test_the_magisk_side_unpacks_none_of_it(self):
+        # customize.sh unpacks named entries only: a file of the computer's side never reaches the device's module
+        src = (TOP / 'android/magisk/installer/customize.sh').read_text()
+        m = re.search(r"unzip -o -q \"\$ZIPFILE\" (.+?) -d", src)
+        self.assertEqual(m.group(1), "'mu300/*' module.prop action.sh switch.sh bootchain.sh 'system/*'")
+        self.assertIn('SKIPUNZIP=1', src)
+        for n in COMPUTER:
+            self.assertFalse(n.startswith(('mu300/', 'system/')) or n in MAGISK, n)
+
+
+class ComputerFilesList(unittest.TestCase):
+    """android/magisk/computer/files.txt holds every file the computer's installers name ($TOP/... in the shell
+    scripts, $Top\\... and Join-Path $Top in the PowerShell ones), except what only --build or the release uses."""
+    BUILD_ONLY = ('out', 'work', 'release/', 'kernel', 'openwrt/', 'rootfs', 'upstream/', 'tools/adbd/', 'tools/gpu',
+                  'tools/make-extra.sh', 'tools/cockpit-i18n.py', 'tools/sign-release.sh', 'platform-tools', '.git',
+                  '.mu300-keep', '.mu300-source', 'tools/', 'tools', 'i18n/', 'android/magisk/installer',
+                  'rootfs/overlay/opt/mu300/bin/mu300-update', 'rootfs/overlay/opt/mu300/lib/release.pub',
+                  'rootfs/panel/', 'gui', 'tools/android-boot-image.sh')
+
+    def test_every_file_named_is_listed(self):
+        listed = computer_files()
+        listed_dirs = {f.rsplit('/', 1)[0] for f in listed}
+        scripts = [f for f in sorted(listed) if f.endswith(('.sh', '.ps1')) and not f.startswith('android/magisk/mu300-linux-switch')]
+        missing = []
+        for f in scripts:
+            text = (TOP / f).read_text(encoding='utf-8')
+            refs = re.findall(r'\$TOP/([A-Za-z0-9_./-]+)', text)
+            refs += [r.replace('\\', '/') for r in re.findall(r'\$Top\\([A-Za-z0-9_.\\-]+)', text)]
+            refs += [r.replace('\\', '/') for r in re.findall(r"Join-Path \$Top '([A-Za-z0-9_.\\-]+)", text)]
+            for ref in refs:
+                ref = ref.rstrip('/.')
+                if not ref or ref in self.BUILD_ONLY or any(ref.startswith(b) for b in self.BUILD_ONLY if b.endswith('/')):
+                    continue
+                if not (TOP / ref).exists():
+                    continue                  # a name put together at run time (openwrt/mu300-$os...)
+                if ref not in listed and ref not in listed_dirs:
+                    missing.append(f'{f}: {ref}')
+        self.assertEqual(missing, [])
+
+
+def full_fake_release(rel):
+    """REL like a release, with kernel bundles and systems the zip's own installer can install on the fake device of
+    tests/fakedevice.py (test_magisk_installer.InstallerCase.zip makes them the same way)"""
+    rel.mkdir(parents=True)
+    sums = []
+    for a in ASSETS:
+        if a.startswith('mu300-kernel'):
+            krel = '5.4.254-mu300' if a == 'mu300-kernel.tar.gz' else a[len('mu300-kernel-'):-len('.tar.gz')] + '.0-mu300'
+            files = {'Image': b'\x7fkernel' * 1000, 'ramdisk-generic.lz4': generic_ramdisk(),
+                     'modules/mu300-test.ko': b'\x7fELF test module', 'kernel.release': (krel + '\n').encode(),
+                     'devices': b'f50 u30air\n', 'features': b'sdcard\n'}
+            if a == 'mu300-kernel.tar.gz':
+                files['busybox'] = b'#!busybox\n'
+            data = tar_gz(files)
+        else:
+            os_ = 'ubuntu' if 'ubuntu' in a else ('openwrt-luci' if 'luci' in a else 'openwrt')
+            data = tar_gz({'etc/os-release': f'ID={os_}\n'.encode()})
+        (rel / a).write_bytes(data)
+        sums.append(f'{hashlib.sha256(data).hexdigest()}  {a}\n')
+    (rel / 'mu300-update').write_bytes(b'#!/bin/sh\n')
+    sums.append(f'{hashlib.sha256(b"#!/bin/sh" + chr(10).encode()).hexdigest()}  mu300-update\n')
+    (rel / 'SHA256SUMS').write_text(''.join(sums))
+
+
+@unittest.skipUnless(BUSYBOX, 'no busybox')
+class MagiskPathUnchanged(ShellTest):
+    """The Magisk side of a zip built with its computer side installs exactly as the same zip without it (the layout
+    of the zips before computer/ was added): customize.sh, in a fake Magisk installer environment, runs the zip's own
+    installer on the fake device - a dry run and a whole installation - and both zips give the same output, the
+    same boot partitions, misc and module."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rel_tmp = Path(tempfile.mkdtemp(prefix='mu300-zips-magisk-'))
+        full_fake_release(cls.rel_tmp / 'v2026.10.06')
+        r = subprocess.run(['sh', str(TOP / 'tools/make-magisk-zips.sh'), str(cls.rel_tmp / 'v2026.10.06'), str(cls.rel_tmp / 'out')],
+                           capture_output=True, text=True)
+        assert r.returncode == 0, r.stderr
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.rel_tmp, ignore_errors=True)
+
+    def without_computer_side(self, src, dst):
+        with zipfile.ZipFile(src) as zi, zipfile.ZipFile(dst, 'w') as zo:
+            for i in zi.infolist():
+                if i.filename not in COMPUTER:
+                    zo.writestr(i, zi.read(i.filename))
+        return dst
+
+    def run_zip(self, zp, conf):
+        shutil.rmtree(self.tmp / 'fake', ignore_errors=True)
+        fake = FakeDevice(self.tmp, self.stubs)
+        fake_android_root(fake.root / 'android')
+        (fake.root / 'magisk/busybox').symlink_to(BUSYBOX)
+        if conf:
+            (fake.root / 'sdcard/mu300-install.conf').write_text(conf)
+        mod = self.tmp / 'modpath'
+        shutil.rmtree(mod, ignore_errors=True)
+        shutil.rmtree(self.tmp / 't', ignore_errors=True)
+        (self.tmp / 't').mkdir()
+        env = {k: str(v) for k, v in fake.env(self.tmp / 'unused', self.stubs / 'magiskboot').items()}
+        code = (MAGISK_ENV + f'ZIPFILE="{zp}"; MODPATH="{mod}"; TMPDIR="{self.tmp}/t"; set +e +u; '
+                f'. "{TOP}/android/magisk/installer/customize.sh"; echo "customize returned"')
+        r = subprocess.run([BUSYBOX, 'sh', '-c', code], capture_output=True, text=True, env=self.env(**env), timeout=300)
+        by = fake.root / 'dev/block/by-name'
+        state = {n: hashlib.sha256((by / n).read_bytes()).hexdigest() for n in ('boot_a', 'misc')}
+        # boot_b: what it holds, not its bytes - the device segment's cpio carries the times its files were made
+        img = (by / 'boot_b').read_bytes()
+        if img[44:54] == b'loglevel=5':
+            ksz = struct.unpack_from('<I', img, 8)[0]
+            state['boot_b'] = (img[44:44 + 1536], hashlib.sha256(img[4096:4096 + ksz]).hexdigest(),
+                               {n: hashlib.sha256(d).hexdigest() + str(x) for n, (k, x, d) in
+                                leaves(cpio_all(unlz4_legacy(ramdisk_of(img)))).items()})
+        else:
+            state['boot_b'] = hashlib.sha256(img).hexdigest()
+        state['module'] = sorted(str(p.relative_to(mod)) for p in mod.rglob('*')) if mod.exists() else None
+        out = re.sub(r'mu300-magisk\.\w+', 'mu300-magisk.X', r.stdout)
+        out = re.sub(r'\$6\$[^$\s]+\$\S+', '$6$salt$hash', out)
+        return r, out, state
+
+    def test_dry_run_and_install_as_before(self):
+        self.stub('magiskboot', MAGISKBOOT)
+        for name in ('mu300-magisk-v2026.10.06-openwrt-k6.18.zip', 'mu300-magisk-v2026.10.06-ubuntu-24.04-k5.4.zip'):
+            now = self.rel_tmp / 'out' / name
+            before = self.without_computer_side(now, self.tmp / ('before-' + name))
+            self.assertTrue(set(zipfile.ZipFile(now).namelist()) - set(zipfile.ZipFile(before).namelist()))
+            for conf, rc_word in (('MU300_DRY_RUN=1\n', 'Dry run'), ('', None)):
+                r1, out1, st1 = self.run_zip(before, conf)
+                r2, out2, st2 = self.run_zip(now, conf)
+                if rc_word:
+                    self.assertIn(rc_word, out1)
+                    self.assertIsNone(st1['module'])
+                else:
+                    self.assertNotIn('ABORT', out1, out1 + r1.stderr)
+                    self.assertIn('switch.sh', st1['module'])
+                    self.assertIsInstance(st1['boot_b'], tuple)              # a Linux boot image was written
+                    self.assertIn('etc/mu300-device', st1['boot_b'][2])
+                self.assertEqual(out2, out1, name)
+                self.assertEqual(st2, st1, name)
 
 
 class Workflow(unittest.TestCase):

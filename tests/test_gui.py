@@ -1184,6 +1184,26 @@ class Window(unittest.TestCase):
         self.assertIn('Parallel connections per download', show('install', 2))
         self.assertIn('Never copied by the installer', show('install', 3))
         self.assertIn('Ubuntu 26.04', show('install', 4))
+        # started from an unpacked Magisk zip: its system and kernel, nothing to choose about them, nothing to download
+        import copy
+        saved = ctl.choices
+        pkg = {'dir': '/somewhere/mu300-magisk-v2026.10.23-openwrt-luci-k7.2', 'tag': 'v2026.10.23', 'system': 'openwrt-luci',
+               'os': 'openwrt-luci', 'ubuntu': '', 'kernel': '7.2', 'files': {}, 'bytes': 45 << 20}
+        ctl.choices = copy.copy(saved)
+        ctl.choices.apply_package(pkg)
+        ctl.package = pkg
+        a._sync()
+        page = show('install', 2)
+        self.assertIn('This package', page)
+        self.assertIn('OpenWrt with the MU300 control panel', page)
+        for gone in ('Ubuntu LTS', 'The beta: v2026.10.25', 'The web panel for Ubuntu'):
+            self.assertNotIn(gone, page)
+        self.assertEqual(ctl.problems(), [])
+        self.assertIn('this unpacked Magisk zip, nothing downloaded', show('install', 4))
+        ctl.package = {'dir': '/somewhere/else', 'error': 'manifest'}
+        self.assertIn('is not an unpacked Magisk zip of a release that this installer can read', show('install', 2))
+        ctl.choices, ctl.package = saved, None
+        a._sync()
         # other devices: no root, a locked bootloader, data in the free space, a card, no room
         ctl.facts = facts(root='no'); ctl.check_state = 'failed'; ctl.check_error = 'su does not work on the device'
         self.assertIn('Without root nothing can be installed', show('install', 0))
@@ -1206,7 +1226,14 @@ class Window(unittest.TestCase):
         self.assertIn('holds a MU300 Linux installation', page)
         ctl.facts = facts(region__size='0', makeroom__first='12275712', makeroom__end='122155007', makeroom__usable_end='122155007',
                           makeroom__min_android='8388608', makeroom__min_linux='1638400', makeroom__max_linux='101490688')
-        self.assertIn('Make room now', show('install', 1))
+        page = show('install', 1)
+        self.assertIn('Make room now', page)
+        self.assertIn("restarts into Android's own recovery", page)          # the reset, and how it goes on (tools/resume.sh)
+        # a prepared installation waiting (tools/resume.sh): what its checks said
+        ctl.facts = facts(resume__transaction='/home/u/mu300-backups/x/transaction.json', resume__check='RESUME-OK', verdict__code='resume')
+        self.assertIn('A prepared installation waits for this device (EXPERIMENTAL', show('install', 1))
+        ctl.facts = facts(resume__transaction='/home/u/mu300-backups/x/transaction.json', resume__check='RESUME-REFUSED: preparation token mismatch')
+        self.assertIn('it cannot be continued: preparation token mismatch', show('install', 1))
         # a check that fitted the choices to the device: the widgets follow (a card that holds an installation)
         ctl.choices.storage = 'sd'
         a.on_change({'check'})

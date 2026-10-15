@@ -457,7 +457,7 @@ class Storage(ShellTest):
 
     def test_installer_refuses_a_card_install_with_a_kernel_that_cannot_read_it(self):
         src = (TOP / 'install.sh').read_text()
-        unpack = src.index('tar -xzf "$REL/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"')
+        unpack = src.index('tar -xzf "$ASSETS/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"')
         check = src.index('sd_kernel_ok "$KMAIN" || die')
         self.assertLess(unpack, check)
         self.assertLess(check, src.index("say \"$(t 'Adding the vendor files from your device to the images')\""))
@@ -1258,7 +1258,7 @@ class VpnOnInTheReplacedSystem(ShellTest):
 
     def question(self, shell, probe, answer):
         src = (TOP / 'install.sh').read_text()
-        block = src[src.index('vx_default=no\n'):src.index('\nKERNEL=5.4\n')]
+        block = src[src.index('vx_default=no\n'):src.index('\n[ -n "$PKG" ] || KERNEL=5.4\n')]
         block = block[:block.index('\nEXTRA_VPN=')]
         code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; OSES="ubuntu openwrt"; '
                 'die() { echo "DIE $*"; exit 1; }; '
