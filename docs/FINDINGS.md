@@ -133,6 +133,7 @@ what replaced it. The table below gives each section's state.
 | 71 | A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found | current (run against an F50 from a Mac on 2026-10-15: check, backup, installs and uninstalls from the text installer and from the window; the U30 Air, a locked bootloader, Linux and Windows hosts not measured; Windows only by CI) |
 | 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; run end to end on an F50 from Chrome on macOS on 2026-10-13 (docs/web-installer.md); Windows, a Linux host, the U30 Air, KernelSU/APatch and a download over a carrier's network not measured |
 | 74 | The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, #194) | current (the maintainer's U30 Air on 7.2.10 and the contributor's on 7.2.9); two working cards, kernel 5.4 and an F50 not run |
+| 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | experimental, opt-in build recipe (7.2.9; 7.2.10 without a client); PMK provenance open; the WPA2 fallback measured on the U30 Air |
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
@@ -5905,3 +5906,93 @@ device with openwrt-luci:
     mu300-update apply && reboot
     # after: the same job, and crond running
     cat /etc/crontabs/root; ps | grep crond
+### 80. WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat)
+The AP side of 14b's station finding. `docs/U30AIR-SAE.md` has the recipe and the open question; what the hardware
+showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
+
+* **Stock hostapd cannot do SAE on this driver.** The SME is in the firmware (`iw phy`: `connect`, no
+  `authenticate`), so hostapd never sees the SAE frames: a WPA3-only BSS comes up, a client finishes SAE with the
+  firmware and then fails association or the 4-way handshake (macOS: `-3912`).
+* **Two vendor interfaces make it work.** hostapd hands the passphrase to the firmware with vendor command OUI
+  `0x001374`, subcommand 43, nested attributes 8 (passphrase), 6 (group, 19) and 7 (ACT, `0xffffffff`); the
+  firmware answers each association with the derived PMK and PMKID as a trailing vendor element in the
+  `NEW_STATION` IE buffer: EID 221, length 52, prefix `40:45:da:04`, then 32 + 16 bytes. Hunting-and-pecking,
+  group 19 only; H2E-only clients and other groups untested.
+* **Only the passphrase reaches the firmware.** `vendor_set_sae_password` (`sc2355/vendor.c`) stores the group and
+  never increments `group_count`, so `vendor_softap_convert_para` writes no group TLV; and it writes the ACT TLV only
+  when `setting->act != -1`, which `0xffffffff` is not. `CMD_SET_SAE_PARAM` therefore carries the entry, the
+  passphrase and the end marker: group 19 and the anti-clogging threshold are the firmware's defaults, and hostapd's
+  `sae_groups` and `sae_anti_clogging_threshold` do nothing in this mode. Left as it is: sending a group list the
+  firmware has never been given is a change nobody has measured.
+* **The gate is the option and a firmware capability, not the device.** The driver answers the vendor command with
+  `-ENOTSUPP` unless the firmware reports `SPRD_EXTEND_SOATAP_WPA3`. The F50 has the same chip and driver; what its
+  firmware reports is not known. The command exists in the 5.4 vendor driver as well as in the mainline port;
+  only 7.2.9 has run it.
+* **The PMK arrives in a client-controlled buffer.** The driver passes `evt_new_station.ie` straight through as
+  `assoc_req_ies` (`sc2355/cmdevt.c` -> `common/report.c`), the same bytes that carry the station's own IEs. The
+  parser accepts exactly one trailing element and rejects any second marker, which only holds if the firmware
+  always appends its own; nothing proves it refuses an association without a completed SAE exchange. Open.
+* **The stock driver printed secrets at `L_DBG`**: the SAE passphrase (`pwd is :%s`, `vendor.c`), a station PSK
+  (`cfg80211.c`, `%s` on a buffer that is not NUL-terminated), every TX command and up to 400 bytes of every RX
+  message on PCIe (`pcie.c`, `sdio.c`), the `NEW_STATION` event (`cmdevt.c`). The default level is `L_INFO` and this
+  kernel exposes no debugfs node for it, so none leaked by default; the removals are unconditional now. Confirmed
+  on the device with the rebuilt 7.2.9 module: `dmesg` and `logread` through a boot, a WPA2 association and a
+  package swap hold none of the patterns (the only `EVENT:` matches are `reorder_wlan_delba_event`).
+* **Option off is the stock path.** With the patched `wpad-basic-openssl` r8 installed and the WPA2-PSK hotspot
+  untouched, the generated `hostapd-phy0.conf` has no `sae`/`u30_sae` key, a WPA2 client is back 32 s after the
+  package swap, the VPN stays up. The mode needs pure SAE, `ieee80211w=2`, `sae_pwe=0` and PMKSA caching, and a
+  BSS with the option and any other mode fails closed (`Failed to set beacon parameters`, AP-DISABLED).
+  In the patch every new path starts from `u30_sae_offload` (the configuration check, the firmware request, the
+  key import); the one line that is not behind it replaces hostapd's debug hex dump of the association IEs with their
+  length. OpenWrt's wifi-scripts turn the documented UCI settings into `wpa_key_mgmt=SAE`, `ieee80211w=2`,
+  `sae_pwe=0`, `u30_sae_offload=1` and `wpa_passphrase` (no `sae_password`, which the patch refuses), checked with
+  the 25.12.5 scripts in a container.
+* **A second BSS with the option, added live, took the radio down (2026-10-12).** `wifi reload` with a new
+  `wifi-iface` (`encryption sae`, `ieee80211w 2`, `sae_pwe 0`, `u30_sae_offload=1`) next to the WPA2 hotspot: both
+  SSIDs disappeared and did not come back within ten minutes. The device could only be reached over that hotspot,
+  so the cause is not known yet (hostapd gives the whole phy up when one BSS fails to set up; the earlier maintainer
+  test used a separate BSS with r6 and a full `wifi down/up`). Enable the option on a device you can reach another
+  way, and with a full `wifi down; wifi up`, never `wifi reload`.
+  Snrat's r9 refuses a second BSS when the configuration is loaded (`U30 SAE: supports a single BSS only`); on his
+  device, with `logread -f` over USB, the refusal still took the running WPA2 BSS down with it through netifd's
+  reload. The cause of the r8 outage itself was never captured.
+* **A hotspot that could not start stayed down at every boot; now it goes back to WPA2 (2026-10-13).** Three roads
+  to it: `mu300-update` keeps `/etc/config` and replaces the packages, and the stock wpad refuses a configuration with
+  a key it does not know; the firmware refuses the vendor command; the patch rejects the mode.
+  `openwrt-wifi-sae-guard` (does nothing without the option) looks before the first `wifi up` whether the installed
+  hostapd has the option, and about two minutes after boot whether the access point is `ENABLED`; if not, the BSS
+  becomes `psk2` with the same passphrase, the file as it was is kept in `/etc/mu300/wireless.sae-offload`, and
+  `mu300-wifi` logs one error line. WPA2 because hostapd's own SAE cannot work on this driver (first point).
+* **Measured on the U30 Air, 2026-10-13** (OpenWrt 25.12.5, 7.2.10, r9 built with the helper, this branch's
+  `sprd_wlan_combo.ko`; no Wi-Fi client at hand, so no association with SAE was tried):
+  * Without the option the guard changes nothing: `AP-ENABLED` at 40.1 / 41.5 / 43.3 / 43.4 s before, 41.2 / 41.3 /
+    43.3 s with it; silent, the configuration byte-identical, a WPA2 client back by itself.
+  * netifd starts the radio once before `mu300-hw` does (15 to 23 s after power-on; `AP-DISABLED` under the world
+    regulatory domain). So the stock hostapd does see the option once and logs `unknown configuration item`; the
+    guard acts before `mu300-hw`'s `wifi down; wifi up` at about 37 s, and the hotspot was up as WPA2 at 39.9 s, the
+    configuration byte-identical to the one before the opt-in, the saved file mode 600.
+  * A mode r9 refuses (`sae-mixed`; a second BSS): fallback 136 s after power-on, `AP-ENABLED` at 139.5 and 139.7 s.
+    Off on purpose (the key's marker, interface or radio disabled): untouched.
+  * **The log loses the guard's line.** 128 KiB, about 1300 lines, and one Wi-Fi restart writes hundreds: 135 s
+    after the fallback the line was gone. It is now also in `/etc/mu300/wireless.sae-offload.why`, with its time.
+  * r9 with the option: `U30 SAE: firmware runtime parameters configured`, `vendor_set_sae_password type : 8/6/7`,
+    no `firmware not support softap wpa3`, `AP-ENABLED` 5 s after `wifi up`, 41.6 s after power-on; the generated
+    file has `wpa_key_mgmt=SAE`, `ieee80211w=2`, `sae_pwe=0`, `u30_sae_offload=1`. A synthetic passphrase, as text
+    and as hex: 0 lines in `dmesg` and `logread`; none of the removed prints. Option off again: `WPA-PSK`, no line.
+  * The module with the removals booted and ran every step above (its `wcn_bsp` is section-identical to the
+    installed one; `sprd_wlan_combo` 352 bytes of code shorter). The module in v2026.10.25 prints the passphrase
+    with `pr_info`, not at `L_DBG` as the point above says: it holds the four format strings. It was not run with
+    the option, so that print was not seen in a log.
+  * `apk add` of the r9 pair next to `wpad-basic-mbedtls` is refused (conflict): `apk del` the stock one first.
+    This `iw` prints no "Supported commands", and `iw dev wlan0 station dump` on this driver prints no station
+    fields, so neither can serve as a check.
+  * Not measured: any client (WPA3 join, WPA2 refused on the SAE BSS, wrong passphrase, throughput, the PMK
+    probe), kernel 5.4, the F50. After the SAE steps and the original WPA2 configuration back, the WPA2 client that
+    had rejoined earlier did not come back within 4 minutes, nor after the device was all stock again: it had
+    most likely left, and a WPA2 join after SAE in one boot is not shown.
+* **Built, 2026-10-13:** `sprd_wlan_combo` with these removals for 7.2.10 and 6.18.56 (with `wcn_bsp`; the five touched
+  files warn only where the vendor's code always did, none of the removed format strings is in the module);
+  for 5.4 the twelve `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver and all 69 objects
+  compile (the module was not linked: ThinLTO wants to write next to the kernel's objects). The hostapd patch applies
+  with GNU patch after OpenWrt 25.12.5's own patches on `ca266cc2` (BSD patch rejects the `ap_config.c` hunk, which
+  has no leading context: build in the SDK, not on macOS).
