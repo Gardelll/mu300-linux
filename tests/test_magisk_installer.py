@@ -2,6 +2,7 @@
 read, never run; on a fake device (tests/fakedevice.py) it finds the model, the slots, where Linux goes and what is
 already there, and a refusal or a dry run writes nothing; an installation writes boot_<linux slot>, verifies it
 and arms misc last."""
+import gzip
 import hashlib
 import io
 import json
@@ -88,9 +89,11 @@ def fake_ext4_bytes(label):
 
 
 def tar_gz(files):
-    """{name: bytes} -> a .tar.gz as the release makes them (./ names)"""
+    """{name: bytes} -> a .tar.gz as the release makes them (./ names). The same files give the same bytes: the gzip
+    header holds no time (with the time in it, two zips made a second apart had other checksums - a test that made
+    one zip, then another, and installed the first against the second's manifest failed now and then)"""
     buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode='w:gz') as t:
+    with gzip.GzipFile(fileobj=buf, mode='wb', mtime=0) as gz, tarfile.open(fileobj=gz, mode='w') as t:
         for name, data in files.items():
             info = tarfile.TarInfo('./' + name)
             info.size = len(data)
@@ -1418,10 +1421,12 @@ class Install(InstallerCase):
         # gets installed is the checked copy
         good = self.tmp / 'good.zip'
         shutil.copy(self.zipfile, good)
+        manifest = (self.mu300 / 'manifest').read_text()          # the good zip's (corrupt_payload makes it anew)
         self.corrupt_payload()
         evil = self.tmp / 'evil.zip'
         shutil.copy(self.zipfile, evil)
         shutil.copy(good, self.zipfile)
+        (self.mu300 / 'manifest').write_text(manifest)
         self.stub('magiskboot-swap', f'cp "{evil}" "$ZIPFILE"; exec "{self.stubs}/magiskboot" "$@"')
         self.magiskboot = self.stubs / 'magiskboot-swap'
         r = self.run_installer()
