@@ -495,11 +495,11 @@ plan_choices() {
     fi
     sd_kernel_ok "$KB" || die "$(t 'this kernel cannot read the SD card; use a newer zip')"
     # Never back to an older release by itself: the new image does the carrying over, and one from before
-    # v2026.10.28 keeps only a list of places - what else was added to the system would be gone from it. (Tags are
-    # dates, so they sort as text; a system that does not say which release it is is not held back.)
+    # v2026.10.28 keeps only a list of places - what else was added to the system would be gone from it. (newer,
+    # mu300-update's: the release tags, docs/FINDINGS.md 125 - every vYYYY.MM.DD.N is newer than every vYYYY.MM.DD,
+    # which text order does not give; a system or a zip that does not say which release it is is not held back.)
     DOWNGRADE=0
-    if [ "$UPDATE" = 1 ] && [ -n "$HAVE_VERSION" ] && [ "$HAVE_VERSION" != "$TAG" ] &&
-        [ "$(printf '%s\n%s\n' "$HAVE_VERSION" "$TAG" | sort | tail -n1)" = "$HAVE_VERSION" ]; then
+    if [ "$UPDATE" = 1 ] && [ -n "$HAVE_VERSION" ] && newer "$HAVE_VERSION" "$TAG"; then
         [ "${MU300_DOWNGRADE:-}" = yes ] ||
             die "$(t 'The installed {1} is {2}, and this zip is {3}, an older release. Going back to an older release is not done by itself: the older release may not carry over everything you added to the system.' "$OS" "$HAVE_VERSION" "$TAG")
 $(t 'Nothing was changed. To install it all the same, put MU300_DOWNGRADE=yes into {1} (a release before v2026.10.28 then keeps only settings, users and home directories), or MU300_MODE=wipe to start fresh.' "$TRUSTED_CONF")"

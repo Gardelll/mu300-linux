@@ -362,12 +362,13 @@ class InstallerCase(ShellTest):
     IMAGE_SHADOW = 'root::19000:0:99999:7:::\nubuntu:$6$img$imagehash:19000:0:99999:7:::\n'
 
     def zip(self, system='openwrt', kernel='6.18', features=('sdcard',), devices='f50 u30air', corrupt=False,
-            image_shadow=True):
+            image_shadow=True, tag='v2026.10.06'):
         """mu300/ with its manifest, and the zip with the payload of SYSTEM and KERNEL"""
         self.mu300 = self.tmp / 'zip' / 'mu300'
         shutil.rmtree(self.tmp / 'zip', ignore_errors=True)
         shutil.copytree(INSTALLER_DIR, self.mu300, symlinks=True)
-        self.zip_args = dict(system=system, kernel=kernel, features=features, devices=devices, image_shadow=image_shadow)
+        self.zip_args = dict(system=system, kernel=kernel, features=features, devices=devices, image_shadow=image_shadow,
+                             tag=tag)
         self.kernel_release = f'{kernel}.0-mu300' if kernel != '5.4' else '5.4.254-mu300'
         kasset = 'mu300-kernel.tar.gz' if kernel == '5.4' else f'mu300-kernel-{kernel}.tar.gz'
         rasset = ROOTFS_ASSET[system]
@@ -380,7 +381,7 @@ class InstallerCase(ShellTest):
             files['etc/shadow'] = self.IMAGE_SHADOW.encode()
         rootfs = tar_gz(files)
         (self.mu300 / 'manifest').write_text(
-            f'TAG=v2026.10.06\nSYSTEM={system}\nOS={os_}\nUBUNTU={ubuntu}\nKERNEL={kernel}\nKERNEL_ASSET={kasset}\n'
+            f'TAG={tag}\nSYSTEM={system}\nOS={os_}\nUBUNTU={ubuntu}\nKERNEL={kernel}\nKERNEL_ASSET={kasset}\n'
             f'ROOTFS_ASSET={rasset}\nSHA256_KERNEL={hashlib.sha256(kb).hexdigest()}\n'
             f'SHA256_ROOTFS={hashlib.sha256(rootfs).hexdigest()}\n')
         self.zipfile = self.tmp / 'zip' / 'mu300-magisk.zip'
@@ -795,6 +796,26 @@ class Plan(InstallerCase):
         self.version('openwrt', 'v2026.10.25')
         r = self.run_installer(conf='MU300_DRY_RUN=1\n', trusted='MU300_MODE=wipe\n')
         self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+
+    def test_the_release_order_is_the_tags_not_their_text(self):
+        # docs/FINDINGS.md 125: every vYYYY.MM.DD.N is newer than every vYYYY.MM.DD, and N is a number - text order
+        # gets both wrong (v2026.10.27 > v2026.10.16.1, v2026.10.16.2 > v2026.10.16.10)
+        for zip_tag, installed, older in (('v2026.10.16.1', 'v2026.10.27', False), ('v2026.10.27', 'v2026.10.16.1', True),
+                                          ('v2026.10.16.10', 'v2026.10.16.2', False), ('v2026.10.16.2', 'v2026.10.16.10', True),
+                                          ('v2026.10.17.1', 'v2026.10.16.3', False), ('v2026.10.16.1', 'v2026.10.16.1', False)):
+            self.reset()
+            self.zip(system='openwrt', kernel='6.18', tag=zip_tag)
+            self.existing_filesystem(systems=('openwrt',))
+            self.version('openwrt', installed)
+            r = self.run_installer(conf='MU300_DRY_RUN=1\n')
+            if older:
+                self.assertNotIn(r.returncode, (0, 3), (zip_tag, installed, r.stdout + r.stderr))
+                self.assertIn(f'The installed openwrt is {installed}, and this zip is {zip_tag}, an older release.',
+                              r.stdout + r.stderr)
+                self.assertTrue(self.nothing_written())
+            else:
+                self.assertEqual(r.returncode, 3, (zip_tag, installed, r.stdout + r.stderr))
+                self.assertNotIn('an older release', r.stdout + r.stderr)
 
     def test_keeping_only_the_list_is_for_root_to_ask(self):
         # MU300_UPDATE_KEEP=list (the update as it was before v2026.10.28) gives up files of the user: only a file
