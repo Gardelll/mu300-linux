@@ -2,7 +2,7 @@
 
 What docs/FINDINGS.md 85 measured in containers (and `tests/update-experiment` on the images of a real release
 build), to be run on the **F50 with Ubuntu** and the **U30 Air with OpenWrt and the control panel** in one go,
-before the release that brings it is promoted. Nothing here has run on a device yet. Every step says what to
+before the release that brings it is promoted. Run on both devices on 2026-10-16 (FINDINGS 85, "On the devices"; part 7 not yet). Every step says what to
 expect; what differs goes into FINDINGS 85 with the device, the release and the kernel.
 
 Two updates are measured on each device: **the first one**, from the newest published release (v2026.10.27: no

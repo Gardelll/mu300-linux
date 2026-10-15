@@ -137,7 +137,7 @@ what replaced it. The table below gives each section's state.
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
-| 85 | An update keeps everything the user made: the image's manifest tells its files from the user's, one carry block for `mu300-update`, the installers and the Magisk zip, and never less protected than the user left it | current (unit tests, and real release images updated in containers; nothing of it has run on a device: docs/update-device-test.md) |
+| 85 | An update keeps everything the user made: the image's manifest tells its files from the user's, one carry block for `mu300-update`, the installers and the Magisk zip, and never less protected than the user left it | current (unit tests, real release images in containers, and the device protocol on a U30 Air, openwrt-luci, and an F50, Ubuntu, 2026-10-16, with two unpublished signed releases of the branch: everything carried; two defects fixed; the Android path not run) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 
@@ -6450,8 +6450,55 @@ The updates that are not the plain one (`tests/update-experiment/scenarios.sh`):
 | updated twice (to v2026.10.26, "rebooted", to v2026.10.27): the second update reads the first one's own manifest | 46 kept, 2 set aside, 1 installed again, 3 not carried by design |
 | `MU300_UPDATE_KEEP=list`: the update as it was | 27 kept, 1 installed again, 3 not carried by design, 2 changed, 34 lost |
 
+**On the devices (2026-10-16, `docs/update-device-test.md`).** Two releases built from this branch and never
+published, v2026.10.40 (T1) and v2026.10.41 (T2): `tools/make-release.sh` with the mainline kernels built at the
+branch's commit, signed with the project's key (`SHA256SUMS.sig`), the Magisk zips of T2 by `make-magisk-zips.sh`.
+The mirror was on each device (busybox `uhttpd` on 127.0.0.1 on the U30 Air, `file://` on the F50: no server on the
+computer), with the API files of §86 for the page's *Check*. A U30 Air (openwrt-luci, kernel 6.18.56, the owner's
+VPN with its kill switch over SIM1) and an F50 (Ubuntu 24.04, kernel 7.2.10; its carrier passed no traffic without a
+VPN that day, so python3, hello and tree came from files: a standalone CPython in the test directory, the two .deb
+by `dpkg -i`), both on v2026.10.27, `experiment.py plant / KIND sys.json --live` (63 items on Ubuntu, 46 on OpenWrt).
+
+| step | U30 Air (openwrt-luci) | F50 (Ubuntu) |
+|---|---|---|
+| 2. v2026.10.27 -> T1, terminal | "continuing with the mu300-update of T1", no "no list of the files"; carried 3456 files, 257 MB in 36 s (the whole apply); set aside: `/www/index.html` (held), `/etc/banner.failsafe` (image's in use), `/etc/banner` deleted again; python3 listed for the first boot. **The boot image was not written**: `/dev/mmcblk0p38` was a regular file of 50 MB in that boot (something had written to the path before this test; a restart makes /dev anew), and the updater refused to write to it and said so | 2588 files, 225 MB in 31 s; `/usr/lib/systemd/system/ssh.service` held, `/etc/issue.net` and `/etc/skel` (the user's in use), hello and tree listed; boot image T1 |
+| 2. verify | the copy for the rollback: every item kept; the new system before the restart: 42 kept, 1 held, 3 by design | 58 kept, 1 held, 4 by design |
+| 2. after the restart | 41 kept; `/etc/uci-defaults/99-user` gone (OpenWrt runs and deletes it at boot: by design); the VPN up on the same exit address; extras changed (below) | 55 kept; 3 "lost" that the booted system rewrote itself: `/etc/resolv.conf` (a link again), `/var/log/wtmp`, the planted journal file (journald set it aside as corrupt) - not the update's |
+| 3. T1 -> T2 | through the panel's backend (`ubus call mu300dash update_get/update_act/update_job`, what the page calls): *Check* offered T2 with "Free space needed" 2308456 KB (planted: 257 MB), the update "signed with the project's release key", 3460 files carried, the report on the page (`report_new` 1, then 0 after `mu300-update report`); again **from a file** (the zip put where `upload_begin` said, `upload_done` inspected it: T2, openwrt-luci, k6.18, signature valid, the SHA-256 of `SHA256SUMS-magisk`) | `inspect` of the zip (signature valid, fits), `apply --from` the zip with mobile data stopped: "signed with the project's release key", no download, 2593 files, 233 MB in 51 s |
+| 3. first boot | **python3 was not installed again** (below, fixed) | hello and tree wait for the internet (state offline: this F50 had none) |
+| 4. rollback + rollback-boot | T1 again, everything kept but the uci-defaults script | T1 again, as in part 2 |
+| 5. older release | T1 with T2 installed: refused (also with `MU300_DOWNGRADE=1`), nothing downloaded; `--downgrade`: through, everything kept | the same |
+| 6. no room, `--no-rollback` | - | a 27 GB file in /srv: refused before any download ("30722 MB needed, 2559 MB free", naming clean and --no-rollback); `--no-rollback`: through, `ubuntu.broken`, rollback "no previous version kept"; after the restart the file is there, verify as before, `clean` removed `ubuntu.broken` |
+| end | v2026.10.27 by `apply --downgrade --unsigned` (refused without each flag), then the system as it was before the plant | the same |
+
+Found and fixed on this branch:
+* **One dead feed kept every package from coming back on OpenWrt.** The planted `customfeeds.list` names
+  `example.invalid`; `apk update` then fails as a whole ("1 unavailable", exit 1) although every other feed answered,
+  `mu300-user-packages` took that for "offline", waited 300 s between tries and would give up after five boots:
+  python3 never came back on the U30 Air. Ubuntu had `apt_sources_check` for the same case; apk now counts as
+  online when fewer feeds were unavailable than are configured (`apk_update`; offline every feed is unavailable).
+  With it, python3 was installed again at once (`test_a_dead_feed_of_the_users_is_not_offline`).
+* **`experiment.py --live` replaced what the device needs**: the VPN's and the hotspot's settings (`ENABLE=0`: the
+  owner's VPN off after the restart), the SSH host keys and `PasswordAuthentication no`, root's crontab (a daily
+  reboot), the panel's saved band locks (applied at the next boot), and disabled cron or sysctl. With `--live` a
+  file the device has gets a line of the user's, host keys and saved locks are written down as they are, and no image
+  service is disabled.
+
+Seen, not changed here:
+* **The VPN module is brought to "latest" even when the installed one is newer**: v2.0.3 (a pre-release, installed
+  by hand) became v2.0.1 at the first update (`module_download` compares hashes, not versions; v2026.10.27's updater
+  does the same). Put back by hand afterwards.
+* The report's time on OpenWrt is UTC (22:19 for 01:19 local); on Ubuntu it is local.
+* When T1's and T2's boot images are the same bytes the second update says "boot: already up to date (T2)", and
+  `rollback-boot` then goes back to the image before T1.
+* `Deleted again` on the F50 listed `/etc/rc[2-5].d/S01ssh`: a real change on that unit (an earlier test had disabled
+  `ssh.service`), not a false line.
+
+**Not run**: part 7 (the Magisk zip from Android, the computer installer: the F50's Android could not be addressed
+apart from another F50 in use), the page in a browser (its backend was driven), the 5.4 kernel, an SD card.
+
 **Not measured, or not on a device.**
-* Nothing of this ran on an F50 or a U30 Air: not the helper on the devices' kernels (5.4 vendor, mainline) and
+* Before 2026-10-16 nothing of this ran on an F50 or a U30 Air: not the helper on the devices' kernels (5.4 vendor, mainline) and
   under Android (a static aarch64 program started from the Linux filesystem by Magisk's root), not the time the
   scan and the hashing take on the eMMC or an SD card, not a boot of an updated system. In the containers the
   updated systems were only asked what can be asked without booting (`dpkg --audit` empty, `sshd -t`, `visudo -c`,
