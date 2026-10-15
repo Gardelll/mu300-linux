@@ -622,12 +622,30 @@ if (-not $py) {
 }
 
 # ---- the release and the beta question (tools/releases.sh's release_resolve, here ReleasePick and BetaAsked) -------
-$bnames = 'ReleasePick', 'BetaAsked'
+$bnames = 'ReleasePick', 'BetaAsked', 'TagKey', 'TagNewer'
 $bdefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $bnames -contains $n.Name }, $true)
 foreach ($d in $bdefs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in $bnames) {
     if (-not (Get-Command $w -CommandType Function -ErrorAction SilentlyContinue)) { Write-Host "FAIL: $w not found in install.ps1"; exit 99 }
 }
+# the release tags (docs/FINDINGS.md 125): the table every language is held to
+foreach ($line in [IO.File]::ReadAllLines((Join-Path (Join-Path (Join-Path $Top 'tests') 'fixtures') 'release-tags.tsv'))) {
+    if (-not $line -or $line.StartsWith('#')) { continue }
+    $f = $line.Split("`t")
+    switch ($f[0]) {
+        'ok'  { Check "tag ok [$($f[1])]" ($null -ne (TagKey $f[1])) $true }
+        'bad' { Check "tag bad [$($f[1])]" ($null -eq (TagKey $f[1])) $true }
+        'cmp' {
+            $a = $f[1]; $b = $f[3]
+            $got = if (TagNewer $a $b) { if (TagNewer $b $a) { 'both' } else { '>' } } elseif (TagNewer $b $a) { '<' } elseif ($null -ne (TagKey $a) -and $null -ne (TagKey $b)) { '=' } else { '!' }
+            Check "tag $a $($f[2]) $b" $got $f[2]
+        }
+    }
+}
+Check 'tag: a newline after it'  ($null -eq (TagKey "v2026.10.16.1`n")) $true
+Check 'tag: other digits'        ($null -eq (TagKey "v2026.10.16.$([char]0x0661)")) $true
+$site0 = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
+Check 'slot a: by TagNewer'      ($site0 -match "\(TagNewer 'v2026\.10\.10' \`$Release\)") $true
 Check 'beta asked'               (BetaAsked 'v2026.10.23' 'v2026.10.25' $false) $true
 Check 'no beta: not asked'       (BetaAsked 'v2026.10.23' '' $false) $false
 Check 'no release: not asked'    (BetaAsked '' 'v2026.10.25' $false) $false

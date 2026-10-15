@@ -3,6 +3,8 @@
 // from a mirror, or the user downloads it and picks the file). What the API says is
 // data from the network: every tag, name, size and checksum is checked for its shape before it is used, and a
 // download link is only ever one into this project's releases.
+import { newerTag, releaseKey } from "./version.js";
+
 export const REPO = "dikeckaan/mu300-linux";
 export const VPN_REPO = "dikeckaan/mu300-linux-vpn";
 export const VPN_ASSET = "mu300-linux-vpn.tar.gz";
@@ -49,7 +51,8 @@ async function getJson(fetchImpl, url) {
   try { return await res.json(); } catch (e) { throw new GithubError("bad-answer", "GitHub's answer could not be read"); }
 }
 
-const newer = (a, b) => (a.published !== b.published ? a.published > b.published : a.tag > b.tag);
+// by when it was published; the same moment: by the tag (the release tags' order, docs/FINDINGS.md 125)
+const newer = (a, b) => (a.published !== b.published ? a.published > b.published : newerTag(a.tag, b.tag) || (!releaseKey(a.tag) && a.tag > b.tag));
 
 // loadReleases() -> { stable, beta }: the newest release, and the newest prerelease when it is newer than that
 // (else null: there is no beta to ask about)
@@ -62,7 +65,8 @@ export async function loadReleases(fetchImpl = globalThis.fetch.bind(globalThis)
     if (r.prerelease) { if (!beta || newer(r, beta)) beta = r; } else if (!stable || newer(r, stable)) stable = r;
   }
   if (!stable && !beta) throw new GithubError("no-release", "no release was found");
-  if (beta && stable && !newer(beta, stable)) beta = null;
+  // and a beta is newer than the release by its tag too, when both are release tags (as mu300-update decides)
+  if (beta && stable && (!newer(beta, stable) || (releaseKey(beta.tag) && releaseKey(stable.tag) && !newerTag(beta.tag, stable.tag)))) beta = null;
   return { stable, beta };
 }
 
@@ -78,8 +82,9 @@ export function zipName(tag, system, kernel) { return `mu300-magisk-${tag}-${sys
 // Can the web installer use this release at all? Its zips' installer must know MU300_ANSWERS; releases up to
 // LAST_RELEASE_WITHOUT_WEB are known not to (the page still checks the zip itself once it is picked).
 export function releaseSupportsWeb(release) {
+  if (releaseKey(release.tag)) return newerTag(release.tag, LAST_RELEASE_WITHOUT_WEB);   // vYYYY.MM.DD(.N)
   if (!/^v\d{4}\.\d{2}\.\d{2}/.test(release.tag)) return true;      // not a dated tag: decided by the zip
-  return release.tag.slice(0, 11) > LAST_RELEASE_WITHOUT_WEB;
+  return release.tag.slice(0, 11) > LAST_RELEASE_WITHOUT_WEB;      // a three-field tag with something after it
 }
 
 // the zip of a release for a system and a kernel: { name, size, sha256, url } or null when the release has none

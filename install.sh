@@ -367,11 +367,12 @@ slot_setup() {
 }
 # Linux on a needs systems that know it (release v2026.10.10 on: mu300-next-boot, mu300-update and the recorder
 # follow the slot the initramfs names); the init is this checkout's either way, build-boot-image.py puts it behind a
-# mainline kernel's generic segment. A tag that is not a release date (MU300_RELEASE_URL's "custom") is not judged.
+# mainline kernel's generic segment. A tag that is not a release tag (MU300_RELEASE_URL's "custom") is not judged;
+# newer and tag_ok: tools/releases.sh (vYYYY.MM.DD.N is newer than every vYYYY.MM.DD, docs/FINDINGS.md 125).
 slot_release_ok() {  # slot_release_ok RELEASE
     [ "$LINUX_SLOT" = a ] || return 0
-    case $1 in v[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]*) ;; *) return 0 ;; esac
-    [ "$(printf '%s\n%s\n' v2026.10.10 "$1" | sort | head -n1)" = v2026.10.10 ] ||
+    tag_ok "$1" || return 0
+    ! newer v2026.10.10 "$1" ||
         die "$(t 'Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer' "$1" v2026.10.10)"
 }
 # write_linux_boot IMAGE: IMAGE to boot_$LINUX_SLOT, verified, then the block beside it (IMAGE without .img +

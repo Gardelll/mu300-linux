@@ -149,6 +149,7 @@ what replaced it. The table below gives each section's state.
 | 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
+| 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 
 ## Hardware and firmware facts
 
@@ -5319,7 +5320,7 @@ and no JSON tool is needed (Ubuntu has none). GitHub's list of releases is read 
 every `,"` and `{"` is given a line of its own - which the escaped quotes inside a release's notes never are, so
 notes that contain `"tag_name": "v2099.01.01"` change nothing (tested with GitHub's pretty and compact forms).
 
-The functions of the block, by name, because a merge will ask: `jv`, `jstr`, `jnum`, `mtime`, `tag_ok`, `newer`,
+The functions of the block, by name, because a merge will ask: `jv`, `jstr`, `jnum`, `mtime`, `tag_ok`, `tag_key`, `newer` (§125),
 `space_needed`, `source_conf`, `key_state`, `sig_raw`, `sig_state`, `stage_private`, `tag_sha`, `sums_trusted`,
 `sums_verdict`, `apply_targets`, `downgrade_ok`, `boot_downgrade_ok`, `zip_p`, `man_val`,
 `from_open`, `from_read`, `payload_is`, `from_close`, `from_member`, `from_fits`, `from_installed`, `apply_options`,
@@ -5522,7 +5523,7 @@ a file. The file is in `/etc/mu300`, so it survives updates: whoever could write
 **What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
 (`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's
 ubus endpoint takes POSTs with a session. Every parameter is a fixed word, a release tag
-(`v[0-9]{4}\.[0-9]{2}\.[0-9]{2}`), one of the three systems, one of the three kernels, a size or a SHA-256; mu300dash
+(`v[0-9]{4}\.[0-9]{2}\.[0-9]{2}`, and since §125 `vYYYY.MM.DD.N` too), one of the three systems, one of the three kernels, a size or a SHA-256; mu300dash
 refuses anything else before the adapter runs, and the adapter checks again. Everything that changes the device
 also wants the word of its operation (`confirm`), so a stray call does nothing; on the page each of those is a
 dialog that says what will happen, and going back or deleting the kept version takes a tick first. The log and the
@@ -7259,3 +7260,79 @@ the v2026.10.27 kernels on the same devices.
   hotspot took the Mac back (§92 has the log lines).
 * Not covered: two Wi-Fi clients (mDNS between them, a second client's DHCPv6), an SDIO board, and the skb
   short-headroom path, which no log line shows; nothing here proves the use-after-free case was reached.
+
+### 125. Release names: the day of the release and its number (vYYYY.MM.DD.N)
+
+**Status: current** (unit tests in sh, Python, JavaScript and PowerShell against one table; the old clients' behaviour
+read from their code at the tags v2026.10.25, v2026.10.26 and v2026.10.27; nothing run on a device).
+
+**What was wrong.** The release tags were `vYYYY.MM.DD`, but the "day" was used as a counter: v2026.10.27 was
+published on 2026-10-15 (UTC), twelve days ahead of the calendar. The owner's decision (2026-10-15): the tag says the
+real day of the release, then a number for the releases of that day.
+
+**The scheme.** A new release is `vYYYY.MM.DD.N`: YYYY.MM.DD the UTC date it is built, N = 1, 2, 3, ... for the
+releases of that day. N has no leading zero and is at most 99 (Magisk's `versionCode` below); the month is 01..12, the
+day 01..31. `tools/make-release.sh --next-tag` prints the next one: today's date and one more than the highest N of
+today's tags among GitHub's releases (`gh release list`, drafts and prereleases included) and the tags (local and
+`git ls-remote origin`); without GitHub's answer it prints nothing and fails rather than guess. `make-release.sh TAG`
+takes only the four-field form for a new release and refuses a TAG whose date is not today unless `--any-date` is
+given. The Release workflow takes the tag input empty (then `--next-tag`) or checks a given one (`--check-tag`) at its
+start, and passes `--any-date` to the build hours later, which may end on the next day.
+
+**The order (the transition rule).** Every four-field tag is newer than every three-field tag, whatever the dates:
+v2026.10.16.1 > v2026.10.27. Four-field tags compare by the date, then by N, as numbers: v2026.10.16.2 >
+v2026.10.16.1, v2026.10.16.10 > v2026.10.16.9, v2026.10.17.1 > v2026.10.16.99. Three-field tags keep their old order
+among themselves. Anything else - `test-issue-102`, `v2026.10.16.0`, `v2026.10.16.01`, `v2026.13.01.1`,
+`v2026.10.27-fix1`, a trailing newline or space, digits of another script - is no release tag: neither newer nor older
+than anything. As a key: `1YYYYMMDD00` for vYYYY.MM.DD, `2YYYYMMDDNN` for vYYYY.MM.DD.N.
+
+**One comparer per language, one table.** `tests/fixtures/release-tags.tsv` lists the tags that are release tags, the
+ones that are not, and 31 pairs with their order; every implementation is tested against it:
+
+| language | where | used by |
+|---|---|---|
+| sh | the `release-tag` block (`tag_ok`, `tag_key`, `newer`) of `tools/releases.sh`, word for word also in `mu300-update` and `tools/android-install.sh` (a test compares the three) | install.sh (the slot-a check), make-release.sh, make-magisk-zips.sh (`versionCode`), mu300-update (`notice`, `check`, `downgrade_ok`, `boot_downgrade_ok`, `--from`, `releases`, a module's `requires`), android-install.sh (for an update's downgrade check) |
+| Python | `tools/release_pick.py`: `tag_key`, `tag_ok`, `newer` | the installers' release and beta decision (install.sh, install.ps1, the graphical installer) |
+| JavaScript | `site/assets/web-installer/version.js`: `releaseKey`, `newerTag`, word for word also in the panel's `update.js` | the web installer (`loadReleases`, `releaseSupportsWeb`), System > Update |
+| PowerShell | `install.ps1`: `TagKey`, `TagNewer` (tested in `tests/installer.Tests.ps1`) | install.ps1's slot-a check |
+
+The sh block uses only the shell's own patterns (no grep, no locale) and compares the key in two parts (the era and
+the date, nine digits; then N without its leading zero): an 11-digit number would overflow a shell with 32-bit
+integers, and `08` must not be read as octal. .NET's `\d` takes any script's digits and its `$` lets a final newline
+through, so the PowerShell expressions use `[0-9]` and `\z`. The device programs that only check a tag (the panel's
+rpcd `update_act`, the update adapter, `dashboard-info`'s note of a newer release) use one extended regular expression,
+`v[0-9]{4}\.[0-9]{2}\.[0-9]{2}|v[0-9]{4}\.(0[1-9]|1[0-2])\.(0[1-9]|[12][0-9]|3[01])\.[1-9][0-9]?`, which a test holds
+to the table too. The installers' beta is now also newer by its tag than the release when both are release tags
+(published later alone is not enough), as `mu300-update releases` decided already. Magisk's `versionCode` of a
+four-field release is YYYYMMDDNN (2026101602: ten digits, above every three-field release's eight, below 2^31 until
+the year 2147). What only checks the form `v[0-9]` and plain characters (the zips' manifest, the mirror, the
+workflows' `startsWith(tag, 'v')`, the Telegram announcement) takes the new tags as they are.
+
+**What the clients released before this do with a four-field release** (read from their code at v2026.10.25-27; the
+three have the same logic in these places):
+
+* `mu300-update apply`: no tag is validated or compared. It reads `releases/latest`, fetches that release's
+  `mu300-update` (checked against its `SHA256SUMS`), and when it differs `exec`s it with `MU300_RELEASE=<tag>`
+  before it changes anything; the new updater then runs `downgrade_ok` with the new rule (v2026.10.16.1 is not older
+  than v2026.10.27) and does the update. **An update works; no bridge release is needed for it.**
+* `mu300-update notice` (the login note, `mu300-toolkit`) and `check` compare with `sort` as text. Against a three-field
+  installed tag, a four-field one sorts after it only when its date is 2026.10.27 or later (v2026.10.27.1 >
+  v2026.10.27 as text: the shorter one is a prefix). For releases dated 2026-10-15 to 2026-10-26 a device on v2026.10.25,
+  .26 or .27 shows **no note**, and `check` says "This is newer than the newest release (a test release);
+  mu300-update apply would go back to vYYYY.MM.DD.N" - wrong in its words, while `apply` goes forward. From the first
+  release dated 2026-10-27 or later their text order agrees with the rule again (a date's digits sort as text). Making
+  the note right before then would take a three-field release after v2026.10.27 (it would have to be `v2026.10.28`,
+  carrying the new updater), which the new scheme rules out: the gap is documented instead (wiki Updating, "Release
+  names", and the site's update page).
+* `mu300-update`'s module check (`version_ok`): the VPN module needs `mu300-linux v2026.10.16`, compared with the
+  old text order against the three-field tag of the old system - unchanged. After an update the new updater compares.
+* The control panel of those releases has no update page and no note of a newer release (they came after v2026.10.27).
+* `install.sh` and `install.ps1` of those releases take `releases/latest` (GitHub's "latest", any tag); their slot-a
+  check (`v2026.10.10` or newer) compares as text and lets every four-field tag through, which is right.
+* Their Magisk zips check only their own manifest's tag (`v[0-9]` and plain characters) and look at no release list.
+* The web installer is not in users' hands: the site serves main's. Before this change its `releaseSupportsWeb`
+  compared the first eleven characters with v2026.10.23, so v2026.10.16.1 counted as "too old for the web installer":
+  this change must be on the site before the first four-field release. Its choice of the newest release went by the
+  time of publishing and was right.
+* The graphical installer and the installers' beta question are newer than v2026.10.27 (`tools/release_pick.py` is
+  not in those tags); they go by the time of publishing too, now with the tag order on top.
