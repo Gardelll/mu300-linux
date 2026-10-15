@@ -135,6 +135,7 @@ what replaced it. The table below gives each section's state.
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
+| 91 | The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst (after kanoqwq's 3cbf37fc) | current (fixed; unit tests only, not measured on a device) |
 
 ## Hardware and firmware facts
 
@@ -5707,3 +5708,55 @@ device with openwrt-luci:
     mu300-update apply && reboot
     # after: the same job, and crond running
     cat /etc/crontabs/root; ps | grep crond
+
+### 91. The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst
+
+`mu300cell-v6.sh` is relay mode's event monitor (openwrt-luci, `option ipv6 'relay'`): it reports the RA's IPv6
+to netifd and, on a `+CGEV`, reads `AT+CGCONTRDP=1` once and moves the bearer's IPv4 address and DNS in place,
+without a redial. kanoqwq reworked his copy for mobility in clean-tf-7.2 `3cbf37fc`; comparing it with ours showed
+one defect his commit does not name and three he does. All four are read from the code; none was seen on a device.
+
+* **The wrong card (ours alone).** The monitor read the bearer on `/run/mu300-at6`, `at7`, `at` and the URCs from
+  `/run/mu300-at/urc/stty_nr<slot*3>.log`, whatever the card. In a dual-SIM boot on SIM2 (`/run/mu300-radio-freeze`,
+  FINDINGS 74) `/run/mu300-at` is SIM1's nr1 and SIM2's owner is `/run/mu300-at4`, whose URC log is
+  `/run/mu300-at4/urc/stty_nr3.log`. So the monitor asked SIM1 (radio off: no bearer, "keeping the last state")
+  and waited for a log that never appears: on SIM2, an address change was never followed, and the watchdog's
+  reconnect was the only repair. It now picks the channels and the log the way `mobile-data` and the panel's
+  collector do: SIM1 nr6/nr7/nr1 and `stty_nr0.log`; SIM2 pinned at boot `/run/mu300-at` (its nr4 then) and
+  `stty_nr3.log` there; SIM2 in a dual-SIM boot `/run/mu300-at4`. A slot `mu300-sim` cannot name ends the monitor.
+  No `AT+SPACTCARD=` prefix is added: each of these channels already belongs to the card it is used for.
+* **What is believed (from 3cbf37fc).** The address must be four 0-255 parts without leading zeros and not
+  `0.0.0.0`, the mask contiguous (the old `mask2prefix` turned anything unknown into /32), CR and blanks are
+  removed, and a DNS of `0.0.0.0` (no second server) or one that is not an address is left out. Nothing else of
+  the answer reaches `ip` or netifd.
+* **A failed install keeps the old snapshot (from 3cbf37fc).** The new address and the route go in first; when
+  one fails, the previous address/DNS stay the monitor's state, nothing is reported, and the next hint or renew
+  tries again (before, the new values were taken as current and the next read said "unchanged"). The old address
+  goes only after the new one holds, and then the new one is put in once more (the old primary takes a secondary
+  of its subnet with it: no `promote_secondaries`, as in `mu300cell.sh`'s setup). An unchanged bearer whose
+  address the kernel lost is put back.
+* **Hints (from 3cbf37fc).** `+CGEV` ACT/DEACT (the short `NW ACT` forms) and DETACH and Unisoc's `+SPPCODATA`
+  now ask for a read besides PDN and MODIFY. A hint in the 2 s after a read used to be dropped - possibly the last
+  of a burst, the one after which the new address is readable; it now waits out the rest of the 2 s. One queued
+  read covers a burst: the producer sends a hint only when it creates `/run/mu300cell-<config>.events.pdp` (a
+  directory: `mkdir` is atomic and never follows a symlink), the reader removes it just before its AT read.
+
+**Not taken from 3cbf37fc:** the monitor for an IPv4-only context (relay mode is dual-stack only here; an IPv4-only
+bearer keeps the watchdog's measured reconnect), the exit to netifd after three readings of an inactive context
+(the watchdog owns that repair: FINDINGS 90), `proto_set_keep 0`, and his watchdog's `ubus ... renew`.
+
+Unit tests: `tests/test_mu300cell.py` class `RelayMonitorBearer` (the monitor sourced with `MU300CELL_V6_LIB=1`):
+the channels and log per slot and dual-SIM state, `mask2prefix`, `valid_ipv4`, `read_bearer`, add-before-delete,
+failure and retry, the lost kernel address, the hint patterns. Under dash and bash locally, busybox sh in CI.
+
+Device checklist (openwrt-luci, relay mode):
+
+    # 1. F50 or U30 Air on SIM1: the monitor runs and follows a change
+    ps w | grep [m]u300cell-v6; logread -f | grep mu300cell-renew
+    #    on the panel's AT terminal: AT+CGACT=0,1 then AT+CGACT=1,1 - one "bearer updated"/"unchanged" line per burst,
+    #    no ifdown; ping 1.1.1.1 resumes on the new address
+    ubus call network.interface.wan renew        # "manual-renew: bearer unchanged"
+    # 2. U30 Air, a dual-SIM boot on SIM2: the monitor's tail is on /run/mu300-at4/urc/stty_nr3.log and its reads
+    #    go to /run/mu300-at4 (ps w | grep 'tail -n 0 -F'); the same AT+CGACT cycle on SIM2
+    # 3. a lost address: ip -4 addr flush dev sipa_eth0 scope global; ubus call network.interface.wan renew
+    #    - the address is back without a redial
