@@ -16,6 +16,7 @@ import { INSTALL_STEPS, MIB, NEED, UNINSTALL_STEPS, analyseStorage, answersFor, 
   parsePlan, stageRisk, targetExisting, targetSize, validateChoices } from "./flow.js";
 import { GithubError, combos, findZip, loadReleases, loadVpnModule, releaseSupportsWeb } from "./github.js";
 import { loadKey } from "./keystore.js";
+import { Manager, renderManager } from "./manager.js";
 import { MirrorError, downloadZip, loadMirror } from "./mirror.js";
 import { maskSerial, pageMasker as masker } from "./privacy.js";
 import { Sha256 } from "./sha256.js";
@@ -232,7 +233,9 @@ async function afterConnect(conn) {
   if (id.kind === "linux") {
     S.dev = new LinuxDevice(conn, { log });
     S.linux = await S.dev.info();
+    await startManager();
     S.phase = "ready"; S.view = "home"; render();
+    if (S.mgr) { S.mgr.load("overview").catch(mgrFailed); S.mgr.attach().catch(mgrFailed); }
     return;
   }
   if (id.kind !== "android") { S.phase = "failed"; S.failure = { code: "not-ours" }; render(); return; }
@@ -294,7 +297,7 @@ function onConnectionLost(conn, err) {
 async function disconnect(silent) {
   const c = S.conn;
   S.conn = null; S.dev = null; S.kind = ""; S.probe = null; S.status = null; S.analysis = null; S.linux = null; S.rootState = "";
-  S.action = null;
+  S.action = null; S.mgr = null; S.hello = null;
   if (!silent) { S.phase = "idle"; S.lost = null; S.view = "home"; S.w = null; S.job = null; }
   if (c) { try { await c.close(); } catch (e) { /* gone */ } }
   if (!silent) render();
@@ -1286,10 +1289,49 @@ async function startUninstall() {
 
 // ---------------------------------------------------------------------------------------------------- MU300 Linux
 
+// ---- the device manager (manager.js) on a release with mu300-api; the small view below on an older one
+async function startManager() {
+  S.mgr = null; S.hello = null;
+  if (typeof S.dev.hello !== "function") return;
+  try { S.hello = await S.dev.hello(); } catch (e) { if (isGone(e)) throw e; S.hello = null; }
+  if (!S.hello) return;
+  S.mgr = new Manager(S.dev, S.hello, { log: (l, e) => logLine(l, e), masker, onChange: mgrChanged });
+}
+function mgrFailed(e) {
+  if (isGone(e) || !S.mgr) return;
+  S.mgr.note = { kind: "bad", title: t("mgr.failed"), text: errorText(explainError(e)) };
+  render();
+}
+// a job's new lines go straight into its box (typing in a field is not disturbed); anything else draws the page
+function mgrChanged(lines) {
+  const pre = document.getElementById("wi-job-pre");
+  if (lines && pre && S.mgr && S.mgr.job && S.mgr.job.state === "running" && pre.dataset.state === "running") {
+    if (lines.length) { pre.append(document.createTextNode(lines.join("\n") + "\n")); pre.scrollTop = pre.scrollHeight; }
+    return;
+  }
+  render();
+}
+const MGR_UI = {
+  h, t, btn, chip, callout, render, masker, saveBlob, stamp,
+  errorText: (e) => errorText(explainError(e)),
+  isGone,
+  leaving: () => { S.expectDisconnect = true; },
+  logText: () => LOG.join("\n"),
+  publicKey: () => (S.key ? publicKeyLine(S.key) : ""),
+  timeZones: () => { try { return Intl.supportedValuesOf("timeZone").filter((z) => z.includes("/")); } catch (e) { return []; } },
+};
+
 function linuxView() {
+  if (S.mgr) {
+    const v = renderManager(MGR_UI, S.mgr);
+    const pre = v.querySelector("#wi-job-pre");
+    if (pre && S.mgr.job) pre.dataset.state = S.mgr.job.state;
+    return v;
+  }
   const i = S.linux, d = S.dev;
   const out = h("section", { class: "panel wi-panel" });
   out.append(h("h2", {}, t("linux.title")));
+  out.append(callout("", t("mgr.old.title"), t("mgr.old.text")));
   out.append(h("dl", { class: "wi-facts" },
     h("dt", {}, t("linux.system")), h("dd", {}, `${i.os || "?"} · ${i.version || "?"}`),
     h("dt", {}, t("linux.kernel")), h("dd", {}, `${i.kernel || "?"}${i.kernelChoice ? " (" + i.kernelChoice + ")" : ""}`),
@@ -1358,7 +1400,13 @@ async function demoConnect() {
   S.keyInfo = await loadKey("web-installer"); S.key = S.keyInfo.key; S.keyFp = await fingerprint(S.key);
   S.conn = { close: async () => {} };
   S.dev = d; S.kind = d.kind; S.phase = "ready"; S.view = "home"; S.lost = null;
-  if (d.kind === "linux") { S.linux = await d.info(); render(); return; }
+  if (d.kind === "linux") {
+    S.linux = await d.info();
+    await startManager();
+    render();
+    if (S.mgr) { S.mgr.load("overview").catch(mgrFailed); S.mgr.attach().catch(mgrFailed); }
+    return;
+  }
   S.probe = await d.probe();
   render();
   await checkRoot();
