@@ -817,6 +817,9 @@ msgstr "Продължителност на сесията"
 msgid "Registration"
 msgstr "Регистрация"
 
+msgid "Data roaming"
+msgstr "Роуминг на данни"
+
 msgid "Bandwidth"
 msgstr "Честотна лента"
 
@@ -952,6 +955,18 @@ msgstr "Включване на мобилното радио"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Ще се изпълни последователността за включване SFUN (до около 1 минута)."
 
+msgid "Turn data roaming off"
+msgstr "Изключване на роуминга на данни"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Докато SIM картата е регистрирана в роуминг мрежа, мобилните данни остават изключени; SMS, обажданията и регистрацията не се засягат. Някои SIM карти съобщават роуминг и у дома (MVNO, национален роуминг): там данните също биха спрели."
+
+msgid "Allow data roaming"
+msgstr "Разрешаване на роуминг на данни"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Мобилните данни се използват и в роуминг мрежи, което може да струва допълнително. Някои SIM карти съобщават роуминг и у дома (MVNO, национален роуминг) и се нуждаят от това, за да имат данни изобщо."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Мобилната свързаност може да спре за 1–2 минути."
 
@@ -1080,6 +1095,15 @@ msgstr "Само спешни повиквания"
 
 msgid "Status %s"
 msgstr "Състояние %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Изключено: данните са спрени при роуминг"
+
+msgid "Allowed"
+msgstr "Разрешено"
+
+msgid "Off"
+msgstr "Изкл."
 
 msgid "LTE anchor"
 msgstr "LTE котва"
@@ -1605,9 +1629,6 @@ msgstr "Без промяна"
 
 msgid "LTE only (5G off)"
 msgstr "Само LTE (5G изключен)"
-
-msgid "Off"
-msgstr "Изкл."
 
 msgid "On"
 msgstr "Вкл."
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Радиото не се включи"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Интеграцията на мобилни данни не се предоставя от тази платформа"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Настройката за роуминг на данни не можа да бъде запазена"
 
 msgid "Expected on or off"
 msgstr "Очаква се on или off"

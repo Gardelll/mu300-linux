@@ -817,6 +817,9 @@ msgstr "Διάρκεια συνεδρίας"
 msgid "Registration"
 msgstr "Καταχώριση"
 
+msgid "Data roaming"
+msgstr "Περιαγωγή δεδομένων"
+
 msgid "Bandwidth"
 msgstr "Εύρος ζώνης"
 
@@ -952,6 +955,18 @@ msgstr "Ενεργοποίηση ραδιοφώνου κινητού δικτύ�
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Θα εκτελεστεί η ακολουθία ενεργοποίησης SFUN (έως περίπου 1 λεπτό)."
 
+msgid "Turn data roaming off"
+msgstr "Απενεργοποίηση περιαγωγής δεδομένων"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Όσο η SIM είναι καταχωρισμένη σε δίκτυο περιαγωγής, τα δεδομένα κινητής μένουν απενεργοποιημένα· τα SMS, οι κλήσεις και η καταχώριση δεν επηρεάζονται. Ορισμένες SIM αναφέρουν περιαγωγή και στη χώρα τους (ένας MVNO, εθνική περιαγωγή): εκεί τα δεδομένα θα σταματούσαν επίσης."
+
+msgid "Allow data roaming"
+msgstr "Να επιτρέπεται η περιαγωγή δεδομένων"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Τα δεδομένα κινητής χρησιμοποιούνται και σε δίκτυα περιαγωγής, κάτι που μπορεί να κοστίσει επιπλέον. Ορισμένες SIM αναφέρουν περιαγωγή και στη χώρα τους (ένας MVNO, εθνική περιαγωγή) και το χρειάζονται για να έχουν δεδομένα."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Η συνδεσιμότητα κινητού δικτύου μπορεί να διακοπεί για 1–2 λεπτά."
 
@@ -1080,6 +1095,15 @@ msgstr "Μόνο κλήσεις έκτακτης ανάγκης"
 
 msgid "Status %s"
 msgstr "Κατάσταση %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Ανενεργή: τα δεδομένα σταματούν σε περιαγωγή"
+
+msgid "Allowed"
+msgstr "Επιτρέπεται"
+
+msgid "Off"
+msgstr "Ανενεργό"
 
 msgid "LTE anchor"
 msgstr "Άγκυρα LTE"
@@ -1605,9 +1629,6 @@ msgstr "Να μείνει ως έχει"
 
 msgid "LTE only (5G off)"
 msgstr "Μόνο LTE (5G κλειστό)"
-
-msgid "Off"
-msgstr "Ανενεργό"
 
 msgid "On"
 msgstr "Ενεργό"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Το ραδιόφωνο δεν ενεργοποιήθηκε"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Η ενσωμάτωση δεδομένων κινητής δεν παρέχεται από αυτή την πλατφόρμα"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Δεν ήταν δυνατή η αποθήκευση της ρύθμισης περιαγωγής δεδομένων"
 
 msgid "Expected on or off"
 msgstr "Αναμενόταν on ή off"

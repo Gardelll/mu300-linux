@@ -817,6 +817,9 @@ msgstr "Trvanie relácie"
 msgid "Registration"
 msgstr "Registrácia"
 
+msgid "Data roaming"
+msgstr "Dátový roaming"
+
 msgid "Bandwidth"
 msgstr "Šírka pásma"
 
@@ -952,6 +955,18 @@ msgstr "Zapnúť mobilné rádio"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Prebehne sekvencia zapnutia SFUN (až asi 1 minúta)."
 
+msgid "Turn data roaming off"
+msgstr "Vypnúť dátový roaming"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Kým je SIM registrovaná v roamingovej sieti, mobilné dáta zostávajú vypnuté; SMS, hovory a registrácia nie sú dotknuté. Niektoré SIM hlásia roaming aj doma (MVNO, národný roaming): tam by sa dáta tiež zastavili."
+
+msgid "Allow data roaming"
+msgstr "Povoliť dátový roaming"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobilné dáta sa používajú aj v roamingových sieťach, čo môže stáť navyše. Niektoré SIM hlásia roaming aj doma (MVNO, národný roaming) a bez toho by nemali dáta vôbec."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Mobilné pripojenie sa môže na 1–2 minúty zastaviť."
 
@@ -1080,6 +1095,15 @@ msgstr "Iba tiesňové volania"
 
 msgid "Status %s"
 msgstr "Stav %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Vypnuté: dáta pozastavené pri roamingu"
+
+msgid "Allowed"
+msgstr "Povolené"
+
+msgid "Off"
+msgstr "Vypnuté"
 
 msgid "LTE anchor"
 msgstr "Kotva LTE"
@@ -1605,9 +1629,6 @@ msgstr "Ponechať bez zmeny"
 
 msgid "LTE only (5G off)"
 msgstr "Iba LTE (5G vypnuté)"
-
-msgid "Off"
-msgstr "Vypnuté"
 
 msgid "On"
 msgstr "Zapnuté"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Rádio sa nespustilo"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Integrácia mobilných dát nie je na tejto platforme k dispozícii"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Nastavenie dátového roamingu sa nepodarilo uložiť"
 
 msgid "Expected on or off"
 msgstr "Očakávalo sa on alebo off"

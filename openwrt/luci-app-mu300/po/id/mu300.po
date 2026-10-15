@@ -817,6 +817,9 @@ msgstr "Durasi sesi"
 msgid "Registration"
 msgstr "Registrasi"
 
+msgid "Data roaming"
+msgstr "Roaming data"
+
 msgid "Bandwidth"
 msgstr "Lebar pita"
 
@@ -952,6 +955,18 @@ msgstr "Nyalakan radio seluler"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Urutan penyalaan SFUN akan dijalankan (hingga sekitar 1 menit)."
 
+msgid "Turn data roaming off"
+msgstr "Matikan roaming data"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Selama SIM terdaftar di jaringan roaming, data seluler tetap mati; SMS, panggilan, dan pendaftaran tidak terpengaruh. Beberapa SIM melaporkan roaming bahkan di dalam negeri (MVNO, roaming nasional): di sana data juga akan berhenti."
+
+msgid "Allow data roaming"
+msgstr "Izinkan roaming data"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Data seluler juga digunakan di jaringan roaming, yang bisa menambah biaya. Beberapa SIM melaporkan roaming bahkan di dalam negeri (MVNO, roaming nasional) dan memerlukan ini agar mendapat data."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Konektivitas seluler mungkin berhenti selama 1–2 menit."
 
@@ -1080,6 +1095,15 @@ msgstr "Hanya darurat"
 
 msgid "Status %s"
 msgstr "Status %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Mati: data ditahan saat roaming"
+
+msgid "Allowed"
+msgstr "Diizinkan"
+
+msgid "Off"
+msgstr "Mati"
 
 msgid "LTE anchor"
 msgstr "Anchor LTE"
@@ -1605,9 +1629,6 @@ msgstr "Biarkan apa adanya"
 
 msgid "LTE only (5G off)"
 msgstr "Hanya LTE (5G mati)"
-
-msgid "Off"
-msgstr "Mati"
 
 msgid "On"
 msgstr "Hidup"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio tidak menyala"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Integrasi data seluler tidak disediakan oleh platform ini"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Pengaturan roaming data tidak dapat disimpan"
 
 msgid "Expected on or off"
 msgstr "Diharapkan on atau off"

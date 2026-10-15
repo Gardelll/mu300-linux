@@ -817,6 +817,9 @@ msgstr "مدت نشست"
 msgid "Registration"
 msgstr "ثبت"
 
+msgid "Data roaming"
+msgstr "رومینگ داده"
+
 msgid "Bandwidth"
 msgstr "پهنای باند"
 
@@ -952,6 +955,18 @@ msgstr "روشن کردن رادیوی سلولی"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "توالی روشن‌سازی SFUN اجرا می‌شود (تا حدود 1 دقیقه)."
 
+msgid "Turn data roaming off"
+msgstr "خاموش کردن رومینگ داده"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "تا زمانی که سیم‌کارت در یک شبکه رومینگ ثبت شده است، داده همراه خاموش می‌ماند؛ پیامک، تماس‌ها و ثبت در شبکه تحت تأثیر قرار نمی‌گیرند. برخی سیم‌کارت‌ها حتی در کشور خود رومینگ گزارش می‌کنند (یک MVNO، رومینگ ملی): آنجا هم داده متوقف می‌شود."
+
+msgid "Allow data roaming"
+msgstr "اجازه رومینگ داده"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "داده همراه در شبکه‌های رومینگ نیز استفاده می‌شود که ممکن است هزینه اضافی داشته باشد. برخی سیم‌کارت‌ها حتی در کشور خود رومینگ گزارش می‌کنند (یک MVNO، رومینگ ملی) و برای داشتن داده به این نیاز دارند."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "ممکن است اتصال سلولی 1–2 دقیقه متوقف شود."
 
@@ -1080,6 +1095,15 @@ msgstr "فقط اضطراری"
 
 msgid "Status %s"
 msgstr "وضعیت %s"
+
+msgid "Off: data held back while roaming"
+msgstr "خاموش: داده در رومینگ متوقف شده است"
+
+msgid "Allowed"
+msgstr "مجاز"
+
+msgid "Off"
+msgstr "خاموش"
 
 msgid "LTE anchor"
 msgstr "لنگر LTE"
@@ -1605,9 +1629,6 @@ msgstr "بدون تغییر"
 
 msgid "LTE only (5G off)"
 msgstr "فقط LTE (5G خاموش)"
-
-msgid "Off"
-msgstr "خاموش"
 
 msgid "On"
 msgstr "روشن"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "رادیو روشن نشد"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "یکپارچه‌سازی داده همراه در این پلتفرم فراهم نیست"
+
+msgid "The data roaming setting could not be saved"
+msgstr "تنظیم رومینگ داده ذخیره نشد"
 
 msgid "Expected on or off"
 msgstr "on یا off مورد انتظار است"

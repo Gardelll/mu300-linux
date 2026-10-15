@@ -52,6 +52,36 @@ start otherwise, and a user name or password without an APN is refused rather th
 not yet been tried against a network that checks the credentials; if your carrier needs it, a report either way is
 welcome.
 
+## Data roaming
+
+**Allowed by default**, as in every earlier release: the device uses mobile data on whatever network the SIM
+registers on. Turn data roaming **off** and mobile data stays down while the SIM is registered on a roaming network,
+and comes back by itself when it is home again (within about a minute). SMS, calls, USSD and the registration itself
+keep working; only the data connection is held back.
+
+```sh
+sudo mobile-data roaming        # the setting, the network (home or roaming) and whether data is held back
+sudo mobile-data roaming off    # no data while roaming
+sudo mobile-data roaming on     # data while roaming too (the default)
+```
+
+| Where | How |
+|---|---|
+| OpenWrt control panel | Status dashboard: the **Data roaming** row (Allowed, Off, or "Off: data held back while roaming") and the **Data roaming** button in Quick controls |
+| OpenWrt | LuCI -> Network -> Interfaces -> wan, **Data roaming** next to the APN (one per SIM: `network.wan.roaming` for the external card, `network.wan.roaming_internal` for the internal card / SIM2); or `uci set network.wan.roaming=0; uci commit network` |
+| Ubuntu | `MU300_DATA_ROAMING=0` in `/etc/mu300/mobile-data.conf` (one setting for both cards), or Cockpit's MU300 page -> Mobile data |
+| Both | `mu300-toolkit` -> Network -> Mobile data: data roaming |
+
+A change applies within half a minute; nothing restarts.
+
+**Some SIMs report roaming at home.** "Roaming" is what the network tells the modem, and an MVNO on another
+operator's network, or national roaming, can say so in your own country. If mobile data stops at home after you
+turned data roaming off, that is why: turn it back on. The dashboard's Registration row shows what the network says
+("Registered (roaming)").
+
+There is no switch for this in the modem that we know of; the dial and its watchdog decide it (details and the
+device checklist: [FINDINGS 120](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md)).
+
 ## Data usage
 
 The device counts its mobile data per day and per billing cycle, both ways, the way the operator counts it. The count

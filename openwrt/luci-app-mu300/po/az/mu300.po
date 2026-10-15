@@ -817,6 +817,9 @@ msgstr "Sessiya müddəti"
 msgid "Registration"
 msgstr "Qeydiyyat"
 
+msgid "Data roaming"
+msgstr "Məlumat rouminqi"
+
 msgid "Bandwidth"
 msgstr "Bant genişliyi"
 
@@ -952,6 +955,18 @@ msgstr "Mobil radionu yandır"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN yandırma ardıcıllığı icra olunacaq (təxminən 1 dəqiqəyədək)."
 
+msgid "Turn data roaming off"
+msgstr "Məlumat rouminqini söndür"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "SIM rouminq şəbəkəsində qeydiyyatda olduğu müddətdə mobil məlumat söndürülü qalır; SMS, zənglər və qeydiyyat təsirlənmir. Bəzi SIM-lər evdə də rouminq bildirir (MVNO, milli rouminq): orada da məlumat dayanar."
+
+msgid "Allow data roaming"
+msgstr "Məlumat rouminqinə icazə ver"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobil məlumat rouminq şəbəkələrində də istifadə olunur, bu əlavə xərc yarada bilər. Bəzi SIM-lər evdə də rouminq bildirir (MVNO, milli rouminq) və ümumiyyətlə məlumat üçün buna ehtiyac duyur."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Mobil bağlantı 1–2 dəqiqəlik dayana bilər."
 
@@ -1080,6 +1095,15 @@ msgstr "Yalnız təcili zənglər"
 
 msgid "Status %s"
 msgstr "Status %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Söndürülüb: rouminqdə məlumat dayandırıldı"
+
+msgid "Allowed"
+msgstr "İcazə verilib"
+
+msgid "Off"
+msgstr "Söndürülüb"
 
 msgid "LTE anchor"
 msgstr "LTE lövbəri"
@@ -1605,9 +1629,6 @@ msgstr "Olduğu kimi saxla"
 
 msgid "LTE only (5G off)"
 msgstr "Yalnız LTE (5G söndürülüb)"
-
-msgid "Off"
-msgstr "Söndürülüb"
 
 msgid "On"
 msgstr "Aktiv"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio işə düşmədi"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Mobil məlumat inteqrasiyası bu platformada təmin edilmir"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Məlumat rouminqi ayarı yadda saxlanıla bilmədi"
 
 msgid "Expected on or off"
 msgstr "on və ya off gözlənilir"
