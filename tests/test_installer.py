@@ -102,8 +102,9 @@ exit 0''')
 
     def run_sh(self, shell, call, answer='', serial=None):
         (self.tmp / 'adb.log').unlink(missing_ok=True)
+        # sleep as a function: busybox ash may run its own sleep applet before the stub on PATH (CI: 60 waits of 5 s)
         code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; '
-                'say() { echo "SAY $*"; }; die() { echo "DIE $*"; exit 1; }; '
+                'say() { echo "SAY $*"; }; sleep() { :; }; die() { echo "DIE $*"; exit 1; }; '
                 'ask() { printf "ASKED[%s] " "$3"; read -r _a; [ -n "$_a" ] || _a=$3; eval "$1=\\$_a"; }; '
                 f'. "$TOP/tools/linux-mode.sh"; {"ANDROID_SERIAL=" + serial + "; export ANDROID_SERIAL" if serial else "unset ANDROID_SERIAL"}; '
                 f'{call}; echo "rc=$? serial=${{ANDROID_SERIAL:-none}}"')
