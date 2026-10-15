@@ -137,6 +137,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 110 | The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it | current (unit and Node tests against the real mu300-api; not run on a device yet: the protocol is in docs/web-installer.md) |
 
 ## Hardware and firmware facts
 
@@ -5896,3 +5897,79 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+## The device manager
+
+### 110. The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it
+
+**What was asked.** The owner, 2026-10-15: the web installer should also manage a device that runs our Linux - the
+Wi-Fi name, the VPN and so on, everything about the device - over the same WebUSB connection. Until then it had a
+small view (status, update check, kernel, restart, back to Android, logs) made of single shell commands.
+
+**The design.** The page composes no command and reimplements nothing. The device has one entry point,
+`/opt/mu300/bin/mu300-api METHOD`, with a fixed list of methods and the request as one JSON object on stdin; it answers
+one JSON object. Its interface is documented as stable in `docs/ADB-INTERFACE.md` (field `api`, now `1`).
+
+* **Reading the request** without jq (Ubuntu has it, OpenWrt does not) or jsonfilter (the reverse): `lib/json.awk`, one
+  program for busybox awk, mawk and gawk. A request is a flat object of strings, numbers, booleans and null, keys
+  `[a-z][a-z0-9_]{0,31}`; a nested value, a key twice, a raw control character, `\u0000` (or any control character
+  other than tab, newline and CR, escaped or not), a lone surrogate, trailing text or more than 64 KiB is
+  `bad-request` before any method runs. The same program re-serialises a tool's JSON answer (`mode=check`) before it
+  is put into a reply, so a tool cannot break the reply it is part of; a tool's answer that is not JSON is `null` or
+  `failed`, never pasted in.
+* **Every field by its own rule**, an unknown field refused: fixed words, numbers in ranges, an SSID by hostapd's and
+  wifi-client's rule (1-32 bytes, no control character, no space first or last), a WPA2 passphrase (8-63 printable
+  ASCII), an APN by 3GPP's characters and credentials by `mobile-data.conf`'s own rule (FINDINGS 65: printable ASCII,
+  no quote or backslash, at most 64), a channel from `lib/wifi-channels.sh` for the band and the country (never DFS,
+  FINDINGS 42), a LAN address private and at `.1`, a host name by RFC 1123, a time zone that exists in the zoneinfo,
+  a VPN link by the scheme list `mu300vpn` uses, an `https://` URL, an adb public key by its shape.
+* **Values reach a tool** as one argument that a pattern has already kept from starting with `-`, or on its stdin. The
+  secrets only ever on stdin or in the file they belong in: the hotspot password into `hotspot.conf` (0600) or UCI
+  through `uci batch` on stdin, the APN password into `mobile-data.conf` (0600) or UCI the same way, a VPN link or
+  config on `mu300-vpn profile import -`'s stdin (a here-document: the variable is expanded once and never read
+  again), a VPN URL and a Wi-Fi password into a 0600 file of the root-only job directory that the job opens as its
+  stdin and removes before the command runs, the login password on `chpasswd`'s stdin (Ubuntu) or the static
+  busybox's `chpasswd -c sha512` (OpenWrt, whose own busybox has none). Nothing secret is read back: `password_set`
+  says whether there is one.
+* **Shared code paths.** The CLIs of `/opt/mu300/bin` are the shared layer: `mu300-wifi-band` for a band change on
+  OpenWrt, `wifi-client`, `mu300-sim`, `mu300-traffic`, `sms`, `mu300-usb`, `mu300-next-boot`, `mu300-os`,
+  `mu300-update`, `mu300-extra`, and the VPN module's `mu300-vpn` (the same machine-readable CLI the LuCI pages reach
+  through `mu300vpn` and Cockpit calls directly). Mobile data on and off is mu300-traffic's own way (`ifup/ifdown wan`,
+  `systemctl start/stop mu300-mobile-data.service`). What only the OpenWrt control panel has - band and cell locks,
+  the SMS pool, SMS forwarding - is delegated on openwrt-luci to its backend, called as rpcd calls it
+  (`/usr/libexec/rpcd/mu300dash call METHOD` with the request on stdin: no `ubus call` with a secret in its argv), with
+  the same field rules applied first; elsewhere those methods are `unsupported`. The overview's radio, battery and
+  temperature readings are those of `mu300-panel info` (Cockpit's page); the panel extra keeps its own copy for
+  systems that have no mu300-api - a release-independent extra cannot rely on it yet.
+* **Long work is the job**: `update.check`, `update.apply`, `kernel.set`, `extra.install/remove`, `vpn.install`,
+  `vpn.engine_install`, `vpn.add_url`, `vpn.sub_add`, `vpn.sub_refresh`, `wificlient.join/leave`. One at a time
+  (flock, and the state), started with `setsid` so that adbd's SIGHUP at the end of the shell, a closed tab or a pulled
+  cable does not reach it; its output in `/run/mu300-api/job/log`, its status in `rc`. `job.status {from: N}` gives the
+  lines from N (whole lines while it runs, at most 400, each cut at 400 bytes, an address's path and query replaced by
+  `...`). `hello` names the job, so a page that connects later follows it from the start. An update, a kernel or an
+  extra's removal cannot be cancelled half way.
+* **WPA3 (FINDINGS 80)** is never switched on: the option needs a patched hostapd and a full `wifi down; wifi up`, and
+  a live change took a U30 Air's radio down. A hotspot already set to SAE by hand is shown as such and kept; a change
+  of its password restarts it with `wifi down; wifi up`, never `wifi reload`. An open hotspot gets `psk2` with its
+  first password.
+* **Hidden SSID on Ubuntu** is new in `hotspot-start` (`HIDDEN=1` -> `ignore_broadcast_ssid=1`).
+* **adb's keys mode** (FINDINGS 70) is only switched on together with the page's own key (`adb.auth {mode: keys, key}`:
+  the key goes to `mu300-usb adb key -` first; a key that is refused leaves the mode alone), and every change of adb,
+  the USB role, the LAN, the hotspot, mobile data and a restart runs two seconds after the answer (`setsid`), so the
+  answer reaches the page first.
+
+**The page.** `manager.js`: tabs Overview, Wi-Fi, Mobile data, VPN, SMS, USB and LAN, System. Every action whose
+consequence reaches the page's own connection or the device's uplink asks first, saying what happens and how to get
+back (the USB host role and adb's mode end the connection; a restart; mobile data off when it is the only uplink; a
+kill switch; the LAN address, which does not touch adb). Secret fields start empty ("unchanged"), are shown only
+while "show" is ticked, are emptied once saved and are added to the page's masker. The overview, the job and the
+log are masked as everything else on the page; the diagnostics file leaves out SSIDs, user names, addresses and
+message texts. A release without mu300-api (hello prints the marker) gets the earlier small view with a note to
+update.
+
+**Tested**: `tests/test_api.py` (every method's validation and its calls into stub tools, hostile values, the
+secrets in no argv, reply or file but their own, the job; dash, bash and busybox sh, busybox's awk where there is
+busybox), `tests/web/manager.test.mjs` (the page's adapter and the Manager against a fake adbd whose shell runs the
+real mu300-api), the strings test across en/tr/zh. **Not run on a device**: both test devices were in use. The device
+protocol is in `docs/web-installer.md` ("The device manager on a device"); until it has been run, the manager is
+untested on hardware, OpenWrt's `uci batch` quoting and `ifstatus` included.

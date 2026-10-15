@@ -232,3 +232,52 @@ but files in `/data/local/tmp/mu300-web` and `/data/adb/mu300-web` (`clean all` 
 has no battery); a closed tab is fine. If the page misbehaves in any way, the device side can always be finished or
 inspected from a terminal: `adb shell su -c 'sh /data/local/tmp/mu300-web/android-web.sh status deep'` and
 `... follow`.
+
+## The device manager
+
+A device in our Linux whose release has `mu300-api` (FINDINGS 110) gets the manager instead of the small manage view:
+
+```
+ browser                                               device, MU300 Linux (adb shell is root)
+ manager.js   Manager (reads, actions, the job)   --adb--> /opt/mu300/bin/mu300-api METHOD   (request: JSON on stdin)
+              renderManager (tabs, forms)                    lib/json.awk, the CLIs of /opt/mu300/bin, mu300-vpn,
+ device.js    LinuxDevice.hello() / .api()                   on openwrt-luci the panel's rpcd backend for locks/SMS
+```
+
+`device.js` sends only methods of its own fixed list (`API_METHODS`, held to `mu300-api --methods` by
+`tests/web/manager.test.mjs`) and that the device named in `hello`; the log gets the method and how it ended, never
+the request. `?demo=linux` shows the manager with made-up answers, `?demo=linux-old` the fallback of a release without
+mu300-api. Testing without a device: `python3 tests/test_api.py` (the device side, every shell) and
+`node --test tests/web/manager.test.mjs` (the page's side against the real mu300-api).
+
+## The device manager on a device
+
+Not run yet. Run it for each system (Ubuntu, openwrt-luci; plain OpenWrt for the parts it has) on an F50 and on a
+U30 Air, with a release that has mu300-api, from Chrome on a computer. Keep a terminal with SSH (or the serial
+console) to the device for the checks in the third column, and save the page's log at the end of each run. Stop at
+the first row that does not match.
+
+| # | Do | Must appear / check on the device | Notes |
+|---|---|---|---|
+| 1 | Connect (the device in Linux). | "Device manager" with the system's name; in the log, one line per action naming the method and how it ended (`# mu300-api wifi.set: ok`), never what was sent. | An older release: "This release has no device manager yet" and the small view. |
+| 2 | Overview. | System, release, kernel, uptime, memory, Linux storage, hottest sensor; operator/technology/registration/RSRP; mobile data state and address; data used; the hotspot; LAN address. U30 Air: battery. | Compare with `mu300-device --json`, `mu300-traffic`, `ip -4 addr show sipa_eth0`. |
+| 3 | Wi-Fi: change the SSID to `Test "1" $(x)` and the password; save. | A confirmation that names the restart; a phone sees the new name and joins with the new password. Ubuntu: `sudo cat /etc/mu300/hotspot.conf`; OpenWrt: `uci show wireless` (key set, encryption psk2). The password is nowhere in the page's log. | Then 2.4 GHz with channel 11, then 5 GHz back: `iw dev` shows the channel. |
+| 4 | Wi-Fi: hide the name; save. | The phone no longer lists it; joining by typing the name works. Ubuntu: `ignore_broadcast_ssid=1` in `/run/mu300-hostapd.conf`. | Unhide. |
+| 5 | Turn the hotspot off, then on. | Off survives a restart (Ubuntu: `systemctl is-enabled mu300-hotspot` = disabled; OpenWrt: `wireless.radio0.disabled=1`). | |
+| 6 | Wi-Fi client: Look for networks; join a WPA2 network; leave. | The job box follows `wifi-client connect`; the hotspot goes off while joined and comes back on leave; `wifi-client status`. | Close the tab during the join: reconnect shows the job. |
+| 7 | Mobile data: off, then on. | The confirmation says the device goes offline; `ip addr show sipa_eth0` loses and regains the address; the page stays connected. | |
+| 8 | APN: set `internet` with a user and password, PAP; save. Then remove the credentials. | Ubuntu: `/etc/mu300/mobile-data.conf` (0600) has the lines, mobile data restarts and comes back. OpenWrt: `uci show network.wan`. The password never in the page or its log. | A real private APN if one is at hand. |
+| 9 | SIM: pick the other slot (U30 Air: two SIMs). | `mu300-sim status`; after a restart the other card. | F50: internal/external. |
+| 10 | Locks (openwrt-luci): LTE bands `1,3`, then everything automatic. | LuCI's lock page shows the same; mobile data back within a minute. | Ubuntu: the "part of the control panel" note. |
+| 11 | VPN without the module: Install the VPN module. | The job follows `mu300-extra install vpn`; then `mu300-vpn status`. | Needs the device online. |
+| 12 | VPN: add a share link; rename; use; turn on; check the exit address; kill switch on, then off; IPv6 auto; remove. | `mu300-vpn profile list`; the exit address is the server's; with the kill switch on and the VPN off, a client has no internet. The link is nowhere in the page's log. | A subscription URL: add, refresh, remove. |
+| 13 | SMS: send one to a phone you have; read the list; delete it. | The phone receives it; `sms list` (Ubuntu) or LuCI's SMS page (openwrt-luci). | Forwarding (openwrt-luci): the read-only summary matches LuCI. |
+| 14 | USB and LAN: set `192.168.90.1`. | The page stays connected; the computer gets a 192.168.90.x address; SSH to 192.168.90.1. Set the default back. | |
+| 15 | adb: Keys only. | The connection drops and comes back by itself; `mu300-usb adb status` says keys, one key. Then Open to every computer. | Clear the site's data in Chrome while in keys mode: the page is locked out; `sudo mu300-usb adb auth open` over SSH. |
+| 16 | U30 Air: Make the port a host. | The page loses the device; a flash drive works; a restart brings the USB connection back. | |
+| 17 | System: device name, time zone; login password (then log in over SSH with it); SSH off and on. | `hostname`, `date`, `ssh` refused while off. | OpenWrt without zoneinfo: a time zone is refused as "not available". |
+| 18 | Check for updates; Update now (a release newer than the device's), close the tab half way, reconnect. | The job box shows the update from its start and its end; after a restart the new release. | Update and kernel jobs have no Cancel. |
+| 19 | Kernel 7.2, then back. | `uname -r` after the restart. | |
+| 20 | Extras: install `panel` (Ubuntu) or `lang` (OpenWrt), remove it. | `mu300-extra status`. | |
+| 21 | Read the logs; Save a diagnostics file. | The file has no SSID, no MAC in full, no phone number, no password. | Attach it to the run's notes. |
+| 22 | Make Android the default; restart. | Android starts; from Android, Start Linux again. | |

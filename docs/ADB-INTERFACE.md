@@ -75,6 +75,77 @@ adb -s MU300LINUX-<id> shell '/opt/mu300/bin/mu300-next-boot android && sync && 
 The device leaves `adb devices` within seconds and comes back as Android with its own serial. This is what
 `install.sh`, `install.ps1` and the uninstallers do when they find the device in Linux.
 
+## Settings and actions: mu300-api
+
+From the release that brings it (FINDINGS 110), every setting the web installer's device manager reads or changes
+goes through one command:
+
+```sh
+printf '%s' '{"ssid":"Home","password":"a secret 123"}' | adb shell /opt/mu300/bin/mu300-api wifi.set
+```
+
+The method is the only argument; the request is one JSON object on **stdin** (send `{}` when there is nothing: the
+command reads stdin until it is closed), never on the command line, where a password would be in `ps` for every
+user. The answer is one line of JSON on stdout: `{"ok":1,...}` with exit status 0, or
+`{"ok":0,"error":"CODE","detail":"..."}` with exit status 1 (2: no method). Before anything else, ask:
+
+```sh
+printf '{}' | adb shell '[ -x /opt/mu300/bin/mu300-api ] && /opt/mu300/bin/mu300-api hello || echo MU300-API-NONE'
+```
+
+`MU300-API-NONE` is an older release: use the commands above. Otherwise `hello` answers
+`{"ok":1,"api":1,"system":"ubuntu","device":"f50","release":"...","methods":[...],"features":{...},"job":{"kind":"","state":"none"}}`.
+**`api`** is the version of this interface: methods and fields may be added without changing it; it changes when one
+goes away or changes meaning. `methods` is what this device has; `features` says which parts it has (`vpn` the
+module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `pool` on openwrt-luci, or empty),
+`locks` and `forward` (openwrt-luci), `dual_sim`, `battery` and `usb_role` (U30 Air), `wpa3` (always false)).
+
+| Method | Request | Answer (besides `ok`) |
+|---|---|---|
+| `hello` | - | above |
+| `overview` | - | `system os device release kernel kernel_choice hostname uptime now memory storage signal data traffic battery temperatures hotspot vpn lan boot` |
+| `wifi.get` | - | `enabled client_mode ssid band channel channel_live country security hidden password_set channels clients` (the password never) |
+| `wifi.set` | `ssid` `password` `band` (`2.4`/`5`) `channel` (`auto` or one of `channels`) `hidden` (bool); at least one | `restart` |
+| `wifi.power` | `state` `on`/`off` (kept across restarts) | - |
+| `wificlient.status`, `.scan` | - | `active`, `text` (wifi-client's own words) |
+| `wificlient.join` | `ssid`, `password` or `open: true` | `job` |
+| `wificlient.leave` | `forget` (bool) | `job` |
+| `data.get` | - | `state iface address apn pdp auth user password_set signal sim roaming_switch` |
+| `data.set` | `apn` `pdp` (`IP`/`IPV6`/`IPV4V6`) `auth` (`none`/`pap`/`chap`/`both`) `user` `password` `clear_credentials` | `restart` |
+| `data.power` | `state` | - |
+| `sim.get`, `sim.select` | -, `slot` 1/2 | `sim` (mu300-sim's JSON) |
+| `lock.get`, `lock.set` | -, `kind` (`mode endc lte nr cell reset`) `val` | `data`: the control panel's answer (openwrt-luci only) |
+| `vpn.status` | `exit_ip` (bool) | `installed`, `status` (mu300-vpn's JSON), `extra` |
+| `vpn.profiles`, `.subs`, `.settings` | - | `profiles`, `subscriptions`, `settings` (`KILL_SWITCH`, `IPV6`) |
+| `vpn.service` `vpn.killswitch` `vpn.use` | `op` on/off/restart, `value` on/off, `id` | - |
+| `vpn.add` | `source` `link`/`text`, `data`, `name` | `id` |
+| `vpn.add_url`, `vpn.sub_add` | `url` (https), `name`, `interval` | `job` |
+| `vpn.rename` `vpn.remove` `vpn.setting` `vpn.sub_remove` | `id name`, `id`, `key` `IPV6` `value`, `id keep` | - |
+| `vpn.sub_refresh` `vpn.install` `vpn.engine_install` | `id`/`all`, -, `name` | `job` |
+| `vpn.logs` | `lines` 1-1000 | `log` |
+| `sms.list` `sms.read` `sms.send` `sms.delete` | `page`, `id`, `number text`, `id sim` | `data` or `text` |
+| `sms.job`, `sms.forward` | - | `data` (openwrt-luci) |
+| `lan.get`, `lan.set` | -, `ip` (private, ending in `.1`) | `ip default_ip usb_role usb_role_switch adb` |
+| `usb.role` | `role` `host`/`device` (U30 Air) | - |
+| `adb.auth` | `mode` `open`/`keys`, `key` (an adbkey.pub line; required for `keys`) | - |
+| `system.get` | - | `hostname timezone user ssh time release kernel kernel_choice boot extras` |
+| `system.hostname` `system.timezone` `system.password` `system.ssh` | `name`, `zone`, `password`, `state` | `user` for the password |
+| `system.reboot` `system.boot` `system.bootos` | -, `target` `linux android lock unlock`, `os` | - |
+| `update.check` `update.apply` `kernel.set` `extra.install` `extra.remove` | -, -, `version`, `name`, `name` | `job` |
+| `extra.list`, `logs` | -, `lines` | `extras`, `text` |
+| `job.status` | `from` (a line number) | `job`: `kind state rc started ended text next cancel` |
+| `job.cancel`, `job.clear` | - | - |
+
+**Errors**: `bad-request`, `unknown-method`, `unknown-field` (detail: the field), `bad-value` (the field), `missing`
+(the field), `not-root`, `unsupported` (what), `busy` (another job), `not-installed` (the VPN module), `failed` (the
+tool's last line, an address's path and query cut off).
+
+**Jobs**: a method that answers `{"job":"KIND"}` has started the device's one background job, in its own session: it
+goes on when the adb connection ends. Follow it with `job.status {"from": N}` (N: the `next` of the last answer),
+until `state` is not `running`; `done` has `rc`, `interrupted` none (the device restarted, say). `job.clear` forgets an
+ended one. Restarts of the hotspot, the LAN, mobile data, adb and the device itself happen two seconds after the
+answer: an `adb.auth`, `usb.role host` or `system.reboot` ends the connection then.
+
 ## What the interface does not promise
 
 * That adb is there. It is on by default and open to every computer (the owner's decision of 2026-10-13, FINDINGS

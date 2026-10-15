@@ -11,6 +11,7 @@
 * [SMS](SMS)
 * [VPN](VPN)
 * [Control Panel (LuCI)](Control-Panel-(LuCI))
+* [Device Manager](Device-Manager)
 
 **Keeping it running**
 * [Updating](Updating)
