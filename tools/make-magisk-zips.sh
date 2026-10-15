@@ -10,6 +10,10 @@
 # Update): for that it carries the release's SHA256SUMS and, when the release is signed, SHA256SUMS.sig - the
 # signature covers the SHA256SUMS, and the SHA256SUMS the two assets of the payload, so a zip can be checked against
 # the project's release key wherever it came from (docs/FINDINGS.md 86). The installer does not read either.
+# Unpacked on a computer, a zip is an installer for that computer too (docs/FINDINGS.md 111): computer/ holds this
+# project's installers (android/magisk/computer/files.txt), with START-HERE.md and the launchers at the top, and they
+# install the zip's own payload (tools/package.sh). None of that is a file the Magisk side reads: customize.sh unpacks
+# only module.prop, mu300/, the switch module and system/, so a zip installs in Magisk exactly as it did without them.
 set -eu
 USAGE='usage: tools/make-magisk-zips.sh RELEASE_DIR OUT_DIR [TAG]'
 TOP=$(cd "$(dirname "$0")/.." && pwd)
@@ -41,6 +45,24 @@ COMMON='META-INF/com/google/android/update-binary META-INF/com/google/android/up
 action.sh switch.sh bootchain.sh system/bin/mu300-linux mu300/install.sh mu300/android-boot-image.sh mu300/mu300-update
 mu300/android-install.sh mu300/android-bootchain.sh mu300/android-mount-mu300root.sh mu300/storage.sh mu300/i18n.sh mu300/i18n/tr.tsv
 mu300/i18n/zh.tsv mu300/subset-files.txt mu300/gpu-files.txt mu300/busybox mu300/manifest mu300/SHA256SUMS'
+# ... and the computer's side: the launchers, the guide, and computer/ - the files of files.txt (a directory: every
+# file in it, never a cache of Python's or a hidden file), and the mark that says "the payload is next to me"
+C=$TOP/android/magisk/computer
+LAUNCHERS='START-HERE.md start.sh start.cmd start-gui.sh start-gui.cmd uninstall-linux.sh uninstall-linux.cmd'
+COMPUTER=$(sed -e 's/#.*//' -e 's/[[:space:]]*$//' "$C/files.txt" | while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if [ -d "$TOP/$f" ]; then
+        (cd "$TOP" && find "$f" -type f ! -name '.*' ! -name '*.pyc' ! -path '*/__pycache__/*')
+    elif [ -f "$TOP/$f" ]; then
+        echo "$f"
+    else
+        echo "android/magisk/computer/files.txt names $f, which is not there" >&2; echo '<missing>'
+    fi
+done | LC_ALL=C sort -u)
+case $COMPUTER in *'<missing>'*) exit 1 ;; esac
+COMMON="$COMMON $LAUNCHERS computer/.mu300-package $(printf '%s\n' $COMPUTER | sed 's|^|computer/|')"
+# a .cmd for cmd.exe has CRLF line ends, whatever the checkout did
+crlf() { tr -d '\r' < "$1" | awk '{ printf "%s\r\n", $0 }' > "$2"; }
 # (the signature of a signed release)
 [ ! -s "$R/SHA256SUMS.sig" ] || COMMON="$COMMON mu300/SHA256SUMS.sig"
 stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
@@ -65,6 +87,19 @@ stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     cp "$R/$4" "$R/$5" "$S/payload/"
     printf 'TAG=%s\nSYSTEM=%s\nOS=%s\nUBUNTU=%s\nKERNEL=%s\nKERNEL_ASSET=%s\nROOTFS_ASSET=%s\nSHA256_KERNEL=%s\nSHA256_ROOTFS=%s\n' \
         "$TAG" "$2" "$6" "$7" "$3" "$5" "$4" "$(sha "$R/$5")" "$(sha "$R/$4")" > "$S/mu300/manifest"
+    # the computer's side (tools/package.sh): the project's installers of this checkout (in CI the tag's), the guide
+    # with this zip's system, kernel and release in it, the launchers, and the mark
+    for f in $COMPUTER; do
+        mkdir -p "$S/computer/$(dirname "$f")"
+        case $f in *.cmd) crlf "$TOP/$f" "$S/computer/$f" ;; *) cp "$TOP/$f" "$S/computer/$f" ;; esac
+    done
+    printf '%s\n' 'This directory is the computer side of a Magisk zip of MU300 Linux: the payload is next to it (START-HERE.md).' \
+        > "$S/computer/.mu300-package"
+    sed -e "s/@TAG@/$TAG/g" -e "s/@SYSTEM@/$2/g" -e "s/@KERNEL@/$3/g" "$C/START-HERE.md" > "$S/START-HERE.md"
+    for f in start.sh start-gui.sh uninstall-linux.sh; do cp "$C/$f" "$S/$f"; done
+    for f in start.cmd start-gui.cmd uninstall-linux.cmd; do crlf "$C/$f" "$S/$f"; done
+    chmod 755 "$S/start.sh" "$S/start-gui.sh" "$S/uninstall-linux.sh"     # (only these: the Magisk files keep their modes)
+    find "$S/computer" -name '*.sh' -exec chmod 755 {} +
 }
 audit() {  # audit ZIP ROOTFS_ASSET KERNEL_ASSET: exactly the names it should hold, the payload stored
     printf '%s\n' $COMMON "payload/$2" "payload/$3" | LC_ALL=C sort > "$W/want"
