@@ -138,7 +138,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
-| 93 | sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command (after kanoqwq's 0438ab01) | current (mainline kernels; compiled in CI, not run on a device: hold the merge for a device soak) |
+| 93 | sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command (after kanoqwq's 0438ab01) | current (mainline kernels; eMMC soak on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: clean, HS400ES, throughput unchanged; the SD slot not tested, no card) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 
 ## Hardware and firmware facts
@@ -6571,3 +6571,24 @@ workflow, dispatched on the branch. **Not run on a device. Hold the merge for a 
     dd if=/dev/zero of=/var/tmp/t bs=1M count=512 oflag=direct; dd if=/var/tmp/t of=/dev/null bs=1M iflag=direct
     # a soak: write/verify a few GiB, reboot ten times, e2fsck -fn on the root from Android or the initramfs
     # the SD card slot (FINDINGS 31j-31l): a card is seen, mounted, read and written; hot-plug still detected
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches), against the release kernels of v2026.10.27 on the same devices:
+
+* **F50, Ubuntu 24.04, 7.2.10.** `mmc0` HS400 enhanced strobe at 200 MHz, as before. 3 GiB of random data in
+  twelve files on the root filesystem (a loop over `mmcblk0` at the Linux region's offset, so every write goes to
+  the eMMC), checksums, read back uncached: all right after writing and after each of five boots of the test kernel
+  and one of the release kernel. `dumpe2fs`: clean. Then from Android, `e2fsck -fn` of the region through a
+  read-only loop: no error (12318 files). No ADMA error, no `EXT4-fs error`, no I/O error in any boot.
+* **U30 Air, openwrt-luci, 6.18.56.** HS400 enhanced strobe. The same 3 GiB soak on the Linux disk, checked after
+  writing, after each of three boots of the test kernel and after the release kernel's boot: all right;
+  `errors_count` 0.
+* **Throughput** (256 MiB `dd` with `oflag=direct`/`iflag=direct` on the F50, three runs each; 1 GiB on the U30 Air
+  in whole seconds): F50 file writes 179-195 MB/s on the test kernel and 189-217 on the release (the same spread
+  on both when repeated), file reads 272-302 and 269-317, the raw `mmcblk0` read 264-267 and 203-264; U30 Air 1 GiB
+  raw read 3-4 s, write with `fsync` 4 s, read back 3-4 s on both. No difference beyond the spread of runs.
+* **The empty SD slot** (`mmc1`, F50): in one of the seven boots of the test kernel the probe's one rescan logged
+  `Got command interrupt 0x00000001 even though no command operation was in progress` with a register dump (`Cmd
+  0x371a`, CMD55; §31j has the cause); none in the four boots of the release kernel this session. Too few boots to
+  tell a difference, and it is the slot without a card, not a transfer.
+* **Not tested:** a card in the slot and hot-plug (none here; the U30 Air has no slot).
