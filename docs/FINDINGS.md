@@ -137,6 +137,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; built for 6.18.56 and 7.2.10, unit tests; not measured on a device) |
 
 ## Hardware and firmware facts
 
@@ -613,7 +614,6 @@ Two smaller differences from the same reference, both cheap to copy and neither 
 * Its `rx_errors` and `tx_errors` are equal and non-zero (81 each) on a link that works, so those counters are
   not by themselves a sign of trouble.
 
-**Read the IPA state before theorising - `/sys/kernel/debug/sipa/` answers most of it**, and two of its fields
 are easy to misread:
 
 * `nic`: `suspend_stage`, `rc` (resumes), `sc` (suspends), `is_bypass`, then one line per allocated nic. A fresh
@@ -5896,3 +5896,46 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+### 102. Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry
+
+From kanoqwq's clean-tf-7.2 `149c9d2a` ("preserve TX retries"), checked against our `upstream/modules/sprd_modem/
+sipa_v3` (mainline kernels' modem stack; the 5.4 build uses the vendor tree and is not changed). Three defects in
+`sipa_eth_start_xmit()`, the transmit function of the `sipa_eth` interfaces that carry mobile data:
+
+* **Every retry one more header.** The device is raw IP: a packet arrives with `mac_header == network_header`, and
+  the function `skb_push`es 14 bytes for the IPA's Ethernet framing. When the IPA's send FIFO is full,
+  `sipa_nic_tx()` returns `-EAGAIN` and keeps nothing (`sipa_skb_sender_send_data()` unmaps and returns without
+  taking the skb), and the function returns `NETDEV_TX_BUSY`: the qdisc sends the same skb again later. The push
+  does not move `mac_header`, so the test is true again and every retry pushed another 14 bytes in front of the
+  packet: what finally went out was the packet behind 14·(retries+1) bytes of stale header. For a
+  `CHECKSUM_PARTIAL` TCP/UDP packet the checksum field (the pseudo-header seed) had also been zeroed for the IPA,
+  and stayed zero for the retry.
+* **The IRQ flags in one static variable.** `spin_lock_irqsave(&queue_lock, queue_lock_flags)` with a file-scope
+  `queue_lock_flags`, shared by the TX path and the flow-control wake-up on every CPU: a second CPU taking the lock
+  overwrites the holder's saved interrupt state, and the holder then restores the other CPU's.
+* **A freed skb reported as not sent.** When `skb_linearize()` fails the skb is freed and the function returned the
+  `-ENOMEM` as its `netdev_tx_t`, which the stack does not take as "consumed".
+
+Changed (ours, the same three fixes as his): the push is undone and the seed put back before `NETDEV_TX_BUSY`; the
+flags are a local of each function; a failed linearize returns `NETDEV_TX_OK`. The "fail to send" line is rate
+limited (it fires on every retry under backpressure). Not taken from the same commit here: his Wi-Fi changes (§103),
+and nothing about `sipa overflow ... err=2`, which his own notes leave unexplained.
+
+**When it bites:** only when the IPA FIFO is full (`no_free_cnt` in the sender grows), i.e. uplink bursts faster than
+the modem drains them; a packet retried then is sent corrupt (dropped by the network, retransmitted by TCP). Nobody
+here has measured how often that happens on our boards.
+
+**Measured:** built for 7.2.10 and 6.18.56 (`sipa_eth.ko`, no new warnings; built from a copy against the
+`mu300-mainline` volume's trees). `tests/test_sipa_eth_xmit.py` compiles the function from the source with
+stand-ins for the kernel calls (ASan/UBSan where the compiler has them): 1, 3 and 50 busy answers in a row, then
+the packet goes out with exactly one header (54 bytes for 40), unchanged between retries, the seed back, the lock
+released; a failed linearize says `NETDEV_TX_OK` with the skb freed. The previous source does not compile in the
+harness (the static flags), so the test is no negative control of the retry itself. Nothing run on a device.
+
+**Device checklist (before merge; F50 or U30 Air, 6.18 or 7.2, mobile data up):**
+
+    iperf3 -c <server> -t 60 -P 8                    # uplink as hard as the link goes (or a large upload)
+    dmesg | grep -c 'fail to send'                   # retries happened (rate-limited lines) - the case under test
+    # TCP throughput is not worse than before; ping -s 1400 and a download keep working; no oops in dmesg;
+    # ip -s link show sipa_eth0: tx_errors counts the busy answers, no climbing tx_dropped
