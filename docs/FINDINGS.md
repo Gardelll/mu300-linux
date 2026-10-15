@@ -6419,8 +6419,8 @@ once it is not the running system. Never is anything of the user's deleted to ma
 has never kept the old system; it now carries by link (no room needed) and swaps safely: old to `<os>.broken`,
 new into place, then the removal, and a run that finds `<os>.broken` without `<os>` puts it back first.
 `rollback` is unchanged and returns the old system exactly (below). `apply` does not go to an *older* release by
-itself any more (`MU300_DOWNGRADE=1`; the zip: `MU300_DOWNGRADE=yes` from `/data/adb` only): the update is done by
-the release it installs, and one from before v2026.10.28 keeps the list only.
+itself (`apply --downgrade`, the rule of the panel's update, §86; the zip: `MU300_DOWNGRADE=yes` from `/data/adb`
+only): the update is done by the release it installs, and one from before v2026.10.28 keeps the list only.
 
 **The Magisk zip.** Update was its default already (`MU300_MODE=update` when it finds a filesystem). Its plan now
 says what that means - `update: <os> <old> -> <new>: everything you added to it or changed in it is kept ...`, `not

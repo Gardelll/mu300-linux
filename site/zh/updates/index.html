@@ -106,7 +106,7 @@ sudo reboot</code></pre>
 <ol>
 <li>先下载并校验所有文件；全部到齐之前什么都不改。</li>
 <li>新系统解压在旧系统<strong>旁边</strong>，到最后才换上，所以下载中断也不会留下一个更新到一半的系统。</li>
-<li>你的设置、用户、<code>/usr/local</code>、从你设备上取来的 Wi-Fi 和基带文件，以及已装的扩展都会带过去。VPN 模块（核心和引擎作为一组）会更新到它的最新版本。</li>
+<li><strong>你在系统里添加和改动的一切都会带过去</strong>：任何目录里的文件（<code>/etc/wireguard</code>、你自己写的服务、crontab、<code>/var/lib/docker</code>、<code>/opt</code>、主目录）、你改过的设置、账户和密码、按你开关状态的服务、从你设备上取来的 Wi-Fi 和基带文件，以及已装的扩展。每个版本都带着自己文件的清单，更新就靠它把版本自带的文件和你的文件区分开。VPN 模块（核心和引擎作为一组）会更新到它的最新版本。</li>
 <li>内核和启动镜像也一起更新。新内核的头几次启动照常按失败次数计算，所以起不来的内核会让设备自己回到 Android。</li>
 </ol>
 <p>换内核也是同样的方式：<code>sudo mu300-update kernel 6.18</code>（或 <code>5.4</code>、<code>7.2</code>），然后重启。见<a href="../choose/#kernels">选择内核</a>。</p>
@@ -120,14 +120,15 @@ sudo mu300-update apply</code></pre>
 <pre><code>wget -O /opt/mu300/bin/mu300-update https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update
 mu300-update apply</code></pre>
 </div>
-<p>用电脑也行：再运行一次安装程序，选 <code>update</code>。它会重装系统、写入新的启动镜像，并保留你的设置和数据。</p>
+<p>同一个文件你的版本和发布版的版本相遇时，设置用你的，程序用发布版的；需要让开的内容都保存在 <code>/etc/mu300/update-kept/</code> 下，并列在 <code>/etc/mu300/update-report</code> 里（<code>sudo mu300-update report</code>；控制面板里在 系统 &gt; 更新 下）。更新不会打开你关掉的东西：你停用的服务仍然是停用的。以上从 v2026.10.28 起；到 v2026.10.27 为止，更新只保留一组固定的位置（设置、用户、主目录、<code>/usr/local</code>）。详情见 wiki 的 <a href="https://github.com/dikeckaan/mu300-linux/wiki/Updating#what-an-update-keeps">Updating</a> 页面。</p>
+<p>用电脑也行：再运行一次安装程序，选 <code>update</code>。它会重装系统、写入新的启动镜像，并像 <code>apply</code> 一样保留你的一切。在现有安装上刷新版本的 Magisk zip 也一样。</p>
 <p><strong>你自己装的软件包</strong>（<code>apk add</code>、<code>apt install</code>）不在发布版的镜像里。更新会把它们列出来，把它们的 OpenWrt 设置先放到一边（免得程序不在了设置还在起作用），新系统在第一次开机联网后再把它们装回来。<code>mu300-user-packages status</code> 显示哪些回来了（控制面板里：系统 &rarr; 更新后的软件包）；<code>mu300-update apply --no-reinstall</code> 跳过这一步。Ubuntu 上你添加的 apt 源（PPA）也会保留。从 v2026.10.20 起。</p>
 <p>装了网页面板扩展的 Ubuntu 上，新镜像里没有 Cockpit：更新后的第一次开机会在后台把它装回来（扩展自带副本就用副本，否则联网后从 Ubuntu 的软件源装）；<code>mu300-panel status</code> 会说明进度。</p>
 </section>
 
 <section id="rollback">
 <h2>回滚</h2>
-<p>上一个版本会以 <code>&lt;os&gt;.old</code> 的形式保留，直到你清理掉；上一个启动镜像也会保留。</p>
+<p>上一个版本会以 <code>&lt;os&gt;.old</code> 的形式保留，直到你清理掉；上一个启动镜像也会保留。这样你的文件在磁盘上有两份；空间不够时 <code>apply</code> 会说明并且什么都不改，<code>sudo mu300-update apply --no-rollback</code> 则在不保留上一个版本的情况下更新。</p>
 <pre><code>sudo mu300-update rollback        <span class="c"># 回到上一个系统</span>
 sudo mu300-update rollback-boot   <span class="c"># 回到上一个内核和启动镜像</span>
 sudo mu300-update clean           <span class="c"># 删掉保留的旧版本</span></code></pre>

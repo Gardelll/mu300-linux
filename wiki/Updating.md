@@ -35,9 +35,12 @@ control panel's home page. **It never installs one by itself.**
 release after v2026.10.25 on). It runs the same `mu300-update`, so everything on this page applies to it too.
 
 * **Installed** shows the system that runs and its release, the other systems on the device, the kernel, the boot
-  image, whether a restart goes to Linux or Android, and the free space.
+  image, whether a restart goes to Linux or Android, and the free space. Under it, **Report of the last update**:
+  what the last updates carried over, set aside or put back (`/etc/mu300/update-report`, the newest on top; see
+  [What an update keeps](#what-an-update-keeps)). It is open while it is new.
 * **Online update:** *Check for updates* asks GitHub and shows the newest release, how much the device would
-  download and how much free space the update wants. *Update* starts it. It runs on the device, not in your
+  download and how much free space the update wants (with room for a copy of your files: see
+  [Room, and going back](#room-and-going-back)). *Update* starts it. It runs on the device, not in your
   browser: you can close the page, and when you open it again, from any device, it shows how far the update is. At
   the end it offers *Restart now*. A pre-release (a release still being tried) is offered only when you tick it.
 * **Update from a file**, for a device without internet: on another computer, download the Magisk zip of the
@@ -118,9 +121,12 @@ aside stays in `/etc/mu300/update-kept/` through later updates until you delete 
 ### Room, and going back
 
 `apply` keeps the previous system whole as `<os>.old`, exactly as it was when you updated, for `rollback`. Your
-files are therefore there twice until `sudo mu300-update clean`. When the disk has no room for the second copy,
-`apply` says how much is needed and how much is free, and changes nothing. Then either make room, or update
-without keeping the previous system:
+files are therefore there twice until `sudo mu300-update clean`. Before it downloads anything, `apply` wants about
+1 GB free, 1 GB more for every system it updates, and room for the copy of what you added to each (counted from the
+list of files of the release you are on); the control panel shows the same figure. Once the new system is unpacked
+the copy is counted exactly once more. When the disk has no room, `apply` says how much is needed and how much is
+free, and changes nothing. Then either make room, or update without keeping the previous system (from a terminal;
+the panel always keeps it):
 
 ```sh
 sudo mu300-update apply --no-rollback    # your files are moved over, not copied: needs no room, and there is no rollback
@@ -131,7 +137,8 @@ changes after that stays in the previous one.
 
 `apply` never goes back to an **older** release by itself: the update is done by the release it installs, and one
 from before v2026.10.28 would keep only the list of places. `rollback` is the way back. (To install an older
-release all the same: `sudo MU300_DOWNGRADE=1 mu300-update apply`.)
+release all the same: `sudo mu300-update apply --downgrade`, the word of [the panel's update](#from-the-browser-openwrt-with-the-control-panel)
+too; a Magisk zip asks for `MU300_DOWNGRADE=yes` in `/data/adb/mu300-install.conf`.)
 
 ### Coming from a release before v2026.10.28
 

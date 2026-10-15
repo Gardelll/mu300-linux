@@ -110,8 +110,12 @@ sudo reboot</code></pre>
 <li>Önce her dosya indirilir ve denetlenir; hepsi gelmeden hiçbir şey değişmez.</li>
 <li>Yeni sistem eskisinin <strong>yanına</strong> açılır ve ancak en sonda yer değiştirir; yarıda kesilen bir indirme
 yarı güncellenmiş bir sistem bırakamaz.</li>
-<li>Ayarlarınız, kullanıcılar, <code>/usr/local</code>, cihazınızdan alınan Wi-Fi ve modem dosyaları ve kurulu
-eklentiler taşınır. VPN modülü, çekirdeği ve motorları tek set olarak, son sürümüne getirilir.</li>
+<li><strong>Sisteme eklediğiniz ve sistemde değiştirdiğiniz her şey taşınır</strong>: herhangi bir dizindeki dosyalar
+(<code>/etc/wireguard</code>, kendi yazdığınız bir servis, crontab'lar, <code>/var/lib/docker</code>, <code>/opt</code>,
+ev dizinleri), değiştirdiğiniz ayarlar, hesaplar ve parolalar, açtığınız ya da kapattığınız haliyle servisler,
+cihazınızdan alınan Wi-Fi ve modem dosyaları ve kurulu eklentiler. Her sürüm kendi dosyalarının listesini taşır;
+güncelleme onları sizinkilerden böyle ayırır. VPN modülü, çekirdeği ve motorları tek set olarak, son sürümüne
+getirilir.</li>
 <li>Çekirdek ve açılış imajı da güncellenir. Yeni bir çekirdek ilk açılışlarını her zamanki deneme haklarıyla yapar;
 açılmazsa cihaz kendiliğinden Android'e döner.</li>
 </ol>
@@ -128,8 +132,16 @@ sudo mu300-update apply</code></pre>
 <pre><code>wget -O /opt/mu300/bin/mu300-update https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update
 mu300-update apply</code></pre>
 </div>
+<p>Bir dosyanın sizin sürümünüzle sürümün kendi sürümü karşılaştığında ayarlarda sizinki, programlarda sürümünkü
+kullanılır; kenara çekilmesi gereken her şey <code>/etc/mu300/update-kept/</code> altına saklanır ve
+<code>/etc/mu300/update-report</code> içinde listelenir (<code>sudo mu300-update report</code>; kontrol panelinde
+Sistem &gt; Güncelleme altında). Güncelleme kapattığınızı açmaz: kapattığınız bir servis kapalı kalır. Bunların hepsi
+v2026.10.28'den beri; v2026.10.27'ye kadar bir güncelleme yalnızca bir yer listesini koruyordu (ayarlar, kullanıcılar,
+ev dizinleri, <code>/usr/local</code>). Ayrıntılar wiki'nin
+<a href="https://github.com/dikeckaan/mu300-linux/wiki/Updating#what-an-update-keeps">Updating</a> sayfasında.</p>
 <p>Bilgisayarla da olur: kurulum programını yeniden çalıştırın ve <code>update</code> cevabını verin. Sistemleri yeniden
-kurar, yeni bir açılış imajı yazar, ayarlarınızı ve verilerinizi korur.</p>
+kurar, yeni bir açılış imajı yazar ve <code>apply</code> gibi sizin olan her şeyi korur. Yeni sürümün Magisk zip'ini
+var olanın üzerine kurmak da aynısını yapar.</p>
 <p><strong>Kendi kurduğunuz paketler</strong> (<code>apk add</code>, <code>apt install</code>) sürümün imajında yoktur. Güncelleme
 onları listeler, OpenWrt ayarlarını programları olmadan iş görmesinler diye kenara koyar, ve yeni sistem çevrimiçi olur olmaz ilk
 açılışında onları yeniden kurar. <code>mu300-user-packages status</code> nelerin geri geldiğini gösterir (kontrol panelinde: Sistem
@@ -141,7 +153,9 @@ kendi kopyası varsa ondan, yoksa çevrimiçi olunca Ubuntu'nun arşivinden); <c
 
 <section id="rollback">
 <h2>Geri alma</h2>
-<p>Önceki sürüm siz temizleyene kadar <code>&lt;os&gt;.old</code> olarak saklanır; önceki açılış imajı da saklanır.</p>
+<p>Önceki sürüm siz temizleyene kadar <code>&lt;os&gt;.old</code> olarak saklanır; önceki açılış imajı da saklanır.
+Dosyalarınız böylece diskte iki kez bulunur; buna yer yoksa <code>apply</code> bunu söyler ve hiçbir şeyi değiştirmez,
+<code>sudo mu300-update apply --no-rollback</code> ise önceki sürümü saklamadan günceller.</p>
 <pre><code>sudo mu300-update rollback        <span class="c"># önceki sisteme dönüş</span>
 sudo mu300-update rollback-boot   <span class="c"># önceki çekirdeğe ve açılış imajına dönüş</span>
 sudo mu300-update clean           <span class="c"># saklanan önceki sürümü sil</span></code></pre>
