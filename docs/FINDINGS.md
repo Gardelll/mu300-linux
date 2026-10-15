@@ -150,6 +150,7 @@ what replaced it. The table below gives each section's state.
 | 110 | The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it | current (unit and Node tests against the real mu300-api; the device protocol run with the page's modules over WebUSB on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-16: six defects fixed; rows 6, 9, 16 and the Android restart not run) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
+| 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 
 ## Hardware and firmware facts
@@ -6669,6 +6670,135 @@ switch (9: the U30's second card registers for emergency only, the F50's needs a
 Update now (18: the update itself is #224's test), the restart into Android (22), the real page in Chrome (the
 chooser and the folder picker are browser UI), plain OpenWrt and a V50.
 
+## Data roaming
+
+### 120. Data roaming: a switch of our own in the dial and its watchdog, the network's word for roaming, and a test hook
+
+**What was missing.** Mobile data dialled whatever network the card registered on. Data roaming was always on and no
+front end could turn it off; the panels showed "Registered (roaming)" and nothing else. Android has "allow data
+roaming" per SIM; this is that.
+
+**How "roaming" is known.** From the card's registration, which the modem reports on the card's own AT channels (§74:
+the dial's channel, nr2 for slot 0 and nr5 for the U30 Air's SIM2 or the F50's internal card, answers for its card
+alone, so no `AT+SPACTCARD=<n>;` prefix is needed and none is sent; the panel's terminal refuses that form anyway).
+`<stat>` of `AT+CEREG?` (query form `+CEREG: <n>,<stat>[,...]`), and of `AT+C5GREG?` only when LTE's says neither
+home nor roaming (5G SA). 3GPP TS 27.007: 1 registered home, 5 registered roaming, 9 and 10 the same two for "CSFB not
+preferred" (EPS); 6/7 (SMS only) and 8 (emergency only) are not counted as either. The dashboard's table shows 10 as
+"Registered" (it is roaming): left as it is, the data decision does not use that table. No `AT+CREG?`/`AT+CGREG?`: the
+modem's data registration on LTE and NR is CEREG/C5GREG, and those are the ones measured answering on this modem (the
+dial waits on CEREG since the beginning, the panel's collector reads both every 1.5 s).
+
+**"Roaming" at home.** Stat 5 is the network's word. An MVNO on a host operator's network, or national roaming,
+reports 5 in its own country. So the setting is the user's answer, never a guess of ours, and every front end says
+"some SIMs report roaming at home (an MVNO, national roaming)".
+
+**A switch of the modem's own: none known.** Looked for and not found: the repository has no RIL binaries
+(`android-vendor/` holds the extraction lists; the extracted vendor subsets on the build host carry the GPU and
+modem-control files, no `libril*`), no Unisoc AT reference names one, the AT commands seen from this modem (`AT+SP*`
+in every log and script here) have none, and a web search for `SPDATAROAM`/`SPROAM`/Unisoc RIL data roaming found
+nothing. On Android the decision is the framework's (its data network controller checks the service state's data
+roaming flag against the user's setting before it asks the RIL for a data call); the RIL only gets the call, with the
+APN's roaming protocol. So nothing new is sent to the modem: the switch is the policy of `mobile-data`'s dial and its
+watchdog.
+
+**The default: allowed.** Every release so far used data while roaming; an update must not take anybody's data away
+(think of an MVNO SIM at home). Turning it off is one switch.
+
+**Where it is stored.** OpenWrt: `network.wan.roaming` for slot 0 (the external card / SIM1), `network.wan.
+roaming_internal` for slot 1 (the F50's internal card, the U30 Air's SIM2): per card, as the APN is (`apn`,
+`apn_internal`), since the second card is often the travel SIM that is meant to roam. Ubuntu: `MU300_DATA_ROAMING` in
+`/etc/mu300/mobile-data.conf`, one for both cards, as Ubuntu has one APN. Values 1/on/yes/true and 0/off/no/false;
+unset or anything else is allowed (`mobile-data roaming` says when a stored value is neither). The file is read as
+KEY=VALUE lines, never executed. The value is read again at every decision: a front end writes it, nothing is
+restarted, and the dial or the watchdog acts on it within half a minute (the watchdog's interval). The one writer is
+`mobile-data roaming on|off [--slot 0|1]`: on Ubuntu the file is rewritten with its other lines kept, root's alone
+(it may hold the APN password), a new file renamed over the old one; on OpenWrt `uci set` and `uci commit network`
+(no reload: netifd is not restarted by it).
+
+**Enforcement.**
+
+* The dial (`up`), after the registration and before anything of a data context (the IPA delegate, `AT+CGDCONT`,
+  `AT+CGACT`): with data roaming off it asks the registration once. Roaming: no context; `$ROAM_HELD`
+  (`/run/mu300/data-roaming-held`, its line the slot) is written, one line goes to `radio.log`, syslog and stderr -
+  only when the hold begins - and the "down on purpose" marker (`/run/mu300-mobile-data-down`) is set, so the data
+  cap's count of "data is up" stays right. Under netifd it exits 4: `mu300cell` reports `DATA_ROAMING` and netifd
+  tries again after 60 s (`MU300_ROAM_RETRY`), which is how data comes back at home; a held try costs the radio-on
+  check, `AT+CAVIMS=1` and two registration reads, and activates nothing. On Ubuntu it returns 0 (the service is not
+  "failed" and systemd does not restart it every 30 s), and the watchdog brings data back. Home, or allowed: the hold
+  ends (one line) and the dial goes on. The registration unreadable with data roaming off: a failed dial ("could not
+  tell"), retried like any other, and no hold.
+* The watchdog, while held: no reconnect and no "mobile data lost". OpenWrt: nothing is dialled (netifd's retries
+  own it); a wan somebody took down (netifd's `autostart` false: `ifdown`, the panel's button, the data cap) ends the
+  hold. Ubuntu: one `AT+CEREG?` a round; home or allowed ends the hold and dials once. `mobile-data down` (the service
+  stopped by hand, from Cockpit, by the data cap) ends the hold first, so data that somebody turned off is not
+  brought back. While mu300-power holds the modem down (suspend) the round does nothing.
+* The watchdog, a live connection: with data roaming off it asks the registration once a round (one more AT
+  command; with the default nothing more is asked than before). Roaming: the hold begins and the data goes down once
+  - OpenWrt `ifup wan` (netifd's own teardown, then its dial holds), Ubuntu the `down` path (`AT+CGACT=0`, routes,
+  NAT). The next rounds see the hold: no loop.
+* The U30 Air's first-data check for SIM2 (§74, `sim_data_wait`) gives no verdict while data is held for roaming
+  (registered, no data on purpose), so a roaming SIM2 is not sent back to SIM1 with a restart.
+* Not touched: the radio, the registration, `AT+CAVIMS=1` (IMS, sent before the gate), SMS, USSD, calls, emergency.
+
+**Status.** `mobile-data roaming`: the setting, the network (home, roaming, unknown; asks the modem) and "mobile data
+held back: roaming, and data roaming is off". `mobile-data roaming --json`: `{"allowed","held","slot","per_sim",
+"slots":[slot 0, slot 1]}`, files only. `mobile-data status` adds "roaming: yes, data not allowed while roaming".
+
+**Front ends.** OpenWrt panel: the dashboard's Data roaming row (Allowed / Off / "Off: data held back while
+roaming"), a Data roaming button in Quick controls (the card in use; `mu300dash act roaming on|off`, nothing else
+accepted, which runs `mobile-data roaming`), and LuCI's wan page (one flag per card next to its APN). Ubuntu: Cockpit's
+MU300 page (Mobile data card: the row and a button, `mobile-data roaming on|off` through Cockpit's administrative
+access, argument by argument). Both: `mu300-toolkit` -> Network -> Mobile data: data roaming. The web device manager
+(PR #244) reads and writes the same command.
+
+**Test hook (device tests only).** A regular file `/run/mu300/roaming-test`, owned by the user `mobile-data` runs
+as (root), not a link, whose line is `home-as-roaming`, makes stat 1 and 9 count as roaming. `/run` is RAM, so it is
+gone at the next boot. No front end writes it and nothing a front end sends reaches the name.
+
+**Device checklist** (items 1-5 run on 2026-10-15, below; item 6 not yet):
+
+1. A home SIM, nothing set: `sudo mobile-data roaming` says "data roaming allowed", "network home"; data as before.
+2. `sudo mobile-data roaming off`: with the home SIM the data stays up (the watchdog asks CEREG and finds 1); the
+   dashboard says Off.
+3. Force the roaming branch: `echo home-as-roaming | sudo tee /run/mu300/roaming-test`. Within 30 s: one line
+   "registered on a roaming network and data roaming is off" in `/run/mu300/radio.log` and the log, data down
+   (OpenWrt: the wan shows `DATA_ROAMING` and retries each minute; Ubuntu: `systemctl is-active mu300-mobile-data`
+   still active), the dashboard "Off: data held back while roaming", SMS still send and arrive. No second line in
+   five minutes.
+4. `sudo mobile-data roaming on` (or remove the hook file): data back within a minute, one line "mobile data comes
+   back". Then `off` again with the hook and `sudo rm /run/mu300/roaming-test`: data back at "home" the same way.
+5. While held: `ifdown wan` / `systemctl stop mu300-mobile-data`, then remove the hook: data stays down (somebody
+   turned it off). U30 Air: the same on SIM2, with `roaming_internal`.
+6. Abroad, or with a SIM that really roams: the network row says roaming; off holds, on dials.
+
+**On the devices (2026-10-15).** The branch's `mobile-data`, `mu300cell.sh`, `mu300dash`, the dashboard's
+`action`/`dashboard-info`, `mu300cell.js`, `mu300-sim2-warmup` and `mu300-toolkit` copied over v2026.10.27 on a U30
+Air (OpenWrt 25.12.5, kernel 6.18.56, SIM1 in use with data, the VPN up over it) and the Ubuntu files on an F50
+(Ubuntu 24.04, kernel 7.2.10, its card with data); the watchdog restarted on each.
+
+| item | U30 Air (OpenWrt) | F50 (Ubuntu) |
+|---|---|---|
+| 1. nothing set | "data roaming allowed", "network home"; `--json` `per_sim: true`, slots `[true,true]`; data and the VPN as before | the same, `per_sim: false`; no `mobile-data.conf` was there |
+| 2. `off` | `network.wan.roaming='0'`; the wan stays up (45 s, the watchdog's rounds asking CEREG); the dashboard's `wan.roaming` `{"allowed":0,"held":0}`; the exit IP through the VPN unchanged from the Mac | the file `MU300_DATA_ROAMING=0`, mode 600; data stays up |
+| 3. the hook | the line in `radio.log` and syslog 6 s after the hook; the wan `DATA_ROAMING`, pending, set up again every 60 s by netifd; the dashboard `{"allowed":0,"held":1}`; `mu300-sms send 7000 KALAN` sent and the carrier's answer arrived while held; one line in 4.5 min (5 netifd retries) | the line 6 s after the hook; no default route, no address; `mu300-mobile-data` still active, 0 restarts; `mobile-data status` "roaming: yes, data not allowed..."; no second hold in 7 min |
+| 4. `on`; `off` + hook, then the hook removed | wan up 21 s after `on` ("allowed, mobile data comes back"); with `off` down in 15 s; the hook removed: up in 64 s ("on the home network, mobile data comes back"), VPN exit IP back | up 28 s after `on`; down 36 s after `off`; up 33 s after the hook went ("on the home network") |
+| 5. taken down while held | `ifdown wan`, hook removed: 100 s later still down, `autostart: false`, the hold file gone, no "comes back"; `ifup wan` brought it back | `systemctl stop mu300-mobile-data`, hook removed: 100 s later no default route, the service inactive, the down marker there |
+
+The panel's action through ubus: `act roaming off` / `on` wrote `network.wan.roaming`, `act roaming bogus` was
+refused ("Invalid argument for this op"). `mobile-data roaming off|on --slot 1` wrote `roaming_internal` alone and
+`--json` showed it per slot. Everything set was unset again afterwards (`uci delete`, the F50's file removed).
+
+One defect, fixed: on Ubuntu the hold's line was twice in the journal (logger's, and the same line on stderr of the
+watchdog, whose stderr is the journal). stderr now gets it only when `JOURNAL_STREAM` is not set (a dial by hand);
+`test_the_hold_is_said_once_in_the_journal`.
+
+**Not verified.** Item 6: no SIM that really roams was at hand, so whether this modem reports 5 for national roaming
+or an MVNO at home is not known; the roaming branch was reached only through the test hook (stat 1 read as 5). The
+U30 Air's SIM2: its card in this unit registers for emergency service only (stat 8, §74) and never gets data, so
+the hold on SIM2 and `sim_data_wait`'s "no verdict while held" were not run (a switch to it goes back to SIM1 by
+design); only its setting (`roaming_internal`) was. Cockpit's MU300 page (the panel extra was not installed on the
+F50) and LuCI's wan page were not opened; the panel's backend was driven through ubus.
+
 ## A Magisk zip on a computer
 
 ### 111. One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer
@@ -6753,8 +6883,8 @@ launchers are CRLF and need no exec bit there; macOS and Linux keep the bits, an
 
 ### 112. Making room by a reset, and the installation that resumes afterwards (EXPERIMENTAL; kano's flow, ported)
 
-**Status: experimental. Unit tests and tests against fakes only. Nobody in this project has run any of it on a
-device, and neither has kano run its reset part (below).** The owner asked for kano's reset-and-resume flow (kanoqwq,
+**Status: experimental. Run end to end once, on one F50 (2026-10-15/16, below): prepare, reset, resume, boot. kano
+has not run its reset part (below).** The owner asked for kano's reset-and-resume flow (kanoqwq,
 branch `clean-tf-7.2`, MIT; commits `f6b0668d` 2026-10-14 "add desktop deployment", which brought
 `desktop/installer.py`'s transaction, `validate_resume`, `resume_payload_id` and `desktop/boot/part-prepare.sh`, and
 `0e19fe32` 2026-10-15, which added the GUI's journal around it). The owner's word (2026-10-15): "if kano did it, we
@@ -6914,6 +7044,73 @@ started (every exec `I/O error`, even the SSH password check). A reboot through 
 -84`, `Failed to initialize a non-removable card`); a normal `reboot` after it did. And while Linux runs from the card,
 `boot_b` and the two `runtimenv` partitions are written now and then (the boot log, the modem's NV server), so an
 image taken from a running Linux is consistent everywhere but there.
+
+**The same F50, 2026-10-16: checks 3 to 5, the resumed run and the first boot (the installer of 70a21b24, the
+commit that prepared it).** The owner turned USB debugging on again and gave the shell Magisk's root by hand (check
+4: it can be done; how, on a screenless unit, is his). Then, read from Android as root:
+* **Check 3 holds.** `mmcblk0p75` starts at 12275712 and is 108224512 sectors (ends at 120500223, the prepared end),
+  `/data` is a new f2fs on `dm-39` of 51.6 GiB (13527552 blocks of 4 KiB; it was a 20 GiB f2fs on the grown partition
+  the day before), `ro.crypto.state=encrypted`, `ro.crypto.type=file`, `sys.boot_completed=1`, the eMMC CID the
+  transaction's.
+* **Check 5 holds.** The 4 KiB at sector 120504320 are `MU300-PREPARED-V1 <the transaction's token>` and zeros.
+* misc: recovery cleared the first 2 KiB in full (zeros; the leftover `bootonce-bootloader` went with them), and the
+  A/B block at 2048 is byte for byte the one of the prepare's backup (sha256 of 2048..4095 the same).
+
+`install.sh --check` (`ANDROID_SERIAL`, the SD card still in): "A prepared installation is waiting", `resume.check`
+`RESUME-OK`, region 61698211840 (sector 120504320), 843055104 bytes, `verdict.code` `resume`, nothing written.
+
+**The resumed run** (answers: OpenWrt plain, kernel 6.18, Android by default, the confirmation `@stdin` to read the
+summary first). It found the transaction by serial and CID by itself, asked no storage or overwrite question, said
+"this device has 0.8 GiB: only OpenWrt fits" and took release v2026.10.27. The first try stopped at "Building the
+boot image": `TypeError: object of type 'PosixPath' has no len()` in `boot/build-boot-image.py`. That is not of this
+path: the boot image's manifest (`edb57d80`, 2026-10-15) counts `len(order)`, and the U30 Air's `--device-modules`
+loop reuses `order` for its order file's path, so **every install from a computer since that commit stopped there**
+(`install.sh` and `install.ps1` pass `--device-modules` whenever the 5.4 bundle has `modules-u30air`, and the
+release's always does). Nothing had been written; the transaction stayed `prepared`. Fixed with a test
+(`tests/test_boot_image.py`), the fix put on the 70a21b24 checkout (the file is not one the transaction is bound to),
+and the run again: the summary said `writes: Linux region at offset 61698211840, boot_b, 32 bytes of misc (boot_a, GPT
+and userdata are not touched)`; then `mke2fs` of an 804 MiB `mu300root`, OpenWrt with the hotspot's name imported,
+`MU300-INSTALL-OK`, boot_b written and read back (the sha256 the image's), slot b armed for one boot, the Magisk
+switch, `done result ok`, the transaction `installed`. The events in order: `hello` (prebuilt), `preflight`,
+`storage`, `resume.transaction`, `resume.check RESUME-OK`, `storage internal`, `verdict.code resume`, `release`,
+`choices` and the questions, `pull`, the downloads and `verify ok` x3, `vendor`, `bootimage`, `confirm` (`waiting`,
+then `INSTALL`), `copy`, `device`, `boot`, `switch`, `done`. The ext4 superblock now covers the token (it is gone, as
+it should be after the install).
+
+**The first boot.** The installer's reboot, with the card still in: boot_b's new image (6.18.56) started and took
+the SD card's OpenWrt as root (`stage=sd-root dev=/dev/mmcblk1p1`), as it prefers the card; misc went back to
+Android's slot. The owner then took the card out, and from Android `su -c mu300-linux`: 22 s later the unit was
+`MU300LINUX-324950664950-2128e853` on USB, 192.168.77.1 answered, `/etc/mu300/image-version` v2026.10.27, OpenWrt
+25.12.5, kernel 6.18.56, `/run/mu300-root-dev` `mmcblk0@61698211840`, `/` on `loop0` (775 MiB, 18 % used), no
+`mmcblk1`, SSH as root with the password of the answers. `mu300-next-boot android` and `reboot`: Android back, adb
+`324950664950`, root.
+
+**What the copies of the transaction showed** (`--transaction` on copies, the real file and the copies unchanged
+afterwards, sha256 before and after):
+* the CID changed: refused, "the device or its slot differs from the saved transaction (cid)";
+* the slot changed, a real run: refused, the `error` event, stopped after `storage`: nothing written;
+* `target` 2048 sectors smaller, a real run: "the prepared partition geometry differs (userdata is 108224512 sectors,
+  the transaction made it 108222464)";
+* the state put back to `prepared`, a real run: "preparation token mismatch; refusing to overwrite the region" (the
+  ext4 has the token's place): a resume cannot run twice;
+* a `prepared` copy in `MU300_BACKUP_DIR`: `--check` finds it and refuses it (token), `--check --no-resume` ignores
+  it and says "a MU300 Linux installation is already present";
+* an `installed` copy, unchanged: `RESUME-OK` (kano's rule: an installed record is not asked for its token), and the
+  same copy with the installer of current `main`: "this installer's tools or the package differ from the ones that
+  prepared the installation", because `tools/android-install.sh` changed since (the release-tag block). That is the
+  design: a transaction is resumed with the installer that prepared it, and the installer does not update itself
+  while one waits; one prepared before an update of these tools has to be finished with the old checkout.
+
+**One more defect, of every installer, found on the way.** During one `--check --no-resume` another session
+restarted adb's server; every read of the region came back empty, and the installer said "existing mu300root
+filesystem: no", "data check:  of 16 samples", `[: : integer expression expected`, and "OK: free and empty" for a
+region that held the Linux just installed. A real run would have skipped the update-or-wipe question and the
+overwrite one. `region_find_existing` and `region_dirty` (and `install.ps1`'s copy) now take no answer for no
+answer and stop ("no answer from the device"), with a test. `tools/storage.sh` is one of the files a transaction is
+bound to, so this fix, too, refuses a transaction prepared before it.
+
+Not changed, noted: `--check` reports a refused transaction and goes on to the ordinary verdict (`exit 0`); only a
+real run stops on it. The systems question offers "3" as its default where only OpenWrt fits.
 
 ### 90. The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection
 

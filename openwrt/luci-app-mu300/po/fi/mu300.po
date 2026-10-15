@@ -817,6 +817,9 @@ msgstr "Istunnon kesto"
 msgid "Registration"
 msgstr "Rekisteröinti"
 
+msgid "Data roaming"
+msgstr "Datavierailu"
+
 msgid "Bandwidth"
 msgstr "Kaistanleveys"
 
@@ -952,6 +955,18 @@ msgstr "Kytke matkapuhelinradio päälle"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN-käynnistysjakso suoritetaan (enintään noin 1 minuutti)."
 
+msgid "Turn data roaming off"
+msgstr "Poista datavierailu käytöstä"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Kun SIM on rekisteröitynyt verkkovierailuverkkoon, mobiilidata pysyy pois päältä; tekstiviestit, puhelut ja rekisteröinti eivät muutu. Jotkin SIM-kortit ilmoittavat verkkovierailusta myös kotimaassa (MVNO, kansallinen verkkovierailu): siellä data pysähtyisi myös."
+
+msgid "Allow data roaming"
+msgstr "Salli datavierailu"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobiilidataa käytetään myös verkkovierailuverkoissa, mikä voi maksaa lisää. Jotkin SIM-kortit ilmoittavat verkkovierailusta myös kotimaassa (MVNO, kansallinen verkkovierailu) ja tarvitsevat tämän saadakseen dataa lainkaan."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Matkapuhelinyhteys voi katketa 1–2 minuutiksi."
 
@@ -1080,6 +1095,15 @@ msgstr "Vain hätäpuhelut"
 
 msgid "Status %s"
 msgstr "Tila %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Pois: data pysäytetty verkkovierailussa"
+
+msgid "Allowed"
+msgstr "Sallittu"
+
+msgid "Off"
+msgstr "Pois"
 
 msgid "LTE anchor"
 msgstr "LTE-ankkuri"
@@ -1605,9 +1629,6 @@ msgstr "Jätä ennalleen"
 
 msgid "LTE only (5G off)"
 msgstr "Vain LTE (5G pois)"
-
-msgid "Off"
-msgstr "Pois"
 
 msgid "On"
 msgstr "Päällä"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio ei käynnistynyt"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Mobiilidatan integraatiota ei ole tällä alustalla"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Datavierailun asetusta ei voitu tallentaa"
 
 msgid "Expected on or off"
 msgstr "Odotettiin on tai off"

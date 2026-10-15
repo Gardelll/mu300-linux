@@ -817,6 +817,9 @@ msgstr "مدة الجلسة"
 msgid "Registration"
 msgstr "التسجيل"
 
+msgid "Data roaming"
+msgstr "تجوال البيانات"
+
 msgid "Bandwidth"
 msgstr "عرض النطاق الترددي"
 
@@ -952,6 +955,18 @@ msgstr "تشغيل الراديو الخلوي"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "سيُنفَّذ تسلسل التشغيل SFUN (حتى دقيقة واحدة تقريباً)."
 
+msgid "Turn data roaming off"
+msgstr "إيقاف تجوال البيانات"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "ما دامت شريحة SIM مسجلة على شبكة تجوال، تبقى بيانات الجوال متوقفة؛ ولا تتأثر الرسائل القصيرة والمكالمات والتسجيل. بعض الشرائح تُبلغ عن التجوال حتى داخل البلد (مشغل افتراضي MVNO، تجوال وطني): وهناك ستتوقف البيانات أيضًا."
+
+msgid "Allow data roaming"
+msgstr "السماح بتجوال البيانات"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "تُستخدم بيانات الجوال على شبكات التجوال أيضًا، وقد يكلف ذلك أكثر. بعض الشرائح تُبلغ عن التجوال حتى داخل البلد (مشغل افتراضي MVNO، تجوال وطني) وتحتاج إلى هذا الخيار لتحصل على البيانات أصلًا."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "قد يتوقف الاتصال الخلوي لمدة 1–2 دقيقة."
 
@@ -1080,6 +1095,15 @@ msgstr "الطوارئ فقط"
 
 msgid "Status %s"
 msgstr "الحالة %s"
+
+msgid "Off: data held back while roaming"
+msgstr "متوقف: البيانات محجوبة أثناء التجوال"
+
+msgid "Allowed"
+msgstr "مسموح"
+
+msgid "Off"
+msgstr "متوقف"
 
 msgid "LTE anchor"
 msgstr "ارتكاز LTE"
@@ -1605,9 +1629,6 @@ msgstr "بدون تغيير"
 
 msgid "LTE only (5G off)"
 msgstr "LTE فقط (5G متوقف)"
-
-msgid "Off"
-msgstr "متوقف"
 
 msgid "On"
 msgstr "يعمل"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "لم يعمل الراديو"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "تكامل بيانات الجوال غير متوفر في هذه المنصة"
+
+msgid "The data roaming setting could not be saved"
+msgstr "تعذّر حفظ إعداد تجوال البيانات"
 
 msgid "Expected on or off"
 msgstr "المتوقع on أو off"

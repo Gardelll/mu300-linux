@@ -817,6 +817,9 @@ msgstr "Durata sesiunii"
 msgid "Registration"
 msgstr "Înregistrare"
 
+msgid "Data roaming"
+msgstr "Roaming de date"
+
 msgid "Bandwidth"
 msgstr "Lățime de bandă"
 
@@ -952,6 +955,18 @@ msgstr "Pornire radio celular"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "Se va rula secvența de pornire SFUN (până la aproximativ 1 minut)."
 
+msgid "Turn data roaming off"
+msgstr "Dezactivează roamingul de date"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "Cât timp SIM-ul este înregistrat într-o rețea de roaming, datele mobile rămân oprite; SMS-urile, apelurile și înregistrarea nu sunt afectate. Unele SIM-uri raportează roaming și acasă (un MVNO, roaming național): acolo datele s-ar opri de asemenea."
+
+msgid "Allow data roaming"
+msgstr "Permite roamingul de date"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Datele mobile sunt folosite și în rețelele de roaming, ceea ce poate costa în plus. Unele SIM-uri raportează roaming și acasă (un MVNO, roaming național) și au nevoie de asta pentru a avea date."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Conectivitatea celulară se poate opri timp de 1–2 minute."
 
@@ -1080,6 +1095,15 @@ msgstr "Doar urgențe"
 
 msgid "Status %s"
 msgstr "Stare %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Oprit: date reținute în roaming"
+
+msgid "Allowed"
+msgstr "Permis"
+
+msgid "Off"
+msgstr "Oprit"
 
 msgid "LTE anchor"
 msgstr "Ancoră LTE"
@@ -1605,9 +1629,6 @@ msgstr "Lasă neschimbat"
 
 msgid "LTE only (5G off)"
 msgstr "Doar LTE (5G oprit)"
-
-msgid "Off"
-msgstr "Oprit"
 
 msgid "On"
 msgstr "Pornit"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radioul nu a pornit"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Integrarea datelor mobile nu este oferită de această platformă"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Setarea roamingului de date nu a putut fi salvată"
 
 msgid "Expected on or off"
 msgstr "Se așteaptă on sau off"

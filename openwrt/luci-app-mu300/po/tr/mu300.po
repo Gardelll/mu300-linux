@@ -817,6 +817,9 @@ msgstr "Oturum süresi"
 msgid "Registration"
 msgstr "Kayıt durumu"
 
+msgid "Data roaming"
+msgstr "Veri dolaşımı"
+
 msgid "Bandwidth"
 msgstr "Bant genişliği"
 
@@ -952,6 +955,18 @@ msgstr "Hücresel radyoyu aç"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN açılış sırası çalışacak (yaklaşık 1 dakikaya kadar)."
 
+msgid "Turn data roaming off"
+msgstr "Veri dolaşımını kapat"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "SIM bir dolaşım ağına kayıtlıyken mobil veri kapalı kalır; SMS, aramalar ve ağ kaydı etkilenmez. Bazı SIM'ler yurt içinde de dolaşım bildirir (bir MVNO, ulusal dolaşım): orada da veri durur."
+
+msgid "Allow data roaming"
+msgstr "Veri dolaşımına izin ver"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "Mobil veri dolaşım ağlarında da kullanılır; bu ek ücrete yol açabilir. Bazı SIM'ler yurt içinde de dolaşım bildirir (bir MVNO, ulusal dolaşım) ve veri için buna ihtiyaç duyar."
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "Hücresel bağlantı 1–2 dakika kesilebilir."
 
@@ -1080,6 +1095,15 @@ msgstr "Yalnızca acil arama"
 
 msgid "Status %s"
 msgstr "Durum %s"
+
+msgid "Off: data held back while roaming"
+msgstr "Kapalı: dolaşımda veri durduruldu"
+
+msgid "Allowed"
+msgstr "İzin verildi"
+
+msgid "Off"
+msgstr "Kapalı"
 
 msgid "LTE anchor"
 msgstr "LTE ankraj hücresi"
@@ -1605,9 +1629,6 @@ msgstr "Olduğu gibi bırak"
 
 msgid "LTE only (5G off)"
 msgstr "Yalnızca LTE (5G kapalı)"
-
-msgid "Off"
-msgstr "Kapalı"
 
 msgid "On"
 msgstr "Açık"
@@ -3378,6 +3399,12 @@ msgstr "Yönetilen çift SIM radyosu için SIM denetimini kullanın veya yeniden
 
 msgid "Radio did not come up"
 msgstr "Radyo açılmadı"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Mobil veri entegrasyonu bu platformda sağlanmıyor"
+
+msgid "The data roaming setting could not be saved"
+msgstr "Veri dolaşımı ayarı kaydedilemedi"
 
 msgid "Expected on or off"
 msgstr "on veya off bekleniyor"

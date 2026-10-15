@@ -817,6 +817,9 @@ msgstr "सत्र अवधि"
 msgid "Registration"
 msgstr "पंजीकरण"
 
+msgid "Data roaming"
+msgstr "डेटा रोमिंग"
+
 msgid "Bandwidth"
 msgstr "बैंडविड्थ"
 
@@ -952,6 +955,18 @@ msgstr "सेल्युलर रेडियो चालू करें"
 msgid "The SFUN power-on sequence will run (up to about 1 minute)."
 msgstr "SFUN पावर-ऑन क्रम चलेगा (लगभग 1 मिनट तक)।"
 
+msgid "Turn data roaming off"
+msgstr "डेटा रोमिंग बंद करें"
+
+msgid "While the SIM is registered on a roaming network, mobile data stays off; SMS, calls and the registration are not affected. Some SIMs report roaming at home (an MVNO, national roaming): there, data would stop as well."
+msgstr "जब तक SIM किसी रोमिंग नेटवर्क पर पंजीकृत है, मोबाइल डेटा बंद रहता है; SMS, कॉल और पंजीकरण प्रभावित नहीं होते। कुछ SIM घर पर भी रोमिंग बताते हैं (कोई MVNO, राष्ट्रीय रोमिंग): वहाँ भी डेटा रुक जाएगा।"
+
+msgid "Allow data roaming"
+msgstr "डेटा रोमिंग की अनुमति दें"
+
+msgid "Mobile data is used on roaming networks too, which can cost extra. Some SIMs report roaming at home (an MVNO, national roaming) and need this to have data at all."
+msgstr "मोबाइल डेटा रोमिंग नेटवर्क पर भी उपयोग होता है, जिसका अतिरिक्त शुल्क लग सकता है। कुछ SIM घर पर भी रोमिंग बताते हैं (कोई MVNO, राष्ट्रीय रोमिंग) और डेटा पाने के लिए इसकी ज़रूरत होती है।"
+
 msgid "Cellular connectivity may stop for 1–2 minutes."
 msgstr "सेल्युलर कनेक्टिविटी 1–2 मिनट के लिए रुक सकती है।"
 
@@ -1080,6 +1095,15 @@ msgstr "केवल आपातकालीन"
 
 msgid "Status %s"
 msgstr "स्थिति %s"
+
+msgid "Off: data held back while roaming"
+msgstr "बंद: रोमिंग में डेटा रोका गया"
+
+msgid "Allowed"
+msgstr "अनुमत"
+
+msgid "Off"
+msgstr "बंद"
 
 msgid "LTE anchor"
 msgstr "LTE एंकर"
@@ -1605,9 +1629,6 @@ msgstr "जैसा है वैसा रखें"
 
 msgid "LTE only (5G off)"
 msgstr "केवल LTE (5G बंद)"
-
-msgid "Off"
-msgstr "बंद"
 
 msgid "On"
 msgstr "चालू"
@@ -3385,6 +3406,12 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "रेडियो चालू नहीं हुआ"
+
+msgid "Mobile data integration is not provided by this platform"
+msgstr "इस प्लेटफ़ॉर्म पर मोबाइल डेटा एकीकरण उपलब्ध नहीं है"
+
+msgid "The data roaming setting could not be saved"
+msgstr "डेटा रोमिंग सेटिंग सहेजी नहीं जा सकी"
 
 msgid "Expected on or off"
 msgstr "on या off अपेक्षित है"

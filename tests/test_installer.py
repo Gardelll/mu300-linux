@@ -791,6 +791,22 @@ class Region(ShellTest):
             out = self.run_region(shell, 'region_probe; region_find_existing; region_dirty').stdout
             self.assertIn('existing=no DIRTY=1', out)
 
+    def test_no_answer_is_never_an_empty_region(self):
+        """2026-10-16, F50-C: adb's server went away in the middle of --check; every read came back empty, and the
+        region holding an installation was "existing: no", "free and empty" (DIRTY empty, compared as 0). In a real
+        run that skips the update-or-wipe question and the overwrite one. No answer is status 2 now."""
+        start = ((2048 + (4 << 21)) // 4096 + 1) * 4096 * 512
+        self.fake(ext4_at=start)
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; su_do() { :; }; region_find_existing').stdout
+            self.assertIn('rc=2', out)
+            self.assertIn('existing= ', out)
+            out = self.run_region(shell, 'region_probe; su_do() { :; }; region_dirty').stdout
+            self.assertIn('rc=2', out)
+            self.assertIn('DIRTY=\n', out + '\n')
+            # and an answer is still read as before
+            out = self.run_region(shell, 'region_probe; region_find_existing').stdout
+            self.assertIn(f'rc=0 OFF={start} SIZE={1000 * 4096} existing=yes', out)
 
     def test_a_table_that_ends_at_the_end_of_the_disk_is_an_empty_region_and_is_never_read(self):
         """Issue #65 (and #43, #52): the last partition ends 2 MiB before the end of the eMMC. The first boundary
