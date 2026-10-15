@@ -8,7 +8,9 @@ boot slot. There are two ways to get it:
   the install it is called "MU300 Linux" instead of "MU300 Linux switch"; the module id is the same
   (`mu300_linux_switch`), so the two replace each other. The Action button, `mu300-linux` and everything below work
   the same. Their files come from this directory (`installer/` is the installation part, `mu300-linux-switch/` is
-  this module), assembled by `tools/make-magisk-zips.sh`.
+  this module), assembled by `tools/make-magisk-zips.sh`. Unpacked on a computer, the same zip is the computer's
+  installer for its system and kernel (`computer/`, `START-HERE.md` and the launchers; `computer/files.txt` here lists
+  what goes in, and the README's "A Magisk zip on a computer" says how it is used).
 * **The switch-only module**, for a device where Linux was installed from a computer (`./install.sh`). It installs
   nothing and only changes the boot slot:
 
