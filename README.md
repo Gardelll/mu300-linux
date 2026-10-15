@@ -199,6 +199,30 @@ and it asks first. Back the device up with `tools/backup-device.sh` before sayin
 neither case, stop and open an issue with what `--check` printed; they identify the variant. With an SD card in the
 slot there is a way that erases nothing: `--check` says so, and the installer offers the card instead.
 
+**Making room is a reset, and the installation resumes afterwards (EXPERIMENTAL).** Android keeps its data
+encrypted (file-based encryption, with the metadata key in `/metadata`), and a data filesystem cleared from outside
+is one it cannot mount: it would stop in its recovery, waiting for a person at a screen these devices do not have.
+So the installer does what kano's desktop installer does (kanoqwq's branch `clean-tf-7.2`, commits `f6b0668d` and
+`0e19fe32`): before anything is written it saves a backup (the partition table, `misc`, `boot` and the boot chain of
+both slots - never the NV or calibration partitions) and a *transaction* on this computer, in `~/mu300-backups/<date>-<id>/`
+(`MU300_BACKUP_DIR` elsewhere). Then it shrinks `userdata` (the backup copy of the table first, both read back),
+writes a token to the first 4 KiB of the new region (outside every partition, where the reset does not reach) and
+asks Android's own recovery, through the bootloader message in `misc`, to format `userdata` on the next start.
+The device restarts, Android is reset - **all of its data is erased** - and starts as new.
+
+Then: set Android up again, turn USB debugging back on and bring root back (Magisk survives in the boot partition,
+but its app and its grants were in the erased data: install the Magisk app again and let Shell have root), and run
+`./install.sh` (or `.\install.ps1`, or the window) again. It finds the transaction and continues, when the device
+(serial, the eMMC's CID), Android's slot, `userdata`'s node, start and size, the partition table (both copies, every
+CRC), the region by the installers' own arithmetic, the token on the device and the installer's own tools (the GPT
+reader, the region's arithmetic, what formats and fills it, `boot/init`) are all still the ones it was prepared with;
+otherwise it stops, having written nothing, and says which. `--resume` insists on a transaction, `--no-resume`
+installs as if nothing had been prepared (the region is then space that holds data, and you type `overwrite`),
+`--transaction FILE` takes another one (`-Resume`, `-NoResume`, `-Transaction` for `install.ps1`). While a
+transaction waits the installer does not update itself. kano says he ran the stage after the reset's check against
+his V50's record ("passing the 8.00 GiB partition, identity, token and payload checks") and that the reset itself
+"still needs real MU300 validation"; this project has not run it on a device either (FINDINGS 112).
+
 **On the SD card.** With a card of at least 700 MiB in the slot the installer asks whether the Linux filesystem
 goes there instead of into the free eMMC space (`MU300_STORAGE=sd` answers it). The card is formatted (ext4,
 label `mu300sd`); on the eMMC only `boot_b` (or `boot_a`) and 32 bytes of `misc` are written, so a device with a small eMMC
@@ -479,6 +503,10 @@ adbd (platform-tools 34.0.5), built static for both systems by `tools/adbd/build
 
 ### Installing from Android with a Magisk zip
 
+**A zip has two ways in.** Installed as it is in Magisk, on the device, it installs its system and kernel there (this
+section). Unpacked on a computer, it is the computer's installer with that system and kernel in it, offline - see
+[A Magisk zip on a computer](#a-magisk-zip-on-a-computer) below.
+
 If the device already runs a rooted Android with Magisk 26 or newer, Linux can be installed from the device itself,
 without a computer: from the Magisk app (reached through scrcpy, a web panel or a phone running adb) or from
 `adb shell`. The zips are built from the files of a release by the "Magisk installers" workflow
@@ -525,6 +553,31 @@ second one adds its system next to the first and becomes the one that boots; `mu
 After a successful install the zip stays as the Magisk module "MU300 Linux" (the switch module of
 [android/magisk/README.md](android/magisk/README.md), same id): its Action button and `su -c mu300-linux` start
 Linux from Android later.
+
+#### A Magisk zip on a computer
+
+Unpack the **whole** zip into a folder and start `start.cmd` (Windows) or `sh start.sh` (macOS, Linux);
+`start-gui.cmd` / `sh start-gui.sh` open the graphical installer's window straight away, and `uninstall-linux.cmd` /
+`sh uninstall-linux.sh` start the uninstaller. `START-HERE.md` in the zip says the same in English, Turkish and
+Chinese.
+
+* It is this project's `install.sh` / `install.ps1` and the graphical installer, in the zip's `computer/` folder, of
+  the release the zip belongs to. `computer/.mu300-package` tells them that the zip's payload is next to them
+  (`MU300_PACKAGE=DIR`, `./install.sh --package DIR` or `.\install.ps1 -Package DIR` name another unpacked zip;
+  `tools/package.sh`).
+* It installs exactly the system and the kernel of that zip, from its `payload/`, and downloads nothing: both files
+  must have the checksum the zip's `mu300/manifest` names and the one the release's `mu300/SHA256SUMS` names. There
+  is no question about the system, the kernel or the release, and the installer does not update itself. Everything
+  else is the installer as always: the device's own Wi-Fi and modem files are read, the summary is shown and nothing
+  is written before `INSTALL`.
+* The VPN module, when it is asked for, is still a download (it is not part of a zip), and the web panel for Ubuntu
+  is not offered (add it later: `sudo mu300-extra install panel`).
+* **adb is not in the zip**: Google's platform-tools are under the Android SDK licence, whose section 3.4 does not
+  allow passing them on. Download them from https://developer.android.com/tools/releases/platform-tools and unpack
+  them into the zip's folder (`platform-tools/adb` next to `START-HERE.md`), or have adb on the PATH. The computer
+  also needs Python 3.8+ and lz4 (Windows: the installer installs both when missing, which needs the internet once).
+* The computer's side adds about 0.33 MB to a zip (68 files); the payload is in it once. Magisk never sees it: its
+  `customize.sh` unpacks only `module.prop`, `mu300/`, the switch module and `system/` (FINDINGS 111).
 
 **What is written.** Linux goes to its own place: a free region of the internal storage behind the partitions, or an
 SD card (a card that already holds a Linux installation of this project is used first, as the device does when it
