@@ -122,7 +122,7 @@ what replaced it. The table below gives each section's state.
 | 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
 | 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
-| 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; unit tests against a table built from #9's figures, not measured on a device) |
+| 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; the erase of Android's data superseded by §112; unit tests against a table built from #9's figures, not measured on a device) |
 | 58 | A service's own error in an HTTP 200 answer to the SMS webhook: a KEY=VALUE check of the answer; a button that clears the delivery log (#171) | current (unit tests; measured on the U30 Air against a fake webhook, not against the real services) |
 | 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
 | 63 | A reused SMS reference number mixed long messages, or kept them from ever being joined; a part delivered again | current (fixed; unit tests only, not measured on a device) |
@@ -139,6 +139,7 @@ what replaced it. The table below gives each section's state.
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 
 ## Hardware and firmware facts
 
@@ -288,6 +289,8 @@ Asked for often, because a smaller eMMC variant leaves less free space behind `u
     that still boots.
   * **It rewrites the partition table and erases everything in Android.** Take a full backup first
     (`tools/backup-device.sh`), and treat the path as experimental: it has been done by hand on one device.
+  * (2026-10-15) Android's data is no longer cleared by the installer: Android's own recovery is asked to reset it,
+    and the installation resumes after the reset (§112).
 
 ### 10. Mounting gotchas
 * busybox `mount -o loop,offset=` only creates a loop for regular files; for a block device the options go to
@@ -6527,3 +6530,93 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+
+## Making room on an encrypted Android
+
+### 112. Making room by a reset, and the installation that resumes afterwards (EXPERIMENTAL; kano's flow, ported)
+
+**Status: experimental. Unit tests and tests against fakes only. Nobody in this project has run any of it on a
+device, and neither has kano run its reset part (below).** The owner asked for kano's reset-and-resume flow (kanoqwq,
+branch `clean-tf-7.2`, MIT; commits `f6b0668d` 2026-10-14 "add desktop deployment", which brought
+`desktop/installer.py`'s transaction, `validate_resume`, `resume_payload_id` and `desktop/boot/part-prepare.sh`, and
+`0e19fe32` 2026-10-15, which added the GUI's journal around it). The owner's word (2026-10-15): "if kano did it, we
+don't need to test it, take it." kano's code was read; none of it was run here and no binary of it was taken.
+
+**Why the make-room path changed.** It used to shrink `userdata` from the running Android, then zero the first
+32 MiB of it so that Android would "format /data cleanly on the next boot" (§9b, §57). These devices keep `/data`
+with file-based and metadata encryption (§9: `dm-default-key`, the key in `/metadata`). A raw filesystem zeroed from
+outside then decrypts to noise under the old key, so Android cannot mount it. It reboots into recovery with
+`--prompt_and_wipe_data`, and that prompt waits for a person at a screen. The F50, U30 Air and V50 have no screen.
+kano's answer is to ask recovery itself for the reset. That is AOSP's bootloader message in the first 2 KiB of
+`misc`: `boot-recovery` at 0 and `recovery\n--wipe_data\n` at 0x40. Recovery formats `userdata` at its new size and
+resets the encryption with it. His `part-prepare.sh` says "the vendor flashing tool's erase-userdata writes the same
+block, zeroed in full". That is the one piece of device evidence he gives for the mechanism.
+
+**What his flow does, and what this port does.**
+
+| kano (`desktop/installer.py`, `part-prepare.sh`) | here (`tools/resume.sh`, `tools/resume.py`, `install.ps1`) |
+|---|---|
+| backup on the computer in `~/mu300-backups/<date>-<cid>`: both GPT copies, misc, boot and the boot chain of both slots, `SHA256SUMS` | the same, each file checked against `sha256sum` on the device; the NV and calibration partitions are never read |
+| `transaction.json` saved before the first write (`prepared-request`); serial, slot, `storage` (CID, node, start, size, disk), target, need, token, payload identity | the same fields, written atomically by `resume.py new`; `prepared` once everything is written |
+| stage one in a desktop initramfs on the Linux slot: checks the request against the device, carves `userdata` and a `mu300root` GPT partition, writes the token to its first sector, writes the BCB and Android's slot to misc, reboots | from the running Android, as this project's make-room path always did: the new table (the backup copy first, both read back, resize-last-partition.py checks both and every CRC), the token in the first 4 KiB of the region behind `userdata` (read back), the BCB (read back, and the A/B block behind it unchanged). No GPT partition: this project's Linux region stays unpartitioned (§9) |
+| recovery formats the smaller `userdata`; Android starts as new; the user sets it up, enables USB debugging and restores root | the same; the installer says so, and that Magisk's app and grants were in the erased data |
+| `resume-internal-install`: the newest transaction under `~/mu300-backups`, or `--transaction` | found by itself on the next run (newest waiting for this serial and CID), or `--resume` / `--transaction FILE`; `--no-resume` ignores it |
+| `validate_resume`: CID, node, start, slot, serial; userdata size equal to the target; root geometry; the marker `MU300-PART-PREPARED-V2 <token>` unless the record says installed | the same, plus the table read back (both copies, every CRC; its first, end and usable end), the region by `FreeRegion`/`region_probe`'s arithmetic, and the BCB: a reset that has not run yet (misc still asks for it) is said as such, before anything else |
+| `resume_payload_id`: the checksums of his boot image, rootfs, filesystem tools and kernel family, not of prompts or paths | the checksums of the tools that decide what a resumed install writes where: `resize-last-partition.py`, `storage.sh`, `android-install.sh`, `android-mount-mu300root.sh`, `boot/init` (and, from an unpacked zip, its two payload files: §111). The installer does not update itself while a transaction waits |
+| state `installed` after the boot image is written | the same, after `write_linux_boot` |
+| `encrypted()`: encrypted state or type, or `/data` on dm, is encrypted; `unencrypted` with an F2FS/ext4 magic is not; anything else raises | the same rule (`resume.py encrypted`); an unknown state stops the make-room path, nothing changed |
+
+What kano has that is not ported: the preserving offline shrink for an unencrypted `userdata`. This project's
+make-room path always erases. Also not ported: his desktop initramfs and its tools, the free-GPT-gap install into a
+new partition, and the userdata image. Where this differs on purpose: the token. kano writes it offline, with nothing
+mounted. Here it is written while Android still has the old, larger `userdata` mounted. f2fs may write into its old
+tail until the restart and overwrite the token. That is unlikely (the token is one 4 KiB block at a 2 MiB boundary,
+written right before the restart), and if it happens the resume refuses with "token mismatch" and writes nothing.
+`--no-resume` then installs into the region as into any space that holds data (`overwrite` typed). It is the same
+failure his flow stops on, without its cause.
+
+**What survives the reset, and where the transaction lives.** The reset formats `userdata`, and with FBE its keys
+in `/metadata`. `/sdcard` (`/data/media`) and `/data/local/tmp` are in it. So nothing the installer could put in
+Android's storage survives, and the transaction lives on the computer, as with kano. On the device, the reset leaves
+what lies outside `userdata`: the new partition table, the token at the start of the region (outside every
+partition from then on), `boot_a`/`boot_b` (Magisk's patched boot included), the boot chain and the A/B block in
+`misc`. Recovery clears the BCB once it has run.
+
+**What kano says he measured** (his notes, `docs/DESKTOP-INSTALLER-PORT.zh-CN.md` and `desktop/README.md` of
+`f6b0668d`, `installer/VERIFICATION.md` of `0e19fe32`; translated from Chinese where marked):
+
+* 2026-10-13: "MU300 实机缩容、原厂 recovery 重置/续装、完整部署后的重启和更新仍待验证" (translated: shrinking on a
+  real MU300, the stock-recovery reset and resume, and the reboot and update after a full deployment still need
+  verification).
+* 2026-10-14, on a V50: "新版 EXE 对旧记录进行只读续装预检，通过 8.00 GiB 分区、身份、令牌及载荷校验。没有再次缩容或
+  写独立分区" (translated: the new EXE ran a read-only resume pre-check against the old record and passed the
+  8.00 GiB partition, identity, token and payload checks; no second shrink, no write to the independent partition).
+  The same notes say a first stage existed on that V50 ("现有 8 GiB 分区可继续续装", translated: the existing 8 GiB
+  partition can still be resumed into). They do not say how the reset went there.
+* `desktop/README.md`: "Hardware installation, especially stock-recovery reset/resume, still needs real MU300
+  validation before a release."
+* 2026-10-15: "No connected-device installation, formatting, GPT mutation, userdata reset/shrink, boot-chain
+  synchronization, misc write, live SSH upgrade or Magisk flash was performed."
+
+**Tests.** `tests/test_resume.py`:
+* the transaction: kano's wrong-device/geometry/marker cases, plus this project's own checks; the identity; `find`;
+  the BCB and the marker; kano's encryption rule.
+* `install.sh` as a whole against `tests/fakeadb.py` in its new `emmc` mode, real storage in a directory
+  (`tests/fakeemmc.py`). The prepare is checked on what it wrote: only `userdata`'s end moved, then the token, the
+  BCB with the A/B block unchanged, the order of the writes, the backup, and that no NV partition was read.
+* the run before the reset (refused: "reset not run yet"), the reset (the kernel's view, recovery's format), the
+  resumed run (no storage or overwrite question, the region as prepared), `--check`, `--no-resume`, `--resume`
+  without a record, and a slot, token, geometry or identity that changed (each refused, nothing written).
+* `tests/installer.Tests.ps1`: `install.ps1`'s `OfferRepartition` with the same writes on its own fake.
+* `tests/test_gui.py`: the window's texts.
+
+**Before this is used on a device.**
+1. The vendor's recovery honours `--wipe_data` from the BCB without a prompt (kano's evidence is the vendor tool's
+   block, not a run).
+2. The bootloader starts recovery from the BCB on a plain reboot.
+3. Android starts after the reset with `userdata` at its new size.
+4. Magisk's root can be brought back on a screenless unit (the Magisk app over adb, the Shell grant through scrcpy).
+5. The token is still there after the restart.
+
+Until then the path stays EXPERIMENTAL, and an SD card remains the way that erases nothing.

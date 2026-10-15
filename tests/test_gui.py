@@ -1206,7 +1206,14 @@ class Window(unittest.TestCase):
         self.assertIn('holds a MU300 Linux installation', page)
         ctl.facts = facts(region__size='0', makeroom__first='12275712', makeroom__end='122155007', makeroom__usable_end='122155007',
                           makeroom__min_android='8388608', makeroom__min_linux='1638400', makeroom__max_linux='101490688')
-        self.assertIn('Make room now', show('install', 1))
+        page = show('install', 1)
+        self.assertIn('Make room now', page)
+        self.assertIn("restarts into Android's own recovery", page)          # the reset, and how it goes on (tools/resume.sh)
+        # a prepared installation waiting (tools/resume.sh): what its checks said
+        ctl.facts = facts(resume__transaction='/home/u/mu300-backups/x/transaction.json', resume__check='RESUME-OK', verdict__code='resume')
+        self.assertIn('A prepared installation waits for this device (EXPERIMENTAL', show('install', 1))
+        ctl.facts = facts(resume__transaction='/home/u/mu300-backups/x/transaction.json', resume__check='RESUME-REFUSED: preparation token mismatch')
+        self.assertIn('it cannot be continued: preparation token mismatch', show('install', 1))
         # a check that fitted the choices to the device: the widgets follow (a card that holds an installation)
         ctl.choices.storage = 'sd'
         a.on_change({'check'})

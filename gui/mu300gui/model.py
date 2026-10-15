@@ -443,7 +443,8 @@ UNINSTALL_STEPS = (('preflight', N_('Check the computer and the device')), ('fin
 CHECK_STEPS = (('preflight', N_('Check the computer and the device')), ('storage', N_('Find the place for Linux')))
 BACKUP_STEPS = (('preflight', N_('Check the computer and the device')), ('backup', N_('Copy the boot image and the start of misc')))
 MAKEROOM_STEPS = (('preflight', N_('Check the computer and the device')), ('storage', N_('Read the partition table')),
-                  ('repartition', N_('Rewrite the partition table and clear Android\'s data')))
+                  ('backup', N_('Back up the partition table, misc, boot and the boot chain')),
+                  ('repartition', N_('Rewrite the partition table and ask Android\'s recovery for the reset')))
 # From these stages on a run writes to the device: stopping it there can leave a write half done. Before them
 # nothing on the device has changed and a run can be stopped at any moment.
 NO_CANCEL = {'install': ('device', 'boot', 'switch', 'done'), 'uninstall': ('misc', 'boot', 'erase', 'sd', 'userdata', 'switch', 'done'),

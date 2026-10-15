@@ -256,13 +256,28 @@ Check 'no install: default no'  (VpnDefault @(VpnOnSystems @('ubuntu') 'no' 0 ''
 Check 'no install: no probe'    $script:suCmd ''
 
 # ---- making room (issue #32): install.sh's offer_repartition, here OfferRepartition -------------------------------
-$rnames = 'Quiet', 'FreeRegion', 'GptShow', 'RepartitionPlan', 'RepartitionSectors', 'LayoutFigures', 'GptTool', 'GptDump', 'OfferRepartition'
+$rnames = 'Quiet', 'FreeRegion', 'GptShow', 'RepartitionPlan', 'RepartitionSectors', 'LayoutFigures', 'GptTool', 'GptDump', 'OfferRepartition',
+    'ResumePy', 'ParseFacts', 'FactsOk', 'ResumeFacts', 'ResumeBackup', 'ResumePush', 'ResumeSha', 'WriteUnix', 'ResumePending'
 $rdefs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $rnames -contains $n.Name }, $true)
 foreach ($d in $rdefs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in $rnames) {
     if (-not (Get-Command $w -CommandType Function -ErrorAction SilentlyContinue)) { Write-Host "FAIL: $w not found in install.ps1"; exit 99 }
 }
 LoadLanguage 'en'
+# what the make-room path reads to identify the device, as install.ps1 sends it (the same text as tools/resume.sh's)
+$FactsCmd = [regex]::Match([IO.File]::ReadAllText((Join-Path $Top 'install.ps1')), "(?m)^\`$script:FactsCmd = '([^']*)'").Groups[1].Value
+$script:FactsCmd = $FactsCmd
+$shFacts = [regex]::Match([IO.File]::ReadAllText((Join-Path (Join-Path $Top 'tools') 'resume.sh')), "_rf=\`$\(su_do '([^']*)'\)").Groups[1].Value
+Check 'facts: the same command as install.sh' ($FactsCmd -and $FactsCmd -ceq $shFacts) $true
+Check 'facts: no double quotes (Windows PowerShell 5.1 drops them)' $FactsCmd.Contains('"') $false
+$pf = ParseFacts "NODE=mmcblk0p18`r`nCID=15010053454d36344720c1a6b7d2e900`nSTART=12275712`nSIZE=109879296`nSTATE=encrypted`nTYPE=file`nSOURCE=/dev/block/dm-6`nMAGIC=`nEXT="
+Check 'facts: read'             "$($pf.NODE) $($pf.START) $($pf.SIZE) $($pf.STATE) $($pf.TYPE) [$($pf.MAGIC)]" 'mmcblk0p18 12275712 109879296 encrypted file []'
+$pf.SERIAL = '324950664950'
+Check 'facts: ok'               (FactsOk $pf) $true
+foreach ($bad in @(@{ NODE = 'sda1' }, @{ NODE = 'mmcblk0p18;x' }, @{ CID = 'XYZ' }, @{ CID = ('a' * 31) }, @{ START = '' }, @{ SIZE = '1e3' }, @{ SERIAL = '' })) {
+    $b = $pf.Clone(); foreach ($k in $bad.Keys) { $b[$k] = $bad[$k] }
+    Check "facts: refused $(@($bad.Keys) -join ',')" (FactsOk $b) $false
+}
 # The figures of the 64 GB eMMC (FINDINGS #9): 122159104 sectors, last usable LBA 122155007, userdata from sector
 # 12275712, 20 GiB of it at the factory. Issue #32 gives no sectors: its layout is this one with userdata extended to
 # the last usable LBA (tests/fakegpt.py's vendor64).
@@ -373,16 +388,24 @@ if (-not $py) {
         & $py (Join-Path (Join-Path $Top 'tests') 'fakegpt.py') (Join-Path $fx 'dev') $Layout
         $script:dev = @{ disk = $D64; head = [IO.File]::ReadAllBytes((Join-Path $fx 'dev.head')); tail = [IO.File]::ReadAllBytes((Join-Path $fx 'dev.tail'))
             files = @{}; cmds = (New-Object System.Collections.ArrayList); bad = 0; rebooted = $false; wiped = $false
-            shortPush = $false; deafDisk = $false; noRead = $false }
+            shortPush = $false; deafDisk = $false; noRead = $false; marker = @{}; bcb = $null
+            facts = "NODE=mmcblk0p18`nCID=15010053454d36344720c1a6b7d2e900`nSTART=$F64`nSIZE=$($U64 - $F64 + 1)`nSTATE=encrypted`nTYPE=file`nSOURCE=/dev/block/dm-6`nMAGIC=`nEXT=" }
         $script:dev.head0 = Sha256Hex $script:dev.head; $script:dev.tail0 = Sha256Hex $script:dev.tail
         if (-not $SameWork) { $script:Work = Join-Path $fx ('work-' + [guid]::NewGuid()) }
     }
     function Python { & $py @args }
+    function AdbProp($name) { if ($name -eq 'ro.serialno') { return '324950664950' } else { $script:dev.bad++; return '' } }
+    $ANDROID_SLOT = 'a'
+    $BackupDir = Join-Path $fx 'backups'
+    # the bytes of a partition of the fake device, the same every time
+    function PartBytes([string]$Name) { return [Text.Encoding]::ASCII.GetBytes(("$Name " * 300)) }
     function SuDoToFile($cmd, $path) {
         [void]$script:dev.cmds.Add("pull: $cmd")
         if ($script:dev.noRead) { return }
         if ($cmd -ceq 'dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null') { [IO.File]::WriteAllBytes($path, $script:dev.head) }
         elseif ($cmd -ceq "dd if=/dev/block/mmcblk0 bs=512 skip=$($script:dev.disk - 33) count=33 2>/dev/null") { [IO.File]::WriteAllBytes($path, $script:dev.tail) }
+        elseif ($cmd -ceq 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null') { [IO.File]::WriteAllBytes($path, (New-Object byte[] 4096)) }
+        elseif ($cmd -cmatch '^cat /dev/block/by-name/((boot|uboot|sml|teecfg|trustos|vbmeta)_[ab])$') { [IO.File]::WriteAllBytes($path, (PartBytes $Matches[1])) }
         else { $script:dev.bad++ }
     }
     function adb {
@@ -394,19 +417,35 @@ if (-not $py) {
         } elseif ($args[0] -eq 'reboot' -and $args.Count -eq 1) { $script:dev.rebooted = $true }
         else { $script:dev.bad++ }
     }
+    $tmpFiles = '/data/local/tmp/mu300-new.head /data/local/tmp/mu300-new.tail /data/local/tmp/mu300-marker.bin /data/local/tmp/mu300-bcb.bin'
     function SuDo($cmd) {
         [void]$script:dev.cmds.Add("su: $cmd")
         $seek = $script:dev.disk - 33
-        if ($cmd -cmatch '^sha256sum (/data/local/tmp/new\.(head|tail))$') {
+        if ($cmd -ceq $script:FactsCmd) { return $script:dev.facts }
+        if ($cmd -cmatch '^sha256sum (/data/local/tmp/mu300-(new\.head|new\.tail|marker\.bin|bcb\.bin))$') {
             $f = $Matches[1]
             if ($script:dev.files.ContainsKey($f)) { return "$(Sha256Hex $script:dev.files[$f])  $f`r" } else { return '' }
         }
-        if ($cmd -ceq "dd if=/data/local/tmp/new.tail of=/dev/block/mmcblk0 bs=512 seek=$seek conv=fsync 2>/dev/null") {
-            if (-not $script:dev.deafDisk) { $script:dev.tail = $script:dev.files['/data/local/tmp/new.tail'] }
-        } elseif ($cmd -ceq 'dd if=/data/local/tmp/new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null') {
-            if (-not $script:dev.deafDisk) { $script:dev.head = $script:dev.files['/data/local/tmp/new.head'] }
-        } elseif ($cmd -ceq 'dd if=/dev/zero of=/dev/block/by-name/userdata bs=1M count=32 conv=fsync 2>/dev/null') { $script:dev.wiped = $true }
-        elseif ($cmd -cne 'sync; rm -f /data/local/tmp/new.head /data/local/tmp/new.tail' -and $cmd -cne 'rm -f /data/local/tmp/new.head /data/local/tmp/new.tail') { $script:dev.bad++ }
+        if ($cmd -cmatch '^sha256sum /dev/block/by-name/((boot|uboot|sml|teecfg|trustos|vbmeta)_[ab])$') { return "$(Sha256Hex (PartBytes $Matches[1]))  /dev/block/by-name/$($Matches[1])`r" }
+        if ($cmd -ceq 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v') { return ' 5f 61 00 00 42 43 41 42 01 02 00 00 9f 00 1e 00 00 00 00 00 00 00 00 00 00 00 00 00 0b e1 71 46' }
+        if ($cmd -cmatch '^dd if=/dev/block/mmcblk0 bs=512 skip=(\d+) count=8 2>/dev/null \| sha256sum$') {
+            $b = if ($script:dev.marker.ContainsKey($Matches[1])) { $script:dev.marker[$Matches[1]] } else { New-Object byte[] 4096 }
+            return "$(Sha256Hex $b)  -"
+        }
+        if ($cmd -ceq 'dd if=/dev/block/by-name/misc bs=2048 count=1 2>/dev/null | sha256sum') {
+            $b = if ($script:dev.bcb) { $script:dev.bcb } else { New-Object byte[] 2048 }
+            return "$(Sha256Hex $b)  -"
+        }
+        if ($cmd -ceq "dd if=/data/local/tmp/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$seek conv=fsync 2>/dev/null") {
+            if (-not $script:dev.deafDisk) { $script:dev.tail = $script:dev.files['/data/local/tmp/mu300-new.tail'] }
+        } elseif ($cmd -ceq 'dd if=/data/local/tmp/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null') {
+            if (-not $script:dev.deafDisk) { $script:dev.head = $script:dev.files['/data/local/tmp/mu300-new.head'] }
+        } elseif ($cmd -cmatch '^dd if=/data/local/tmp/mu300-marker\.bin of=/dev/block/mmcblk0 bs=512 seek=(\d+) count=8 conv=notrunc,fsync 2>/dev/null$') {
+            $script:dev.marker[$Matches[1]] = $script:dev.files['/data/local/tmp/mu300-marker.bin']
+        } elseif ($cmd -ceq 'dd if=/data/local/tmp/mu300-bcb.bin of=/dev/block/by-name/misc bs=2048 count=1 conv=notrunc,fsync 2>/dev/null') {
+            $script:dev.bcb = $script:dev.files['/data/local/tmp/mu300-bcb.bin']
+        } elseif ($cmd -cmatch '^dd if=/dev/zero of=') { $script:dev.wiped = $true }
+        elseif ($cmd -cne "sync; rm -f $tmpFiles" -and $cmd -cne "rm -f $tmpFiles") { $script:dev.bad++ }
         return ''
     }
     function Die($m) { throw "DIE: $m" }
@@ -430,11 +469,16 @@ if (-not $py) {
         try { OfferRepartition $script:dev.disk ($U64 + 1) 0 } catch { $script:died = "$($_.Exception.Message)" }
     }
     function Writes { @($script:dev.cmds | Where-Object { $_ -match ' of=' }) }
-    function Untouched { ((Sha256Hex $script:dev.head) -eq $script:dev.head0) -and ((Sha256Hex $script:dev.tail) -eq $script:dev.tail0) -and -not $script:dev.wiped -and -not $script:dev.rebooted -and (Writes).Count -eq 0 }
+    function Untouched { ((Sha256Hex $script:dev.head) -eq $script:dev.head0) -and ((Sha256Hex $script:dev.tail) -eq $script:dev.tail0) -and -not $script:dev.wiped -and -not $script:dev.rebooted -and (Writes).Count -eq 0 -and $null -eq $script:dev.bcb -and $script:dev.marker.Count -eq 0 }
     function Printed([string]$Pattern) { [bool](@($script:out | Where-Object { $_ -match $Pattern }).Count) }
-    $tailDd = "su: dd if=/data/local/tmp/new.tail of=/dev/block/mmcblk0 bs=512 seek=$($D64 - 33) conv=fsync 2>/dev/null"
-    $headDd = 'su: dd if=/data/local/tmp/new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null'
-    $zeroDd = 'su: dd if=/dev/zero of=/dev/block/by-name/userdata bs=1M count=32 conv=fsync 2>/dev/null'
+    $tailDd = "su: dd if=/data/local/tmp/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$($D64 - 33) conv=fsync 2>/dev/null"
+    $headDd = 'su: dd if=/data/local/tmp/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null'
+    # the region behind the new end of userdata (4 GiB less): its first 4 KiB hold the token
+    $rgStart = (FreeRegion ($U64 - 8388608 + 1) $D64).Start
+    $markerDd = "su: dd if=/data/local/tmp/mu300-marker.bin of=/dev/block/mmcblk0 bs=512 seek=$rgStart count=8 conv=notrunc,fsync 2>/dev/null"
+    $bcbDd = 'su: dd if=/data/local/tmp/mu300-bcb.bin of=/dev/block/by-name/misc bs=2048 count=1 conv=notrunc,fsync 2>/dev/null'
+    $bcbFile = Join-Path $fx 'bcb.bin'
+    & $py (Join-Path (Join-Path $Top 'tools') 'resume.py') bcb $bcbFile
 
     # -Check: the figures, no question, nothing written
     $Check = $true
@@ -448,7 +492,9 @@ if (-not $py) {
     Check 'check: says so'          ($script:out[$script:out.Count - 1]) '  -Check writes nothing. Run the installer without it to make room.'
     Check 'check: no question'      $script:asked.Count 0
     Check 'check: device untouched' (Untouched) $true
-    Check 'check: reads the table only' (($script:dev.cmds -join '|')) "pull: dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null|pull: dd if=/dev/block/mmcblk0 bs=512 skip=$($D64 - 33) count=33 2>/dev/null"
+    Check 'check: reads the table and what identifies the device' (($script:dev.cmds -join '|')) "pull: dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null|pull: dd if=/dev/block/mmcblk0 bs=512 skip=$($D64 - 33) count=33 2>/dev/null|su: $FactsCmd"
+    Check 'check: the reset, it says' (Printed "Android's own recovery erases Android's data") $true
+    Check 'check: encrypted, it says' (Printed "^  Android's data:       encrypted \(encrypted/file\)$") $true
     Check 'check: nothing unexpected' $script:dev.bad 0
 
     # the default answer is no
@@ -477,8 +523,9 @@ if (-not $py) {
     Check 'shrink: what Android keeps' (Printed '^  userdata \(Android\):   48[.,]4 GiB$') $true
     Check 'shrink: what Linux gets' (Printed '^  Linux region:         4[.,]0 GiB$') $true
     Check 'shrink: questions'       ($script:asked -join '|') ('Make room by shrinking userdata? (yes/no)|' + ('How many GiB for Linux? (the rest stays with Android)|' * 4) + "Type ERASE to rewrite the partition table and wipe Android's data|Reboot now? (yes/no)")
-    # the backup copy of the table first, then the primary, then the start of userdata - and nothing else is written
-    Check 'shrink: what is written' ((Writes) -join '|') "$tailDd|$headDd|$zeroDd"
+    # the backup copy of the table first, then the primary, then the token, then the request to recovery - and nothing
+    # else is written
+    Check 'shrink: what is written' ((Writes) -join '|') "$tailDd|$headDd|$markerDd|$bcbDd"
     Check 'shrink: nothing unexpected' $script:dev.bad 0
     Check 'shrink: the table was kept'  ((Sha256Hex ([IO.File]::ReadAllBytes("$gd\gpt.head"))) + (Sha256Hex ([IO.File]::ReadAllBytes("$gd\gpt.tail")))) ($script:dev.head0 + $script:dev.tail0)
     Check 'shrink: the device has the new one' ((Sha256Hex $script:dev.head) + (Sha256Hex $script:dev.tail)) ((Sha256Hex ([IO.File]::ReadAllBytes("$gd\new.head"))) + (Sha256Hex ([IO.File]::ReadAllBytes("$gd\new.tail"))))
@@ -487,29 +534,53 @@ if (-not $py) {
     Check 'shrink: userdata starts where it did' $now.First $F64
     Check 'shrink: userdata ends 4 GiB earlier'  $now.End ($U64 - 8388608)
     Check 'shrink: says where'      (Printed '^  userdata now ends at sector 113766399$') $true
-    Check 'shrink: userdata cleared' $script:dev.wiped $true
+    Check 'shrink: userdata not cleared from here' $script:dev.wiped $false
+    Check 'shrink: the request to recovery' (Sha256Hex $script:dev.bcb) (Sha256Hex ([IO.File]::ReadAllBytes($bcbFile)))
+    $tx = @(Get-ChildItem -LiteralPath $BackupDir -Recurse -Filter 'transaction.json')
+    Check 'shrink: one transaction'  $tx.Count 1
+    $txj = [IO.File]::ReadAllText($tx[0].FullName) | ConvertFrom-Json
+    Check 'shrink: the transaction' "$($txj.state) $($txj.serial) $($txj.slot) $($txj.cid) $($txj.region_start) $($txj.target)" "prepared 324950664950 a 15010053454d36344720c1a6b7d2e900 $rgStart $($U64 - 8388608 - $F64 + 1)"
+    $mk = Join-Path $fx 'marker.bin'
+    & $py (Join-Path (Join-Path $Top 'tools') 'resume.py') marker $txj.token $mk
+    Check 'shrink: the token'       (Sha256Hex $script:dev.marker["$rgStart"]) (Sha256Hex ([IO.File]::ReadAllBytes($mk)))
+    $bk = Split-Path -Parent $tx[0].FullName
+    Check 'shrink: the backup'      (@(Get-Content (Join-Path $bk 'SHA256SUMS')).Count) 15
+    Check 'shrink: the backup of boot_b' (Sha256Hex ([IO.File]::ReadAllBytes((Join-Path $bk 'boot_b.img')))) (Sha256Hex (PartBytes 'boot_b'))
     Check 'shrink: reboots'         $script:dev.rebooted $true
     Check 'shrink: the last thing'  ($script:dev.cmds[$script:dev.cmds.Count - 1]) 'adb: reboot'
     # no partition but userdata is named, and nothing but the partition table is read
-    Check 'shrink: no other partition' (@($script:dev.cmds | Where-Object { $_ -match 'by-name/(?!userdata )|nvram|fixnv|runtimenv|prodnv|persist|miscdata|mmcblk0p' }).Count) 0
-    Check 'shrink: reads'           (@($script:dev.cmds | Where-Object { $_ -like 'pull:*' } | Sort-Object -Unique).Count) 2
+    Check 'shrink: no other partition' (@($script:dev.cmds | Where-Object { $_ -match 'by-name/(?!(misc|boot_[ab]|uboot_[ab]|sml_[ab]|teecfg_[ab]|trustos_[ab]|vbmeta_[ab])\b)|nvram|fixnv|runtimenv|prodnv|persist|miscdata' }).Count) 0
+    Check 'shrink: reads'           (@($script:dev.cmds | Where-Object { $_ -like 'pull:*' } | Sort-Object -Unique).Count) 15
+    Remove-Item -Recurse -Force $BackupDir
 
     # "no" to the reboot
     FakeDevice 'vendor64'; RunOffer @('yes', '2.5', 'ERASE', 'no')
     Check 'no reboot: no error'     $script:died ''
-    Check 'no reboot: written'      ((Writes) -join '|') "$tailDd|$headDd|$zeroDd"
+    Check 'no reboot: written'      ((Writes) -join '|') ("$tailDd|$headDd|$markerDd|$bcbDd" -replace "seek=$rgStart", "seek=$((FreeRegion ($U64 - 5242880 + 1) $D64).Start)")
     Check 'no reboot: stays up'     $script:dev.rebooted $false
 
     # a push that stops halfway: what is on the device is not what was made, and nothing is written
     FakeDevice 'vendor64'; $script:dev.shortPush = $true; RunOffer @('yes', '4', 'ERASE')
     Check 'short push: refused'     $script:died 'DIE: the new partition table did not arrive on the device as it was made; nothing is changed'
     Check 'short push: device untouched' (Untouched) $true
-    Check 'short push: cleaned up'  ($script:dev.cmds[$script:dev.cmds.Count - 1]) 'su: rm -f /data/local/tmp/new.head /data/local/tmp/new.tail'
+    Check 'short push: cleaned up'  ($script:dev.cmds[$script:dev.cmds.Count - 1]) "su: rm -f $tmpFiles"
 
     # a device whose table does not change: said, and userdata is not cleared
     FakeDevice 'vendor64'; $script:dev.deafDisk = $true; RunOffer @('yes', '4', 'ERASE')
     Check 'did not take: said'      $script:died 'DIE: the table did not take (userdata still ends at 122155007). Nothing else was changed.'
-    Check 'did not take: userdata not cleared' ($script:dev.wiped -or $script:dev.rebooted) $false
+    Check 'did not take: no reset asked for' ($script:dev.wiped -or $script:dev.rebooted -or $null -ne $script:dev.bcb -or $script:dev.marker.Count -gt 0) $false
+
+    # an encryption state that cannot be told: kano's rule, nothing is changed
+    FakeDevice 'vendor64'; $script:dev.facts = $script:dev.facts -replace 'STATE=encrypted', 'STATE=' -replace 'TYPE=file', 'TYPE=' -replace 'SOURCE=/dev/block/dm-6', 'SOURCE=/dev/block/mmcblk0p18' -replace 'MAGIC=', 'MAGIC=1020f5f2'
+    RunOffer @('yes', '4', 'ERASE')
+    Check 'unknown crypto: refused' $script:died "DIE: Android's encryption state is unknown (?/?); nothing is changed."
+    Check 'unknown crypto: no question' $script:asked.Count 0
+    Check 'unknown crypto: device untouched' (Untouched) $true
+    # the table and the running kernel disagree: reboot first
+    FakeDevice 'vendor64'; $script:dev.facts = $script:dev.facts -replace "SIZE=\d+", 'SIZE=4096'
+    RunOffer @('yes', '4', 'ERASE')
+    Check 'kernel disagrees: refused' $script:died 'DIE: the partition table and the running kernel disagree about userdata; reboot Android and try again'
+    Check 'kernel disagrees: device untouched' (Untouched) $true
 
     # a partition behind userdata: not a table to make room in. The tool's reason and the figures, no question
     FakeDevice 'nvlast64'; RunOffer @('yes', '4', 'ERASE')
