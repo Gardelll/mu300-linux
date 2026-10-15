@@ -135,6 +135,7 @@ what replaced it. The table below gives each section's state.
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
+| 90 | The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection (after kanoqwq's 3cbf37fc) | current (unit tests only; not measured on a device) |
 
 ## Hardware and firmware facts
 
@@ -5707,3 +5708,43 @@ device with openwrt-luci:
     mu300-update apply && reboot
     # after: the same job, and crond running
     cat /etc/crontabs/root; ps | grep crond
+
+### 90. The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection
+
+`mobile-data watch` asks `AT+CGACT?` every 30 s and reconnects after two rounds without our context active. Before
+this change the test was `at "AT+CGACT?" | grep -q "+CGACT:1,1"`, so a round in which the modem gave no final
+result code within 4 s, the client lock was busy, or the answer was `ERROR` counted exactly like a context the
+network had taken down: two such rounds and the watchdog ran `up` (Ubuntu) or `ifup wan` (OpenWrt), which tears
+down the bearer that was still carrying traffic. Nothing measured shows it happening on our boards; the case is
+read from the code. It is the situation kanoqwq describes for a device on the move in clean-tf-7.2 `3cbf37fc`
+("fix: improve cellular mobility"): AT owners can be busy while the modem moves between cells, and a timeout is
+not a detach.
+
+**Taken from 3cbf37fc:** the distinction itself - only an answer is evidence. **Changed:**
+
+* His watchdog never escalates a silent modem and also treats "OK with no line for the context" as unknown. Ours
+  keeps both of the old repairs: "OK" with `<cid>,0` or with no line for the context at all (what a firmware
+  reset leaves, the reason the watchdog exists) is *inactive* and reconnects in two rounds as before; and a modem
+  that stays silent for `MU300_WATCH_UNKNOWN_ROUNDS` rounds (4, about two minutes) goes the old way (radio check,
+  then a reconnect a round later), so a channel that only a radio-on would wake up is still woken. An answer in
+  between starts the count over.
+* Not taken: his switch of the radio only on an explicit `+CFUN: 0` (`radio_on` reads `AT+CFUN?` itself and does
+  nothing to a radio that is on, so the old check costs a handshake, not a connection), and his `ubus ... renew`
+  for an active context whose address changed: here only the relay monitor (`mu300cell-v6.sh`, relay mode) acts
+  on a renew; in every other mode nothing would, so a changed address keeps the measured reconnect.
+
+`watch_context` returns `active`, `inactive` or `unknown`; `+CGACT: 1,1` with a space and a CR are read too, and
+`+CGACT:11,1` or `1,10` are not taken for context 1. Unit tests: `tests/test_device_scripts.py`
+(`MobileData.test_watch_context_states`, `..._leaves_the_bearer_alone_while_the_modem_does_not_answer`,
+`..._still_reconnects_a_modem_that_stays_silent`, `..._an_answer_between_silent_rounds_starts_the_count_over`,
+`..._an_answered_lost_context_still_reconnects_in_two_rounds`). Not run on a device.
+
+Device checklist (either board, either system):
+
+    # 1. normal: data up, then watch the log for five minutes - no "reconnecting"
+    logread -f | grep mobile-data     # OpenWrt;  journalctl -fu mu300-mobile-data  on Ubuntu
+    # 2. a silent channel: stop the nr2 daemon (OpenWrt: kill the atd2 instance's mu300-atd; procd brings it back)
+    #    for under 90 s - no reconnect, data keeps flowing (ping 1.1.1.1 the whole time)
+    # 3. a lost context: AT+CGACT=0,1 on the panel's AT terminal - "mobile data lost ... reconnecting" within ~60 s,
+    #    data back as before
+    # 4. airplane: AT+CFUN=0 - "radio was off, switching it on" and data back, as before
