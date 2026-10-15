@@ -5901,23 +5901,40 @@ another cause than runtime PM.
 ### 101. The Magisk switch built its misc block under a fixed name in the adb shell user's directory
 
 Found while comparing our switch with kanoqwq's clean-tf-7.2 `1f8f03fb` (his one-time boot changes misc only; ours
-does too, §100). `mu300-linux` (`android/magisk/mu300-linux-switch/switch.sh`) wrote the 32-byte block to
-`${TMPDIR:-/data/local/tmp}/mu300-bc.bin` as root, checked its size, then `dd`'d it into misc. `/data/local/tmp`
-belongs to the adb `shell` user (2000, mode 0771): that user, without root, could plant `mu300-bc.bin` as a symlink
-(root's `printf >` follows it and overwrites the target) or replace the file between the size check and `dd` (and so
-choose the bytes that go into misc; the read-back then fails, with misc already changed). Apps cannot write there;
-the user at the adb shell can, and on a device where Magisk grants root only to chosen apps that is less than root.
+does too, §100), and narrowed by a security review of the first version of this fix. `mu300-linux`
+(`android/magisk/mu300-linux-switch/switch.sh`, run as root) wrote the 32-byte block to
+`${TMPDIR:-/data/local/tmp}/mu300-bc.bin`, checked its size, then `dd`'d it into misc. `/data/local/tmp` belongs to
+the adb `shell` user (2000, mode 0771, no sticky bit): that user, without root, could plant `mu300-bc.bin` as a
+symlink (root's `printf >` follows it and overwrites the target) or replace the file between the size check and
+`dd` (and so choose the bytes that go into misc; the read-back then fails, with misc already changed). A private
+`mktemp -d` directory there (the first version) is not enough: without the sticky bit the shell user can rename it
+away and put a directory of their own in its place between `mktemp` and the write. Apps cannot write there; the
+user at the adb shell can, and on a device where Magisk grants root only to chosen apps that is less than root.
 
-Changed: the block goes through a `mktemp -d` directory (root's, 0700, an unguessable name) under the same parent,
-removed afterwards; `dd` copies `count=32` whatever the file holds. Without a private directory nothing is written.
+Changed:
 
-**Bootability:** unchanged: the same block, written and read back as before; every failure exits before `dd`.
+* **No file on the way.** The 64 hex digits are checked (hex only), the bytes `printf` makes are counted (32), and
+  `printf` goes straight into `dd ... bs=1 count=32 conv=notrunc`. Nothing is created in any directory.
+* **misc resolved once.** `by-name/misc` is followed once (`readlink -f`); the result has to be a block device under
+  `/dev/block` whose sysfs entry (`/sys/class/block/<name>/uevent`, written by nobody but the kernel) says
+  `PARTNAME=misc`. That one path is read (the live block), written and read back. A link that leads anywhere else
+  (another partition, a file) is refused before anything is written. (`MU300_SYSFS`, tests only, stands for `/sys`
+  and lets a regular file stand for the device.)
 
-**Measured:** nothing on a device. `tests/test_magisk_switch.py`: a real (non-dry) run against files standing in for
-the partitions with a symlink planted at the old name (its target untouched, the block in misc, the private
-directory gone, reboot called); an unusable `TMPDIR` (refused, misc untouched). Run in the `mu300-unit` container
-(busybox).
+**Bootability:** unchanged when misc is what by-name says: the same block, written and read back as before; every
+refusal exits before `dd`, and misc stays as it was (Android boots).
 
-**Device checklist (before merge; Android with Magisk, Linux installed):** `su -c mu300-linux --dry-run` (the block),
-then the Action button or `su -c mu300-linux`: the device reboots into Linux; `ls /data/local/tmp` afterwards holds
-no `mu300-switch.*`; from Linux, back to Android as usual.
+**Measured:** nothing on a device. `tests/test_magisk_switch.py` (real, non-dry runs against files standing in for
+the partitions): a symlink planted at the old name (it and its target untouched, nothing new in `TMPDIR`, the block
+in misc, 4096 bytes still); `by-name/misc` a link to a partition sysfs calls `boot_a`, then one with no sysfs entry
+(refused, the target unchanged), then one sysfs calls `misc` (written there, through the link resolved once);
+without the test switch, a regular file is refused (`outside /dev/block`). `test_android_web.BootLinux` gives its
+fake device the sysfs entry. Run in the `mu300-unit` container (busybox, as root).
+
+**Device checklist (before merge; Android with Magisk, Linux installed):**
+
+    su -c 'readlink -f /dev/block/by-name/misc; grep PARTNAME /sys/class/block/$(basename $(readlink -f /dev/block/by-name/misc))/uevent'
+    # PARTNAME=misc - if not, this change refuses to switch on that device: report it
+    su -c 'mu300-linux --dry-run'        # the block; nothing written
+    # the Action button or su -c mu300-linux: reboots into Linux; ls /data/local/tmp has nothing new
+    # the web installer's "Boot Linux" (android-web.sh boot-linux) the same

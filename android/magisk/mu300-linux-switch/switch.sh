@@ -51,6 +51,21 @@ MISC=$by_name/misc
 BOOT_A=$by_name/boot_a
 BOOT_B=$by_name/boot_b
 [ -e "$MISC" ] || die "no misc partition at $MISC"
+# misc is resolved once, to the block device itself, and that path is the one read, written and read back: the
+# by-name link is followed here and never again. It has to be a block device under /dev/block whose kernel name
+# says PARTNAME=misc (sysfs, which no other user writes). MU300_SYSFS (tests only) stands for /sys and lets a
+# regular file stand for the device.
+SYSFS=${MU300_SYSFS:-/sys}
+misc_dev=$($BB readlink -f "$MISC") || die "cannot resolve $MISC"
+if [ -n "${MU300_SYSFS:-}" ]; then
+    [ -f "$misc_dev" ] && [ ! -L "$misc_dev" ] || die "misc ($misc_dev) is not a device"
+else
+    case $misc_dev in /dev/block/*) ;; *) die "misc resolves outside /dev/block ($misc_dev)" ;; esac
+    [ -b "$misc_dev" ] || die "misc ($misc_dev) is not a block device"
+fi
+$BB grep -qx 'PARTNAME=misc' "$SYSFS/class/block/${misc_dev##*/}/uevent" 2>/dev/null ||
+    die "$misc_dev is not the misc partition (sysfs PARTNAME)"
+MISC=$misc_dev
 [ -e "$BOOT_A" ] && [ -e "$BOOT_B" ] || die "both boot_a and boot_b are required at $by_name"
 
 hex_of() {  # hex_of FILE OFFSET COUNT -> lowercase hex, no spaces (only ever used for a few bytes)
@@ -153,19 +168,16 @@ if [ "$DRY" = 1 ]; then
     exit 0
 fi
 
-# The block file lives in a directory of root's own (mktemp -d: 0700, a name nobody can guess), never under a fixed
-# name in /data/local/tmp: that directory is the adb shell user's, who could have put a symlink there (root's write
-# would follow it) or swapped the file between the size check and dd (and so chosen what goes into misc). dd copies
-# at most the 32 bytes whatever the file holds.
-tdir=$($BB mktemp -d "${TMPDIR:-/data/local/tmp}/mu300-switch.XXXXXX") || die "could not make a private directory"
-tmp=$tdir/bc.bin
-$BB printf "$(echo "$new" | sed 's/../\\x&/g')" > "$tmp" || { rm -rf "$tdir"; die "could not build the block file"; }
-[ "$($BB stat -c %s "$tmp")" = 32 ] || { rm -rf "$tdir"; die "the block file is not 32 bytes"; }
-
-dd if="$tmp" of="$MISC" bs=1 count=32 seek="$BC_OFFSET" conv=notrunc 2>/dev/null ||
-    { rm -rf "$tdir"; die "writing misc failed"; }
+# No file on the way: the block goes from printf straight into dd. It used to be written to a fixed name in
+# ${TMPDIR:-/data/local/tmp}, the adb shell user's directory (0771, no sticky bit), where that user could plant a
+# symlink (root's write follows it) or swap the file - or a whole directory made there - between the size check
+# and dd, and so choose what goes into misc. The 64 hex digits are checked, the 32 bytes counted, dd copies 32.
+case $new in *[!0-9a-f]*) die "the new block is not hex ($new)" ;; esac
+esc=$(echo "$new" | sed 's/../\\x&/g')
+[ "$($BB printf "$esc" | $BB wc -c | tr -d ' ')" = 32 ] || die "the new block is not 32 bytes"
+$BB printf "$esc" | dd of="$MISC" bs=1 count=32 seek="$BC_OFFSET" conv=notrunc 2>/dev/null ||
+    die "writing misc failed"
 sync
-rm -rf "$tdir"
 
 back=$(hex_of "$MISC" "$BC_OFFSET" 32)
 [ "$back" = "$new" ] || die "misc verify failed ($back) - reboot normally, Android is unaffected"

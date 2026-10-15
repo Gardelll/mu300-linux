@@ -24,6 +24,14 @@ class Switch(ShellTest):
         fake_misc(self.parts / 'misc')
         self.blocks = bbi.bootloader_control((self.parts / 'misc').read_bytes())   # android_a, linux_b, android_b, linux_a
         self.stub('id', 'echo 0')
+        # the kernel's word that by-name/misc is the misc partition (switch.sh checks it on the resolved device)
+        self.sysfs = self.tmp / 'sys'
+        self.uevent('misc', 'misc')
+
+    def uevent(self, dev, partname):
+        d = self.sysfs / 'class/block' / dev
+        d.mkdir(parents=True, exist_ok=True)
+        (d / 'uevent').write_text(f'MAJOR=259\nMINOR=1\nDEVNAME={dev}\nDEVTYPE=partition\nPARTNAME={partname}\n')
 
     @staticmethod
     def boot(fill, cmdline=b''):
@@ -39,9 +47,9 @@ class Switch(ShellTest):
         other = self.boot(b'\x22', b'loglevel=5' if linux else b'')
         (self.parts / f'boot_{linux_on}').write_bytes(stock if same else other)
 
-    def switch(self, shell, suffix, *args):
+    def switch(self, shell, suffix, *args, **env):
         return self.script(shell, SWITCH, *args, MU300_BY_NAME=self.parts, MU300_BUSYBOX=self.busybox,
-                           MU300_SLOT_SUFFIX=suffix)
+                           MU300_SLOT_SUFFIX=suffix, MU300_SYSFS=self.sysfs, **env)
 
     def new_block(self, r):
         lines = [l for l in r.stdout.splitlines() if l.startswith('misc  new:')]
@@ -102,37 +110,68 @@ class Switch(ShellTest):
             self.assertNotEqual(r.returncode, 0)
             self.assertIn("'_c'", r.stderr)
 
-    def test_the_block_file_is_root_s_own_never_a_shared_name(self):
-        # The block used to go through ${TMPDIR:-/data/local/tmp}/mu300-bc.bin: a fixed name in the adb shell user's
-        # directory, where a symlink planted there would take root's write elsewhere. Now a mktemp -d directory,
-        # and dd copies at most the 32 bytes (kanoqwq's 1f8f03fb review round, FINDINGS 101).
-        _, linux_b, _, _ = self.blocks
+    def armed(self, shell, **env):
         self.stub('reboot', 'echo reboot >> "$STUBLOG/reboot.log"')
         self.stub('sleep', 'exit 0')
+        return self.switch(shell, '_a', **env)
+
+    def test_no_file_on_the_way_to_misc(self):
+        # The block used to go through ${TMPDIR:-/data/local/tmp}/mu300-bc.bin, a fixed name in the adb shell user's
+        # directory: a symlink planted there took root's write elsewhere. Now printf goes straight into dd
+        # (FINDINGS 101): nothing is created in TMPDIR, the planted link and its target stay as they were.
+        _, linux_b, _, _ = self.blocks
         shared = self.tmp / 'shared'
         shared.mkdir()
+        victim = self.tmp / 'victim'
         for shell in self.each_shell():
             self.images()
             fake_misc(self.parts / 'misc')
-            victim = self.tmp / 'victim'
             victim.write_bytes(b'keep')
             planted = shared / 'mu300-bc.bin'
             planted.unlink(missing_ok=True)
             planted.symlink_to(victim)
-            r = self.script(shell, SWITCH, MU300_BY_NAME=self.parts, MU300_BUSYBOX=self.busybox,
-                            MU300_SLOT_SUFFIX='_a', TMPDIR=shared)
+            r = self.armed(shell, TMPDIR=shared)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertIn('armed for one boot', r.stdout)
             self.assertEqual(victim.read_bytes(), b'keep')
             misc = (self.parts / 'misc').read_bytes()
             self.assertEqual(misc[0x800:0x820], linux_b)
+            self.assertEqual(len(misc), 4096)
             self.assertEqual(sorted(p.name for p in shared.iterdir()), ['mu300-bc.bin'])
             self.assertIn('reboot', (self.tmp / 'reboot.log').read_text())
-            # no private directory to be had: nothing is written
-            fake_misc(self.parts / 'misc')
-            before = (self.parts / 'misc').read_bytes()
-            r = self.script(shell, SWITCH, MU300_BY_NAME=self.parts, MU300_BUSYBOX=self.busybox,
-                            MU300_SLOT_SUFFIX='_a', TMPDIR=self.tmp / 'no-such-dir')
+
+    def test_misc_is_resolved_once_and_must_be_the_misc_partition(self):
+        # by-name/misc is followed once, to a device whose sysfs entry says PARTNAME=misc; a link to anything else
+        # (here: another partition's file) is refused before anything is written, and the target stays as it was
+        _, linux_b, _, _ = self.blocks
+        real = self.tmp / 'mmcblk0p9'
+        for shell in self.each_shell():
+            self.images()
+            fake_misc(real)
+            (self.parts / 'misc').unlink(missing_ok=True)
+            (self.parts / 'misc').symlink_to(real)
+            before = real.read_bytes()
+            self.uevent('mmcblk0p9', 'boot_a')          # the link leads to a partition that is not misc
+            r = self.armed(shell)
             self.assertNotEqual(r.returncode, 0)
-            self.assertIn('private directory', r.stderr)
+            self.assertIn('is not the misc partition', r.stderr)
+            self.assertEqual(real.read_bytes(), before)
+            (self.sysfs / 'class/block/mmcblk0p9/uevent').unlink()   # no word from sysfs at all
+            r = self.armed(shell)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertEqual(real.read_bytes(), before)
+            self.uevent('mmcblk0p9', 'misc')            # the real misc behind the link: read and written there
+            r = self.armed(shell)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertEqual(real.read_bytes()[0x800:0x820], linux_b)
+            self.assertTrue((self.parts / 'misc').is_symlink())
+
+    def test_on_a_device_misc_must_be_a_block_device_under_dev_block(self):
+        self.images()
+        before = (self.parts / 'misc').read_bytes()
+        for shell in self.each_shell():
+            r = self.script(shell, SWITCH, MU300_BY_NAME=self.parts, MU300_BUSYBOX=self.busybox,
+                            MU300_SLOT_SUFFIX='_a')
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('outside /dev/block', r.stderr)
             self.assertEqual((self.parts / 'misc').read_bytes(), before)
