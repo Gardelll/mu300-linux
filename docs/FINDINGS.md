@@ -135,6 +135,7 @@ what replaced it. The table below gives each section's state.
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
+| 93 | sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command (after kanoqwq's 0438ab01) | current (mainline kernels; compiled in CI, not run on a device: hold the merge for a device soak) |
 
 ## Hardware and firmware facts
 
@@ -5707,3 +5708,46 @@ device with openwrt-luci:
     mu300-update apply && reboot
     # after: the same job, and crond running
     cat /etc/crontabs/root; ps | grep crond
+
+### 93. sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command
+
+Mainline `drivers/mmc/host/sdhci-sprd.c` (both of our mainline kernels; the eMMC and the SD card slot) overrides
+the SDHCI register accessors to handle its reserved registers - `SDHCI_MAX_CURRENT`, the read-only
+`SDHCI_BLOCK_COUNT`, the interrupt mask, the hardware-reset bit - and then does the access with `readl_relaxed`,
+`writel_relaxed`, `writew_relaxed`, `writeb_relaxed`. The SDHCI core relies on its accessors being the ordered
+ones: it writes the ADMA descriptor table into DMA memory and then starts the transfer with a register write
+(`SDHCI_COMMAND`, through `writew`). A relaxed MMIO write is not ordered after earlier stores to memory (Linux's
+"device-io" rules; on arm64 `writel` is `__iowmb()` and then the store), so the controller can be told to fetch a
+descriptor whose last store is not yet visible to it - a transfer from or to the wrong place. The vendor's 5.4
+driver is not changed here (its source is fetched at build time and has not been read for this).
+
+kanoqwq found this in clean-tf-7.2 `0438ab01` while chasing ext4 corruption on other Unisoc boards, and his
+evidence is from there, not from ours: on an E5 (his other project), a directory block held the complete content of
+an inode-table block, and file writes logged `mmc0: ADMA error: 0x02000002` with no CRC errors; after the change,
+896 MiB written and read back with `O_DIRECT`, 3584 metadata updates and two offline `e2fsck -fn` were clean, at
+HS400 with runtime PM on. He says himself that it is not proven to be the only cause. **We have no report of
+corruption on an F50 or a U30 Air** (FINDINGS has none), so this is taken as the correct ordering by the kernel's
+own rules, not as the fix of a symptom of ours.
+
+**Taken:** the four accessors' final access becomes `readl`/`writel`/`writew`/`writeb`; every special case stays
+(the reset bit's read in `writeb` keeps its relaxed read: it orders nothing against DMA memory, and the write after
+it is the ordered one). **Changed:** his edit lives in his `emmc.py`; here it is `upstream/port/sdhci_order.py`,
+called from `install.py` next to the other sdhci-sprd edits, idempotent, and the port stops (`port: ...`) when the
+four lines are not exactly where they were - a kernel that changes them must be looked at again, as with the
+other anchors. Not taken: his 5.4 patch (`kernel/patches/sdhci-sprd-dma-ordering.patch`), his eMMC power and
+reliable-write changes (V50-specific, unproven by his own account), his CI C check.
+
+Cost: one barrier (`dmb oshst` / `dmb oshld`) per register access of these two hosts; a transfer takes a handful.
+Not measured.
+
+**Unit tests:** `tests/test_sdhci_order.py` against a copy of mainline's accessor block (the edit, the kept special
+cases, idempotence, a changed driver stops the port). The real tree is checked by the Mainline kernel build
+workflow, dispatched on the branch. **Not run on a device. Hold the merge for a soak on each board:**
+
+    # on the new kernel (both boards; 6.18 and 7.2)
+    dmesg | grep -iE 'mmc[01]|ADMA|EXT4-fs (error|warning)'      # nothing new; HS400 as before:
+    cat /sys/kernel/debug/mmc0/ios                                # timing spec: mmc HS400 enhanced strobe
+    # throughput, before and after (same board, same free space): within noise
+    dd if=/dev/zero of=/var/tmp/t bs=1M count=512 oflag=direct; dd if=/var/tmp/t of=/dev/null bs=1M iflag=direct
+    # a soak: write/verify a few GiB, reboot ten times, e2fsck -fn on the root from Android or the initramfs
+    # the SD card slot (FINDINGS 31j-31l): a card is seen, mounted, read and written; hot-plug still detected
