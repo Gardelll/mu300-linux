@@ -27,10 +27,16 @@ android_lines() { adb devices -l 2>/dev/null | awk 'NR > 1 && $2 == "device" && 
 linux_adb_listed() {  # linux_adb_listed [SERIAL]
     adb devices -l 2>/dev/null | awk -v s="${1:-}" 'NR > 1 && $1 ~ /^MU300LINUX/ && (s == "" || $1 == s) {f = 1} END {exit !f}'
 }
-# the serial number of the one device in Linux that lets this computer in; status 1: none, or more than one
+# the serial number of the device in Linux that lets this computer in: the one ANDROID_SERIAL named (LINUX_WANTED,
+# kept by require_android), else the only one; status 1: none, the named one is not there, or more than one
+LINUX_WANTED=
 linux_adb() {
-    _la=$(adb devices -l 2>/dev/null | awk 'NR > 1 && $2 == "device" && $1 ~ /^MU300LINUX/ {print $1}')
+    _la=$(adb devices -l 2>/dev/null | awk -v s="$LINUX_WANTED" 'NR > 1 && $2 == "device" && $1 ~ /^MU300LINUX/ && (s == "" || $1 == s) {print $1}')
     [ -n "$_la" ] && [ "$(printf '%s\n' "$_la" | wc -l | tr -d ' ')" = 1 ] && echo "$_la"
+}
+# more than one device in Linux among the adb devices
+linux_adb_many() {
+    [ "$(adb devices -l 2>/dev/null | awk 'NR > 1 && $1 ~ /^MU300LINUX/' | wc -l | tr -d ' ')" -gt 1 ]
 }
 # "adb get-state" for the Android to work on: nothing when the only adb devices are in Linux, "linux" when
 # ANDROID_SERIAL names one of those
@@ -62,6 +68,14 @@ linux_mode_to_android() {
     fi
     # -t: sudo needs a terminal to ask for the device password, and everything runs in one sudo call so it is
     # asked only once. reboot cuts the connection, so ssh's exit status says nothing: watch the port instead.
+    # Only where the address can be no other device: with two boards in Linux on adb, 192.168.77.1 or .78.1 may
+    # well be the other one (measured: the F50 named by ANDROID_SERIAL next to a U30 Air in Linux at .78.1).
+    # MU300_IP, given by the user, is the one exception.
+    _lm_ssh_ok=1
+    [ -n "${MU300_IP:-}" ] || ! linux_adb_many || _lm_ssh_ok=0
+    if [ $_lm_gone = 0 ] && [ $_lm_ssh_ok = 0 ]; then
+        die "$(t 'more than one device runs MU300 Linux and adb could not reboot this one: boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot), or give its address with MU300_IP')"
+    fi
     for user in ubuntu root; do
         [ $_lm_gone = 0 ] && linux_mode_running || break
         _lm_ssh=1
@@ -83,10 +97,18 @@ linux_mode_to_android() {
     [ $_lm_gone = 1 ] || [ $_lm_ssh = 1 ] || ! linux_adb_listed ||
         die "$(t 'boot Android yourself (on the device: sudo mu300-next-boot android && sudo reboot)')"
     echo "  $(t 'waiting for Android')"
+    # Which device comes back: the serial number of our Linux is MU300LINUX-<Android's serial>-<eMMC id> (boot/init).
+    # Never "whatever single device adb lists": while the F50 rebooted, a Pixel next to it was the only one, and the
+    # check went on with the Pixel (measured; nothing was written, su failed there).
+    _lm_back=${_lm_s:-$LINUX_WANTED}; _lm_back=${_lm_back#MU300LINUX}; _lm_back=${_lm_back#-}; _lm_back=${_lm_back%%-*}
     n=0
     while [ $n -lt 60 ]; do
-        select_device quiet
-        [ "$(android_state)" = device ] && { echo "  $(t 'Android is up')"; return 0; }
+        if [ -n "$_lm_back" ] && android_lines | awk -v s="$_lm_back" '$1 == s {f = 1} END {exit !f}'; then
+            export ANDROID_SERIAL=$_lm_back
+        else
+            select_device quiet || true
+        fi
+        [ -n "${ANDROID_SERIAL:-}" ] && [ "$(android_state)" = device ] && { echo "  $(t 'Android is up')"; return 0; }
         n=$((n + 1)); sleep 5
     done
     die "$(t 'the device did not come back as Android; boot it yourself (mu300-next-boot android)')"
@@ -129,7 +151,8 @@ target_attached() { android_lines | grep -q -E 'model:F50|product:MU300|device:M
 
 require_android() {
     # ANDROID_SERIAL naming the device in Linux: that is the one to send back to Android, not one to work on
-    case ${ANDROID_SERIAL:-} in MU300LINUX*) unset ANDROID_SERIAL ;; esac
+    # (kept in LINUX_WANTED: with two boards in Linux it is the one that is rebooted, never the other)
+    case ${ANDROID_SERIAL:-} in MU300LINUX*) LINUX_WANTED=$ANDROID_SERIAL; unset ANDROID_SERIAL ;; esac
     # The device in Linux, and only a phone or tablet in Android: that is not the one to install to - offer to
     # send the device back to Android first
     if [ -z "${ANDROID_SERIAL:-}" ] && ! target_attached && { linux_adb_listed || linux_mode_running; }; then

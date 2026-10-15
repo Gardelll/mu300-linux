@@ -232,7 +232,8 @@ if [ -n "$OFF" ] && [ $wipe = keep ] && { [ $sdwipe = erase ] || [ "$SD_HAS" != 
 fi
 
 # never delete through a still mounted Linux filesystem
-su_do "grep -q \" $T/mu300root \" /proc/mounts || rm -rf $T/mu300root; rm -f $T/mu300-* $T/android-install.sh $T/android-mount-mu300root.sh" >/dev/null
+# (files only: /data/local/tmp/mu300-web is the web installer's directory, and "rm -f mu300-*" said "Is a directory")
+su_do "grep -q \" $T/mu300root \" /proc/mounts || rm -rf $T/mu300root; for f in $T/mu300-*; do [ -d \$f ] || rm -f \$f; done; rm -f $T/android-install.sh $T/android-mount-mu300root.sh" >/dev/null
 
 # ---------------------------------------------------------------- giving the space back (EXPERIMENTAL)
 # Only for a device where the installer shrank userdata to make room (the 32 GB variant). Growing it back is

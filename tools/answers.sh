@@ -45,21 +45,33 @@ answers_private() {
 }
 
 # answers_load FILE: the variables of an answers file. A name that is not one of ours is an error, not a variable.
+# answers_fail MESSAGE: an error before the progress stream is set up (the answers file is read first). A program
+# that asked for the stream in the environment still gets its last event (measured: a file with mode 644 ended the
+# run with no event at all).
+answers_fail() {
+    printf 'ERROR: %s\n' "$1" >&2
+    _afj="@@mu300 {\"event\":\"error\",\"message\":\"$(json_esc "$1")\"}"
+    case ${MU300_PROGRESS_FD:-} in
+        [3-9]) eval "printf '%s\n' \"\$_afj\" >&$MU300_PROGRESS_FD" 2>/dev/null || true ;;
+        '') [ "${MU300_PROGRESS:-0}" != 1 ] || printf '%s\n' "$_afj" ;;
+    esac
+    exit 2
+}
+
 answers_load() {
-    [ -r "$1" ] || { printf 'ERROR: cannot read the answers file %s\n' "$1" >&2; exit 2; }
-    answers_private "$1" || {
-        printf 'ERROR: the answers file %s can hold a password and must be yours alone (no link, owned by you, chmod 600)\n' "$1" >&2
-        exit 2; }
+    [ -r "$1" ] || answers_fail "cannot read the answers file $1"
+    answers_private "$1" ||
+        answers_fail "the answers file $1 can hold a password and must be yours alone (no link, owned by you, chmod 600)"
     _an=0
     while IFS= read -r _al || [ -n "$_al" ]; do
         _an=$((_an + 1))
         _al=$(printf '%s' "$_al" | tr -d '\r')
         case $_al in ''|'#'*) continue ;; esac
         # (the line itself is not shown: it may be a secret that lost its name)
-        case $_al in *=*) ;; *) printf 'ERROR: answers file: line %s is not NAME=value\n' "$_an" >&2; exit 2 ;; esac
+        case $_al in *=*) ;; *) answers_fail "answers file: line $_an is not NAME=value" ;; esac
         _ak=${_al%%=*}; _av=${_al#*=}
-        case $_ak in *[!A-Z0-9_]*|'') printf 'ERROR: answers file: not a variable of the installer: %s\n' "$_ak" >&2; exit 2 ;; esac
-        case $_ak in MU300_*|ANDROID_SERIAL) ;; *) printf 'ERROR: answers file: not a variable of the installer: %s\n' "$_ak" >&2; exit 2 ;; esac
+        case $_ak in *[!A-Z0-9_]*|'') answers_fail "answers file: not a variable of the installer: $_ak" ;; esac
+        case $_ak in MU300_*|ANDROID_SERIAL) ;; *) answers_fail "answers file: not a variable of the installer: $_ak" ;; esac
         # for the programs this one starts too (adb reads ANDROID_SERIAL) - but never a secret: a name that the
         # environment already exports is unset first, which takes it out of there
         if answers_secret "$_ak"; then unset "$_ak"; eval "$_ak=\$_av"; else eval "$_ak=\$_av"; export "$_ak"; fi

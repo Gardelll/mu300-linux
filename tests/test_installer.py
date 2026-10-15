@@ -80,7 +80,7 @@ class LinuxOverAdb(ShellTest):
 echo "adb $*" >> "$STUBLOG/adb.log"
 case "$1 $2" in
     "devices -l") cat "$STUBLOG/adb.out"; exit 0 ;;
-    "get-state ") n=$(awk 'NR > 1 && $2 == "device"' "$STUBLOG/adb.out" | grep -c .)
+    "get-state ") n=$(awk -v s="${ANDROID_SERIAL:-}" 'NR > 1 && $2 == "device" && (s == "" || $1 == s)' "$STUBLOG/adb.out" | grep -c .)
         [ "$n" = 1 ] && echo device || echo "error: more than one or no device" >&2; exit 0 ;;
 esac
 [ "$1" = -s ] && { serial=$2; shift 2; } || serial=${ANDROID_SERIAL:-}
@@ -177,6 +177,48 @@ exit 0''')
             out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
             self.assertIn('rc=0 serial=324950664950', out)
             self.assertNotIn("su -c", log)
+
+    def test_two_boards_in_linux_the_named_one_is_rebooted_never_the_other(self):
+        # measured on the Mac with F50-B and a U30 Air both in Linux: linux_adb picked none of the two, and the SSH
+        # fallback went to 192.168.77.1/78.1 - where the U30 Air, not the F50 named by ANDROID_SERIAL, answered
+        other = LINUX.replace('324950664950', '323960377386')
+        for shell in self.each_shell():
+            self.devices('adb.out', [other, LINUX])
+            self.devices('adb.after', [other, F50])
+            (self.tmp / 'ssh-up').write_text('')
+            out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
+            self.assertIn(f'asking it over adb ({LINUX_SERIAL})', out)
+            self.assertIn('rc=0 serial=324950664950', out)
+            self.assertNotIn('ssh', log)
+            self.assertNotIn('323960377386', log)
+            # adb cannot reboot it: no SSH to an address that may be the other board's
+            self.devices('adb.out', [other, LINUX])
+            (self.tmp / 'reboot-fails').write_text('')
+            out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
+            self.assertIn('DIE more than one device runs MU300 Linux', out)
+            self.assertNotIn('ssh', log)
+            # none named: neither is picked over adb, and SSH is not guessed either
+            (self.tmp / 'reboot-fails').unlink()
+            out, log = self.run_sh(shell, 'require_android')
+            self.assertIn('DIE more than one device runs MU300 Linux', out)
+            self.assertNotIn('reboot', log)
+            self.assertNotIn('ssh', log)
+            (self.tmp / 'ssh-up').unlink()
+
+    def test_waiting_for_android_never_takes_the_phone_next_to_it(self):
+        # measured: while the F50 rebooted, a Pixel was the only adb device; "adb get-state" said "device" and the
+        # check went on with the Pixel. Now only the board that was rebooted (its serial is in MU300LINUX-<serial>-...)
+        for shell in self.each_shell():
+            self.devices('adb.out', [LINUX, TABLET])
+            self.devices('adb.after', [TABLET])          # the F50 never comes back
+            out, log = self.run_sh(shell, 'require_android', serial=LINUX_SERIAL)
+            self.assertNotIn('Android is up', out)
+            self.assertIn('DIE the device did not come back as Android', out)
+            self.assertNotIn('d16d93c5 shell', log)
+            self.devices('adb.out', [LINUX, TABLET])
+            self.devices('adb.after', [TABLET, F50])
+            out, _ = self.run_sh(shell, 'require_android')
+            self.assertIn('rc=0 serial=324950664950', out)
 
     def test_the_answer_no_touches_nothing(self):
         for shell in self.each_shell():

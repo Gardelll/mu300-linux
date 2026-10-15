@@ -215,6 +215,24 @@ class Ask(ShellTest):
             self.assertEqual(r.returncode, 2)
             self.assertIn('cannot read the answers file', r.stderr)
 
+    def test_a_refused_answers_file_still_ends_the_stream(self):
+        # measured on the Mac: a file with mode 644 stopped install.sh with no event at all, before the stream existed
+        f = self.tmp / 'answers'
+        f.write_text('MU300_ANS_PASSWORD=hunter2secret\n')
+        f.chmod(0o644)
+        for shell in self.each_shell():
+            r = self.run_ask(shell, f'ANSWERS_FILE="{f}"; answers_setup; echo reached', MU300_PROGRESS=1)
+            self.assertEqual(r.returncode, 2)
+            ev = events(r.stdout)
+            self.assertEqual(len(ev), 1, r.stdout)
+            self.assertEqual(ev[0]['event'], 'error')
+            self.assertIn('must be yours alone', ev[0]['message'])
+            r = self.run_ask(shell, f'{{ ANSWERS_FILE="{f}"; answers_setup; }} 3>&1 1>/dev/null', MU300_PROGRESS_FD=3)
+            self.assertEqual([e['event'] for e in events(r.stdout)], ['error'])
+            self.assertNotIn('hunter2', r.stdout + r.stderr)
+            r = self.run_ask(shell, f'ANSWERS_FILE="{f}"; answers_setup')      # no stream asked for: none
+            self.assertNotIn('@@mu300', r.stdout + r.stderr)
+
     def test_events_are_json_whatever_the_text_holds(self):
         tricky = ['plain', 'a "quoted" \\ back\\slash', 'line\nend\tand tab\r', 'Türkçe 中文 ✓', "it's $HOME `x` %s {1}",
                   'bell\a esc\033[31m', '']

@@ -1277,7 +1277,9 @@ class App:
                 line.pack(anchor='w', pady=(S3, 0))
                 ttk.Label(line, text=_('Kernel:'), style='Card.TLabel').pack(side='left')
                 kbox = ttk.Combobox(line, values=['5.4', '6.18', '7.2'], width=6, state='readonly')
-                kbox.set('6.18')
+                # the kernel it runs, not a fixed 6.18 (seen on F50-B running 7.2.10: the box said 6.18)
+                running = info.get('kernel', '')
+                kbox.set(next((k for k in ('5.4', '6.18', '7.2') if running == k or running.startswith(k + '.')), '6.18'))
                 kbox.pack(side='left', padx=S2)
                 action(line, _('Switch to it'), lambda: self._command('kernel-' + kbox.get(), _('Install kernel {1} on the device? It restarts into it afterwards only when you restart it.', kbox.get()))).pack(side='left')
             else:

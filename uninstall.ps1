@@ -436,7 +436,8 @@ if ($OFF -gt 0 -and $wipe -eq 'keep' -and ($sdwipe -eq 'erase' -or $SD_HAS -ne '
 }
 
 # (no double quotes in a command for the device: Windows PowerShell 5.1 drops them on the way to adb)
-SuDo "grep -qw $T/mu300root /proc/mounts || rm -rf $T/mu300root; rm -f $T/mu300-* $T/android-install.sh $T/android-mount-mu300root.sh" | Out-Null
+# (files only: /data/local/tmp/mu300-web is the web installer's directory)
+SuDo "grep -qw $T/mu300root /proc/mounts || rm -rf $T/mu300root; for f in $T/mu300-*; do [ -d `$f ] || rm -f `$f; done; rm -f $T/android-install.sh $T/android-mount-mu300root.sh" | Out-Null
 # the on-device switch would point at a Linux slot that holds Android again
 Step 'switch' 95
 Say 'Removing the on-device switch (Magisk module)'
