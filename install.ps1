@@ -20,6 +20,9 @@
                                -Lang, -Release, -ReleaseUrl and -Work.
       .\install.ps1 -NoBootchainSync   leave the Linux slot's boot chain as it is (for experts; the default copies
                                uboot, sml, teecfg, trustos and vbmeta of Android's slot there, backed up first)
+      .\install.ps1 -Package DIR   install the system and the kernel of a release's Magisk zip unpacked at DIR, from
+                               its files and without a download ($env:MU300_PACKAGE; the zip's own computer\install.ps1,
+                               which its start.cmd runs, finds them by itself: START-HERE.md in the zip)
 
     Needs: adb. Python 3 and its lz4 module are installed for this user when missing (winget or python.org, then
     pip); Windows 10/11 provide tar and curl.
@@ -35,7 +38,10 @@
     Only the Linux region (or the SD card), the boot partition of the slot Android does not run from (boot_b, or
     boot_a when Android runs from b) and 32 bytes of misc are written; Android's boot partition, the GPT and
     userdata stay untouched. The one exception is asked for first and needs ERASE typed: where userdata fills the
-    disk (the 32 GB variant), the installer offers to shrink it, which rewrites the GPT and erases Android's data. With an SD card in the slot it asks where the Linux filesystem goes ($env:MU300_STORAGE =
+    disk (the 32 GB variant), the installer offers to shrink it, which rewrites the GPT and erases Android's data -
+    EXPERIMENTAL: Android's own recovery resets Android, and the installation resumes on the next run once Android is
+    set up again with USB debugging and root (a transaction in ~\mu300-backups; -Resume, -NoResume, -Transaction FILE;
+    tools\resume.py). With an SD card in the slot it asks where the Linux filesystem goes ($env:MU300_STORAGE =
     'internal' or 'sd' answers without asking).
     The VPN, when wanted, is the module of github.com/dikeckaan/mu300-linux-vpn: its latest release
     ($env:MU300_VPN_URL: another place with its files and SHA256SUMS; $env:MU300_VPN_MODULE: a copy on this computer).
@@ -54,7 +60,11 @@ param(
     [switch]$Backup,         # only copy Android's boot image and the first block of misc to this computer
     [switch]$AdbPath,        # only print the adb that would be used
     [switch]$NoSelfUpdate,   # do not bring this copy up to date with GitHub first
-    [switch]$NoBootchainSync # leave the Linux slot's boot chain as it is ($env:MU300_SYNC_BOOTCHAIN = '0' too)
+    [switch]$NoBootchainSync, # leave the Linux slot's boot chain as it is ($env:MU300_SYNC_BOOTCHAIN = '0' too)
+    [switch]$Resume,         # continue the installation prepared by making room, or stop when there is none
+    [switch]$NoResume,       # install as if nothing had been prepared ($env:MU300_RESUME = '0' too)
+    [string]$Transaction = '', # that transaction, not the newest one for this device ($env:MU300_TRANSACTION)
+    [string]$Package = ''    # an unpacked Magisk zip of a release: its system and kernel, nothing downloaded
 )
 
 $ErrorActionPreference = 'Stop'
@@ -500,8 +510,92 @@ if ($AdbPath) {
     exit 0
 }
 Progress 'hello' 'script' 'install.ps1' 'version' '1' 'mode' $(if ($Check) { 'check' } elseif ($Backup) { 'backup' } else { 'prebuilt' })
-# first of all, make this the newest installer (it runs the updated one and ends when it changed)
-if (SelfUpdate) {
+
+# ---------------------------------------------------------------- a package (tools/package.sh for install.sh)
+# A release's Magisk zip, unpacked on a computer, is an installer for that computer too: its computer\ directory is
+# this project's installers, with a file .mu300-package in it, and the system and the kernel of the zip lie next to
+# it - payload\<the two assets>, mu300\manifest naming them and mu300\SHA256SUMS, the release's own checksums. Then
+# exactly that system and that kernel are installed from those files, nothing is downloaded and the installer does not
+# update itself (it is the one that came with the files). -Package DIR or $env:MU300_PACKAGE names another one.
+# PackageDir: the directory of the unpacked zip, or '' (a copy of the project)
+function PackageDir([string]$Given, [string]$TopDir) {
+    if ($Given) { return $Given }
+    if ($TopDir -and (Test-Path -LiteralPath (Join-Path $TopDir '.mu300-package'))) { return (Split-Path -Parent $TopDir) }
+    return ''
+}
+# PackageManifest: the manifest of an unpacked zip, read as the zip's own installer reads it (only its keys, every
+# value exactly one a release has: they become file names), as a hashtable; $null when it is not valid
+function PackageManifest([string]$Dir) {
+    $f = Join-Path (Join-Path $Dir 'mu300') 'manifest'
+    if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { return $null }
+    $m = @{ TAG = ''; SYSTEM = ''; OS = ''; UBUNTU = ''; KERNEL = ''; KERNEL_ASSET = ''; ROOTFS_ASSET = ''; SHA256_KERNEL = ''; SHA256_ROOTFS = '' }
+    foreach ($line in [IO.File]::ReadAllLines($f)) {
+        $i = $line.IndexOf('=')
+        if ($i -le 0) { continue }
+        $k = $line.Substring(0, $i)
+        if ($m.ContainsKey($k) -and $k -ceq $k.ToUpperInvariant()) { $m[$k] = $line.Substring($i + 1).TrimEnd("`r") }
+    }
+    if ($m.TAG -cnotmatch '^v[0-9][0-9A-Za-z._-]*$' -or $m.TAG.Contains('..')) { return $null }
+    $sys = @('openwrt:openwrt::mu300-openwrt-rootfs.tar.gz', 'openwrt-luci:openwrt-luci::mu300-openwrt-luci-rootfs.tar.gz',
+        'ubuntu-24.04:ubuntu:24.04:mu300-ubuntu-rootfs.tar.gz', 'ubuntu-26.04:ubuntu:26.04:mu300-ubuntu-26.04-rootfs.tar.gz')
+    if ($sys -cnotcontains "$($m.SYSTEM):$($m.OS):$($m.UBUNTU):$($m.ROOTFS_ASSET)") { return $null }
+    if (@('5.4:mu300-kernel.tar.gz', '6.18:mu300-kernel-6.18.tar.gz', '7.2:mu300-kernel-7.2.tar.gz') -cnotcontains "$($m.KERNEL):$($m.KERNEL_ASSET)") { return $null }
+    if ($m.UBUNTU -eq '26.04' -and $m.KERNEL -eq '5.4') { return $null }
+    foreach ($h in $m.SHA256_KERNEL, $m.SHA256_ROOTFS) { if ($h -cnotmatch '^[0-9a-f]{64}$') { return $null } }
+    return $m
+}
+# PackageCheck: why a payload file of an unpacked zip cannot be used ('' when it can): it must be there, with the
+# checksum the manifest names ($Want) and the one the release's SHA256SUMS names
+function PackageCheck([string]$Dir, [string]$Name, [string]$Want) {
+    $sums = Join-Path (Join-Path $Dir 'mu300') 'SHA256SUMS'
+    $listed = ''
+    if (Test-Path -LiteralPath $sums) {
+        foreach ($line in [IO.File]::ReadAllLines($sums)) {
+            $p = $line.TrimEnd("`r") -split '\s+', 2
+            if ($p.Count -eq 2 -and $p[1].TrimStart('*') -ceq $Name) { $listed = $p[0]; break }
+        }
+    }
+    $f = Join-Path (Join-Path $Dir 'payload') $Name
+    if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { return 'missing' }
+    $have = (Get-FileHash -LiteralPath $f -Algorithm SHA256).Hash.ToLowerInvariant()
+    if (-not $listed -or $have -cne $Want -or $have -cne $listed) { return 'mismatch' }
+    return ''
+}
+$PKG = PackageDir $(if ($Package) { $Package } else { [string]$env:MU300_PACKAGE }) $Top
+$PM = $null
+if ($PKG) {
+    if (-not (Test-Path -LiteralPath $PKG -PathType Container)) { Die (T 'no unpacked Magisk zip at {1}' $PKG) }
+    $PKG = (Resolve-Path -LiteralPath $PKG).Path
+    if (-not (Test-Path -LiteralPath (Join-Path $PKG 'mu300\manifest')) -or -not (Test-Path -LiteralPath (Join-Path $PKG 'mu300\SHA256SUMS'))) {
+        Die (T '{1} is not an unpacked Magisk zip of a release (it has no mu300/manifest and mu300/SHA256SUMS)' $PKG)
+    }
+    $PM = PackageManifest $PKG
+    if (-not $PM) { Die (T 'the package is incomplete or damaged (its manifest is not valid)') }
+    $Release = $PM.TAG; $ReleaseUrl = ''
+    Info 'package' $PKG; Info 'package.system' $PM.SYSTEM; Info 'package.kernel' $PM.KERNEL; Info 'package.release' $PM.TAG
+    Write-Host (T 'Package: {1} with kernel {2}, release {3} (unpacked Magisk zip at {4})' $PM.SYSTEM $PM.KERNEL $PM.TAG $PKG)
+}
+# Making room by a reset, and the installation that resumes afterwards (EXPERIMENTAL; tools/resume.sh is the same for
+# install.sh, tools/resume.py keeps the transaction): where the transactions and backups are kept, and whether one waits.
+$BackupDir = if ($env:MU300_BACKUP_DIR) { $env:MU300_BACKUP_DIR } else { Join-Path $HOME 'mu300-backups' }
+$ResumeWanted = if ($Resume) { '1' } elseif ($NoResume) { '0' } else { [string]$env:MU300_RESUME }
+if (-not $Transaction -and $env:MU300_TRANSACTION) { $Transaction = $env:MU300_TRANSACTION }
+# ResumePending: a transaction in $Dir still waits (for any device) - read here without Python, before the self-update
+function ResumePending([string]$Dir) {
+    if (-not (Test-Path -LiteralPath $Dir -PathType Container)) { return $false }
+    foreach ($f in @(Get-ChildItem -LiteralPath $Dir -Directory -ErrorAction SilentlyContinue | ForEach-Object { Join-Path $_.FullName 'transaction.json' })) {
+        if (-not (Test-Path -LiteralPath $f)) { continue }
+        try { $j = [IO.File]::ReadAllText($f) | ConvertFrom-Json } catch { continue }
+        if ($j.format -eq 1 -and @('prepared-request', 'prepared') -contains [string]$j.state) { return $true }
+    }
+    return $false
+}
+$resumeWaits = $ResumeWanted -ne '0' -and ($Transaction -or (ResumePending $BackupDir))
+if ($resumeWaits) { Write-Host ('  ' + (T 'a prepared installation is waiting (tools/resume.sh): this installer does not update itself until it is done')) }
+
+# first of all, make this the newest installer (it runs the updated one and ends when it changed) - not from a
+# package, and not while a prepared installation waits: its transaction is bound to the tools that prepared it
+if (-not $PKG -and -not $resumeWaits -and (SelfUpdate)) {
     $env:MU300_SELF_UPDATED = '1'
     AnswersReexport
     $PSBoundParameters['Lang'] = $Lang
@@ -748,6 +842,57 @@ $region = FreeRegion $lastEnd $disk
 [int64]$OFF = $region.Start * 512
 [int64]$SIZE = ($region.End - $region.Start) * 512
 Info 'emmc.sectors' $disk; Info 'emmc.last_end' $lastEnd; Info 'region.offset' $OFF; Info 'region.size' $SIZE
+# a prepared installation waiting for this device (the make-room path below, on an earlier run): its checks first
+$RESUMING = 0; $RESUME_TX = ''
+if ($ResumeWanted -ne '0' -and ($ResumeWanted -eq '1' -or $resumeWaits)) {
+    $rv = ResumeFacts
+    if (-not $rv) {
+        if ($ResumeWanted -eq '1') { Die (T 'could not read what identifies this device (serial, eMMC CID, userdata)') }
+    } else {
+        $RESUME_TX = if ($Transaction) { $Transaction } else { [string]((ResumePy find $BackupDir $rv.SERIAL $rv.CID) | Select-Object -First 1) }
+        if (-not $RESUME_TX) {
+            if ($ResumeWanted -eq '1') { Die (T 'no saved transaction for this device in {1} (--transaction FILE names one)' $BackupDir) }
+        } elseif (-not (Test-Path -LiteralPath $RESUME_TX)) {
+            Die (T '{1} not found' $RESUME_TX)
+        } else {
+            $RESUMING = 1
+            Info 'resume.transaction' $RESUME_TX
+            Say (T 'A prepared installation is waiting: {1}' $RESUME_TX)
+            Write-Host ('  ' + (T 'EXPERIMENTAL: it continues the installation that made room by resetting Android. --no-resume ignores it.'))
+            # every check of the transaction against the device, read only (tools\resume.py check)
+            $g = Join-Path $Work 'gpt'
+            New-Item -ItemType Directory -Force -Path $g | Out-Null
+            $rs = $null
+            if (GptDump $disk "$g\resume") { $rs = GptShow @(GptTool $g @('resume.head,resume.tail', '--disk-sectors', "$disk", '--name', 'userdata', '--show')) }
+            if (-not $rs) { Die (T 'could not read the partition table') }
+            $rr = [string]((ResumePy get $RESUME_TX region_start) | Select-Object -First 1) -replace '^region_start=', ''
+            if ($rr -notmatch '^[0-9]+$') { Die (T 'could not read the transaction {1}' $RESUME_TX) }
+            Remove-Item -Force "$g\resume-marker.bin", "$g\resume-bcb.bin" -ErrorAction SilentlyContinue
+            SuDoToFile "dd if=/dev/block/mmcblk0 bs=512 skip=$rr count=8 2>/dev/null" "$g\resume-marker.bin"
+            SuDoToFile 'dd if=/dev/block/by-name/misc bs=2048 count=1 2>/dev/null' "$g\resume-bcb.bin"
+            $idArgs = @('identity', $Top)
+            if ($PKG) { $idArgs += (Join-Path $PKG 'mu300\manifest') }
+            $id = [string]((ResumePy @idArgs) | Select-Object -First 1)
+            $out = [string]((ResumePy check $RESUME_TX "serial=$($rv.SERIAL)" "slot=$ANDROID_SLOT" "cid=$($rv.CID)" "node=$($rv.NODE)" `
+                "start=$($rv.START)" "size=$($rv.SIZE)" "disk=$disk" "gpt_first=$($rs.First)" "gpt_end=$($rs.End)" "usable_end=$($rs.UsableEnd)" `
+                "region_start=$([int64]($OFF / 512))" "region_end=$([int64](($OFF + $SIZE) / 512))" "marker=$g\resume-marker.bin" `
+                "bcb=$g\resume-bcb.bin" "identity=$id") | Select-Object -First 1)
+            Info 'resume.check' $out
+            if ($script:ResumeRc -ne 0) {
+                $why = $out -replace '^RESUME-REFUSED: ', ''
+                if ($Check) {
+                    Write-Host ('  ' + (T 'The prepared installation cannot be continued: {1}' $why))
+                    $RESUMING = 0
+                } else {
+                    Die ((T 'The prepared installation cannot be continued: {1}' $why) + "`n" + (T 'Nothing was written. Keep the device as it is and keep {1}.' $RESUME_TX) + "`n" +
+                        (T 'Another transaction: --transaction FILE. To install as if nothing had been prepared: --no-resume (the region is then treated as space that holds data).'))
+                }
+            } else {
+                Write-Host ('  ' + (T 'the device, its slot, its partition table, the region, the token and this installer are the ones the transaction was made with'))
+            }
+        }
+    }
+}
 # the partitions, for a picture of the eMMC: "name:first sector:sectors" of each (the stream only; sysfs, read only)
 if ($script:MuProgress) { Info 'partitions' ((SuDo 'for p in /sys/block/mmcblk0/mmcblk0p*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done') -replace "`n", ' ') }
 function Gib([int64]$b) { '{0:N1} GiB' -f ($b / 1GB) }
@@ -919,6 +1064,73 @@ function GptDump([int64]$Disk, [string]$Prefix) {
     if (-not (Test-Path "$Prefix.head") -or -not (Test-Path "$Prefix.tail")) { return $false }
     return ((Get-Item "$Prefix.head").Length -eq 34 * 512 -and (Get-Item "$Prefix.tail").Length -eq 33 * 512)
 }
+# ---- reset and resume (EXPERIMENTAL; tools/resume.sh): ported from kano's desktop installer (kanoqwq/mu300-linux,
+# clean-tf-7.2, desktop/installer.py and desktop/boot/part-prepare.sh; f6b0668d, 0e19fe32). userdata is shrunk as before,
+# but Android's own recovery formats it (a bootloader message in misc, --wipe_data): with file-based encryption a
+# filesystem cleared from outside is one Android cannot mount. A transaction and a backup are saved on this computer
+# first, a token goes to the start of the new region (outside every partition, where the reset does not reach), and
+# the next run continues when the device, its slot, the partition table, the region, the token and these tools still
+# match (tools\resume.py check).
+# resume.py with these arguments: its lines, and its exit code in $script:ResumeRc
+function ResumePy {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$RArgs)
+    $ErrorActionPreference = 'Continue'
+    $out = @(Python "$Top\tools\resume.py" @RArgs 2>$null | ForEach-Object { "$_" })
+    $script:ResumeRc = $LASTEXITCODE
+    return $out
+}
+# what identifies the device and its userdata, and how Android keeps its data: the same command as install.sh's
+# (sysfs, properties, /proc/mounts; read only, and no double quotes - see the data check)
+$script:FactsCmd = 'd=$(readlink -f /dev/block/by-name/userdata); n=${d##*/}; b=${n%p*}; echo NODE=$n; echo CID=$(cat /sys/class/block/$b/device/cid); echo START=$(cat /sys/class/block/$n/start); echo SIZE=$(cat /sys/class/block/$n/size); echo STATE=$(getprop ro.crypto.state); echo TYPE=$(getprop ro.crypto.type); while read s m r; do case $m in /data) echo SOURCE=$s; break ;; esac; done < /proc/mounts; echo MAGIC=$(dd if=$d bs=1 skip=1024 count=4 2>/dev/null | od -An -tx1 | tr -d \\040\\012); echo EXT=$(dd if=$d bs=1 skip=1080 count=2 2>/dev/null | od -An -tx1 | tr -d \\040\\012)'
+function ParseFacts([string]$Text) {
+    $f = @{}
+    foreach ($l in ($Text -split "`n")) { if ($l -match '^([A-Z]+)=(.*)$') { if (-not $f.ContainsKey($Matches[1])) { $f[$Matches[1]] = $Matches[2].Trim() } } }
+    return $f
+}
+# FactsOk: the identity is one kano's checks take (an eMMC partition node, a 128-bit CID, numbers, a serial)
+function FactsOk($F) {
+    return ([string]$F.NODE -cmatch '^mmcblk[0-9]p[0-9]+$' -and [string]$F.CID -cmatch '^[0-9a-f]{32}$' -and
+        [string]$F.START -match '^[0-9]+$' -and [string]$F.SIZE -match '^[0-9]+$' -and [string]$F.SERIAL)
+}
+function ResumeFacts {
+    $f = ParseFacts (SuDo $script:FactsCmd)
+    $f.SERIAL = AdbProp 'ro.serialno'
+    if (-not (FactsOk $f)) { return $null }
+    $magic = if ($f.EXT -eq '53ef') { '53ef' } else { [string]$f.MAGIC }
+    $f.CRYPTO = [string]((ResumePy encrypted "state=$($f.STATE)" "type=$($f.TYPE)" "source=$($f.SOURCE)" "magic=$magic") | Select-Object -First 1)
+    return $f
+}
+# the backup of kano's: the table (as read for the plan), the first block of misc, both slots' boot and boot chain,
+# each checked against the device. Never the NV or calibration partitions.
+function ResumeBackup([string]$Dir, [string]$G) {
+    New-Item -ItemType Directory -Force -Path $Dir | Out-Null
+    Copy-Item "$G\gpt.head" (Join-Path $Dir 'gpt.head'); Copy-Item "$G\gpt.tail" (Join-Path $Dir 'gpt.tail')
+    SuDoToFile 'dd if=/dev/block/by-name/misc bs=4096 count=1 2>/dev/null' (Join-Path $Dir 'misc-head.bin')
+    if (-not (Test-Path (Join-Path $Dir 'misc-head.bin'))) { Die (T 'could not read the misc header from the device') }
+    foreach ($bp in 'boot', 'uboot', 'sml', 'teecfg', 'trustos', 'vbmeta') {
+        foreach ($bs in 'a', 'b') {
+            $n = "${bp}_$bs"
+            Say (T 'Backing up {1}' $n)
+            $f = Join-Path $Dir "$n.img"
+            SuDoToFile "cat /dev/block/by-name/$n" $f
+            $want = (([string](SuDo "sha256sum /dev/block/by-name/$n")).Trim() -split '\s+')[0]
+            if (-not (Test-Path $f) -or -not $want -or (Get-FileHash $f -Algorithm SHA256).Hash.ToLower() -ne $want) {
+                Die (T 'the copy of {1} is not what the device holds; nothing was changed' $n)
+            }
+        }
+    }
+    $lines = foreach ($n in @('gpt.head', 'gpt.tail', 'misc-head.bin') + @(Get-ChildItem -LiteralPath $Dir -Filter '*.img' | Sort-Object Name | ForEach-Object { $_.Name })) {
+        "$((Get-FileHash (Join-Path $Dir $n) -Algorithm SHA256).Hash.ToLower())  $n"
+    }
+    WriteUnix (Join-Path $Dir 'SHA256SUMS') ((@($lines) -join "`n") + "`n")
+}
+# a file to the device, and there with the checksum it has here
+function ResumePush([string]$Local, [string]$Remote) {
+    Quiet { adb push $Local $Remote } | Out-Null
+    $sum = (([string](SuDo "sha256sum $Remote")).Trim() -split '\s+')[0]
+    return ($sum -eq (Get-FileHash $Local -Algorithm SHA256).Hash.ToLower())
+}
+function ResumeSha([string]$Cmd) { return (([string](SuDo $Cmd)).Trim() -split '\s+')[0] }
 function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Say (T 'Not enough free space - this looks like the 32 GB variant')
     $g = Join-Path $Work 'gpt'
@@ -947,11 +1159,20 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
         Die ((@((T 'there is not enough room to split: {1} in total,' (Gib ($plan.Total * 512))), (T 'and Android needs at least {1} of it. Nothing is changed.' (Gib ($plan.MinAndroid * 512)))) + @(LayoutFigures $Disk $LastEnd $Size $info $plan)) -join "`n")
     }
 
+    # the device's identity and how Android keeps its data (read only); kano's rule: encrypted, plain, or unknown
+    $rf = ResumeFacts
+    if (-not $rf) { Die (T 'could not read what identifies this device (serial, eMMC CID, userdata)') }
+    if ([int64]$rf.START -ne $info.First -or [int64]$rf.START + [int64]$rf.SIZE - 1 -ne $info.End) {
+        Die (T 'the partition table and the running kernel disagree about userdata; reboot Android and try again')
+    }
+    Info 'makeroom.crypto' $rf.CRYPTO; Info 'makeroom.crypto_state' $rf.STATE; Info 'makeroom.crypto_type' $rf.TYPE
+    $cryptoText = switch ($rf.CRYPTO) { 'yes' { T 'encrypted' } 'no' { T 'not encrypted' } default { T 'unknown' } }
     Write-Host ''
     Write-Host "  eMMC:                 $(Gib ($Disk * 512))"
     Write-Host ('  ' + (T 'userdata now:         {1} (sectors {2}..{3})' (Gib (($info.End - $info.First + 1) * 512)) $info.First $info.End))
     Write-Host ('  ' + (T 'free behind it:       {1}' (Gib ($plan.Free * 512))))
     Write-Host ('  ' + (T 'to share:             {1}' (Gib ($plan.Total * 512))))
+    Write-Host ('  ' + (T "Android's data:       {1} ({2})" $cryptoText ("$(if ($rf.STATE) { $rf.STATE } else { '?' })$(if ($rf.TYPE) { '/' + $rf.TYPE })")))
     Write-Host ''
     Write-Host ('  ' + (T 'Linux needs at least  {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (both)' (Gib ($plan.MinLinux * 512))))
     Write-Host ('  ' + (T 'Android keeps at least {1}' (Gib ($plan.MinAndroid * 512))))
@@ -959,27 +1180,72 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     Write-Host ('  ' + (T 'THIS IS EXPERIMENTAL. It rewrites the partition table and ERASES everything in Android -'))
     Write-Host ('  ' + (T 'apps, photos, accounts, settings. Take a full backup first:  sh tools/backup-device.sh'))
     Write-Host ('  ' + (T 'Only userdata changes size; it is the last partition, so nothing else moves.'))
+    Write-Host ('  ' + (T "Android's own recovery erases Android's data: the device restarts into it, resets Android (a factory"))
+    Write-Host ('  ' + (T 'reset) and starts Android again, which takes a few minutes and more than one restart. Then set Android up'))
+    Write-Host ('  ' + (T 'again, turn USB debugging back on and bring root back (Magisk: install the Magisk app again and let'))
+    Write-Host ('  ' + (T 'Shell have root), and run this installer again: it finds what was prepared and continues.'))
+    Write-Host ('  ' + (T 'What was prepared, and a backup of the partition table, misc, boot and the boot chain, are kept on this'))
+    Write-Host ('  ' + (T 'computer in {1} - the reset erases everything of it on the device.' $BackupDir))
     Write-Host ''
     if ($Check) {
         Write-Host ('  ' + (T '-Check writes nothing. Run the installer without it to make room.'))
         return
     }
+    # kano's rule: an encryption state that cannot be told is no ground to stand on
+    if ($rf.CRYPTO -ne 'yes' -and $rf.CRYPTO -ne 'no') {
+        Die (T "Android's encryption state is unknown ({1}); nothing is changed." "$(if ($rf.STATE) { $rf.STATE } else { '?' })/$(if ($rf.TYPE) { $rf.TYPE } else { '?' })")
+    }
     if ((Ask (T 'Make room by shrinking userdata? (yes/no)') 'no' 'MU300_ANS_MAKE_ROOM') -ne 'yes') { Die (T 'nothing was changed.') }
 
     while ($true) {
         $lin = RepartitionSectors (Ask (T 'How many GiB for Linux? (the rest stays with Android)') '4' 'MU300_ANS_LINUX_GIB') $plan.MinLinux $plan.MaxLinux
-        if ($lin.State -eq 'ok') { break }
+        if ($lin.State -eq 'ok') {
+            # userdata ends where the region the installers find behind it (FreeRegion) is the size asked for: it
+            # starts one 2 MiB block after userdata and stops one block short of the disk's end, so a userdata that
+            # ended that many sectors before the usable end left 4 MiB or more less (install.sh; FINDINGS 112)
+            [int64]$newEnd = [math]::Floor(($Disk - 34) / 4096 - 1) * 4096 - $lin.Sectors - 4096 - 1
+            if ($newEnd -gt $info.UsableEnd) { $newEnd = $info.UsableEnd - $lin.Sectors }
+            $linRegion = FreeRegion ($newEnd + 1) $Disk
+            if (($linRegion.End - $linRegion.Start) -lt $plan.MinLinux) { $lin.State = 'small' }
+            elseif (($newEnd - $info.First + 1) -lt $plan.MinAndroid) { $lin.State = 'large' }
+            else { break }
+        }
         if ($lin.State -eq 'nan') { Write-Host ('  ' + (T 'give a number, like 4 or 2.5')) }
         elseif ($lin.State -eq 'small') { Write-Host ('  ' + (T 'too small: Linux needs at least {1}' (Gib ($plan.MinLinux * 512)))) }
         else { Write-Host ('  ' + (T 'too large: Android would be left with less than {1}' (Gib ($plan.MinAndroid * 512)))) }
     }
-    [int64]$newEnd = $info.UsableEnd - $lin.Sectors
     Write-Host ''
     Write-Host ('  ' + (T 'userdata (Android):   {1}' (Gib (($newEnd - $info.First + 1) * 512))))
-    Write-Host ('  ' + (T 'Linux region:         {1}' (Gib ($lin.Sectors * 512))))
+    Write-Host ('  ' + (T 'Linux region:         {1}' (Gib (($linRegion.End - $linRegion.Start) * 512))))
     Write-Host ''
     # the word itself, in capitals, in every language
     if ((Ask (T 'Type ERASE to rewrite the partition table and wipe Android''s data') '' 'MU300_ANS_ERASE_ANDROID') -cne 'ERASE') { Die (T 'nothing was changed.') }
+
+    # a backup on this computer, before anything is written
+    Step 'backup' 30
+    $bd = Join-Path $BackupDir ((Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + $rf.CID.Substring(24, 8))
+    Say (T 'Backing up to {1}' $bd)
+    ResumeBackup $bd $g
+    Info 'resume.backup' $bd
+
+    # the transaction, saved before the first write; the region by the installers' arithmetic behind the new end
+    $rg = FreeRegion ($newEnd + 1) $Disk
+    $tok = [string]((ResumePy token) | Select-Object -First 1)
+    $idArgs = @('identity', $Top)
+    if ($PKG) { $idArgs += (Join-Path $PKG 'mu300\manifest') }
+    $id = [string]((ResumePy @idArgs) | Select-Object -First 1)
+    if ($tok -notmatch '^[0-9a-f]{32}$' -or $id -notmatch '^[0-9a-f]{64}$') { Die (T 'could not compute the installer identity') }
+    $tx = Join-Path $bd 'transaction.json'
+    ResumePy new $tx "serial=$($rf.SERIAL)" "slot=$ANDROID_SLOT" "cid=$($rf.CID)" "node=$($rf.NODE)" "start=$($rf.START)" `
+        "size=$($rf.SIZE)" "disk=$Disk" "target=$($newEnd - [int64]$rf.START + 1)" "need=$($rg.End - $rg.Start)" `
+        "usable_end=$($info.UsableEnd)" "region_start=$($rg.Start)" "region_end=$($rg.End)" "token=$tok" "identity=$id" `
+        "crypto=$($rf.CRYPTO)" "crypto_state=$($rf.STATE)" "crypto_type=$($rf.TYPE)" "backup=$bd" | Out-Null
+    if ($script:ResumeRc -ne 0) { Die (T 'could not save the transaction; nothing was changed') }
+    Info 'resume.transaction' $tx
+    Write-Host ('  ' + (T 'transaction saved: {1}' $tx))
+    ResumePy marker $tok "$g\marker.bin" | Out-Null
+    ResumePy bcb "$g\bcb.bin" | Out-Null
+    if (-not (Test-Path "$g\marker.bin") -or -not (Test-Path "$g\bcb.bin")) { Die (T 'could not prepare the files to write; nothing was changed') }
 
     Step 'repartition' 50
     Say (T 'Rewriting the partition table')
@@ -988,21 +1254,18 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     $made = $script:GptRc -eq 0 -and (Test-Path "$g\new.head") -and (Test-Path "$g\new.tail")
     if ($made) { $made = (Get-Item "$g\new.head").Length -eq 34 * 512 -and (Get-Item "$g\new.tail").Length -eq 33 * 512 }
     if (-not $made) { Die (T 'the resize was refused; nothing is changed') }
-    # What goes into the partition table is what the tool made, byte for byte: a push that failed or stopped halfway
-    # leaves no file or a short one on the device, and dd would write that (install.sh does not look).
-    foreach ($n in 'head', 'tail') {
-        Quiet { adb push "$g\new.$n" "$T/new.$n" } | Out-Null
-        $sum = (([string](SuDo "sha256sum $T/new.$n")).Trim() -split '\s+')[0]
-        if ($sum -ne (Get-FileHash "$g\new.$n" -Algorithm SHA256).Hash.ToLower()) {
-            SuDo "rm -f $T/new.head $T/new.tail" | Out-Null
+    # what goes to the device is what was made here, byte for byte (a push that stopped halfway leaves a short file)
+    foreach ($n in 'new.head', 'new.tail', 'marker.bin', 'bcb.bin') {
+        if (-not (ResumePush "$g\$n" "$T/mu300-$n")) {
+            SuDo "rm -f $T/mu300-new.head $T/mu300-new.tail $T/mu300-marker.bin $T/mu300-bcb.bin" | Out-Null
             Die (T 'the new partition table did not arrive on the device as it was made; nothing is changed')
         }
     }
-    # the backup copy first: if power is lost between the two, the primary is still the old table and the
-    # device boots, which is the recoverable order
-    SuDo "dd if=$T/new.tail of=/dev/block/mmcblk0 bs=512 seek=$($Disk - 33) conv=fsync 2>/dev/null" | Out-Null
-    SuDo "dd if=$T/new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null" | Out-Null
-    SuDo "sync; rm -f $T/new.head $T/new.tail" | Out-Null
+    $abBefore = (SuDo 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v') -replace '\s', ''
+    # the backup copy first: if power is lost between the two, the primary is still the old table and the device
+    # boots, which is the recoverable order
+    SuDo "dd if=$T/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$($Disk - 33) conv=fsync 2>/dev/null" | Out-Null
+    SuDo "dd if=$T/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null" | Out-Null
 
     Say (T 'Verifying')
     $null = GptDump $Disk "$g\after"
@@ -1013,16 +1276,28 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
     if ($after.End -ne $newEnd) { Die (T 'the table did not take (userdata still ends at {1}). Nothing else was changed.' $after.End) }
     Write-Host ('  ' + (T 'userdata now ends at sector {1}' $after.End))
 
-    # Android cannot mount a filesystem that claims to be larger than its partition; clearing the superblocks
-    # is what makes it format /data cleanly on the next boot instead of bootlooping on a repair attempt.
-    Say (T 'Clearing Android''s data filesystem so it is recreated on the next boot')
-    SuDo 'dd if=/dev/zero of=/dev/block/by-name/userdata bs=1M count=32 conv=fsync 2>/dev/null' | Out-Null
+    # the token: the first 4 KiB of the region, outside every partition from now on
+    SuDo "dd if=$T/mu300-marker.bin of=/dev/block/mmcblk0 bs=512 seek=$($rg.Start) count=8 conv=notrunc,fsync 2>/dev/null" | Out-Null
+    if ((ResumeSha "dd if=/dev/block/mmcblk0 bs=512 skip=$($rg.Start) count=8 2>/dev/null | sha256sum") -ne (Get-FileHash "$g\marker.bin" -Algorithm SHA256).Hash.ToLower()) {
+        Die (T 'the token did not read back from the device; misc was not changed, Android keeps its data. Run the installer again.')
+    }
+    # the reset, by Android's own recovery: the bootloader message in the first 2 KiB of misc
+    Say (T 'Asking Android''s recovery to reset Android''s data on the next boot')
+    SuDo "dd if=$T/mu300-bcb.bin of=/dev/block/by-name/misc bs=2048 count=1 conv=notrunc,fsync 2>/dev/null" | Out-Null
+    $abAfter = (SuDo 'dd if=/dev/block/by-name/misc bs=1 skip=2048 count=32 2>/dev/null | od -An -tx1 -v') -replace '\s', ''
+    if ((ResumeSha 'dd if=/dev/block/by-name/misc bs=2048 count=1 2>/dev/null | sha256sum') -ne (Get-FileHash "$g\bcb.bin" -Algorithm SHA256).Hash.ToLower() -or $abAfter -ne $abBefore) {
+        Die (T 'the request for the reset did not read back from misc. The partition table is changed already: run the installer again, it continues from here.')
+    }
+    SuDo "sync; rm -f $T/mu300-new.head $T/mu300-new.tail $T/mu300-marker.bin $T/mu300-bcb.bin" | Out-Null
+    ResumePy set $tx 'state=prepared' | Out-Null
+    if ($script:ResumeRc -ne 0) { Die (T 'could not save the transaction') }
 
-    Say (T 'Done - the device has to reboot before the new layout is visible')
-    Write-Host ('  ' + (T 'Android will set up its data partition again on this boot, which takes a few minutes.'))
-    Write-Host ('  ' + (T 'When it is back, run this installer again and it will find the free space.'))
+    Say (T 'Done - the device restarts into the reset now')
+    Write-Host ('  ' + (T "Android's recovery formats Android's data on the next start; then Android starts as new. Set it up,"))
+    Write-Host ('  ' + (T 'turn USB debugging on, bring root back (the Magisk app, Shell allowed), and run this installer again.'))
+    Write-Host ('  ' + (T 'transaction: {1}' $tx))
     $rb = Ask (T 'Reboot now? (yes/no)') 'yes' 'MU300_ANS_REBOOT'
-    Progress 'done' 'result' 'ok' 'repartitioned' 'yes'
+    Progress 'done' 'result' 'ok' 'repartitioned' 'yes' 'resume' 'pending' 'transaction' $tx
     if ($rb -eq 'yes') { Quiet { adb reboot } | Out-Null }
 }
 
@@ -1042,7 +1317,9 @@ if ($sd.Count -eq 3 -and $sd[2] -eq 'SD' -and $sd[1] -match '^[0-9]+$') {
 }
 Info 'sd.device' $SD_DEV; Info 'sd.bytes' $SD_BYTES
 $SD_MODE = 0; $sdEx = 'no'
-if ($Check) {
+if ($RESUMING -eq 1 -and -not $Check) {
+    Info 'storage' 'internal'            # the region that was prepared for it
+} elseif ($Check) {
     if ($SD_DEV) {
         $sdEx = SdExisting
         Info 'sd.state' $sdEx
@@ -1099,6 +1376,8 @@ $existing = 'no'
 foreach ($cand in @($OFF, 27762098176)) {
     if (-not (RegionOnDisk $cand)) { continue }
     $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
+    # two bytes on the disk always read as four hex digits: anything else is no answer, never "no installation"
+    if ($m -notmatch '^[0-9a-f]{4}$') { Die (T 'no answer from the device') }
     $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {
         $blocks = [int64]((SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
@@ -1115,14 +1394,17 @@ if ($SD_MODE -eq 1) {
 }
 
 $dirty = 0
-if ($SD_MODE -eq 0 -and $existing -eq 'no') {
+if ($SD_MODE -eq 0 -and $existing -eq 'no' -and $RESUMING -eq 0) {
     $step = [int64]($SIZE / 1MB / 16)
     $probe = (0..15 | ForEach-Object { [int64]($OFF / 1MB) + $_ * $step }) -join ' '
     # Empty is 0x00 or 0xFF (what an eMMC reads back after an erase). No double quotes in the command: Windows
     # PowerShell 5.1 drops them on the way to adb, tr got an unquoted \000 - "delete the character 0" - and every
     # empty MiB counted as data, so on Windows an empty region was always "16 of 16 not empty". \\ reaches the
     # device's shell as one backslash, which tr then reads as the start of an octal escape.
-    $dirty = [int](SuDo "n=0; for s in $probe; do c=`$(dd if=/dev/block/mmcblk0 bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000\\377 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); done; echo `$n").Trim()
+    $dirtyOut = (SuDo "n=0; for s in $probe; do c=`$(dd if=/dev/block/mmcblk0 bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000\\377 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); done; echo `$n").Trim()
+    # [int]'' is 0: no answer passed as an empty region
+    if ($dirtyOut -notmatch '^[0-9]+$') { Die (T 'no answer from the device') }
+    $dirty = [int]$dirtyOut
     Write-Host (T 'data check: {1} of 16 samples contain data' $dirty)
     Info 'region.dirty' $dirty
     if ($dirty -gt 0) {
@@ -1130,7 +1412,10 @@ if ($SD_MODE -eq 0 -and $existing -eq 'no') {
         Write-Host ('  ' + (T 'start of the region: {1}' $head.Trim()))
     }
 }
-if ($existing -eq 'yes') {
+if ($RESUMING -eq 1) {
+    # (what the region holds is what was userdata, erased with the word ERASE when it was prepared, and the token)
+    $vcode = 'resume'; $verdict = T 'OK: the region prepared by making room, checked against its transaction'
+} elseif ($existing -eq 'yes') {
     $vcode = 'existing'; $verdict = T 'OK: a MU300 Linux installation is already present (it can be kept or replaced)'
 } elseif ($SD_MODE -eq 1) {
     $vcode = 'sd'; $verdict = T 'OK: the SD card will be formatted; everything on it is erased'
@@ -1184,6 +1469,24 @@ function ReleaseList {
     } catch { return $none }
     finally { Remove-Item $f -ErrorAction SilentlyContinue }
 }
+# The release tags (docs/FINDINGS.md 125): vYYYY.MM.DD up to v2026.10.27, where the "day" was a counter, and from then
+# on vYYYY.MM.DD.N, the real (UTC) day the release was built and N = 1..99 for the releases of that day. Every
+# four-field tag is newer than every three-field one; four-field tags compare by the date, then by N, as numbers. The
+# rule of tools/releases.sh and tools/release_pick.py, held to the same table (tests/fixtures/release-tags.tsv).
+# TagKey: a number in the order of the releases (1YYYYMMDD00, 2YYYYMMDDNN), or $null for what is no release tag
+function TagKey([string]$Tag) {
+    # ([0-9], not \d: .NET's \d takes every script's digits; \z, not $: $ lets a newline at the end through)
+    if ($Tag -cmatch '^v([0-9]{4})\.([0-9]{2})\.([0-9]{2})\z') { return [long]('1' + $Matches[1] + $Matches[2] + $Matches[3] + '00') }
+    if ($Tag -cmatch '^v([0-9]{4})\.(0[1-9]|1[0-2])\.(0[1-9]|[12][0-9]|3[01])\.([1-9][0-9]?)\z') {
+        return [long]('2' + $Matches[1] + $Matches[2] + $Matches[3] + $Matches[4].PadLeft(2, '0'))
+    }
+    return $null
+}
+# TagNewer A B: release A is newer than release B; false when either is no release tag
+function TagNewer([string]$A, [string]$B) {
+    $ka = TagKey $A; $kb = TagKey $B
+    return [bool]($null -ne $ka -and $null -ne $kb -and $ka -gt $kb)
+}
 # BetaAsked: whether the beta question is put. Not with -Answers: that file holds one answer per question in a fixed
 # order, and a question that comes and goes with GitHub's releases would shift every answer behind it.
 function BetaAsked([string]$Latest, [string]$Beta, [bool]$Positional) { return [bool]($Latest -and $Beta -and $Beta -ne $Latest -and -not $Positional) }
@@ -1205,6 +1508,18 @@ Info 'release' $Release
 
 Step 'choices' 10
 Say (T 'What should be installed?')
+if ($PKG) {
+    # a package's system, Ubuntu and kernel are its own: nothing to ask, only whether they fit here
+    Write-Host ('  ' + (T 'This package installs {1} with kernel {2} (release {3}); nothing is downloaded.' $PM.SYSTEM $PM.KERNEL $PM.TAG))
+    Write-Host ('  ' + (T 'Another system or kernel: the zip of that combination, or ./install.sh of the project.'))
+    $OSES = @($PM.OS); $BOOT_OS = $PM.OS; $UBUNTU = $(if ($PM.UBUNTU) { $PM.UBUNTU } else { '24.04' })
+    if ($DEVICE -eq 'v50' -and $PM.KERNEL -eq '5.4') { Die (T 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.2 of this release') }
+    $need = if ($PM.OS -eq 'ubuntu') { $NEED_UBUNTU } else { $NEED_OPENWRT }
+    if ($SIZE -lt $need) {
+        $needMib = [int64]($need / 1MB); $haveMib = [int64]($SIZE / 1MB)
+        Die (T 'that choice needs about {1} MiB and this device has {2} MiB of free space' $needMib $haveMib)
+    }
+} else {
 Write-Host ('  ' + (T '1) Ubuntu LTS: 24.04 or 26.04, asked next (full distribution, apt, ~500 MiB RAM in use)'))
 Write-Host ('  ' + (T '2) OpenWrt {1} (router, LuCI web UI, ~140 MiB RAM in use)' '25.12.5'))
 Write-Host ('  ' + (T '3) both (switch later with: mu300-os ubuntu|openwrt)'))
@@ -1250,6 +1565,7 @@ if ($OSES -contains 'ubuntu') {
         { $_ -in '2', '26.04' } { $UBUNTU = '26.04' }
         default { Die (T 'invalid choice') }
     }
+}
 }
 # the release file of a system: Ubuntu 26.04 has its own, 24.04 keeps the name it always had
 function RootfsFile($os) { if ($os -eq 'ubuntu' -and $UBUNTU -eq '26.04') { 'mu300-ubuntu-26.04-rootfs.tar.gz' } else { "mu300-$os-rootfs.tar.gz" } }
@@ -1309,9 +1625,12 @@ $EXTRA_PANEL = $null
 if ($OSES -contains 'ubuntu') {
     Write-Host ('  ' + (T 'The web panel for Ubuntu (Cockpit with an MU300 page: signal, SMS, VPN, Wi-Fi, updates, a terminal; on the LAN only) is optional. It can also be added later on the device:'))
     Write-Host '    sudo mu300-extra install panel'
-    $px = Ask (T 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)') 'no' 'MU300_ANS_PANEL'
+    # (not part of a package: it is a file of the release, not of the zip)
+    if ($PKG) { Write-Host ('  ' + (T 'It is not part of this package.')) }
+    else { $px = Ask (T 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)') 'no' 'MU300_ANS_PANEL' }
 }
 $KERNEL = $null
+if ($PKG) { $KERNEL = $PM.KERNEL } else {
 Say (T 'Which kernel?')
 Write-Host ('  ' + (T "1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports"))
 Write-Host ('  ' + (T '2) 6.18  mainline Linux, current long-term (LTS) release: newer drivers and security fixes, the same'))
@@ -1332,6 +1651,7 @@ while (-not $KERNEL) {
         { $_ -in '3', '7.2' } { $KERNEL = '7.2' }
         default { Write-Host ('  ' + (T 'enter 1, 2 or 3')) }
     }
+}
 }
 $FORMAT = 0; $WIPE_LEGACY = 0; $UPDATE = 0
 if ($existing -eq 'no') {
@@ -1400,14 +1720,31 @@ if ($gpu -eq 'yes') {
 }
 
 # ($Release: looked up before the questions, see ReleaseList)
-# Linux on a needs systems that know it (release v2026.10.10 on); a tag that is not a release date is not judged
-if ($LINUX_SLOT -eq 'a' -and $Release -match '^v\d{4}\.\d{2}\.\d{2}' -and [string]::CompareOrdinal($Release, 'v2026.10.10') -lt 0) {
+# Linux on a needs systems that know it (release v2026.10.10 on); a tag that is not a release tag is not judged
+if ($LINUX_SLOT -eq 'a' -and (TagKey $Release) -and (TagNewer 'v2026.10.10' $Release)) {
     Die (T 'Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer' $Release 'v2026.10.10')
 }
 Step 'download' 20
-Say (T 'Downloading release {1}' $Release)
 $REL = "$Work\release\$Release"
 New-Item -ItemType Directory -Force -Path $REL | Out-Null
+# $ASSETS: where the release's files are - downloaded into $REL, or a package's payload\ (the kernels are unpacked
+# into $REL either way)
+$ASSETS = $REL
+$vpnFromModule = $false
+if ($PKG) {
+    Say (T 'Checking the files of this package')
+    $ASSETS = Join-Path $PKG 'payload'
+    foreach ($pf in @(@($PM.KERNEL_ASSET, $PM.SHA256_KERNEL), @($PM.ROOTFS_ASSET, $PM.SHA256_ROOTFS))) {
+        Write-Host "  $($pf[0])"
+        $why = PackageCheck $PKG $pf[0] $pf[1]
+        if ($why -eq 'missing') { Die (T '{1} is missing from the package (payload/)' $pf[0]) }
+        if ($why) { Progress 'verify' 'file' $pf[0] 'result' 'mismatch'; Die (T 'checksum mismatch for {1}' $pf[0]) }
+        Progress 'verify' 'file' $pf[0] 'result' 'ok'
+    }
+    # the VPN is not in a zip: the module of its own repository, which is a download
+    if ($vx -eq 'yes') { $vpnFromModule = $true }
+} else {
+Say (T 'Downloading release {1}' $Release)
 $base = if ($ReleaseUrl) { $ReleaseUrl } else { "https://github.com/$Repo/releases/download/$Release" }
 Invoke-WebRequest "$base/SHA256SUMS" -OutFile "$REL\SHA256SUMS" -UseBasicParsing
 $sums = @{}
@@ -1419,7 +1756,6 @@ $files = @('mu300-kernel.tar.gz') + ($OSES | ForEach-Object { RootfsFile $_ })
 if ($KERNEL -ne '5.4') { $files += "mu300-kernel-$KERNEL.tar.gz" }
 # the VPN: a release from before the module (its systems carry mu300-vpn) has the engines as its own vpn extra, from the
 # same SHA256SUMS; a newer one has neither, and the module comes from its own repository (below)
-$vpnFromModule = $false
 if ($vx -eq 'yes') {
     if ($sums.ContainsKey('mu300-extra-vpn.tar.gz')) { $files += 'mu300-extra-vpn.tar.gz'; $EXTRA_VPN = "$REL\mu300-extra-vpn.tar.gz" }
     else { $vpnFromModule = $true }
@@ -1445,20 +1781,27 @@ foreach ($f in $files) {
         Progress 'verify' 'file' $f 'result' 'ok'
     } else { Progress 'verify' 'file' $f 'result' 'cached' }
 }
+}
 if ($vpnFromModule) { FetchVpnModule }
+# the 5.4 bundle: its kernel, and for every kernel the busybox, logdw and modules of the boot image's first segment.
+# A package with a mainline kernel has no 5.4 bundle: its boot image is that kernel with its own generic segment,
+# which brings init's busybox, logdw and modules (build-boot-image.py checks that it does).
+$HAVE54 = (-not $PKG) -or $KERNEL -eq '5.4'
 Remove-Item -Recurse -Force "$REL\kernel" -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force -Path "$REL\kernel" | Out-Null
-& tar -xzf "$REL\mu300-kernel.tar.gz" -C "$REL\kernel"
-# the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline kernel is
-# checked below)
-if (($DEVICE -notin @('f50', 'v50')) -and -not (Test-Path "$REL\kernel\modules-$DEVICE")) { Die (T 'release {1} does not support this device yet; use a newer one' $Release) }
+if ($HAVE54) {
+    New-Item -ItemType Directory -Force -Path "$REL\kernel" | Out-Null
+    & tar -xzf "$ASSETS\mu300-kernel.tar.gz" -C "$REL\kernel"
+    # the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline
+    # kernel is checked below)
+    if (($DEVICE -notin @('f50', 'v50')) -and -not (Test-Path "$REL\kernel\modules-$DEVICE")) { Die (T 'release {1} does not support this device yet; use a newer one' $Release) }
+}
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 $KMAIN = $null
 if ($KERNEL -ne '5.4') {
     $KMAIN = "$REL\kernel-$KERNEL"
     Remove-Item -Recurse -Force $KMAIN -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Force -Path $KMAIN | Out-Null
-    & tar -xzf "$REL\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN
+    & tar -xzf "$ASSETS\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN
     foreach ($k in 'Image', 'ramdisk-generic.lz4', 'kernel.release') {
         if (-not (Test-Path "$KMAIN\$k")) { Die (T '{1} is incomplete' "mu300-kernel-$KERNEL.tar.gz") }
     }
@@ -1492,10 +1835,12 @@ WriteUnix "$Work\init" (((Get-Content -Raw "$Top\boot\init") -replace '(?m)^ROOT
 # image that "mu300-update kernel 6.18" (or 7.2) writes on the device
 $bootArgs = @("$Top\boot\build-boot-image.py", '--stock-boot', "$Work\dumps\boot_$ANDROID_SLOT.img", '--misc-head', "$Work\dumps\misc-head.bin",
     '--kernel', $(if ($KMAIN) { "$KMAIN\Image" } else { "$REL\kernel\Image" }),
-    '--modules', "$REL\kernel\modules", '--init', "$Work\init", '--busybox', "$REL\kernel\busybox",
-    '--logdw', "$REL\kernel\logdw", '--ueventd-perms', "$Top\android-vendor\ueventd-perms.sh",
+    '--init', "$Work\init", '--ueventd-perms', "$Top\android-vendor\ueventd-perms.sh",
     '--android-subset', "$Work\android-subset", '--out', "$Work\boot-linux-slot$LINUX_SLOT.img", '--device', $DEVICE, '--linux-slot', $LINUX_SLOT)
-if (Test-Path "$REL\kernel\modules-u30air") { $bootArgs += @('--device-modules', "u30air=$REL\kernel\modules-u30air") }
+if ($HAVE54) {
+    $bootArgs += @('--modules', "$REL\kernel\modules", '--busybox', "$REL\kernel\busybox", '--logdw', "$REL\kernel\logdw")
+    if (Test-Path "$REL\kernel\modules-u30air") { $bootArgs += @('--device-modules', "u30air=$REL\kernel\modules-u30air") }
+}
 if ($KMAIN) { $bootArgs += @('--append-ramdisk', "$KMAIN\ramdisk-generic.lz4") }
 # a failed build must stop here: otherwise an earlier image (or none) would be written to the device
 Remove-Item "$Work\boot-linux-slot$LINUX_SLOT.*" -ErrorAction SilentlyContinue
@@ -1529,7 +1874,7 @@ Step 'copy' 75
 Say (T 'Copying to the device')
 foreach ($f in 'android-mount-mu300root.sh', 'android-install.sh', 'android-bootchain.sh') { PushUnix "$Top\tools\$f" "$T/$f" | Out-Null }
 foreach ($os in $OSES) {
-    & adb push "$REL\$(RootfsFile $os)" "$T/mu300-$os.tar.gz" | Out-Null
+    & adb push "$ASSETS\$(RootfsFile $os)" "$T/mu300-$os.tar.gz" | Out-Null
     & adb push "$Work\mu300-vendor-$os.tar.gz" "$T/mu300-vendor-$os.tar.gz" | Out-Null
 }
 # android-install.sh puts every pushed mu300-extra-<name>.tar.gz onto the Linux partition (extra/<name>); the VPN
@@ -1599,6 +1944,11 @@ if ("$readBack".Split(' ')[0] -ne $EXP) {
     Die (T 'boot_{1} verify failed (slot {2} still active, Android keeps booting)' $LINUX_SLOT $ANDROID_SLOT)
 }
 SuDo "dd if=$T/mu300-bc.bin of=/dev/block/by-name/misc bs=1 seek=2048 conv=notrunc && sync && rm $T/mu300-boot.img $T/mu300-bc.bin $T/mu300-boot.rb" | Out-Null
+# the prepared installation is done: its transaction no longer waits (kano: state installed)
+if ($RESUMING -eq 1) {
+    ResumePy set $RESUME_TX 'state=installed' | Out-Null
+    if ($script:ResumeRc -ne 0) { Write-Host ('  ' + (T 'could not mark {1} as done' $RESUME_TX)) }
+}
 
 # on-device switch for later: one command in Android instead of plugging into a computer (needs Magisk)
 Step 'switch' 96

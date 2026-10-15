@@ -35,9 +35,18 @@ kernel/build-all.sh    # -> out/Image, out/modules/*.ko, out/modules.builtin*  (
 Maintainers publish the prebuilt images with `tools/make-release.sh TAG --publish` (it refuses to publish if an image
 contains firmware, Android files, host keys or local settings).
 
+**Release names.** A new release is tagged `vYYYY.MM.DD.N`: the real day (UTC) it is built, and `N` = 1, 2, 3, ... for
+the releases of that day (no leading zero, at most 99). `tools/make-release.sh --next-tag` prints the next one (today's
+date, one more than the highest `N` of today's releases on GitHub and of today's tags); `make-release.sh` takes no
+other form for a new release and refuses a tag whose day is not today unless `--any-date` is given (a retry, a build
+past midnight). The releases up to v2026.10.27 are `vYYYY.MM.DD`, where the "day" was a counter that ran ahead of the
+calendar. Every four-field tag is newer than every three-field one, whatever the dates; four-field tags compare by the
+date, then by `N`, as numbers (so `.10` comes after `.9`). docs/FINDINGS.md 125 has the rule, the one table every
+comparer is tested against, and what the updaters and installers released before it do with the new names.
+
 **Releasing from GitHub Actions.** The same release, built on a GitHub arm64 runner: Actions > Release > Run workflow,
-with the ref `main` (the job refuses any other ref, and a tag or release that already exists), the tag, and prerelease
-left on. It builds the 5.4 kernel, the mainline 6.18 and 7.2 kernels and their modules (about an hour the first time;
+with the ref `main` (the job refuses any other ref, and a tag or release that already exists), the tag left empty (the
+workflow takes `make-release.sh --next-tag`; a tag given must be `vYYYY.MM.DD.N` of today), and prerelease left on. It builds the 5.4 kernel, the mainline 6.18 and 7.2 kernels and their modules (about an hour the first time;
 about five minutes while the kernel outputs are still in the Actions cache, which they are until `kernel/`, `upstream/`
 or the newest kernel.org version changes), runs `tools/make-release.sh --publish --prerelease` and dispatches the Magisk
 zips. Then try the prerelease on a device, edit its notes, and promote it with

@@ -457,7 +457,7 @@ class Storage(ShellTest):
 
     def test_installer_refuses_a_card_install_with_a_kernel_that_cannot_read_it(self):
         src = (TOP / 'install.sh').read_text()
-        unpack = src.index('tar -xzf "$REL/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"')
+        unpack = src.index('tar -xzf "$ASSETS/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"')
         check = src.index('sd_kernel_ok "$KMAIN" || die')
         self.assertLess(unpack, check)
         self.assertLess(check, src.index("say \"$(t 'Adding the vendor files from your device to the images')\""))
@@ -791,6 +791,22 @@ class Region(ShellTest):
             out = self.run_region(shell, 'region_probe; region_find_existing; region_dirty').stdout
             self.assertIn('existing=no DIRTY=1', out)
 
+    def test_no_answer_is_never_an_empty_region(self):
+        """2026-10-16, F50-C: adb's server went away in the middle of --check; every read came back empty, and the
+        region holding an installation was "existing: no", "free and empty" (DIRTY empty, compared as 0). In a real
+        run that skips the update-or-wipe question and the overwrite one. No answer is status 2 now."""
+        start = ((2048 + (4 << 21)) // 4096 + 1) * 4096 * 512
+        self.fake(ext4_at=start)
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; su_do() { :; }; region_find_existing').stdout
+            self.assertIn('rc=2', out)
+            self.assertIn('existing= ', out)
+            out = self.run_region(shell, 'region_probe; su_do() { :; }; region_dirty').stdout
+            self.assertIn('rc=2', out)
+            self.assertIn('DIRTY=\n', out + '\n')
+            # and an answer is still read as before
+            out = self.run_region(shell, 'region_probe; region_find_existing').stdout
+            self.assertIn(f'rc=0 OFF={start} SIZE={1000 * 4096} existing=yes', out)
 
     def test_a_table_that_ends_at_the_end_of_the_disk_is_an_empty_region_and_is_never_read(self):
         """Issue #65 (and #43, #52): the last partition ends 2 MiB before the end of the eMMC. The first boundary
@@ -916,7 +932,7 @@ class InstallSlot(ShellTest):
     def run_slot(self, shell, tail):
         m = re.search(r'# --- slot begin\n(.*?)# --- slot end', self.SRC, re.S)
         self.assertIsNotNone(m, 'install.sh has no slot block')
-        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; T=/data/local/tmp; '
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; . "$TOP/tools/releases.sh"; MU300_LANG=en; T=/data/local/tmp; '
                 'say() { echo "SAY $*"; }; die() { echo "DIE $*"; exit 1; }; '
                 'su_do() { printf "%s\\n" "$1" >> "$STUBLOG/su.log"; case $1 in '
                 '"getprop ro.boot.slot_suffix") n=$(( $(cat "$STUBLOG/n" 2>/dev/null || echo 0) + 1 )); '
@@ -1003,7 +1019,9 @@ class InstallSlot(ShellTest):
         for shell in self.each_shell():
             for slot, rel, ok in (('a', 'v2026.10.09', False), ('a', 'v2026.09.28', False), ('a', 'v2026.10.10', True),
                                   ('a', 'v2026.10.14', True), ('a', 'v2027.01.01', True), ('a', 'custom', True),
-                                  ('b', 'v2026.09.28', True)):
+                                  ('b', 'v2026.09.28', True),
+                                  # the new names (FINDINGS 125): newer than every three-field tag, whatever the date
+                                  ('a', 'v2026.10.16.1', True), ('a', 'v2026.10.01.1', True), ('a', 'v2026.10.16.0', True)):
                 out = self.run_slot(shell, f'LINUX_SLOT={slot}; slot_release_ok {rel}; echo SURVIVED')
                 self.assertEqual('SURVIVED' in out, ok, (slot, rel, out))
                 if not ok:
@@ -1222,7 +1240,7 @@ class VpnOnInTheReplacedSystem(ShellTest):
             (root / o / 'etc/mu300/vpn.conf').write_text(f'ENABLE={1 if o in on else 0}\nKILL_SWITCH={1 if o in ks else 0}\n')
         lib = TOP / 'rootfs/overlay/opt/mu300/lib/vpn-orphan.sh'
         self.stub('adb', 'echo "adb $*" >> "$STUBLOG/calls"')
-        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; T=/data/local/tmp; '
+        code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; . "$TOP/tools/releases.sh"; MU300_LANG=en; T=/data/local/tmp; '
                 'say() { :; }; die() { echo "DIE $*"; exit 1; }; '
                 f'su_do() {{ echo "$1" > "{self.tmp}/su"; '
                 f'eval "$(printf "%s" "$1" | sed "s|^.*&& {{|{{|; s|/data/local/tmp/vpn-orphan.sh|{lib}|; '
@@ -1256,7 +1274,7 @@ class VpnOnInTheReplacedSystem(ShellTest):
 
     def question(self, shell, probe, answer):
         src = (TOP / 'install.sh').read_text()
-        block = src[src.index('vx_default=no\n'):src.index('\nKERNEL=5.4\n')]
+        block = src[src.index('vx_default=no\n'):src.index('\n[ -n "$PKG" ] || KERNEL=5.4\n')]
         block = block[:block.index('\nEXTRA_VPN=')]
         code = (f'TOP="{TOP}"; . "$TOP/tools/i18n.sh"; MU300_LANG=en; OSES="ubuntu openwrt"; '
                 'die() { echo "DIE $*"; exit 1; }; '

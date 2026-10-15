@@ -5,12 +5,20 @@
 #
 # On the 32 GB variant there is no free region at all (userdata fills the disk). The installer then offers
 # to shrink userdata to make one - EXPERIMENTAL, it rewrites the partition table and erases everything in
-# Android, so take a full backup with tools/backup-device.sh first.
+# Android, so take a full backup with tools/backup-device.sh first. Android's own recovery resets Android's data
+# (that is what works with its encryption), and the installation resumes on the next run of this installer, once
+# Android is set up again with USB debugging and root (tools/resume.sh; a transaction in ~/mu300-backups):
+#   ./install.sh --resume        continue the prepared installation, or stop when there is none for this device
+#   ./install.sh --no-resume     install as if nothing had been prepared (MU300_RESUME=0)
+#   ./install.sh --transaction FILE   that transaction, not the newest one for the device (MU300_TRANSACTION)
 #   ./install.sh                 install Ubuntu, OpenWrt or both from the prebuilt release images
 #   ./install.sh --build         build kernel outputs/root filesystems locally instead (see README "Build and run")
 #   ./install.sh --backup        only copy what an installation reads first to this computer: Android's boot image
 #                                and the first block of misc, checked against the device (writes nothing to it)
 #   ./install.sh --adb-path      print the adb this installer would use, and stop
+#   ./install.sh --package DIR   install the system and the kernel of a release's Magisk zip unpacked at DIR, from its
+#                                files and without a download (MU300_PACKAGE=DIR; the zip's own computer/install.sh,
+#                                which its start.sh runs, finds them by itself: START-HERE.md in the zip, tools/package.sh)
 #   ./install.sh --answers FILE  ask nothing: every question is answered by its variable, from FILE (NAME=value
 #                                lines) or the environment; a question without an answer is an error that names the
 #                                variable. MU300_PROGRESS=1 adds a machine-readable progress stream. For programs
@@ -70,6 +78,8 @@ T=/data/local/tmp
 MODE=prebuilt; CHECK_ONLY=0; BACKUP_ONLY=0; ADB_PATH_ONLY=0; ANSWERS_FILE=; _opt=
 for a in "$@"; do
     if [ "$_opt" = answers ]; then ANSWERS_FILE=$a; _opt=; continue; fi
+    if [ "$_opt" = transaction ]; then MU300_TRANSACTION=$a; export MU300_TRANSACTION; _opt=; continue; fi
+    if [ "$_opt" = package ]; then MU300_PACKAGE=$a; export MU300_PACKAGE; _opt=; continue; fi
     case $a in
         --check) CHECK_ONLY=1 ;;
         --build) MODE=build ;;
@@ -78,11 +88,17 @@ for a in "$@"; do
         --adb-path) ADB_PATH_ONLY=1 ;;
         --answers) _opt=answers ;;
         --answers=*) ANSWERS_FILE=${a#--answers=} ;;
+        --resume) MU300_RESUME=1; export MU300_RESUME ;;
+        --no-resume) MU300_RESUME=0; export MU300_RESUME ;;
+        --transaction) _opt=transaction ;;
+        --transaction=*) MU300_TRANSACTION=${a#--transaction=}; export MU300_TRANSACTION ;;
+        --package) _opt=package ;;
+        --package=*) MU300_PACKAGE=${a#--package=}; export MU300_PACKAGE ;;
         -h|--help) sed -n '2,/^set -eu/{/^set -eu/d;s/^# \{0,1\}//p;}' "$0"; exit 0 ;;
         *) echo "unknown option $a (see --help)" >&2; exit 2 ;;
     esac
 done
-[ -z "$_opt" ] || { echo "--answers needs a file (see --help)" >&2; exit 2; }
+[ -z "$_opt" ] || { echo "--$_opt needs a file or directory (see --help)" >&2; exit 2; }
 . "$TOP/tools/answers.sh"    # say, die, ask; the answers mode and the progress stream
 answers_setup                # (before anything reads a MU300_* variable: an answers file sets them)
 RELEASE=${MU300_RELEASE:-}
@@ -90,6 +106,8 @@ REPO=${MU300_REPO:-dikeckaan/mu300-linux}
 . "$TOP/tools/i18n.sh"
 . "$TOP/tools/storage.sh"
 . "$TOP/tools/releases.sh"
+. "$TOP/tools/resume.sh"
+. "$TOP/tools/package.sh"
 # adb from platform-tools unzipped next to the project (or into the usual places) needs no PATH entry
 find_adb() {
     command -v adb >/dev/null && return 0
@@ -105,9 +123,26 @@ if [ $ANSWERS_MODE = 1 ]; then
 fi
 choose_language
 progress hello script install.sh version 1 mode "$([ $CHECK_ONLY = 1 ] && echo check || { [ $BACKUP_ONLY = 1 ] && echo backup || echo $MODE; })"
-# first of all, make this the newest installer (it restarts itself when it changed)
+# an unpacked Magisk zip (tools/package.sh): its system and kernel, its release, no download and no self-update -
+# the installer that came with the files is the one that knows them
+PKG=$(package_dir)
+if [ -n "$PKG" ]; then
+    package_load "$PKG"
+    [ $MODE != build ] || die "$(t '--build builds the systems itself: run it from a copy of the project, not from an unpacked Magisk zip')"
+    RELEASE=$PKG_TAG
+    info package "$PKG"; info package.system "$PKG_SYSTEM"; info package.kernel "$PKG_KERNEL"; info package.release "$PKG_TAG"
+    echo "$(t 'Package: {1} with kernel {2}, release {3} (unpacked Magisk zip at {4})' "$PKG_SYSTEM" "$PKG_KERNEL" "$PKG_TAG" "$PKG")"
+fi
+# first of all, make this the newest installer (it restarts itself when it changed) - not from a package, and not
+# while a prepared installation waits: its transaction is bound to the tools that prepared it (tools/resume.sh)
 . "$TOP/tools/self-update.sh"
-self_update "$0" "$@"
+if [ -n "$PKG" ]; then
+    :
+elif resume_pending; then
+    echo "  $(t 'a prepared installation is waiting (tools/resume.sh): this installer does not update itself until it is done')"
+else
+    self_update "$0" "$@"
+fi
 # the graphical installer, offered once to a person who starts a plain installation
 . "$TOP/tools/gui-launch.sh"
 [ $CHECK_ONLY = 1 ] || [ $BACKUP_ONLY = 1 ] || [ $MODE != prebuilt ] || gui_offer
@@ -257,6 +292,8 @@ step preflight 2
 say "$(t 'Checking host tools and device')"
 need="adb"
 [ $CHECK_ONLY = 1 ] || [ $BACKUP_ONLY = 1 ] || { [ $MODE = build ] && need="adb docker python3 lz4" || need="adb python3 lz4 curl"; }
+# (a package downloads nothing: curl only for the VPN module, when it is wanted)
+[ -z "$PKG" ] || [ $CHECK_ONLY = 1 ] || [ $BACKUP_ONLY = 1 ] || need="adb python3 lz4"
 find_adb || true
 for c in $need; do command -v $c >/dev/null || die "$(t '{1} not found' "$c")"; done
 if [ $CHECK_ONLY = 0 ] && [ $MODE = build ]; then
@@ -330,11 +367,12 @@ slot_setup() {
 }
 # Linux on a needs systems that know it (release v2026.10.10 on: mu300-next-boot, mu300-update and the recorder
 # follow the slot the initramfs names); the init is this checkout's either way, build-boot-image.py puts it behind a
-# mainline kernel's generic segment. A tag that is not a release date (MU300_RELEASE_URL's "custom") is not judged.
+# mainline kernel's generic segment. A tag that is not a release tag (MU300_RELEASE_URL's "custom") is not judged;
+# newer and tag_ok: tools/releases.sh (vYYYY.MM.DD.N is newer than every vYYYY.MM.DD, docs/FINDINGS.md 125).
 slot_release_ok() {  # slot_release_ok RELEASE
     [ "$LINUX_SLOT" = a ] || return 0
-    case $1 in v[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]*) ;; *) return 0 ;; esac
-    [ "$(printf '%s\n%s\n' v2026.10.10 "$1" | sort | head -n1)" = v2026.10.10 ] ||
+    tag_ok "$1" || return 0
+    ! newer v2026.10.10 "$1" ||
         die "$(t 'Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer' "$1" v2026.10.10)"
 }
 # write_linux_boot IMAGE: IMAGE to boot_$LINUX_SLOT, verified, then the block beside it (IMAGE without .img +
@@ -439,12 +477,20 @@ offer_repartition() {
     info makeroom.min_android $MIN_ANDROID; info makeroom.min_linux $MIN_LINUX; info makeroom.max_linux $max_linux
     [ $max_linux -ge $MIN_LINUX ] || die "$(t 'there is not enough room to split: {1} in total,' "$(gib $((total * 512)))")
 $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_ANDROID * 512)))")"
+    # the device's identity and how Android keeps its data (read only); kano's rule: encrypted, plain, or unknown
+    resume_facts || die "$(t 'could not read what identifies this device (serial, eMMC CID, userdata)')"
+    [ "$UD_START" = "$LAST_FIRST" ] && [ $((UD_START + UD_SIZE - 1)) = "$LAST_END" ] ||
+        die "$(t 'the partition table and the running kernel disagree about userdata; reboot Android and try again')"
+    info makeroom.crypto "$CRYPTO"; info makeroom.crypto_state "$CRYPTO_STATE"; info makeroom.crypto_type "$CRYPTO_TYPE"
 
     echo
     echo "  eMMC:                 $(gib $((disk * 512)))"
-    echo "  $(t 'userdata now:         {1} (sectors {2}..{3})' "$(gib $((LAST_END - LAST_FIRST + 1)))" "$LAST_FIRST" "$LAST_END")"
+    echo "  $(t 'userdata now:         {1} (sectors {2}..{3})' "$(gib $(( (LAST_END - LAST_FIRST + 1) * 512 )))" "$LAST_FIRST" "$LAST_END")"
     echo "  $(t 'free behind it:       {1}' "$(gib $(( (USABLE_END - LAST_END) * 512 )))")"
     echo "  $(t 'to share:             {1}' "$(gib $((total * 512)))")"
+    # (not a case inside $(...): macOS's bash 3.2 takes its first ")" for the end of the substitution)
+    crypto_text=$(t 'unknown'); [ "$CRYPTO" = yes ] && crypto_text=$(t 'encrypted'); [ "$CRYPTO" = no ] && crypto_text=$(t 'not encrypted')
+    echo "  $(t "Android's data:       {1} ({2})" "$crypto_text" "${CRYPTO_STATE:-?}${CRYPTO_TYPE:+/$CRYPTO_TYPE}")"
     echo
     echo "  $(t 'Linux needs at least  {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (both)' "$(gib $((MIN_LINUX * 512)))")"
     echo "  $(t 'Android keeps at least {1}' "$(gib $((MIN_ANDROID * 512)))")"
@@ -452,12 +498,20 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
     echo "  $(t 'THIS IS EXPERIMENTAL. It rewrites the partition table and ERASES everything in Android -')"
     echo "  $(t 'apps, photos, accounts, settings. Take a full backup first:  sh tools/backup-device.sh')"
     echo "  $(t 'Only userdata changes size; it is the last partition, so nothing else moves.')"
+    echo "  $(t "Android's own recovery erases Android's data: the device restarts into it, resets Android (a factory")"
+    echo "  $(t 'reset) and starts Android again, which takes a few minutes and more than one restart. Then set Android up')"
+    echo "  $(t 'again, turn USB debugging back on and bring root back (Magisk: install the Magisk app again and let')"
+    echo "  $(t 'Shell have root), and run this installer again: it finds what was prepared and continues.')"
+    echo "  $(t 'What was prepared, and a backup of the partition table, misc, boot and the boot chain, are kept on this')"
+    echo "  $(t 'computer in {1} - the reset erases everything of it on the device.' "$BACKUP_DIR")"
     echo
     if [ $CHECK_ONLY = 1 ]; then
         echo "  $(t '--check writes nothing. Run the installer without it to make room.')"
         progress done result ok
         exit 0
     fi
+    # kano's rule: an encryption state that cannot be told is no ground to stand on
+    [ "$CRYPTO" != unknown ] || die "$(t "Android's encryption state is unknown ({1}); nothing is changed." "${CRYPTO_STATE:-?}/${CRYPTO_TYPE:-?}")"
     ask go "$(t 'Make room by shrinking userdata? (yes/no)')" no MU300_ANS_MAKE_ROOM
     [ "$go" = yes ] || die "$(t 'nothing was changed.')"
 
@@ -466,57 +520,44 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
         case "$lin" in ''|*[!0-9.]*) echo "  $(t 'give a number, like 4 or 2.5')"; continue ;; esac
         lin_s=$(awk -v g="$lin" 'BEGIN { printf "%d", (g * 1073741824) / 512 }')
         lin_s=$(( (lin_s / 4096) * 4096 ))   # keep the boundary on a 2 MiB alignment
-        if [ "$lin_s" -lt $MIN_LINUX ]; then
+        # userdata ends where the region the installers find behind it (region_probe, resume_region) is lin_s
+        # sectors: that region starts one 2 MiB block after userdata's end and stops one block short of the
+        # disk's end, so a userdata that ended lin_s before the usable end left a region 4 MiB or more smaller
+        # than asked - 0.79 GiB for OpenWrt's 0.78 was 804 MiB, 0.78125 would have been 796 and the resumed run
+        # would have refused it after the reset (FINDINGS 112, the first device run)
+        new_end=$(( ((disk - 34) / 4096 - 1) * 4096 - lin_s - 4096 - 1 ))
+        [ $new_end -le "$USABLE_END" ] || new_end=$((USABLE_END - lin_s))
+        resume_region $((new_end + 1))
+        if [ $((RG_END - RG_START)) -lt $MIN_LINUX ]; then
             echo "  $(t 'too small: Linux needs at least {1}' "$(gib $((MIN_LINUX * 512)))")"
-        elif [ "$lin_s" -gt $max_linux ]; then
+        elif [ "$lin_s" -gt $max_linux ] || [ $((new_end - LAST_FIRST + 1)) -lt $MIN_ANDROID ]; then
             echo "  $(t 'too large: Android would be left with less than {1}' "$(gib $((MIN_ANDROID * 512)))")"
         else
             break
         fi
     done
-    new_end=$((USABLE_END - lin_s))
     echo
     echo "  $(t 'userdata (Android):   {1}' "$(gib $(( (new_end - LAST_FIRST + 1) * 512 )))")"
-    echo "  $(t 'Linux region:         {1}' "$(gib $((lin_s * 512)))")"
+    echo "  $(t 'Linux region:         {1}' "$(gib $(( (RG_END - RG_START) * 512 )))")"
     echo
     ask sure "$(t "Type ERASE to rewrite the partition table and wipe Android's data")" "" MU300_ANS_ERASE_ANDROID
     [ "$sure" = ERASE ] || die "$(t 'nothing was changed.')"
 
-    step repartition 50
-    say "$(t 'Rewriting the partition table')"
-    python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/gpt.head,$WORK/gpt/gpt.tail" \
-        --disk-sectors "$disk" --name userdata --end-sector "$new_end" --out "$WORK/gpt/new" || die "$(t 'the resize was refused; nothing is changed')"
-    adb push "$WORK/gpt/new.head" /data/local/tmp/new.head >/dev/null 2>&1
-    adb push "$WORK/gpt/new.tail" /data/local/tmp/new.tail >/dev/null 2>&1
-    # the backup copy first: if power is lost between the two, the primary is still the old table and the
-    # device boots, which is the recoverable order
-    su_do "dd if=/data/local/tmp/new.tail of=/dev/block/mmcblk0 bs=512 seek=$((disk - 33)) conv=fsync 2>/dev/null" >/dev/null
-    su_do "dd if=/data/local/tmp/new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null" >/dev/null
-    su_do 'sync; rm -f /data/local/tmp/new.head /data/local/tmp/new.tail' >/dev/null
+    # a backup on this computer, before anything is written (kano's backup: the table, misc, boot and the boot chain
+    # of both slots, checked against the device)
+    step backup 30
+    RESUME_BD=$BACKUP_DIR/$(date +%Y%m%d-%H%M%S)-$(printf '%s' "$CID" | cut -c25-32)
+    say "$(t 'Backing up to {1}' "$RESUME_BD")"
+    resume_backup "$RESUME_BD"
+    info resume.backup "$RESUME_BD"
+    resume_prepare "$new_end"
 
-    say "$(t 'Verifying')"
-    su_do "dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/mmcblk0 bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
-    adb pull /data/local/tmp/gpt.head "$WORK/gpt/after.head" >/dev/null 2>&1 || true
-    adb pull /data/local/tmp/gpt.tail "$WORK/gpt/after.tail" >/dev/null 2>&1 || true
-    su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
-    check=$(python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/after.head,$WORK/gpt/after.tail" \
-              --disk-sectors "$disk" --name userdata --show) || die "$(t 'the table on the device does not read back as valid GPT.')
-$(t "The backup copy at the end of the disk was written first, so Android's own repair may still fix this. Do not power off.")"
-    got=$(echo "$check" | sed -n 's/^LAST_END=//p')
-    [ "$got" = "$new_end" ] || die "$(t 'the table did not take (userdata still ends at {1}). Nothing else was changed.' "$got")"
-    echo "  $(t 'userdata now ends at sector {1}' "$got")"
-
-    # Android cannot mount a filesystem that claims to be larger than its partition; clearing the superblocks
-    # is what makes it format /data cleanly on the next boot instead of bootlooping on a repair attempt.
-    say "$(t "Clearing Android's data filesystem so it is recreated on the next boot")"
-    su_do "dd if=/dev/zero of=/dev/block/by-name/userdata bs=1M count=32 conv=fsync 2>/dev/null" >/dev/null
-
-    say "$(t 'Done - the device has to reboot before the new layout is visible')"
-    echo "  $(t 'Android will set up its data partition again on this boot, which takes a few minutes.')"
-    echo "  $(t 'When it is back, run this installer again and it will find the free space.')"
+    say "$(t 'Done - the device restarts into the reset now')"
+    echo "  $(t "Android's recovery formats Android's data on the next start; then Android starts as new. Set it up,")"
+    echo "  $(t 'turn USB debugging on, bring root back (the Magisk app, Shell allowed), and run this installer again.')"
+    echo "  $(t 'transaction: {1}' "$RESUME_FILE")"
     ask rb "$(t 'Reboot now? (yes/no)')" yes MU300_ANS_REBOOT
-    progress done result ok repartitioned yes
+    progress done result ok repartitioned yes resume pending transaction "$RESUME_FILE"
     [ "$rb" = yes ] && adb reboot
     exit 0
 }
@@ -526,6 +567,11 @@ step storage 6
 say "$(t 'Locating free eMMC space after the last partition')"
 region_probe || die "$(t 'could not read the partition table from the device (is su granted? try again)')"
 info emmc.sectors "$disk"; info emmc.last_end "$last_end"; info region.offset "$OFF"; info region.size "$SIZE"
+# a prepared installation waiting for this device (the make-room path below, on an earlier run): its checks first
+resume_lookup
+if [ $RESUME = 1 ]; then
+    if [ $CHECK_ONLY = 1 ]; then resume_validate soft || RESUME=0; else resume_validate; fi
+fi
 # the partitions, for a picture of the eMMC: "name:first sector:sectors" of each (the stream only; sysfs, read only)
 [ -z "$PROGRESS_FD" ] || info partitions "$(su_do 'for p in /sys/block/mmcblk0/mmcblk0p*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done' | tr '\n' ' ')"
 gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
@@ -546,6 +592,9 @@ if [ $CHECK_ONLY = 1 ]; then
         echo "$(t 'SD card: {1}, {2}, existing mu300sd filesystem: {3}' "$SD_DEV" "$(gib "$SD_BYTES")" "$(t "$([ $sd_ex = yes ] && echo yes || echo no)")")"
         [ $sd_ex = foreign ] && echo "  $(t 'the SD card holds another Linux (ext4) filesystem; the installer will not format it')"
     fi
+elif [ $RESUME = 1 ]; then
+    SD_MODE=0                    # the region that was prepared for it
+    info storage internal
 else
     choose_storage
     info storage "$([ $SD_MODE = 1 ] && echo sd || echo internal)"
@@ -565,7 +614,7 @@ if [ $SD_MODE = 0 ] && [ $SIZE -lt $((700 * 1024 * 1024)) ]; then
     fi
     offer_repartition   # exits, either by installing nothing or by rebooting for a second pass
 fi
-region_find_existing
+region_find_existing || die "$(t 'no answer from the device')"
 echo "$(t 'Linux region: offset {1}, {2}, existing mu300root filesystem: {3}' "$OFF" "$(gib $SIZE)" "$(t "$existing")")"
 INTERNAL_EXISTS=0; [ $existing = yes ] && INTERNAL_EXISTS=1; INT_SIZE=
 info region.existing "$existing"; info region.offset "$OFF"; info region.size "$SIZE"
@@ -578,14 +627,17 @@ fi
 # 0x00 or 0xFF: an eMMC reads back what its erase leaves (EXT_CSD ERASED_MEM_CONT), and on some F50s that is 0xFF -
 # counted as data, a region that was never written stopped the install with "not empty".
 DIRTY=0
-if [ $SD_MODE = 0 ] && [ $existing = no ]; then
-    region_dirty
+if [ $SD_MODE = 0 ] && [ $existing = no ] && [ $RESUME = 0 ]; then
+    region_dirty || die "$(t 'no answer from the device')"
     echo "$(t 'data check: {1} of 16 samples contain data' "$DIRTY")"
     info region.dirty "$DIRTY"
     # what is there, for a report: the first bytes of the region
     [ "$DIRTY" -gt 0 ] && echo "  $(t 'start of the region: {1}' "$(su_do "dd if=/dev/block/mmcblk0 bs=1048576 skip=$(( OFF / 1048576 )) count=1 2>/dev/null | od -An -tx1 -N32" | tr -s ' \n' ' ')")"
 fi
-if [ $existing = yes ]; then
+if [ $RESUME = 1 ]; then
+    # (what the region holds is what was userdata, erased with the word ERASE when it was prepared, and the token)
+    vcode=resume; verdict=$(t 'OK: the region prepared by making room, checked against its transaction')
+elif [ $existing = yes ]; then
     vcode=existing; verdict=$(t 'OK: a MU300 Linux installation is already present (it can be kept or replaced)')
 elif [ $SD_MODE = 1 ]; then
     vcode=sd; verdict=$(t 'OK: the SD card will be formatted; everything on it is erased')
@@ -619,6 +671,21 @@ fi
 info release "$RELEASE"
 step choices 10
 say "$(t 'What should be installed?')"
+# --- package-choices begin
+# package_choices: a package's system, Ubuntu and kernel are its own - nothing to ask, only whether they fit here
+package_choices() {
+    echo "  $(t 'This package installs {1} with kernel {2} (release {3}); nothing is downloaded.' "$PKG_SYSTEM" "$PKG_KERNEL" "$PKG_TAG")"
+    echo "  $(t 'Another system or kernel: the zip of that combination, or ./install.sh of the project.')"
+    OSES=$PKG_OS; BOOT_OS=$PKG_OS; UBUNTU=${PKG_UBUNTU:-24.04}; KERNEL=$PKG_KERNEL
+    [ "$DEVICE" != v50 ] || [ "$KERNEL" != 5.4 ] ||
+        die "$(t 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.2 of this release')"
+    need=$NEED_OPENWRT; [ "$OSES" = ubuntu ] && need=$NEED_UBUNTU
+    [ $SIZE -ge $need ] || die "$(t 'that choice needs about {1} MiB and this device has {2} MiB of free space' "$((need / 1048576))" "$((SIZE / 1048576))")"
+}
+# --- package-choices end
+if [ -n "$PKG" ]; then
+    package_choices
+else
 echo "  $(t '1) Ubuntu LTS: 24.04 or 26.04, asked next (full distribution, apt, ~500 MiB RAM in use)')"
 echo "  $(t '2) OpenWrt {1} (router, LuCI web UI, ~140 MiB RAM in use)' "$OWRT_VER")"
 echo "  $(t '3) both (switch later with: mu300-os ubuntu|openwrt)')"
@@ -662,6 +729,7 @@ case " $OSES " in *" ubuntu "*) if [ $MODE = prebuilt ]; then
     ask uv "$(t 'Ubuntu')" 1 MU300_ANS_UBUNTU
     case $uv in 1|24.04) UBUNTU=24.04 ;; 2|26.04) UBUNTU=26.04 ;; *) die "$(t 'invalid choice')" ;; esac
 fi ;; esac
+fi
 # the release file of a system: Ubuntu 26.04 has its own, 24.04 keeps the name it always had
 rootfs_file() { if [ "$1" = ubuntu ] && [ "$UBUNTU" = 26.04 ]; then echo mu300-ubuntu-26.04-rootfs.tar.gz; else echo "mu300-$1-rootfs.tar.gz"; fi; }
 ask dl "$(t 'Boot Linux by default instead of Android (falls back to Android if Linux fails)? (yes/no)')" yes MU300_ANS_DEFAULT_LINUX
@@ -723,10 +791,12 @@ EXTRA_PANEL=
 case " $OSES " in *" ubuntu "*)
     echo "  $(t 'The web panel for Ubuntu (Cockpit with an MU300 page: signal, SMS, VPN, Wi-Fi, updates, a terminal; on the LAN only) is optional. It can also be added later on the device:')"
     echo "    sudo mu300-extra install panel"
-    ask px "$(t 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)')" no MU300_ANS_PANEL ;;
+    # (not part of a package: it is a file of the release, not of the zip)
+    if [ -n "$PKG" ]; then echo "  $(t 'It is not part of this package.')"
+    else ask px "$(t 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)')" no MU300_ANS_PANEL; fi ;;
 esac
-KERNEL=5.4
-if [ $MODE = prebuilt ]; then
+[ -n "$PKG" ] || KERNEL=5.4
+if [ $MODE = prebuilt ] && [ -z "$PKG" ]; then
     say "$(t 'Which kernel?')"
     echo "  $(t "1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports")"
     echo "  $(t '2) 6.18  mainline Linux, current long-term (LTS) release: newer drivers and security fixes, the same')"
@@ -809,6 +879,18 @@ if [ $MODE = prebuilt ]; then
 slot_release_ok "$RELEASE"   # (RELEASE: release_resolve, before the questions)
 REL=$WORK/release/$RELEASE
 mkdir -p "$REL"
+# ASSETS: where the release's files are - downloaded into REL, or a package's payload/ (the kernels are unpacked into
+# REL either way)
+ASSETS=$REL
+VPN_FROM_MODULE=
+if [ -n "$PKG" ]; then
+step download 20
+say "$(t 'Checking the files of this package')"
+ASSETS=$PKG/payload
+package_verify
+# the VPN is not in a zip: the module of its own repository, which is a download
+[ "$vx" != yes ] || VPN_FROM_MODULE=1
+else
 # MU300_RELEASE_URL: another location with the same files (e.g. a local test server)
 base=${MU300_RELEASE_URL:-https://github.com/$REPO/releases/download/$RELEASE}
 step download 20
@@ -819,7 +901,6 @@ files=mu300-kernel.tar.gz
 for os in $OSES; do files="$files $(rootfs_file $os)"; done
 # the VPN: a release from before the module (its systems carry mu300-vpn) has the engines as its own vpn extra, from the
 # same SHA256SUMS; a newer one has neither, and the module comes from its own repository (below)
-VPN_FROM_MODULE=
 if [ "$vx" = yes ]; then
     if awk '$2 == "mu300-extra-vpn.tar.gz" || $2 == "*mu300-extra-vpn.tar.gz" {f = 1} END {exit !f}' "$REL/SHA256SUMS"; then
         files="$files mu300-extra-vpn.tar.gz"; EXTRA_VPN=$REL/mu300-extra-vpn.tar.gz
@@ -849,18 +930,25 @@ for f in $files; do
         progress verify file "$f" result cached
     fi
 done
+fi
 [ -z "$VPN_FROM_MODULE" ] || fetch_vpn_module
-rm -rf "$REL/kernel" && mkdir -p "$REL/kernel" && tar -xzf "$REL/mu300-kernel.tar.gz" -C "$REL/kernel"
-KOUT=$REL/kernel
-# the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline kernel is
-# checked below)
-case $DEVICE in f50|v50) ;; *) [ -d "$KOUT/modules-$DEVICE" ] || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")" ;; esac
-BUSYBOX=$KOUT/busybox; LOGDW=$KOUT/logdw
+# the 5.4 bundle: its kernel, and for every kernel the busybox, logdw and modules of the boot image's first segment.
+# A package with a mainline kernel has no 5.4 bundle: its boot image is that kernel with its own generic segment,
+# which brings init's busybox, logdw and modules (build-boot-image.py checks that it does).
+KOUT=; BUSYBOX=; LOGDW=
+if [ -z "$PKG" ] || [ "$KERNEL" = 5.4 ]; then
+    rm -rf "$REL/kernel" && mkdir -p "$REL/kernel" && tar -xzf "$ASSETS/mu300-kernel.tar.gz" -C "$REL/kernel"
+    KOUT=$REL/kernel
+    # the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline kernel
+    # is checked below)
+    case $DEVICE in f50|v50) ;; *) [ -d "$KOUT/modules-$DEVICE" ] || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")" ;; esac
+    BUSYBOX=$KOUT/busybox; LOGDW=$KOUT/logdw
+fi
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 KMAIN=
 if [ "$KERNEL" != 5.4 ]; then
     KMAIN=$REL/kernel-$KERNEL
-    rm -rf "$KMAIN" && mkdir -p "$KMAIN" && tar -xzf "$REL/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"
+    rm -rf "$KMAIN" && mkdir -p "$KMAIN" && tar -xzf "$ASSETS/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"
     [ -s "$KMAIN/Image" ] && [ -s "$KMAIN/ramdisk-generic.lz4" ] && [ -s "$KMAIN/kernel.release" ] || die "$(t '{1} is incomplete' "mu300-kernel-$KERNEL.tar.gz")"
     # a bundle names the devices it runs on; older mainline kernels do not bring up the U30 Air's USB (FINDINGS 33c)
     [ $DEVICE = f50 ] || grep -qw $DEVICE "$KMAIN/devices" 2>/dev/null || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")"
@@ -940,9 +1028,9 @@ sed "s/^ROOT_OFFSET=[0-9]*/ROOT_OFFSET=$OFF/" "$TOP/boot/init" > "$WORK/init"
 # image that "mu300-update kernel 6.18" (or 7.2) writes on the device
 python3 "$TOP/boot/build-boot-image.py" --stock-boot "$WORK/dumps/boot_$ANDROID_SLOT.img" --misc-head "$WORK/dumps/misc-head.bin" \
   --kernel "${KMAIN:-$KOUT}/Image" ${KMAIN:+--append-ramdisk "$KMAIN/ramdisk-generic.lz4"} \
-  --modules "$KOUT/modules" --init "$WORK/init" --busybox "$BUSYBOX" --device "$DEVICE" \
-  $([ -d "$KOUT/modules-u30air" ] && echo --device-modules "u30air=$KOUT/modules-u30air") \
-  --logdw "$LOGDW" --ueventd-perms "$TOP/android-vendor/ueventd-perms.sh" \
+  ${KOUT:+--modules "$KOUT/modules"} --init "$WORK/init" ${BUSYBOX:+--busybox "$BUSYBOX"} --device "$DEVICE" \
+  $([ -n "$KOUT" ] && [ -d "$KOUT/modules-u30air" ] && echo --device-modules "u30air=$KOUT/modules-u30air") \
+  ${LOGDW:+--logdw "$LOGDW"} --ueventd-perms "$TOP/android-vendor/ueventd-perms.sh" \
   --android-subset "$WORK/android-subset" --linux-slot "$LINUX_SLOT" --out "$WORK/boot-linux-slot$LINUX_SLOT.img" >/dev/null
 
 # ---------------------------------------------------------------- confirm and install
@@ -972,7 +1060,7 @@ say "$(t 'Copying to the device')"
 adb push "$TOP/tools/android-mount-mu300root.sh" "$TOP/tools/android-install.sh" "$TOP/tools/android-bootchain.sh" $T/ >/dev/null
 for os in $OSES; do
     if [ $MODE = prebuilt ]; then
-        adb push "$REL/$(rootfs_file $os)" $T/mu300-$os.tar.gz >/dev/null
+        adb push "$ASSETS/$(rootfs_file $os)" $T/mu300-$os.tar.gz >/dev/null
         adb push "$WORK/mu300-vendor-$os.tar.gz" $T/mu300-vendor-$os.tar.gz >/dev/null
     else
         adb push "$WORK/mu300-$os.tar.gz" $T/mu300-$os.tar.gz >/dev/null
@@ -997,6 +1085,8 @@ bootchain_pull
 
 step boot 92
 write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"
+# the prepared installation is done: its transaction no longer waits (kano: state installed)
+[ $RESUME = 0 ] || resume_py set "$RESUME_FILE" state=installed || echo "  $(t 'could not mark {1} as done' "$RESUME_FILE")"
 
 # on-device switch for later: one command in Android instead of plugging into a computer (needs Magisk)
 step switch 96

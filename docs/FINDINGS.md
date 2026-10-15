@@ -122,7 +122,7 @@ what replaced it. The table below gives each section's state.
 | 54 | A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171) | current (unit tests; not sent from a device to a real service) |
 | 55 | Imported Android files nobody but root could read: the CP was never loaded (#127, #135, #170) | current (fixed; what differed between #170's boots is not known) |
 | 56 | The VPN page showed a refused config without its reason; the engines' own defects are in the VPN module's FINDINGS 26i-26m | current (fixed; measured on the U30 Air) |
-| 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; unit tests against a table built from #9's figures, not measured on a device) |
+| 57 | A 64 GB unit whose partition table has `userdata` filling the disk, and no way to make room from Windows (#32) | current (fixed; the erase of Android's data superseded by §112; unit tests against a table built from #9's figures, not measured on a device) |
 | 58 | A service's own error in an HTTP 200 answer to the SMS webhook: a KEY=VALUE check of the answer; a button that clears the delivery log (#171) | current (unit tests; measured on the U30 Air against a fake webhook, not against the real services) |
 | 60 | `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149) | current (fixed for mu300-atd and mu300-voice, F50-B on 5.4 and 7.2.10); `/run` itself is still 1777 |
 | 63 | A reused SMS reference number mixed long messages, or kept them from ever being joined; a part delivered again | current (fixed; unit tests only, not measured on a device) |
@@ -139,7 +139,18 @@ what replaced it. The table below gives each section's state.
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 85 | An update keeps everything the user made: the image's manifest tells its files from the user's, one carry block for `mu300-update`, the installers and the Magisk zip, and never less protected than the user left it | current (unit tests, real release images in containers, and the device protocol on a U30 Air, openwrt-luci, and an F50, Ubuntu, 2026-10-16, with two unpublished signed releases of the branch: everything carried; two defects fixed; the Android path not run) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
+| 90 | The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection (after kanoqwq's 3cbf37fc) | current (fixed; measured on the U30 Air, openwrt-luci v2026.10.27, 6.18.56, 2026-10-15; the OpenWrt watchdog's messages now reach the log) |
+| 91 | The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst (after kanoqwq's 3cbf37fc) | current (fixed; SIM1 measured on the U30 Air, openwrt-luci v2026.10.27, relay mode, 2026-10-15; the SIM2 choice only under the device's shell, no dual-SIM boot) |
+| 92 | Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken (after kanoqwq's 3cbf37fc) | current (mainline module only; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15; the multicast question not measured) |
+| 93 | sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command (after kanoqwq's 0438ab01) | current (mainline kernels; eMMC soak on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: clean, HS400ES, throughput unchanged; the SD slot not tested, no card) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 100 | `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch (kanoqwq 1f8f03fb) | current (fixed; measured on the F50, Ubuntu 24.04, and the U30 Air, openwrt-luci, both v2026.10.27, 2026-10-15) |
+| 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; measured on the F50, Android with Magisk, 2026-10-15; the U30 Air's sysfs name read from Linux) |
+| 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
+| 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
+| 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
+| 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
+| 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 
 ## Hardware and firmware facts
 
@@ -289,6 +300,8 @@ Asked for often, because a smaller eMMC variant leaves less free space behind `u
     that still boots.
   * **It rewrites the partition table and erases everything in Android.** Take a full backup first
     (`tools/backup-device.sh`), and treat the path as experimental: it has been done by hand on one device.
+  * (2026-10-15) Android's data is no longer cleared by the installer: Android's own recovery is asked to reset it,
+    and the installation resumes after the reset (§112).
 
 ### 10. Mounting gotchas
 * busybox `mount -o loop,offset=` only creates a loop for regular files; for a block device the options go to
@@ -5308,7 +5321,7 @@ and no JSON tool is needed (Ubuntu has none). GitHub's list of releases is read 
 every `,"` and `{"` is given a line of its own - which the escaped quotes inside a release's notes never are, so
 notes that contain `"tag_name": "v2099.01.01"` change nothing (tested with GitHub's pretty and compact forms).
 
-The functions of the block, by name, because a merge will ask: `jv`, `jstr`, `jnum`, `mtime`, `tag_ok`, `newer`,
+The functions of the block, by name, because a merge will ask: `jv`, `jstr`, `jnum`, `mtime`, `tag_ok`, `tag_key`, `newer` (§125),
 `space_needed`, `source_conf`, `key_state`, `sig_raw`, `sig_state`, `stage_private`, `tag_sha`, `sums_trusted`,
 `sums_verdict`, `apply_targets`, `downgrade_ok`, `boot_downgrade_ok`, `zip_p`, `man_val`,
 `from_open`, `from_read`, `payload_is`, `from_close`, `from_member`, `from_fits`, `from_installed`, `apply_options`,
@@ -5511,7 +5524,7 @@ a file. The file is in `/etc/mu300`, so it survives updates: whoever could write
 **What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
 (`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's
 ubus endpoint takes POSTs with a session. Every parameter is a fixed word, a release tag
-(`v[0-9]{4}\.[0-9]{2}\.[0-9]{2}`), one of the three systems, one of the three kernels, a size or a SHA-256; mu300dash
+(`v[0-9]{4}\.[0-9]{2}\.[0-9]{2}`, and since §125 `vYYYY.MM.DD.N` too), one of the three systems, one of the three kernels, a size or a SHA-256; mu300dash
 refuses anything else before the adapter runs, and the adapter checks again. Everything that changes the device
 also wants the word of its operation (`confirm`), so a stray call does nothing; on the page each of those is a
 dialog that says what will happen, and going back or deleting the kept version takes a tick first. The log and the
@@ -6984,3 +6997,926 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+
+## A Magisk zip on a computer
+
+### 111. One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer
+
+**Status: current; unit and integration tests only - no device was used (other work had the devices).** The owner
+asked for kano's two-entry package for this project's zips: kano (kanoqwq, branch `clean-tf-7.2`, MIT) ships one ZIP
+that Magisk installs and that, unpacked, is a desktop installer (`f6b0668d` "add desktop deployment", `53ef7b1a`,
+`1f8f03fb`, `0e19fe32`). His was read, none of it run, no binary of it taken.
+
+**What a zip is now.** Everything it held stays where it was, byte for byte, with the same zip modes (checked: the 11
+zips of v2026.10.27 built with `tools/make-magisk-zips.sh` of `main` and of this change differ in the new entries and
+in `mu300/i18n/*.tsv`, which gained this change's translations, and in nothing else). Added at the top:
+`START-HERE.md` (the zip's system, kernel and release written in; English, Turkish, Chinese), `start.sh`/`start.cmd`,
+`start-gui.sh`/`start-gui.cmd`, `uninstall-linux.sh`/`.cmd`, and `computer/`: the project's installers for a computer
+(`android/magisk/computer/files.txt`: `install.sh`, `install.ps1`, the uninstallers, their `tools/`, `boot/init` and
+`build-boot-image.py`, the vendor extractors, `i18n/`, `gui/`, the switch module) with `computer/.mu300-package`.
+68 files, 0.99 MB unpacked, **0.33 MB** more per zip (v2026.10.27: 331 412 to 331 422 bytes). The payload is in a
+zip once: the computer's installer reads `payload/` where it is.
+
+**Why Magisk cannot see it.** `customize.sh` sets `SKIPUNZIP=1` and unpacks exactly `mu300/*`, `module.prop`,
+`action.sh`, `switch.sh`, `bootchain.sh` and `system/*`; nothing added is under those names. A test runs
+`customize.sh` in a fake Magisk environment on a zip built with the computer's side and on the same zip without it -
+a dry run and a whole installation on the fake device - and compares the output, `boot_a`, `misc`, what `boot_b`
+holds and the module: equal (`tests/test_magisk_zip.py`, `MagiskPathUnchanged`). The release's real zips, both
+builds, also pass `ReleaseZips` (each zip's own installer, a dry run). The web installer's `zip.js` reads the central
+directory only for `mu300/manifest` and `mu300/install.sh`: a test reads the 11 built zips with it.
+
+**How the computer's side installs that zip's system and kernel.** `tools/package.sh` (and the same in `install.ps1`,
+and `gui/mu300gui/package.py` for the window): the package is `MU300_PACKAGE`, `--package DIR` / `-Package DIR`, or
+the folder above `computer/` when `.mu300-package` is there (the launchers set `MU300_PACKAGE` to their own folder
+and put `platform-tools/` on the PATH when it is there). Its `mu300/manifest` is read as the zip's own installer reads
+it (only its nine keys, never sourced, every value exactly one a release has - they become file names; Ubuntu 26.04
+with 5.4 refused). Then: no self-update (the installer that came with the files is the one that knows them), the
+release is the manifest's tag, and the questions of the system, Ubuntu, kernel, release, beta and web panel are not
+put. At the `download` step both payload files must have the checksum the manifest names **and** the one the
+release's `mu300/SHA256SUMS` names (`verify` events; a mismatch or a missing file stops the run before anything is
+written). The VPN module stays a download when it is asked for; the web panel is a release file, not a zip's. A
+V50 with a 5.4 zip is refused at the choices, with the zip to take.
+
+**The boot image without the 5.4 bundle.** `install.sh` always unpacked `mu300-kernel.tar.gz` for the first ramdisk
+segment's busybox, logdw and 5.4 modules, even with a mainline kernel - and a 6.18 or 7.2 zip has no 5.4 bundle (it
+would add 27 MB to 8 zips). Under a mainline kernel those three are dead weight: the kernel's generic segment is
+unpacked after the first and brings its own `bin/busybox`, `bin/logdw`, `etc/module-order`, modules and `init`
+(this checkout's `init` goes behind both, as before). The zip's own Magisk installer never put them in (its device
+segment plus the bundle's generic one). So `build-boot-image.py` now takes `--busybox`, `--logdw` and `--modules`
+as optional **only with `--append-ramdisk`**, and then decompresses that segment and refuses when it lacks any of
+`bin/busybox`, `bin/logdw`, `etc/module-order`, `init`. A package with a mainline kernel builds the image that way;
+everything else (every copy of the project, a 5.4 package) builds it exactly as before. Checked with the real 7.2
+bundle of v2026.10.27: built, 1 879 018 bytes of ramdisk, no 5.4 module in it.
+
+**adb: not bundled.** Google's platform-tools come under the Android Software Development Kit License Agreement
+(https://developer.android.com/studio/terms), section 3.4: "you may not copy (except for backup purposes), modify,
+adapt, redistribute, decompile, reverse engineer, disassemble, or create derivative works of the SDK or any part of
+the SDK", except "to the extent required by applicable third party licenses"; 3.5 leaves the open-source components
+to their own licences. adb's source is Apache-2.0, but the prebuilt binaries and the Windows USB DLLs are Google's
+SDK distribution - not clearly allowed, so not bundled. kano's GUI release does bundle `adb.exe` and its two DLLs
+with an `ADB-NOTICE.txt` (`installer/platform-tools.json` pins platform-tools r37.0.1). Here `START-HERE.md` says
+where to download them and to unpack them into the zip's folder; `find_adb` / `FindAdb` and the launchers find
+`platform-tools/adb` there.
+
+**kano's and this one.** His package moves the original Magisk files into `payload/` and wraps them with a
+path-switching `customize.sh`; his desktop installer (`desktop/installer.py`, an EXE when built) is a deployment of
+its own - TF card, a userdata image, a GPT partition, offline shrink in a desktop initramfs, reset and resume, SSH
+updates - for OpenWrt only, with a filtered copy of the rootfs prepared on the computer. Here the Magisk files stay
+where they are, and the computer's side is this project's installers, which already handle every system, the SD
+card, the free region, the boot chain and the GUI, pointed at the zip's payload: nothing of the install logic is
+duplicated. Not taken: his EXE, his own deployment modes, the bundled adb (above); his reset-and-resume flow is
+§112's subject.
+
+**Tests.** `tests/test_magisk_zip.py` (the computer's side: files, CRLF launchers, exec bits, `START-HERE.md`, no
+platform-tools, the list covers every file the installers name; `MagiskPathUnchanged`), `tests/test_package.py`
+(`tools/package.sh`; `computer/install.sh` of real built zips against the fake adb, as far as the first pull: no
+question about the system or kernel, the facts, a V50 and a 5.4 zip, a damaged manifest, `--build`, `start.sh`; the
+window's choices and answers), `tests/test_boot_image.py` (the image without the 5.4 bundle, and the refusals),
+`tests/web/logic.test.mjs` and `tests/test_web_installer.py` (zip.js), `tests/installer.Tests.ps1` and
+`tests/answers.Tests.ps1` (the PowerShell side).
+
+**Not measured.** An install from an unpacked zip on a device, on any platform; Windows Explorer's unpacking (the
+launchers are CRLF and need no exec bit there; macOS and Linux keep the bits, and `sh start.sh` needs none).
+
+## Making room on an encrypted Android
+
+### 112. Making room by a reset, and the installation that resumes afterwards (EXPERIMENTAL; kano's flow, ported)
+
+**Status: experimental. Run end to end once, on one F50 (2026-10-15/16, below): prepare, reset, resume, boot. kano
+has not run its reset part (below).** The owner asked for kano's reset-and-resume flow (kanoqwq,
+branch `clean-tf-7.2`, MIT; commits `f6b0668d` 2026-10-14 "add desktop deployment", which brought
+`desktop/installer.py`'s transaction, `validate_resume`, `resume_payload_id` and `desktop/boot/part-prepare.sh`, and
+`0e19fe32` 2026-10-15, which added the GUI's journal around it). The owner's word (2026-10-15): "if kano did it, we
+don't need to test it, take it." kano's code was read; none of it was run here and no binary of it was taken.
+
+**Why the make-room path changed.** It used to shrink `userdata` from the running Android, then zero the first
+32 MiB of it so that Android would "format /data cleanly on the next boot" (§9b, §57). These devices keep `/data`
+with file-based and metadata encryption (§9: `dm-default-key`, the key in `/metadata`). A raw filesystem zeroed from
+outside then decrypts to noise under the old key, so Android cannot mount it. It reboots into recovery with
+`--prompt_and_wipe_data`, and that prompt waits for a person at a screen. The F50, U30 Air and V50 have no screen.
+kano's answer is to ask recovery itself for the reset. That is AOSP's bootloader message in the first 2 KiB of
+`misc`: `boot-recovery` at 0 and `recovery\n--wipe_data\n` at 0x40. Recovery formats `userdata` at its new size and
+resets the encryption with it. His `part-prepare.sh` says "the vendor flashing tool's erase-userdata writes the same
+block, zeroed in full". That is the one piece of device evidence he gives for the mechanism.
+
+**What his flow does, and what this port does.**
+
+| kano (`desktop/installer.py`, `part-prepare.sh`) | here (`tools/resume.sh`, `tools/resume.py`, `install.ps1`) |
+|---|---|
+| backup on the computer in `~/mu300-backups/<date>-<cid>`: both GPT copies, misc, boot and the boot chain of both slots, `SHA256SUMS` | the same, each file checked against `sha256sum` on the device; the NV and calibration partitions are never read |
+| `transaction.json` saved before the first write (`prepared-request`); serial, slot, `storage` (CID, node, start, size, disk), target, need, token, payload identity | the same fields, written atomically by `resume.py new`; `prepared` once everything is written |
+| stage one in a desktop initramfs on the Linux slot: checks the request against the device, carves `userdata` and a `mu300root` GPT partition, writes the token to its first sector, writes the BCB and Android's slot to misc, reboots | from the running Android, as this project's make-room path always did: the new table (the backup copy first, both read back, resize-last-partition.py checks both and every CRC), the token in the first 4 KiB of the region behind `userdata` (read back), the BCB (read back, and the A/B block behind it unchanged). No GPT partition: this project's Linux region stays unpartitioned (§9) |
+| recovery formats the smaller `userdata`; Android starts as new; the user sets it up, enables USB debugging and restores root | the same; the installer says so, and that Magisk's app and grants were in the erased data |
+| `resume-internal-install`: the newest transaction under `~/mu300-backups`, or `--transaction` | found by itself on the next run (newest waiting for this serial and CID), or `--resume` / `--transaction FILE`; `--no-resume` ignores it |
+| `validate_resume`: CID, node, start, slot, serial; userdata size equal to the target; root geometry; the marker `MU300-PART-PREPARED-V2 <token>` unless the record says installed | the same, plus the table read back (both copies, every CRC; its first, end and usable end), the region by `FreeRegion`/`region_probe`'s arithmetic, and the BCB: a reset that has not run yet (misc still asks for it) is said as such, before anything else |
+| `resume_payload_id`: the checksums of his boot image, rootfs, filesystem tools and kernel family, not of prompts or paths | the checksums of the tools that decide what a resumed install writes where: `resize-last-partition.py`, `storage.sh`, `android-install.sh`, `android-mount-mu300root.sh`, `boot/init` (and, from an unpacked zip, its two payload files: §111). The installer does not update itself while a transaction waits |
+| state `installed` after the boot image is written | the same, after `write_linux_boot` |
+| `encrypted()`: encrypted state or type, or `/data` on dm, is encrypted; `unencrypted` with an F2FS/ext4 magic is not; anything else raises | the same rule (`resume.py encrypted`); an unknown state stops the make-room path, nothing changed |
+
+What kano has that is not ported: the preserving offline shrink for an unencrypted `userdata`. This project's
+make-room path always erases. Also not ported: his desktop initramfs and its tools, the free-GPT-gap install into a
+new partition, and the userdata image. Where this differs on purpose: the token. kano writes it offline, with nothing
+mounted. Here it is written while Android still has the old, larger `userdata` mounted. f2fs may write into its old
+tail until the restart and overwrite the token. That is unlikely (the token is one 4 KiB block at a 2 MiB boundary,
+written right before the restart), and if it happens the resume refuses with "token mismatch" and writes nothing.
+`--no-resume` then installs into the region as into any space that holds data (`overwrite` typed). It is the same
+failure his flow stops on, without its cause.
+
+**What survives the reset, and where the transaction lives.** The reset formats `userdata`, and with FBE its keys
+in `/metadata`. `/sdcard` (`/data/media`) and `/data/local/tmp` are in it. So nothing the installer could put in
+Android's storage survives, and the transaction lives on the computer, as with kano. On the device, the reset leaves
+what lies outside `userdata`: the new partition table, the token at the start of the region (outside every
+partition from then on), `boot_a`/`boot_b` (Magisk's patched boot included), the boot chain and the A/B block in
+`misc`. Recovery clears the BCB once it has run.
+
+**What kano says he measured** (his notes, `docs/DESKTOP-INSTALLER-PORT.zh-CN.md` and `desktop/README.md` of
+`f6b0668d`, `installer/VERIFICATION.md` of `0e19fe32`; translated from Chinese where marked):
+
+* 2026-10-13: "MU300 实机缩容、原厂 recovery 重置/续装、完整部署后的重启和更新仍待验证" (translated: shrinking on a
+  real MU300, the stock-recovery reset and resume, and the reboot and update after a full deployment still need
+  verification).
+* 2026-10-14, on a V50: "新版 EXE 对旧记录进行只读续装预检，通过 8.00 GiB 分区、身份、令牌及载荷校验。没有再次缩容或
+  写独立分区" (translated: the new EXE ran a read-only resume pre-check against the old record and passed the
+  8.00 GiB partition, identity, token and payload checks; no second shrink, no write to the independent partition).
+  The same notes say a first stage existed on that V50 ("现有 8 GiB 分区可继续续装", translated: the existing 8 GiB
+  partition can still be resumed into). They do not say how the reset went there.
+* `desktop/README.md`: "Hardware installation, especially stock-recovery reset/resume, still needs real MU300
+  validation before a release."
+* 2026-10-15: "No connected-device installation, formatting, GPT mutation, userdata reset/shrink, boot-chain
+  synchronization, misc write, live SSH upgrade or Magisk flash was performed."
+
+**Tests.** `tests/test_resume.py`:
+* the transaction: kano's wrong-device/geometry/marker cases, plus this project's own checks; the identity; `find`;
+  the BCB and the marker; kano's encryption rule.
+* `install.sh` as a whole against `tests/fakeadb.py` in its new `emmc` mode, real storage in a directory
+  (`tests/fakeemmc.py`). The prepare is checked on what it wrote: only `userdata`'s end moved, then the token, the
+  BCB with the A/B block unchanged, the order of the writes, the backup, and that no NV partition was read.
+* the run before the reset (refused: "reset not run yet"), the reset (the kernel's view, recovery's format), the
+  resumed run (no storage or overwrite question, the region as prepared), `--check`, `--no-resume`, `--resume`
+  without a record, and a slot, token, geometry or identity that changed (each refused, nothing written).
+* `tests/installer.Tests.ps1`: `install.ps1`'s `OfferRepartition` with the same writes on its own fake.
+* `tests/test_gui.py`: the window's texts.
+
+**Before this is used on a device.**
+1. The vendor's recovery honours `--wipe_data` from the BCB without a prompt (kano's evidence is the vendor tool's
+   block, not a run).
+2. The bootloader starts recovery from the BCB on a plain reboot.
+3. Android starts after the reset with `userdata` at its new size.
+4. Magisk's root can be brought back on a screenless unit (the Magisk app over adb, the Shell grant through scrcpy).
+5. The token is still there after the restart.
+
+Until then the path stays EXPERIMENTAL, and an SD card remains the way that erases nothing.
+
+**A first device run, 2026-10-15 (an F50 the owner gave up for it): not done, the unit has room.** Read only, from
+the SD card's Linux on it: the eMMC is 122159104 sectors (58.2 GiB), `userdata` (`mmcblk0p75`, the last partition)
+runs from 12275712 for 41943040 sectors (20 GiB, ends at 54218751), and 32.4 GiB behind it belong to no partition,
+the 64 GB layout of section 9. The region starts at 54222848 and already holds a `mu300root` ext4. The make-room path
+only starts below 700 MiB of free region and without an SD card chosen, so it cannot run here without making a
+32 GB layout by hand, which was not done. **None of the five checks above was done**; they still need a 32 GB unit
+(or one whose layout is changed on purpose). What the unit did show, for the checks:
+* No `recovery` partition; `boot_a` is a version 4 boot image with a ramdisk (Magisk's patch is there), `init_boot_a`
+  is empty. So recovery is the `vendor_boot` ramdisk's, reached through the patched `boot` ramdisk (check 1 and 2
+  run through Magisk's init on this unit).
+* `misc` begins with a leftover bootloader message, `bootonce-bootloader`, and the unit boots normally with it on
+  every start: this bootloader does not act on at least that command (check 2 stays open; `boot-recovery` may still
+  be read). `resume.py`'s prepare replaces the first 2 KiB whole, and its "reset not run yet" test looks for its own
+  message only, so the leftover changes nothing for it.
+* Over USB, in Linux, the unit is `MU300LINUX-324950664950-2128e853` on the computer's adb list; a second F50 cloned
+  from the same unit shows `MU300LINUX-324950664950-203d8329`, and in Android both would be `324950664950`. A
+  resume on one computer with both in Android cannot tell them apart by serial; the eMMC CID in the transaction does.
+
+**The same F50, the same day: the layout made by hand, the prepare, and the reset (checks 1 and 2).** The owner
+decided to make the 32 GB situation on this unit: a full image of the eMMC first (kept on his computer only, the
+sha256 taken on the device and matched against the file's; 58.25 GiB read in 698 s over SSH, 16.2 GB as zstd -1),
+then `userdata` grown to the end of the usable area with `tools/resize-last-partition.py --fill`, as a vendor flash
+leaves it (§57, issue #32): 12275712..122155007 (52.39 GiB), written from the SD card's Linux, the backup copy first,
+both read back. Android started on it without a word: `/data` stayed a 20 GiB f2fs on a 52.39 GiB partition (its
+fstab has no `resize`), `ro.crypto.state=encrypted`, `ro.crypto.type=file`, FBE v2 with metadata encryption
+(`fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized`, `keydirectory=/metadata/vold/metadata_encryption`,
+`formattable`), `/data` on `dm-39`; Magisk 30.7; bootloader locked, verified boot green; build
+`F50_FLYMODEM_ZYV1.0.0B09`.
+
+Then `install.sh` in answers mode (`MU300_STORAGE=internal`, the card's word `internal`, `MU300_ANS_MAKE_ROOM=yes`,
+`MU300_ANS_LINUX_GIB=0.79`, `ERASE`, `MU300_ANS_REBOOT=no`): 27 seconds from start to `done` with `repartitioned=yes`,
+`resume=pending`. The `makeroom.crypto` facts said `yes encrypted file`; the plan said that Android's own recovery
+resets Android (a factory reset). The backup in `~/mu300-backups/<date>-<cid tail>` (the table, the misc header and
+both slots' boot, uboot, sml, teecfg, trustos, vbmeta, each checked), the transaction saved before the first write,
+userdata 12275712..120500223 (51.61 GiB), the region 120504320..122150912 (804 MiB), the token at its start and the
+bootloader message in misc, all read back by hand afterwards as well: `boot-recovery` at 0, `recovery\n--wipe_data\n
+--reason=mu300-make-room\n` at 0x40, the A/B block at 2048 as it was.
+
+The reset, seen from the computer (USB location of the unit, once a second, after `adb reboot`):
+
+| after | on USB |
+|---|---|
+| 0 s | `F50` 19d2:1353 (Android, adb) |
+| 15 s | nothing |
+| 28 s | `Unisoc Phone` 1782:4021, 13 s |
+| 41 s | nothing |
+| 58 s | `F50` 1782:4024 |
+| 81 s | `F50` 19d2:1353, ECM and MTP, **no adb interface**; the stock web page at 192.168.0.1 answers |
+
+Nobody touched the unit. So **check 2 holds** (the bootloader went to recovery from the message in misc on a plain
+reboot: the 13 seconds as `Unisoc Phone` are recovery's; the leftover `bootonce-bootloader` above was not honoured,
+`boot-recovery` is), and **check 1 holds as far as a screenless unit shows it**: recovery did not wait for a person, it
+restarted into Android by itself within a minute and a half, and Android came up without USB debugging, which is what
+a cleared `/data` (its persistent properties) looks like. Checks 3 to 5 (the new size of `/data`, root back, the
+token) need USB debugging and Magisk back, by hand; the resumed run then reads them.
+
+What the run showed in the installer (fixed with tests in the same change as this text):
+* "userdata now" printed userdata's sectors as bytes ("0.1 GiB" for 52.4 GiB).
+* "Android's data" printed `./install.sh: command substitution: line 490: syntax error` and the raw text: a `case`
+  inside `$(...)`, which macOS's `/bin/bash` 3.2 cuts at the first `)`.
+* The region came out smaller than the answer: userdata ended `lin` sectors before the usable end, and the region
+  the installers find behind it starts one 2 MiB block after userdata and stops one block short of the disk's end.
+  0.79 GiB gave 804 MiB here (enough for OpenWrt's 800), but the smallest answer the question took, 0.78125, would have
+  left 796 MiB, and the resumed run would have refused OpenWrt after Android was already reset; 1.6 for Ubuntu the
+  same. Now userdata ends where that region is exactly the answer, and an answer whose region is below 800 MiB is
+  refused before anything is written (`install.sh`, `install.ps1`).
+* `--check` with a usable SD card in the slot ends at "the installer will offer the SD card" and never shows the
+  make-room figures; a real run with `MU300_STORAGE=internal` goes on to them. Not changed.
+
+Two things of the unit on the way, not of this path: the SD card left its slot for a moment while Linux ran from it
+(the kernel log: `mmc1: card aaaa removed`, `EXT4-fs (mmcblk1p1): shut down requested`), after which nothing could be
+started (every exec `I/O error`, even the SSH password check). A reboot through adb's sync service (`b` to
+`/proc/sysrq-trigger`) brought it back, but on that boot the eMMC did not come up (`mmc_select_hs400es failed, error
+-84`, `Failed to initialize a non-removable card`); a normal `reboot` after it did. And while Linux runs from the card,
+`boot_b` and the two `runtimenv` partitions are written now and then (the boot log, the modem's NV server), so an
+image taken from a running Linux is consistent everywhere but there.
+
+**The same F50, 2026-10-16: checks 3 to 5, the resumed run and the first boot (the installer of 70a21b24, the
+commit that prepared it).** The owner turned USB debugging on again and gave the shell Magisk's root by hand (check
+4: it can be done; how, on a screenless unit, is his). Then, read from Android as root:
+* **Check 3 holds.** `mmcblk0p75` starts at 12275712 and is 108224512 sectors (ends at 120500223, the prepared end),
+  `/data` is a new f2fs on `dm-39` of 51.6 GiB (13527552 blocks of 4 KiB; it was a 20 GiB f2fs on the grown partition
+  the day before), `ro.crypto.state=encrypted`, `ro.crypto.type=file`, `sys.boot_completed=1`, the eMMC CID the
+  transaction's.
+* **Check 5 holds.** The 4 KiB at sector 120504320 are `MU300-PREPARED-V1 <the transaction's token>` and zeros.
+* misc: recovery cleared the first 2 KiB in full (zeros; the leftover `bootonce-bootloader` went with them), and the
+  A/B block at 2048 is byte for byte the one of the prepare's backup (sha256 of 2048..4095 the same).
+
+`install.sh --check` (`ANDROID_SERIAL`, the SD card still in): "A prepared installation is waiting", `resume.check`
+`RESUME-OK`, region 61698211840 (sector 120504320), 843055104 bytes, `verdict.code` `resume`, nothing written.
+
+**The resumed run** (answers: OpenWrt plain, kernel 6.18, Android by default, the confirmation `@stdin` to read the
+summary first). It found the transaction by serial and CID by itself, asked no storage or overwrite question, said
+"this device has 0.8 GiB: only OpenWrt fits" and took release v2026.10.27. The first try stopped at "Building the
+boot image": `TypeError: object of type 'PosixPath' has no len()` in `boot/build-boot-image.py`. That is not of this
+path: the boot image's manifest (`edb57d80`, 2026-10-15) counts `len(order)`, and the U30 Air's `--device-modules`
+loop reuses `order` for its order file's path, so **every install from a computer since that commit stopped there**
+(`install.sh` and `install.ps1` pass `--device-modules` whenever the 5.4 bundle has `modules-u30air`, and the
+release's always does). Nothing had been written; the transaction stayed `prepared`. Fixed with a test
+(`tests/test_boot_image.py`), the fix put on the 70a21b24 checkout (the file is not one the transaction is bound to),
+and the run again: the summary said `writes: Linux region at offset 61698211840, boot_b, 32 bytes of misc (boot_a, GPT
+and userdata are not touched)`; then `mke2fs` of an 804 MiB `mu300root`, OpenWrt with the hotspot's name imported,
+`MU300-INSTALL-OK`, boot_b written and read back (the sha256 the image's), slot b armed for one boot, the Magisk
+switch, `done result ok`, the transaction `installed`. The events in order: `hello` (prebuilt), `preflight`,
+`storage`, `resume.transaction`, `resume.check RESUME-OK`, `storage internal`, `verdict.code resume`, `release`,
+`choices` and the questions, `pull`, the downloads and `verify ok` x3, `vendor`, `bootimage`, `confirm` (`waiting`,
+then `INSTALL`), `copy`, `device`, `boot`, `switch`, `done`. The ext4 superblock now covers the token (it is gone, as
+it should be after the install).
+
+**The first boot.** The installer's reboot, with the card still in: boot_b's new image (6.18.56) started and took
+the SD card's OpenWrt as root (`stage=sd-root dev=/dev/mmcblk1p1`), as it prefers the card; misc went back to
+Android's slot. The owner then took the card out, and from Android `su -c mu300-linux`: 22 s later the unit was
+`MU300LINUX-324950664950-2128e853` on USB, 192.168.77.1 answered, `/etc/mu300/image-version` v2026.10.27, OpenWrt
+25.12.5, kernel 6.18.56, `/run/mu300-root-dev` `mmcblk0@61698211840`, `/` on `loop0` (775 MiB, 18 % used), no
+`mmcblk1`, SSH as root with the password of the answers. `mu300-next-boot android` and `reboot`: Android back, adb
+`324950664950`, root.
+
+**What the copies of the transaction showed** (`--transaction` on copies, the real file and the copies unchanged
+afterwards, sha256 before and after):
+* the CID changed: refused, "the device or its slot differs from the saved transaction (cid)";
+* the slot changed, a real run: refused, the `error` event, stopped after `storage`: nothing written;
+* `target` 2048 sectors smaller, a real run: "the prepared partition geometry differs (userdata is 108224512 sectors,
+  the transaction made it 108222464)";
+* the state put back to `prepared`, a real run: "preparation token mismatch; refusing to overwrite the region" (the
+  ext4 has the token's place): a resume cannot run twice;
+* a `prepared` copy in `MU300_BACKUP_DIR`: `--check` finds it and refuses it (token), `--check --no-resume` ignores
+  it and says "a MU300 Linux installation is already present";
+* an `installed` copy, unchanged: `RESUME-OK` (kano's rule: an installed record is not asked for its token), and the
+  same copy with the installer of current `main`: "this installer's tools or the package differ from the ones that
+  prepared the installation", because `tools/android-install.sh` changed since (the release-tag block). That is the
+  design: a transaction is resumed with the installer that prepared it, and the installer does not update itself
+  while one waits; one prepared before an update of these tools has to be finished with the old checkout.
+
+**One more defect, of every installer, found on the way.** During one `--check --no-resume` another session
+restarted adb's server; every read of the region came back empty, and the installer said "existing mu300root
+filesystem: no", "data check:  of 16 samples", `[: : integer expression expected`, and "OK: free and empty" for a
+region that held the Linux just installed. A real run would have skipped the update-or-wipe question and the
+overwrite one. `region_find_existing` and `region_dirty` (and `install.ps1`'s copy) now take no answer for no
+answer and stop ("no answer from the device"), with a test. `tools/storage.sh` is one of the files a transaction is
+bound to, so this fix, too, refuses a transaction prepared before it.
+
+Not changed, noted: `--check` reports a refused transaction and goes on to the ordinary verdict (`exit 0`); only a
+real run stops on it. The systems question offers "3" as its default where only OpenWrt fits.
+
+### 90. The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection
+
+`mobile-data watch` asks `AT+CGACT?` every 30 s and reconnects after two rounds without our context active. Before
+this change the test was `at "AT+CGACT?" | grep -q "+CGACT:1,1"`, so a round in which the modem gave no final
+result code within 4 s, the client lock was busy, or the answer was `ERROR` counted exactly like a context the
+network had taken down: two such rounds and the watchdog ran `up` (Ubuntu) or `ifup wan` (OpenWrt), which tears
+down the bearer that was still carrying traffic. Nothing measured shows it happening on our boards; the case is
+read from the code. It is the situation kanoqwq describes for a device on the move in clean-tf-7.2 `3cbf37fc`
+("fix: improve cellular mobility"): AT owners can be busy while the modem moves between cells, and a timeout is
+not a detach.
+
+**Taken from 3cbf37fc:** the distinction itself - only an answer is evidence. **Changed:**
+
+* His watchdog never escalates a silent modem and also treats "OK with no line for the context" as unknown. Ours
+  keeps both of the old repairs: "OK" with `<cid>,0` or with no line for the context at all (what a firmware
+  reset leaves, the reason the watchdog exists) is *inactive* and reconnects in two rounds as before; and a modem
+  that stays silent for `MU300_WATCH_UNKNOWN_ROUNDS` rounds (4: about two minutes when every command fails
+  at once, about 4.5 minutes when the daemon hangs, measured below) goes the old way (radio check,
+  then a reconnect a round later), so a channel that only a radio-on would wake up is still woken. An answer in
+  between starts the count over.
+* Not taken: his switch of the radio only on an explicit `+CFUN: 0` (`radio_on` reads `AT+CFUN?` itself and does
+  nothing to a radio that is on, so the old check costs a handshake, not a connection), and his `ubus ... renew`
+  for an active context whose address changed: here only the relay monitor (`mu300cell-v6.sh`, relay mode) acts
+  on a renew; in every other mode nothing would, so a changed address keeps the measured reconnect.
+
+`watch_context` returns `active`, `inactive` or `unknown`; `+CGACT: 1,1` with a space and a CR are read too, and
+`+CGACT:11,1` or `1,10` are not taken for context 1. Unit tests: `tests/test_device_scripts.py`
+(`MobileData.test_watch_context_states`, `..._leaves_the_bearer_alone_while_the_modem_does_not_answer`,
+`..._still_reconnects_a_modem_that_stays_silent`, `..._an_answer_between_silent_rounds_starts_the_count_over`,
+`..._an_answered_lost_context_still_reconnects_in_two_rounds`).
+
+**Measured on the U30 Air** (openwrt-luci v2026.10.27, kernel 6.18.56, SIM1, relay mode, the owner's VPN with its
+kill switch on; 2026-10-15), with this branch's `mobile-data` in place of the release's:
+
+* **No log on OpenWrt at all.** procd kept none of the watchdog's stderr (`mu300-post`'s `cellwatch` instance had
+  no `procd_set_param stderr 1`, which every other long-running instance of ours has), so "mobile data lost ...
+  reconnecting" never reached `logread` - not with this change, not before it. The device run below used a
+  watchdog started by hand with its stderr in a file; the instance now sets `stderr 1`
+  (`MobileData.test_the_openwrt_watchdog_logs`).
+* **A silent channel.** The nr2 daemon (`MU300_AT_DIR=/run/mu300-at2`) stopped with `SIGSTOP` for 80, 85, 165 and
+  200 s: no reconnect, the bearer's address unchanged, nothing in the log. One unanswered command takes about 35 s,
+  not the 4 s asked for: `mu300-at -t 4` waits for a daemon that does not take the command off its fifo (measured:
+  "no answer from the daemon" after 35 s, an answered `AT+CGACT?` in under 1 s). So a round of a silent channel is
+  about 65 s, and the four rounds before the old repair take about **4.5 minutes**, not two. Stopped for 290 s:
+  `no answer about the data context for 4 rounds`, then the radio check (`radio was off, switching it on`: the
+  silent channel did not answer `AT+CFUN?` either), and the next round, answered again, started the count over -
+  no redial.
+* **A lost context** (`AT+CGACT=0,1` on the panel's channel nr6): `mobile data lost (modem reset or detached),
+  reconnecting` 58 s later, `ifup wan`, the same address back, data through the tunnel again.
+* **Airplane** (`AT+CFUN=0` on nr6): `radio was off, switching it on`, then reconnects - but on this U30 Air (dual
+  SIM managed, FINDINGS 74) `+CFUN: 1` came back with the SIM's power off (`AT+CPIN?` `+CME ERROR: 10`, `+CEREG:
+  2,8`, emergency only), and every attach failed ("not registered on the network") until `AT+SPACTCARD=0;+SFUN=2`
+  and `AT+SFUN=4` by hand. `radio_on` returns early when `/run/mu300/sim-managed` exists, so the watchdog's repair
+  cannot power a card back on there. Unchanged code (`radio_on` is the release's); left for the dual-SIM work.
+* Not this change, seen on the way: on Ubuntu (F50), stopping the watchdog logs `wlock: unbound variable` (the
+  `EXIT`/`TERM` trap names a `local` of `watch()`); on OpenWrt a `TERM` is caught by that trap and the watchdog runs
+  on without its lock. Both are the release's.
+
+Device checklist (either board, either system):
+
+    # 1. normal: data up, then watch the log for five minutes - no "reconnecting"
+    logread -f | grep mobile-data     # OpenWrt (with stderr 1);  journalctl -fu mu300-mobile-data-watch  on Ubuntu
+    # 2. a silent channel: kill -STOP the nr2 daemon (MU300_AT_DIR=/run/mu300-at2 in its environment), kill -CONT it
+    #    after under 4 min - no reconnect, the address unchanged; after 5 min the radio check, as above
+    # 3. a lost context: AT+CGACT=0,1 on the panel's AT terminal - "mobile data lost ... reconnecting" within ~60 s,
+    #    data back as before
+    # 4. airplane: AT+CFUN=0 - "radio was off, switching it on" and data back, as before
+### 91. The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst
+
+`mu300cell-v6.sh` is relay mode's event monitor (openwrt-luci, `option ipv6 'relay'`): it reports the RA's IPv6
+to netifd and, on a `+CGEV`, reads `AT+CGCONTRDP=1` once and moves the bearer's IPv4 address and DNS in place,
+without a redial. kanoqwq reworked his copy for mobility in clean-tf-7.2 `3cbf37fc`; comparing it with ours showed
+one defect his commit does not name and three he does. All four are read from the code; none was seen on a device.
+
+* **The wrong card (ours alone).** The monitor read the bearer on `/run/mu300-at6`, `at7`, `at` and the URCs from
+  `/run/mu300-at/urc/stty_nr<slot*3>.log`, whatever the card. In a dual-SIM boot on SIM2 (`/run/mu300-radio-freeze`,
+  FINDINGS 74) `/run/mu300-at` is SIM1's nr1 and SIM2's owner is `/run/mu300-at4`, whose URC log is
+  `/run/mu300-at4/urc/stty_nr3.log`. So the monitor asked SIM1 (radio off: no bearer, "keeping the last state")
+  and waited for a log that never appears: on SIM2, an address change was never followed, and the watchdog's
+  reconnect was the only repair. It now picks the channels and the log the way `mobile-data` and the panel's
+  collector do: SIM1 nr6/nr7/nr1 and `stty_nr0.log`; SIM2 pinned at boot `/run/mu300-at` (its nr4 then) and
+  `stty_nr3.log` there; SIM2 in a dual-SIM boot `/run/mu300-at4`. A slot `mu300-sim` cannot name ends the monitor.
+  No `AT+SPACTCARD=` prefix is added: each of these channels already belongs to the card it is used for.
+* **What is believed (from 3cbf37fc).** The address must be four 0-255 parts without leading zeros and not
+  `0.0.0.0`, the mask contiguous (the old `mask2prefix` turned anything unknown into /32), CR and blanks are
+  removed, and a DNS of `0.0.0.0` (no second server) or one that is not an address is left out. Nothing else of
+  the answer reaches `ip` or netifd.
+* **A failed install keeps the old snapshot (from 3cbf37fc).** The new address and the route go in first; when
+  one fails, the previous address/DNS stay the monitor's state, nothing is reported, and the next hint or renew
+  tries again (before, the new values were taken as current and the next read said "unchanged"). The old address
+  goes only after the new one holds, and then the new one is put in once more (the old primary takes a secondary
+  of its subnet with it: no `promote_secondaries`, as in `mu300cell.sh`'s setup). An unchanged bearer whose
+  address the kernel lost is put back.
+* **Hints (from 3cbf37fc).** `+CGEV` ACT/DEACT (the short `NW ACT` forms) and DETACH and Unisoc's `+SPPCODATA`
+  now ask for a read besides PDN and MODIFY. A hint in the 2 s after a read used to be dropped - possibly the last
+  of a burst, the one after which the new address is readable; it now waits out the rest of the 2 s. One queued
+  read covers a burst: the producer sends a hint only when it creates `/run/mu300cell-<config>.events.pdp` (a
+  directory: `mkdir` is atomic and never follows a symlink), the reader removes it just before its AT read.
+
+**Not taken from 3cbf37fc:** the monitor for an IPv4-only context (relay mode is dual-stack only here; an IPv4-only
+bearer keeps the watchdog's measured reconnect), the exit to netifd after three readings of an inactive context
+(the watchdog owns that repair: FINDINGS 90), `proto_set_keep 0`, and his watchdog's `ubus ... renew`.
+
+Unit tests: `tests/test_mu300cell.py` class `RelayMonitorBearer` (the monitor sourced with `MU300CELL_V6_LIB=1`):
+the channels and log per slot and dual-SIM state, `mask2prefix`, `valid_ipv4`, `read_bearer`, add-before-delete,
+failure and retry, the lost kernel address, the hint patterns. Under dash and bash locally, busybox sh in CI.
+
+**Measured on the U30 Air** (openwrt-luci v2026.10.27, kernel 6.18.56, SIM1, `option ipv6 'relay'`, 2026-10-15),
+this branch's monitor in place of the release's and `ifup wan` to start it:
+
+* The monitor tails `/run/mu300-at/urc/stty_nr0.log`. `ubus call network.interface.wan renew`: `manual-renew:
+  bearer unchanged`. `ip -4 addr flush dev sipa_eth0 scope global` and a renew: `manual-renew: bearer updated to
+  <the same address>/8`, the address and the default route back, no ifdown, no redial.
+* **The checklist's `AT+CGACT` cycle on the panel's terminal does not reach the monitor**, on this branch or the
+  release's: the `+CGEV: ME PDN DEACT/ACT` of a command sent on nr6 are answered on nr6 only (they came back with
+  the command's own reply) and never reach nr0's URC log, which only has what the modem announces there. So the
+  hint path was driven by appending lines to that log: six hints at once (`NW PDN DEACT`, `NW DETACH`, `NW PDN
+  ACT`, `+SPPCODATA`, `NW MODIFY`, `ME PDN ACT 1,0`) gave one read (`cgev: bearer unchanged`); a hint and another
+  2 s later gave two reads, 2 and 5 s after the first (the release's monitor drops the second); lines that are not
+  hints, none.
+* **SIM2 not run as a boot:** this unit's second card registers for emergency service only (§74), so a boot on it
+  has no bearer, `mu300cell` never connects and the monitor never starts. The choice of channels and log was run
+  under the device's own busybox sh instead (a copy of the monitor, `mu300-sim` stubbed, the freeze flag a file):
+  slot 0 `/run/mu300-at6 /run/mu300-at7 /run/mu300-at` + `stty_nr0.log` with or without the flag; slot 1 without it
+  `/run/mu300-at` + `stty_nr3.log`; slot 1 with it `/run/mu300-at4` + `/run/mu300-at4/urc/stty_nr3.log`.
+* Seen on the way, not this change: after the WAN was redialled several times by these tests, the VPN's sing-box
+  logged `network: missing default interface` and stayed without an exit until `/etc/init.d/mu300-vpn restart`.
+
+Device checklist (openwrt-luci, relay mode):
+
+    # 1. F50 or U30 Air on SIM1: the monitor runs and follows a change
+    ps w | grep [m]u300cell-v6; logread -f | grep mu300cell-renew
+    #    a network-side change (or URC lines appended to /run/mu300-at/urc/stty_nr0.log): one "bearer updated"/
+    #    "unchanged" line per burst, no ifdown. AT+CGACT on the panel's terminal (nr6) is answered on nr6 only.
+    ubus call network.interface.wan renew        # "manual-renew: bearer unchanged"
+    # 2. U30 Air, a dual-SIM boot on SIM2: the monitor's tail is on /run/mu300-at4/urc/stty_nr3.log and its reads
+    #    go to /run/mu300-at4 (ps w | grep 'tail -n 0 -F'); the same AT+CGACT cycle on SIM2
+    # 3. a lost address: ip -4 addr flush dev sipa_eth0 scope global; ubus call network.interface.wan renew
+    #    - the address is back without a redial
+### 92. Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken
+
+kanoqwq's clean-tf-7.2 `3cbf37fc` brought two Wi-Fi changes from his T551M work to the SC2355 driver. Both were
+compared with our `upstream/modules/sprd_wlan_combo` (the mainline kernels' module) and with what our bridge does.
+
+**Taken: per-frame logs bounded.** In AP mode the TX path wrote, for every frame, `pr_info("... group
+lut_index=...")` when a group-addressed frame found its LUT entry (every broadcast and multicast frame sent), and
+`pr_err("... sta disconn, no data tx!")` for each frame still queued for a client that has left; every frame
+`sprd_send_data` refused was `netdev_err(... drop msg due to TX Err)` on top. The first two are now
+`pr_debug_ratelimited` (as the module's other per-frame lines already are, `pcie.c` `free_num`, `tx.c` "no
+credit"), the third is under `net_ratelimit()`. Nothing else changes: the frame is still refused with `-EPERM`,
+still freed with its message (`dev_kfree_skb`, `sprd_chip_free_msg`), the same return values. Both `pcie.c` and
+`sdio.c` (only the PCIe path runs on the F50 and the U30 Air). Not measured: how much of the kernel log these lines
+filled on our boards (no report of it); kanoqwq's concern is the CPU a burst of them costs when a busy client
+drops off. The 5.4 driver (`kernel/patches/wlan_combo-*`) is not changed here: his 5.4 patch was written against
+the realme source, which is not in this repository to check that it applies, and a hunk that fails stops the
+release build.
+
+**Not taken: the AP/GO multicast "endian fix".** In `sc2355/rx.c` the AP's receive path compares `eth->h_proto`
+(big endian) with `ETH_P_IP`/`ETH_P_IPV6` (host order), so on this CPU the "not IP" test is always true and every
+group frame a client sends is copied back to the BSS by the driver *and* handed to the stack. His fix (`htons()`)
+makes IP multicast go to the stack only. That is a behaviour change, not a bug fix, for us: a Linux bridge never
+sends a frame back out of the port it came from unless that port has hairpin mode, and nothing in this tree sets
+hairpin on `wlan0`. Without the driver's copy, mDNS, SSDP, LLMNR, IPv4 broadcasts and IPv6 ND multicast from one
+Wi-Fi client would no longer reach the other clients of the same radio (a phone casting to a TV on the same
+hotspot). Where hairpin *is* on (OpenWrt's netifd turns it on for a wireless port with `multicast_to_unicast`), the
+present code gives a duplicate, which is harmless for these protocols. A comment at the branch says so, so it is
+not "fixed" blindly. Measure before changing it:
+
+    cat /sys/class/net/wlan0/brport/hairpin_mode /sys/class/net/wlan0/brport/multicast_to_unicast 2>/dev/null
+    # two phones on the same band: mDNS between them (e.g. a Chromecast/AirPlay target, or `avahi-browse -a`),
+    # tcpdump -ni wlan0 udp port 5353 on the device: one copy or two per query
+
+Device checklist for the taken part (either board, 6.18 or 7.2):
+
+    dmesg -C; # a busy client (a download) on Wi-Fi, then switch its Wi-Fi off
+    dmesg | grep -c 'sta disconn'              # 0 (debug only) - before: one line per queued frame
+    dmesg | grep -c 'group lut_index'          # 0 - before: one line per broadcast/multicast frame
+    echo 'module sprd_wlan_combo +p' > /sys/kernel/debug/dynamic_debug/control   # the lines are there, bounded
+    # the hotspot keeps working: a second client, ping and a download
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches): the F50 on Ubuntu 24.04 with 7.2.10, the U30 Air on openwrt-luci with 6.18.56, a MacBook on the 5 GHz
+hotspot (802.11ac, 80 MHz) as the client; against the release kernels of v2026.10.27 on the same devices. The
+device sent to the Mac (bash `/dev/tcp`) and the Mac's Wi-Fi was switched off 4 s into it; the log then:
+
+| | release kernel | test kernel |
+|---|---|---|
+| F50, `sta disconn, no data tx!` | 13 (error level, one per frame) | 0 |
+| F50, `drop msg due to TX Err` | 13 | 12, with `net_ratelimit: 1 callbacks suppressed` |
+| U30 Air, the same two | 10 and 10 | 0 and 12 (rate limited) |
+| `group lut_index` | 0 | 0 |
+
+`group lut_index` never appeared in any run on either kernel, so the first of the three lines is not one our
+boards write in these tests. The hotspot carried on as before: TX to the Mac 300-590 Mbit/s on the F50 and 210-500
+on the U30 Air on both kernels (two clusters, about 320 and 570, on both: the Mac, not the kernel), 6 GiB in one
+stream at 594 Mbit/s on the F50, IPv6 multicast (`ping ff02::1`) answered by the Mac over Wi-Fi. The hairpin
+measurement above needs two Wi-Fi clients and was not made.
+### 93. sdhci-sprd started ADMA transfers with relaxed MMIO: the descriptors were not ordered before the command
+
+Mainline `drivers/mmc/host/sdhci-sprd.c` (both of our mainline kernels; the eMMC and the SD card slot) overrides
+the SDHCI register accessors to handle its reserved registers - `SDHCI_MAX_CURRENT`, the read-only
+`SDHCI_BLOCK_COUNT`, the interrupt mask, the hardware-reset bit - and then does the access with `readl_relaxed`,
+`writel_relaxed`, `writew_relaxed`, `writeb_relaxed`. The SDHCI core relies on its accessors being the ordered
+ones: it writes the ADMA descriptor table into DMA memory and then starts the transfer with a register write
+(`SDHCI_COMMAND`, through `writew`). A relaxed MMIO write is not ordered after earlier stores to memory (Linux's
+"device-io" rules; on arm64 `writel` is `__iowmb()` and then the store), so the controller can be told to fetch a
+descriptor whose last store is not yet visible to it - a transfer from or to the wrong place. The vendor's 5.4
+driver is not changed here (its source is fetched at build time and has not been read for this).
+
+kanoqwq found this in clean-tf-7.2 `0438ab01` while chasing ext4 corruption on other Unisoc boards, and his
+evidence is from there, not from ours: on an E5 (his other project), a directory block held the complete content of
+an inode-table block, and file writes logged `mmc0: ADMA error: 0x02000002` with no CRC errors; after the change,
+896 MiB written and read back with `O_DIRECT`, 3584 metadata updates and two offline `e2fsck -fn` were clean, at
+HS400 with runtime PM on. He says himself that it is not proven to be the only cause. **We have no report of
+corruption on an F50 or a U30 Air** (FINDINGS has none), so this is taken as the correct ordering by the kernel's
+own rules, not as the fix of a symptom of ours.
+
+**Taken:** the four accessors' final access becomes `readl`/`writel`/`writew`/`writeb`; every special case stays
+(the reset bit's read in `writeb` keeps its relaxed read: it orders nothing against DMA memory, and the write after
+it is the ordered one). **Changed:** his edit lives in his `emmc.py`; here it is `upstream/port/sdhci_order.py`,
+called from `install.py` next to the other sdhci-sprd edits, idempotent, and the port stops (`port: ...`) when the
+four lines are not exactly where they were - a kernel that changes them must be looked at again, as with the
+other anchors. Not taken: his 5.4 patch (`kernel/patches/sdhci-sprd-dma-ordering.patch`), his eMMC power and
+reliable-write changes (V50-specific, unproven by his own account), his CI C check.
+
+Cost: one barrier (`dmb oshst` / `dmb oshld`) per register access of these two hosts; a transfer takes a handful.
+Not measured.
+
+**Unit tests:** `tests/test_sdhci_order.py` against a copy of mainline's accessor block (the edit, the kept special
+cases, idempotence, a changed driver stops the port). The real tree is checked by the Mainline kernel build
+workflow, dispatched on the branch. **Not run on a device. Hold the merge for a soak on each board:**
+
+    # on the new kernel (both boards; 6.18 and 7.2)
+    dmesg | grep -iE 'mmc[01]|ADMA|EXT4-fs (error|warning)'      # nothing new; HS400 as before:
+    cat /sys/kernel/debug/mmc0/ios                                # timing spec: mmc HS400 enhanced strobe
+    # throughput, before and after (same board, same free space): within noise
+    dd if=/dev/zero of=/var/tmp/t bs=1M count=512 oflag=direct; dd if=/var/tmp/t of=/dev/null bs=1M iflag=direct
+    # a soak: write/verify a few GiB, reboot ten times, e2fsck -fn on the root from Android or the initramfs
+    # the SD card slot (FINDINGS 31j-31l): a card is seen, mounted, read and written; hot-plug still detected
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches), against the release kernels of v2026.10.27 on the same devices:
+
+* **F50, Ubuntu 24.04, 7.2.10.** `mmc0` HS400 enhanced strobe at 200 MHz, as before. 3 GiB of random data in
+  twelve files on the root filesystem (a loop over `mmcblk0` at the Linux region's offset, so every write goes to
+  the eMMC), checksums, read back uncached: all right after writing and after each of five boots of the test kernel
+  and one of the release kernel. `dumpe2fs`: clean. Then from Android, `e2fsck -fn` of the region through a
+  read-only loop: no error (12318 files). No ADMA error, no `EXT4-fs error`, no I/O error in any boot.
+* **U30 Air, openwrt-luci, 6.18.56.** HS400 enhanced strobe. The same 3 GiB soak on the Linux disk, checked after
+  writing, after each of three boots of the test kernel and after the release kernel's boot: all right;
+  `errors_count` 0.
+* **Throughput** (256 MiB `dd` with `oflag=direct`/`iflag=direct` on the F50, three runs each; 1 GiB on the U30 Air
+  in whole seconds): F50 file writes 179-195 MB/s on the test kernel and 189-217 on the release (the same spread
+  on both when repeated), file reads 272-302 and 269-317, the raw `mmcblk0` read 264-267 and 203-264; U30 Air 1 GiB
+  raw read 3-4 s, write with `fsync` 4 s, read back 3-4 s on both. No difference beyond the spread of runs.
+* **The empty SD slot** (`mmc1`, F50): in one of the seven boots of the test kernel the probe's one rescan logged
+  `Got command interrupt 0x00000001 even though no command operation was in progress` with a register dump (`Cmd
+  0x371a`, CMD55; §31j has the cause); none in the four boots of the release kernel this session. Too few boots to
+  tell a difference, and it is the slot without a card, not a transfer.
+* **Not tested:** a card in the slot and hot-plug (none here; the U30 Air has no slot).
+### 100. `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch
+
+From kanoqwq's clean-tf-7.2 `1f8f03fb` ("misc-only trial boot, protect switch flow"): his desktop installer's
+"Boot OpenWrt once" changes the 32-byte `bootloader_control` block in misc and nothing else, and says so. Our Magisk
+switch (`mu300-linux`, `switch.sh`) already works that way: it never mounts the Linux disk and never touches its
+`default-boot`. The Linux side did not, which an earlier review of ours had flagged:
+
+* **The file before misc.** `mu300-next-boot android|linux|lock` wrote `/etc/mu300/default-boot` first and misc
+  second. The initramfs reads that file (§ default boot, `boot/init`): `linux` makes it skip restoring Android's
+  slot. A misc write that failed (or read back wrong) left the file saying what misc did not.
+* **No lock.** `mu300-boot-ok.service` runs `--rearm` at every boot: it reads the file, then writes the Linux slot's
+  block. A `mu300-next-boot android` (the panel's Switch to Android, a shell) between the read and the write was
+  overwritten by the re-arm: the next boot went to Linux again, with the file saying `android` (the initramfs then
+  restores Android's slot, so the boot after that one was Android: one boot late, never stranded).
+
+Changed (ours; nothing of his code, his change was to his desktop installer only):
+
+* The file is written only after misc has been written and read back (`write_bc`; `PENDING_CONF` names the word
+  that goes with the block). A failed `dd` now says `writing misc failed` instead of ending silently under `set -e`.
+  The degraded arm of §32 (the initramfs' one-shot block, exit 1) still records `linux`, as before: misc was written.
+* The file is written whole and never through a symlink: a new file next to it (`umask 022`, `set -C`), renamed
+  over it.
+* Every command but `status` holds `flock` on `/run/mu300/next-boot.lock` (fd 9) from its first read to its last
+  write, waiting up to 60 s (`MU300_NEXT_BOOT_WAIT`) and then failing without writing anything. Without `flock(1)`
+  (or without `/run/mu300`), or where the lock file is a symlink, nothing is serialised, as before. Ubuntu has
+  util-linux's, OpenWrt busybox's applet.
+
+**Bootability.** Every failure path leaves misc as LK last saw it or as it was verified, and the file as it was: a
+failed `android` leaves Linux armed (the countdown or the next re-arm as before); a failed `linux` leaves the trial
+mode, whose fallback is Android. A file that cannot be written after misc was is reported (exit 1): for `android`
+misc already points at Android; for `linux` the initramfs keeps restoring Android's slot (one-shot trial). A lock
+that is never released (a hung `mu300-next-boot`) costs one boot's re-arm; the slot still has its remaining tries.
+
+**Unit tests** (`tests/test_device_scripts.py`
+`NextBoot`): misc unwritable or the Android block missing, the file untouched; the file through a symlink; the
+degraded arm; a stub `flock` that stays busy (refused after the wait, misc and the file untouched; `status` never
+waits; a symlinked lock file not opened); and the real `flock(1)` holding off a second writer (Linux only; run in
+the `mu300-unit` container).
+
+**Measured on both boards** (2026-10-15), this branch's `mu300-next-boot` in place of the release's: the F50 on
+Ubuntu 24.04 (util-linux `flock`), the U30 Air on openwrt-luci (busybox `flock`), both v2026.10.27, and boots of
+the release and of a test kernel:
+
+* `android`, then `linux`: the file says `android`/`linux` after each, misc `...9f001e...` (Android's block) and
+  `...9e006f...` (slot b, tries 6) read back; no `.default-boot.*` left; `/run/mu300/next-boot.lock` there, root's.
+* **The lock.** `flock /run/mu300/next-boot.lock sleep 10` held, then `android`: went through after 9 s. Held for
+  100 s with `MU300_NEXT_BOOT_WAIT=5`: `another mu300-next-boot is still running`, exit 1 after 4 s, misc and the
+  file as they were (`android`); `status` did not wait. The same on both boards.
+* **The re-arm at boot** (F50: `mu300-boot-ok`, after its 30 s): with the lock held from 20 s into the boot until
+  45 s, the service finished at 48 s with `slot b armed: 5 failed boot(s)` (tries back to 6). On the U30 Air
+  (`mu300-post`'s `bootok`) the re-arm left `boots since the last good one: 0` and tries 6 after each of three boots; the F50
+  came back to Linux at each of its nine boots under this script.
+* `mu300-update kernel` (which runs `--trial`) under this script on both boards, then the boot of that kernel: armed
+  and re-armed as before.
+* F50: `mu300-next-boot android` and a reboot: Android; the Magisk switch back: Linux (`android` in the file, the
+  initramfs restored Android's block: the one-shot trial); `mu300-next-boot linux` made Linux the default again.
+* Small things: the wait is `MU300_NEXT_BOOT_WAIT` minus one seconds (59 by default, 4 for 5); the renamed file
+  loses the SELinux label the old one carried on the F50 (`ls -l` showed `-rw-r--r--.` before, no dot after), which
+  nothing reads on Linux.
+
+**Device checklist (before merge; F50 or U30 Air, Ubuntu and OpenWrt, any kernel):**
+
+    sudo mu300-next-boot status                       # note the misc block
+    sudo mu300-next-boot android; cat /etc/mu300/default-boot   # android; status shows Android's block
+    sudo mu300-next-boot linux;   cat /etc/mu300/default-boot   # linux; slot armed (tries N+1)
+    ls -l /etc/mu300/default-boot /run/mu300/next-boot.lock     # a regular file, root's; the lock file exists
+    # the race: hold the lock and switch; the switch waits, then goes through
+    sudo flock /run/mu300/next-boot.lock sleep 10 & sleep 1; time sudo mu300-next-boot android   # ~9 s
+    sudo mu300-next-boot linux; sudo reboot           # comes back to Linux; systemctl status mu300-boot-ok: success
+    # OpenWrt: the panel's Switch to Android, then reboot: Android; mu300-linux from Android: Linux again
+### 101. The Magisk switch built its misc block under a fixed name in the adb shell user's directory
+
+Found while comparing our switch with kanoqwq's clean-tf-7.2 `1f8f03fb` (his one-time boot changes misc only; ours
+does too, §100), and narrowed by a security review of the first version of this fix. `mu300-linux`
+(`android/magisk/mu300-linux-switch/switch.sh`, run as root) wrote the 32-byte block to
+`${TMPDIR:-/data/local/tmp}/mu300-bc.bin`, checked its size, then `dd`'d it into misc. `/data/local/tmp` belongs to
+the adb `shell` user (2000, mode 0771, no sticky bit): that user, without root, could plant `mu300-bc.bin` as a
+symlink (root's `printf >` follows it and overwrites the target) or replace the file between the size check and
+`dd` (and so choose the bytes that go into misc; the read-back then fails, with misc already changed). A private
+`mktemp -d` directory there (the first version) is not enough: without the sticky bit the shell user can rename it
+away and put a directory of their own in its place between `mktemp` and the write. Apps cannot write there; the
+user at the adb shell can, and on a device where Magisk grants root only to chosen apps that is less than root.
+
+Changed:
+
+* **No file on the way.** The 64 hex digits are checked (hex only), the bytes `printf` makes are counted (32), and
+  `printf` goes straight into `dd ... bs=1 count=32 conv=notrunc`. Nothing is created in any directory.
+* **misc resolved once.** `by-name/misc` is followed once (`readlink -f`); the result has to be a block device under
+  `/dev/block` whose sysfs entry (`/sys/class/block/<name>/uevent`, written by nobody but the kernel) says
+  `PARTNAME=misc`. That one path is read (the live block), written and read back. A link that leads anywhere else
+  (another partition, a file) is refused before anything is written. (`MU300_SYSFS`, tests only, stands for `/sys`
+  and lets a regular file stand for the device.)
+
+**Bootability:** unchanged when misc is what by-name says: the same block, written and read back as before; every
+refusal exits before `dd`, and misc stays as it was (Android boots).
+
+**Unit tests:** `tests/test_magisk_switch.py` (real, non-dry runs against files standing in for
+the partitions): a symlink planted at the old name (it and its target untouched, nothing new in `TMPDIR`, the block
+in misc, 4096 bytes still); `by-name/misc` a link to a partition sysfs calls `boot_a`, then one with no sysfs entry
+(refused, the target unchanged), then one sysfs calls `misc` (written there, through the link resolved once);
+without the test switch, a regular file is refused (`outside /dev/block`). `test_android_web.BootLinux` gives its
+fake device the sysfs entry. Run in the `mu300-unit` container (busybox, as root).
+
+**Device checklist (before merge; Android with Magisk, Linux installed):**
+
+    su -c 'readlink -f /dev/block/by-name/misc; grep PARTNAME /sys/class/block/$(basename $(readlink -f /dev/block/by-name/misc))/uevent'
+    # PARTNAME=misc - if not, this change refuses to switch on that device: report it
+    su -c 'mu300-linux --dry-run'        # the block; nothing written
+    # the Action button or su -c mu300-linux: reboots into Linux; ls /data/local/tmp has nothing new
+    # the web installer's "Boot Linux" (android-web.sh boot-linux) the same
+
+**Measured on the F50** (Android with Magisk, the module of v2026.10.27 with this branch's `switch.sh`, 2026-10-15):
+
+* `by-name/misc` -> `/dev/block/mmcblk0p3`, whose `uevent` says `PARTNAME=misc`. The U30 Air was not taken to
+  Android (it cannot be brought back from there without a hand on it); under Linux its `mmcblk0p3` is `misc` too
+  (`/sys/class/block/mmcblk0p3/uevent`, the same GPT), as on the F50 under Linux.
+* `--dry-run` under Android's `sh` (the Magisk path) and under Magisk's busybox with `ASH_STANDALONE=1` (the web
+  installer's): the same block (`...9e002f...`, slot b with one try), nothing written. The web installer's own entry,
+  `android-web.sh boot-linux dry` with this `switch.sh` in its stage: the same.
+* With `MU300_BY_NAME` pointing at a directory of links: `misc` -> the `boot_a` partition: refused (`/dev/block/
+  mmcblk0p37 is not the misc partition (sysfs PARTNAME)`); `misc` -> a regular file: refused (`misc resolves
+  outside /dev/block`); `misc` -> `/dev/block/by-name/misc` (a second link): taken.
+* The real switch, `su -c mu300-linux`: `slot b armed for one boot`, rebooted into Linux; no `mu300-bc.bin` in
+  `/data/local/tmp`. The initramfs then restored Android's block, as for every one-shot trial.
+### 102. Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry
+
+From kanoqwq's clean-tf-7.2 `149c9d2a` ("preserve TX retries"), checked against our `upstream/modules/sprd_modem/
+sipa_v3` (mainline kernels' modem stack; the 5.4 build uses the vendor tree and is not changed). Three defects in
+`sipa_eth_start_xmit()`, the transmit function of the `sipa_eth` interfaces that carry mobile data:
+
+* **Every retry one more header.** The device is raw IP: a packet arrives with `mac_header == network_header`, and
+  the function `skb_push`es 14 bytes for the IPA's Ethernet framing. When the IPA's send FIFO is full,
+  `sipa_nic_tx()` returns `-EAGAIN` and keeps nothing (`sipa_skb_sender_send_data()` unmaps and returns without
+  taking the skb), and the function returns `NETDEV_TX_BUSY`: the qdisc sends the same skb again later. The push
+  does not move `mac_header`, so the test is true again and every retry pushed another 14 bytes in front of the
+  packet: what finally went out was the packet behind 14·(retries+1) bytes of stale header. For a
+  `CHECKSUM_PARTIAL` TCP/UDP packet the checksum field (the pseudo-header seed) had also been zeroed for the IPA,
+  and stayed zero for the retry.
+* **The IRQ flags in one static variable.** `spin_lock_irqsave(&queue_lock, queue_lock_flags)` with a file-scope
+  `queue_lock_flags`, shared by the TX path and the flow-control wake-up on every CPU: a second CPU taking the lock
+  overwrites the holder's saved interrupt state, and the holder then restores the other CPU's.
+* **A freed skb reported as not sent.** When `skb_linearize()` fails the skb is freed and the function returned the
+  `-ENOMEM` as its `netdev_tx_t`, which the stack does not take as "consumed".
+
+Changed (ours, the same three fixes as his): the push is undone and the seed put back before `NETDEV_TX_BUSY`; the
+flags are a local of each function; a failed linearize returns `NETDEV_TX_OK`. The "fail to send" line is rate
+limited (it fires on every retry under backpressure). Not taken from the same commit here: his Wi-Fi changes (§103),
+and nothing about `sipa overflow ... err=2`, which his own notes leave unexplained.
+
+**When it bites:** whenever `sipa_nic_tx()` says busy. Read from the code this was a full IPA FIFO only, but on
+the devices it is above all **the IPA's resume**: the resource manager answers `-EINPROGRESS` (`sipa_nic_rm_res_
+request()`, before anything is sent: the skb is not taken either) for the first packet after the IPA went to
+sleep. Measured on the F50 (7.2.10): after 25 s without traffic, every first packet met it (`sipa_eth: fail to
+send, ret -115`, six rounds out of six, on the release kernel and on this one); the U30 Air (6.18.56) logged the
+same at boot. A packet retried this way was sent behind the stale header on the release kernel.
+
+**Measured:** built for 7.2.10 and 6.18.56 (`sipa_eth.ko`, no new warnings; built from a copy against the
+`mu300-mainline` volume's trees). `tests/test_sipa_eth_xmit.py` compiles the function from the source with
+stand-ins for the kernel calls (ASan/UBSan where the compiler has them): 1, 3 and 50 busy answers in a row, then
+the packet goes out with exactly one header (54 bytes for 40), unchanged between retries, the seed back, the lock
+released; a failed linearize says `NETDEV_TX_OK` with the skb freed. The previous source does not compile in the
+harness (the static flags), so the test is no negative control of the retry itself. Nothing run on a device.
+
+**Device checklist (before merge; F50 or U30 Air, 6.18 or 7.2, mobile data up):**
+
+    iperf3 -c <server> -t 60 -P 8                    # uplink as hard as the link goes (or a large upload)
+    dmesg | grep -c 'fail to send'                   # retries happened (rate-limited lines) - the case under test
+    # TCP throughput is not worse than before; ping -s 1400 and a download keep working; no oops in dmesg;
+    # ip -s link show sipa_eth0: tx_errors counts the busy answers, no climbing tx_dropped
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches): the F50 (Ubuntu 24.04, 7.2.10) and the U30 Air (openwrt-luci, 6.18.56, the owner's VPN over it), against
+the v2026.10.27 kernels:
+
+* **The first packet after an idle period:** six rounds of 25 s without traffic, then one `ping -I sipa_eth0
+  1.1.1.1`: every round one busy answer (`ret -115`, the IPA resuming) and the ping answered, 6/6 on this kernel and
+  6/6 on the release kernel. So the device did not show the stale header doing harm: either the retried packet
+  survives it somewhere between the IPA and the network, or the busy answer met another packet than the ping. The
+  fix stays what the netdev contract asks (a `NETDEV_TX_BUSY` skb comes back unchanged); no measurement here proves
+  a user-visible effect of the old behaviour.
+* **Uplink under load:** eight parallel uploads (12 MiB each) over the F50's mobile data: `tx_errors` +1 (one busy
+  answer, `fail to send` logged once), no `tx_dropped`, no oops; `ping -s 1400` and a download worked after it.
+  The SIM was throttled to about 1.9 Mbit/s in both directions by then, so throughput says little: an A/B in the
+  same conditions (the release's `sipa_eth.ko` loaded into the test kernel, then this one) gave the same speeds and
+  retransmissions. Unloading and loading `sipa_eth` a second time restarted the F50 (the vendor module is not made
+  to be reloaded; its first reload had already logged `probe ... failed with error -17`): not a test to repeat.
+* The U30 Air carried its VPN over this kernel for three boots; the F50 had mobile data in all of its seven.
+### 103. Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure
+
+From kanoqwq's clean-tf-7.2 `149c9d2a`. His notes (`docs/WIFI-TX-RETRY-20261015.zh-CN.md` there) are measurements on
+an F50 with OpenWrt 25.12.5 and 7.2.8, with kprobes on the command path; our `upstream/modules/sprd_wlan_combo`
+and `wcn_bsp` have the same code at each point. Ported in our own words; his tests, docs and his 5.4 patches not
+taken (the 5.4 driver is built from `kernel/patches/wlan_combo-*`, against a vendor tree, as in §92).
+
+* **A freed skb used on (both transports).** `sc2355_pcie_hif_fill_msdu_dscr()` / `sc2355_hif_fill_msdu_dscr()`,
+  when the headroom was short, replaced the skb with `skb_realloc_headroom()` and `kfree_skb()`'d the original - but
+  only their own copy of the pointer changed: `sc2355_send_data()` and `sprd_xmit_data2cmd_wq()` then filled the
+  message from, or copied and freed, the freed skb (and on an allocation failure freed it a second time). The
+  descriptor was also written into a header shared with clones (a bridge flooding a frame to several ports clones
+  it). Now `skb_cow_head()` (also when `skb_header_cloned()`), sized with the `offset` the push adds; the skb stays
+  the caller's, a failure returns `-ENOMEM` and the caller frees as before; `ethhdr` is read again afterwards (the
+  checksum-offload branch uses it). How often the short-headroom case happens on our boards is not known.
+* **The group TID never set on PCIe.** `sprd_xmit_data2cmd_wq()` sends a frame as a firmware command and, for an
+  AP's group frames, sets the BK TID "to avoid FW hang". It read the descriptor at `skb->data`; on PCIe that is the
+  5-byte address prefix the fill puts in front, so the "LUT index" it tested was the descriptor's offset byte (11)
+  and the branch never ran (kanoqwq's probe: `off=11, lut=4, tid=0`). The descriptor is now taken behind the prefix,
+  before SDIO's flag is pushed (as his E5 SDIO driver does); the per-frame `pr_info` is a rate-limited debug line.
+* **AP IPv6 multicast through the command path.** `tx_mc_pkt()` sent every IPv6 multicast frame of the access point
+  (neighbour discovery, router advertisements, mDNS) as `CMD_TX_DATA`. kanoqwq replayed bursts of eight 12-byte mDNS
+  queries (`ff02::fb`, one burst a second, six bursts) from the USB side of an F50: in each burst the first six
+  were answered OK and the last two `SPRD_CMD_STATUS_ERROR` (-6), twelve in all, identical bytes succeeding and
+  failing; the command worker had already given the frame up. On PCIe these frames now take the data queue, as IPv4
+  multicast always has (firmware credits, EDMA backpressure, the group LUT entry); `tx_filter_ip_pkt()` after it still
+  sends DHCPv6, DNS and VoWiFi by command, EAPOL never comes here. His check after the change: 112 replayed frames all
+  on the data path, no command error, a phone's IPv6 neighbour entry learnt again over multicast ND and its IPv6
+  ping answered. SDIO (no board of ours) keeps the vendor's path.
+  This is the TX side. §92 (the AP RX "endian fix", not taken) is about frames *from* a client being copied back to
+  the BSS; nothing here changes that, and mDNS/ND between clients keeps working the way §92 describes.
+* **A full EDMA pending ring.** The PCIe TX data channel queues at most three submissions behind the running one
+  (`edma_pending_q_buffer`, four slots); a fourth was refused with `ERROR` (-1), counted by the WLAN side like a hard
+  push failure (`pushfail_count`: more than 100 in a row flushed the frames waiting; `failcount`: more than 50), and
+  nothing woke the TX thread when room came back. Now the ring returns `-EAGAIN` (nothing was taken; every other
+  user of `mchn_push_link` - Bluetooth, the RX refill - only tests for non-zero), the WLAN side keeps the frames
+  without counting, and both TX data channels register a `tx_complete` callback that wakes the TX thread when the
+  bus finishes a transfer; the wait flag is armed before the submission, since the completion can come before the
+  push returns. His F50 run afterwards: 128 refusals in 30 min, all `-EAGAIN`, TX kept growing (up to 40.8 Mbit/s in
+  5 s samples), no `tx return err`, no flush, no firmware assert.
+
+`wcn_bsp` and `sprd_wlan_combo` change together (the new return value): the release builds both from this tree.
+
+**Measured here:** built for 7.2.10 and 6.18.56 (`wcn_bsp`, `sprd_wlan_combo`) against the `mu300-mainline`
+volume's trees, compared with the same build of `main`: no new warning. `tests/test_wifi_tx_path.py` reads the source
+for each point. Nothing run on a device (both test devices were in use); his measurements above are on his F50.
+
+**Device checklist (before merge; F50 and U30 Air, 6.18 and 7.2, the hotspot on 5 GHz):**
+
+    # before/after: dmesg -C; a phone on the hotspot
+    ping6 -c3 ff02::1%br-lan            # (OpenWrt; Ubuntu: the hotspot bridge) every client answers
+    # from a computer on USB, a burst of mDNS: for i in $(seq 8); do avahi-resolve -n x$i.local & done
+    dmesg | grep -i 'CMD_TX_DATA' | grep -ci err      # 0 after (before: errors in bursts)
+    dmesg | grep -c 'push link fail'                         # may be > 0 (rate limited); no 'tx return err'
+    # a long download and upload on the phone (iperf3 -R and normal), 10 min: no 'tx return err', no flush,
+    # no firmware assert, throughput not lower than before; IPv4 and IPv6 browsing, AirPlay/Chromecast between
+    # two phones still found (mDNS between clients, §92); a second client joins and gets DHCPv4 and an IPv6 address
+
+**Measured on both boards** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day
+plus the four branches): the F50 (Ubuntu 24.04, 7.2.10) and the U30 Air (openwrt-luci, 6.18.56), a MacBook on the
+5 GHz hotspot (802.11ac, 80 MHz) as the one Wi-Fi client and on the USB side as the sender of the replay; against
+the v2026.10.27 kernels on the same devices.
+
+* **kanoqwq's replay:** six bursts of eight 12-byte mDNS queries to `ff02::fb`, one burst a second, sent by the
+  Mac on its USB link to the device, which bridges them to the Wi-Fi client:
+
+  | | release kernel | test kernel |
+  |---|---|---|
+  | F50: `CMD_TX_DATA ... SPRD_CMD_STATUS_ERROR` | 8 | 0 |
+  | F50: wlan0 `tx_packets` during the replay | +13 | +50 |
+  | U30 Air: `CMD_TX_DATA ... SPRD_CMD_STATUS_ERROR` | 12 (two per burst of eight, as he saw) | 0 |
+  | U30 Air: wlan0 `tx_packets` during the replay | +3 | +59 |
+
+  (On the release kernel the command path does not count in `tx_packets`; on this one the 48 frames are data.)
+* `ping ff02::1` on the bridge: the Mac's Wi-Fi address answered (4 of 5; its USB address the same, the first
+  one lost to neighbour discovery) on both boards.
+* **A full EDMA ring:** under 300 MiB transfers to the Mac, `edma_pending_q_buffer(10) full` with `push link fail:
+  -11` (rate limited) 140-170 times on the F50 and 80 on the U30 Air; `tx return err` 0 (the U30 Air's release
+  kernel had logged 8738 of them in its two hours before the test), no flush of queued frames (the only `flush`
+  lines are a client leaving), no firmware assert, no oops. TX to the Mac 300-590 Mbit/s on the F50 and 210-500 on
+  the U30 Air, the same spread as on the release kernels; 6 GiB in one stream at 594 Mbit/s on the F50.
+* **The client leaving during a transfer:** no oops, no use-after-free report (the kernel has no KASAN), the
+  hotspot took the Mac back (§92 has the log lines).
+* Not covered: two Wi-Fi clients (mDNS between them, a second client's DHCPv6), an SDIO board, and the skb
+  short-headroom path, which no log line shows; nothing here proves the use-after-free case was reached.
+
+### 125. Release names: the day of the release and its number (vYYYY.MM.DD.N)
+
+**Status: current** (unit tests in sh, Python, JavaScript and PowerShell against one table; the old clients' behaviour
+read from their code at the tags v2026.10.25, v2026.10.26 and v2026.10.27; nothing run on a device).
+
+**What was wrong.** The release tags were `vYYYY.MM.DD`, but the "day" was used as a counter: v2026.10.27 was
+published on 2026-10-15 (UTC), twelve days ahead of the calendar. The owner's decision (2026-10-15): the tag says the
+real day of the release, then a number for the releases of that day.
+
+**The scheme.** A new release is `vYYYY.MM.DD.N`: YYYY.MM.DD the UTC date it is built, N = 1, 2, 3, ... for the
+releases of that day. N has no leading zero and is at most 99 (Magisk's `versionCode` below); the month is 01..12, the
+day 01..31. `tools/make-release.sh --next-tag` prints the next one: today's date and one more than the highest N of
+today's tags among GitHub's releases (`gh release list`, drafts and prereleases included) and the tags (local and
+`git ls-remote origin`); without GitHub's answer it prints nothing and fails rather than guess. `make-release.sh TAG`
+takes only the four-field form for a new release and refuses a TAG whose date is not today unless `--any-date` is
+given. The Release workflow takes the tag input empty (then `--next-tag`) or checks a given one (`--check-tag`) at its
+start, and passes `--any-date` to the build hours later, which may end on the next day.
+
+**The order (the transition rule).** Every four-field tag is newer than every three-field tag, whatever the dates:
+v2026.10.16.1 > v2026.10.27. Four-field tags compare by the date, then by N, as numbers: v2026.10.16.2 >
+v2026.10.16.1, v2026.10.16.10 > v2026.10.16.9, v2026.10.17.1 > v2026.10.16.99. Three-field tags keep their old order
+among themselves. Anything else - `test-issue-102`, `v2026.10.16.0`, `v2026.10.16.01`, `v2026.13.01.1`,
+`v2026.10.27-fix1`, a trailing newline or space, digits of another script - is no release tag: neither newer nor older
+than anything. As a key: `1YYYYMMDD00` for vYYYY.MM.DD, `2YYYYMMDDNN` for vYYYY.MM.DD.N.
+
+**One comparer per language, one table.** `tests/fixtures/release-tags.tsv` lists the tags that are release tags, the
+ones that are not, and 31 pairs with their order; every implementation is tested against it:
+
+| language | where | used by |
+|---|---|---|
+| sh | the `release-tag` block (`tag_ok`, `tag_key`, `newer`) of `tools/releases.sh`, word for word also in `mu300-update` and `tools/android-install.sh` (a test compares the three) | install.sh (the slot-a check), make-release.sh, make-magisk-zips.sh (`versionCode`), mu300-update (`notice`, `check`, `downgrade_ok`, `boot_downgrade_ok`, `--from`, `releases`, a module's `requires`), android-install.sh (for an update's downgrade check) |
+| Python | `tools/release_pick.py`: `tag_key`, `tag_ok`, `newer` | the installers' release and beta decision (install.sh, install.ps1, the graphical installer) |
+| JavaScript | `site/assets/web-installer/version.js`: `releaseKey`, `newerTag`, word for word also in the panel's `update.js` | the web installer (`loadReleases`, `releaseSupportsWeb`), System > Update |
+| PowerShell | `install.ps1`: `TagKey`, `TagNewer` (tested in `tests/installer.Tests.ps1`) | install.ps1's slot-a check |
+
+The sh block uses only the shell's own patterns (no grep, no locale) and compares the key in two parts (the era and
+the date, nine digits; then N without its leading zero): an 11-digit number would overflow a shell with 32-bit
+integers, and `08` must not be read as octal. .NET's `\d` takes any script's digits and its `$` lets a final newline
+through, so the PowerShell expressions use `[0-9]` and `\z`. The device programs that only check a tag (the panel's
+rpcd `update_act`, the update adapter, `dashboard-info`'s note of a newer release) use one extended regular expression,
+`v[0-9]{4}\.[0-9]{2}\.[0-9]{2}|v[0-9]{4}\.(0[1-9]|1[0-2])\.(0[1-9]|[12][0-9]|3[01])\.[1-9][0-9]?`, which a test holds
+to the table too. The installers' beta is now also newer by its tag than the release when both are release tags
+(published later alone is not enough), as `mu300-update releases` decided already. Magisk's `versionCode` of a
+four-field release is YYYYMMDDNN (2026101602: ten digits, above every three-field release's eight, below 2^31 until
+the year 2147). What only checks the form `v[0-9]` and plain characters (the zips' manifest, the mirror, the
+workflows' `startsWith(tag, 'v')`, the Telegram announcement) takes the new tags as they are.
+
+**What the clients released before this do with a four-field release** (read from their code at v2026.10.25-27; the
+three have the same logic in these places):
+
+* `mu300-update apply`: no tag is validated or compared. It reads `releases/latest`, fetches that release's
+  `mu300-update` (checked against its `SHA256SUMS`), and when it differs `exec`s it with `MU300_RELEASE=<tag>`
+  before it changes anything; the new updater then runs `downgrade_ok` with the new rule (v2026.10.16.1 is not older
+  than v2026.10.27) and does the update. **An update works; no bridge release is needed for it.**
+* `mu300-update notice` (the login note, `mu300-toolkit`) and `check` compare with `sort` as text. Against a three-field
+  installed tag, a four-field one sorts after it only when its date is 2026.10.27 or later (v2026.10.27.1 >
+  v2026.10.27 as text: the shorter one is a prefix). For releases dated 2026-10-15 to 2026-10-26 a device on v2026.10.25,
+  .26 or .27 shows **no note**, and `check` says "This is newer than the newest release (a test release);
+  mu300-update apply would go back to vYYYY.MM.DD.N" - wrong in its words, while `apply` goes forward. From the first
+  release dated 2026-10-27 or later their text order agrees with the rule again (a date's digits sort as text). Making
+  the note right before then would take a three-field release after v2026.10.27 (it would have to be `v2026.10.28`,
+  carrying the new updater), which the new scheme rules out: the gap is documented instead (wiki Updating, "Release
+  names", and the site's update page).
+* `mu300-update`'s module check (`version_ok`): the VPN module needs `mu300-linux v2026.10.16`, compared with the
+  old text order against the three-field tag of the old system - unchanged. After an update the new updater compares.
+* The control panel of those releases has no update page and no note of a newer release (they came after v2026.10.27).
+* `install.sh` and `install.ps1` of those releases take `releases/latest` (GitHub's "latest", any tag); their slot-a
+  check (`v2026.10.10` or newer) compares as text and lets every four-field tag through, which is right.
+* Their Magisk zips check only their own manifest's tag (`v[0-9]` and plain characters) and look at no release list.
+* The web installer is not in users' hands: the site serves main's. Before this change its `releaseSupportsWeb`
+  compared the first eleven characters with v2026.10.23, so v2026.10.16.1 counted as "too old for the web installer":
+  this change must be on the site before the first four-field release. Its choice of the newest release went by the
+  time of publishing and was right.
+* The graphical installer and the installers' beta question are newer than v2026.10.27 (`tools/release_pick.py` is
+  not in those tags); they go by the time of publishing too, now with the tag order on top.
