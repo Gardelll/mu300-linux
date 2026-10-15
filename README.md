@@ -479,6 +479,10 @@ adbd (platform-tools 34.0.5), built static for both systems by `tools/adbd/build
 
 ### Installing from Android with a Magisk zip
 
+**A zip has two ways in.** Installed as it is in Magisk, on the device, it installs its system and kernel there (this
+section). Unpacked on a computer, it is the computer's installer with that system and kernel in it, offline - see
+[A Magisk zip on a computer](#a-magisk-zip-on-a-computer) below.
+
 If the device already runs a rooted Android with Magisk 26 or newer, Linux can be installed from the device itself,
 without a computer: from the Magisk app (reached through scrcpy, a web panel or a phone running adb) or from
 `adb shell`. The zips are built from the files of a release by the "Magisk installers" workflow
@@ -525,6 +529,31 @@ second one adds its system next to the first and becomes the one that boots; `mu
 After a successful install the zip stays as the Magisk module "MU300 Linux" (the switch module of
 [android/magisk/README.md](android/magisk/README.md), same id): its Action button and `su -c mu300-linux` start
 Linux from Android later.
+
+#### A Magisk zip on a computer
+
+Unpack the **whole** zip into a folder and start `start.cmd` (Windows) or `sh start.sh` (macOS, Linux);
+`start-gui.cmd` / `sh start-gui.sh` open the graphical installer's window straight away, and `uninstall-linux.cmd` /
+`sh uninstall-linux.sh` start the uninstaller. `START-HERE.md` in the zip says the same in English, Turkish and
+Chinese.
+
+* It is this project's `install.sh` / `install.ps1` and the graphical installer, in the zip's `computer/` folder, of
+  the release the zip belongs to. `computer/.mu300-package` tells them that the zip's payload is next to them
+  (`MU300_PACKAGE=DIR`, `./install.sh --package DIR` or `.\install.ps1 -Package DIR` name another unpacked zip;
+  `tools/package.sh`).
+* It installs exactly the system and the kernel of that zip, from its `payload/`, and downloads nothing: both files
+  must have the checksum the zip's `mu300/manifest` names and the one the release's `mu300/SHA256SUMS` names. There
+  is no question about the system, the kernel or the release, and the installer does not update itself. Everything
+  else is the installer as always: the device's own Wi-Fi and modem files are read, the summary is shown and nothing
+  is written before `INSTALL`.
+* The VPN module, when it is asked for, is still a download (it is not part of a zip), and the web panel for Ubuntu
+  is not offered (add it later: `sudo mu300-extra install panel`).
+* **adb is not in the zip**: Google's platform-tools are under the Android SDK licence, whose section 3.4 does not
+  allow passing them on. Download them from https://developer.android.com/tools/releases/platform-tools and unpack
+  them into the zip's folder (`platform-tools/adb` next to `START-HERE.md`), or have adb on the PATH. The computer
+  also needs Python 3.8+ and lz4 (Windows: the installer installs both when missing, which needs the internet once).
+* The computer's side adds about 0.33 MB to a zip (68 files); the payload is in it once. Magisk never sees it: its
+  `customize.sh` unpacks only `module.prop`, `mu300/`, the switch module and `system/` (FINDINGS 111).
 
 **What is written.** Linux goes to its own place: a free region of the internal storage behind the partitions, or an
 SD card (a card that already holds a Linux installation of this project is used first, as the device does when it
