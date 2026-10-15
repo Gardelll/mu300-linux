@@ -114,8 +114,23 @@ On the 32 GB device `userdata` fills the whole disk, so there is no free space. 
 * **An SD card (F50):** erases nothing on the internal storage. The installer offers it.
 * **Shrink `userdata`:** the installer can make room, asks how many GiB to give Linux and keeps at least 4 GiB for
   Android. **This rewrites the partition table and erases everything in Android. It is experimental** and you must
-  type `ERASE`. Take a full backup with `tools/backup-device.sh` first. Android sets its data up again on the next
-  boot; then run the installer again.
+  type `ERASE`. Take a full backup with `tools/backup-device.sh` first.
+
+How it goes (ported from kano's desktop installer, EXPERIMENTAL, not yet run on a device by this project):
+
+1. The installer saves a backup (partition table, `misc`, `boot` and the boot chain of both slots; never the NV or
+   calibration partitions) and a record of what it prepares, a *transaction*, on your computer in
+   `~/mu300-backups/` - keep that folder.
+2. It shrinks `userdata`, writes a token at the start of the new free region and asks Android's own recovery to
+   reset Android on the next start. Android's data is encrypted, so only Android itself can format it again.
+3. The device restarts into recovery, which erases Android's data (a factory reset), and Android starts as new.
+   This takes a few minutes and more than one restart.
+4. Set Android up again, turn USB debugging on, and bring root back: install the Magisk app again and let Shell
+   have root (Magisk itself is still in the boot partition).
+5. Run the installer again. It finds the transaction and checks that this is the same device, slot, partition
+   table, region and token, and the same installer; then it installs as usual into the region. If anything differs
+   it stops and writes nothing. `--no-resume` ignores the transaction, `--resume` insists on one,
+   `--transaction FILE` names one.
 
 ### The SD card (F50 only)
 
@@ -327,6 +342,10 @@ How it is built and how to test it: [docs/web-installer.md](https://github.com/d
 
 ## Installing from Android with a Magisk zip (no computer)
 
+A release's Magisk zip can be used in two ways: installed as it is in Magisk, on the device (this section), or
+unpacked on a computer, where it is the computer's installer with the zip's system and kernel in it
+([below](#a-magisk-zip-on-a-computer)).
+
 If the device runs a rooted Android with **Magisk 26 or newer**, Linux can be installed from the device itself. Each
 release has one zip per system and kernel, 11 in all, e.g. `mu300-magisk-<tag>-ubuntu-24.04-k5.4.zip` or
 `mu300-magisk-<tag>-openwrt-luci-k7.2.zip` (OpenWrt with the control panel); the same zip works on the F50 and the
@@ -343,6 +362,25 @@ U30 Air and finds the place by itself. There is no Ubuntu 26.04 zip with kernel 
 Magisk cannot ask questions, so choices go in a settings file, `mu300-install.conf`. Shrinking `userdata` is not
 offered from a zip. The keys, where the file may live and the rules for erasing are in the
 [README](https://github.com/dikeckaan/mu300-linux#choosing-something-else-mu300-installconf).
+
+## A Magisk zip on a computer
+
+The same zip is also an installer for a computer, with no download: unpack the **whole** zip into a folder and start
+`start.cmd` (Windows) or `sh start.sh` (macOS, Linux) - `start-gui.cmd` / `sh start-gui.sh` open the graphical
+installer's window straight away. It is the project's `install.sh` / `install.ps1` (in the zip's `computer/`
+folder), and it installs exactly the system and the kernel of that zip from the zip's own `payload/`, after checking
+both files against the zip's `mu300/manifest` and the release's `mu300/SHA256SUMS`; it asks no question about the
+system, the kernel or the release, and does not update itself. Everything else is as in [Step 2](#step-2-install):
+the device's own files are read, the summary is shown, and nothing is written before `INSTALL`. `START-HERE.md` in the
+zip says it in English, Turkish and Chinese, and `uninstall-linux.cmd` / `sh uninstall-linux.sh` start the
+uninstaller.
+
+The zip does not contain adb: Google's platform-tools may not be passed on (section 3.4 of the Android SDK licence).
+Download them from https://developer.android.com/tools/releases/platform-tools and unpack them into the zip's folder
+(`platform-tools/adb` next to `START-HERE.md`), or have adb on the PATH. The computer also needs Python 3.8+ and lz4
+(Windows: the installer installs both when missing, which needs the internet once). The VPN module, when you ask for
+it, is still a download; the web panel for Ubuntu is not in a zip (add it later with `sudo mu300-extra install
+panel`).
 
 ## Downloads are slow?
 

@@ -58,6 +58,32 @@ class JavaScript(unittest.TestCase):
             self.assertEqual(r.returncode, 0, f'{f}: {r.stderr}')
 
 
+    def test_a_built_zip_with_its_computer_side_is_read_as_before(self):
+        # the zips of tools/make-magisk-zips.sh, computer/ and the launchers in them: zip.js finds the manifest and the
+        # installer of every one (the fake release of test_magisk_zip)
+        from test_magisk_zip import fake_release
+        tmp = Path(tempfile.mkdtemp(prefix='mu300-web-zips-'))
+        try:
+            fake_release(tmp / 'v2026.10.06')
+            r = subprocess.run(['sh', str(TOP / 'tools/make-magisk-zips.sh'), str(tmp / 'v2026.10.06'), str(tmp / 'out')],
+                               capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            script = ('import { inspectMagiskZip } from ' + json.dumps((WI / 'zip.js').as_uri()) + ';\n'
+                      'import { readFileSync } from "node:fs";\n'
+                      'for (const f of process.argv.slice(2)) console.log(JSON.stringify(await inspectMagiskZip(new Blob([readFileSync(f)]))));\n')
+            (tmp / 'inspect.mjs').write_text(script)
+            zips = sorted((tmp / 'out').glob('*.zip'))
+            self.assertEqual(len(zips), 11)
+            r = subprocess.run([NODE, str(tmp / 'inspect.mjs')] + [str(z) for z in zips], capture_output=True, text=True, timeout=120)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            seen = [json.loads(l) for l in r.stdout.splitlines()]
+            self.assertEqual(len(seen), 11)
+            for z, info in zip(zips, seen):
+                self.assertEqual(f"mu300-magisk-{info['tag']}-{info['system']}-k{info['kernel']}.zip", z.name)
+                self.assertTrue(info['web'], z.name)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
 class Strings(unittest.TestCase):
     def setUp(self):
         self.s = strings()
