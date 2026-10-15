@@ -28,6 +28,8 @@ never installs one by itself.**
 
 * your settings (`/etc/mu300`: hotspot, VPN, toolkit), users and home directories, `/usr/local`, SSH host keys,
   OpenWrt's UCI configuration and services you enabled yourself;
+* the jobs of OpenWrt's **System -> Scheduled Tasks** (`/etc/crontabs`; an update used to drop them, and with the
+  directory empty `crond` did not start at all);
 * the vendor files copied from your device (Wi-Fi firmware, the Android modem userspace);
 * the installed extras: the lang extra is brought to the new release, the [VPN](VPN) module to its latest release;
 * packages you installed yourself (`apk add`, `apt install`): see below.
