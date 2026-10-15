@@ -377,6 +377,78 @@ class ResetAndResume(Device):
         self.assertLess(src.index('if resume_pending; then'), src.index('self_update "$0" "$@"'))
 
 
+
+class FromAnUnpackedZip(ResetAndResume):
+    """The two together (tools/package.sh, §111): room made from an unpacked Magisk zip's own installer, and the
+    installation resumed by it after the reset. The transaction is bound to that zip's payload (kano's payload
+    identity): the same zip continues it, another zip or a copy of the project does not."""
+
+    @classmethod
+    def setUpClass(cls):
+        from test_magisk_zip import fake_release
+        cls.zips = Path(tempfile.mkdtemp(prefix='mu300-resume-zips-'))
+        fake_release(cls.zips / 'v2026.10.06')
+        r = subprocess.run(['sh', str(TOP / 'tools/make-magisk-zips.sh'), str(cls.zips / 'v2026.10.06'), str(cls.zips / 'out')],
+                           capture_output=True, text=True)
+        assert r.returncode == 0, r.stderr
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.zips, ignore_errors=True)
+
+    def unpack(self, name):
+        import zipfile
+        d = self.tmp / 'unpacked' / name
+        shutil.rmtree(d, ignore_errors=True)
+        with zipfile.ZipFile(self.zips / 'out' / f'mu300-magisk-v2026.10.06-{name}.zip') as z:
+            z.extractall(d)
+        return d
+
+    def pkg(self, shell, pkg, answers, *args):
+        f = self.tmp / 'answers.txt'
+        f.write_text(''.join(f'{k}={v}\n' for k, v in answers.items()))
+        f.chmod(0o600)
+        r = self.run_script(shell, str(pkg / 'computer/install.sh'), '--answers', str(f), *args, MU300_PROGRESS='1', MU300_RELEASE='')
+        ev = events(r.stdout)
+        return r, ev, {e['key']: e['value'] for e in ev if e['event'] == 'info'}
+
+    def test_prepared_and_resumed_by_the_same_zip(self):
+        zip_a = self.unpack('openwrt-k6.18')
+        zip_b = self.unpack('ubuntu-24.04-k7.2')
+        answers = {k: v for k, v in INSTALL.items() if k not in ('MU300_ANS_SYSTEMS', 'MU300_OPENWRT', 'MU300_ANS_KERNEL')}
+        for shell in self.each_shell():
+            shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc')
+            shutil.rmtree(self.backups, ignore_errors=True)
+            self.device(pull=True)
+            r, ev, facts = self.pkg(shell, zip_a, MAKE_ROOM)
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+            self.assertEqual(facts['package.system'], 'openwrt')
+            tx = ev[-1]['transaction']
+            fakeemmc.reset(self.emmc)
+            # another zip, or a copy of the project: not the payload the transaction was made with
+            for run in (lambda: self.pkg(shell, zip_b, answers), lambda: self.inst(shell, INSTALL)):
+                self.device(pull='noboot')
+                r, ev, facts = run()
+                self.assertEqual(r.returncode, 1)
+                self.assertIn('tools or the package differ', ev[-1]['message'])
+                self.assertEqual(self.writes(), [])
+            # the same zip: found, checked, continued into the prepared region, as a package (no system question)
+            self.device(pull='noboot')
+            r, ev, facts = self.pkg(shell, zip_a, answers)
+            self.assertEqual((facts['resume.transaction'], facts['resume.check'], facts['verdict.code']), (tx, 'RESUME-OK', 'resume'),
+                             r.stdout[-3000:])
+            self.assertEqual(facts['package.system'], 'openwrt')
+            asked = [e['id'] for e in ev if e['event'] == 'question']
+            for q in ('MU300_ANS_SYSTEMS', 'MU300_ANS_KERNEL', 'MU300_ANS_OVERWRITE', 'MU300_STORAGE'):
+                self.assertNotIn(q, asked)
+            self.assertIn('could not read /dev/block/by-name/boot_a', ev[-1]['message'])
+            self.assertEqual(self.writes(), [])
+
+    # (the tests of ResetAndResume run there, not again here)
+    for _n in [n for n in dir(ResetAndResume) if n.startswith('test_')]:
+        locals()[_n] = None
+    del _n
+
 class Static(unittest.TestCase):
     def test_marked_installed_only_after_the_boot_image_and_misc(self):
         src = (TOP / 'install.sh').read_text()

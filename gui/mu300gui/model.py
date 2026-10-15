@@ -186,6 +186,20 @@ class Choices:
         self.fetch_jobs = 8                 # advanced: MU300_FETCH_JOBS
         self.vpn_url = ''                   # advanced: MU300_VPN_URL
         self.vpn_module = ''                # advanced: MU300_VPN_MODULE
+        self.package = None                 # an unpacked Magisk zip (package.load): its system and kernel only
+
+    def apply_package(self, pkg):
+        """The choices a package makes itself: its system (one), its Ubuntu, its kernel and its release."""
+        self.package = pkg
+        self.ubuntu = pkg['os'] == 'ubuntu'
+        self.openwrt = not self.ubuntu
+        self.openwrt_flavor = 'luci' if pkg['os'] == 'openwrt-luci' else 'plain'
+        self.ubuntu_version = pkg['ubuntu'] or '24.04'
+        self.boot_os = 'ubuntu' if self.ubuntu else 'openwrt'
+        self.kernel = pkg['kernel']
+        self.release = pkg['tag']
+        self.release_url = ''
+        self.panel = False                  # a file of the release, not of the zip
 
     def systems(self):
         """The systems as the installers name them: ubuntu, openwrt or openwrt-luci."""
@@ -266,7 +280,9 @@ def problems(c, facts):
             out.append(('storage', _('The free space is not empty. Type overwrite to use it anyway.')))
     if (c.ubuntu or c.openwrt) and c.place_bytes(facts) and c.place_bytes(facts) < c.needs(facts):
         out.append(('systems', _('That choice needs about {1} and the place has {2}.', size(c.needs(facts)), size(c.place_bytes(facts)))))
-    if c.kernel == '5.4' and c.device == 'v50':
+    if c.kernel == '5.4' and c.device == 'v50' and c.package:
+        out.append(('kernel', _('The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.2 of this release')))
+    elif c.kernel == '5.4' and c.device == 'v50':
         out.append(('kernel', _('The ZTE V50 runs a mainline kernel only (6.18 or 7.2).')))
     elif not c.kernel_ok():
         out.append(('kernel', _('Ubuntu 26.04 needs a mainline kernel: choose 6.18 or 7.2.')))
@@ -306,19 +322,21 @@ def answers(c, facts, lang, serial):
             a['MU300_ANS_INTERNAL_OVER_CARD'] = c.internal_word
     if c.storage != 'sd' and facts.num('region.dirty') > 0 and not facts.existing and c.overwrite_word:
         a['MU300_ANS_OVERWRITE'] = c.overwrite_word
-    if c.release_url:
-        a['MU300_RELEASE_URL'] = c.release_url
-    if c.release:
-        a['MU300_RELEASE'] = c.release
-    else:
-        a['MU300_ANS_BETA'] = 'no'         # "the newest full release" was chosen here, with the beta on offer beside it
-    a['MU300_ANS_SYSTEMS'] = '3' if (c.ubuntu and c.openwrt) else ('1' if c.ubuntu else '2')
-    if c.openwrt:
-        a['MU300_OPENWRT'] = c.openwrt_flavor
-    if c.ubuntu and c.openwrt:
-        a['MU300_ANS_BOOT_OS'] = c.boot_system()
-    if c.ubuntu:
-        a['MU300_ANS_UBUNTU'] = c.ubuntu_version
+    # a package (an unpacked Magisk zip) is its own release, system, Ubuntu and kernel: the installer asks none of these
+    if not c.package:
+        if c.release_url:
+            a['MU300_RELEASE_URL'] = c.release_url
+        if c.release:
+            a['MU300_RELEASE'] = c.release
+        else:
+            a['MU300_ANS_BETA'] = 'no'     # "the newest full release" was chosen here, with the beta on offer beside it
+        a['MU300_ANS_SYSTEMS'] = '3' if (c.ubuntu and c.openwrt) else ('1' if c.ubuntu else '2')
+        if c.openwrt:
+            a['MU300_OPENWRT'] = c.openwrt_flavor
+        if c.ubuntu and c.openwrt:
+            a['MU300_ANS_BOOT_OS'] = c.boot_system()
+        if c.ubuntu:
+            a['MU300_ANS_UBUNTU'] = c.ubuntu_version
     a['MU300_ANS_DEFAULT_LINUX'] = yn(c.default_linux)
     if c.default_linux:
         a['MU300_ANS_BOOT_ATTEMPTS'] = str(c.boot_attempts)
@@ -330,9 +348,10 @@ def answers(c, facts, lang, serial):
     if c.vpn and c.vpn_module:
         a['MU300_VPN_MODULE'] = c.vpn_module
     a['MU300_ANS_ADB'] = yn(c.adb)
-    if c.ubuntu:
+    if c.ubuntu and not c.package:
         a['MU300_ANS_PANEL'] = yn(c.panel)
-    a['MU300_ANS_KERNEL'] = c.kernel
+    if not c.package:
+        a['MU300_ANS_KERNEL'] = c.kernel
     if c.place_existing(facts):
         a['MU300_ANS_EXISTING'] = c.existing
     if c.storage == 'sd' and c.formats(facts) and c.erase_sd_word:
@@ -376,7 +395,10 @@ def uninstall_answers(lang, serial, wipe, sd_wipe, grow=False, erase_word=''):
 
 def download_plan(c, files):
     """The files of the release this installation downloads, as the installers choose them: [(name, bytes)] and
-    their sum. FILES is {name: bytes} of the release (releases.py); a size the list does not have counts as 0."""
+    their sum. FILES is {name: bytes} of the release (releases.py); a size the list does not have counts as 0. A
+    package downloads nothing."""
+    if c.package:
+        return [], 0
     names = ['mu300-kernel.tar.gz']
     if c.kernel != '5.4':
         names.append('mu300-kernel-%s.tar.gz' % c.kernel)
@@ -394,6 +416,8 @@ def work_need(c, files):
     """About how much room the work directory on this computer needs: the downloads, the kernel bundles unpacked,
     the device's own files and the images that are built from them."""
     _plan, total = download_plan(c, files)
+    if c.package:
+        total = c.package.get('bytes', 0)       # its files are there already; what is built from them is not
     return int(total * 1.6) + 400 * MIB
 
 
@@ -404,6 +428,8 @@ def summary(c, facts, release):
     rows = [(_('Systems'), ', '.join(systems) + ('  (' + _('boots: {1}', names[c.boot_system()]) + ')' if len(systems) > 1 else ''))]
     rows.append((_('Kernel'), c.kernel))
     rows.append((_('Release'), c.release or release or _('the newest release')))
+    if c.package:
+        rows.append((_('From'), _('this unpacked Magisk zip, nothing downloaded: {1}', c.package['dir'])))
     rows.append((_('Where'), _('SD card') if c.storage == 'sd' else _('internal storage')))
     if c.place_existing(facts):
         rows.append((_('Existing installation'), _('update: settings and data are kept') if c.existing == 'update' else _('wipe: start from scratch')))

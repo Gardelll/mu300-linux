@@ -139,6 +139,7 @@ what replaced it. The table below gives each section's state.
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 
 ## Hardware and firmware facts
@@ -6531,6 +6532,86 @@ another cause than runtime PM.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
 
+
+## A Magisk zip on a computer
+
+### 111. One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer
+
+**Status: current; unit and integration tests only - no device was used (other work had the devices).** The owner
+asked for kano's two-entry package for this project's zips: kano (kanoqwq, branch `clean-tf-7.2`, MIT) ships one ZIP
+that Magisk installs and that, unpacked, is a desktop installer (`f6b0668d` "add desktop deployment", `53ef7b1a`,
+`1f8f03fb`, `0e19fe32`). His was read, none of it run, no binary of it taken.
+
+**What a zip is now.** Everything it held stays where it was, byte for byte, with the same zip modes (checked: the 11
+zips of v2026.10.27 built with `tools/make-magisk-zips.sh` of `main` and of this change differ in the new entries and
+in `mu300/i18n/*.tsv`, which gained this change's translations, and in nothing else). Added at the top:
+`START-HERE.md` (the zip's system, kernel and release written in; English, Turkish, Chinese), `start.sh`/`start.cmd`,
+`start-gui.sh`/`start-gui.cmd`, `uninstall-linux.sh`/`.cmd`, and `computer/`: the project's installers for a computer
+(`android/magisk/computer/files.txt`: `install.sh`, `install.ps1`, the uninstallers, their `tools/`, `boot/init` and
+`build-boot-image.py`, the vendor extractors, `i18n/`, `gui/`, the switch module) with `computer/.mu300-package`.
+68 files, 0.99 MB unpacked, **0.33 MB** more per zip (v2026.10.27: 331 412 to 331 422 bytes). The payload is in a
+zip once: the computer's installer reads `payload/` where it is.
+
+**Why Magisk cannot see it.** `customize.sh` sets `SKIPUNZIP=1` and unpacks exactly `mu300/*`, `module.prop`,
+`action.sh`, `switch.sh`, `bootchain.sh` and `system/*`; nothing added is under those names. A test runs
+`customize.sh` in a fake Magisk environment on a zip built with the computer's side and on the same zip without it -
+a dry run and a whole installation on the fake device - and compares the output, `boot_a`, `misc`, what `boot_b`
+holds and the module: equal (`tests/test_magisk_zip.py`, `MagiskPathUnchanged`). The release's real zips, both
+builds, also pass `ReleaseZips` (each zip's own installer, a dry run). The web installer's `zip.js` reads the central
+directory only for `mu300/manifest` and `mu300/install.sh`: a test reads the 11 built zips with it.
+
+**How the computer's side installs that zip's system and kernel.** `tools/package.sh` (and the same in `install.ps1`,
+and `gui/mu300gui/package.py` for the window): the package is `MU300_PACKAGE`, `--package DIR` / `-Package DIR`, or
+the folder above `computer/` when `.mu300-package` is there (the launchers set `MU300_PACKAGE` to their own folder
+and put `platform-tools/` on the PATH when it is there). Its `mu300/manifest` is read as the zip's own installer reads
+it (only its nine keys, never sourced, every value exactly one a release has - they become file names; Ubuntu 26.04
+with 5.4 refused). Then: no self-update (the installer that came with the files is the one that knows them), the
+release is the manifest's tag, and the questions of the system, Ubuntu, kernel, release, beta and web panel are not
+put. At the `download` step both payload files must have the checksum the manifest names **and** the one the
+release's `mu300/SHA256SUMS` names (`verify` events; a mismatch or a missing file stops the run before anything is
+written). The VPN module stays a download when it is asked for; the web panel is a release file, not a zip's. A
+V50 with a 5.4 zip is refused at the choices, with the zip to take.
+
+**The boot image without the 5.4 bundle.** `install.sh` always unpacked `mu300-kernel.tar.gz` for the first ramdisk
+segment's busybox, logdw and 5.4 modules, even with a mainline kernel - and a 6.18 or 7.2 zip has no 5.4 bundle (it
+would add 27 MB to 8 zips). Under a mainline kernel those three are dead weight: the kernel's generic segment is
+unpacked after the first and brings its own `bin/busybox`, `bin/logdw`, `etc/module-order`, modules and `init`
+(this checkout's `init` goes behind both, as before). The zip's own Magisk installer never put them in (its device
+segment plus the bundle's generic one). So `build-boot-image.py` now takes `--busybox`, `--logdw` and `--modules`
+as optional **only with `--append-ramdisk`**, and then decompresses that segment and refuses when it lacks any of
+`bin/busybox`, `bin/logdw`, `etc/module-order`, `init`. A package with a mainline kernel builds the image that way;
+everything else (every copy of the project, a 5.4 package) builds it exactly as before. Checked with the real 7.2
+bundle of v2026.10.27: built, 1 879 018 bytes of ramdisk, no 5.4 module in it.
+
+**adb: not bundled.** Google's platform-tools come under the Android Software Development Kit License Agreement
+(https://developer.android.com/studio/terms), section 3.4: "you may not copy (except for backup purposes), modify,
+adapt, redistribute, decompile, reverse engineer, disassemble, or create derivative works of the SDK or any part of
+the SDK", except "to the extent required by applicable third party licenses"; 3.5 leaves the open-source components
+to their own licences. adb's source is Apache-2.0, but the prebuilt binaries and the Windows USB DLLs are Google's
+SDK distribution - not clearly allowed, so not bundled. kano's GUI release does bundle `adb.exe` and its two DLLs
+with an `ADB-NOTICE.txt` (`installer/platform-tools.json` pins platform-tools r37.0.1). Here `START-HERE.md` says
+where to download them and to unpack them into the zip's folder; `find_adb` / `FindAdb` and the launchers find
+`platform-tools/adb` there.
+
+**kano's and this one.** His package moves the original Magisk files into `payload/` and wraps them with a
+path-switching `customize.sh`; his desktop installer (`desktop/installer.py`, an EXE when built) is a deployment of
+its own - TF card, a userdata image, a GPT partition, offline shrink in a desktop initramfs, reset and resume, SSH
+updates - for OpenWrt only, with a filtered copy of the rootfs prepared on the computer. Here the Magisk files stay
+where they are, and the computer's side is this project's installers, which already handle every system, the SD
+card, the free region, the boot chain and the GUI, pointed at the zip's payload: nothing of the install logic is
+duplicated. Not taken: his EXE, his own deployment modes, the bundled adb (above); his reset-and-resume flow is
+§112's subject.
+
+**Tests.** `tests/test_magisk_zip.py` (the computer's side: files, CRLF launchers, exec bits, `START-HERE.md`, no
+platform-tools, the list covers every file the installers name; `MagiskPathUnchanged`), `tests/test_package.py`
+(`tools/package.sh`; `computer/install.sh` of real built zips against the fake adb, as far as the first pull: no
+question about the system or kernel, the facts, a V50 and a 5.4 zip, a damaged manifest, `--build`, `start.sh`; the
+window's choices and answers), `tests/test_boot_image.py` (the image without the 5.4 bundle, and the refusals),
+`tests/web/logic.test.mjs` and `tests/test_web_installer.py` (zip.js), `tests/installer.Tests.ps1` and
+`tests/answers.Tests.ps1` (the PowerShell side).
+
+**Not measured.** An install from an unpacked zip on a device, on any platform; Windows Explorer's unpacking (the
+launchers are CRLF and need no exec bit there; macOS and Linux keep the bits, and `sh start.sh` needs none).
 
 ## Making room on an encrypted Android
 

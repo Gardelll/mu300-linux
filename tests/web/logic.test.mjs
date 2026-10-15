@@ -110,6 +110,16 @@ test("a picked Magisk zip: its manifest and whether its installer knows the web 
   await assert.rejects(z.read("nope"), (e) => e.code === "no-entry");
 });
 
+test("a zip that is also an installer for a computer (computer/, START-HERE.md, the launchers) is read the same", async () => {
+  const extra = [["START-HERE.md", "# MU300 Linux"], ["start.sh", "#!/bin/sh\n"], ["start.cmd", "@echo off\r\n"], ["start-gui.sh", "x"],
+    ["start-gui.cmd", "x"], ["uninstall-linux.sh", "x"], ["uninstall-linux.cmd", "x"], ["computer/.mu300-package", "x"]];
+  for (let i = 0; i < 200; i++) extra.push([`computer/tools/file-${i}.sh`, "#!/bin/sh\n# " + "x".repeat(i)]);
+  const zip = makeZip([["mu300/manifest", MANIFEST()], ["mu300/install.sh", "#!/system/bin/sh\n# MU300_ANSWERS MU300-STEP\n"],
+    ["mu300/android-install.sh", "x"], ["switch.sh", "x"], ["module.prop", "id=mu300_linux_switch\n"], ...extra,
+    ["payload/mu300-ubuntu-rootfs.tar.gz", crypto.randomBytes(100000), 0]]);
+  assert.deepEqual(await inspectMagiskZip(zip), { tag: "v2026.11.01", system: "ubuntu-24.04", os: "ubuntu", ubuntu: "24.04", kernel: "6.18", web: true });
+});
+
 test("what is not one of our zips is refused with a reason", async () => {
   const code = (c) => (e) => e instanceof ZipError && e.code === c;
   await assert.rejects(inspectMagiskZip(new Blob(["hello"])), code("not-a-zip"));

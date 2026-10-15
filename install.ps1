@@ -20,6 +20,9 @@
                                -Lang, -Release, -ReleaseUrl and -Work.
       .\install.ps1 -NoBootchainSync   leave the Linux slot's boot chain as it is (for experts; the default copies
                                uboot, sml, teecfg, trustos and vbmeta of Android's slot there, backed up first)
+      .\install.ps1 -Package DIR   install the system and the kernel of a release's Magisk zip unpacked at DIR, from
+                               its files and without a download ($env:MU300_PACKAGE; the zip's own computer\install.ps1,
+                               which its start.cmd runs, finds them by itself: START-HERE.md in the zip)
 
     Needs: adb. Python 3 and its lz4 module are installed for this user when missing (winget or python.org, then
     pip); Windows 10/11 provide tar and curl.
@@ -60,7 +63,8 @@ param(
     [switch]$NoBootchainSync, # leave the Linux slot's boot chain as it is ($env:MU300_SYNC_BOOTCHAIN = '0' too)
     [switch]$Resume,         # continue the installation prepared by making room, or stop when there is none
     [switch]$NoResume,       # install as if nothing had been prepared ($env:MU300_RESUME = '0' too)
-    [string]$Transaction = '' # that transaction, not the newest one for this device ($env:MU300_TRANSACTION)
+    [string]$Transaction = '', # that transaction, not the newest one for this device ($env:MU300_TRANSACTION)
+    [string]$Package = ''    # an unpacked Magisk zip of a release: its system and kernel, nothing downloaded
 )
 
 $ErrorActionPreference = 'Stop'
@@ -506,6 +510,71 @@ if ($AdbPath) {
     exit 0
 }
 Progress 'hello' 'script' 'install.ps1' 'version' '1' 'mode' $(if ($Check) { 'check' } elseif ($Backup) { 'backup' } else { 'prebuilt' })
+
+# ---------------------------------------------------------------- a package (tools/package.sh for install.sh)
+# A release's Magisk zip, unpacked on a computer, is an installer for that computer too: its computer\ directory is
+# this project's installers, with a file .mu300-package in it, and the system and the kernel of the zip lie next to
+# it - payload\<the two assets>, mu300\manifest naming them and mu300\SHA256SUMS, the release's own checksums. Then
+# exactly that system and that kernel are installed from those files, nothing is downloaded and the installer does not
+# update itself (it is the one that came with the files). -Package DIR or $env:MU300_PACKAGE names another one.
+# PackageDir: the directory of the unpacked zip, or '' (a copy of the project)
+function PackageDir([string]$Given, [string]$TopDir) {
+    if ($Given) { return $Given }
+    if ($TopDir -and (Test-Path -LiteralPath (Join-Path $TopDir '.mu300-package'))) { return (Split-Path -Parent $TopDir) }
+    return ''
+}
+# PackageManifest: the manifest of an unpacked zip, read as the zip's own installer reads it (only its keys, every
+# value exactly one a release has: they become file names), as a hashtable; $null when it is not valid
+function PackageManifest([string]$Dir) {
+    $f = Join-Path (Join-Path $Dir 'mu300') 'manifest'
+    if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { return $null }
+    $m = @{ TAG = ''; SYSTEM = ''; OS = ''; UBUNTU = ''; KERNEL = ''; KERNEL_ASSET = ''; ROOTFS_ASSET = ''; SHA256_KERNEL = ''; SHA256_ROOTFS = '' }
+    foreach ($line in [IO.File]::ReadAllLines($f)) {
+        $i = $line.IndexOf('=')
+        if ($i -le 0) { continue }
+        $k = $line.Substring(0, $i)
+        if ($m.ContainsKey($k) -and $k -ceq $k.ToUpperInvariant()) { $m[$k] = $line.Substring($i + 1).TrimEnd("`r") }
+    }
+    if ($m.TAG -cnotmatch '^v[0-9][0-9A-Za-z._-]*$' -or $m.TAG.Contains('..')) { return $null }
+    $sys = @('openwrt:openwrt::mu300-openwrt-rootfs.tar.gz', 'openwrt-luci:openwrt-luci::mu300-openwrt-luci-rootfs.tar.gz',
+        'ubuntu-24.04:ubuntu:24.04:mu300-ubuntu-rootfs.tar.gz', 'ubuntu-26.04:ubuntu:26.04:mu300-ubuntu-26.04-rootfs.tar.gz')
+    if ($sys -cnotcontains "$($m.SYSTEM):$($m.OS):$($m.UBUNTU):$($m.ROOTFS_ASSET)") { return $null }
+    if (@('5.4:mu300-kernel.tar.gz', '6.18:mu300-kernel-6.18.tar.gz', '7.2:mu300-kernel-7.2.tar.gz') -cnotcontains "$($m.KERNEL):$($m.KERNEL_ASSET)") { return $null }
+    if ($m.UBUNTU -eq '26.04' -and $m.KERNEL -eq '5.4') { return $null }
+    foreach ($h in $m.SHA256_KERNEL, $m.SHA256_ROOTFS) { if ($h -cnotmatch '^[0-9a-f]{64}$') { return $null } }
+    return $m
+}
+# PackageCheck: why a payload file of an unpacked zip cannot be used ('' when it can): it must be there, with the
+# checksum the manifest names ($Want) and the one the release's SHA256SUMS names
+function PackageCheck([string]$Dir, [string]$Name, [string]$Want) {
+    $sums = Join-Path (Join-Path $Dir 'mu300') 'SHA256SUMS'
+    $listed = ''
+    if (Test-Path -LiteralPath $sums) {
+        foreach ($line in [IO.File]::ReadAllLines($sums)) {
+            $p = $line.TrimEnd("`r") -split '\s+', 2
+            if ($p.Count -eq 2 -and $p[1].TrimStart('*') -ceq $Name) { $listed = $p[0]; break }
+        }
+    }
+    $f = Join-Path (Join-Path $Dir 'payload') $Name
+    if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { return 'missing' }
+    $have = (Get-FileHash -LiteralPath $f -Algorithm SHA256).Hash.ToLowerInvariant()
+    if (-not $listed -or $have -cne $Want -or $have -cne $listed) { return 'mismatch' }
+    return ''
+}
+$PKG = PackageDir $(if ($Package) { $Package } else { [string]$env:MU300_PACKAGE }) $Top
+$PM = $null
+if ($PKG) {
+    if (-not (Test-Path -LiteralPath $PKG -PathType Container)) { Die (T 'no unpacked Magisk zip at {1}' $PKG) }
+    $PKG = (Resolve-Path -LiteralPath $PKG).Path
+    if (-not (Test-Path -LiteralPath (Join-Path $PKG 'mu300\manifest')) -or -not (Test-Path -LiteralPath (Join-Path $PKG 'mu300\SHA256SUMS'))) {
+        Die (T '{1} is not an unpacked Magisk zip of a release (it has no mu300/manifest and mu300/SHA256SUMS)' $PKG)
+    }
+    $PM = PackageManifest $PKG
+    if (-not $PM) { Die (T 'the package is incomplete or damaged (its manifest is not valid)') }
+    $Release = $PM.TAG; $ReleaseUrl = ''
+    Info 'package' $PKG; Info 'package.system' $PM.SYSTEM; Info 'package.kernel' $PM.KERNEL; Info 'package.release' $PM.TAG
+    Write-Host (T 'Package: {1} with kernel {2}, release {3} (unpacked Magisk zip at {4})' $PM.SYSTEM $PM.KERNEL $PM.TAG $PKG)
+}
 # Making room by a reset, and the installation that resumes afterwards (EXPERIMENTAL; tools/resume.sh is the same for
 # install.sh, tools/resume.py keeps the transaction): where the transactions and backups are kept, and whether one waits.
 $BackupDir = if ($env:MU300_BACKUP_DIR) { $env:MU300_BACKUP_DIR } else { Join-Path $HOME 'mu300-backups' }
@@ -521,11 +590,12 @@ function ResumePending([string]$Dir) {
     }
     return $false
 }
-# first of all, make this the newest installer (it runs the updated one and ends when it changed) - not while a prepared
-# installation waits: its transaction is bound to the tools that prepared it
 $resumeWaits = $ResumeWanted -ne '0' -and ($Transaction -or (ResumePending $BackupDir))
 if ($resumeWaits) { Write-Host ('  ' + (T 'a prepared installation is waiting (tools/resume.sh): this installer does not update itself until it is done')) }
-if (-not $resumeWaits -and (SelfUpdate)) {
+
+# first of all, make this the newest installer (it runs the updated one and ends when it changed) - not from a
+# package, and not while a prepared installation waits: its transaction is bound to the tools that prepared it
+if (-not $PKG -and -not $resumeWaits -and (SelfUpdate)) {
     $env:MU300_SELF_UPDATED = '1'
     AnswersReexport
     $PSBoundParameters['Lang'] = $Lang
@@ -1406,6 +1476,18 @@ Info 'release' $Release
 
 Step 'choices' 10
 Say (T 'What should be installed?')
+if ($PKG) {
+    # a package's system, Ubuntu and kernel are its own: nothing to ask, only whether they fit here
+    Write-Host ('  ' + (T 'This package installs {1} with kernel {2} (release {3}); nothing is downloaded.' $PM.SYSTEM $PM.KERNEL $PM.TAG))
+    Write-Host ('  ' + (T 'Another system or kernel: the zip of that combination, or ./install.sh of the project.'))
+    $OSES = @($PM.OS); $BOOT_OS = $PM.OS; $UBUNTU = $(if ($PM.UBUNTU) { $PM.UBUNTU } else { '24.04' })
+    if ($DEVICE -eq 'v50' -and $PM.KERNEL -eq '5.4') { Die (T 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.2 of this release') }
+    $need = if ($PM.OS -eq 'ubuntu') { $NEED_UBUNTU } else { $NEED_OPENWRT }
+    if ($SIZE -lt $need) {
+        $needMib = [int64]($need / 1MB); $haveMib = [int64]($SIZE / 1MB)
+        Die (T 'that choice needs about {1} MiB and this device has {2} MiB of free space' $needMib $haveMib)
+    }
+} else {
 Write-Host ('  ' + (T '1) Ubuntu LTS: 24.04 or 26.04, asked next (full distribution, apt, ~500 MiB RAM in use)'))
 Write-Host ('  ' + (T '2) OpenWrt {1} (router, LuCI web UI, ~140 MiB RAM in use)' '25.12.5'))
 Write-Host ('  ' + (T '3) both (switch later with: mu300-os ubuntu|openwrt)'))
@@ -1451,6 +1533,7 @@ if ($OSES -contains 'ubuntu') {
         { $_ -in '2', '26.04' } { $UBUNTU = '26.04' }
         default { Die (T 'invalid choice') }
     }
+}
 }
 # the release file of a system: Ubuntu 26.04 has its own, 24.04 keeps the name it always had
 function RootfsFile($os) { if ($os -eq 'ubuntu' -and $UBUNTU -eq '26.04') { 'mu300-ubuntu-26.04-rootfs.tar.gz' } else { "mu300-$os-rootfs.tar.gz" } }
@@ -1510,9 +1593,12 @@ $EXTRA_PANEL = $null
 if ($OSES -contains 'ubuntu') {
     Write-Host ('  ' + (T 'The web panel for Ubuntu (Cockpit with an MU300 page: signal, SMS, VPN, Wi-Fi, updates, a terminal; on the LAN only) is optional. It can also be added later on the device:'))
     Write-Host '    sudo mu300-extra install panel'
-    $px = Ask (T 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)') 'no' 'MU300_ANS_PANEL'
+    # (not part of a package: it is a file of the release, not of the zip)
+    if ($PKG) { Write-Host ('  ' + (T 'It is not part of this package.')) }
+    else { $px = Ask (T 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)') 'no' 'MU300_ANS_PANEL' }
 }
 $KERNEL = $null
+if ($PKG) { $KERNEL = $PM.KERNEL } else {
 Say (T 'Which kernel?')
 Write-Host ('  ' + (T "1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports"))
 Write-Host ('  ' + (T '2) 6.18  mainline Linux, current long-term (LTS) release: newer drivers and security fixes, the same'))
@@ -1533,6 +1619,7 @@ while (-not $KERNEL) {
         { $_ -in '3', '7.2' } { $KERNEL = '7.2' }
         default { Write-Host ('  ' + (T 'enter 1, 2 or 3')) }
     }
+}
 }
 $FORMAT = 0; $WIPE_LEGACY = 0; $UPDATE = 0
 if ($existing -eq 'no') {
@@ -1606,9 +1693,26 @@ if ($LINUX_SLOT -eq 'a' -and $Release -match '^v\d{4}\.\d{2}\.\d{2}' -and [strin
     Die (T 'Android runs from slot b, and release {1} cannot boot Linux from slot a; use {2} or newer' $Release 'v2026.10.10')
 }
 Step 'download' 20
-Say (T 'Downloading release {1}' $Release)
 $REL = "$Work\release\$Release"
 New-Item -ItemType Directory -Force -Path $REL | Out-Null
+# $ASSETS: where the release's files are - downloaded into $REL, or a package's payload\ (the kernels are unpacked
+# into $REL either way)
+$ASSETS = $REL
+$vpnFromModule = $false
+if ($PKG) {
+    Say (T 'Checking the files of this package')
+    $ASSETS = Join-Path $PKG 'payload'
+    foreach ($pf in @(@($PM.KERNEL_ASSET, $PM.SHA256_KERNEL), @($PM.ROOTFS_ASSET, $PM.SHA256_ROOTFS))) {
+        Write-Host "  $($pf[0])"
+        $why = PackageCheck $PKG $pf[0] $pf[1]
+        if ($why -eq 'missing') { Die (T '{1} is missing from the package (payload/)' $pf[0]) }
+        if ($why) { Progress 'verify' 'file' $pf[0] 'result' 'mismatch'; Die (T 'checksum mismatch for {1}' $pf[0]) }
+        Progress 'verify' 'file' $pf[0] 'result' 'ok'
+    }
+    # the VPN is not in a zip: the module of its own repository, which is a download
+    if ($vx -eq 'yes') { $vpnFromModule = $true }
+} else {
+Say (T 'Downloading release {1}' $Release)
 $base = if ($ReleaseUrl) { $ReleaseUrl } else { "https://github.com/$Repo/releases/download/$Release" }
 Invoke-WebRequest "$base/SHA256SUMS" -OutFile "$REL\SHA256SUMS" -UseBasicParsing
 $sums = @{}
@@ -1620,7 +1724,6 @@ $files = @('mu300-kernel.tar.gz') + ($OSES | ForEach-Object { RootfsFile $_ })
 if ($KERNEL -ne '5.4') { $files += "mu300-kernel-$KERNEL.tar.gz" }
 # the VPN: a release from before the module (its systems carry mu300-vpn) has the engines as its own vpn extra, from the
 # same SHA256SUMS; a newer one has neither, and the module comes from its own repository (below)
-$vpnFromModule = $false
 if ($vx -eq 'yes') {
     if ($sums.ContainsKey('mu300-extra-vpn.tar.gz')) { $files += 'mu300-extra-vpn.tar.gz'; $EXTRA_VPN = "$REL\mu300-extra-vpn.tar.gz" }
     else { $vpnFromModule = $true }
@@ -1646,20 +1749,27 @@ foreach ($f in $files) {
         Progress 'verify' 'file' $f 'result' 'ok'
     } else { Progress 'verify' 'file' $f 'result' 'cached' }
 }
+}
 if ($vpnFromModule) { FetchVpnModule }
+# the 5.4 bundle: its kernel, and for every kernel the busybox, logdw and modules of the boot image's first segment.
+# A package with a mainline kernel has no 5.4 bundle: its boot image is that kernel with its own generic segment,
+# which brings init's busybox, logdw and modules (build-boot-image.py checks that it does).
+$HAVE54 = (-not $PKG) -or $KERNEL -eq '5.4'
 Remove-Item -Recurse -Force "$REL\kernel" -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force -Path "$REL\kernel" | Out-Null
-& tar -xzf "$REL\mu300-kernel.tar.gz" -C "$REL\kernel"
-# the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline kernel is
-# checked below)
-if (($DEVICE -notin @('f50', 'v50')) -and -not (Test-Path "$REL\kernel\modules-$DEVICE")) { Die (T 'release {1} does not support this device yet; use a newer one' $Release) }
+if ($HAVE54) {
+    New-Item -ItemType Directory -Force -Path "$REL\kernel" | Out-Null
+    & tar -xzf "$ASSETS\mu300-kernel.tar.gz" -C "$REL\kernel"
+    # the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline
+    # kernel is checked below)
+    if (($DEVICE -notin @('f50', 'v50')) -and -not (Test-Path "$REL\kernel\modules-$DEVICE")) { Die (T 'release {1} does not support this device yet; use a newer one' $Release) }
+}
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 $KMAIN = $null
 if ($KERNEL -ne '5.4') {
     $KMAIN = "$REL\kernel-$KERNEL"
     Remove-Item -Recurse -Force $KMAIN -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Force -Path $KMAIN | Out-Null
-    & tar -xzf "$REL\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN
+    & tar -xzf "$ASSETS\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN
     foreach ($k in 'Image', 'ramdisk-generic.lz4', 'kernel.release') {
         if (-not (Test-Path "$KMAIN\$k")) { Die (T '{1} is incomplete' "mu300-kernel-$KERNEL.tar.gz") }
     }
@@ -1693,10 +1803,12 @@ WriteUnix "$Work\init" (((Get-Content -Raw "$Top\boot\init") -replace '(?m)^ROOT
 # image that "mu300-update kernel 6.18" (or 7.2) writes on the device
 $bootArgs = @("$Top\boot\build-boot-image.py", '--stock-boot', "$Work\dumps\boot_$ANDROID_SLOT.img", '--misc-head', "$Work\dumps\misc-head.bin",
     '--kernel', $(if ($KMAIN) { "$KMAIN\Image" } else { "$REL\kernel\Image" }),
-    '--modules', "$REL\kernel\modules", '--init', "$Work\init", '--busybox', "$REL\kernel\busybox",
-    '--logdw', "$REL\kernel\logdw", '--ueventd-perms', "$Top\android-vendor\ueventd-perms.sh",
+    '--init', "$Work\init", '--ueventd-perms', "$Top\android-vendor\ueventd-perms.sh",
     '--android-subset', "$Work\android-subset", '--out', "$Work\boot-linux-slot$LINUX_SLOT.img", '--device', $DEVICE, '--linux-slot', $LINUX_SLOT)
-if (Test-Path "$REL\kernel\modules-u30air") { $bootArgs += @('--device-modules', "u30air=$REL\kernel\modules-u30air") }
+if ($HAVE54) {
+    $bootArgs += @('--modules', "$REL\kernel\modules", '--busybox', "$REL\kernel\busybox", '--logdw', "$REL\kernel\logdw")
+    if (Test-Path "$REL\kernel\modules-u30air") { $bootArgs += @('--device-modules', "u30air=$REL\kernel\modules-u30air") }
+}
 if ($KMAIN) { $bootArgs += @('--append-ramdisk', "$KMAIN\ramdisk-generic.lz4") }
 # a failed build must stop here: otherwise an earlier image (or none) would be written to the device
 Remove-Item "$Work\boot-linux-slot$LINUX_SLOT.*" -ErrorAction SilentlyContinue
@@ -1730,7 +1842,7 @@ Step 'copy' 75
 Say (T 'Copying to the device')
 foreach ($f in 'android-mount-mu300root.sh', 'android-install.sh', 'android-bootchain.sh') { PushUnix "$Top\tools\$f" "$T/$f" | Out-Null }
 foreach ($os in $OSES) {
-    & adb push "$REL\$(RootfsFile $os)" "$T/mu300-$os.tar.gz" | Out-Null
+    & adb push "$ASSETS\$(RootfsFile $os)" "$T/mu300-$os.tar.gz" | Out-Null
     & adb push "$Work\mu300-vendor-$os.tar.gz" "$T/mu300-vendor-$os.tar.gz" | Out-Null
 }
 # android-install.sh puts every pushed mu300-extra-<name>.tar.gz onto the Linux partition (extra/<name>); the VPN

@@ -16,6 +16,9 @@
 #   ./install.sh --backup        only copy what an installation reads first to this computer: Android's boot image
 #                                and the first block of misc, checked against the device (writes nothing to it)
 #   ./install.sh --adb-path      print the adb this installer would use, and stop
+#   ./install.sh --package DIR   install the system and the kernel of a release's Magisk zip unpacked at DIR, from its
+#                                files and without a download (MU300_PACKAGE=DIR; the zip's own computer/install.sh,
+#                                which its start.sh runs, finds them by itself: START-HERE.md in the zip, tools/package.sh)
 #   ./install.sh --answers FILE  ask nothing: every question is answered by its variable, from FILE (NAME=value
 #                                lines) or the environment; a question without an answer is an error that names the
 #                                variable. MU300_PROGRESS=1 adds a machine-readable progress stream. For programs
@@ -76,6 +79,7 @@ MODE=prebuilt; CHECK_ONLY=0; BACKUP_ONLY=0; ADB_PATH_ONLY=0; ANSWERS_FILE=; _opt
 for a in "$@"; do
     if [ "$_opt" = answers ]; then ANSWERS_FILE=$a; _opt=; continue; fi
     if [ "$_opt" = transaction ]; then MU300_TRANSACTION=$a; export MU300_TRANSACTION; _opt=; continue; fi
+    if [ "$_opt" = package ]; then MU300_PACKAGE=$a; export MU300_PACKAGE; _opt=; continue; fi
     case $a in
         --check) CHECK_ONLY=1 ;;
         --build) MODE=build ;;
@@ -88,11 +92,13 @@ for a in "$@"; do
         --no-resume) MU300_RESUME=0; export MU300_RESUME ;;
         --transaction) _opt=transaction ;;
         --transaction=*) MU300_TRANSACTION=${a#--transaction=}; export MU300_TRANSACTION ;;
+        --package) _opt=package ;;
+        --package=*) MU300_PACKAGE=${a#--package=}; export MU300_PACKAGE ;;
         -h|--help) sed -n '2,/^set -eu/{/^set -eu/d;s/^# \{0,1\}//p;}' "$0"; exit 0 ;;
         *) echo "unknown option $a (see --help)" >&2; exit 2 ;;
     esac
 done
-[ -z "$_opt" ] || { echo "--$_opt needs a file (see --help)" >&2; exit 2; }
+[ -z "$_opt" ] || { echo "--$_opt needs a file or directory (see --help)" >&2; exit 2; }
 . "$TOP/tools/answers.sh"    # say, die, ask; the answers mode and the progress stream
 answers_setup                # (before anything reads a MU300_* variable: an answers file sets them)
 RELEASE=${MU300_RELEASE:-}
@@ -101,6 +107,7 @@ REPO=${MU300_REPO:-dikeckaan/mu300-linux}
 . "$TOP/tools/storage.sh"
 . "$TOP/tools/releases.sh"
 . "$TOP/tools/resume.sh"
+. "$TOP/tools/package.sh"
 # adb from platform-tools unzipped next to the project (or into the usual places) needs no PATH entry
 find_adb() {
     command -v adb >/dev/null && return 0
@@ -116,10 +123,22 @@ if [ $ANSWERS_MODE = 1 ]; then
 fi
 choose_language
 progress hello script install.sh version 1 mode "$([ $CHECK_ONLY = 1 ] && echo check || { [ $BACKUP_ONLY = 1 ] && echo backup || echo $MODE; })"
-# first of all, make this the newest installer (it restarts itself when it changed) - not while a prepared installation
-# waits: its transaction is bound to the tools that prepared it (tools/resume.sh)
+# an unpacked Magisk zip (tools/package.sh): its system and kernel, its release, no download and no self-update -
+# the installer that came with the files is the one that knows them
+PKG=$(package_dir)
+if [ -n "$PKG" ]; then
+    package_load "$PKG"
+    [ $MODE != build ] || die "$(t '--build builds the systems itself: run it from a copy of the project, not from an unpacked Magisk zip')"
+    RELEASE=$PKG_TAG
+    info package "$PKG"; info package.system "$PKG_SYSTEM"; info package.kernel "$PKG_KERNEL"; info package.release "$PKG_TAG"
+    echo "$(t 'Package: {1} with kernel {2}, release {3} (unpacked Magisk zip at {4})' "$PKG_SYSTEM" "$PKG_KERNEL" "$PKG_TAG" "$PKG")"
+fi
+# first of all, make this the newest installer (it restarts itself when it changed) - not from a package, and not
+# while a prepared installation waits: its transaction is bound to the tools that prepared it (tools/resume.sh)
 . "$TOP/tools/self-update.sh"
-if resume_pending; then
+if [ -n "$PKG" ]; then
+    :
+elif resume_pending; then
     echo "  $(t 'a prepared installation is waiting (tools/resume.sh): this installer does not update itself until it is done')"
 else
     self_update "$0" "$@"
@@ -273,6 +292,8 @@ step preflight 2
 say "$(t 'Checking host tools and device')"
 need="adb"
 [ $CHECK_ONLY = 1 ] || [ $BACKUP_ONLY = 1 ] || { [ $MODE = build ] && need="adb docker python3 lz4" || need="adb python3 lz4 curl"; }
+# (a package downloads nothing: curl only for the VPN module, when it is wanted)
+[ -z "$PKG" ] || [ $CHECK_ONLY = 1 ] || [ $BACKUP_ONLY = 1 ] || need="adb python3 lz4"
 find_adb || true
 for c in $need; do command -v $c >/dev/null || die "$(t '{1} not found' "$c")"; done
 if [ $CHECK_ONLY = 0 ] && [ $MODE = build ]; then
@@ -640,6 +661,21 @@ fi
 info release "$RELEASE"
 step choices 10
 say "$(t 'What should be installed?')"
+# --- package-choices begin
+# package_choices: a package's system, Ubuntu and kernel are its own - nothing to ask, only whether they fit here
+package_choices() {
+    echo "  $(t 'This package installs {1} with kernel {2} (release {3}); nothing is downloaded.' "$PKG_SYSTEM" "$PKG_KERNEL" "$PKG_TAG")"
+    echo "  $(t 'Another system or kernel: the zip of that combination, or ./install.sh of the project.')"
+    OSES=$PKG_OS; BOOT_OS=$PKG_OS; UBUNTU=${PKG_UBUNTU:-24.04}; KERNEL=$PKG_KERNEL
+    [ "$DEVICE" != v50 ] || [ "$KERNEL" != 5.4 ] ||
+        die "$(t 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.2 of this release')"
+    need=$NEED_OPENWRT; [ "$OSES" = ubuntu ] && need=$NEED_UBUNTU
+    [ $SIZE -ge $need ] || die "$(t 'that choice needs about {1} MiB and this device has {2} MiB of free space' "$((need / 1048576))" "$((SIZE / 1048576))")"
+}
+# --- package-choices end
+if [ -n "$PKG" ]; then
+    package_choices
+else
 echo "  $(t '1) Ubuntu LTS: 24.04 or 26.04, asked next (full distribution, apt, ~500 MiB RAM in use)')"
 echo "  $(t '2) OpenWrt {1} (router, LuCI web UI, ~140 MiB RAM in use)' "$OWRT_VER")"
 echo "  $(t '3) both (switch later with: mu300-os ubuntu|openwrt)')"
@@ -683,6 +719,7 @@ case " $OSES " in *" ubuntu "*) if [ $MODE = prebuilt ]; then
     ask uv "$(t 'Ubuntu')" 1 MU300_ANS_UBUNTU
     case $uv in 1|24.04) UBUNTU=24.04 ;; 2|26.04) UBUNTU=26.04 ;; *) die "$(t 'invalid choice')" ;; esac
 fi ;; esac
+fi
 # the release file of a system: Ubuntu 26.04 has its own, 24.04 keeps the name it always had
 rootfs_file() { if [ "$1" = ubuntu ] && [ "$UBUNTU" = 26.04 ]; then echo mu300-ubuntu-26.04-rootfs.tar.gz; else echo "mu300-$1-rootfs.tar.gz"; fi; }
 ask dl "$(t 'Boot Linux by default instead of Android (falls back to Android if Linux fails)? (yes/no)')" yes MU300_ANS_DEFAULT_LINUX
@@ -744,10 +781,12 @@ EXTRA_PANEL=
 case " $OSES " in *" ubuntu "*)
     echo "  $(t 'The web panel for Ubuntu (Cockpit with an MU300 page: signal, SMS, VPN, Wi-Fi, updates, a terminal; on the LAN only) is optional. It can also be added later on the device:')"
     echo "    sudo mu300-extra install panel"
-    ask px "$(t 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)')" no MU300_ANS_PANEL ;;
+    # (not part of a package: it is a file of the release, not of the zip)
+    if [ -n "$PKG" ]; then echo "  $(t 'It is not part of this package.')"
+    else ask px "$(t 'Install the web panel for Ubuntu (about 24 MB more to download, 50 MB on the device)? (yes/no)')" no MU300_ANS_PANEL; fi ;;
 esac
-KERNEL=5.4
-if [ $MODE = prebuilt ]; then
+[ -n "$PKG" ] || KERNEL=5.4
+if [ $MODE = prebuilt ] && [ -z "$PKG" ]; then
     say "$(t 'Which kernel?')"
     echo "  $(t "1) 5.4   Unisoc's vendor kernel (Android 12 base): the longest tested, everything this project supports")"
     echo "  $(t '2) 6.18  mainline Linux, current long-term (LTS) release: newer drivers and security fixes, the same')"
@@ -830,6 +869,18 @@ if [ $MODE = prebuilt ]; then
 slot_release_ok "$RELEASE"   # (RELEASE: release_resolve, before the questions)
 REL=$WORK/release/$RELEASE
 mkdir -p "$REL"
+# ASSETS: where the release's files are - downloaded into REL, or a package's payload/ (the kernels are unpacked into
+# REL either way)
+ASSETS=$REL
+VPN_FROM_MODULE=
+if [ -n "$PKG" ]; then
+step download 20
+say "$(t 'Checking the files of this package')"
+ASSETS=$PKG/payload
+package_verify
+# the VPN is not in a zip: the module of its own repository, which is a download
+[ "$vx" != yes ] || VPN_FROM_MODULE=1
+else
 # MU300_RELEASE_URL: another location with the same files (e.g. a local test server)
 base=${MU300_RELEASE_URL:-https://github.com/$REPO/releases/download/$RELEASE}
 step download 20
@@ -840,7 +891,6 @@ files=mu300-kernel.tar.gz
 for os in $OSES; do files="$files $(rootfs_file $os)"; done
 # the VPN: a release from before the module (its systems carry mu300-vpn) has the engines as its own vpn extra, from the
 # same SHA256SUMS; a newer one has neither, and the module comes from its own repository (below)
-VPN_FROM_MODULE=
 if [ "$vx" = yes ]; then
     if awk '$2 == "mu300-extra-vpn.tar.gz" || $2 == "*mu300-extra-vpn.tar.gz" {f = 1} END {exit !f}' "$REL/SHA256SUMS"; then
         files="$files mu300-extra-vpn.tar.gz"; EXTRA_VPN=$REL/mu300-extra-vpn.tar.gz
@@ -870,18 +920,25 @@ for f in $files; do
         progress verify file "$f" result cached
     fi
 done
+fi
 [ -z "$VPN_FROM_MODULE" ] || fetch_vpn_module
-rm -rf "$REL/kernel" && mkdir -p "$REL/kernel" && tar -xzf "$REL/mu300-kernel.tar.gz" -C "$REL/kernel"
-KOUT=$REL/kernel
-# the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline kernel is
-# checked below)
-case $DEVICE in f50|v50) ;; *) [ -d "$KOUT/modules-$DEVICE" ] || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")" ;; esac
-BUSYBOX=$KOUT/busybox; LOGDW=$KOUT/logdw
+# the 5.4 bundle: its kernel, and for every kernel the busybox, logdw and modules of the boot image's first segment.
+# A package with a mainline kernel has no 5.4 bundle: its boot image is that kernel with its own generic segment,
+# which brings init's busybox, logdw and modules (build-boot-image.py checks that it does).
+KOUT=; BUSYBOX=; LOGDW=
+if [ -z "$PKG" ] || [ "$KERNEL" = 5.4 ]; then
+    rm -rf "$REL/kernel" && mkdir -p "$REL/kernel" && tar -xzf "$ASSETS/mu300-kernel.tar.gz" -C "$REL/kernel"
+    KOUT=$REL/kernel
+    # the 5.4 modules of a device of its own (u30air); the V50 has none, it runs as the F50 does (its mainline kernel
+    # is checked below)
+    case $DEVICE in f50|v50) ;; *) [ -d "$KOUT/modules-$DEVICE" ] || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")" ;; esac
+    BUSYBOX=$KOUT/busybox; LOGDW=$KOUT/logdw
+fi
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 KMAIN=
 if [ "$KERNEL" != 5.4 ]; then
     KMAIN=$REL/kernel-$KERNEL
-    rm -rf "$KMAIN" && mkdir -p "$KMAIN" && tar -xzf "$REL/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"
+    rm -rf "$KMAIN" && mkdir -p "$KMAIN" && tar -xzf "$ASSETS/mu300-kernel-$KERNEL.tar.gz" -C "$KMAIN"
     [ -s "$KMAIN/Image" ] && [ -s "$KMAIN/ramdisk-generic.lz4" ] && [ -s "$KMAIN/kernel.release" ] || die "$(t '{1} is incomplete' "mu300-kernel-$KERNEL.tar.gz")"
     # a bundle names the devices it runs on; older mainline kernels do not bring up the U30 Air's USB (FINDINGS 33c)
     [ $DEVICE = f50 ] || grep -qw $DEVICE "$KMAIN/devices" 2>/dev/null || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")"
@@ -959,9 +1016,9 @@ sed "s/^ROOT_OFFSET=[0-9]*/ROOT_OFFSET=$OFF/" "$TOP/boot/init" > "$WORK/init"
 # image that "mu300-update kernel 6.18" (or 7.2) writes on the device
 python3 "$TOP/boot/build-boot-image.py" --stock-boot "$WORK/dumps/boot_$ANDROID_SLOT.img" --misc-head "$WORK/dumps/misc-head.bin" \
   --kernel "${KMAIN:-$KOUT}/Image" ${KMAIN:+--append-ramdisk "$KMAIN/ramdisk-generic.lz4"} \
-  --modules "$KOUT/modules" --init "$WORK/init" --busybox "$BUSYBOX" --device "$DEVICE" \
-  $([ -d "$KOUT/modules-u30air" ] && echo --device-modules "u30air=$KOUT/modules-u30air") \
-  --logdw "$LOGDW" --ueventd-perms "$TOP/android-vendor/ueventd-perms.sh" \
+  ${KOUT:+--modules "$KOUT/modules"} --init "$WORK/init" ${BUSYBOX:+--busybox "$BUSYBOX"} --device "$DEVICE" \
+  $([ -n "$KOUT" ] && [ -d "$KOUT/modules-u30air" ] && echo --device-modules "u30air=$KOUT/modules-u30air") \
+  ${LOGDW:+--logdw "$LOGDW"} --ueventd-perms "$TOP/android-vendor/ueventd-perms.sh" \
   --android-subset "$WORK/android-subset" --linux-slot "$LINUX_SLOT" --out "$WORK/boot-linux-slot$LINUX_SLOT.img" >/dev/null
 
 # ---------------------------------------------------------------- confirm and install
@@ -991,7 +1048,7 @@ say "$(t 'Copying to the device')"
 adb push "$TOP/tools/android-mount-mu300root.sh" "$TOP/tools/android-install.sh" "$TOP/tools/android-bootchain.sh" $T/ >/dev/null
 for os in $OSES; do
     if [ $MODE = prebuilt ]; then
-        adb push "$REL/$(rootfs_file $os)" $T/mu300-$os.tar.gz >/dev/null
+        adb push "$ASSETS/$(rootfs_file $os)" $T/mu300-$os.tar.gz >/dev/null
         adb push "$WORK/mu300-vendor-$os.tar.gz" $T/mu300-vendor-$os.tar.gz >/dev/null
     else
         adb push "$WORK/mu300-$os.tar.gz" $T/mu300-$os.tar.gz >/dev/null
