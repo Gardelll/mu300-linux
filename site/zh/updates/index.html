@@ -121,7 +121,7 @@ sudo mu300-update apply</code></pre>
 <pre><code>wget -O /opt/mu300/bin/mu300-update https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update
 mu300-update apply</code></pre>
 </div>
-<p>同一个文件你的版本和发布版的版本相遇时，设置用你的，程序用发布版的；需要让开的内容都保存在 <code>/etc/mu300/update-kept/</code> 下，并列在 <code>/etc/mu300/update-report</code> 里（<code>sudo mu300-update report</code>；控制面板里在 系统 &gt; 更新 下）。更新不会打开你关掉的东西：你停用的服务仍然是停用的。以上从 v2026.10.28 起；到 v2026.10.27 为止，更新只保留一组固定的位置（设置、用户、主目录、<code>/usr/local</code>）。详情见 wiki 的 <a href="https://github.com/dikeckaan/mu300-linux/wiki/Updating#what-an-update-keeps">Updating</a> 页面。</p>
+<p>同一个文件你的版本和发布版的版本相遇时，设置用你的，程序用发布版的；需要让开的内容都保存在 <code>/etc/mu300/update-kept/</code> 下，并列在 <code>/etc/mu300/update-report</code> 里（<code>sudo mu300-update report</code>；控制面板里在 系统 &gt; 更新 下）。更新不会打开你关掉的东西：你停用的服务仍然是停用的。以上从第一个四段式标签（vYYYY.MM.DD.N）的版本起；到 v2026.10.27 为止，更新只保留一组固定的位置（设置、用户、主目录、<code>/usr/local</code>）。详情见 wiki 的 <a href="https://github.com/dikeckaan/mu300-linux/wiki/Updating#what-an-update-keeps">Updating</a> 页面。</p>
 <p>用电脑也行：再运行一次安装程序，选 <code>update</code>。它会重装系统、写入新的启动镜像，并像 <code>apply</code> 一样保留你的一切。在现有安装上刷新版本的 Magisk zip 也一样。</p>
 <p><strong>你自己装的软件包</strong>（<code>apk add</code>、<code>apt install</code>）不在发布版的镜像里。更新会把它们列出来，把它们的 OpenWrt 设置先放到一边（免得程序不在了设置还在起作用），新系统在第一次开机联网后再把它们装回来。<code>mu300-user-packages status</code> 显示哪些回来了（控制面板里：系统 &rarr; 更新后的软件包）；<code>mu300-update apply --no-reinstall</code> 跳过这一步。Ubuntu 上你添加的 apt 源（PPA）也会保留。从 v2026.10.20 起。</p>
 <p>装了网页面板扩展的 Ubuntu 上，新镜像里没有 Cockpit：更新后的第一次开机会在后台把它装回来（扩展自带副本就用副本，否则联网后从 Ubuntu 的软件源装）；<code>mu300-panel status</code> 会说明进度。</p>

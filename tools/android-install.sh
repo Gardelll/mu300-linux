@@ -11,7 +11,7 @@
 #   WIPE_LEGACY=0|1    remove a first-generation Ubuntu that lives directly in the filesystem root
 #   UPDATE=0|1         keep everything of the user's in the systems being reinstalled (the carry block of the new
 #                      image's mu300-update; MU300_UPDATE_KEEP=list in the environment: only the list of places an
-#                      update kept before v2026.10.28)
+#                      update kept before the first release with a four-field tag)
 #   BOOT_OS            system started by the initramfs
 #   DEFAULT_LINUX=0|1  keep booting Linux (otherwise every Linux boot is one-shot and returns to Android)
 #   BOOT_ATTEMPTS=1-6  with DEFAULT_LINUX=1: failed boots in a row before Android (.mu300/boot-attempts)

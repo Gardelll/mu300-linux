@@ -818,7 +818,7 @@ class Plan(InstallerCase):
                 self.assertNotIn('an older release', r.stdout + r.stderr)
 
     def test_keeping_only_the_list_is_for_root_to_ask(self):
-        # MU300_UPDATE_KEEP=list (the update as it was before v2026.10.28) gives up files of the user: only a file
+        # MU300_UPDATE_KEEP=list (the update as it was before the first release with a four-field tag) gives up files of the user: only a file
         # root owns may say it; android-install.sh is told through its environment
         keep = self.fake.root / 'update-keep'
         self.fake_install_hook('echo "${MU300_UPDATE_KEEP:-unset}" > "$FAKE/update-keep"')

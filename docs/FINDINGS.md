@@ -6393,7 +6393,7 @@ and the caller took that for done). An image that does not bring these parts (bu
 updated the old way, with a line that says so; `MU300_UPDATE_KEEP=list` asks for the old way (kept for one release:
 `mu300-update`'s environment, the zip's `/data/adb/mu300-install.conf`, the environment of `android-install.sh`).
 
-**The old image's manifest.** A system from v2026.10.28 on has its own (taken only when its first line names the
+**The old image's manifest.** A system from the first release with a four-field tag on has its own (taken only when its first line names the
 release the system says it is). For the releases before that, the new image has them:
 `opt/mu300/lib/image-manifests/<image>.gz`, made from the published images of v2026.09.21 to v2026.10.27 (36
 releases; `tools/image-manifest.py legacy` and `union`). Two releases of one image differ in a few dozen lines, so
@@ -6434,7 +6434,7 @@ has never kept the old system; it now carries by link (no room needed) and swaps
 new into place, then the removal, and a run that finds `<os>.broken` without `<os>` puts it back first.
 `rollback` is unchanged and returns the old system exactly (below). `apply` does not go to an *older* release by
 itself (`apply --downgrade`, the rule of the panel's update, §86; the zip: `MU300_DOWNGRADE=yes` from `/data/adb`
-only): the update is done by the release it installs, and one from before v2026.10.28 keeps the list only.
+only): the update is done by the release it installs, and one from before the first release with a four-field tag keeps the list only.
 
 **The Magisk zip.** Update was its default already (`MU300_MODE=update` when it finds a filesystem). Its plan now
 says what that means - `update: <os> <old> -> <new>: everything you added to it or changed in it is kept ...`, `not
@@ -6545,7 +6545,7 @@ as the carry block writes it, the newest update on top, cut at 6000 bytes with w
 new. The manifests of v2026.10.26 and v2026.10.27, published while this waited, were added (36 releases of each
 image); one published before this is merged needs the same (`tools/image-manifest.py legacy`, `union`).
 
-**On a release build** (2026-10-15: `tools/make-release.sh v2026.10.28` from the branch, not published, signed with
+**On a release build** (2026-10-15: `tools/make-release.sh` from the branch under a three-field test tag after v2026.10.27, not published, signed with
 the project's key; 5.4 and the mainline kernels of v2026.10.27; the Magisk zips by `tools/make-magisk-zips.sh`).
 The experiment from v2026.10.27 as published, now with a third path - the old system offline, given the new
 updater as a user of a release before `apply --from` does it, then `mu300-update apply --from` the release's zip of

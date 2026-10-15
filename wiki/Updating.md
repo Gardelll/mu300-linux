@@ -8,7 +8,7 @@ only swaps them at the very end. If the download breaks halfway, nothing has cha
 cupboard until you throw it away.
 
 **What you lose in an update: nothing.** Everything you added to the system or changed in it is kept, whichever way
-you update (from v2026.10.28 on; see [What an update keeps](#what-an-update-keeps)).
+you update (from the first release with a four-field tag, vYYYY.MM.DD.N, on; see [What an update keeps](#what-an-update-keeps)).
 
 ## Commands
 
@@ -77,7 +77,7 @@ that has none unless you say so (`--unsigned`). Systems up to v2026.10.27 have n
 **Everything you added to the system, and everything you changed in it.** Up to v2026.10.27 an update kept a list
 of places (`/etc/mu300`, home directories, `/usr/local`, SSH keys, OpenWrt's `/etc/config`) and the new release
 replaced the rest: `/etc/wireguard`, a service you wrote, crontabs, `/var/lib/docker`, `/opt` were gone from the
-system afterwards. From v2026.10.28 on it works the other way round. Every release image carries a list of its own
+system afterwards. From the first release with a four-field tag on it works the other way round. Every release image carries a list of its own
 files with a checksum of each, so the update knows which files of your system came with the release you are on.
 Whatever else is there is yours, and it goes into the new system:
 
@@ -136,11 +136,11 @@ Reboot soon after an update. The new system has your files as they were when `ap
 changes after that stays in the previous one.
 
 `apply` never goes back to an **older** release by itself: the update is done by the release it installs, and one
-from before v2026.10.28 would keep only the list of places. `rollback` is the way back. (To install an older
+from before the first release with a four-field tag would keep only the list of places. `rollback` is the way back. (To install an older
 release all the same: `sudo mu300-update apply --downgrade`, the word of [the panel's update](#from-the-browser-openwrt-with-the-control-panel)
 too; a Magisk zip asks for `MU300_DOWNGRADE=yes` in `/data/adb/mu300-install.conf`.)
 
-### Coming from a release before v2026.10.28
+### Coming from a release with a three-field tag
 
 Nothing to do: the new release brings the file lists of every release from v2026.09.21 on. On a system older than
 that, or one built by hand, the update cannot tell a file you changed from one the old release shipped. It then

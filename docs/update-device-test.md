@@ -30,7 +30,7 @@ done
 Each audit must pass (every image has `opt/mu300/bin/mu300-carry`, its own manifest and the manifests of the older
 releases), and each release is signed (`SHA256SUMS.sig`): the images of the branch carry the project's key, so the
 second update refuses an unsigned release. The mainline kernels must be built at the branch's commit (or their
-`upstream/mu300-mainline.config` audit fails); the release dir `release/v2026.10.28` the PR's agent built with
+`upstream/mu300-mainline.config` audit fails); the release dir the PR's agent built (`release/<tag>`, a three-field test tag after v2026.10.27) with
 v2026.10.27's mainline kernels is fine for containers, not for this.
 
 **The mirror** on the computer, laid out as in FINDINGS 86 so that the page's *Check* works too. The devices reach
