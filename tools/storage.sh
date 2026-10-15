@@ -50,7 +50,7 @@ choose_storage() {
     # too little room inside: the card is the way that needs no repartitioning; a card that holds an installation
     # already: that is what the device starts, so it is what an update or reinstall is about
     _d=internal; { [ "$SIZE" -lt "$SD_MIN" ] || [ "$_ex" = yes ]; } && _d=sd
-    ask _st "$(t 'Where should the Linux filesystem go: internal storage or the SD card ({1}, {2})? (internal/sd)' "$SD_DEV" "$(gib "$SD_BYTES")")" $_d
+    ask _st "$(t 'Where should the Linux filesystem go: internal storage or the SD card ({1}, {2})? (internal/sd)' "$SD_DEV" "$(gib "$SD_BYTES")")" $_d MU300_STORAGE
     case $_st in
         internal) internal_over_card "$_ex" ;;
         sd) SD_MODE=1; sd_not_foreign ;;
@@ -64,7 +64,7 @@ internal_over_card() {  # internal_over_card EXISTING   (sd_existing of the card
     [ "$1" = yes ] || return 0
     echo "$(t 'The SD card ({1}) holds a Linux installation (mu300sd), and the device always starts that one first: an installation to internal storage does not start while this card is in the slot.' "$SD_DEV")"
     echo "$(t 'Take the card out before the device restarts, or erase its installation first with the uninstaller.')"
-    ask _ok "$(t 'Type internal to install to internal storage anyway')" no
+    ask _ok "$(t 'Type internal to install to internal storage anyway')" no MU300_ANS_INTERNAL_OVER_CARD
     [ "$_ok" = internal ] || die "$(t 'cancelled')"
 }
 
