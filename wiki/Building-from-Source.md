@@ -53,7 +53,9 @@ applied (about 10 minutes on Apple silicon). Then:
 * **Install your own build:** `./install.sh --build` uses your local kernel outputs and builds the root filesystems
   instead of downloading them.
 * **Release:** `tools/make-release.sh TAG --publish` (it refuses to publish an image that contains firmware, Android
-  files, host keys or local settings), or the Release workflow in GitHub Actions.
+  files, host keys or local settings), or the Release workflow in GitHub Actions. TAG is `vYYYY.MM.DD.N`: the day
+  (UTC) of the build and the number of the release that day; `tools/make-release.sh --next-tag` prints it (see
+  [Updating](Updating#release-names)).
 * **Magisk zips:** `tools/make-magisk-zips.sh RELEASE_DIR OUT_DIR`.
 
 ## Sources

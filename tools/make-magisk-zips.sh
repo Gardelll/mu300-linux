@@ -30,8 +30,16 @@ for f in mu300-kernel.tar.gz mu300-kernel-6.18.tar.gz mu300-kernel-7.2.tar.gz mu
         { echo "$f is missing from $R or does not match its SHA256SUMS" >&2; exit 1; }
 done
 mkdir -p "$2"; O=$(cd "$2" && pwd)
-# Magisk wants an integer that grows: the date in the tag (v2026.10.06 -> 20261006)
-code=$(printf '%s' "$TAG" | tr -cd 0-9 | cut -c1-9); [ -n "$code" ] || code=1
+# Magisk wants an integer that grows: the date in the tag (v2026.10.06 -> 20261006); for a four-field tag the date and
+# N (v2026.10.16.2 -> 2026101602: ten digits, above every three-field tag's eight, as the release is newer; docs/
+# FINDINGS.md 125; below 2^31 until 2147). Any other tag: its digits, as before.
+. "$TOP/tools/releases.sh"
+code=$(tag_key "$TAG") || code=
+case $code in
+    2*) code=${code#2} ;;
+    1*) code=${code#1}; code=${code%00} ;;
+    *) code=$(printf '%s' "$TAG" | tr -cd 0-9 | cut -c1-9); [ -n "$code" ] || code=1 ;;
+esac
 W=$(mktemp -d); trap 'rm -rf "$W"' EXIT
 tar -xzOf "$R/mu300-kernel.tar.gz" ./busybox > "$W/busybox"
 [ -s "$W/busybox" ] || { echo "mu300-kernel.tar.gz has no busybox" >&2; exit 1; }

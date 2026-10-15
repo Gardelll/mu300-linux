@@ -142,6 +142,25 @@ sudo MU300_UBUNTU=26.04 mu300-update apply   # or 24.04
 
 Settings and data are kept. Ubuntu 26.04 needs kernel 6.18 or 7.2.
 
+## Release names
+
+A release is named after the day it was built, then a number: **`vYYYY.MM.DD.N`**. `v2026.10.16.1` is the first
+release of 16 October 2026 (UTC), `v2026.10.16.2` the second one that day. The releases up to **v2026.10.27** had three
+parts (`vYYYY.MM.DD`), and their "day" was only a counter that ran ahead of the calendar: v2026.10.27 came out on
+15 October. So:
+
+* every four-part name is newer than every three-part one, whatever the dates say: `v2026.10.16.1` is newer than
+  `v2026.10.27`;
+* four-part names go by the date, then by the number: `v2026.10.16.10` is newer than `v2026.10.16.9`, and
+  `v2026.10.17.1` newer than both.
+
+`mu300-update`, the control panel, the installers and the web installer all compare them this way. A device that
+still runs **v2026.10.27 or older** updates to a four-part release as usual with `sudo mu300-update apply` (the new
+release's own updater takes over before anything is changed), but its old updater sorts the names as text: until there
+is a release dated 27 October 2026 or later, it does not show the "is out" note at login, and `mu300-update check`
+there says the device is "newer than the newest release" - run `sudo mu300-update apply` anyway. Details:
+[FINDINGS 125](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md).
+
 ## Updating with the computer installer instead
 
 Run `./install.sh` again and answer **update** when it asks *update or wipe*. It reinstalls the systems, writes a fresh
