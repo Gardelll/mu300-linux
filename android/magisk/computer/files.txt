@@ -18,6 +18,8 @@ tools/storage.sh
 tools/releases.sh
 tools/release_pick.py
 tools/package.sh
+tools/resume.sh
+tools/resume.py
 tools/self-update.sh
 tools/gui-launch.sh
 tools/gui-launch.ps1

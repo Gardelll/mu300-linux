@@ -22,7 +22,7 @@ jobs:
         run: python tools/check-i18n.py
       - name: Shell syntax
         shell: bash
-        run: for f in install.sh uninstall.sh tools/i18n.sh tools/self-update.sh tools/linux-mode.sh tools/answers.sh tools/releases.sh tools/gui-launch.sh tools/package.sh android/magisk/computer/start.sh android/magisk/computer/start-gui.sh android/magisk/computer/uninstall-linux.sh android/magisk/installer/mu300-install.sh android/magisk/installer/customize.sh tools/android-boot-image.sh tools/make-magisk-zips.sh; do sh -n "$f"; done
+        run: for f in install.sh uninstall.sh tools/i18n.sh tools/self-update.sh tools/linux-mode.sh tools/answers.sh tools/releases.sh tools/gui-launch.sh tools/package.sh tools/resume.sh android/magisk/computer/start.sh android/magisk/computer/start-gui.sh android/magisk/computer/uninstall-linux.sh android/magisk/installer/mu300-install.sh android/magisk/installer/customize.sh tools/android-boot-image.sh tools/make-magisk-zips.sh; do sh -n "$f"; done
       - name: PowerShell 5.1 parse
         shell: powershell
         run: |

@@ -5,7 +5,12 @@
 #
 # On the 32 GB variant there is no free region at all (userdata fills the disk). The installer then offers
 # to shrink userdata to make one - EXPERIMENTAL, it rewrites the partition table and erases everything in
-# Android, so take a full backup with tools/backup-device.sh first.
+# Android, so take a full backup with tools/backup-device.sh first. Android's own recovery resets Android's data
+# (that is what works with its encryption), and the installation resumes on the next run of this installer, once
+# Android is set up again with USB debugging and root (tools/resume.sh; a transaction in ~/mu300-backups):
+#   ./install.sh --resume        continue the prepared installation, or stop when there is none for this device
+#   ./install.sh --no-resume     install as if nothing had been prepared (MU300_RESUME=0)
+#   ./install.sh --transaction FILE   that transaction, not the newest one for the device (MU300_TRANSACTION)
 #   ./install.sh                 install Ubuntu, OpenWrt or both from the prebuilt release images
 #   ./install.sh --build         build kernel outputs/root filesystems locally instead (see README "Build and run")
 #   ./install.sh --backup        only copy what an installation reads first to this computer: Android's boot image
@@ -73,6 +78,7 @@ T=/data/local/tmp
 MODE=prebuilt; CHECK_ONLY=0; BACKUP_ONLY=0; ADB_PATH_ONLY=0; ANSWERS_FILE=; _opt=
 for a in "$@"; do
     if [ "$_opt" = answers ]; then ANSWERS_FILE=$a; _opt=; continue; fi
+    if [ "$_opt" = transaction ]; then MU300_TRANSACTION=$a; export MU300_TRANSACTION; _opt=; continue; fi
     if [ "$_opt" = package ]; then MU300_PACKAGE=$a; export MU300_PACKAGE; _opt=; continue; fi
     case $a in
         --check) CHECK_ONLY=1 ;;
@@ -82,6 +88,10 @@ for a in "$@"; do
         --adb-path) ADB_PATH_ONLY=1 ;;
         --answers) _opt=answers ;;
         --answers=*) ANSWERS_FILE=${a#--answers=} ;;
+        --resume) MU300_RESUME=1; export MU300_RESUME ;;
+        --no-resume) MU300_RESUME=0; export MU300_RESUME ;;
+        --transaction) _opt=transaction ;;
+        --transaction=*) MU300_TRANSACTION=${a#--transaction=}; export MU300_TRANSACTION ;;
         --package) _opt=package ;;
         --package=*) MU300_PACKAGE=${a#--package=}; export MU300_PACKAGE ;;
         -h|--help) sed -n '2,/^set -eu/{/^set -eu/d;s/^# \{0,1\}//p;}' "$0"; exit 0 ;;
@@ -96,6 +106,7 @@ REPO=${MU300_REPO:-dikeckaan/mu300-linux}
 . "$TOP/tools/i18n.sh"
 . "$TOP/tools/storage.sh"
 . "$TOP/tools/releases.sh"
+. "$TOP/tools/resume.sh"
 . "$TOP/tools/package.sh"
 # adb from platform-tools unzipped next to the project (or into the usual places) needs no PATH entry
 find_adb() {
@@ -122,9 +133,16 @@ if [ -n "$PKG" ]; then
     info package "$PKG"; info package.system "$PKG_SYSTEM"; info package.kernel "$PKG_KERNEL"; info package.release "$PKG_TAG"
     echo "$(t 'Package: {1} with kernel {2}, release {3} (unpacked Magisk zip at {4})' "$PKG_SYSTEM" "$PKG_KERNEL" "$PKG_TAG" "$PKG")"
 fi
-# first of all, make this the newest installer (it restarts itself when it changed)
+# first of all, make this the newest installer (it restarts itself when it changed) - not from a package, and not
+# while a prepared installation waits: its transaction is bound to the tools that prepared it (tools/resume.sh)
 . "$TOP/tools/self-update.sh"
-[ -n "$PKG" ] || self_update "$0" "$@"
+if [ -n "$PKG" ]; then
+    :
+elif resume_pending; then
+    echo "  $(t 'a prepared installation is waiting (tools/resume.sh): this installer does not update itself until it is done')"
+else
+    self_update "$0" "$@"
+fi
 # the graphical installer, offered once to a person who starts a plain installation
 . "$TOP/tools/gui-launch.sh"
 [ $CHECK_ONLY = 1 ] || [ $BACKUP_ONLY = 1 ] || [ $MODE != prebuilt ] || gui_offer
@@ -458,12 +476,18 @@ offer_repartition() {
     info makeroom.min_android $MIN_ANDROID; info makeroom.min_linux $MIN_LINUX; info makeroom.max_linux $max_linux
     [ $max_linux -ge $MIN_LINUX ] || die "$(t 'there is not enough room to split: {1} in total,' "$(gib $((total * 512)))")
 $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_ANDROID * 512)))")"
+    # the device's identity and how Android keeps its data (read only); kano's rule: encrypted, plain, or unknown
+    resume_facts || die "$(t 'could not read what identifies this device (serial, eMMC CID, userdata)')"
+    [ "$UD_START" = "$LAST_FIRST" ] && [ $((UD_START + UD_SIZE - 1)) = "$LAST_END" ] ||
+        die "$(t 'the partition table and the running kernel disagree about userdata; reboot Android and try again')"
+    info makeroom.crypto "$CRYPTO"; info makeroom.crypto_state "$CRYPTO_STATE"; info makeroom.crypto_type "$CRYPTO_TYPE"
 
     echo
     echo "  eMMC:                 $(gib $((disk * 512)))"
     echo "  $(t 'userdata now:         {1} (sectors {2}..{3})' "$(gib $((LAST_END - LAST_FIRST + 1)))" "$LAST_FIRST" "$LAST_END")"
     echo "  $(t 'free behind it:       {1}' "$(gib $(( (USABLE_END - LAST_END) * 512 )))")"
     echo "  $(t 'to share:             {1}' "$(gib $((total * 512)))")"
+    echo "  $(t "Android's data:       {1} ({2})" "$(case $CRYPTO in yes) t 'encrypted' ;; no) t 'not encrypted' ;; *) t 'unknown' ;; esac)" "${CRYPTO_STATE:-?}${CRYPTO_TYPE:+/$CRYPTO_TYPE}")"
     echo
     echo "  $(t 'Linux needs at least  {1} (OpenWrt) / 1.6 GiB (Ubuntu) / 2.4 GiB (both)' "$(gib $((MIN_LINUX * 512)))")"
     echo "  $(t 'Android keeps at least {1}' "$(gib $((MIN_ANDROID * 512)))")"
@@ -471,12 +495,20 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
     echo "  $(t 'THIS IS EXPERIMENTAL. It rewrites the partition table and ERASES everything in Android -')"
     echo "  $(t 'apps, photos, accounts, settings. Take a full backup first:  sh tools/backup-device.sh')"
     echo "  $(t 'Only userdata changes size; it is the last partition, so nothing else moves.')"
+    echo "  $(t "Android's own recovery erases Android's data: the device restarts into it, resets Android (a factory")"
+    echo "  $(t 'reset) and starts Android again, which takes a few minutes and more than one restart. Then set Android up')"
+    echo "  $(t 'again, turn USB debugging back on and bring root back (Magisk: install the Magisk app again and let')"
+    echo "  $(t 'Shell have root), and run this installer again: it finds what was prepared and continues.')"
+    echo "  $(t 'What was prepared, and a backup of the partition table, misc, boot and the boot chain, are kept on this')"
+    echo "  $(t 'computer in {1} - the reset erases everything of it on the device.' "$BACKUP_DIR")"
     echo
     if [ $CHECK_ONLY = 1 ]; then
         echo "  $(t '--check writes nothing. Run the installer without it to make room.')"
         progress done result ok
         exit 0
     fi
+    # kano's rule: an encryption state that cannot be told is no ground to stand on
+    [ "$CRYPTO" != unknown ] || die "$(t "Android's encryption state is unknown ({1}); nothing is changed." "${CRYPTO_STATE:-?}/${CRYPTO_TYPE:-?}")"
     ask go "$(t 'Make room by shrinking userdata? (yes/no)')" no MU300_ANS_MAKE_ROOM
     [ "$go" = yes ] || die "$(t 'nothing was changed.')"
 
@@ -501,41 +533,21 @@ $(t 'and Android needs at least {1} of it. Nothing is changed.' "$(gib $((MIN_AN
     ask sure "$(t "Type ERASE to rewrite the partition table and wipe Android's data")" "" MU300_ANS_ERASE_ANDROID
     [ "$sure" = ERASE ] || die "$(t 'nothing was changed.')"
 
-    step repartition 50
-    say "$(t 'Rewriting the partition table')"
-    python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/gpt.head,$WORK/gpt/gpt.tail" \
-        --disk-sectors "$disk" --name userdata --end-sector "$new_end" --out "$WORK/gpt/new" || die "$(t 'the resize was refused; nothing is changed')"
-    adb push "$WORK/gpt/new.head" /data/local/tmp/new.head >/dev/null 2>&1
-    adb push "$WORK/gpt/new.tail" /data/local/tmp/new.tail >/dev/null 2>&1
-    # the backup copy first: if power is lost between the two, the primary is still the old table and the
-    # device boots, which is the recoverable order
-    su_do "dd if=/data/local/tmp/new.tail of=/dev/block/mmcblk0 bs=512 seek=$((disk - 33)) conv=fsync 2>/dev/null" >/dev/null
-    su_do "dd if=/data/local/tmp/new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null" >/dev/null
-    su_do 'sync; rm -f /data/local/tmp/new.head /data/local/tmp/new.tail' >/dev/null
+    # a backup on this computer, before anything is written (kano's backup: the table, misc, boot and the boot chain
+    # of both slots, checked against the device)
+    step backup 30
+    RESUME_BD=$BACKUP_DIR/$(date +%Y%m%d-%H%M%S)-$(printf '%s' "$CID" | cut -c25-32)
+    say "$(t 'Backing up to {1}' "$RESUME_BD")"
+    resume_backup "$RESUME_BD"
+    info resume.backup "$RESUME_BD"
+    resume_prepare "$new_end"
 
-    say "$(t 'Verifying')"
-    su_do "dd if=/dev/block/mmcblk0 bs=512 count=34 2>/dev/null > /data/local/tmp/gpt.head" >/dev/null
-    su_do "dd if=/dev/block/mmcblk0 bs=512 skip=$((disk - 33)) count=33 2>/dev/null > /data/local/tmp/gpt.tail" >/dev/null
-    adb pull /data/local/tmp/gpt.head "$WORK/gpt/after.head" >/dev/null 2>&1 || true
-    adb pull /data/local/tmp/gpt.tail "$WORK/gpt/after.tail" >/dev/null 2>&1 || true
-    su_do 'rm -f /data/local/tmp/gpt.head /data/local/tmp/gpt.tail' >/dev/null
-    check=$(python3 "$TOP/tools/resize-last-partition.py" "$WORK/gpt/after.head,$WORK/gpt/after.tail" \
-              --disk-sectors "$disk" --name userdata --show) || die "$(t 'the table on the device does not read back as valid GPT.')
-$(t "The backup copy at the end of the disk was written first, so Android's own repair may still fix this. Do not power off.")"
-    got=$(echo "$check" | sed -n 's/^LAST_END=//p')
-    [ "$got" = "$new_end" ] || die "$(t 'the table did not take (userdata still ends at {1}). Nothing else was changed.' "$got")"
-    echo "  $(t 'userdata now ends at sector {1}' "$got")"
-
-    # Android cannot mount a filesystem that claims to be larger than its partition; clearing the superblocks
-    # is what makes it format /data cleanly on the next boot instead of bootlooping on a repair attempt.
-    say "$(t "Clearing Android's data filesystem so it is recreated on the next boot")"
-    su_do "dd if=/dev/zero of=/dev/block/by-name/userdata bs=1M count=32 conv=fsync 2>/dev/null" >/dev/null
-
-    say "$(t 'Done - the device has to reboot before the new layout is visible')"
-    echo "  $(t 'Android will set up its data partition again on this boot, which takes a few minutes.')"
-    echo "  $(t 'When it is back, run this installer again and it will find the free space.')"
+    say "$(t 'Done - the device restarts into the reset now')"
+    echo "  $(t "Android's recovery formats Android's data on the next start; then Android starts as new. Set it up,")"
+    echo "  $(t 'turn USB debugging on, bring root back (the Magisk app, Shell allowed), and run this installer again.')"
+    echo "  $(t 'transaction: {1}' "$RESUME_FILE")"
     ask rb "$(t 'Reboot now? (yes/no)')" yes MU300_ANS_REBOOT
-    progress done result ok repartitioned yes
+    progress done result ok repartitioned yes resume pending transaction "$RESUME_FILE"
     [ "$rb" = yes ] && adb reboot
     exit 0
 }
@@ -545,6 +557,11 @@ step storage 6
 say "$(t 'Locating free eMMC space after the last partition')"
 region_probe || die "$(t 'could not read the partition table from the device (is su granted? try again)')"
 info emmc.sectors "$disk"; info emmc.last_end "$last_end"; info region.offset "$OFF"; info region.size "$SIZE"
+# a prepared installation waiting for this device (the make-room path below, on an earlier run): its checks first
+resume_lookup
+if [ $RESUME = 1 ]; then
+    if [ $CHECK_ONLY = 1 ]; then resume_validate soft || RESUME=0; else resume_validate; fi
+fi
 # the partitions, for a picture of the eMMC: "name:first sector:sectors" of each (the stream only; sysfs, read only)
 [ -z "$PROGRESS_FD" ] || info partitions "$(su_do 'for p in /sys/block/mmcblk0/mmcblk0p*; do echo $(sed -n s/^PARTNAME=//p $p/uevent):$(cat $p/start):$(cat $p/size); done' | tr '\n' ' ')"
 gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
@@ -565,6 +582,9 @@ if [ $CHECK_ONLY = 1 ]; then
         echo "$(t 'SD card: {1}, {2}, existing mu300sd filesystem: {3}' "$SD_DEV" "$(gib "$SD_BYTES")" "$(t "$([ $sd_ex = yes ] && echo yes || echo no)")")"
         [ $sd_ex = foreign ] && echo "  $(t 'the SD card holds another Linux (ext4) filesystem; the installer will not format it')"
     fi
+elif [ $RESUME = 1 ]; then
+    SD_MODE=0                    # the region that was prepared for it
+    info storage internal
 else
     choose_storage
     info storage "$([ $SD_MODE = 1 ] && echo sd || echo internal)"
@@ -597,14 +617,17 @@ fi
 # 0x00 or 0xFF: an eMMC reads back what its erase leaves (EXT_CSD ERASED_MEM_CONT), and on some F50s that is 0xFF -
 # counted as data, a region that was never written stopped the install with "not empty".
 DIRTY=0
-if [ $SD_MODE = 0 ] && [ $existing = no ]; then
+if [ $SD_MODE = 0 ] && [ $existing = no ] && [ $RESUME = 0 ]; then
     region_dirty
     echo "$(t 'data check: {1} of 16 samples contain data' "$DIRTY")"
     info region.dirty "$DIRTY"
     # what is there, for a report: the first bytes of the region
     [ "$DIRTY" -gt 0 ] && echo "  $(t 'start of the region: {1}' "$(su_do "dd if=/dev/block/mmcblk0 bs=1048576 skip=$(( OFF / 1048576 )) count=1 2>/dev/null | od -An -tx1 -N32" | tr -s ' \n' ' ')")"
 fi
-if [ $existing = yes ]; then
+if [ $RESUME = 1 ]; then
+    # (what the region holds is what was userdata, erased with the word ERASE when it was prepared, and the token)
+    vcode=resume; verdict=$(t 'OK: the region prepared by making room, checked against its transaction')
+elif [ $existing = yes ]; then
     vcode=existing; verdict=$(t 'OK: a MU300 Linux installation is already present (it can be kept or replaced)')
 elif [ $SD_MODE = 1 ]; then
     vcode=sd; verdict=$(t 'OK: the SD card will be formatted; everything on it is erased')
@@ -1050,6 +1073,8 @@ bootchain_pull
 
 step boot 92
 write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"
+# the prepared installation is done: its transaction no longer waits (kano: state installed)
+[ $RESUME = 0 ] || resume_py set "$RESUME_FILE" state=installed || echo "  $(t 'could not mark {1} as done' "$RESUME_FILE")"
 
 # on-device switch for later: one command in Android instead of plugging into a computer (needs Magisk)
 step switch 96

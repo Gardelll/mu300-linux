@@ -114,8 +114,23 @@ On the 32 GB device `userdata` fills the whole disk, so there is no free space. 
 * **An SD card (F50):** erases nothing on the internal storage. The installer offers it.
 * **Shrink `userdata`:** the installer can make room, asks how many GiB to give Linux and keeps at least 4 GiB for
   Android. **This rewrites the partition table and erases everything in Android. It is experimental** and you must
-  type `ERASE`. Take a full backup with `tools/backup-device.sh` first. Android sets its data up again on the next
-  boot; then run the installer again.
+  type `ERASE`. Take a full backup with `tools/backup-device.sh` first.
+
+How it goes (ported from kano's desktop installer, EXPERIMENTAL, not yet run on a device by this project):
+
+1. The installer saves a backup (partition table, `misc`, `boot` and the boot chain of both slots; never the NV or
+   calibration partitions) and a record of what it prepares, a *transaction*, on your computer in
+   `~/mu300-backups/` - keep that folder.
+2. It shrinks `userdata`, writes a token at the start of the new free region and asks Android's own recovery to
+   reset Android on the next start. Android's data is encrypted, so only Android itself can format it again.
+3. The device restarts into recovery, which erases Android's data (a factory reset), and Android starts as new.
+   This takes a few minutes and more than one restart.
+4. Set Android up again, turn USB debugging on, and bring root back: install the Magisk app again and let Shell
+   have root (Magisk itself is still in the boot partition).
+5. Run the installer again. It finds the transaction and checks that this is the same device, slot, partition
+   table, region and token, and the same installer; then it installs as usual into the region. If anything differs
+   it stops and writes nothing. `--no-resume` ignores the transaction, `--resume` insists on one,
+   `--transaction FILE` names one.
 
 ### The SD card (F50 only)
 

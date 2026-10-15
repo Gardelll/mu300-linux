@@ -551,6 +551,13 @@ class App:
         facts(i, rows).pack(fill='x')
         if f.get('verdict'):
             banner(i, f['verdict'], 'warn' if f.get('verdict.code') == 'dirty' else 'good').pack(fill='x', pady=(S3, 0))
+        # a prepared installation (making room by a reset, tools/resume.sh): what its checks said
+        if f.get('resume.transaction'):
+            if f.get('resume.check') == 'RESUME-OK':
+                banner(i, _('A prepared installation waits for this device (EXPERIMENTAL: room was made by resetting Android). Install continues it into the prepared region. Its record: {1}', f['resume.transaction']), 'accent').pack(fill='x', pady=(S3, 0))
+            else:
+                banner(i, _('A prepared installation waits for this device, but it cannot be continued: {1}. Nothing is written. Its record: {2}',
+                            f.get('resume.check', '').replace('RESUME-REFUSED: ', ''), f['resume.transaction']), 'bad').pack(fill='x', pady=(S3, 0))
 
         sd = f.sd
         o, i = card(body, _('SD card'))
@@ -624,7 +631,7 @@ class App:
         ttk.Label(line, text=_('Type ERASE:'), style='Warn.TLabel').pack(side='left', padx=(S4, 0))
         ttk.Entry(line, textvariable=self.v['room_word'], width=10).pack(side='left', padx=S2)
         ttk.Button(i, text=_('Make room now'), style='Danger.TButton', command=self._make_room_go).pack(anchor='w', pady=(S3, 0))
-        ttk.Label(i, text=_('Afterwards the device restarts, Android sets its data up again (a few minutes), and the check finds the free space.'),
+        ttk.Label(i, text=_('First the partition table, misc, boot and the boot chain are backed up to this computer, with a record of what is prepared. Then the device restarts into Android\'s own recovery, which resets Android - a factory reset, a few minutes and more than one restart. Set Android up again, turn USB debugging on and bring root back (install the Magisk app again, let Shell have root); then Refresh: the installation continues where it was prepared. EXPERIMENTAL (ported from kano\'s desktop installer).'),
                   style='Warn.Muted.TLabel', wraplength=660, justify='left').pack(anchor='w', pady=(S2, 0))
 
     def _make_room_go(self):
@@ -1084,7 +1091,7 @@ class App:
             return
         box = self.w['run-banner']
         if kind == 'makeroom' and p.ok:
-            banner(box, _('Room was made. The device restarts and Android sets its data up again (a few minutes). Then press Refresh on the Device page.'), 'good').pack(fill='x', pady=(0, S3))
+            banner(box, _('Room was made. The device restarts into Android\'s recovery, which resets Android (a few minutes, more than one restart). Set Android up again, turn USB debugging on and bring root back (the Magisk app, Shell allowed); then press Refresh on the Device page: the installation continues where it was prepared.'), 'good').pack(fill='x', pady=(0, S3))
         elif kind in ('install', 'makeroom') and not p.ok:
             banner(box, _('It stopped: {1}', p.error or '?'), 'bad').pack(fill='x', pady=(0, S2))
             reached = [s_[0] for s_ in p.steps if s_[2] in ('done', 'failed', 'running')]
