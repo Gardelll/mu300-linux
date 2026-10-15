@@ -274,6 +274,12 @@ test("choices the device would refuse are refused here first", () => {
   assert.deepEqual(check(choices({ systems: ["openwrt", "openwrt-luci"], bootOs: "openwrt" })), ["one-of-each"]);
   assert.deepEqual(check(choices({ systems: ["ubuntu-26.04"], kernel: "5.4" })), ["ubuntu-2604-needs-mainline"]);
   assert.deepEqual(check(choices({ kernel: "6.6" })), ["no-kernel"]);
+  // the ZTE V50 (FINDINGS 95): mainline only; the F50 and the U30 Air keep 5.4
+  assert.deepEqual(check(choices(), status({ device: "v50" })), ["v50-needs-mainline"]);
+  assert.deepEqual(check(choices({ kernel: "6.18" }), status({ device: "v50" })), []);
+  assert.deepEqual(check(choices({ kernel: "7.2" }), status({ device: "v50" })), []);
+  assert.deepEqual(check(choices(), status({ device: "u30air" })), []);
+  assert.deepEqual(deviceBlockers(status({ device: "v50" })), []);
   assert.deepEqual(check(choices({ bootOs: "openwrt" })), ["boot-os-not-installed"]);
   assert.deepEqual(check(choices({ attempts: 7 })), ["attempts"]);
   assert.deepEqual(check(choices({ password: "short" })), ["password"]);

@@ -136,6 +136,7 @@ what replaced it. The table below gives each section's state.
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
+| 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 
 ## Hardware and firmware facts
 
@@ -5798,3 +5799,100 @@ showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
   compile (the module was not linked: ThinLTO wants to write next to the kernel's objects). The hostapd patch applies
   with GNU patch after OpenWrt 25.12.5's own patches on `ca266cc2` (BSD patch rejects the `ap_config.c` hunk, which
   has no leading context: build in the SDK, not on macOS).
+
+## ZTE V50 (MU3351)
+
+### 95. The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his
+
+**Status: experimental. Nothing in this section was measured by this project: nobody here has a V50.** What follows
+separates what kano (kanoqwq) says he read and measured on his V50, in his line of this project (branch
+`clean-tf-7.2`, MIT like this one), from what was checked here. The owner's word (2026-10-15): "if kano did V50
+support, bring it over". Nothing of his tree was run here and no binary of it was taken; the code below is ported
+into this tree's structure.
+
+**kano's commits about the V50.** `f6b0668d` (2026-10-14, "add desktop deployment and isolate F50/V50 profiles"):
+the identity, the device-tree test, the AW9523B LED driver, the LED mapping, dual SIM, NFC, CPU voltage, his notes
+(`docs/V50-MU3351-20261014.zh-CN.md`). `0438ab01` (2026-10-14): the shared eMMC policy that replaced his V50-only
+one, and a changelog. Later ones mention the V50 in passing: `2d3b6f3f` (the F50 and the V50 have no battery: their
+fuel gauge is not one), `e114999d` and `8d3d29e6` (updates and installs on his V50 with his desktop installer),
+`0e19fe32` and `53ef7b1a` (his GUI and docs); `cd4fb28b` (2026-10-01) took a boot-time change from "V50 boot speed
+research".
+
+**What kano says he read or measured (his notes, 2026-10-14; not repeated here).**
+* Identity: `ro.product.model` V50, `ro.product.device` MU3351, platform `ums9620`, board `ums9620_2h10_feimao`, T760:
+  the F50's kernel platform; the same CPU frequency tables, the SC2355 Wi-Fi on PCIe, the same A/B partition names.
+  ZTE's support page calls the V50 MU3351 (not the Blade V50 phone). Android 13, file-based encryption on his unit.
+* Its LEDs: an AW9523B at 0x5b on I2C3 (`/soc/ap-ahb/i2c@2270000/aw9523b_led@5b`), not in the F50's device tree. The
+  DT `idx` values are GPIO pins, not DIM registers (from `aw9523b_brightness_work` in ZTE's Android driver); the
+  current limit is the low two bits of `default_imax` (`aw9523b_set_led_imax`); three lamps, NET1, NET2 and Wi-Fi,
+  each with two white emitters and blue and red ones (from `groupcolor_store`, and lit one group at a time on the
+  unit). The PMIC's `sc27xx:*` LEDs exist there as well, and older scripts picked those.
+* No battery (his power-supply code treats the F50 and the V50 alike: their fuel gauge is synthetic).
+* NFC: I2C2 0x57, reset on AP GPIO189 (the U30 Air's is 190); the tag read and written back.
+* Dual SIM: with only SIM 2 in, `CPIN READY`, `CFUN=1` and both stacks up; registration answered `CEREG=8` (the card
+  was out of credit). Two cards at once: not measured, in his words.
+* eMMC: under mainline ext4 reported `deleted inode referenced` after normal reboots, again after an offline fsck.
+  With the eMMC host's runtime PM forbidden at probe (kernel 7.2.8 "#17") a marker, the configuration and scripts
+  survived a sync and a reboot with their SHA-256, `errors_count` 0: "an improvement, not proof that runtime PM alone
+  caused it". Writing `power/control` "on" from the initramfs hung the boot before the mount. He later replaced it
+  with a policy for every board (FUA emulated with flushes, ordered MMIO in `sdhci-sprd`, the eMMC never powered off
+  at system suspend), which he says was not yet measured on the V50.
+* His V50 booted Linux from slot b with misc's boot control (32 bytes), his boot chain check read the five images
+  alike on both slots, and it ran OpenWrt with the 6.18.54/7.2.8 kernels he built with his AW9523B driver.
+  His installers refuse kernel 5.4 on the V50.
+
+**What was checked here (2026-10-15).**
+* The F50's stock device tree (`vendor_boot`, the live FDT and `dtbo` of an F50, read with `dtc`): no AW9523B, no
+  `charger_policy_service`; its `i2c@2270000` is `sprd,sc9860-i2c`, disabled and empty. The U30 Air's `vendor_boot`
+  (a backup of 2026-09-27): no AW9523B; `charger_policy_service` present. So the node tells the V50 from both.
+* Both mainline kernels (6.18.56, 7.2.10) build with the driver and patch 0017; no warning from either file.
+* Unit tests for every decision below, on dash, bash and busybox sh.
+
+**What was ported, and how a V50 is told apart.**
+* `mu300-device` and `boot/init` (one rule, the same code; a test holds them to it): the label (`/etc/mu300-device`,
+  `/run/mu300/device`) as before, except that **f50** on a device tree with the AW9523B node and without the charger
+  policy service is a **v50** (an older installer took a V50 for an F50 when the user said yes), and **v50** on a
+  device tree without that node is what the tree says (u30air with the charger policy service, else f50). The F50
+  and the U30 Air: no node, so the answer is the one of before in every case (`test_mu300_device_three_boards`,
+  `tests/test_boot_init.py` `Device`).
+* Installers (`install.sh`, `install.ps1`, the Magisk zip, `tools/android-web.sh` for the web installer, the boot
+  chain scripts): exactly `V50 / MU3351` on `ums9620` is a v50, with one line saying it is experimental; a model V50
+  with another device, or a device MU3351 under another model, or another platform is refused, never offered as an
+  F50; `MU300_DEVICE` cannot make a V50 another device (`f50`/`u30air` only, as before). Kernel: mainline only
+  (`install.sh --build`, the 5.4 choice, a zip whose kernel does not name the V50 and the web installer's 5.4 are
+  refused with the way out).
+* Kernel bundles: a mainline bundle names `v50` in `devices` only when its kernel has `CONFIG_LEDS_AW9523B=y`; the 5.4
+  bundle never does, so `mu300-update` never puts 5.4 or an older kernel on a V50.
+* `leds-aw9523b` (kano's driver, `upstream/port/drivers/leds/`, built in): binds only `awinic,aw9523b` with ZTE's
+  binding (`led_enable` 1, `gpio_enable` 0), checks the whole binding and the chip ID 0x23 before it touches the chip;
+  registers the DT groups, each wired pin (`aw9523b:pinN`) and, for exactly the V50's binding, the lamps
+  (`v50:net1:white` ...). `mu300-led`: NET1 is the network lamp (blue 4G, white 5G, red no service), the Wi-Fi lamp
+  white on 5 GHz and blue on 2.4 GHz, NET2 dark; the PMIC's LEDs are never written on a V50.
+* Patch 0017 (`sdhci-sprd`): the eMMC host's runtime PM forbidden at probe where the AW9523B node is, his measured
+  fix, not the later shared policy (that one changes every board, and nothing measured it on the V50 either). On the
+  F50 and the U30 Air it is a lookup that finds nothing.
+* No battery: `mu300-power`, the dashboard's power tile and the USB role setter take the V50 as an F50.
+* The charger at 0x1a (patch 0016, issue #225): bound only with `/charger_policy_service`; the V50 has none (kano's
+  init tests for that node before the AW9523B and still took his unit for a v50; and he says it has no battery), so
+  nothing is bound there, as on the F50.
+* USB network `192.168.79.1` (kano kept the F50's `192.168.77.1`, which collides with an F50 on one computer).
+
+**What does not work yet.** The second SIM (the dual-SIM code is the U30 Air's, §74, and kano's evidence is one card
+in SIM 2 that did not register); NFC (`mu300-nfc` says so; another reset line than the U30 Air's); SIM selection;
+kernel 5.4; kano's CPU voltage whitelist entry for the V50's SML (this tree has no such list); his NET2/Wi-Fi LuCI LED
+page and his OpenWrt LED events for two SIMs.
+
+**Risks.** A V50 that does not boot falls back to Android after the usual attempts (misc's trial). The LED driver and
+patch 0017 do nothing without the node. A V50 installed earlier as an F50 becomes a v50 with the next update: its
+address moves to `192.168.79.1` (Ubuntu without `lan.conf`; OpenWrt keeps the LAN it was set up with) and its kernel
+is updated only to a mainline one that names it (`mu300-update kernel 6.18`). The eMMC trouble kano saw may have
+another cause than runtime PM.
+
+**Checklist for a V50 owner (report in an issue).**
+1. Android: `getprop ro.product.model`, `ro.product.device`, `ro.board.platform` say V50, MU3351, ums9620.
+2. Install with kernel 6.18 (or 7.2) of a release that names the V50; the installer says "ZTE V50: EXPERIMENTAL".
+3. In Linux: `mu300-device` says `v50`; `ssh` to `192.168.79.1` works; `dmesg | grep -i -e aw9523b -e 'kept awake'`
+   shows "4 LED groups, pin mask 0xffff" and "MU300: ZTE V50, eMMC host kept awake".
+4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
+5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
+6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.

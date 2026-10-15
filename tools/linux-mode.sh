@@ -7,8 +7,9 @@
 # Uses: say(), die(), ask(), and t() from tools/i18n.sh (loaded here when the caller has not)
 command -v t >/dev/null 2>&1 || . "$TOP/tools/i18n.sh"
 
-# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1 (MU300_IP: another address)
-MU300_IPS=${MU300_IP:-192.168.77.1 192.168.78.1}
+# the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1, V50 192.168.79.1 (MU300_IP: another
+# address)
+MU300_IPS=${MU300_IP:-192.168.77.1 192.168.78.1 192.168.79.1}
 
 # true when something answers on the Linux SSH port of the USB network; MU300_IP is then that device, and only it
 # is watched from here on (another device may still be running Linux next to it)
@@ -99,7 +100,7 @@ select_device() {  # select_device [quiet]: quiet never asks, it only picks what
     [ -n "${ANDROID_SERIAL:-}" ] && return 0
     _sd_all=$(android_lines)
     [ -n "$_sd_all" ] || return 0
-    _sd_f50=$(printf '%s\n' "$_sd_all" | grep -E 'model:F50|product:MU300|device:MU300|device:U30Air' | awk '{print $1}')
+    _sd_f50=$(printf '%s\n' "$_sd_all" | grep -E 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351' | awk '{print $1}')
     _sd_one=
     [ -n "$_sd_f50" ] && [ "$(printf '%s\n' "$_sd_f50" | wc -l | tr -d ' ')" = 1 ] && _sd_one=$_sd_f50
     # the only adb device, and an F50/U30 Air: nothing to ask
@@ -125,7 +126,7 @@ select_device() {  # select_device [quiet]: quiet never asks, it only picks what
 
 # call before anything else that needs adb
 # is one of the adb devices an F50/U30 Air?
-target_attached() { android_lines | grep -q -E 'model:F50|product:MU300|device:MU300|device:U30Air'; }
+target_attached() { android_lines | grep -q -E 'model:F50|product:MU300|device:MU300|device:U30Air|device:MU3351'; }
 
 require_android() {
     # ANDROID_SERIAL naming the device in Linux: that is the one to send back to Android, not one to work on

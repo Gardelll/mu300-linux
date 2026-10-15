@@ -34,7 +34,8 @@ require_android
 [ "$(su_do 'id -u')" = 0 ] || die "su does not work on the device"
 model="$(su_do 'getprop ro.product.model') / $(su_do 'getprop ro.product.device')"
 echo "device: $model"
-case "$model" in *MU300*|*F50*|*mu300*|*U30Air*|*U30_Air*) ;; *) die "this does not look like a ZTE F50/MU300 or U30 Air" ;; esac
+# (the ZTE V50, experimental: FINDINGS 95, as install.sh takes it)
+case "$model" in *MU300*|*F50*|*mu300*|*U30Air*|*U30_Air*|"V50 / MU3351") ;; *) die "this does not look like a ZTE F50/MU300, U30 Air or V50" ;; esac
 # Linux is on the slot Android is not on (install.sh): b next to an Android on a, a next to an Android on b
 case $(su_do 'getprop ro.boot.slot_suffix') in
     _a) ANDROID_SLOT=a; LINUX_SLOT=b ;;
