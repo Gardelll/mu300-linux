@@ -131,7 +131,7 @@ what replaced it. The table below gives each section's state.
 | 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
 | 70 | adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it | current (unit tests; nothing of it measured on a device: the checklist is in the section) |
 | 71 | A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found | current (run against an F50 from a Mac on 2026-10-15: check, backup, installs and uninstalls from the text installer and from the window; the U30 Air, a locked bootloader, Linux and Windows hosts not measured; Windows only by CI) |
-| 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; run end to end on an F50 from Chrome on macOS on 2026-10-13 (docs/web-installer.md); Windows, a Linux host, the U30 Air, KernelSU/APatch and a download over a carrier's network not measured |
+| 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; run end to end on an F50 from Chrome on macOS on 2026-10-13 (docs/web-installer.md), the real release mirror from Node on 2026-10-15; Windows, a Linux host, the U30 Air, KernelSU/APatch and a download over a carrier's network not measured |
 | 74 | The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, #194) | current (the maintainer's U30 Air on 7.2.10 and the contributor's on 7.2.9); two working cards, kernel 5.4 and an F50 not run |
 | 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | experimental, opt-in build recipe (7.2.9; 7.2.10 without a client); PMK provenance open; the WPA2 fallback measured on the U30 Air |
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
@@ -5830,9 +5830,15 @@ every asset a `digest` (`sha256:...`). The files themselves can only come to a p
   up to the size the release names, and the whole must have the release's checksum - the mirror's word counts for
   nothing. *Measured on the F50, in Chrome, against a stand-in server for that host:* a device without internet was
   told apart and this way proposed; a part cut after 5 MB gave "the download broke off", and the second try
-  downloaded 41 MiB, pushed it and got the device's plan. *Not measured:* the real host with real files (the mirror is empty until the
-  first push of a release to it; the page then finds no copy and offers the next way), and GitHub's limits on
-  such use.
+  downloaded 41 MiB, pushed it and got the device's plan. *Measured against the real host on 2026-10-15* (the
+  page's modules from Node, F50-B in Android with no internet, the Mac on a home connection): the device's own
+  probe said `no-network` ("bad address 'github.com'"), so the page proposes the mirror; the manifest of branch
+  `v2026.10.27` of `dikeckaan/mu300-linux-mirror` came in 370 ms with 11 zips, the one for Ubuntu 24.04 on 7.2 with
+  the release's size and SHA-256; its 3 parts (119,429,644 bytes) came in 32.4 s (3.5 MiB/s), each and the whole
+  checked; the push and the device's own check took 7 s; the plan (`dry_run=1`, `format=0 update=1` over the
+  installed Ubuntu) ended with status 3, nothing written, the device's files cleaned up. *Not measured:* GitHub's
+  limits on such use (no throttling was seen in that one download), and a mirror branch that is missing or
+  incomplete for a release on the real host (the stand-in server's cases above).
 * *Last: the user downloads the zip* (an ordinary download, which no CORS rule stops) and picks it; the page reads
   the zip's directory and `mu300/manifest` in the browser and refuses a wrong one before anything is sent.
 * The Magisk zip is the unit, not the separate assets: it holds the installer of its own release, and its payload is
