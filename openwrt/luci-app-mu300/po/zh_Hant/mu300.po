@@ -37,6 +37,9 @@ msgstr "流量統計"
 msgid "Device management"
 msgstr "裝置管理"
 
+msgid "Update"
+msgstr "更新"
+
 msgid "Languages"
 msgstr "語言"
 
@@ -1054,6 +1057,9 @@ msgstr "錨點 B%s"
 msgid "No serving cell"
 msgstr "無服務基地台"
 
+msgid "Version %s is out: update"
+msgstr "%s 版本已發佈：更新"
+
 msgid "Not registered"
 msgstr "未註冊"
 
@@ -2040,6 +2046,396 @@ msgstr "關閉"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "64 讓每個封包都像裝置本身的流量一樣送出"
 
+msgid "Check for updates"
+msgstr "檢查更新"
+
+msgid "Checking the file"
+msgstr "正在檢查檔案"
+
+msgid "Update from a file"
+msgstr "從檔案更新"
+
+msgid "Back to the previous version"
+msgstr "回到上一個版本"
+
+msgid "Back to the previous boot image"
+msgstr "回到上一個開機映像"
+
+msgid "Remove the previous version"
+msgstr "移除上一個版本"
+
+msgid "Kernel change"
+msgstr "更換核心"
+
+msgid "Starting…"
+msgstr "正在開始…"
+
+msgid "Downloading"
+msgstr "正在下載"
+
+msgid "All files are here and verified"
+msgstr "所有檔案已備妥並通過驗證"
+
+msgid "Unpacking the new system"
+msgstr "正在解開新系統"
+
+msgid "Carrying over your settings"
+msgstr "正在轉移您的設定"
+
+msgid "Writing down the packages you installed"
+msgstr "正在記錄您安裝的套件"
+
+msgid "Switching to the new system"
+msgstr "正在切換到新系統"
+
+msgid "Kernel and boot image"
+msgstr "核心與開機映像"
+
+msgid "Restart the device?"
+msgstr "要重新啟動裝置嗎？"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "裝置現在重新啟動。預設開機的是 Android，因此會進入 Android：請在那裡切換到 Linux 以啟動更新後的系統。"
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "裝置現在重新啟動，大約一分鐘內無法連線。如果新系統無法啟動，裝置會在幾次失敗後自動回到 Android。"
+
+msgid "Restart"
+msgstr "重新啟動"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "正在重新啟動… 請在大約一分鐘後重新開啟此頁面。"
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "已執行 %s。關閉此頁面後仍會繼續；請勿關閉裝置電源。"
+
+msgid "Done. Restart the device to start it."
+msgstr "已完成。重新啟動裝置即可啟動。"
+
+msgid "Done. Nothing needs a restart."
+msgstr "已完成。不需要重新啟動。"
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "未能完成，且已執行了一部分：重新啟動前請先閱讀記錄。"
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "未能完成。沒有任何變更；原因請見記錄。"
+
+msgid "Log"
+msgstr "記錄"
+
+msgid "Restart now"
+msgstr "立即重新啟動"
+
+msgid "Later"
+msgstr "稍後"
+
+msgid "Close"
+msgstr "關閉"
+
+msgid "Updating is not available on this system"
+msgstr "此系統不支援更新"
+
+msgid "Another update is running on the device"
+msgstr "裝置上正在執行另一個更新"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "它是在此頁面之外啟動的（終端機、工具包）。在它結束之前，這裡無法啟動任何作業。"
+
+msgid "Restart needed"
+msgstr "需要重新啟動"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "此系統已更新，但仍在執行舊版本。新版本會在下次重新啟動時啟動。"
+
+msgid "Installed"
+msgstr "已安裝"
+
+msgid "This system"
+msgstr "本系統"
+
+msgid "Also on this device"
+msgstr "此裝置上還有"
+
+msgid "Kernel"
+msgstr "核心"
+
+msgid "choice %s"
+msgstr "選擇 %s"
+
+msgid "Boot image"
+msgstr "開機映像"
+
+msgid "from the installer"
+msgstr "來自安裝程式"
+
+msgid "Default boot"
+msgstr "預設開機"
+
+msgid "Free space"
+msgstr "可用空間"
+
+msgid "Release signatures"
+msgstr "發行版簽章"
+
+msgid "checked with the project's key"
+msgstr "以專案的金鑰驗證"
+
+msgid "this system has no release key"
+msgstr "本系統沒有發行金鑰"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "預設開機的是 Android：重新啟動後進入 Android，再從那裡啟動 Linux。"
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux 已鎖定為預設開機：啟動失敗時裝置不會自動進入 Android，新開機映像的頭幾次啟動除外。"
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "如果 Linux 連續 %d 次啟動失敗，裝置會自動啟動 Android。"
+
+msgid "Report of the last update"
+msgstr "上次更新的報告"
+
+msgid "Online update"
+msgstr "線上更新"
+
+msgid "Asking GitHub…"
+msgstr "正在詢問 GitHub…"
+
+msgid "Checked %s ago"
+msgstr "%s前已檢查"
+
+msgid "Not checked yet"
+msgstr "尚未檢查"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "更新後重新安裝我加入的套件（首次啟動時裝置需要連上網路）"
+
+msgid "Pre-release"
+msgstr "預先發行版"
+
+msgid "Newest release"
+msgstr "最新發行版"
+
+msgid "Release notes"
+msgstr "版本資訊"
+
+msgid "Download"
+msgstr "下載"
+
+msgid "Free space needed"
+msgstr "所需可用空間"
+
+msgid "not enough: remove the previous version first"
+msgstr "不足：請先移除上一個版本"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "預先發行版是仍在試用中的版本：可能有正式發行版沒有的問題。上一個版本同樣會保留。"
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "本系統比最新發行版還新（測試版本）。"
+
+msgid "Up to date."
+msgstr "已是最新。"
+
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "此版本未簽署，而本系統會檢查簽章：不能從這裡安裝。請在下方用它的檔案更新，那裡會請你確認。"
+
+msgid "Update to %s"
+msgstr "更新到 %s"
+
+msgid "Choose at least one system"
+msgstr "請至少選擇一個系統"
+
+msgid "Update to %s?"
+msgstr "要更新到 %s 嗎？"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "裝置會下載 %s，把新系統放在目前執行的系統旁邊，並在下次重新啟動時切換過去。您的設定會轉移過去，上一個版本會保留。需要幾分鐘；請勿關閉裝置電源。"
+
+msgid "Also offer the pre-release %s"
+msgstr "同時提供預先發行版 %s"
+
+msgid "Systems to update:"
+msgstr "要更新的系統："
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "無法連上 GitHub：裝置沒有網際網路連線，或 GitHub 沒有回應。沒有網路時，請在下方從檔案更新。"
+
+msgid "release"
+msgstr "發行版"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "適用於沒有網路的裝置：在另一台電腦上，從 GitHub 的發行頁面下載對應本系統和本核心的發行版 Magisk zip，然後在這裡上傳。本裝置對應的檔案是："
+
+msgid "Uploaded file"
+msgstr "已上傳的檔案"
+
+msgid "Checking the file…"
+msgstr "正在檢查檔案…"
+
+msgid "It says it is"
+msgstr "檔案自稱為"
+
+msgid "kernel %s"
+msgstr "核心 %s"
+
+msgid "Signature"
+msgstr "簽章"
+
+msgid "signed with the project's release key"
+msgstr "已用專案的發行金鑰簽署"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "錯誤：與專案的發行金鑰不符"
+
+msgid "not signed"
+msgstr "未簽署"
+
+msgid "cannot be checked on this system"
+msgstr "無法在本系統上驗證"
+
+msgid "Its system is not installed on this device."
+msgstr "此檔案中的系統未安裝在此裝置上。"
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "這是另一個 Ubuntu 版本，不是已安裝的那個。"
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "它帶的核心與此裝置使用的不同。請使用核心 %s 對應的 zip，或先更換核心。"
+
+msgid "Its kernel does not run on this model."
+msgstr "它的核心無法在此型號上執行。"
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "檔案已損毀：內容與檢查碼不符。"
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "簽章錯誤。此檔案並非原樣來自本專案；絕不會被安裝。"
+
+msgid "This file cannot be used here."
+msgstr "此檔案不能在這裡使用。"
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "請將 SHA-256 與發行頁面上 SHA256SUMS-magisk 中的值比對：這是證明未簽署檔案來源的唯一依據。"
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "此發行版已經安裝；更新只會重新寫入開機映像。"
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "我知道此檔案未簽署：沒有任何東西能證明它來自本專案。我已自行比對其 SHA-256，並希望安裝它。"
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "我知道這是 %s，比已安裝的 %s 舊，並希望回到這個版本。"
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "這不是本專案的發行檔案：需要的是某個發行版的 Magisk zip。"
+
+msgid "Update from this file"
+msgstr "從此檔案更新"
+
+msgid "Tick the confirmations above first"
+msgstr "請先勾選上方的確認項目"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "裝置會把此檔案中的系統放在目前執行的系統旁邊，並在下次重新啟動時切換過去。您的設定會轉移過去，上一個版本會保留。需要幾分鐘；請勿關閉裝置電源。"
+
+msgid "Check the file"
+msgstr "檢查檔案"
+
+msgid "Remove the file"
+msgstr "移除檔案"
+
+msgid "Previous version"
+msgstr "上一個版本"
+
+msgid "No previous version is kept on this device."
+msgstr "此裝置上沒有保留上一個版本。"
+
+msgid "replaced %s"
+msgstr "取代於 %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "我想恢復上一個系統；更新之後所做的變更會留在我離開的版本中。"
+
+msgid "Back to the previous version?"
+msgstr "要回到上一個版本嗎？"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "上一個系統（%s）將成為下次重新啟動時啟動的系統。您離開的版本不會保留；更新之後變更的設定不會帶回去。"
+
+msgid "Go back"
+msgstr "返回上一版"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "目前執行的就是上一個版本：請先重新啟動。"
+
+msgid "I want the previous kernel and boot image back."
+msgstr "我想恢復上一個核心和開機映像。"
+
+msgid "Back to the previous boot image?"
+msgstr "要回到上一個開機映像嗎？"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "上一個開機映像（%s）會寫入 Linux 插槽，並在下次重新啟動時啟動。如果無法啟動，裝置會自動回到 Android。"
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "我不需要返回：刪除上一個系統以釋出空間。"
+
+msgid "Remove the previous version?"
+msgstr "要移除上一個版本嗎？"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "保留的上一個系統副本將被永久刪除。之後無法再從此頁面回到它。"
+
+msgid "the vendor kernel"
+msgstr "廠商核心"
+
+msgid "mainline"
+msgstr "主線"
+
+msgid "not with Ubuntu 26.04"
+msgstr "不適用於 Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "更換核心"
+
+msgid "This kernel is the one in use"
+msgstr "目前使用的就是這個核心"
+
+msgid "Change the kernel to %s?"
+msgstr "要將核心更換為 %s 嗎？"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "裝置會從最新發行版下載該核心並寫入新的開機映像；下次重新啟動時啟動。上一個開機映像會保留，如果新映像無法啟動，裝置會自動回到 Android。裝置必須連上網路。"
+
+msgid "Start Android at the next restart"
+msgstr "下次重新啟動時啟動 Android"
+
+msgid "Start Android at the next restart?"
+msgstr "下次重新啟動時要啟動 Android 嗎？"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "下次及之後的重新啟動都會啟動 Android 而不是 Linux。之後可從 Android 再次啟動 Linux（Magisk 模組的 Action 按鈕，或 mu300-linux）。"
+
+msgid "Start Android next"
+msgstr "下次啟動 Android"
+
+msgid "What an update keeps"
+msgstr "更新會保留什麼"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "更新會裝上新發行版的系統，並轉移屬於您的內容：設定、帳號及其密碼、裝置的金鑰和家目錄。您自己安裝的套件會被記錄下來，並在裝置連上網路後的首次啟動時重新安裝。上一個版本會一直留在裝置上，直到您將其移除，因此您可以返回。"
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "Wiki 的「更新」頁面列出了確切保留的內容。"
+
+msgid "Choose a file first"
+msgstr "請先選擇檔案"
+
+msgid "Uploading: %s of %s"
+msgstr "正在上傳：%s / %s"
+
 msgid "running"
 msgstr "執行中"
 
@@ -2073,9 +2469,6 @@ msgstr "沒有設定檔使用它。"
 msgid "Removed"
 msgstr "已移除"
 
-msgid "Check for updates"
-msgstr "檢查更新"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "每個引擎都是獨立的附加套件：只安裝您的設定檔需要的即可。Xray 執行 vless、vmess、trojan 和 ss 連結（搭配 hev-socks5-tunnel），sing-box 執行相同的連結及其自有的 JSON，mihomo 執行 Clash 訂閱，dae 在較新的核心上執行 hysteria2、tuic 等。WireGuard 和 OpenVPN 是系統的套件。"
 
@@ -2084,9 +2477,6 @@ msgstr "每個引擎下載數十 MB：使用行動數據時會計入方案流量
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "可用版本來自 VPN 模組的最新發行版本。"
-
-msgid "Update"
-msgstr "更新"
 
 msgid "system package"
 msgstr "系統套件"
@@ -2255,9 +2645,6 @@ msgstr "啟動"
 
 msgid "Stop"
 msgstr "停止"
-
-msgid "Restart"
-msgstr "重新啟動"
 
 msgid "Stop the VPN?"
 msgstr "停止 VPN？"
@@ -2435,9 +2822,6 @@ msgstr "此設定檔來自訂閱：下次重新整理會覆蓋您的修改。"
 
 msgid "Config of %s"
 msgstr "%s 的設定"
-
-msgid "Close"
-msgstr "關閉"
 
 msgid "Rename"
 msgstr "重新命名"
@@ -2810,6 +3194,18 @@ msgstr "套件轉接器沒有傳回有效回覆"
 
 msgid "Invalid packages operation"
 msgstr "無效的套件操作"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "sizes 參數必須為 0 或 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "更新配接程式未傳回有效回應"
+
+msgid "Unknown update operation"
+msgstr "未知的更新操作"
+
+msgid "Invalid update request"
+msgstr "無效的更新要求"
 
 # Dual SIM controls.
 msgid "Invalid SIM setting"
@@ -3216,3 +3612,42 @@ msgstr "無法設定 TTL"
 
 msgid "Unknown TTL operation"
 msgstr "未知的 TTL 操作"
+
+msgid "An update task is already running"
+msgstr "已有更新工作正在執行"
+
+msgid "The task could not be started"
+msgstr "無法啟動工作"
+
+msgid "The updater gave no valid reply"
+msgstr "更新程式未傳回有效回應"
+
+msgid "This needs confirmation"
+msgstr "此操作需要確認"
+
+msgid "Check for updates first"
+msgstr "請先檢查更新"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "上傳目錄不安全；未做任何變更"
+
+msgid "Not enough memory for this upload"
+msgstr "記憶體不足，無法完成此次上傳"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Linux 分割區的可用空間不足"
+
+msgid "The file was not checked; upload it again"
+msgstr "檔案未經檢查；請重新上傳"
+
+msgid "This file is not for this device"
+msgstr "此檔案不適用於此裝置"
+
+msgid "The signature of this file is wrong"
+msgstr "此檔案的簽章不正確"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "此檔案未簽署：需要確認"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "此檔案比已安裝的版本舊：需要確認"

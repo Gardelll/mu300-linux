@@ -390,7 +390,7 @@ function devicePanel() {
   }
   // ready
   const usb = S.usb || {};
-  const name = S.kind === "linux" ? t("device.linux", S.linux && S.linux.device === "u30air" ? "U30 Air" : "F50")
+  const name = S.kind === "linux" ? t("device.linux", S.linux && ({ u30air: "U30 Air", v50: "V50" })[S.linux.device] || "F50")
     : (S.probe && S.probe.props["ro.product.model"]) || usb.productName || t("device.unknown");
   p.append(h("div", { class: "wi-device-head" },
     h("h2", {}, name), chip(S.kind === "linux" ? "Linux" : "Android", S.kind === "linux" ? "linux" : "android"),
@@ -526,6 +526,7 @@ function androidHome() {
       linux.kernel ? [h("dt", {}, t("choice.kernel")), h("dd", {}, linux.kernel)] : null,
       h("dt", {}, t("home.default")), h("dd", {}, t(linux.default_linux ? "home.default.linux" : "home.default.android", linux.attempts))));
   }
+  if (s.device === "v50") out.append(callout("warn", t("v50.title"), t("v50.text")));
   for (const b of blockers) out.append(callout("warn", t("blocker.title"), t("blocker." + b.code)));
   if (S.failure && S.busy === "") { out.append(failureBox(S.failure)); }
   const acts = h("div", { class: "actions" });
@@ -577,7 +578,7 @@ function startWizard() {
   S.w = newWizard(); S.view = "wizard"; S.failure = null;
   const a = S.analysis, st = S.status;
   const have = st.linux && st.linux.systems ? Object.keys(st.linux.systems) : [];
-  S.w.choices = { target: a.target, systems: [], kernel: (st.linux && st.linux.kernel) || "5.4", bootOs: (st.linux && st.linux.boot_os) || "",
+  S.w.choices = { target: a.target, systems: [], kernel: (st.linux && st.linux.kernel) || (st.device === "v50" ? "6.18" : "5.4"), bootOs: (st.linux && st.linux.boot_os) || "",
     // Linux as the default boot is proposed every time, as the installers do: an installation that is there may say
     // "Android" only because the page's own "Restart into Android" made it so on the way here
     defaultLinux: true, attempts: (st.linux && st.linux.attempts) || 5, hotspot: true, gpu: true, vpn: false,
@@ -721,7 +722,7 @@ function stepChoices() {
   box.append(h("h3", {}, t("choice.kernel")));
   const ks = h("div", { class: "wi-opts" });
   for (const k of ["5.4", "6.18", "7.2"]) {
-    const ok = c.systems.every((s) => (avail[s] || []).includes(k));
+    const ok = c.systems.every((s) => (avail[s] || []).includes(k)) && !(S.status.device === "v50" && k === "5.4");   // the V50: mainline only
     ks.append(radio("kernel", k, c.kernel, t("kernel." + k), () => { c.kernel = k; w.files = {}; render(); }, { disabled: !ok }));
   }
   box.append(ks);
@@ -1078,7 +1079,7 @@ function stepReview() {
     t("review.writes", p.storage === "sd" ? t("review.writes.sd") : t("review.writes.region"), p.linux_slot, p.android_slot),
     t("review.fallback")));
   if (w.planLog.length) box.append(h("details", { class: "wi-explain" }, h("summary", {}, t("review.device-plan")), h("pre", { class: "wi-planlog" }, w.planLog.join("\n"))));
-  box.append(h("ul", { class: "wi-check" }, h("li", {}, t("review.keep.power", st.device === "u30air" ? t("review.keep.battery") : t("review.keep.nobattery"))), h("li", {}, t("review.keep.tab")), h("li", {}, t("review.keep.time"))));
+  box.append(h("ul", { class: "wi-check" }, h("li", {}, t("review.keep.power", st.device === "u30air" ? t("review.keep.battery") : t(st.device === "v50" ? "review.keep.nobattery.v50" : "review.keep.nobattery"))), h("li", {}, t("review.keep.tab")), h("li", {}, t("review.keep.time"))));
   const go = btn(t("review.install"), startInstall, "primary", { disabled: w.typed !== "INSTALL", id: "wi-go" });
   box.append(h("label", { class: "wi-field" }, t("erase.type", "INSTALL"), h("input", { type: "text", autocomplete: "off", spellcheck: "false", value: w.typed,
     oninput: (ev) => { w.typed = ev.target.value.trim(); go.disabled = w.typed !== "INSTALL"; } })));
@@ -1220,7 +1221,7 @@ function jobView() {
 
 function donePanel(j) {
   const c = j.choices || {}, st = S.status || {};
-  const ip = (j.device || st.device) === "u30air" ? "192.168.78.1" : "192.168.77.1";
+  const ip = ({ u30air: "192.168.78.1", v50: "192.168.79.1" })[j.device || st.device] || "192.168.77.1";
   const bootOs = c.bootOs || (st.linux && st.linux.boot_os) || "ubuntu";
   const user = bootOs === "ubuntu" ? "ubuntu" : "root";
   const box = h("div", {});

@@ -373,7 +373,7 @@ export function normalizeLinuxInfo(o, source) {
   const systems = Array.isArray(o.systems) ? o.systems.map(s) : s(o.systems).split(/\s+/);
   return {
     source,                                  // "json" (mu300-device --json) or "commands"
-    device: ["f50", "u30air"].includes(s(o.device)) ? s(o.device) : "",
+    device: ["f50", "u30air", "v50"].includes(s(o.device)) ? s(o.device) : "",
     version: s(o.version), os: s(o.os), kernel: s(o.kernel), kernelChoice: s(o.kernel_choice),
     bootOs: s(o.boot_os), defaultBoot: s(o.default_boot) === "linux" ? "linux" : "android",
     attempts: /^[1-6]$/.test(s(o.attempts)) ? Number(s(o.attempts)) : 5,

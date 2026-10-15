@@ -18,6 +18,15 @@ Wait two minutes. If there is still nothing, unplug and replug it. Every boot th
 of them in a row (or the number you chose) the device starts Android. Then run `tools/collect-logs.sh` and open an
 issue with the result.
 
+## Back in Android right after installing, and the bootloader is locked
+
+The installer warned "The bootloader is locked. Did you patch TrustOS?". A locked bootloader checks the boot image
+it starts: without a patched TrustOS it rejects the Linux image (on the serial console the bootloader says
+`verify_ret:0x3`, issue #134), counts that as a failed boot, and after the failed boots the device starts Android
+again. Nothing is broken, and nothing of Android was changed. Linux needs a device that boots a modified boot
+image: an unlocked bootloader, or a locked one with a patched TrustOS. This project does not root, unlock or patch
+devices and gives no guide for it.
+
 ## Back in Android without asking, on kernel 6.18
 
 About one boot in 20 on one board hangs in its first seconds, and the device then falls back to Android (this can take

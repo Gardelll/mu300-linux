@@ -37,6 +37,9 @@ msgstr "Spotreba dát"
 msgid "Device management"
 msgstr "Správa zariadenia"
 
+msgid "Update"
+msgstr "Aktualizovať"
+
 msgid "Languages"
 msgstr "Jazyky"
 
@@ -1054,6 +1057,9 @@ msgstr "Kotva B%s"
 msgid "No serving cell"
 msgstr "Žiadna obsluhujúca bunka"
 
+msgid "Version %s is out: update"
+msgstr "Vyšla verzia %s: aktualizujte"
+
 msgid "Not registered"
 msgstr "Neregistrované"
 
@@ -2045,6 +2051,396 @@ msgstr "Vypnúť"
 msgid "64 makes every packet leave like the device's own traffic"
 msgstr "S 64 odchádza každý paket ako vlastná prevádzka zariadenia"
 
+msgid "Check for updates"
+msgstr "Skontrolovať aktualizácie"
+
+msgid "Checking the file"
+msgstr "Kontrola súboru"
+
+msgid "Update from a file"
+msgstr "Aktualizácia zo súboru"
+
+msgid "Back to the previous version"
+msgstr "Späť na predchádzajúcu verziu"
+
+msgid "Back to the previous boot image"
+msgstr "Späť na predchádzajúci spúšťací obraz"
+
+msgid "Remove the previous version"
+msgstr "Odstrániť predchádzajúcu verziu"
+
+msgid "Kernel change"
+msgstr "Zmena jadra"
+
+msgid "Starting…"
+msgstr "Spúšťa sa…"
+
+msgid "Downloading"
+msgstr "Sťahovanie"
+
+msgid "All files are here and verified"
+msgstr "Všetky súbory sú tu a overené"
+
+msgid "Unpacking the new system"
+msgstr "Rozbaľuje sa nový systém"
+
+msgid "Carrying over your settings"
+msgstr "Prenášajú sa vaše nastavenia"
+
+msgid "Writing down the packages you installed"
+msgstr "Zapisujú sa balíky, ktoré ste nainštalovali"
+
+msgid "Switching to the new system"
+msgstr "Prepína sa na nový systém"
+
+msgid "Kernel and boot image"
+msgstr "Jadro a spúšťací obraz"
+
+msgid "Restart the device?"
+msgstr "Reštartovať zariadenie?"
+
+msgid "The device restarts now. The default boot is Android, so it starts Android: switch to Linux from there to start the updated system."
+msgstr "Zariadenie sa teraz reštartuje. Predvolené spúšťanie je Android, takže sa spustí Android: odtiaľ prepnite na Linux, aby sa spustil aktualizovaný systém."
+
+msgid "The device restarts now and is away for about a minute. If the new system does not start, the device goes back to Android by itself after the failed attempts."
+msgstr "Zariadenie sa teraz reštartuje a asi minútu bude nedostupné. Ak sa nový systém nespustí, zariadenie sa po neúspešných pokusoch samo vráti do Androidu."
+
+msgid "Restart"
+msgstr "Reštartovať"
+
+msgid "Restarting… open this page again in about a minute."
+msgstr "Reštartuje sa… otvorte túto stránku znova asi o minútu."
+
+msgid "Running for %s. It goes on when this page is closed; do not switch the device off."
+msgstr "Beží %s. Pokračuje aj po zatvorení tejto stránky; zariadenie nevypínajte."
+
+msgid "Done. Restart the device to start it."
+msgstr "Hotovo. Reštartujte zariadenie, aby sa zmena prejavila."
+
+msgid "Done. Nothing needs a restart."
+msgstr "Hotovo. Reštart nie je potrebný."
+
+msgid "It did not finish, and part of it was done: read the log before you restart."
+msgstr "Nedokončilo sa to a časť sa vykonala: pred reštartom si prečítajte záznam."
+
+msgid "It did not finish. Nothing was changed; the log says why."
+msgstr "Nedokončilo sa to. Nič sa nezmenilo; dôvod je v zázname."
+
+msgid "Log"
+msgstr "Záznam"
+
+msgid "Restart now"
+msgstr "Reštartovať teraz"
+
+msgid "Later"
+msgstr "Neskôr"
+
+msgid "Close"
+msgstr "Zavrieť"
+
+msgid "Updating is not available on this system"
+msgstr "Aktualizácia nie je v tomto systéme dostupná"
+
+msgid "Another update is running on the device"
+msgstr "Na zariadení beží iná aktualizácia"
+
+msgid "It was started outside this page (a terminal, the toolkit). Nothing can be started here until it has finished."
+msgstr "Bolo to spustené mimo tejto stránky (terminál, toolkit). Kým sa to neskončí, nedá sa tu nič spustiť."
+
+msgid "Restart needed"
+msgstr "Je potrebný reštart"
+
+msgid "This system was updated and still runs the old version. The new one starts at the next restart."
+msgstr "Tento systém bol aktualizovaný a stále beží stará verzia. Nová sa spustí pri ďalšom reštarte."
+
+msgid "Installed"
+msgstr "Nainštalované"
+
+msgid "This system"
+msgstr "Tento systém"
+
+msgid "Also on this device"
+msgstr "Tiež na tomto zariadení"
+
+msgid "Kernel"
+msgstr "Jadro"
+
+msgid "choice %s"
+msgstr "voľba %s"
+
+msgid "Boot image"
+msgstr "Spúšťací obraz"
+
+msgid "from the installer"
+msgstr "z inštalátora"
+
+msgid "Default boot"
+msgstr "Predvolené spúšťanie"
+
+msgid "Free space"
+msgstr "Voľné miesto"
+
+msgid "Release signatures"
+msgstr "Podpisy vydaní"
+
+msgid "checked with the project's key"
+msgstr "kontrolujú sa kľúčom projektu"
+
+msgid "this system has no release key"
+msgstr "tento systém nemá kľúč vydaní"
+
+msgid "The default boot is Android: a restart goes to Android, and Linux is started from there."
+msgstr "Predvolené spúšťanie je Android: reštart vedie do Androidu a Linux sa spúšťa odtiaľ."
+
+msgid "Linux is locked as the default boot: a failed start does not send the device to Android by itself, except the first starts of a new boot image."
+msgstr "Linux je zamknutý ako predvolené spúšťanie: neúspešné spustenie zariadenie samo do Androidu neprepne, okrem prvých spustení nového spúšťacieho obrazu."
+
+msgid "If Linux fails to start %d times in a row, the device starts Android by itself."
+msgstr "Ak sa Linux nespustí %d-krát po sebe, zariadenie samo spustí Android."
+
+msgid "Report of the last update"
+msgstr "Správa o poslednej aktualizácii"
+
+msgid "Online update"
+msgstr "Aktualizácia online"
+
+msgid "Asking GitHub…"
+msgstr "Dopyt na GitHub…"
+
+msgid "Checked %s ago"
+msgstr "Skontrolované pred %s"
+
+msgid "Not checked yet"
+msgstr "Zatiaľ neskontrolované"
+
+msgid "Install the packages I added again after the update (needs the device online at the first start)"
+msgstr "Po aktualizácii znova nainštalovať balíky, ktoré som pridal (pri prvom spustení musí byť zariadenie online)"
+
+msgid "Pre-release"
+msgstr "Predbežné vydanie"
+
+msgid "Newest release"
+msgstr "Najnovšie vydanie"
+
+msgid "Release notes"
+msgstr "Poznámky k vydaniu"
+
+msgid "Download"
+msgstr "Stiahnutie"
+
+msgid "Free space needed"
+msgstr "Potrebné voľné miesto"
+
+msgid "not enough: remove the previous version first"
+msgstr "nestačí: najprv odstráňte predchádzajúcu verziu"
+
+msgid "A pre-release is a release still being tried: it can have faults a release does not. The previous version is kept all the same."
+msgstr "Predbežné vydanie je vydanie, ktoré sa ešte skúša: môže mať chyby, ktoré bežné vydanie nemá. Predchádzajúca verzia sa aj tak uchová."
+
+msgid "This system is newer than the newest release (a test release)."
+msgstr "Tento systém je novší než najnovšie vydanie (testovacie vydanie)."
+
+msgid "Up to date."
+msgstr "Aktuálne."
+
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Toto vydanie nie je podpísané a tento systém kontroluje podpisy: odtiaľto sa neinštaluje. Aktualizujte z jeho súboru nižšie, ktorý si vyžiada potvrdenie."
+
+msgid "Update to %s"
+msgstr "Aktualizovať na %s"
+
+msgid "Choose at least one system"
+msgstr "Vyberte aspoň jeden systém"
+
+msgid "Update to %s?"
+msgstr "Aktualizovať na %s?"
+
+msgid "The device downloads %s, puts the new system beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Zariadenie stiahne %s, uloží nový systém vedľa bežiaceho a pri ďalšom reštarte naň prepne. Vaše nastavenia sa prenesú a predchádzajúca verzia sa uchová. Trvá to niekoľko minút; zariadenie nevypínajte."
+
+msgid "Also offer the pre-release %s"
+msgstr "Ponúkať aj predbežné vydanie %s"
+
+msgid "Systems to update:"
+msgstr "Systémy na aktualizáciu:"
+
+msgid "GitHub could not be reached: the device has no internet connection, or GitHub did not answer. Without internet, update from a file below."
+msgstr "GitHub sa nepodarilo kontaktovať: zariadenie nemá pripojenie na internet alebo GitHub neodpovedal. Bez internetu aktualizujte zo súboru nižšie."
+
+msgid "release"
+msgstr "vydanie"
+
+msgid "For a device without internet: download the Magisk zip of a release for this system and this kernel on another computer, from the release page on GitHub, and upload it here. For this device that is:"
+msgstr "Pre zariadenie bez internetu: na inom počítači stiahnite zo stránky vydania na GitHube Magisk zip vydania pre tento systém a toto jadro a nahrajte ho sem. Pre toto zariadenie je to:"
+
+msgid "Uploaded file"
+msgstr "Nahraný súbor"
+
+msgid "Checking the file…"
+msgstr "Kontrola súboru…"
+
+msgid "It says it is"
+msgstr "Podľa súboru ide o"
+
+msgid "kernel %s"
+msgstr "jadro %s"
+
+msgid "Signature"
+msgstr "Podpis"
+
+msgid "signed with the project's release key"
+msgstr "podpísané kľúčom vydaní projektu"
+
+msgid "WRONG: it does not match the project's release key"
+msgstr "NESPRÁVNY: nezodpovedá kľúču vydaní projektu"
+
+msgid "not signed"
+msgstr "nepodpísané"
+
+msgid "cannot be checked on this system"
+msgstr "na tomto systéme ho nemožno skontrolovať"
+
+msgid "Its system is not installed on this device."
+msgstr "Jeho systém nie je na tomto zariadení nainštalovaný."
+
+msgid "It is the other Ubuntu release, not the one installed."
+msgstr "Je to to druhé vydanie Ubuntu, nie to nainštalované."
+
+msgid "It carries another kernel than this device uses. Take the zip for kernel %s, or change the kernel first."
+msgstr "Obsahuje iné jadro, než aké toto zariadenie používa. Vezmite zip pre jadro %s alebo najprv zmeňte jadro."
+
+msgid "Its kernel does not run on this model."
+msgstr "Jeho jadro na tomto modeli nebeží."
+
+msgid "The file is damaged: its contents do not match their checksums."
+msgstr "Súbor je poškodený: jeho obsah nezodpovedá kontrolným súčtom."
+
+msgid "Its signature is wrong. This file does not come from the project as it is; it is never installed."
+msgstr "Jeho podpis je nesprávny. Tento súbor v tejto podobe nepochádza od projektu; nikdy sa nenainštaluje."
+
+msgid "This file cannot be used here."
+msgstr "Tento súbor tu nemožno použiť."
+
+msgid "Compare the SHA-256 with the one in SHA256SUMS-magisk on the release page: it is the only proof of where an unsigned file comes from."
+msgstr "Porovnajte SHA-256 s hodnotou v SHA256SUMS-magisk na stránke vydania: je to jediný dôkaz pôvodu nepodpísaného súboru."
+
+msgid "This release is installed already; the update would only refresh the boot image."
+msgstr "Toto vydanie je už nainštalované; aktualizácia by iba obnovila spúšťací obraz."
+
+msgid "I know this file is not signed: nothing proves that it comes from the project. I compared its SHA-256 myself and want it installed."
+msgstr "Viem, že tento súbor nie je podpísaný: nič nedokazuje, že pochádza od projektu. Jeho SHA-256 som sám porovnal a chcem ho nainštalovať."
+
+msgid "I know this is %s, older than the installed %s, and want to go back to it."
+msgstr "Viem, že toto je %s, staršie než nainštalované %s, a chcem sa k nemu vrátiť."
+
+msgid "This is not a release file of this project: a Magisk zip of a release is expected."
+msgstr "Toto nie je súbor vydania tohto projektu: očakáva sa Magisk zip vydania."
+
+msgid "Update from this file"
+msgstr "Aktualizovať z tohto súboru"
+
+msgid "Tick the confirmations above first"
+msgstr "Najprv zaškrtnite potvrdenia vyššie"
+
+msgid "The device puts the system of this file beside the running one and switches to it at the next restart. Your settings are carried over and the previous version is kept. It takes several minutes; do not switch the device off."
+msgstr "Zariadenie uloží systém z tohto súboru vedľa bežiaceho a pri ďalšom reštarte naň prepne. Vaše nastavenia sa prenesú a predchádzajúca verzia sa uchová. Trvá to niekoľko minút; zariadenie nevypínajte."
+
+msgid "Check the file"
+msgstr "Skontrolovať súbor"
+
+msgid "Remove the file"
+msgstr "Odstrániť súbor"
+
+msgid "Previous version"
+msgstr "Predchádzajúca verzia"
+
+msgid "No previous version is kept on this device."
+msgstr "Na tomto zariadení nie je uchovaná žiadna predchádzajúca verzia."
+
+msgid "replaced %s"
+msgstr "nahradené %s"
+
+msgid "I want the previous system back; what I changed since the update stays in the version I leave."
+msgstr "Chcem späť predchádzajúci systém; čo som od aktualizácie zmenil, zostane vo verzii, ktorú opúšťam."
+
+msgid "Back to the previous version?"
+msgstr "Späť na predchádzajúcu verziu?"
+
+msgid "The previous system (%s) becomes the one that starts at the next restart. The version you leave is not kept; settings you changed since the update are not carried back."
+msgstr "Predchádzajúci systém (%s) sa stane tým, ktorý sa spustí pri ďalšom reštarte. Verzia, ktorú opúšťate, sa neuchová; nastavenia zmenené od aktualizácie sa späť neprenesú."
+
+msgid "Go back"
+msgstr "Vrátiť sa"
+
+msgid "The previous version is the one running now: restart first."
+msgstr "Predchádzajúca verzia je tá, ktorá práve beží: najprv reštartujte."
+
+msgid "I want the previous kernel and boot image back."
+msgstr "Chcem späť predchádzajúce jadro a spúšťací obraz."
+
+msgid "Back to the previous boot image?"
+msgstr "Späť na predchádzajúci spúšťací obraz?"
+
+msgid "The previous boot image (%s) is written to the Linux slot and starts at the next restart. If it does not start, the device goes back to Android by itself."
+msgstr "Predchádzajúci spúšťací obraz (%s) sa zapíše do slotu Linuxu a spustí sa pri ďalšom reštarte. Ak sa nespustí, zariadenie sa samo vráti do Androidu."
+
+msgid "I do not need to go back: delete the previous system to free its space."
+msgstr "Vracať sa nepotrebujem: vymazať predchádzajúci systém a uvoľniť jeho miesto."
+
+msgid "Remove the previous version?"
+msgstr "Odstrániť predchádzajúcu verziu?"
+
+msgid "The kept copy of the previous system is deleted for good. After that there is no going back to it from this page."
+msgstr "Uchovaná kópia predchádzajúceho systému sa natrvalo vymaže. Potom sa k nej z tejto stránky už nedá vrátiť."
+
+msgid "the vendor kernel"
+msgstr "jadro výrobcu"
+
+msgid "mainline"
+msgstr "mainline"
+
+msgid "not with Ubuntu 26.04"
+msgstr "nie s Ubuntu 26.04"
+
+msgid "Change the kernel"
+msgstr "Zmeniť jadro"
+
+msgid "This kernel is the one in use"
+msgstr "Toto jadro sa práve používa"
+
+msgid "Change the kernel to %s?"
+msgstr "Zmeniť jadro na %s?"
+
+msgid "The device downloads that kernel from the newest release and writes a new boot image; it starts at the next restart. The previous boot image is kept, and if the new one does not start the device goes back to Android by itself. The device must be online."
+msgstr "Zariadenie stiahne toto jadro z najnovšieho vydania a zapíše nový spúšťací obraz; spustí sa pri ďalšom reštarte. Predchádzajúci spúšťací obraz sa uchová, a ak sa nový nespustí, zariadenie sa samo vráti do Androidu. Zariadenie musí byť online."
+
+msgid "Start Android at the next restart"
+msgstr "Pri ďalšom reštarte spustiť Android"
+
+msgid "Start Android at the next restart?"
+msgstr "Pri ďalšom reštarte spustiť Android?"
+
+msgid "The next restart, and the ones after it, start Android instead of Linux. Linux is started again from Android (the Magisk module's Action button, or mu300-linux)."
+msgstr "Ďalší reštart aj tie po ňom spustia Android namiesto Linuxu. Linux sa znova spúšťa z Androidu (tlačidlo Akcia modulu Magisk alebo mu300-linux)."
+
+msgid "Start Android next"
+msgstr "Nabudúce spustiť Android"
+
+msgid "What an update keeps"
+msgstr "Čo aktualizácia zachová"
+
+msgid "An update puts the system of the new release in place and carries over what is yours: the settings, the accounts and their passwords, the device's keys and the home directories. Packages you installed yourself are written down and installed again at the first start, once the device is online. The previous version stays on the device until you remove it, so you can go back."
+msgstr "Aktualizácia nasadí systém nového vydania a prenesie to, čo je vaše: nastavenia, účty a ich heslá, kľúče zariadenia a domovské adresáre. Balíky, ktoré ste nainštalovali sami, sa zapíšu a znova nainštalujú pri prvom spustení, len čo je zariadenie online. Predchádzajúca verzia zostáva na zariadení, kým ju neodstránite, takže sa môžete vrátiť."
+
+msgid "The wiki's Updating page lists exactly what is kept."
+msgstr "Stránka wiki o aktualizácii uvádza presne, čo sa zachová."
+
+msgid "Choose a file first"
+msgstr "Najprv vyberte súbor"
+
+msgid "Uploading: %s of %s"
+msgstr "Nahrávanie: %s z %s"
+
 msgid "running"
 msgstr "beží"
 
@@ -2078,9 +2474,6 @@ msgstr "Nebeží na ňom žiadny profil."
 msgid "Removed"
 msgstr "Odstránené"
 
-msgid "Check for updates"
-msgstr "Skontrolovať aktualizácie"
-
 msgid "Each engine is an extra of its own: install only the ones your profiles need. Xray runs vless, vmess, trojan and ss links (with hev-socks5-tunnel), sing-box the same links and its own JSON, mihomo Clash subscriptions, dae hysteria2, tuic and the rest on newer kernels. WireGuard and OpenVPN are packages of the system."
 msgstr "Každý engine je samostatný doplnok: nainštalujte len tie, ktoré vaše profily potrebujú. Xray spúšťa odkazy vless, vmess, trojan a ss (s hev-socks5-tunnel), sing-box rovnaké odkazy a vlastný JSON, mihomo odbery Clash, dae hysteria2, tuic a ostatné na novších jadrách. WireGuard a OpenVPN sú balíky systému."
 
@@ -2089,9 +2482,6 @@ msgstr "Sťahovanie má desiatky MB na engine: pri mobilných dátach sa započ�
 
 msgid "The available versions come from the latest release of the VPN module."
 msgstr "Dostupné verzie pochádzajú z najnovšieho vydania modulu VPN."
-
-msgid "Update"
-msgstr "Aktualizovať"
 
 msgid "system package"
 msgstr "systémový balík"
@@ -2260,9 +2650,6 @@ msgstr "Spustiť"
 
 msgid "Stop"
 msgstr "Zastaviť"
-
-msgid "Restart"
-msgstr "Reštartovať"
 
 msgid "Stop the VPN?"
 msgstr "Zastaviť VPN?"
@@ -2440,9 +2827,6 @@ msgstr "Tento profil pochádza z odberu: jeho ďalšie obnovenie prepíše vaše
 
 msgid "Config of %s"
 msgstr "Konfigurácia %s"
-
-msgid "Close"
-msgstr "Zavrieť"
 
 msgid "Rename"
 msgstr "Premenovať"
@@ -2817,6 +3201,18 @@ msgstr "Adaptér balíkov nevrátil platnú odpoveď"
 
 msgid "Invalid packages operation"
 msgstr "Neplatná operácia s balíkmi"
+
+msgid "The sizes parameter must be 0 or 1"
+msgstr "Parameter sizes musí byť 0 alebo 1"
+
+msgid "The update adapter gave no valid reply"
+msgstr "Adaptér aktualizácií nevrátil platnú odpoveď"
+
+msgid "Unknown update operation"
+msgstr "Neznáma operácia aktualizácie"
+
+msgid "Invalid update request"
+msgstr "Neplatná požiadavka na aktualizáciu"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3223,3 +3619,42 @@ msgstr "TTL sa nepodarilo nastaviť"
 
 msgid "Unknown TTL operation"
 msgstr "Neznáma operácia TTL"
+
+msgid "An update task is already running"
+msgstr "Úloha aktualizácie už beží"
+
+msgid "The task could not be started"
+msgstr "Úlohu sa nepodarilo spustiť"
+
+msgid "The updater gave no valid reply"
+msgstr "Aktualizačný program nevrátil platnú odpoveď"
+
+msgid "This needs confirmation"
+msgstr "Toto vyžaduje potvrdenie"
+
+msgid "Check for updates first"
+msgstr "Najprv skontrolujte aktualizácie"
+
+msgid "The upload directory is not safe; nothing was changed"
+msgstr "Adresár na nahrávanie nie je bezpečný; nič sa nezmenilo"
+
+msgid "Not enough memory for this upload"
+msgstr "Nedostatok pamäte na toto nahranie"
+
+msgid "Not enough free space on the Linux partition"
+msgstr "Nedostatok voľného miesta na oddiele Linux"
+
+msgid "The file was not checked; upload it again"
+msgstr "Súbor nebol skontrolovaný; nahrajte ho znova"
+
+msgid "This file is not for this device"
+msgstr "Tento súbor nie je pre toto zariadenie"
+
+msgid "The signature of this file is wrong"
+msgstr "Podpis tohto súboru je nesprávny"
+
+msgid "This file is not signed: that needs confirmation"
+msgstr "Tento súbor nie je podpísaný: to vyžaduje potvrdenie"
+
+msgid "This file is older than what is installed: that needs confirmation"
+msgstr "Tento súbor je starší než to, čo je nainštalované: to vyžaduje potvrdenie"
