@@ -473,8 +473,9 @@ if (-not $py) {
     function Printed([string]$Pattern) { [bool](@($script:out | Where-Object { $_ -match $Pattern }).Count) }
     $tailDd = "su: dd if=/data/local/tmp/mu300-new.tail of=/dev/block/mmcblk0 bs=512 seek=$($D64 - 33) conv=fsync 2>/dev/null"
     $headDd = 'su: dd if=/data/local/tmp/mu300-new.head of=/dev/block/mmcblk0 bs=512 conv=fsync 2>/dev/null'
-    # the region behind the new end of userdata (4 GiB less): its first 4 KiB hold the token
-    $rgStart = (FreeRegion ($U64 - 8388608 + 1) $D64).Start
+    # userdata ends where the region behind it is the 4 GiB asked for (FINDINGS 112); its first 4 KiB hold the token
+    [int64]$newEnd4 = [math]::Floor(($D64 - 34) / 4096 - 1) * 4096 - 8388608 - 4096 - 1
+    $rgStart = (FreeRegion ($newEnd4 + 1) $D64).Start
     $markerDd = "su: dd if=/data/local/tmp/mu300-marker.bin of=/dev/block/mmcblk0 bs=512 seek=$rgStart count=8 conv=notrunc,fsync 2>/dev/null"
     $bcbDd = 'su: dd if=/data/local/tmp/mu300-bcb.bin of=/dev/block/by-name/misc bs=2048 count=1 conv=notrunc,fsync 2>/dev/null'
     $bcbFile = Join-Path $fx 'bcb.bin'
@@ -532,14 +533,15 @@ if (-not $py) {
     Check 'shrink: it differs'      ((Sha256Hex $script:dev.head) -ne $script:dev.head0 -and (Sha256Hex $script:dev.tail) -ne $script:dev.tail0) $true
     $now = GptShow @(GptTool $gd @('after.head,after.tail', '--disk-sectors', "$D64", '--name', 'userdata', '--show'))
     Check 'shrink: userdata starts where it did' $now.First $F64
-    Check 'shrink: userdata ends 4 GiB earlier'  $now.End ($U64 - 8388608)
-    Check 'shrink: says where'      (Printed '^  userdata now ends at sector 113766399$') $true
+    Check 'shrink: userdata ends before a 4 GiB region'  $now.End $newEnd4
+    Check 'shrink: the region is the size asked for' ((FreeRegion ($newEnd4 + 1) $D64).End - $rgStart) 8388608
+    Check 'shrink: says where'      (Printed '^  userdata now ends at sector 113758207$') $true
     Check 'shrink: userdata not cleared from here' $script:dev.wiped $false
     Check 'shrink: the request to recovery' (Sha256Hex $script:dev.bcb) (Sha256Hex ([IO.File]::ReadAllBytes($bcbFile)))
     $tx = @(Get-ChildItem -LiteralPath $BackupDir -Recurse -Filter 'transaction.json')
     Check 'shrink: one transaction'  $tx.Count 1
     $txj = [IO.File]::ReadAllText($tx[0].FullName) | ConvertFrom-Json
-    Check 'shrink: the transaction' "$($txj.state) $($txj.serial) $($txj.slot) $($txj.cid) $($txj.region_start) $($txj.target)" "prepared 324950664950 a 15010053454d36344720c1a6b7d2e900 $rgStart $($U64 - 8388608 - $F64 + 1)"
+    Check 'shrink: the transaction' "$($txj.state) $($txj.serial) $($txj.slot) $($txj.cid) $($txj.region_start) $($txj.target)" "prepared 324950664950 a 15010053454d36344720c1a6b7d2e900 $rgStart $($newEnd4 - $F64 + 1)"
     $mk = Join-Path $fx 'marker.bin'
     & $py (Join-Path (Join-Path $Top 'tools') 'resume.py') marker $txj.token $mk
     Check 'shrink: the token'       (Sha256Hex $script:dev.marker["$rgStart"]) (Sha256Hex ([IO.File]::ReadAllBytes($mk)))
@@ -556,7 +558,7 @@ if (-not $py) {
     # "no" to the reboot
     FakeDevice 'vendor64'; RunOffer @('yes', '2.5', 'ERASE', 'no')
     Check 'no reboot: no error'     $script:died ''
-    Check 'no reboot: written'      ((Writes) -join '|') ("$tailDd|$headDd|$markerDd|$bcbDd" -replace "seek=$rgStart", "seek=$((FreeRegion ($U64 - 5242880 + 1) $D64).Start)")
+    Check 'no reboot: written'      ((Writes) -join '|') ("$tailDd|$headDd|$markerDd|$bcbDd" -replace "seek=$rgStart", "seek=$((FreeRegion ($newEnd4 + 8388608 - 5242880 + 1) $D64).Start)")
     Check 'no reboot: stays up'     $script:dev.rebooted $false
 
     # a push that stops halfway: what is on the device is not what was made, and nothing is written

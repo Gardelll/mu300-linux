@@ -6728,6 +6728,66 @@ only starts below 700 MiB of free region and without an SD card chosen, so it ca
 * Over USB, in Linux, the unit is `MU300LINUX-324950664950-2128e853` on the computer's adb list; a second F50 cloned
   from the same unit shows `MU300LINUX-324950664950-203d8329`, and in Android both would be `324950664950`. A
   resume on one computer with both in Android cannot tell them apart by serial; the eMMC CID in the transaction does.
+
+**The same F50, the same day: the layout made by hand, the prepare, and the reset (checks 1 and 2).** The owner
+decided to make the 32 GB situation on this unit: a full image of the eMMC first (kept on his computer only, the
+sha256 taken on the device and matched against the file's; 58.25 GiB read in 698 s over SSH, 16.2 GB as zstd -1),
+then `userdata` grown to the end of the usable area with `tools/resize-last-partition.py --fill`, as a vendor flash
+leaves it (§57, issue #32): 12275712..122155007 (52.39 GiB), written from the SD card's Linux, the backup copy first,
+both read back. Android started on it without a word: `/data` stayed a 20 GiB f2fs on a 52.39 GiB partition (its
+fstab has no `resize`), `ro.crypto.state=encrypted`, `ro.crypto.type=file`, FBE v2 with metadata encryption
+(`fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized`, `keydirectory=/metadata/vold/metadata_encryption`,
+`formattable`), `/data` on `dm-39`; Magisk 30.7; bootloader locked, verified boot green; build
+`F50_FLYMODEM_ZYV1.0.0B09`.
+
+Then `install.sh` in answers mode (`MU300_STORAGE=internal`, the card's word `internal`, `MU300_ANS_MAKE_ROOM=yes`,
+`MU300_ANS_LINUX_GIB=0.79`, `ERASE`, `MU300_ANS_REBOOT=no`): 27 seconds from start to `done` with `repartitioned=yes`,
+`resume=pending`. The `makeroom.crypto` facts said `yes encrypted file`; the plan said that Android's own recovery
+resets Android (a factory reset). The backup in `~/mu300-backups/<date>-<cid tail>` (the table, the misc header and
+both slots' boot, uboot, sml, teecfg, trustos, vbmeta, each checked), the transaction saved before the first write,
+userdata 12275712..120500223 (51.61 GiB), the region 120504320..122150912 (804 MiB), the token at its start and the
+bootloader message in misc, all read back by hand afterwards as well: `boot-recovery` at 0, `recovery\n--wipe_data\n
+--reason=mu300-make-room\n` at 0x40, the A/B block at 2048 as it was.
+
+The reset, seen from the computer (USB location of the unit, once a second, after `adb reboot`):
+
+| after | on USB |
+|---|---|
+| 0 s | `F50` 19d2:1353 (Android, adb) |
+| 15 s | nothing |
+| 28 s | `Unisoc Phone` 1782:4021, 13 s |
+| 41 s | nothing |
+| 58 s | `F50` 1782:4024 |
+| 81 s | `F50` 19d2:1353, ECM and MTP, **no adb interface**; the stock web page at 192.168.0.1 answers |
+
+Nobody touched the unit. So **check 2 holds** (the bootloader went to recovery from the message in misc on a plain
+reboot: the 13 seconds as `Unisoc Phone` are recovery's; the leftover `bootonce-bootloader` above was not honoured,
+`boot-recovery` is), and **check 1 holds as far as a screenless unit shows it**: recovery did not wait for a person, it
+restarted into Android by itself within a minute and a half, and Android came up without USB debugging, which is what
+a cleared `/data` (its persistent properties) looks like. Checks 3 to 5 (the new size of `/data`, root back, the
+token) need USB debugging and Magisk back, by hand; the resumed run then reads them.
+
+What the run showed in the installer (fixed with tests in the same change as this text):
+* "userdata now" printed userdata's sectors as bytes ("0.1 GiB" for 52.4 GiB).
+* "Android's data" printed `./install.sh: command substitution: line 490: syntax error` and the raw text: a `case`
+  inside `$(...)`, which macOS's `/bin/bash` 3.2 cuts at the first `)`.
+* The region came out smaller than the answer: userdata ended `lin` sectors before the usable end, and the region
+  the installers find behind it starts one 2 MiB block after userdata and stops one block short of the disk's end.
+  0.79 GiB gave 804 MiB here (enough for OpenWrt's 800), but the smallest answer the question took, 0.78125, would have
+  left 796 MiB, and the resumed run would have refused OpenWrt after Android was already reset; 1.6 for Ubuntu the
+  same. Now userdata ends where that region is exactly the answer, and an answer whose region is below 800 MiB is
+  refused before anything is written (`install.sh`, `install.ps1`).
+* `--check` with a usable SD card in the slot ends at "the installer will offer the SD card" and never shows the
+  make-room figures; a real run with `MU300_STORAGE=internal` goes on to them. Not changed.
+
+Two things of the unit on the way, not of this path: the SD card left its slot for a moment while Linux ran from it
+(the kernel log: `mmc1: card aaaa removed`, `EXT4-fs (mmcblk1p1): shut down requested`), after which nothing could be
+started (every exec `I/O error`, even the SSH password check). A reboot through adb's sync service (`b` to
+`/proc/sysrq-trigger`) brought it back, but on that boot the eMMC did not come up (`mmc_select_hs400es failed, error
+-84`, `Failed to initialize a non-removable card`); a normal `reboot` after it did. And while Linux runs from the card,
+`boot_b` and the two `runtimenv` partitions are written now and then (the boot log, the modem's NV server), so an
+image taken from a running Linux is consistent everywhere but there.
+
 ### 90. The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection
 
 `mobile-data watch` asks `AT+CGACT?` every 30 s and reconnects after two rounds without our context active. Before

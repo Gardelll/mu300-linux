@@ -226,11 +226,12 @@ class ResetAndResume(Device):
             # only userdata's end moved, by the size asked for; every other partition is where it was
             self.assertTrue(tables_equal_but_userdata(before, after))
             self.assertEqual(ud_after[1], ud_before[1])
-            self.assertEqual(ud_before[2] - ud_after[2], 4 << 21)
             self.assertEqual(rec['target'], ud_after[2] - ud_after[1] + 1)
-            # the region by the installers' arithmetic, and the token at its start
+            # the region by the installers' arithmetic is the size asked for, exactly; and the token at its start
             start = ((ud_after[2] + 1) // 4096 + 1) * 4096
             self.assertEqual(rec['region_start'], start)
+            self.assertEqual(rec['region_end'] - rec['region_start'], 4 << 21)
+            self.assertEqual(rec['need'], 4 << 21)
             self.assertEqual(fakeemmc.read(self.emmc, start, 8), resume.marker(rec['token']))
             # the request to recovery, and the A/B block behind it as it was
             misc = (self.emmc / 'dev/block/by-name/misc').read_bytes()
@@ -256,6 +257,36 @@ class ResetAndResume(Device):
             # never an NV or calibration partition, not even read
             for c in self.calls():
                 self.assertNotRegex(c['cmd'], r'by-name/(prodnv|miscdata|persist|ztecfg|ztepersist|calinv|isedata|\w*nv\w*)', c['cmd'])
+
+    def test_the_smallest_size_leaves_a_region_openwrt_fits_and_the_figures_add_up(self):
+        # the first device run (FINDINGS 112): userdata used to end that many sectors before the usable end, and the
+        # region behind it came out 4 MiB or more short of the answer - 0.78125 GiB (OpenWrt's 800 MiB) gave 796 MiB,
+        # which the resumed run would have refused after the reset. And the plan printed userdata's sectors as
+        # bytes ("userdata now: 0.1 GiB"), and macOS's bash 3.2 broke on a case inside $(...).
+        for shell in self.each_shell():
+            shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc')
+            shutil.rmtree(self.backups, ignore_errors=True)
+            self.device(pull=True)
+            before = fakeemmc.table(self.emmc)
+            ud = [p for p in before if p[0] == 'userdata'][0]
+            r, ev, facts = self.inst(shell, dict(MAKE_ROOM, MU300_ANS_LINUX_GIB='0.78125'))
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+            rec = json.loads(Path(ev[-1]['transaction']).read_text())
+            self.assertEqual(rec['region_end'] - rec['region_start'], 800 << 11)
+            self.assertGreaterEqual((rec['region_end'] - rec['region_start']) * 512, int(facts['need.openwrt']))
+            gib = '%.1f GiB' % ((ud[2] - ud[1] + 1) * 512 / 2**30)
+            self.assertIn('userdata now:         %s (sectors' % gib, r.stdout)
+            self.assertIn("Android's data:       encrypted (", r.stdout)
+            self.assertNotIn('syntax error', r.stdout + r.stderr)
+            # below it: refused, and the same answer twice stops the run with nothing written
+            shutil.rmtree(self.backups, ignore_errors=True)
+            shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc')
+            self.device(pull=True)
+            r, ev, facts = self.inst(shell, dict(MAKE_ROOM, MU300_ANS_LINUX_GIB='0.78'))
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('too small: Linux needs at least 0.8 GiB', r.stdout)
+            self.assertEqual(fakeemmc.table(self.emmc), before)
+            self.assertEqual(self.writes(), [])
 
     def test_resumed_after_the_reset_and_refused_before_it(self):
         for shell in self.each_shell():
