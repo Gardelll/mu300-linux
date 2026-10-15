@@ -6468,6 +6468,47 @@ The updates that are not the plain one (`tests/update-experiment/scenarios.sh`):
   changes between `apply` and the reboot stays in the previous system (`apply` says: reboot soon).
 * Android's own toybox was not measured (Ubuntu's 0.8.9 was); it is not used for carrying any more.
 
+**With the panel's update (§86).** Both changes rewrote `apply`; they are one now. *Every source* - GitHub, a mirror,
+`apply --from` a Magisk zip or a release directory, a downgrade - ends in `apply_one`, which runs the new image's
+carry block, so what is said here holds for each (measured below for online and `--from`). *One word for an older
+release:* §86's `downgrade_ok` and `--downgrade` (`MU300_ALLOW_DOWNGRADE`); this change's own `MU300_DOWNGRADE`
+variable of `mu300-update` is gone before it was ever released (the zip's `MU300_DOWNGRADE=yes` setting stays the
+zip's), and the refusal now says why it matters: the older release's updater may not carry everything over. *One
+rule for room:* `space_needed N [CARRY_KB]` is what `apply` refuses with before it downloads and what the page shows
+(`status --sizes`, `releases`); `carry_need` adds the copy of the user's files kept for a rollback - the old system
+less its image's files as its manifest has them, with the carry's margin - and nothing for `--no-rollback` or for a
+system whose image's manifest is not there before the new image is (every release up to v2026.10.27: the first
+update to a release with this is counted only by the carry block's exact check after the unpack, which changes
+nothing when it fails - measured below). *The report on the page:* System > Update shows `/etc/mu300/update-report`
+as the carry block writes it, the newest update on top, cut at 6000 bytes with where the rest is, open while it is
+new. The manifests of v2026.10.26 and v2026.10.27, published while this waited, were added (36 releases of each
+image); one published before this is merged needs the same (`tools/image-manifest.py legacy`, `union`).
+
+**On a release build** (2026-10-15: `tools/make-release.sh v2026.10.28` from the branch, not published, signed with
+the project's key; 5.4 and the mainline kernels of v2026.10.27; the Magisk zips by `tools/make-magisk-zips.sh`).
+The experiment from v2026.10.27 as published, now with a third path - the old system offline, given the new
+updater as a user of a release before `apply --from` does it, then `mu300-update apply --from` the release's zip of
+its system (`--unsigned`: v2026.10.27 has no key to check with) - `tests/update-experiment/results/built-*.md`:
+
+| image | `mu300-update apply` | installer, Magisk zip | `apply --from` the zip |
+|---|---|---|---|
+| Ubuntu 24.04 | 61 kept, 1 set aside, 1 installed again, 4 by design, **0 lost** | 61, 1, 1, 3, **0 lost** | 61, 1, 1, 4, **0 lost** |
+| Ubuntu 26.04 | 61, 1, 1, 4, **0 lost** | 61, 1, 1, 3, **0 lost** | 61, 1, 1, 4, **0 lost** |
+| OpenWrt | 46 kept, 2 set aside, 1 installed again, 3 by design, **0 lost** | 46, 2, 1, 2, **0 lost** | 46, 2, 1, 3, **0 lost** |
+| OpenWrt with the panel | 46, 2, 1, 3, **0 lost** | 46, 2, 1, 2, **0 lost** | 46, 2, 1, 3, **0 lost** |
+
+Nothing *changed*; the copy kept for a rollback (`<os>.old`) was the old system in every planted item, by both
+device paths; the other system and the extras beside it untouched. On OpenWrt, `--no-rollback` the same; 2.5 GB of
+the user's with 2.3 GB free: "not enough room to carry your files over beside the previous system: 2673 MB needed,
+2214 MB free", nothing changed, and through with `--no-rollback`; `MU300_UPDATE_KEEP=list` loses what it always did
+(34 of 67 on Ubuntu), as it says.
+
+**A test that failed now and then** (`test_magisk_installer...test_payload_replaced_after_verification_is_not_installed`,
+"checksum mismatch", about 1 run in 20 on this branch): the test made a zip, then the corrupt one, and the fake
+release's `tar_gz` put the time into the gzip header - when a second boundary fell between the two, the manifest
+the installer read was the second zip's and the payload the first's. No race in the installer (it checks a copy of
+the payload and uses only that copy). Made deterministic: 2 failures in 100 runs before, 0 in 200 after.
+
 **Manifests of the old releases, for the record** (optional: no updater reads them from there). For each tag from
 v2026.09.21 to v2026.10.27, with the tag's four images in `release/<tag>` as published:
 
