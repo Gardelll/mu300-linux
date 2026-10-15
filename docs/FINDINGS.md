@@ -6579,8 +6579,8 @@ the release and of a test kernel:
   file as they were (`android`); `status` did not wait. The same on both boards.
 * **The re-arm at boot** (F50: `mu300-boot-ok`, after its 30 s): with the lock held from 20 s into the boot until
   45 s, the service finished at 48 s with `slot b armed: 5 failed boot(s)` (tries back to 6). On the U30 Air
-  (`mu300-post`'s `bootok`) the re-arm left `boots since the last good one: 0` and tries 6 after each of three boots (the F50's
-  through seven).
+  (`mu300-post`'s `bootok`) the re-arm left `boots since the last good one: 0` and tries 6 after each of three boots, and so did
+  every one of the F50's nine boots under this script.
 * `mu300-update kernel` (which runs `--trial`) under this script on both boards, then the boot of that kernel: armed
   and re-armed as before.
 * F50: `mu300-next-boot android` and a reboot: Android; the Magisk switch back: Linux (`android` in the file, the
