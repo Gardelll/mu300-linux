@@ -135,6 +135,7 @@ what replaced it. The table below gives each section's state.
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
+| 92 | Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken (after kanoqwq's 3cbf37fc) | current (mainline module only; compiled in CI, not run on a device) |
 
 ## Hardware and firmware facts
 
@@ -5707,3 +5708,44 @@ device with openwrt-luci:
     mu300-update apply && reboot
     # after: the same job, and crond running
     cat /etc/crontabs/root; ps | grep crond
+
+### 92. Three Wi-Fi TX log lines written once per frame; the AP multicast "endian fix" not taken
+
+kanoqwq's clean-tf-7.2 `3cbf37fc` brought two Wi-Fi changes from his T551M work to the SC2355 driver. Both were
+compared with our `upstream/modules/sprd_wlan_combo` (the mainline kernels' module) and with what our bridge does.
+
+**Taken: per-frame logs bounded.** In AP mode the TX path wrote, for every frame, `pr_info("... group
+lut_index=...")` when a group-addressed frame found its LUT entry (every broadcast and multicast frame sent), and
+`pr_err("... sta disconn, no data tx!")` for each frame still queued for a client that has left; every frame
+`sprd_send_data` refused was `netdev_err(... drop msg due to TX Err)` on top. The first two are now
+`pr_debug_ratelimited` (as the module's other per-frame lines already are, `pcie.c` `free_num`, `tx.c` "no
+credit"), the third is under `net_ratelimit()`. Nothing else changes: the frame is still refused with `-EPERM`,
+still freed with its message (`dev_kfree_skb`, `sprd_chip_free_msg`), the same return values. Both `pcie.c` and
+`sdio.c` (only the PCIe path runs on the F50 and the U30 Air). Not measured: how much of the kernel log these lines
+filled on our boards (no report of it); kanoqwq's concern is the CPU a burst of them costs when a busy client
+drops off. The 5.4 driver (`kernel/patches/wlan_combo-*`) is not changed here: his 5.4 patch was written against
+the realme source, which is not in this repository to check that it applies, and a hunk that fails stops the
+release build.
+
+**Not taken: the AP/GO multicast "endian fix".** In `sc2355/rx.c` the AP's receive path compares `eth->h_proto`
+(big endian) with `ETH_P_IP`/`ETH_P_IPV6` (host order), so on this CPU the "not IP" test is always true and every
+group frame a client sends is copied back to the BSS by the driver *and* handed to the stack. His fix (`htons()`)
+makes IP multicast go to the stack only. That is a behaviour change, not a bug fix, for us: a Linux bridge never
+sends a frame back out of the port it came from unless that port has hairpin mode, and nothing in this tree sets
+hairpin on `wlan0`. Without the driver's copy, mDNS, SSDP, LLMNR, IPv4 broadcasts and IPv6 ND multicast from one
+Wi-Fi client would no longer reach the other clients of the same radio (a phone casting to a TV on the same
+hotspot). Where hairpin *is* on (OpenWrt's netifd turns it on for a wireless port with `multicast_to_unicast`), the
+present code gives a duplicate, which is harmless for these protocols. A comment at the branch says so, so it is
+not "fixed" blindly. Measure before changing it:
+
+    cat /sys/class/net/wlan0/brport/hairpin_mode /sys/class/net/wlan0/brport/multicast_to_unicast 2>/dev/null
+    # two phones on the same band: mDNS between them (e.g. a Chromecast/AirPlay target, or `avahi-browse -a`),
+    # tcpdump -ni wlan0 udp port 5353 on the device: one copy or two per query
+
+Device checklist for the taken part (either board, 6.18 or 7.2):
+
+    dmesg -C; # a busy client (a download) on Wi-Fi, then switch its Wi-Fi off
+    dmesg | grep -c 'sta disconn'              # 0 (debug only) - before: one line per queued frame
+    dmesg | grep -c 'group lut_index'          # 0 - before: one line per broadcast/multicast frame
+    echo 'module sprd_wlan_combo +p' > /sys/kernel/debug/dynamic_debug/control   # the lines are there, bounded
+    # the hotspot keeps working: a second client, ping and a download
