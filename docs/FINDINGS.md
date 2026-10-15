@@ -138,7 +138,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
-| 90 | The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection (after kanoqwq's 3cbf37fc) | current (unit tests only; not measured on a device) |
+| 90 | The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection (after kanoqwq's 3cbf37fc) | current (fixed; measured on the U30 Air, openwrt-luci v2026.10.27, 6.18.56, 2026-10-15; the OpenWrt watchdog's messages now reach the log) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
 
 ## Hardware and firmware facts
@@ -6545,7 +6545,8 @@ not a detach.
 * His watchdog never escalates a silent modem and also treats "OK with no line for the context" as unknown. Ours
   keeps both of the old repairs: "OK" with `<cid>,0` or with no line for the context at all (what a firmware
   reset leaves, the reason the watchdog exists) is *inactive* and reconnects in two rounds as before; and a modem
-  that stays silent for `MU300_WATCH_UNKNOWN_ROUNDS` rounds (4, about two minutes) goes the old way (radio check,
+  that stays silent for `MU300_WATCH_UNKNOWN_ROUNDS` rounds (4: about two minutes when every command fails
+  at once, about 4.5 minutes when the daemon hangs, measured below) goes the old way (radio check,
   then a reconnect a round later), so a channel that only a radio-on would wake up is still woken. An answer in
   between starts the count over.
 * Not taken: his switch of the radio only on an explicit `+CFUN: 0` (`radio_on` reads `AT+CFUN?` itself and does
@@ -6557,14 +6558,41 @@ not a detach.
 `+CGACT:11,1` or `1,10` are not taken for context 1. Unit tests: `tests/test_device_scripts.py`
 (`MobileData.test_watch_context_states`, `..._leaves_the_bearer_alone_while_the_modem_does_not_answer`,
 `..._still_reconnects_a_modem_that_stays_silent`, `..._an_answer_between_silent_rounds_starts_the_count_over`,
-`..._an_answered_lost_context_still_reconnects_in_two_rounds`). Not run on a device.
+`..._an_answered_lost_context_still_reconnects_in_two_rounds`).
+
+**Measured on the U30 Air** (openwrt-luci v2026.10.27, kernel 6.18.56, SIM1, relay mode, the owner's VPN with its
+kill switch on; 2026-10-15), with this branch's `mobile-data` in place of the release's:
+
+* **No log on OpenWrt at all.** procd kept none of the watchdog's stderr (`mu300-post`'s `cellwatch` instance had
+  no `procd_set_param stderr 1`, which every other long-running instance of ours has), so "mobile data lost ...
+  reconnecting" never reached `logread` - not with this change, not before it. The device run below used a
+  watchdog started by hand with its stderr in a file; the instance now sets `stderr 1`
+  (`MobileData.test_the_openwrt_watchdog_logs`).
+* **A silent channel.** The nr2 daemon (`MU300_AT_DIR=/run/mu300-at2`) stopped with `SIGSTOP` for 80, 85, 165 and
+  200 s: no reconnect, the bearer's address unchanged, nothing in the log. One unanswered command takes about 35 s,
+  not the 4 s asked for: `mu300-at -t 4` waits for a daemon that does not take the command off its fifo (measured:
+  "no answer from the daemon" after 35 s, an answered `AT+CGACT?` in under 1 s). So a round of a silent channel is
+  about 65 s, and the four rounds before the old repair take about **4.5 minutes**, not two. Stopped for 290 s:
+  `no answer about the data context for 4 rounds`, then the radio check (`radio was off, switching it on`: the
+  silent channel did not answer `AT+CFUN?` either), and the next round, answered again, started the count over -
+  no redial.
+* **A lost context** (`AT+CGACT=0,1` on the panel's channel nr6): `mobile data lost (modem reset or detached),
+  reconnecting` 58 s later, `ifup wan`, the same address back, data through the tunnel again.
+* **Airplane** (`AT+CFUN=0` on nr6): `radio was off, switching it on`, then reconnects - but on this U30 Air (dual
+  SIM managed, FINDINGS 74) `+CFUN: 1` came back with the SIM's power off (`AT+CPIN?` `+CME ERROR: 10`, `+CEREG:
+  2,8`, emergency only), and every attach failed ("not registered on the network") until `AT+SPACTCARD=0;+SFUN=2`
+  and `AT+SFUN=4` by hand. `radio_on` returns early when `/run/mu300/sim-managed` exists, so the watchdog's repair
+  cannot power a card back on there. Unchanged code (`radio_on` is the release's); left for the dual-SIM work.
+* Not this change, seen on the way: on Ubuntu (F50), stopping the watchdog logs `wlock: unbound variable` (the
+  `EXIT`/`TERM` trap names a `local` of `watch()`); on OpenWrt a `TERM` is caught by that trap and the watchdog runs
+  on without its lock. Both are the release's.
 
 Device checklist (either board, either system):
 
     # 1. normal: data up, then watch the log for five minutes - no "reconnecting"
-    logread -f | grep mobile-data     # OpenWrt;  journalctl -fu mu300-mobile-data  on Ubuntu
-    # 2. a silent channel: stop the nr2 daemon (OpenWrt: kill the atd2 instance's mu300-atd; procd brings it back)
-    #    for under 90 s - no reconnect, data keeps flowing (ping 1.1.1.1 the whole time)
+    logread -f | grep mobile-data     # OpenWrt (with stderr 1);  journalctl -fu mu300-mobile-data-watch  on Ubuntu
+    # 2. a silent channel: kill -STOP the nr2 daemon (MU300_AT_DIR=/run/mu300-at2 in its environment), kill -CONT it
+    #    after under 4 min - no reconnect, the address unchanged; after 5 min the radio check, as above
     # 3. a lost context: AT+CGACT=0,1 on the panel's AT terminal - "mobile data lost ... reconnecting" within ~60 s,
     #    data back as before
     # 4. airplane: AT+CFUN=0 - "radio was off, switching it on" and data back, as before
