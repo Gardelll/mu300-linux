@@ -6701,3 +6701,21 @@ partition from then on), `boot_a`/`boot_b` (Magisk's patched boot included), the
 5. The token is still there after the restart.
 
 Until then the path stays EXPERIMENTAL, and an SD card remains the way that erases nothing.
+
+**A first device run, 2026-10-15 (an F50 the owner gave up for it): not done, the unit has room.** Read only, from
+the SD card's Linux on it: the eMMC is 122159104 sectors (58.2 GiB), `userdata` (`mmcblk0p75`, the last partition)
+runs from 12275712 for 41943040 sectors (20 GiB, ends at 54218751), and 32.4 GiB behind it belong to no partition,
+the 64 GB layout of section 9. The region starts at 54222848 and already holds a `mu300root` ext4. The make-room path
+only starts below 700 MiB of free region and without an SD card chosen, so it cannot run here without making a
+32 GB layout by hand, which was not done. **None of the five checks above was done**; they still need a 32 GB unit
+(or one whose layout is changed on purpose). What the unit did show, for the checks:
+* No `recovery` partition; `boot_a` is a version 4 boot image with a ramdisk (Magisk's patch is there), `init_boot_a`
+  is empty. So recovery is the `vendor_boot` ramdisk's, reached through the patched `boot` ramdisk (check 1 and 2
+  run through Magisk's init on this unit).
+* `misc` begins with a leftover bootloader message, `bootonce-bootloader`, and the unit boots normally with it on
+  every start: this bootloader does not act on at least that command (check 2 stays open; `boot-recovery` may still
+  be read). `resume.py`'s prepare replaces the first 2 KiB whole, and its "reset not run yet" test looks for its own
+  message only, so the leftover changes nothing for it.
+* Over USB, in Linux, the unit is `MU300LINUX-324950664950-2128e853` on the computer's adb list; a second F50 cloned
+  from the same unit shows `MU300LINUX-324950664950-203d8329`, and in Android both would be `324950664950`. A
+  resume on one computer with both in Android cannot tell them apart by serial; the eMMC CID in the transaction does.
