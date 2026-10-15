@@ -1024,8 +1024,9 @@ class Bounds(FetchCase):
 
     def test_a_server_that_sends_more_than_the_release_names_cannot_fill_the_storage(self):
         # 5 MB for a file of 100 000 bytes: the downloader's own file size limit stops the write, and what the file
-        # had grown to when the stub looked is at most the size rounded up to a block
-        w = self.wget(f'{self.SAYS}{self.OUT}head -c 5000000 /dev/zero >> "$out" 2>/dev/null; wc -c < "$out" > "$STUBLOG/grew"')
+        # had grown to when the stub looked is at most the size rounded up to a block. (The stub outlives the watch's
+        # kill, which may come first - the file is past the size once the limit stopped it - so that it can look.)
+        w = self.wget(f'trap "" TERM; {self.SAYS}{self.OUT}head -c 5000000 /dev/zero >> "$out" 2>/dev/null; wc -c < "$out" > "$STUBLOG/grew"')
         t0 = time.time()
         rc, out = self.fetch(w, 100000)
         self.assertEqual(rc, '13', out)
