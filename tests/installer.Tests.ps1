@@ -133,7 +133,7 @@ Check 'sd kernel, other features'   (SdKernelOk 1 $kd) $false
 Check 'sd kernel, sdcard'           (SdKernelOk 1 $kd) $true
 Remove-Item -Recurse -Force $kd
 $src = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
-$iUnpack = $src.IndexOf('& tar -xzf "$REL\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN')
+$iUnpack = $src.IndexOf('& tar -xzf "$ASSETS\mu300-kernel-$KERNEL.tar.gz" -C $KMAIN')
 $iCheck = $src.IndexOf('if (-not (SdKernelOk $SD_MODE $KMAIN))')
 Check 'sd kernel check after unpack' ($iUnpack -ge 0 -and $iCheck -gt $iUnpack) $true
 
