@@ -130,6 +130,7 @@ what replaced it. The table below gives each section's state.
 | 65 | An APN with a user name and a password (`AT+CGPCO`), and what else kanoqwq's APN page does | current (unit tests only; never sent to a modem) |
 | 66 | The OpenWrt image build tries a package download again | current (unit tests only; no image built with it) |
 | 70 | adb to Linux on by default and open to every computer: the owner's decision, the exposure, and the state that decides it | current (unit tests; nothing of it measured on a device: the checklist is in the section) |
+| 71 | A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found | current (run against an F50 from a Mac on 2026-10-15: check, backup, installs and uninstalls from the text installer and from the window; the U30 Air, a locked bootloader, Linux and Windows hosts not measured; Windows only by CI) |
 | 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; run end to end on an F50 from Chrome on macOS on 2026-10-13 (docs/web-installer.md); Windows, a Linux host, the U30 Air, KernelSU/APatch and a download over a carrier's network not measured |
 | 74 | The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, #194) | current (the maintainer's U30 Air on 7.2.10 and the contributor's on 7.2.9); two working cards, kernel 5.4 and an F50 not run |
 | 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | experimental, opt-in build recipe (7.2.9; 7.2.10 without a client); PMK provenance open; the WPA2 fallback measured on the U30 Air |
@@ -5675,6 +5676,203 @@ Kernel 5.4, which issue #194's unit runs: whether its `/dev/sipc_sbuf` reads the
 if not, the `brokers-missing` row above is what happens). A truly empty position and a PIN-locked card with the
 current rule, on hardware. The restart after `no-radio` (the `no-data` restart, which is the same code, ran). The
 F50: unit tests, and the default path on the U30 Air. An M3.
+
+### 71. A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found
+
+Written against an `adb` that is a Python program (`tests/fakeadb.py`) and a fake installer; then run against an F50
+(F50-B) from one Mac on 2026-10-15 - what that showed, and what it found, is under "What a device showed" at the
+end. On Windows only what CI runs.
+
+**Why.** A user showed a third party's Windows program for this project: a form with a device list, six buttons
+and a few tabs, which carries its own copy of what the installer does. A copy drifts: the installer has gained the
+slot rule, the boot chain sync, the read-back of the boot image and the bounded SD stages (§33a, §50, #86) since
+any such copy could have been made. So the window here has no install logic at all. It asks the questions, hands
+the answers to `install.sh` / `install.ps1`, and shows what they report.
+
+**The answers mode** (`tools/answers.sh`, `tools/answers.ps1`; `docs/INSTALLER-AUTOMATION.md` is the reference).
+Each question has one variable, the last argument of its `ask`. Four rules carry the safety:
+
+* A question whose variable is not set stops the run and names the variable. It is never defaulted and nothing is
+  read from standard input in its place. Tested for every question up to the first pull, under dash, bash and
+  busybox ash, and for `install.ps1` under Windows PowerShell 5.1 and PowerShell 7.
+* A variable set to nothing takes the default, and no default is the destructive answer: `INSTALL`, `ERASE`,
+  `overwrite`, `internal` and `UNINSTALL` have to be given.
+* A question that comes back stops. The kernel question and the make-room size repeat until they like the answer;
+  the same variable would answer for ever. The second time is an error ("the answer in MU300_ANS_KERNEL was not
+  accepted: 5.4").
+* `@stdin` as a value puts the question on the stream and reads one line. That is what lets the window show the
+  installer's **own** summary - made after the download and the build, from what is really there - before
+  `INSTALL` is sent. A window that composed a summary of its own from the choices would be showing a guess.
+
+**The progress stream** is lines `@@mu300 {json}` next to the text for people: stages with a percentage, questions
+and answers, the facts of the device, a download's bytes once a second, the sha256 results, errors. The last event
+of a run is `done` or `error` whatever ends it (an `EXIT` trap in the shell scripts, a `trap` in PowerShell): a
+reader must never wait for more. The facts of `--check` are what the window draws the device from, so the window
+and the text check cannot disagree about a device; among them are things the text does not print - the bootloader's
+lock and verified-boot state, read with plain `getprop` **before** the check for root, so a device without root
+still says what it is.
+
+**What went wrong on the way, and is fixed:**
+
+* *PowerShell does not tell `$Ans` from `$ans`.* `tools/answers.ps1` is dot-sourced, so its script variables share
+  `install.ps1`'s scope. The dictionary of answers was `$script:Ans`; `install.ps1`'s own `$ans = Ask ...` (the
+  storage question) replaced it with a string, and the first whole run on Windows stopped with "[System.String]
+  does not contain a method named 'ContainsKey'". `-NonInteractive` was lost the same way: the file set a variable
+  of the parameter's name to `$false` after the parameter had been bound. Every variable of the file has the prefix
+  `Mu` now, and `tests/test_answers.py` checks that the installers use none of those names. Found by CI's first run
+  of `tests/answers.Tests.ps1`, not by reading.
+* *A secret given in the environment was inherited by everything.* `MU300_ANS_PASSWORD` from an answers file was
+  never exported, but one given in the environment stayed there for adb, curl and python to inherit; an answers
+  file was accepted whatever its permissions; a malformed line of it was echoed. Now: one table of secrets, whose
+  values are never printed, never in an event and never in an error; a secret in the environment is taken out of
+  it before anything is started (and put back for the one restart after a self-update); the file must be the
+  user's alone (no link, owned by the user, no permission for group or others - `install.sh`, `uninstall.sh`;
+  Windows has no such check); a bad line is reported by its number. The fake adb records the answer variables it
+  was started with, and the tests look for the password in every output stream, in adb's environment, in the
+  fake's log and in the work directory.
+* *The parts of a parallel download count twice for a moment.* While they are joined both the parts and the whole
+  file exist; the byte count on the stream is capped at the length.
+* *`install.ps1` waited two minutes on a device without root* before it said so: it asked for `sys.boot_completed`
+  through `su`. It asks through plain adb now, as `install.sh` does.
+* *A boot image that could not be pulled was a PowerShell exception* (`Get-Item` on a file that is not there), not
+  the installer's message.
+
+**The beta question.** The installers took `releases/latest`. They now read the list of releases and offer a
+prerelease only when it was published after the newest full release (`tools/release_pick.py`, one file for both
+installers and the window). No token; when the list does not come - offline, the API's rate limit, a proxy's page -
+the newest release is looked up as before and nothing is asked. The release is resolved before the questions now,
+so a GitHub that does not answer stops the run before the password, not after the pulls. `install.ps1 -Answers`
+(one answer per line, in order) never gets the question: it would shift every answer behind it.
+
+**Where a Python that can draw the window is found.** Measured on this Mac, the one fact of this section that came
+from a real machine:
+
+* macOS's own Python - `/usr/bin/python3`, the Command Line Tools' 3.9.6 - has tkinter with **Tk 8.5**. On macOS
+  26.6 its window opens and stays black: no widget is ever drawn. Homebrew's Python 3.13 on the same machine had no
+  tkinter at all; `brew install python-tk@3.13` brought Tk 9.1, and with it the window draws.
+* So a Python counts only when its Tk is 8.6 or newer, an older one is named as such ("its Tk is older than 8.6"),
+  and among the Pythons without a usable tkinter the one a fix is known for is the one offered
+  (`brew install python-tk@X.Y`), not the first found. The window itself refuses an older Tk with exit status 3,
+  on which the installers go on in text.
+* `/usr/bin/python3` without the Command Line Tools is a stub whose only effect is the dialog that offers to
+  install them. It is run only when `xcode-select -p` succeeds (tested with a stub that records being run).
+* On Windows the Microsoft Store's alias is a `python.exe` that prints nothing and fails; every candidate is run
+  with a real argument, so it is never taken for a Python and the Store is never opened. A Python installed a
+  moment ago by winget is not on the process's `PATH`; the installation directories find it.
+* Not measured: any Linux desktop, any Windows machine with a person at it.
+
+**The window** (`gui/`, tkinter and the standard library only). Model, runner and controller have no window in
+them and are tested without a display; the widgets are built once per page from the controller's state.
+
+* The device, root and the bootloader are shown separately. Only a missing root blocks an installation.
+* **A locked bootloader is a warning, never a refusal - the owner's decision of 2026-10-13.** The bootloader does
+  not have to be unlocked: a device with a patched TrustOS boots a modified boot image with the bootloader locked,
+  and that is enough. No property says whether TrustOS is patched, so nothing can be decided from the lock. Both
+  text installers (in the checks and again in the plan before `INSTALL`) and the window (in the warning colour on
+  the device page and above the summary, never red) say: "The bootloader is locked. Did you patch TrustOS? With a
+  patched TrustOS Linux boots on a locked bootloader; without it the device goes back to Android by itself after
+  the install." There is no extra confirmation. Issue #156 asked for an early refusal on a locked bootloader; this
+  supersedes it. Locked is `ro.boot.flash.locked=1` or `ro.boot.vbmeta.device_state=locked`, unlocked is `0` or
+  `unlocked`, anything else is "not reported"; the verified-boot colour is shown and not interpreted. **What an F50
+  or a U30 Air really reports in these properties - unlocked, locked, locked with a patched TrustOS - is still not
+  measured**: the rule is written from the properties' meaning in Android, not from a device. The window does not
+  root, unlock or patch anything and links to no guide for it.
+* Stop is offered while nothing has been written to the device (up to and including the copy to
+  `/data/local/tmp`) and not from `android-install.sh` on; closing the window is refused there too. Closing the
+  summary dialog answers no.
+* The make-room path (§9b, §57) is there with its figures and wants `ERASE` typed into the window, which is then
+  the installer's own `MU300_ANS_ERASE_ANDROID`. **It has never been run from the window against a device.**
+* "Back up now" is `install.sh --backup`: Android's boot image and the first block of `misc`, compared with the
+  device by sha256. The NV and calibration partitions are not read by it, by the installers or by the window; the
+  full backup of those stays `tools/backup-device.sh`, which the window names and does not run.
+* A device in our Linux is recognised by its serial number (`MU300LINUX-...`, §70) and asked with
+  `mu300-device --json`; update, kernel switch, restart and back to Android then go over adb as the project's own
+  commands. Without adb to it the window shows the commands and opens an SSH session in the system's terminal.
+* Every line of a run is masked when it comes in: the serial numbers of the attached devices, 15-digit numbers
+  standing alone (IMEI, IMSI), ICCIDs, passwords and their hashes, Wi-Fi passphrases, adb keys, MAC addresses, the
+  home directory's name. Nothing unmasked is kept, so the log on the screen, the copied and the saved log and the
+  diagnostics report cannot differ in that. The masking is by pattern: a secret in a shape nobody thought of is
+  not caught, which is why the report says to read it before posting.
+
+**What a device showed** (2026-10-15; F50-B: 64 GB, Android 13 `F50_FLYMODEM_ZYV1.0.0B09`, Magisk 30.6, bootloader
+unlocked; a Mac with macOS 26.6 and Homebrew's Python 3.13 / Tk 9.1; release v2026.10.27; next to it a U30 Air in
+Linux on the same adb, and for part of the day a Pixel 7. Every run with `MU300_PROGRESS=1`, each stream checked:
+every `@@mu300` line JSON with string values at the start of a line, the steps in order, the last event `done` or
+`error`.)
+
+* *`--check` from a device in Linux*, named by `ANDROID_SERIAL=MU300LINUX-...`: asked over adb, rebooted, came back as
+  Android, 35 events, `done ok`. The facts are `install.sh`'s text: eMMC 122159104 sectors, partitions ending at
+  54218752, the region at 27762098176 with 34779168768 bytes, `existing`, slots a/b, the boot chain identical.
+* *The bootloader's properties on this unlocked unit:* `ro.boot.flash.locked=0`, `ro.boot.vbmeta.device_state=unlocked`,
+  `ro.boot.verifiedbootstate=orange`, so `bootloader.state=unlocked` and no warning. Seen once by accident on a Pixel
+  7 with a locked bootloader (see the first fault below): `1` / `locked` / `green`. A locked F50 or U30 Air, with or
+  without a patched TrustOS, is still not measured.
+* *`--backup`:* `boot_a.img` (64 MiB) and `misc-head.bin` (4 KiB), the sha256 of the boot image the same as the
+  device's, nothing written.
+* *Installations in answers mode*, the summary on `@stdin` and `INSTALL` sent when it waited: Ubuntu 24.04 on 7.2 over
+  the existing filesystem (`update`, 14 questions, `/etc/mu300/lan.conf` kept); OpenWrt with the panel on 7.2 with the
+  filesystem wiped; a fresh Ubuntu after a quick uninstall, where the region still held data and
+  `MU300_ANS_OVERWRITE=overwrite` was asked for. Each `done ok` with the release, kernel and system, and the device
+  booted Linux. The sha256 results were `ok` for downloaded files and `cached` for kept ones.
+* *The beta question:* asked ("A beta is out: v2026.10.27 ... Install the beta v2026.10.27 instead of v2026.10.25?")
+  while v2026.10.27 was a prerelease newer than the release v2026.10.25, and answered yes from the file; not asked
+  once v2026.10.27 had become the release (v2026.10.26, an older prerelease, does not count), and a `MU300_ANS_BETA`
+  in the file then stays unused.
+* *Uninstallations in answers mode*: `quick` from a device in Linux (named by its Linux serial, rebooted over adb), and
+  `keep` from the window; both `done ok`, `boot_b` a copy of `boot_a`, the Magisk module marked for removal.
+* *The window* (driven from its own Tk thread, the screen locked part of the time, so screenshots only from the
+  morning's runs): the device page in Android, in Linux and with two boards to choose from; the storage bar against
+  the real table; Choose; an installation from the window (update, Ubuntu on 7.2) through the installer's own
+  summary to the Finish page; the uninstaller from the window with `keep`; Manage on a device in Linux:
+  `mu300-device --json`, the update check, back to Android; the kernel box showing the running kernel.
+* *The question "Use the graphical installer?"* at a terminal (a pty): the default `yes` (macOS, no SSH), `no` went
+  on in text, `yes` started the window with `/opt/homebrew/bin/python3.13`. The search found `/usr/bin/python3` (3.9,
+  Tk 8.5: too old) and Homebrew's 3.13 with Tk 9.1, and took the second.
+* *The web installer's mirror* (FINDINGS 72) was run on the same day with the same unit.
+
+Faults the device found, all fixed with tests:
+
+* *While the F50 rebooted, a Pixel next to it was the only adb device*, and `install.sh --check` went on with the
+  Pixel ("su: inaccessible or not found"; nothing written). Waiting for Android now takes only the board that was
+  rebooted (our Linux's serial is `MU300LINUX-<Android's serial>-<eMMC id>`), or the one F50/U30 Air, never
+  another device. `install.ps1` / `uninstall.ps1` had the same wait and have the same fix.
+* *Two boards in Linux on adb* (the F50 named by `ANDROID_SERIAL`, a U30 Air): the named board was dropped, none of
+  the two was rebooted over adb, and the SSH fallback went to 192.168.77.1/.78.1 - where the U30 Air answered. Now
+  the named board is the one rebooted, and without adb to it no address is guessed while another board in Linux is
+  on adb (unless `MU300_IP` names it). Measured afterwards: only the F50 was rebooted. Also in the PowerShell scripts.
+* *The window went on with the other board.* While the F50 restarted after an installation from the window, the
+  U30 Air in Linux was the only adb device left and the window took it (and asked it for `mu300-device --json`); its
+  Manage page would have restarted or updated that board. The window now follows the board it worked on through a
+  restart, in whichever system it comes back, and takes none while it is away. Measured afterwards: during the
+  restart into Android nothing was selected, then the F50 in Android, checked by itself.
+* *The kernel box of Manage said 6.18* on a device running 7.2.10; it shows the running kernel now.
+* *An answers file with mode 644* stopped `install.sh` before the stream existed, with no event at all; a program
+  that asked for the stream now gets the `error` event (the text, never the file's content).
+* *The uninstaller's clean-up said "rm: /data/local/tmp/mu300-web: Is a directory"*: the web installer's directory
+  matched `mu300-*`. Only files are removed now (`uninstall.sh`, `uninstall.ps1`).
+
+Seen and left as they are:
+
+* The first check after Android came back failed once with "could not read the partition table": about 8 s after it
+  first showed up the F50 left adb for 2 s and came back (Android's USB set-up after the boot). The window checks
+  again when the device comes back, and that check passed. A text run started in that moment can fail the same way;
+  starting it again is the remedy.
+* A password that is also a word of the installer's output is masked there too: with `ubuntu` as the password the
+  window's log and summary say "systems: <password> (Ubuntu 24.04)". That is the masking working, and it tells a
+  reader of the log that the password is `ubuntu`; a password that is no such word avoids both.
+* The end of an installation names 192.168.77.1 for SSH whatever `/etc/mu300/lan.conf` on the device says (an update
+  keeps that file).
+
+**What is still to be shown:**
+
+1. `.\install.ps1 -Check`, any run of the PowerShell scripts against a device, and the window on Windows (CI runs
+   them against the fake adb only); by hand the question and the search for Python on a machine with only the
+   Store alias, and `[Console]::OutputEncoding` under a window with no console (the Turkish and Chinese text).
+2. A U30 Air, and what `bootloader.locked` / `bootloader.verified` say on a locked F50 or U30 Air, with and without a
+   patched TrustOS.
+3. The window on a Linux desktop; from the window: a device that is unauthorised, Stop during the download, the
+   SSH button.
+4. The make-room path from the window, last, on a unit that may lose its Android data.
 
 ### 83. An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`)
 

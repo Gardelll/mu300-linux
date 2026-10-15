@@ -38,7 +38,7 @@ that works on our boards may not work on yours.
 
 What you do with your device is your decision and your responsibility. In particular:
 
-* **Rooting, unlocking and recovery are not part of this project.** Getting a device rooted, flashing with Magisk,
+* **Rooting, unlocking, patching and recovery are not part of this project.** Getting a device rooted, flashing with Magisk,
   SPD/BROM or any other third-party tool, and anything you download from anywhere else to do so, is done at your own
   risk, following those tools' own instructions. We did not write them, we do not check them, and we cannot say
   what they do to your device, your data or your warranty.
@@ -136,8 +136,13 @@ trying it costs you the server.
 
 ## Before you start
 
-Your device must already be **rooted and unlocked** (it must already boot a modified Android boot image), and you
-need `adb` on your computer. Getting to that point is not part of this project.
+Your device must already be **rooted, and able to boot a modified boot image**: an unlocked bootloader, or a locked
+one with a patched TrustOS. You also need `adb` on your computer. Getting to that point is not part of this project:
+it does not root, unlock or patch devices and gives no guide for it.
+
+The bootloader does not have to be unlocked. The installers do not refuse a locked one; they say so and ask "Did
+you patch TrustOS?". With a patched TrustOS Linux boots on a locked bootloader; without it the bootloader rejects
+the Linux boot image and the device goes back to Android by itself after the install.
 
 > **Warning.** Installing writes to the `boot_b` and `misc` partitions (`boot_a` instead of `boot_b` when Android
 > runs from slot b, as it often does after an OTA update). If something goes badly wrong you may need a
@@ -222,6 +227,23 @@ It asks a few questions (internal storage or SD card; Ubuntu, OpenWrt or both, a
 which kernel; which one boots; whether Linux boots by default; a password; the VPN module), downloads the ready-made images,
 copies the Wi-Fi and modem files from your own device, shows exactly what it is about to write, and waits for you to
 type `INSTALL`. Then it reboots into Linux.
+
+**A window instead of a terminal.** Started by hand, the installer first asks whether you want the graphical
+installer: the same steps in a window, with the device, its storage and the progress shown rather than printed
+(`MU300_GUI=0` never asks, `MU300_GUI=1` starts it without asking). It needs a Python 3.8 or newer with tkinter
+(Tk 8.6 or newer); the installer looks for one, says what is missing, and installs nothing without showing the
+command and getting a yes. The window drives this same `install.sh` / `install.ps1`, so it installs nothing
+differently. It can also be started directly: `python3 gui/mu300-gui.py`.
+
+![The graphical installer: the device page](docs/images/gui/gui-01-device.png)
+
+**A beta, when there is one.** When GitHub has a prerelease newer than the newest release, the installer asks
+whether to install that beta instead and names both (default: no). `MU300_RELEASE=<tag>` / `-Release <tag>` picks a
+release and asks nothing.
+
+**Without a terminal.** `./install.sh --answers FILE` (`.\install.ps1 -AnswersFile FILE`) takes every answer from
+variables and asks nothing; a question without an answer stops the run and names its variable.
+`MU300_PROGRESS=1` adds a machine-readable progress stream. See [docs/INSTALLER-AUTOMATION.md](docs/INSTALLER-AUTOMATION.md).
 
 The installer speaks **English, Türkçe and 中文**: it asks at the start (English is the default; `MU300_LANG=tr`
 or `.\install.ps1 -Lang zh` skips the question). Adding a language is one file: see `i18n/README.md`. Before anything else it brings your copy of the project up to date
