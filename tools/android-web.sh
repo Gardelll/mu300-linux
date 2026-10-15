@@ -192,6 +192,10 @@ job_state() {  # none | running | done | interrupted
     _p=$(cat "$JOB/pid" 2>/dev/null)
     # the pid is that job's only in the Android boot it was started in
     if [ -n "$_p" ] && [ "$(cat "$JOB/boot" 2>/dev/null)" = "$(boot_now)" ] && kill -0 "$_p" 2>/dev/null; then echo running
+    # The job writes its status and then ends: one that ended between the look for the status above and the look
+    # at its process here wrote it meanwhile, and is done. (Without this second look a job that finished well was
+    # now and then "interrupted" for a watcher: tests/test_android_web.py EndToEnd, on a loaded CI machine.)
+    elif [ -f "$JOB/rc" ]; then echo done
     else echo interrupted; fi
 }
 boot_now() { cat "${MU300_BOOT_ID:-/proc/sys/kernel/random/boot_id}" 2>/dev/null | tr -d ' \n'; }

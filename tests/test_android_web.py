@@ -665,6 +665,20 @@ class Uninstall(WebCase):
         return subprocess.run([BUSYBOX, 'sh', '-c', f'MU300_LIB=1; . "{self.stage}/android-web.sh"; ' + code],
                               capture_output=True, text=True, env=self.web_env(MU300_WEB_STAGE=self.stage, **extra), timeout=60)
 
+    def test_a_job_that_ends_while_it_is_looked_at_is_done(self):
+        # the job writes its status (rc) and ends; a look that found no status yet and then no process saw it end
+        # in between: done, never "interrupted" (follow then printed "EXIT interrupted" for an install that went well)
+        job = self.root() / 'job'
+        job.mkdir(parents=True)
+        (job / 'kind').write_text('install\n')
+        dead = subprocess.Popen(['true']); dead.wait()
+        (job / 'pid').write_text(f'{dead.pid}\n')
+        code = ('boot_now > "$JOB/boot"; '
+                'kill() { [ "$1" = -0 ] && [ ! -e "$JOB/rc.once" ] && : > "$JOB/rc.once" && echo 0 > "$JOB/rc"; command kill "$@"; }; '
+                'job_state; rm -f "$JOB/rc"; job_state')
+        r = self.lib(code)
+        self.assertEqual(r.stdout.split(), ['done', 'interrupted'], r.stderr)
+
     def test_misc_that_does_not_verify_gets_its_old_block_back(self):
         self.installed()
         misc = self.fake.root / 'dev/block/by-name/misc'
