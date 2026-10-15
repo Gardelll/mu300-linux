@@ -2243,6 +2243,9 @@ msgstr "Este sistema é mais novo que a versão mais recente (uma versão de tes
 msgid "Up to date."
 msgstr "Atualizado."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Esta versão não está assinada e este sistema verifica assinaturas: ela não é instalada daqui. Atualize pelo arquivo dela abaixo, que pede sua confirmação."
+
 msgid "Update to %s"
 msgstr "Atualizar para %s"
 

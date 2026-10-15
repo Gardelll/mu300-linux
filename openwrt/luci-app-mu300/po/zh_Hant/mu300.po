@@ -2238,6 +2238,9 @@ msgstr "本系統比最新發行版還新（測試版本）。"
 msgid "Up to date."
 msgstr "已是最新。"
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "此版本未簽署，而本系統會檢查簽章：不能從這裡安裝。請在下方用它的檔案更新，那裡會請你確認。"
+
 msgid "Update to %s"
 msgstr "更新到 %s"
 

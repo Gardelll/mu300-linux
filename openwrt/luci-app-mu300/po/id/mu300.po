@@ -2243,6 +2243,9 @@ msgstr "Sistem ini lebih baru daripada rilis terbaru (rilis uji)."
 msgid "Up to date."
 msgstr "Sudah yang terbaru."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Rilis ini tidak ditandatangani, dan sistem ini memeriksa tanda tangan: rilis ini tidak dipasang dari sini. Perbarui dari berkasnya di bawah, yang meminta Anda mengonfirmasi."
+
 msgid "Update to %s"
 msgstr "Perbarui ke %s"
 

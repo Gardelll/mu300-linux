@@ -2243,6 +2243,9 @@ msgstr "Αυτό το σύστημα είναι νεότερο από τη νε�
 msgid "Up to date."
 msgstr "Ενημερωμένο."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Αυτή η έκδοση δεν είναι υπογεγραμμένη και αυτό το σύστημα ελέγχει τις υπογραφές: δεν εγκαθίσταται από εδώ. Ενημερώστε από το αρχείο της παρακάτω, που ζητά επιβεβαίωση."
+
 msgid "Update to %s"
 msgstr "Ενημέρωση σε %s"
 

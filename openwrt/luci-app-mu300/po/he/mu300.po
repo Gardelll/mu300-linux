@@ -2243,6 +2243,9 @@ msgstr "המערכת הזו חדשה יותר מהגרסה החדשה ביותר
 msgid "Up to date."
 msgstr "המערכת מעודכנת."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "גרסה זו אינה חתומה, ומערכת זו בודקת חתימות: היא לא מותקנת מכאן. עדכנו מהקובץ שלה למטה, שמבקש מכם אישור."
+
 msgid "Update to %s"
 msgstr "עדכון ל-%s"
 

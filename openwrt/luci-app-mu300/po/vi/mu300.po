@@ -2243,6 +2243,9 @@ msgstr "Hệ thống này mới hơn bản phát hành mới nhất (một bản
 msgid "Up to date."
 msgstr "Đã là mới nhất."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Bản phát hành này chưa được ký, và hệ thống này kiểm tra chữ ký: nó không được cài từ đây. Hãy cập nhật từ tệp của nó bên dưới, nơi sẽ yêu cầu bạn xác nhận."
+
 msgid "Update to %s"
 msgstr "Cập nhật lên %s"
 

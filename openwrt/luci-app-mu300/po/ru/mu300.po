@@ -2243,6 +2243,9 @@ msgstr "Эта система новее последнего релиза (те
 msgid "Up to date."
 msgstr "Установлена последняя версия."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Этот выпуск не подписан, а эта система проверяет подписи: он не устанавливается отсюда. Обновитесь из его файла ниже — там нужно будет подтвердить."
+
 msgid "Update to %s"
 msgstr "Обновить до %s"
 

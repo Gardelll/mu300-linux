@@ -2243,6 +2243,9 @@ msgstr "이 시스템은 최신 릴리스보다 새 버전입니다(테스트 �
 msgid "Up to date."
 msgstr "최신 상태입니다."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "이 릴리스는 서명되지 않았고 이 시스템은 서명을 확인합니다. 여기서는 설치되지 않습니다. 아래에서 해당 파일로 업데이트하세요. 확인을 요청합니다."
+
 msgid "Update to %s"
 msgstr "%s(으)로 업데이트"
 

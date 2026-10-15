@@ -2243,6 +2243,9 @@ msgstr "هذا النظام أحدث من أحدث إصدار (إصدار اخت
 msgid "Up to date."
 msgstr "النظام محدَّث."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "هذا الإصدار غير موقّع، وهذا النظام يتحقق من التواقيع: لا يُثبَّت من هنا. حدّث من ملفه أدناه، الذي يطلب منك التأكيد."
+
 msgid "Update to %s"
 msgstr "التحديث إلى %s"
 

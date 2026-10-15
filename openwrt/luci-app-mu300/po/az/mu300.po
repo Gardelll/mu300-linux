@@ -2243,6 +2243,9 @@ msgstr "Bu sistem ən yeni buraxılışdan daha yenidir (sınaq buraxılışı).
 msgid "Up to date."
 msgstr "Ən yeni versiya quraşdırılıb."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Bu buraxılış imzalanmayıb və bu sistem imzaları yoxlayır: buradan quraşdırılmır. Aşağıda onun faylından yeniləyin, o sizdən təsdiq istəyir."
+
 msgid "Update to %s"
 msgstr "%s versiyasına yenilə"
 

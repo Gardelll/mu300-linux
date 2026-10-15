@@ -2243,6 +2243,9 @@ msgstr "このシステムは最新のリリースより新しいものです (�
 msgid "Up to date."
 msgstr "最新です。"
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "このリリースは署名されておらず、このシステムは署名を確認します。ここからはインストールされません。下のファイルから更新してください。確認を求められます。"
+
 msgid "Update to %s"
 msgstr "%s に更新"
 

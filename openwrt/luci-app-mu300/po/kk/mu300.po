@@ -2243,6 +2243,9 @@ msgstr "Бұл жүйе ең жаңа релизден жаңарақ (сына�
 msgid "Up to date."
 msgstr "Ең жаңа нұсқа орнатылған."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Бұл шығарылым қолтаңбаланбаған, ал бұл жүйе қолтаңбаларды тексереді: ол осы жерден орнатылмайды. Төмендегі оның файлынан жаңартыңыз, ол растауды сұрайды."
+
 msgid "Update to %s"
 msgstr "%s нұсқасына жаңарту"
 

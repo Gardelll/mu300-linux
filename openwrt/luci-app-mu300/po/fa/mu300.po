@@ -2243,6 +2243,9 @@ msgstr "این سیستم از جدیدترین نسخهٔ انتشار جدید
 msgid "Up to date."
 msgstr "به‌روز است."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "این نسخه امضا نشده است و این سیستم امضاها را بررسی می‌کند: از اینجا نصب نمی‌شود. از فایل آن در پایین به‌روزرسانی کنید که از شما تأیید می‌خواهد."
+
 msgid "Update to %s"
 msgstr "به‌روزرسانی به %s"
 

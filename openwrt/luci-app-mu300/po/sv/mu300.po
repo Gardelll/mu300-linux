@@ -2243,6 +2243,9 @@ msgstr "Det här systemet är nyare än den senaste releasen (en testrelease)."
 msgid "Up to date."
 msgstr "Uppdaterat."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Den här versionen är inte signerad, och det här systemet kontrollerar signaturer: den installeras inte härifrån. Uppdatera från dess fil nedan, som ber dig bekräfta."
+
 msgid "Update to %s"
 msgstr "Uppdatera till %s"
 

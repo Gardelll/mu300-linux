@@ -2243,6 +2243,9 @@ msgstr "Ez a rendszer újabb a legújabb kiadásnál (tesztkiadás)."
 msgid "Up to date."
 msgstr "Naprakész."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Ez a kiadás nincs aláírva, és ez a rendszer ellenőrzi az aláírásokat: innen nem települ. Frissítsen lent a fájljából, amely megerősítést kér."
+
 msgid "Update to %s"
 msgstr "Frissítés erre: %s"
 

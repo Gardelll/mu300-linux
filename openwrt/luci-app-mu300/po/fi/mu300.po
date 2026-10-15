@@ -2243,6 +2243,9 @@ msgstr "Tämä järjestelmä on uudempi kuin uusin julkaisu (testijulkaisu)."
 msgid "Up to date."
 msgstr "Ajan tasalla."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Tätä julkaisua ei ole allekirjoitettu, ja tämä järjestelmä tarkistaa allekirjoitukset: sitä ei asenneta täältä. Päivitä sen tiedostosta alempana, joka pyytää vahvistuksen."
+
 msgid "Update to %s"
 msgstr "Päivitä versioon %s"
 

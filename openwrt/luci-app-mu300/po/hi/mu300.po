@@ -2243,6 +2243,9 @@ msgstr "यह सिस्टम सबसे नई रिलीज़ से 
 msgid "Up to date."
 msgstr "अप टू डेट है।"
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "यह रिलीज़ हस्ताक्षरित नहीं है, और यह सिस्टम हस्ताक्षर जाँचता है: इसे यहाँ से इंस्टॉल नहीं किया जाता। नीचे इसकी फ़ाइल से अपडेट करें, जो आपसे पुष्टि माँगती है।"
+
 msgid "Update to %s"
 msgstr "%s पर अपडेट करें"
 

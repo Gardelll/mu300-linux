@@ -2243,6 +2243,9 @@ msgstr "Tento systém je novější než nejnovější vydání (testovací vyd�
 msgid "Up to date."
 msgstr "Aktuální."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Toto vydání není podepsané a tento systém kontroluje podpisy: odsud se neinstaluje. Aktualizujte z jeho souboru níže, který si vyžádá potvrzení."
+
 msgid "Update to %s"
 msgstr "Aktualizovat na %s"
 

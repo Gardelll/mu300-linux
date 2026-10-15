@@ -2243,6 +2243,9 @@ msgstr "Acest sistem este mai nou decât cea mai nouă versiune (o versiune de t
 msgid "Up to date."
 msgstr "La zi."
 
+msgid "This release is not signed, and this system checks signatures: it is not installed from here. Update from its file below, which asks you to confirm."
+msgstr "Această versiune nu este semnată, iar acest sistem verifică semnăturile: nu se instalează de aici. Actualizați din fișierul ei de mai jos, care vă cere confirmarea."
+
 msgid "Update to %s"
 msgstr "Actualizează la %s"
 
