@@ -137,6 +137,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 100 | `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch (kanoqwq 1f8f03fb) | current (fixed; unit tests only, not measured on a device: the checklist is in the section) |
 
 ## Hardware and firmware facts
 
@@ -5896,3 +5897,53 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+### 100. `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch
+
+From kanoqwq's clean-tf-7.2 `1f8f03fb` ("misc-only trial boot, protect switch flow"): his desktop installer's
+"Boot OpenWrt once" changes the 32-byte `bootloader_control` block in misc and nothing else, and says so. Our Magisk
+switch (`mu300-linux`, `switch.sh`) already works that way: it never mounts the Linux disk and never touches its
+`default-boot`. The Linux side did not, which an earlier review of ours had flagged:
+
+* **The file before misc.** `mu300-next-boot android|linux|lock` wrote `/etc/mu300/default-boot` first and misc
+  second. The initramfs reads that file (§ default boot, `boot/init`): `linux` makes it skip restoring Android's
+  slot. A misc write that failed (or read back wrong) left the file saying what misc did not.
+* **No lock.** `mu300-boot-ok.service` runs `--rearm` at every boot: it reads the file, then writes the Linux slot's
+  block. A `mu300-next-boot android` (the panel's Switch to Android, a shell) between the read and the write was
+  overwritten by the re-arm: the next boot went to Linux again, with the file saying `android` (the initramfs then
+  restores Android's slot, so the boot after that one was Android: one boot late, never stranded).
+
+Changed (ours; nothing of his code, his change was to his desktop installer only):
+
+* The file is written only after misc has been written and read back (`write_bc`; `PENDING_CONF` names the word
+  that goes with the block). A failed `dd` now says `writing misc failed` instead of ending silently under `set -e`.
+  The degraded arm of §32 (the initramfs' one-shot block, exit 1) still records `linux`, as before: misc was written.
+* The file is written whole and never through a symlink: a new file next to it (`umask 022`, `set -C`), renamed
+  over it.
+* Every command but `status` holds `flock` on `/run/mu300/next-boot.lock` (fd 9) from its first read to its last
+  write, waiting up to 60 s (`MU300_NEXT_BOOT_WAIT`) and then failing without writing anything. Without `flock(1)`
+  (or without `/run/mu300`), or where the lock file is a symlink, nothing is serialised, as before. Ubuntu has
+  util-linux's, OpenWrt busybox's applet.
+
+**Bootability.** Every failure path leaves misc as LK last saw it or as it was verified, and the file as it was: a
+failed `android` leaves Linux armed (the countdown or the next re-arm as before); a failed `linux` leaves the trial
+mode, whose fallback is Android. A file that cannot be written after misc was is reported (exit 1): for `android`
+misc already points at Android; for `linux` the initramfs keeps restoring Android's slot (one-shot trial). A lock
+that is never released (a hung `mu300-next-boot`) costs one boot's re-arm; the slot still has its remaining tries.
+
+**Measured:** nothing on a device (both test devices were in use). Unit tests (`tests/test_device_scripts.py`
+`NextBoot`): misc unwritable or the Android block missing, the file untouched; the file through a symlink; the
+degraded arm; a stub `flock` that stays busy (refused after the wait, misc and the file untouched; `status` never
+waits; a symlinked lock file not opened); and the real `flock(1)` holding off a second writer (Linux only; run in
+the `mu300-unit` container).
+
+**Device checklist (before merge; F50 or U30 Air, Ubuntu and OpenWrt, any kernel):**
+
+    sudo mu300-next-boot status                       # note the misc block
+    sudo mu300-next-boot android; cat /etc/mu300/default-boot   # android; status shows Android's block
+    sudo mu300-next-boot linux;   cat /etc/mu300/default-boot   # linux; slot armed (tries N+1)
+    ls -l /etc/mu300/default-boot /run/mu300/next-boot.lock     # a regular file, root's; the lock file exists
+    # the race: hold the lock and switch; the switch waits, then goes through
+    sudo flock /run/mu300/next-boot.lock sleep 10 & sleep 1; time sudo mu300-next-boot android   # ~9 s
+    sudo mu300-next-boot linux; sudo reboot           # comes back to Linux; systemctl status mu300-boot-ok: success
+    # OpenWrt: the panel's Switch to Android, then reboot: Android; mu300-linux from Android: Linux again
