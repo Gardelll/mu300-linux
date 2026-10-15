@@ -139,7 +139,7 @@ what replaced it. The table below gives each section's state.
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
-| 100 | `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch (kanoqwq 1f8f03fb) | current (fixed; unit tests only, not measured on a device: the checklist is in the section) |
+| 100 | `mu300-next-boot`: the default boot written before misc was, and a re-arm that could undo a switch (kanoqwq 1f8f03fb) | current (fixed; measured on the F50, Ubuntu 24.04, and the U30 Air, openwrt-luci, both v2026.10.27, 2026-10-15) |
 
 ## Hardware and firmware facts
 
@@ -6562,11 +6562,31 @@ mode, whose fallback is Android. A file that cannot be written after misc was is
 misc already points at Android; for `linux` the initramfs keeps restoring Android's slot (one-shot trial). A lock
 that is never released (a hung `mu300-next-boot`) costs one boot's re-arm; the slot still has its remaining tries.
 
-**Measured:** nothing on a device (both test devices were in use). Unit tests (`tests/test_device_scripts.py`
+**Unit tests** (`tests/test_device_scripts.py`
 `NextBoot`): misc unwritable or the Android block missing, the file untouched; the file through a symlink; the
 degraded arm; a stub `flock` that stays busy (refused after the wait, misc and the file untouched; `status` never
 waits; a symlinked lock file not opened); and the real `flock(1)` holding off a second writer (Linux only; run in
 the `mu300-unit` container).
+
+**Measured on both boards** (2026-10-15), this branch's `mu300-next-boot` in place of the release's: the F50 on
+Ubuntu 24.04 (util-linux `flock`), the U30 Air on openwrt-luci (busybox `flock`), both v2026.10.27, and boots of
+the release and of a test kernel:
+
+* `android`, then `linux`: the file says `android`/`linux` after each, misc `...9f001e...` (Android's block) and
+  `...9e006f...` (slot b, tries 6) read back; no `.default-boot.*` left; `/run/mu300/next-boot.lock` there, root's.
+* **The lock.** `flock /run/mu300/next-boot.lock sleep 10` held, then `android`: went through after 9 s. Held for
+  100 s with `MU300_NEXT_BOOT_WAIT=5`: `another mu300-next-boot is still running`, exit 1 after 4 s, misc and the
+  file as they were (`android`); `status` did not wait. The same on both boards.
+* **The re-arm at boot** (F50: `mu300-boot-ok`, after its 30 s): with the lock held from 20 s into the boot until
+  45 s, the service finished at 48 s with `slot b armed: 5 failed boot(s)` (tries back to 6). On the U30 Air
+  (`mu300-post`'s `bootok`) the re-arm left `boots since the last good one: 0` and tries 6 after each of five boots.
+* `mu300-update kernel` (which runs `--trial`) under this script on both boards, then the boot of that kernel: armed
+  and re-armed as before.
+* F50: `mu300-next-boot android` and a reboot: Android; the Magisk switch back: Linux (`android` in the file, the
+  initramfs restored Android's block: the one-shot trial); `mu300-next-boot linux` made Linux the default again.
+* Small things: the wait is `MU300_NEXT_BOOT_WAIT` minus one seconds (59 by default, 4 for 5); the renamed file
+  loses the SELinux label the old one carried on the F50 (`ls -l` showed `-rw-r--r--.` before, no dot after), which
+  nothing reads on Linux.
 
 **Device checklist (before merge; F50 or U30 Air, Ubuntu and OpenWrt, any kernel):**
 
