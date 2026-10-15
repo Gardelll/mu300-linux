@@ -153,13 +153,19 @@ if [ "$DRY" = 1 ]; then
     exit 0
 fi
 
-tmp=${TMPDIR:-/data/local/tmp}/mu300-bc.bin
-$BB printf "$(echo "$new" | sed 's/../\\x&/g')" > "$tmp" || die "could not build the block file"
-[ "$($BB stat -c %s "$tmp")" = 32 ] || { rm -f "$tmp"; die "the block file is not 32 bytes"; }
+# The block file lives in a directory of root's own (mktemp -d: 0700, a name nobody can guess), never under a fixed
+# name in /data/local/tmp: that directory is the adb shell user's, who could have put a symlink there (root's write
+# would follow it) or swapped the file between the size check and dd (and so chosen what goes into misc). dd copies
+# at most the 32 bytes whatever the file holds.
+tdir=$($BB mktemp -d "${TMPDIR:-/data/local/tmp}/mu300-switch.XXXXXX") || die "could not make a private directory"
+tmp=$tdir/bc.bin
+$BB printf "$(echo "$new" | sed 's/../\\x&/g')" > "$tmp" || { rm -rf "$tdir"; die "could not build the block file"; }
+[ "$($BB stat -c %s "$tmp")" = 32 ] || { rm -rf "$tdir"; die "the block file is not 32 bytes"; }
 
-dd if="$tmp" of="$MISC" bs=1 seek="$BC_OFFSET" conv=notrunc 2>/dev/null || { rm -f "$tmp"; die "writing misc failed"; }
+dd if="$tmp" of="$MISC" bs=1 count=32 seek="$BC_OFFSET" conv=notrunc 2>/dev/null ||
+    { rm -rf "$tdir"; die "writing misc failed"; }
 sync
-rm -f "$tmp"
+rm -rf "$tdir"
 
 back=$(hex_of "$MISC" "$BC_OFFSET" 32)
 [ "$back" = "$new" ] || die "misc verify failed ($back) - reboot normally, Android is unaffected"

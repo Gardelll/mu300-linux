@@ -101,3 +101,38 @@ class Switch(ShellTest):
             r = self.switch(shell, '_c', '--dry-run')
             self.assertNotEqual(r.returncode, 0)
             self.assertIn("'_c'", r.stderr)
+
+    def test_the_block_file_is_root_s_own_never_a_shared_name(self):
+        # The block used to go through ${TMPDIR:-/data/local/tmp}/mu300-bc.bin: a fixed name in the adb shell user's
+        # directory, where a symlink planted there would take root's write elsewhere. Now a mktemp -d directory,
+        # and dd copies at most the 32 bytes (kanoqwq's 1f8f03fb review round, FINDINGS 101).
+        _, linux_b, _, _ = self.blocks
+        self.stub('reboot', 'echo reboot >> "$STUBLOG/reboot.log"')
+        self.stub('sleep', 'exit 0')
+        shared = self.tmp / 'shared'
+        shared.mkdir()
+        for shell in self.each_shell():
+            self.images()
+            fake_misc(self.parts / 'misc')
+            victim = self.tmp / 'victim'
+            victim.write_bytes(b'keep')
+            planted = shared / 'mu300-bc.bin'
+            planted.unlink(missing_ok=True)
+            planted.symlink_to(victim)
+            r = self.script(shell, SWITCH, MU300_BY_NAME=self.parts, MU300_BUSYBOX=self.busybox,
+                            MU300_SLOT_SUFFIX='_a', TMPDIR=shared)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertIn('armed for one boot', r.stdout)
+            self.assertEqual(victim.read_bytes(), b'keep')
+            misc = (self.parts / 'misc').read_bytes()
+            self.assertEqual(misc[0x800:0x820], linux_b)
+            self.assertEqual(sorted(p.name for p in shared.iterdir()), ['mu300-bc.bin'])
+            self.assertIn('reboot', (self.tmp / 'reboot.log').read_text())
+            # no private directory to be had: nothing is written
+            fake_misc(self.parts / 'misc')
+            before = (self.parts / 'misc').read_bytes()
+            r = self.script(shell, SWITCH, MU300_BY_NAME=self.parts, MU300_BUSYBOX=self.busybox,
+                            MU300_SLOT_SUFFIX='_a', TMPDIR=self.tmp / 'no-such-dir')
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn('private directory', r.stderr)
+            self.assertEqual((self.parts / 'misc').read_bytes(), before)

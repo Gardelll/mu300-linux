@@ -137,6 +137,7 @@ what replaced it. The table below gives each section's state.
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
+| 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; unit tests only, not measured on a device) |
 
 ## Hardware and firmware facts
 
@@ -5896,3 +5897,27 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+### 101. The Magisk switch built its misc block under a fixed name in the adb shell user's directory
+
+Found while comparing our switch with kanoqwq's clean-tf-7.2 `1f8f03fb` (his one-time boot changes misc only; ours
+does too, §100). `mu300-linux` (`android/magisk/mu300-linux-switch/switch.sh`) wrote the 32-byte block to
+`${TMPDIR:-/data/local/tmp}/mu300-bc.bin` as root, checked its size, then `dd`'d it into misc. `/data/local/tmp`
+belongs to the adb `shell` user (2000, mode 0771): that user, without root, could plant `mu300-bc.bin` as a symlink
+(root's `printf >` follows it and overwrites the target) or replace the file between the size check and `dd` (and so
+choose the bytes that go into misc; the read-back then fails, with misc already changed). Apps cannot write there;
+the user at the adb shell can, and on a device where Magisk grants root only to chosen apps that is less than root.
+
+Changed: the block goes through a `mktemp -d` directory (root's, 0700, an unguessable name) under the same parent,
+removed afterwards; `dd` copies `count=32` whatever the file holds. Without a private directory nothing is written.
+
+**Bootability:** unchanged: the same block, written and read back as before; every failure exits before `dd`.
+
+**Measured:** nothing on a device. `tests/test_magisk_switch.py`: a real (non-dry) run against files standing in for
+the partitions with a symlink planted at the old name (its target untouched, the block in misc, the private
+directory gone, reboot called); an unusable `TMPDIR` (refused, misc untouched). Run in the `mu300-unit` container
+(busybox).
+
+**Device checklist (before merge; Android with Magisk, Linux installed):** `su -c mu300-linux --dry-run` (the block),
+then the Action button or `su -c mu300-linux`: the device reboots into Linux; `ls /data/local/tmp` afterwards holds
+no `mu300-switch.*`; from Linux, back to Android as usual.
