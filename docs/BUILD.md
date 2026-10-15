@@ -108,7 +108,7 @@ cid=$(docker create mu300-ubuntu:24.04); docker export $cid > rootfs/base.tar; d
 sh tools/adbd/build.sh tools/adbd/adbd
 # mu300-carry (static aarch64): with it in the image, an update TO this image carries everything of the user's
 # over and the image gets the manifest of its own files; without it such an update keeps only the list of places
-# an update kept before v2026.10.26 (docs/FINDINGS.md 85)
+# an update kept before v2026.10.28 (docs/FINDINGS.md 85)
 docker run --rm -v "$PWD/tools/carry":/w mu300-kbuild gcc -O2 -static -o /w/mu300-carry /w/mu300-carry.c
 docker run --rm -v "$PWD/rootfs":/w -v "$PWD/out/modules":/kmods:ro -v "$PWD/out":/kout:ro \
   -v "$PWD/firmware":/firmware:ro -v "$PWD/android-subset":/android-subset:ro -v "$PWD/tools/logdw/logdw":/logdw:ro \

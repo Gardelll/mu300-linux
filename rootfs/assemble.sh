@@ -69,7 +69,7 @@ if [ -e /keys ]; then install -m755 /keys $R/opt/mu300/bin/mu300-keys; fi
 # tools/adbd build (static arm64, musl): adb over USB, on unless mu300-usb adb off
 if [ -e /adbd ]; then install -m755 /adbd $R/opt/mu300/bin/adbd; fi
 # tools/carry build (static arm64): an update carries everything of the user's over with it (mu300-update, the carry
-# block; without it an update of this image keeps only the list of places, as before v2026.10.26)
+# block; without it an update of this image keeps only the list of places, as before v2026.10.28)
 if [ -e /carry ]; then install -m755 /carry $R/opt/mu300/bin/mu300-carry; fi
 # the manifests of the releases before images carried their own: this system's only (the overlay has OpenWrt's too)
 rm -f $R/opt/mu300/lib/image-manifests/openwrt*.gz

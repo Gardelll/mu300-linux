@@ -75,7 +75,7 @@ gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 # Android's own shell and toolbox, never Magisk's standalone busybox: its mke2fs makes ext2 only and its losetup has
 # no -S. su -c sh gives install.sh exactly this environment. MU300_DEVICE_WORK tells android-install.sh where its files are.
 # MU300_LOCK_DIR: the lock of a timed-out SD-card stage (android-install.sh, FINDINGS 50) outlives this run's W.
-# MU300_UPDATE_KEEP: list keeps only the places an update kept before v2026.10.26 (android-install.sh).
+# MU300_UPDATE_KEEP: list keeps only the places an update kept before v2026.10.28 (android-install.sh).
 asw() { env -u ASH_STANDALONE PATH="$APATH" MU300_DEVICE_WORK="${W:-}" MU300_LOCK_DIR="$WORK_PARENT" MU300_UPDATE_KEEP="${MU300_UPDATE_KEEP:-all}" "$@"; }
 su_do() { asw "$DEVSH" -c "$1"; }            # storage.sh's way to run a command on the device: here it is local
 
@@ -495,14 +495,14 @@ plan_choices() {
     fi
     sd_kernel_ok "$KB" || die "$(t 'this kernel cannot read the SD card; use a newer zip')"
     # Never back to an older release by itself: the new image does the carrying over, and one from before
-    # v2026.10.26 keeps only a list of places - what else was added to the system would be gone from it. (Tags are
+    # v2026.10.28 keeps only a list of places - what else was added to the system would be gone from it. (Tags are
     # dates, so they sort as text; a system that does not say which release it is is not held back.)
     DOWNGRADE=0
     if [ "$UPDATE" = 1 ] && [ -n "$HAVE_VERSION" ] && [ "$HAVE_VERSION" != "$TAG" ] &&
         [ "$(printf '%s\n%s\n' "$HAVE_VERSION" "$TAG" | sort | tail -n1)" = "$HAVE_VERSION" ]; then
         [ "${MU300_DOWNGRADE:-}" = yes ] ||
             die "$(t 'The installed {1} is {2}, and this zip is {3}, an older release. Going back to an older release is not done by itself: the older release may not carry over everything you added to the system.' "$OS" "$HAVE_VERSION" "$TAG")
-$(t 'Nothing was changed. To install it all the same, put MU300_DOWNGRADE=yes into {1} (a release before v2026.10.26 then keeps only settings, users and home directories), or MU300_MODE=wipe to start fresh.' "$TRUSTED_CONF")"
+$(t 'Nothing was changed. To install it all the same, put MU300_DOWNGRADE=yes into {1} (a release before v2026.10.28 then keeps only settings, users and home directories), or MU300_MODE=wipe to start fresh.' "$TRUSTED_CONF")"
         DOWNGRADE=1; USED_KEYS="$USED_KEYS MU300_DOWNGRADE"
     fi
     if [ "$UPDATE" = 1 ] && [ "${MU300_UPDATE_KEEP:-all}" = list ]; then USED_KEYS="$USED_KEYS MU300_UPDATE_KEEP"; fi
@@ -586,7 +586,7 @@ plan_print() {
                 echo "  $(t 'update:         {1} {2} -> {3}: everything you added to it or changed in it is kept (files, settings, accounts and passwords);' "$OS" "${HAVE_VERSION:-?}" "$TAG")"
                 echo "  $(t '                packages you installed are installed again at its first boot; what could not stay in place is listed in /etc/mu300/update-report')"
             fi
-            [ "$DOWNGRADE" = 0 ] || echo "  $(t '                {1} is the OLDER release (MU300_DOWNGRADE=yes): one from before v2026.10.26 keeps only settings, users and home directories' "$TAG")" ;;
+            [ "$DOWNGRADE" = 0 ] || echo "  $(t '                {1} is the OLDER release (MU300_DOWNGRADE=yes): one from before v2026.10.28 keeps only settings, users and home directories' "$TAG")" ;;
     esac
     _others=$(for _os in $HAVE_SYSTEMS; do [ "$_os" = "$OS" ] || printf '%s ' "$_os"; done)
     if [ "$FORMAT" = 0 ] && [ -n "$_others" ]; then
@@ -659,10 +659,10 @@ write_example() {
         echo "# wipe (root): the Linux filesystem is made anew. Every installed system, every file in them and the extras"
         echo "# are erased. (Android, its data and the boot fallback are never touched by either.)"
         echo "#MU300_MODE=update"
-        echo "# (root) yes: install this zip over a NEWER release of the same system. A release before v2026.10.26 then"
+        echo "# (root) yes: install this zip over a NEWER release of the same system. A release before v2026.10.28 then"
         echo "# keeps only settings, users and home directories."
         echo "#MU300_DOWNGRADE=yes"
-        echo "# (root) list: keep only what an update kept before v2026.10.26 (settings, users, home directories), should"
+        echo "# (root) list: keep only what an update kept before v2026.10.28 (settings, users, home directories), should"
         echo "# carrying everything over fail. all is the default."
         echo "#MU300_UPDATE_KEEP=all"
         echo "# ubuntu or openwrt: which system boots"

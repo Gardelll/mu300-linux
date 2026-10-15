@@ -6115,7 +6115,7 @@ F50: unit tests, and the default path on the U30 Air. An M3.
 
 The owner's requirement: people must be able to update to a new release without losing any data, in any way - by
 `mu300-update apply`, by the computer installers' **update**, and by a Magisk zip installed over what is there.
-Until v2026.10.25 an update kept a list of places (`keep_list`: `/etc/mu300`, `/etc/ssh`, home directories,
+Until v2026.10.27 an update kept a list of places (`keep_list`: `/etc/mu300`, `/etc/ssh`, home directories,
 `/usr/local`, OpenWrt's `/etc/config`, a few more), the accounts, and the packages added on the device (installed
 again at the first boot, §32c); the image replaced everything else. **Measured in
 containers only: no device was free for this work.** The protocol for a device is docs/update-device-test.md.
@@ -6379,12 +6379,12 @@ and the caller took that for done). An image that does not bring these parts (bu
 updated the old way, with a line that says so; `MU300_UPDATE_KEEP=list` asks for the old way (kept for one release:
 `mu300-update`'s environment, the zip's `/data/adb/mu300-install.conf`, the environment of `android-install.sh`).
 
-**The old image's manifest.** A system from v2026.10.26 on has its own (taken only when its first line names the
+**The old image's manifest.** A system from v2026.10.28 on has its own (taken only when its first line names the
 release the system says it is). For the releases before that, the new image has them:
-`opt/mu300/lib/image-manifests/<image>.gz`, made from the published images of v2026.09.21 to v2026.10.25 (34
+`opt/mu300/lib/image-manifests/<image>.gz`, made from the published images of v2026.09.21 to v2026.10.27 (36
 releases; `tools/image-manifest.py legacy` and `union`). Two releases of one image differ in a few dozen lines, so
-each file holds every distinct line once, with the releases that have it in front: 96 kB (openwrt), 99 kB
-(openwrt-luci), 479 kB (ubuntu-24.04), 598 kB (ubuntu-26.04), where the manifests one by one are 30 MB. An image has
+each file holds every distinct line once, with the releases that have it in front: 97 kB (openwrt), 101 kB
+(openwrt-luci), 480 kB (ubuntu-24.04), 599 kB (ubuntu-26.04), where the manifests one by one are 30 MB. An image has
 those of its own system (Ubuntu: both releases, for `MU300_UBUNTU`). They are part of the image, so they are checked
 with it (the release's `SHA256SUMS`, the zip's manifest), an update needs no download for them, and a zip works
 offline. Nothing has to be published for the old releases; for the record their manifests can be attached to them
@@ -6420,7 +6420,7 @@ has never kept the old system; it now carries by link (no room needed) and swaps
 new into place, then the removal, and a run that finds `<os>.broken` without `<os>` puts it back first.
 `rollback` is unchanged and returns the old system exactly (below). `apply` does not go to an *older* release by
 itself any more (`MU300_DOWNGRADE=1`; the zip: `MU300_DOWNGRADE=yes` from `/data/adb` only): the update is done by
-the release it installs, and one from before v2026.10.26 keeps the list only.
+the release it installs, and one from before v2026.10.28 keeps the list only.
 
 **The Magisk zip.** Update was its default already (`MU300_MODE=update` when it finds a filesystem). Its plan now
 says what that means - `update: <os> <old> -> <new>: everything you added to it or changed in it is kept ...`, `not
@@ -6469,7 +6469,7 @@ The updates that are not the plain one (`tests/update-experiment/scenarios.sh`):
 * Android's own toybox was not measured (Ubuntu's 0.8.9 was); it is not used for carrying any more.
 
 **Manifests of the old releases, for the record** (optional: no updater reads them from there). For each tag from
-v2026.09.21 to v2026.10.25, with the tag's four images in `release/<tag>` as published:
+v2026.09.21 to v2026.10.27, with the tag's four images in `release/<tag>` as published:
 
 ```sh
 python3 tools/image-manifest.py assets release/<tag> manifests/<tag>
@@ -6478,6 +6478,7 @@ gh release upload <tag> -R dikeckaan/mu300-linux manifests/<tag>/*.manifest.gz
 
 `rootfs/overlay/opt/mu300/lib/image-manifests/` was made from the same manifests (`tools/image-manifest.py legacy`,
 then `union`), each image downloaded and checked against its release's `SHA256SUMS` first.
+
 ### 71. A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found
 
 Written against an `adb` that is a Python program (`tests/fakeadb.py`) and a fake installer; then run against an F50

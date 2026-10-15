@@ -8,7 +8,7 @@ only swaps them at the very end. If the download breaks halfway, nothing has cha
 cupboard until you throw it away.
 
 **What you lose in an update: nothing.** Everything you added to the system or changed in it is kept, whichever way
-you update (from v2026.10.26 on; see [What an update keeps](#what-an-update-keeps)).
+you update (from v2026.10.28 on; see [What an update keeps](#what-an-update-keeps)).
 
 ## Commands
 
@@ -66,15 +66,15 @@ device kept.
 
 A release can carry a signature of its checksums (`SHA256SUMS.sig`). A system that has the project's release key
 (`/opt/mu300/lib/release.pub`) checks it on every update and refuses a release whose signature is wrong, and one
-that has none unless you say so (`--unsigned`). Systems up to v2026.10.25 have no key and update as they always did. Details:
+that has none unless you say so (`--unsigned`). Systems up to v2026.10.27 have no key and update as they always did. Details:
 [FINDINGS 86](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md).
 
 ## What an update keeps
 
-**Everything you added to the system, and everything you changed in it.** Up to v2026.10.25 an update kept a list
+**Everything you added to the system, and everything you changed in it.** Up to v2026.10.27 an update kept a list
 of places (`/etc/mu300`, home directories, `/usr/local`, SSH keys, OpenWrt's `/etc/config`) and the new release
 replaced the rest: `/etc/wireguard`, a service you wrote, crontabs, `/var/lib/docker`, `/opt` were gone from the
-system afterwards. From v2026.10.26 on it works the other way round. Every release image carries a list of its own
+system afterwards. From v2026.10.28 on it works the other way round. Every release image carries a list of its own
 files with a checksum of each, so the update knows which files of your system came with the release you are on.
 Whatever else is there is yours, and it goes into the new system:
 
@@ -130,10 +130,10 @@ Reboot soon after an update. The new system has your files as they were when `ap
 changes after that stays in the previous one.
 
 `apply` never goes back to an **older** release by itself: the update is done by the release it installs, and one
-from before v2026.10.26 would keep only the list of places. `rollback` is the way back. (To install an older
+from before v2026.10.28 would keep only the list of places. `rollback` is the way back. (To install an older
 release all the same: `sudo MU300_DOWNGRADE=1 mu300-update apply`.)
 
-### Coming from a release before v2026.10.26
+### Coming from a release before v2026.10.28
 
 Nothing to do: the new release brings the file lists of every release from v2026.09.21 on. On a system older than
 that, or one built by hand, the update cannot tell a file you changed from one the old release shipped. It then

@@ -346,7 +346,7 @@ offered from a zip. The keys, where the file may live and the rules for erasing 
 
 **Installing a zip over an installation is an update, and an update loses nothing.** That is what the zip does by
 itself when it finds Linux on the device; nothing has to be set. The plan it prints says so before anything is
-written (`update: openwrt v2026.10.26 -> v2026.10.27: everything you added to it or changed in it is kept ...`).
+written (`update: openwrt v2026.10.27 -> v2026.10.28: everything you added to it or changed in it is kept ...`).
 
 * **Kept:** everything you added to the system or changed in it - files in any directory, settings, accounts,
   services you enabled or disabled - exactly as with `mu300-update apply`
@@ -367,7 +367,7 @@ written (`update: openwrt v2026.10.26 -> v2026.10.27: everything you added to it
   filesystem is made anew, and every installed system, every file in them and the extras are erased. Android, its
   data and the way back to Android are never touched by either.
 
-This holds for zips from v2026.10.26 on. An older zip keeps only settings (`/etc/mu300`), accounts and home
+This holds for zips from v2026.10.28 on. An older zip keeps only settings (`/etc/mu300`), accounts and home
 directories, `/usr/local`, SSH host keys and OpenWrt's UCI configuration.
 
 ## Downloads are slow?
