@@ -45,8 +45,7 @@ $T = '/data/local/tmp'
 $Top = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 if (-not $Work) { $Work = Join-Path $Top 'work' }
 # the USB network of each kind of device: F50 192.168.77.1, U30 Air 192.168.78.1, V50 192.168.79.1; $MU300_IP is set
-# to the one
-# that answers
+# to the one that answers
 $MU300_IP = '192.168.77.1'
 function LinuxRunning {
     foreach ($ip in @('192.168.77.1', '192.168.78.1', '192.168.79.1')) {
