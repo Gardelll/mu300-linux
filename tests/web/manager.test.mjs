@@ -140,6 +140,10 @@ test("what an action does to the page's own connection", () => {
   assert.equal(consequence("lan.set", { ip: "10.0.0.1" }).args[0], "10.0.0.1");
   assert.ok(!consequence("lan.set", { ip: "10.0.0.1" }).leaves);
   assert.equal(consequence("data.power", { state: "off" }).key, "mgr.confirm.data-off-only");
+  // data roaming alone restarts nothing: its own sentence; with an APN change it is the restart's
+  assert.equal(consequence("data.set", { roaming: false }).key, "mgr.confirm.roaming-off");
+  assert.equal(consequence("data.set", { roaming: true }).key, "mgr.confirm.roaming-on");
+  assert.equal(consequence("data.set", { roaming: true, apn: "x" }).key, "mgr.confirm.data-set");
   assert.equal(consequence("data.power", { state: "off" }, { wifiUplink: true }).key, "mgr.confirm.data-off");
   assert.equal(consequence("vpn.killswitch", { value: "on" }).key, "mgr.confirm.killswitch");
   assert.equal(consequence("wifi.get", {}), null);

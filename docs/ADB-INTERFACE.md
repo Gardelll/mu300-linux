@@ -110,8 +110,8 @@ module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `p
 | `wificlient.status`, `.scan` | - | `active`, `text` (wifi-client's own words) |
 | `wificlient.join` | `ssid`, `password` or `open: true` | `job` |
 | `wificlient.leave` | `forget` (bool) | `job` |
-| `data.get` | - | `state iface address apn pdp auth user password_set signal sim roaming_switch` |
-| `data.set` | `apn` `pdp` (`IP`/`IPV6`/`IPV4V6`) `auth` (`none`/`pap`/`chap`/`both`) `user` `password` `clear_credentials` | `restart` |
+| `data.get` | - | `state iface address apn pdp auth user password_set signal sim roaming roaming_switch` (`roaming`: `mobile-data roaming --json`, null without it; FINDINGS 120) |
+| `data.set` | `apn` `pdp` (`IP`/`IPV6`/`IPV4V6`) `auth` (`none`/`pap`/`chap`/`both`) `user` `password` `clear_credentials` `roaming` (bool: `mobile-data roaming on` or `off`; alone it restarts nothing) | `restart` |
 | `data.power` | `state` | - |
 | `sim.get`, `sim.select` | -, `slot` 1/2 | `sim` (mu300-sim's JSON) |
 | `lock.get`, `lock.set` | -, `kind` (`mode endc lte nr cell reset`) `val` | `data`: the control panel's answer (openwrt-luci only) |

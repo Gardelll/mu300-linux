@@ -44,7 +44,11 @@ export function consequence(method, req = {}, ctx = {}) {
     case "usb.role": return req.role === "host" ? { key: "mgr.confirm.usb-host", leaves: true } : null;
     case "adb.auth": return { key: req.mode === "keys" ? "mgr.confirm.adb-keys" : "mgr.confirm.adb-open", leaves: true };
     case "data.power": return req.state === "off" ? { key: ctx.wifiUplink ? "mgr.confirm.data-off" : "mgr.confirm.data-off-only" } : null;
-    case "data.set": return { key: "mgr.confirm.data-set" };
+    case "data.set":
+      // data roaming alone restarts nothing (mobile-data takes it up within half a minute)
+      if (Object.keys(req).length === 1 && typeof req.roaming === "boolean")
+        return { key: req.roaming ? "mgr.confirm.roaming-on" : "mgr.confirm.roaming-off" };
+      return { key: "mgr.confirm.data-set" };
     case "wifi.set": return { key: "mgr.confirm.wifi-set" };
     case "wifi.power": return req.state === "off" ? { key: "mgr.confirm.wifi-off" } : null;
     case "wificlient.join": return { key: "mgr.confirm.wifi-join" };
@@ -438,6 +442,17 @@ export function renderManager(ui, M) {
   }
 
   // ---- mobile data, the SIM, the locks
+  // Data roaming (mobile-data roaming, FINDINGS 120): the SIM in use's setting and whether data is held back; a
+  // system without the switch (d.roaming null) gets the old sentence
+  function roaming(d) {
+    const r = d.roaming;
+    if (!r || !d.roaming_switch) return h("p", { class: "small muted" }, t("mgr.roaming.none"));
+    const state = r.held ? t("mgr.roaming.held") : r.allowed ? t("mgr.roaming.allowed") : t("mgr.roaming.off");
+    return h("div", {}, facts([[t("mgr.roaming.title"), chip(state, r.held ? "warn" : r.allowed ? "ok" : "")]]),
+      h("div", { class: "actions" }, btn(r.allowed ? t("mgr.roaming.turn-off") : t("mgr.roaming.allow"),
+        () => run("data.set", { roaming: !r.allowed }), "", { disabled: off })),
+      h("p", { class: "small muted" }, t("mgr.roaming")));
+  }
   function mobile(b) {
     const d = M.data.data;
     if (!d) return;
@@ -451,7 +466,7 @@ export function renderManager(ui, M) {
       [t("mgr.sim"), sim && sim.active ? t("mgr.sim.value", String(sim.active), String(sim.default || sim.active)) : ""]]));
     b.append(h("div", { class: "actions" }, btn(d.state === "up" ? t("mgr.data.turn-off") : t("mgr.data.turn-on"),
       () => run("data.power", { state: d.state === "up" ? "off" : "on" }, { ctx: { wifiUplink: M.data.wificlient && M.data.wificlient.active } }), "", { disabled: off })),
-      h("p", { class: "small muted" }, t("mgr.roaming")));
+      roaming(d));
     const f = form("apn", () => ({ apn: d.apn || "", pdp: d.pdp || "IP", auth: d.auth || "", user: d.user || "", password: "", clear: false }));
     b.append(h("h3", {}, t("mgr.apn.title")), h("p", { class: "small muted" }, t("mgr.apn.text")),
       h("div", { class: "wi-form" },
