@@ -139,7 +139,7 @@ what replaced it. The table below gives each section's state.
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 95 | The ZTE V50 (MU3351), experimental: how it is told apart, and what kano measured on his (f6b0668d, 0438ab01) | experimental; nothing of it measured by this project (no V50 here): unit tests, the device trees of an F50 and a U30 Air, both mainline kernels built |
-| 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; built for 6.18.56 and 7.2.10, unit tests; not measured on a device) |
+| 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
 
 ## Hardware and firmware facts
 
@@ -6554,9 +6554,12 @@ flags are a local of each function; a failed linearize returns `NETDEV_TX_OK`. T
 limited (it fires on every retry under backpressure). Not taken from the same commit here: his Wi-Fi changes (§103),
 and nothing about `sipa overflow ... err=2`, which his own notes leave unexplained.
 
-**When it bites:** only when the IPA FIFO is full (`no_free_cnt` in the sender grows), i.e. uplink bursts faster than
-the modem drains them; a packet retried then is sent corrupt (dropped by the network, retransmitted by TCP). Nobody
-here has measured how often that happens on our boards.
+**When it bites:** whenever `sipa_nic_tx()` says busy. Read from the code this was a full IPA FIFO only, but on
+the devices it is above all **the IPA's resume**: the resource manager answers `-EINPROGRESS` (`sipa_nic_rm_res_
+request()`, before anything is sent: the skb is not taken either) for the first packet after the IPA went to
+sleep. Measured on the F50 (7.2.10): after 25 s without traffic, every first packet met it (`sipa_eth: fail to
+send, ret -115`, six rounds out of six, on the release kernel and on this one); the U30 Air (6.18.56) logged the
+same at boot. A packet retried this way was sent behind the stale header on the release kernel.
 
 **Measured:** built for 7.2.10 and 6.18.56 (`sipa_eth.ko`, no new warnings; built from a copy against the
 `mu300-mainline` volume's trees). `tests/test_sipa_eth_xmit.py` compiles the function from the source with
@@ -6571,3 +6574,21 @@ harness (the static flags), so the test is no negative control of the retry itse
     dmesg | grep -c 'fail to send'                   # retries happened (rate-limited lines) - the case under test
     # TCP throughput is not worse than before; ping -s 1400 and a download keep working; no oops in dmesg;
     # ip -s link show sipa_eth0: tx_errors counts the busy answers, no climbing tx_dropped
+
+**Measured** (2026-10-15) on a test kernel with §92, §93, §102 and §103 together (main of that day plus the four
+branches): the F50 (Ubuntu 24.04, 7.2.10) and the U30 Air (openwrt-luci, 6.18.56, the owner's VPN over it), against
+the v2026.10.27 kernels:
+
+* **The first packet after an idle period:** six rounds of 25 s without traffic, then one `ping -I sipa_eth0
+  1.1.1.1`: every round one busy answer (`ret -115`, the IPA resuming) and the ping answered, 6/6 on this kernel and
+  6/6 on the release kernel. So the device did not show the stale header doing harm: either the retried packet
+  survives it somewhere between the IPA and the network, or the busy answer met another packet than the ping. The
+  fix stays what the netdev contract asks (a `NETDEV_TX_BUSY` skb comes back unchanged); no measurement here proves
+  a user-visible effect of the old behaviour.
+* **Uplink under load:** eight parallel uploads (12 MiB each) over the F50's mobile data: `tx_errors` +1 (one busy
+  answer, `fail to send` logged once), no `tx_dropped`, no oops; `ping -s 1400` and a download worked after it.
+  The SIM was throttled to about 1.9 Mbit/s in both directions by then, so throughput says little: an A/B in the
+  same conditions (the release's `sipa_eth.ko` loaded into the test kernel, then this one) gave the same speeds and
+  retransmissions. Unloading and loading `sipa_eth` a second time restarted the F50 (the vendor module is not made
+  to be reloaded; its first reload had already logged `probe ... failed with error -17`): not a test to repeat.
+* The U30 Air carried its VPN over this kernel for three boots; the F50 had mobile data in all of its seven.
