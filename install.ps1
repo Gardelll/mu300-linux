@@ -1376,6 +1376,8 @@ $existing = 'no'
 foreach ($cand in @($OFF, 27762098176)) {
     if (-not (RegionOnDisk $cand)) { continue }
     $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
+    # two bytes on the disk always read as four hex digits: anything else is no answer, never "no installation"
+    if ($m -notmatch '^[0-9a-f]{4}$') { Die (T 'no answer from the device') }
     $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {
         $blocks = [int64]((SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
@@ -1399,7 +1401,10 @@ if ($SD_MODE -eq 0 -and $existing -eq 'no' -and $RESUMING -eq 0) {
     # PowerShell 5.1 drops them on the way to adb, tr got an unquoted \000 - "delete the character 0" - and every
     # empty MiB counted as data, so on Windows an empty region was always "16 of 16 not empty". \\ reaches the
     # device's shell as one backslash, which tr then reads as the start of an octal escape.
-    $dirty = [int](SuDo "n=0; for s in $probe; do c=`$(dd if=/dev/block/mmcblk0 bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000\\377 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); done; echo `$n").Trim()
+    $dirtyOut = (SuDo "n=0; for s in $probe; do c=`$(dd if=/dev/block/mmcblk0 bs=1048576 skip=`$s count=1 2>/dev/null | tr -d \\000\\377 | wc -c); [ `$c -gt 0 ] && n=`$((n + 1)); done; echo `$n").Trim()
+    # [int]'' is 0: no answer passed as an empty region
+    if ($dirtyOut -notmatch '^[0-9]+$') { Die (T 'no answer from the device') }
+    $dirty = [int]$dirtyOut
     Write-Host (T 'data check: {1} of 16 samples contain data' $dirty)
     Info 'region.dirty' $dirty
     if ($dirty -gt 0) {

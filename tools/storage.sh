@@ -197,12 +197,15 @@ region_probe() {
 region_on_disk() { [ $(( ($1 + 2048) / 512 )) -le "${disk:?region_probe first}" ]; }
 
 # an existing installation defines the region (it may have been created with a slightly different size, or at the
-# fixed offset of the first releases)
+# fixed offset of the first releases). Two bytes on the disk always read as four hex digits: no answer (adb lost
+# for a moment, 2026-10-16 on F50-C) is status 2, never "no installation" - that skipped the update-or-wipe
+# question and the data check, and the region was "free and empty".
 region_find_existing() {
     existing=no
     for cand in $OFF 27762098176; do
         region_on_disk "$cand" || continue
-        m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' ')
+        m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' \n')
+        case $m in [0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;; *) existing=; return 2 ;; esac
         l=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | LC_ALL=C tr -d '\000')
         if [ "$m" = 53ef ] && [ "$l" = mu300root ]; then
             blocks=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1028)) count=4 2>/dev/null | od -An -tu4" | tr -d ' ')
@@ -219,6 +222,8 @@ region_dirty() {
     probe=""; i=0
     while [ $i -lt 16 ]; do probe="$probe $(( OFF / 1048576 + i * step ))"; i=$((i + 1)); done
     DIRTY=$(su_do "n=0; for s in $probe; do c=\$(dd if=/dev/block/mmcblk0 bs=1048576 skip=\$s count=1 2>/dev/null | tr -d \"\\000\\377\" | wc -c); [ \$c -gt 0 ] && n=\$((n + 1)); done; echo \$n")
+    # a count, or no answer (status 2): an empty DIRTY compared as "0" and the region passed as empty
+    case $DIRTY in ''|*[!0-9]*) DIRTY=; return 2 ;; esac
 }
 
 # vpn_on_systems "OS...": the systems among OS... of the Linux filesystem already on the device whose VPN is on

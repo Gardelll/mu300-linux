@@ -614,7 +614,7 @@ if [ $SD_MODE = 0 ] && [ $SIZE -lt $((700 * 1024 * 1024)) ]; then
     fi
     offer_repartition   # exits, either by installing nothing or by rebooting for a second pass
 fi
-region_find_existing
+region_find_existing || die "$(t 'no answer from the device')"
 echo "$(t 'Linux region: offset {1}, {2}, existing mu300root filesystem: {3}' "$OFF" "$(gib $SIZE)" "$(t "$existing")")"
 INTERNAL_EXISTS=0; [ $existing = yes ] && INTERNAL_EXISTS=1; INT_SIZE=
 info region.existing "$existing"; info region.offset "$OFF"; info region.size "$SIZE"
@@ -628,7 +628,7 @@ fi
 # counted as data, a region that was never written stopped the install with "not empty".
 DIRTY=0
 if [ $SD_MODE = 0 ] && [ $existing = no ] && [ $RESUME = 0 ]; then
-    region_dirty
+    region_dirty || die "$(t 'no answer from the device')"
     echo "$(t 'data check: {1} of 16 samples contain data' "$DIRTY")"
     info region.dirty "$DIRTY"
     # what is there, for a report: the first bytes of the region
