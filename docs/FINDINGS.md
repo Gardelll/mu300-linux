@@ -154,6 +154,7 @@ what replaced it. The table below gives each section's state.
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
+| 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 
 ## Hardware and firmware facts
 
@@ -8345,3 +8346,49 @@ with the right one - checked (journal replayed, `mu300-pwcheck`), kept; with a w
 written; after these two `ubuntu` logged in over ssh and a wrong password was refused. `MU300_KEEP_PASSWORD=no` with
 `MU300_PASSWORD` - the new one logged in, `ubuntu` no longer. The zip's `computer/install.sh` (answers mode, keep, the
 right password): pushed the zip's `mu300-pwcheck` and busybox, confirmed, updated, and `ubuntu` logged in afterwards.
+
+### 132. Every OpenWrt release shipped its web server's TLS key: one private key for all devices of an image
+
+**Status: current** (unit tests; the shipped keys' fingerprints taken from every published release; the field fix run
+on the U30 Air, by hand and at boot, 2026-10-16).
+
+**What was wrong.** The uhttpd package makes its key pair (`/etc/uhttpd.key`, `/etc/uhttpd.crt`) when apk installs it,
+and since v2026.10.13 apk installs it in the image build: the pair was in the published rootfs tarball, so every device
+that installed one image had the same private key for LuCI over HTTPS, and anyone who downloads the release has it
+(a man in the middle on the LAN, or anyone the device's HTTPS is reachable to, could pose as the device's LuCI and read
+the password typed into it). uhttpd only makes a pair when there is none, so a device kept the shipped one for good.
+Found while working on Docker in the images (PR #258), on F50-C: its key was v2026.10.16.1's plain OpenWrt one.
+
+**Which releases.** `gh release list`, then each published `mu300-openwrt-rootfs.tar.gz` and
+`mu300-openwrt-luci-rootfs.tar.gz` (60 tarballs, 41 releases) streamed through `tar` for `etc/uhttpd.key` and hashed,
+nothing kept: the 28 tarballs from v2026.09.17 to v2026.10.12 have no key (the listing checked: uhttpd, no key file);
+the 32 of v2026.10.13 to v2026.10.27 and v2026.10.16.1 each have one, all different (one key per image build, the
+same for every device of that image). Assets that were replaced on a release before this was looked at, and images
+built by hand, are not on the list.
+
+**The build.** `openwrt/build-rootfs.sh` removes the pair from the image and fails if a key is still there; the audit
+of `tools/make-release.sh` refuses a tarball with `etc/uhttpd.key` (the same hunk as PR #258's). uhttpd makes the
+device its own pair at its first start: px5g (px5g-mbedtls, in both images; openssl is there too) with the
+`key_type ec` of `/etc/config/uhttpd`, an EC P-256 key and a self-signed certificate valid for 397 days.
+
+**The devices.** `/etc/uci-defaults/92-mu300-uhttpd-key` (both images) holds the 32 fingerprints (sha256 of the key
+file; never a key) and removes `/etc/uhttpd.key` and `/etc/uhttpd.crt`, and the pair of any uhttpd section whose
+`key` points elsewhere, when the key file is byte for byte one of them; a key not on the list (made on the device,
+or the user's own) is never touched, nor an empty file. uci-defaults run at boot before uhttpd (START 50), so uhttpd
+starts with no pair and makes one. Every update brings the file again (it removed itself when it ran, and
+mu300-update does not carry that removal over), so it runs on the first boot of every image, whatever way it came:
+mu300-update with the old image's manifest already leaves the image's key behind (it is the old image's file, not
+the user's), but without the manifest, and the Magisk zip and computer installer paths that carry `/etc`, would keep
+it. A device on an old release keeps the shipped key until it updates; by hand, the same script then
+`/etc/init.d/uhttpd restart`, or `rm /etc/uhttpd.key /etc/uhttpd.crt; /etc/init.d/uhttpd restart`. The browser warns
+once about the new self-signed certificate (or about a changed one, where it had an exception for the old); LuCI over
+plain HTTP is not affected.
+
+**Measured on the U30 Air** (openwrt-luci v2026.10.16.1, VPN profile `cengiz-abi`, sing-box, kill switch on). Its key
+was v2026.10.16.1's openwrt-luci one (0523f54e...). After a root-only backup of `/etc/uhttpd.*` and the VPN settings:
+the script by hand removed the pair and logged it; `uhttpd restart` made an EC P-256 pair (px5g, "Generating EC private
+key"), not on the list; HTTPS answered with the new certificate (SHA-256 69:88:5C... before, B2:05:9C... after) and the
+LuCI login page, as did HTTP; a second run kept the new key. Then the boot path: the shipped pair put back, the script
+in `/etc/uci-defaults`, a reboot: the script ran and was gone, uhttpd had made another new pair (EC:94:0E...), LuCI
+answered over both. Through all of it the VPN stayed up with the same exit IP, and the sha256 of every file of
+`/etc/config` and `/etc/mu300/vpn*` was the same as before.
