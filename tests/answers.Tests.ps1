@@ -264,6 +264,41 @@ Check 'existing: update'        ($r.Asked -contains 'MU300_ANS_EXISTING=update')
 Check 'existing: goes on'       (LastEvent $r).message 'pulling boot_a failed'
 Check "existing: nothing written: $(UntouchedWhy)"  (Untouched) 0
 
+# an update of systems with a login password: keep it (the current one checked on the device, android-pwcheck.sh in
+# the fake) or set a new one. The passwords of the fake: Ubuntu's ubuntu has one, OpenWrt's root has none.
+$upd = With (Without $answers 'MU300_ANS_PASSWORD') @{ MU300_ANS_EXISTING = 'update' }
+Device 'pull' $false 'existing' $true 'passwords' @{ ubuntu = 'oldsecret1'; 'openwrt-luci' = '' }
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $upd)`""
+Check 'keep: asks'              ((LastEvent $r).message -match 'set MU300_ANS_KEEP_PASSWORD ') $true
+Check 'keep: the systems'       ($r.Out -match 'The installed ubuntu openwrt-luci has a login password of its own') $true
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD_UBUNTU = 'oldsecret1'; MU300_ANS_CURRENT_PASSWORD = '' }))`""
+Check 'keep, right: confirmed'  "$($r.Facts['password.ubuntu']) $($r.Facts['password.openwrt-luci'])" 'MATCH MATCH'
+Check 'keep, right: no new password asked' (@($r.Asked | Where-Object { $_ -like 'MU300_ANS_PASSWORD=*' }).Count) 0
+Check 'keep, right: asked'      (@($r.Asked | Where-Object { $_ -like 'MU300_ANS_*PASSWORD*' }) -join ' ') 'MU300_ANS_KEEP_PASSWORD=yes MU300_ANS_CURRENT_PASSWORD_UBUNTU= MU300_ANS_CURRENT_PASSWORD='
+Check 'keep, right: goes on'    (LastEvent $r).message 'pulling boot_a failed'
+Check 'keep, right: never shown' ($r.Out -match 'oldsecret1') $false
+Check 'keep, right: adb never sees it' (@(Calls '' | Where-Object { @($_.answers | ForEach-Object { "$_".ToUpper() }) -match 'CURRENT_PASSWORD' }).Count) 0
+Check 'keep, right: not on a command line' (@(Calls '' | Where-Object { "$($_.cmd) $($_.argv -join ' ')" -match 'oldsecret1' }).Count) 0
+Check "keep, right: nothing written: $(UntouchedWhy)"  (Untouched) 0
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD_UBUNTU = 'wrongpass9'; MU300_ANS_CURRENT_PASSWORD = '' }))`""
+Check 'keep, wrong: stops'      "$($r.Rc) $((LastEvent $r).event) $(@(Calls 'pull').Count)" '1 error 0'
+Check 'keep, wrong: says so'    ((LastEvent $r).message -match 'the current password of "ubuntu" in the installed ubuntu was not confirmed. Nothing was changed') $true
+Check 'keep, wrong: never shown' ($r.Out -match 'wrongpass9') $false
+Check "keep, wrong: nothing written: $(UntouchedWhy)"  (Untouched) 0
+# OpenWrt's root without a password: confirmed by an empty entry, and not by a typed one
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD_UBUNTU = 'oldsecret1'; MU300_ANS_CURRENT_PASSWORD_OPENWRT_LUCI = 'something' }))`""
+Check 'keep, empty one typed: stops' ((LastEvent $r).message -match '"root" in the installed openwrt-luci was not confirmed') $true
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'no'; MU300_ANS_PASSWORD = 'newsecret22' }))`""
+Check 'no: the new password'    ($r.Asked -contains 'MU300_ANS_PASSWORD=') $true
+Check 'no: nothing checked'     (@(Calls 'push' | Where-Object { "$($_.argv -join ' ')" -match 'mu300-pwcheck\.in' }).Count) 0
+Check 'no: goes on'             (LastEvent $r).message 'pulling boot_a failed'
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'no' }))`""
+Check 'no: needs the new one'   ((LastEvent $r).message -match 'set MU300_ANS_PASSWORD ') $true
+Device 'pull' $false 'existing' $true 'passwords' @{ ubuntu = 'oldsecret1' } 'pwcheck' 'UNVERIFIABLE'
+$r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf (With $upd @{ MU300_ANS_KEEP_PASSWORD = 'yes'; MU300_ANS_CURRENT_PASSWORD = 'oldsecret1' }))`""
+Check 'unverifiable: stops'     ((LastEvent $r).message -match 'could not be checked on the device \(UNVERIFIABLE\)') $true
+Check "unverifiable: nothing written: $(UntouchedWhy)"  (Untouched) 0
+
 # data in the free space needs its word
 Device 'pull' $false 'dirty' 2
 $r = RunScript 'install.ps1' "-AnswersFile `"$(AnswersFileOf $answers)`""

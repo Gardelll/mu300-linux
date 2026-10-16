@@ -51,7 +51,7 @@ tar -xzOf "$R/mu300-kernel.tar.gz" ./busybox > "$W/busybox"
 # what every zip holds besides its payload, by name (the audit below compares against this)
 COMMON='META-INF/com/google/android/update-binary META-INF/com/google/android/updater-script module.prop customize.sh
 action.sh switch.sh bootchain.sh system/bin/mu300-linux mu300/install.sh mu300/android-boot-image.sh mu300/mu300-update
-mu300/android-install.sh mu300/android-bootchain.sh mu300/android-mount-mu300root.sh mu300/storage.sh mu300/i18n.sh mu300/i18n/tr.tsv
+mu300/android-install.sh mu300/android-bootchain.sh mu300/android-mount-mu300root.sh mu300/android-pwcheck.sh mu300/storage.sh mu300/i18n.sh mu300/i18n/tr.tsv
 mu300/i18n/zh.tsv mu300/subset-files.txt mu300/gpu-files.txt mu300/busybox mu300/manifest mu300/SHA256SUMS'
 # ... and the computer's side: the launchers, the guide, and computer/ - the files of files.txt (a directory: every
 # file in it, never a cache of Python's or a hidden file), and the mark that says "the payload is next to me"
@@ -83,7 +83,7 @@ stage() {  # stage DIR SYSTEM KERNEL ROOTFS_ASSET KERNEL_ASSET OS UBUNTU
     cp "$M/system/bin/mu300-linux" "$S/system/bin/"
     cp "$I/mu300-install.sh" "$S/mu300/install.sh"
     cp "$TOP/tools/android-boot-image.sh" "$TOP/tools/android-install.sh" "$TOP/tools/android-bootchain.sh" "$TOP/tools/android-mount-mu300root.sh" \
-       "$TOP/tools/storage.sh" "$TOP/tools/i18n.sh" "$S/mu300/"
+       "$TOP/tools/android-pwcheck.sh" "$TOP/tools/storage.sh" "$TOP/tools/i18n.sh" "$S/mu300/"
     # the checkout's (in CI the tag's, so the release's own): the installer needs bootimg_from_stock, which an older
     # release's mu300-update does not have when zips are built locally from one
     cp "$TOP/rootfs/overlay/opt/mu300/bin/mu300-update" "$S/mu300/mu300-update"

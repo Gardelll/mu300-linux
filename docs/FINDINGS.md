@@ -153,6 +153,7 @@ what replaced it. The table below gives each section's state.
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
+| 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 
 ## Hardware and firmware facts
 
@@ -8241,3 +8242,78 @@ three have the same logic in these places):
   time of publishing and was right.
 * The graphical installer and the installers' beta question are newer than v2026.10.27 (`tools/release_pick.py` is
   not in those tags); they go by the time of publishing too, now with the tag order on top.
+
+### 126. An update's password: kept, and checked when the user asks (the Magisk zip and the computer's installers)
+
+**What happened.** The v2026.10.16.1 smoke test on an F50 (F50-C: Android, internal OpenWrt, kernel 6.18) updated
+OpenWrt with that release's Magisk zip, and root's password was empty afterwards, while the plan had said the
+accounts and passwords are kept. Two rules met. The zip carries no password (issue #167: a system it installs gets
+the images' well-known one, Ubuntu's `ubuntu`/`ubuntu`, OpenWrt's `root` with none). And to decide whether a system
+"has accounts of its own" it compared the installed hash with the image's and with a SHA-crypt hash of `ubuntu`
+(`default_hash`): a root whose password was `ubuntu` - what the computer's installer sets when asked for it, and what
+the project's tests use - counted as "the images' own", so the update put the images' own back, which for OpenWrt is
+none. An empty root counted the same. The computer's installers had the opposite gap: an update always asked a new
+password and wrote it over the old one; `mu300-update apply` on the device keeps passwords.
+
+**The owner's rule (2026-10-16).** On an update, ask whether to keep the password. Yes: keep it, after the user types
+the current one and it checks against the installed system's hash (an empty one is confirmed by an empty entry). No:
+a new one, typed twice. Fresh installs as before.
+
+**Checking a password against an installed system** (`tools/android-pwcheck.sh`, run as root on Android over the
+read-only mount of the Linux filesystem; it prints one word - `MATCH`, `NOMATCH`, `LOCKED`, `NOUSER`, `UNVERIFIABLE`
+- and never the password or the hash; the password comes on standard input, the hash never leaves the device):
+
+* What the images hold, measured: Ubuntu 24.04's `passwd` and `chpasswd` write yescrypt (`$y$j9T$...`); OpenWrt
+  25.12's `passwd` (busybox) and so LuCI write SHA-256-crypt (`$5$`, seen on F50-C); the installers write
+  SHA-512-crypt (`$6$`); OpenWrt's image has root empty.
+* The release's static busybox (the 5.4 bundle's, Ubuntu's `busybox-static` 1.36.1, in every zip as `mu300/busybox`)
+  has `mkpasswd` with des, md5, sha256 and sha512 only: asked for yescrypt it silently made an MD5 hash. Python's
+  `crypt` is gone in 3.13, macOS's libc has no yescrypt, and Windows has nothing: the check cannot run on the
+  computer for every system.
+* So the check runs on the device with the installed system's own tools, in a `chroot` (Android and Linux share the
+  architecture): Ubuntu's `perl` (`perl-base` is essential) through libxcrypt's `crypt()` - yescrypt, SHA-crypt,
+  MD5-crypt, bcrypt; OpenWrt's `openssl passwd -1/-5/-6 -salt` (its image has `/usr/bin/openssl`). The zip first tries
+  its busybox `mkpasswd` for `$1$`/`$5$`/`$6$` (no chroot needed). A hash with `rounds=` goes to perl; a method nothing
+  computes is `UNVERIFIABLE`. An empty entry matches only an empty field (`passwd -d` and LuCI never store a hash of the
+  empty password).
+* On F50-C (Android 13, kernel 5.4.254, OpenWrt v2026.10.16.1): `chroot <mount>/openwrt /usr/bin/openssl` under
+  Android's toybox `chroot` and `env -i`: right password `MATCH`, wrong `NOMATCH`, empty `NOMATCH`. Ubuntu's perl in a
+  chroot on Android's kernel was not run on a device (no Ubuntu on F50-C); in a container with Ubuntu 24.04's perl a
+  `chpasswd` hash checks (unit test).
+
+**The computer's installers** (`install.sh`, `install.ps1`, the window, and an unpacked zip's `computer/`, which is the
+same `install.sh`): an update first looks at the systems it replaces (`pw_states`, a read-only mount) and, when one
+has a login password of its own (set, empty or locked), asks *Keep the current password? (yes/no)*, default yes. Yes
+asks the current password of each such system once, without echo, sends it to the device in a file of the user's
+alone (pushed, read by the check on standard input, removed in the same command) and stops after three wrong tries:
+**nothing is changed** and the message says to run again and answer no. Stopping was chosen over falling back to "set
+a new password": the user asked to keep it, a run that turns that into a new password is a surprise, and nothing is
+written before the question, so stopping costs nothing. `LOCKED` and `UNVERIFIABLE` stop the same way. No asks a new
+password typed twice (the old question). A system the update installs new still gets the new password; the device's
+`android-install.sh` leaves the accounts of `KEEP_PW_OSES` exactly as they were whatever `PWHASH` says. Answers mode:
+`MU300_ANS_KEEP_PASSWORD`, `MU300_ANS_CURRENT_PASSWORD` (or `..._UBUNTU`, `..._OPENWRT`, `..._OPENWRT_LUCI`), secrets
+like `MU300_ANS_PASSWORD`, one try; the verdict is an `info` event `password.<system>`.
+
+**The Magisk zip.** Nothing can be typed while Magisk installs a zip (and the devices have no keys a module could
+read), so its answers are a `mu300-install.conf`, and for the password of an update only one **inside the zip**: at
+its top (`zip mu300-magisk-...zip mu300-install.conf`; `customize.sh` unpacks it and hands it over as
+`MU300_ZIP_CONF`, and it wins over every other file), in its `mu300/`, or `MU300_ANSWERS` of a caller. Without one an
+update keeps the accounts and passwords as they are - every password, the images' own and none included, as
+`mu300-update` does - and the plan and the end say "kept, not checked". `MU300_KEEP_PASSWORD=yes` with
+`MU300_CURRENT_PASSWORD` keeps it once it checks (no such line: the empty password); anything else stops before
+anything is written, with the way out in the message. `MU300_KEEP_PASSWORD=no` with `MU300_PASSWORD` sets a new one
+(a file is not typed, so it is given once); `no` alone or `MU300_PASSWORD_RESET=yes` puts the images' own back. An
+update no longer takes `MU300_PASSWORD` or `MU300_PASSWORD_RESET` from `/data/adb/mu300-install.conf` (a line left
+there would reset the password at every later update); a new system still does. `MU300_KEEP_PASSWORD` and
+`MU300_CURRENT_PASSWORD` from any other file are reported and ignored. The machine plan gains `password_checked`.
+
+**On the device** (F50-C, 2026-10-16, a zip of this branch built with `tools/make-magisk-zips.sh` from the
+v2026.10.16.1 assets, OpenWrt k6.18, Android locale Chinese; root's password set to `ubuntu` with `passwd` first):
+the zip without a file: "kept, not checked", root still `ubuntu` (the next run's check confirmed it); with
+`MU300_KEEP_PASSWORD=yes`, `MU300_CURRENT_PASSWORD=ubuntu`: checked, kept, ssh with `ubuntu` works and a wrong one is
+refused; with a wrong current password: refused before anything was written (exit 1, the module not installed);
+with `MU300_KEEP_PASSWORD=no`, `MU300_PASSWORD=...`: the new one logs in over ssh, `ubuntu` no longer does. Then the
+same zip unpacked on a Mac, its `computer/install.sh` in answers mode against F50-C: a wrong current password stopped
+it at the question ("not confirmed. Nothing was changed"); the right one passed the check, the update installed
+(`kept the accounts and passwords of the previous openwrt`) and `root`/`ubuntu` logged in afterwards, the hash still
+the `$5$` one `passwd` had written. `install.ps1` and the window were run against the fake adb only.

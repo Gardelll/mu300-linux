@@ -30,6 +30,7 @@ MU300_FILES = {
     'mu300/mu300-update': 'rootfs/overlay/opt/mu300/bin/mu300-update',
     'mu300/android-install.sh': 'tools/android-install.sh',
     'mu300/android-mount-mu300root.sh': 'tools/android-mount-mu300root.sh',
+    'mu300/android-pwcheck.sh': 'tools/android-pwcheck.sh',
     'mu300/android-bootchain.sh': 'tools/android-bootchain.sh',
     'mu300/storage.sh': 'tools/storage.sh',
     'mu300/i18n.sh': 'tools/i18n.sh',
@@ -238,7 +239,7 @@ class Conf(ShellTest):
             ex = (sd / 'mu300-install.conf.example').read_text()
             lines = ex.splitlines()
             keys = [l for l in lines if re.match(r'#MU300_[A-Z_]+=', l)]
-            self.assertEqual(len(keys), 19, ex)
+            self.assertEqual(len(keys), 21, ex)
             for line in keys:
                 i = lines.index(line)
                 self.assertTrue(lines[i - 1].startswith('# '), line)          # its explanation, on a line of its own
@@ -1306,14 +1307,16 @@ class Install(InstallerCase):
         self.assertIn(self.NOTE['openwrt'], text)
         self.assertTrue(text.startswith('MU300 Linux '))                       # the newest first
         self.assertLess(text.index('user: ubuntu'), text.index('user: root'))
-        # the first system again with its password given: the note replaces its old one, the other one stays
+        # the first system again with its password given (an update: in the zip): the note replaces its old one, the
+        # other one stays
         self.zip(system='openwrt')
-        r = self.run_installer(trusted='MU300_PASSWORD=correct horse\n')
+        top = self.zip_conf('MU300_PASSWORD=correct horse\n')
+        r = self.run_installer(extra_env={'MU300_ZIP_CONF': top})
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         text = f.read_text()
         self.assertEqual(text.count('user: root\n'), 1, text)
         self.assertEqual(text.count('user: ubuntu\n'), 1, text)
-        self.assertIn(f'user: root\npassword: the one given as MU300_PASSWORD in {self.conf_path()}\n', text)
+        self.assertIn(f'user: root\npassword: the one given as MU300_PASSWORD in {self.ZIP_CONF}\n', text)
         self.assertIn(self.NOTE['ubuntu'], text)
         self.assertNotIn(self.NOTE['openwrt'], text)
         self.assertNotIn('correct horse', text)
@@ -1324,16 +1327,25 @@ class Install(InstallerCase):
         self.assertNotIn('user: ubuntu', text)
         self.assertEqual(text.count('user: root\n'), 1, text)
 
-    def kept(self, r, users):
-        """R kept the password: no hash for android-install.sh, no password shown, the plan and report say so"""
+    def kept(self, r, users, checked=False):
+        """R kept the password: no hash for android-install.sh, no password shown, the plan and report say so -
+        CHECKED: the current one was confirmed (MU300_KEEP_PASSWORD=yes in the zip), else kept without a check"""
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         env = (self.fake.root / 'install.env').read_text()
         self.assertIn("PWHASH=''", env)
         self.assertIn('PW_SET=0\n', env)
+        os_ = self.zip_args['system'].partition('-')[0]
+        self.assertIn(f'KEEP_PW_OSES="{os_}"', env)
         self.assertNotRegex(r.stdout, r'password for \w+: "')
         self.assertNotIn('none yet', r.stdout)
-        self.assertIn('password:       kept: the accounts and passwords of the installed system are not changed',
-                      r.stdout)
+        if checked:
+            self.assertIn('password:       kept: the accounts and passwords of the installed system are not changed; '
+                          'the current password was checked', r.stdout)
+            self.assertNotIn('not checked', r.stdout)
+        else:
+            self.assertIn('password:       kept, not checked: the accounts and passwords of the installed system are not '
+                          'changed (a mu300-install.conf inside the zip can check it or set a new one', r.stdout)
+            self.assertIn('(not checked: a mu300-install.conf inside the zip can check it or set a new one', r.stdout)
         self.assertIn(f'password for {users}: unchanged', r.stdout)
 
     def test_update_keeps_the_password(self):
@@ -1380,23 +1392,10 @@ class Install(InstallerCase):
             # the system there still has the image's accounts (an older mu300-update never carried them over)
             ('image accounts', lambda: (self.existing_filesystem(systems=('openwrt',)),
                                         self.accounts('openwrt', marked=True)), None),
-            # a system without an /etc/shadow (damaged): nothing to keep
+            # a system without an /etc/shadow (damaged), or without its account in it: nothing to keep
             ('no shadow', lambda: self.existing_filesystem(systems=('openwrt',)), None),
-            # the images' well-known ubuntu/ubuntu (the fake mkpasswd's hash of "ubuntu" with that salt)
-            ('default password', lambda: (self.existing_filesystem(systems=('openwrt',)),
-                                          (self.fake.root / 'fs/openwrt/etc/shadow').write_text(
-                                              'root:$6$abc$' + b'ubuntu'.hex() + ':19000::::::\n')), None),
-            # the image's own hash carried over from a system without the mark
-            ('image hash', lambda: (self.zip(system='ubuntu-24.04'), self.existing_filesystem(systems=('ubuntu',)),
-                                    (self.fake.root / 'fs/ubuntu/etc/shadow').write_text(
-                                        'ubuntu:$6$img$imagehash:19000::::::\n')), None),
-            # the zip's image shadow cannot be read: nothing to compare with, so not kept
-            ('unreadable image', lambda: (self.zip(image_shadow=False), self.existing_filesystem(systems=('openwrt',)),
-                                          self.accounts('openwrt')), None),
-            # root has no password of its own (OpenWrt's image leaves it empty; locked or missing alike)
-            ('no hash', lambda: (self.existing_filesystem(systems=('openwrt',)),
-                                 (self.fake.root / 'fs/openwrt/etc/shadow').write_text('root::19000::::::\nubuntu:$6$x$y:1::\n')),
-             None))
+            ('no account', lambda: (self.existing_filesystem(systems=('openwrt',)),
+                                    (self.fake.root / 'fs/openwrt/etc/shadow').write_text('daemon:*:1::\n')), None))
         for name, target, trusted in cases:
             with self.subTest(name):
                 self.reset()
@@ -1410,7 +1409,7 @@ class Install(InstallerCase):
         self.assertIn(self.PLAN['openwrt'].format(conf=self.conf_path()), r.stdout)
         self.assertFalse((self.fake.root / 'data/adb/mu300-linux-password.txt').exists())
 
-    def test_password_reset_only_when_a_trusted_conf_asks(self):
+    def test_password_reset_only_from_the_zip(self):
         conf = self.fake.root / 'data/adb/mu300-install.conf'
         f = self.fake.root / 'data/adb/mu300-linux-password.txt'
         # any app could write /sdcard: a reset asked for there is ignored, the password stays
@@ -1419,21 +1418,175 @@ class Install(InstallerCase):
         self.kept(r, 'root')
         self.assertIn('MU300_PASSWORD_RESET is taken only from', r.stdout)
         self.assertFalse(f.exists())
-        # from /data/adb: the images' password (OpenWrt's root without one), shown, noted, and the line used once
+        # /data/adb neither, on an update: a line left there must not reset the password at every update. It is not
+        # used, so it stays
         r = self.run_installer(trusted='MU300_PASSWORD_RESET=yes\nMU300_BOOT_ATTEMPTS=3\n')
-        self.images_password(r, 'openwrt')
-        text = conf.read_text()
-        self.assertIn('# MU300_PASSWORD_RESET was used by the installer and removed', text)
-        self.assertIn('MU300_BOOT_ATTEMPTS=3\n', text)
-        # the next flash: root without a password is not an account to keep, the images' password applies again
-        # (the same empty one; an update carries every other account over)
-        (self.fake.root / 'fs/openwrt/etc/shadow').write_text('root::19000::::::\n')
-        self.images_password(self.run_installer(trusted=text), 'openwrt')
-        # one the user set since is kept
-        self.accounts('openwrt')
-        self.kept(self.run_installer(trusted=text), 'root')
+        self.kept(r, 'root')
+        self.assertIn(f'an update sets a password only from a mu300-install.conf inside the zip: MU300_PASSWORD_RESET in '
+                      f'{self.conf_path()} is not used', r.stdout)
+        self.assertEqual(conf.read_text(), 'MU300_PASSWORD_RESET=yes\nMU300_BOOT_ATTEMPTS=3\n')
+        # from the zip: the images' password (OpenWrt's root without one), shown and noted
+        top = self.zip_conf('MU300_PASSWORD_RESET=yes\n')
+        r = self.run_installer(extra_env={'MU300_ZIP_CONF': top})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('PW_SET=1\n', (self.fake.root / 'install.env').read_text())
+        self.assertIn("PWHASH=''", (self.fake.root / 'install.env').read_text())
+        self.assertIn(self.SHOWN['openwrt'], r.stdout)
         self.assertIn(self.NOTE['openwrt'], f.read_text())
-        # a password of one's own in /data/adb is a reset too
+
+    ZIP_CONF = 'mu300-install.conf in mu300-magisk.zip'         # what the installer calls it (not the unpacked path)
+
+    def zip_conf(self, text):
+        """a mu300-install.conf at the top of the zip, as customize.sh hands it over (MU300_ZIP_CONF)"""
+        top = self.tmp / 'zip' / 'top-mu300-install.conf'
+        top.write_text(text)
+        return str(top)
+
+    def pw_shadow(self, os_, line):
+        etc = self.fake.root / 'fs' / os_ / 'etc'
+        etc.mkdir(parents=True, exist_ok=True)
+        (etc / 'shadow').write_text(line + '\n' + 'daemon:*:19000::::::\n')
+
+    @staticmethod
+    def fake_hash(pw, salt='saltsalt'):
+        """the hash the fake busybox's mkpasswd makes (tests/fakedevice.py: UBB)"""
+        return f'$6${salt}$' + pw.encode().hex()[:20]
+
+    def test_an_update_keeps_any_password_without_a_word(self):
+        # no mu300-install.conf in the zip: an update keeps what the system has, whatever it is - the images'
+        # well-known ubuntu (the computer's installer may have set it for root too), none, the image's own hash, a
+        # locked account (the v2026.10.16.1 zip reset an OpenWrt root that had "ubuntu" to none, and said it kept it)
+        cases = (('openwrt', 'root:' + self.fake_hash('ubuntu', 'abc') + ':19000::::::', 'root'),
+                 ('openwrt', 'root::19000::::::', 'root'),
+                 ('openwrt', 'root:!:19000::::::', 'root'),
+                 ('ubuntu-24.04', 'ubuntu:$6$img$imagehash:19000::::::', 'ubuntu'),
+                 ('ubuntu-24.04', 'ubuntu:$y$j9T$yozuPAQ4fDSQH5fJzaFQd/$Z6UKqnHQMcZqZNJ18QIV5mTrJ7raj2y7MDipRg8bUj.:19000::::::',
+                  'ubuntu'))
+        for system, line, users in cases:
+            with self.subTest(line):
+                self.reset()
+                self.zip(system=system)
+                os_ = system.partition('-')[0]
+                self.existing_filesystem(systems=(os_,))
+                self.pw_shadow(os_, line)
+                self.kept(self.run_installer(), users)
+                self.assertFalse((self.fake.root / 'data/adb/mu300-linux-password.txt').exists())
+
+    def check_env(self):
+        """the chroot of android-pwcheck.sh runs the command here (perl, openssl of this machine)"""
+        chroot = self.tmp / 'fake-chroot'
+        chroot.write_text('#!/bin/sh\nshift\nexec "$@"\n')
+        chroot.chmod(0o755)
+        return {'MU300_CHROOT': str(chroot)}
+
+    def test_keep_with_the_current_password(self):
+        # MU300_KEEP_PASSWORD=yes and the right current password in the zip: kept, and the plan says it was checked.
+        # The password is shown nowhere and written nowhere.
+        self.existing_filesystem(systems=('openwrt',))
+        self.pw_shadow('openwrt', 'root:' + self.fake_hash('old root pw') + ':19000::::::')
+        top = self.zip_conf('MU300_KEEP_PASSWORD=yes\nMU300_CURRENT_PASSWORD=old root pw\n')
+        r = self.run_installer(extra_env=dict(self.check_env(), MU300_ZIP_CONF=top))
+        self.kept(r, 'root', checked=True)
+        self.assertNotIn('old root pw', r.stdout + r.stderr)
+        self.assertNotIn(b'old root pw'.hex()[:20], r.stdout + r.stderr)          # nor the hash
+        for p in (self.fake.root / 'data/adb').rglob('*'):
+            if p.is_file():
+                self.assertNotIn(b'old root pw', p.read_bytes())
+        self.assertIn('MU300_KEEP_PASSWORD MU300_CURRENT_PASSWORD', r.stdout)      # the settings named, not their values
+        # the conf inside the zip's mu300/ does the same
+        (self.mu300 / 'mu300-install.conf').write_text('MU300_KEEP_PASSWORD=yes\nMU300_CURRENT_PASSWORD=old root pw\n')
+        self.kept(self.run_installer(extra_env=self.check_env()), 'root', checked=True)
+
+    def test_keep_with_a_wrong_password_stops(self):
+        self.existing_filesystem(systems=('openwrt',))
+        self.pw_shadow('openwrt', 'root:' + self.fake_hash('old root pw') + ':19000::::::')
+        for current in ('MU300_CURRENT_PASSWORD=guess1234\n', ''):        # no line: the empty password
+            with self.subTest(current):
+                top = self.zip_conf('MU300_KEEP_PASSWORD=yes\n' + current)
+                r = self.run_installer(extra_env=dict(self.check_env(), MU300_ZIP_CONF=top))
+                self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+                self.assertIn(f'MU300_CURRENT_PASSWORD in {self.ZIP_CONF} is not the current password of "root" in the installed '
+                              'openwrt. Nothing was changed.', r.stdout)
+                self.assertNotIn('guess1234', r.stdout + r.stderr)
+                self.assertTrue(self.nothing_written())
+                self.assertFalse((self.fake.root / 'install.env').exists())
+
+    def test_keep_an_empty_password(self):
+        # OpenWrt's root as it ships: no password, confirmed by none
+        self.existing_filesystem(systems=('openwrt',))
+        self.pw_shadow('openwrt', 'root::19000::::::')
+        top = self.zip_conf('MU300_KEEP_PASSWORD=yes\n')
+        self.kept(self.run_installer(extra_env=dict(self.check_env(), MU300_ZIP_CONF=top)), 'root', checked=True)
+        top = self.zip_conf('MU300_KEEP_PASSWORD=yes\nMU300_CURRENT_PASSWORD=something\n')
+        r = self.run_installer(extra_env=dict(self.check_env(), MU300_ZIP_CONF=top))
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertTrue(self.nothing_written())
+
+    def test_keep_a_locked_or_unverifiable_password_stops(self):
+        self.existing_filesystem(systems=('openwrt',))
+        top = self.zip_conf('MU300_KEEP_PASSWORD=yes\nMU300_CURRENT_PASSWORD=whatever1\n')
+        for line, said in (('root:!:19000::::::', 'has no password login, so there is none to confirm'),
+                           # a method nothing on the device computes (no openssl or perl in this system)
+                           ('root:$2b$10$abcdefghijklmnopqrstuuabcdefghijklmnopqrstuvwxyz012:19000::::::',
+                            'could not be checked on the device (UNVERIFIABLE)')):
+            with self.subTest(line):
+                self.pw_shadow('openwrt', line)
+                r = self.run_installer(extra_env=dict(self.check_env(), MU300_ZIP_CONF=top))
+                self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+                self.assertIn(said, r.stdout)
+                self.assertTrue(self.nothing_written())
+
+    def test_no_sets_the_new_password_from_the_zip(self):
+        self.existing_filesystem(systems=('openwrt',))
+        self.pw_shadow('openwrt', 'root:' + self.fake_hash('old root pw') + ':19000::::::')
+        top = self.zip_conf('MU300_KEEP_PASSWORD=no\nMU300_PASSWORD=new secret 9\n')
+        r = self.run_installer(extra_env={'MU300_ZIP_CONF': top})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        env = (self.fake.root / 'install.env').read_text()
+        self.assertIn('new secret 9'.encode().hex()[:20], env)
+        self.assertIn('KEEP_PW_OSES=""', env)
+        self.assertIn(f'password:       the one from {self.ZIP_CONF} (not shown)', r.stdout)
+        self.assertNotIn('new secret 9', r.stdout + r.stderr)
+        # no without a new one: the images' own (OpenWrt's root without one)
+        top = self.zip_conf('MU300_KEEP_PASSWORD=no\n')
+        r = self.run_installer(extra_env={'MU300_ZIP_CONF': top})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('PW_SET=1\n', (self.fake.root / 'install.env').read_text())
+        self.assertIn(self.SHOWN['openwrt'], r.stdout)
+        # yes and a new one at once: refused, nothing written
+        top = self.zip_conf('MU300_KEEP_PASSWORD=yes\nMU300_PASSWORD=new secret 9\n')
+        r = self.run_installer(extra_env=dict(self.check_env(), MU300_ZIP_CONF=top))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('do not go together', r.stdout)
+        self.assertTrue(self.nothing_written())
+
+    def test_the_password_settings_of_an_update_come_from_the_zip_only(self):
+        # MU300_KEEP_PASSWORD and MU300_CURRENT_PASSWORD are read from no other file; MU300_PASSWORD from /data/adb
+        # is not used by an update
+        self.existing_filesystem(systems=('openwrt',))
+        self.pw_shadow('openwrt', 'root:' + self.fake_hash('old root pw') + ':19000::::::')
+        r = self.run_installer(trusted='MU300_KEEP_PASSWORD=yes\nMU300_CURRENT_PASSWORD=wrong one\nMU300_PASSWORD=new secret 9\n',
+                               extra_env=self.check_env())
+        self.kept(r, 'root')
+        self.assertIn('MU300_KEEP_PASSWORD is taken only from a mu300-install.conf inside the zip', r.stdout)
+        self.assertIn('MU300_CURRENT_PASSWORD is taken only from a mu300-install.conf inside the zip', r.stdout)
+        self.assertIn('MU300_PASSWORD in', r.stdout)
+        self.assertNotIn('wrong one', r.stdout + r.stderr)
+        self.assertNotIn('new secret 9'.encode().hex()[:20], (self.fake.root / 'install.env').read_text())
+        # the zip's file wins over /data/adb
+        top = self.zip_conf('MU300_BOOT_ATTEMPTS=2\n')
+        r = self.run_installer(trusted='MU300_BOOT_ATTEMPTS=3\n', extra_env={'MU300_ZIP_CONF': top})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('BOOT_ATTEMPTS=2\n', (self.fake.root / 'install.env').read_text())
+
+    def test_a_fresh_install_keeps_the_images_password(self):
+        # nothing to keep: the images' own, or MU300_PASSWORD from /data/adb as before; a keep answer only warns
+        top = self.zip_conf('MU300_KEEP_PASSWORD=yes\nMU300_CURRENT_PASSWORD=whatever1\n')
+        r = self.run_installer(extra_env={'MU300_ZIP_CONF': top})
+        self.images_password(r, 'openwrt')
+        self.assertIn('MU300_KEEP_PASSWORD: the installed openwrt has no password of its own to keep', r.stdout)
+        # a password of one's own in /data/adb, as before
+        self.reset()
         r = self.run_installer(trusted='MU300_PASSWORD=correct horse\n')
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertNotIn('correct horse', r.stdout)
@@ -1543,7 +1696,8 @@ class WebCaller(InstallerCase):
                              'device': 'f50', 'storage': 'internal', 'sd_dev': '', 'offset': p['offset'],
                              'size': p['size'], 'format': '1', 'update': '0', 'have': '', 'boot_os': 'openwrt',
                              'default_linux': '1', 'boot_attempts': '5', 'hotspot': '1', 'gpu': 'yes',
-                             'password': 'image', 'extras': '', 'adb': '0', 'linux_slot': 'b', 'android_slot': 'a',
+                             'password': 'image', 'password_checked': '0', 'extras': '', 'adb': '0', 'linux_slot': 'b',
+                             'android_slot': 'a',
                              'sync_bootchain': '1', 'bootchain': '', 'dry_run': '1'})
         self.assertRegex(p['offset'], r'^\d+$')
         self.assertGreater(int(p['size']), 700 << 20)
@@ -1732,6 +1886,105 @@ class Password(ShellTest):
                 self.assertRegex(r.stdout.strip(), r'^[./0-9A-Za-z]{16}$')
                 seen.add(r.stdout)
             self.assertEqual(len(seen), 20)
+
+
+def _crypt_with(tool, setting, pw):
+    """the crypt of PW with SETTING by this machine's TOOL (perl, openssl), or None where it cannot"""
+    try:
+        if tool == 'perl':
+            out = subprocess.run(['perl', '-e', 'print crypt($ARGV[0], $ARGV[1]) // ""', pw, setting],
+                                 capture_output=True, text=True, timeout=10).stdout
+        else:
+            m, salt = setting.split('$')[1], setting.split('$')[2]
+            out = subprocess.run(['openssl', 'passwd', '-' + m, '-salt', salt, pw], capture_output=True, text=True,
+                                 timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out if out.startswith(setting.rsplit('$', 1)[0] if tool == 'perl' else '$' + setting.split('$')[1] + '$') else None
+
+
+# a yescrypt hash of "old secret 1" as Ubuntu 24.04's chpasswd made it
+YESCRYPT = '$y$j9T$yozuPAQ4fDSQH5fJzaFQd/$Z6UKqnHQMcZqZNJ18QIV5mTrJ7raj2y7MDipRg8bUj.'
+
+
+class PwCheck(ShellTest):
+    """tools/android-pwcheck.sh: one word out, never a password or a hash; the hash computed by the system's own tools
+    (a chroot that, here, runs this machine's perl and openssl)"""
+
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / 'sys'
+        (self.root / 'etc').mkdir(parents=True)
+        (self.root / 'usr/bin').mkdir(parents=True)
+        self.chroot = self.tmp / 'chroot'
+        self.chroot.write_text('#!/bin/sh\nshift\nexec "$@"\n')
+        self.chroot.chmod(0o755)
+
+    def tool(self, name):
+        p = self.root / 'usr/bin' / name
+        p.write_text('')                         # only looked at with -x; the chroot runs this machine's
+        p.chmod(0o755)
+
+    def check(self, shell, line, pw=None, user='root', **env):
+        (self.root / 'etc/shadow').write_text('daemon:*:1::\n' + line + '\n')
+        args = ['-s'] if pw is None else []
+        r = self.script(shell, TOP / 'tools/android-pwcheck.sh', *args, self.root, user,
+                        stdin='' if pw is None else pw + '\n', MU300_CHROOT=str(self.chroot), **env)
+        h = line.split(':')[1]
+        if len(h) > 2:
+            self.assertNotIn(h, r.stdout + r.stderr)
+        if pw:
+            self.assertNotIn(pw, r.stdout + r.stderr)
+        self.assertRegex(r.stdout, r'^(SET|EMPTY|LOCKED|NOUSER|MATCH|NOMATCH|UNVERIFIABLE)\n$')
+        return r.stdout.strip(), r.returncode
+
+    def test_states(self):
+        for shell in self.each_shell():
+            self.assertEqual(self.check(shell, 'root::19000::::::'), ('EMPTY', 0))
+            self.assertEqual(self.check(shell, 'root:!:19000::::::'), ('LOCKED', 0))
+            self.assertEqual(self.check(shell, 'root:$6$x$y:19000::::::'), ('SET', 0))
+            self.assertEqual(self.check(shell, 'other:$6$x$y:19000::::::'), ('NOUSER', 1))
+            self.assertEqual(self.check(shell, 'root::1::', user='r;oot'), ('NOUSER', 1))
+
+    def test_empty_and_locked(self):
+        for shell in self.each_shell():
+            self.assertEqual(self.check(shell, 'root::19000::::::', ''), ('MATCH', 0))
+            self.assertEqual(self.check(shell, 'root::19000::::::', 'x'), ('NOMATCH', 1))
+            self.assertEqual(self.check(shell, 'root:!$6$x$y:19000::::::', 'x'), ('LOCKED', 1))
+            self.assertEqual(self.check(shell, 'root:$6$x$y:19000::::::', ''), ('NOMATCH', 1))
+            # nothing here computes it
+            self.assertEqual(self.check(shell, 'root:$6$saltsalt$abc:19000::::::', 'x'), ('UNVERIFIABLE', 1))
+
+    def test_the_zips_busybox(self):
+        # MU300_PWCHECK_BB: the Magisk zip's busybox mkpasswd (here the fake device's, tests/fakedevice.py)
+        bb = self.tmp / 'bb'
+        bb.write_text(UBB)
+        bb.chmod(0o755)
+        h = '$6$saltsalt$' + b'right one'.hex()[:20]
+        for shell in self.each_shell():
+            self.assertEqual(self.check(shell, f'root:{h}:1::', 'right one', MU300_PWCHECK_BB=str(bb)), ('MATCH', 0))
+            self.assertEqual(self.check(shell, f'root:{h}:1::', 'wrong one', MU300_PWCHECK_BB=str(bb)), ('NOMATCH', 1))
+
+    def test_openwrt_openssl(self):
+        # OpenWrt: its openssl passwd (MD5-, SHA-256- and SHA-512-crypt: what its passwd and LuCI write)
+        self.tool('openssl')
+        for setting in ('$1$abcdefgh$', '$5$abcdefghijklmnop$', '$6$abcdefghijklmnop$'):
+            h = _crypt_with('openssl', setting, 'root pw 1')
+            if not h:
+                self.skipTest(f"this machine's openssl cannot make {setting}")
+            for shell in self.each_shell():
+                self.assertEqual(self.check(shell, f'root:{h}:1::', 'root pw 1'), ('MATCH', 0), setting)
+                self.assertEqual(self.check(shell, f'root:{h}:1::', 'root pw 2'), ('NOMATCH', 1), setting)
+
+    def test_ubuntu_yescrypt_with_perl(self):
+        # Ubuntu: perl's crypt() (libxcrypt), for the yescrypt its passwd writes
+        if _crypt_with('perl', YESCRYPT, 'old secret 1') != YESCRYPT:
+            self.skipTest("this machine's crypt() has no yescrypt")
+        self.tool('perl')
+        for shell in self.each_shell():
+            self.assertEqual(self.check(shell, f'ubuntu:{YESCRYPT}:1::', 'old secret 1', user='ubuntu'), ('MATCH', 0))
+            self.assertEqual(self.check(shell, f'ubuntu:{YESCRYPT}:1::', 'old secret 2', user='ubuntu'), ('NOMATCH', 1))
+            self.assertEqual(self.check(shell, f'ubuntu:{YESCRYPT}:1::', '', user='ubuntu'), ('NOMATCH', 1))
 
 
 if __name__ == '__main__':

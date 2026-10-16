@@ -114,6 +114,28 @@ class Customize(ShellTest):
                 self.assertEqual((mod / f).read_text(), '#!/system/bin/sh\n', f)
             self.assertEqual(sorted(p.name for p in (self.tmp / 't').iterdir()), [])   # nothing left behind
 
+    def test_a_conf_at_the_top_of_the_zip_reaches_the_installer(self):
+        # zip mu300-magisk-....zip mu300-install.conf: the only way to tell an update about the password; a zip
+        # without one installs as before
+        show = 'echo "conf=[${MU300_ZIP_CONF:-}]"; [ -z "${MU300_ZIP_CONF:-}" ] || cat "$MU300_ZIP_CONF"; exit 0'
+        for shell in self.each_shell():
+            r, mod = self.run_customize(shell, show)
+            self.assertIn('conf=[]', r.stdout, r.stdout + r.stderr)
+            self.assertNotIn('ABORT', r.stdout)
+            z = self.zip_with(show)
+            with zipfile.ZipFile(z, 'a') as f:
+                f.writestr('mu300-install.conf', 'MU300_KEEP_PASSWORD=yes\n')
+            m = self.tmp / 'modpath2'
+            m.mkdir(exist_ok=True)
+            code = (MAGISK_ENV + f'BOOTMODE=true; ZIPFILE="{z}"; MODPATH="{m}"; TMPDIR="{self.tmp}/t"; '
+                    f'MAGISKBIN="{self.tmp}/magisk"; mkdir -p "$TMPDIR"; set +e +u; '
+                    f'. "{TOP}/android/magisk/installer/customize.sh"; echo "after"')
+            r = self.sh(shell, code)
+            self.assertIn(f'conf=[{self.tmp}/t/mu300-zip/mu300-install.conf]', r.stdout, r.stdout + r.stderr)
+            self.assertIn('MU300_KEEP_PASSWORD=yes', r.stdout)
+            self.assertNotIn('ABORT', r.stdout)
+            self.assertEqual(sorted(p.name for p in (self.tmp / 't').iterdir()), [])   # nothing left behind
+
     def test_recovery_is_refused(self):
         for shell in self.each_shell():
             r, _ = self.run_customize(shell, 'echo ran; exit 0', bootmode='false')

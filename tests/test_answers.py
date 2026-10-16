@@ -757,6 +757,130 @@ class Install(Device):
             self.assertEqual(asked[0], ('MU300_ANS_SYSTEMS', '2'))
             self.assertNotIn('MU300_ANS_BOOT_OS', [a[0] for a in asked])       # one system: nothing to choose
 
+    # An update asks whether to keep the passwords of the systems it replaces; keeping one takes its current password,
+    # checked on the device (android-pwcheck.sh, which the fake answers from "passwords"). Nothing past the first pull
+    # is reached by a run that stops, and no password is anywhere.
+    UPDATE = dict(ANSWERS, MU300_ANS_EXISTING='update')
+
+    def pw_questions(self, asked):
+        return [a for a in asked if 'PASSWORD' in a[0]]
+
+    def test_keep_with_the_right_current_password(self):
+        for shell in self.each_shell():
+            self.device(pull=False, existing=True, passwords={'ubuntu': 'old secret 1', 'openwrt-luci': 'oldroot99'})
+            r, ev, asked = self.install(shell, dict(self.UPDATE, MU300_ANS_KEEP_PASSWORD='yes',
+                                                    MU300_ANS_CURRENT_PASSWORD_UBUNTU='old secret 1',
+                                                    MU300_ANS_CURRENT_PASSWORD='oldroot99'))
+            self.assertEqual(self.pw_questions(asked), [('MU300_ANS_KEEP_PASSWORD', 'yes'),
+                                                        ('MU300_ANS_CURRENT_PASSWORD_UBUNTU', None),
+                                                        ('MU300_ANS_CURRENT_PASSWORD', None)], r.stdout + r.stderr)
+            self.assertIn('confirmed: the password of ubuntu stays as it is', r.stdout)
+            self.assertIn('confirmed: the password of openwrt-luci stays as it is', r.stdout)
+            self.assertIn({'event': 'info', 'key': 'password.ubuntu', 'value': 'MATCH'}, ev)
+            self.assertIn('could not read /dev/block/by-name/boot_a', ev[-1]['message'])     # on to the first pull
+            self.assert_nothing_written()
+            self.assert_no_secret_anywhere('old secret')
+            self.assert_no_secret_anywhere('oldroot99')
+            self.assertEqual((r.stdout + r.stderr).count('oldroot99'), 0)
+
+    def test_keep_with_a_wrong_current_password_stops(self):
+        for shell in self.each_shell():
+            self.device(pull=False, existing=True, passwords={'ubuntu': 'old secret 1'})
+            r, ev, asked = self.install(shell, dict(self.UPDATE, MU300_ANS_KEEP_PASSWORD='yes',
+                                                    MU300_ANS_CURRENT_PASSWORD='guess123'))
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('that is not the current password of "ubuntu" in ubuntu', r.stdout)
+            self.assertIn('was not confirmed. Nothing was changed: run the installer again and answer no', ev[-1]['message'])
+            self.assertEqual(self.calls('pull'), [])
+            self.assert_nothing_written()
+            self.assertEqual((r.stdout + r.stderr).count('guess123'), 0)
+
+    def test_keep_an_empty_password_with_an_empty_entry(self):
+        # OpenWrt's root as it ships: no password, confirmed by an empty answer; no new password is asked for
+        for shell in self.each_shell():
+            self.device(pull=False, existing=True, passwords={'openwrt-luci': ''})
+            ans = {k: v for k, v in self.UPDATE.items() if k != 'MU300_ANS_PASSWORD'}
+            r, ev, asked = self.install(shell, dict(ans, MU300_ANS_SYSTEMS='2', MU300_ANS_KEEP_PASSWORD='yes',
+                                                    MU300_ANS_CURRENT_PASSWORD=''))
+            self.assertEqual(self.pw_questions(asked), [('MU300_ANS_KEEP_PASSWORD', 'yes'), ('MU300_ANS_CURRENT_PASSWORD', None)])
+            self.assertIn('confirmed: the password of openwrt-luci stays as it is', r.stdout)
+            self.assertIn('could not read /dev/block/by-name/boot_a', ev[-1]['message'])
+            # a non-empty answer is not the empty password
+            r, ev, asked = self.install(shell, dict(ans, MU300_ANS_SYSTEMS='2', MU300_ANS_KEEP_PASSWORD='yes',
+                                                    MU300_ANS_CURRENT_PASSWORD='something'))
+            self.assertIn('was not confirmed', ev[-1]['message'])
+            self.assert_nothing_written()
+
+    def test_no_sets_the_new_password(self):
+        for shell in self.each_shell():
+            self.device(pull=False, existing=True, passwords={'ubuntu': 'old secret 1', 'openwrt-luci': ''})
+            r, ev, asked = self.install(shell, dict(self.UPDATE, MU300_ANS_KEEP_PASSWORD='no'))
+            self.assertEqual(self.pw_questions(asked), [('MU300_ANS_KEEP_PASSWORD', 'no'), ('MU300_ANS_PASSWORD', None)])
+            self.assertIn('could not read /dev/block/by-name/boot_a', ev[-1]['message'])
+            # the new one is still typed twice: two that differ stop the run
+            r = self.run_script(shell, 'install.sh', stdin='', MU300_NONINTERACTIVE=1, MU300_PROGRESS=1,
+                                **dict(self.UPDATE, MU300_ANS_KEEP_PASSWORD='no', MU300_ANS_PASSWORD='short'))
+            self.assertIn('passwords differ or are shorter than 6 characters', events(r.stdout)[-1]['message'])
+            self.assert_nothing_written()
+
+    def test_a_system_installed_new_still_gets_the_new_password(self):
+        # Ubuntu is updated and kept; OpenWrt has no account there yet (installed new): the new password is asked for
+        for shell in self.each_shell():
+            self.device(pull=False, existing=True, passwords={'ubuntu': 'old secret 1'})
+            r, ev, asked = self.install(shell, dict(self.UPDATE, MU300_ANS_KEEP_PASSWORD='yes',
+                                                    MU300_ANS_CURRENT_PASSWORD='old secret 1'))
+            self.assertEqual(self.pw_questions(asked), [('MU300_ANS_KEEP_PASSWORD', 'yes'), ('MU300_ANS_CURRENT_PASSWORD', None),
+                                                        ('MU300_ANS_PASSWORD', None)])
+            self.assertIn('could not read /dev/block/by-name/boot_a', ev[-1]['message'])
+
+    def test_a_password_that_cannot_be_checked_stops(self):
+        for shell in self.each_shell():
+            self.device(pull=False, existing=True, passwords={'ubuntu': 'old secret 1'}, pwcheck='UNVERIFIABLE')
+            r, ev, asked = self.install(shell, dict(self.UPDATE, MU300_ANS_KEEP_PASSWORD='yes',
+                                                    MU300_ANS_CURRENT_PASSWORD='old secret 1'))
+            self.assertIn('could not be checked on the device (UNVERIFIABLE)', ev[-1]['message'])
+            self.device(pull=False, existing=True, passwords={'ubuntu': '!'})
+            r, ev, asked = self.install(shell, dict(self.UPDATE, MU300_ANS_KEEP_PASSWORD='yes',
+                                                    MU300_ANS_CURRENT_PASSWORD='old secret 1'))
+            self.assertIn('has no password login', ev[-1]['message'])
+            self.assertEqual(self.calls('pull'), [])
+            self.assert_nothing_written()
+
+    def test_no_question_without_a_password_to_keep(self):
+        # a fresh installation, a wipe, and an update of a filesystem whose systems have no account of theirs
+        for shell in self.each_shell():
+            self.device(pull=False)
+            r, ev, asked = self.install(shell, ANSWERS)
+            self.assertEqual(self.pw_questions(asked), [('MU300_ANS_PASSWORD', None)])
+            self.device(pull=False, existing=True)
+            r, ev, asked = self.install(shell, self.UPDATE)
+            self.assertEqual(self.pw_questions(asked), [('MU300_ANS_PASSWORD', None)])
+            self.device(pull=False, existing=True, passwords={'ubuntu': 'old secret 1'})
+            r, ev, asked = self.install(shell, dict(ANSWERS, MU300_ANS_EXISTING='wipe'))
+            self.assertEqual(self.pw_questions(asked), [('MU300_ANS_PASSWORD', None)])
+
+    def test_keep_asks_three_times_at_the_terminal(self):
+        # interactive: a wrong entry asks again, three in all, then the run stops before anything is pulled
+        for shell in self.each_shell():
+            self.device(pull=False, existing=True, passwords={'openwrt-luci': 'oldroot99'})
+            env = dict(MU300_OPENWRT='luci', MU300_STORAGE='internal')
+            # systems, default linux, attempts, hotspot, gpu, vpn, adb, kernel, update/wipe, keep, then the passwords
+            answers = ['2', 'yes', '5', 'no', 'no', 'no', 'no', '2', 'update', 'yes', 'a1', 'b2', 'c3']
+            r = self.run_script(shell, 'install.sh', stdin='\n'.join(answers) + '\n', **env)
+            out = r.stdout + r.stderr
+            self.assertEqual(out.count('that is not the current password of "root" in openwrt-luci'), 3, out)
+            self.assertIn('was not confirmed. Nothing was changed', out)
+            self.assertEqual(self.calls('pull'), [])
+            self.assert_nothing_written()
+            # the right one on the second try
+            self.device(pull=False, existing=True, passwords={'openwrt-luci': 'oldroot99'})
+            answers[-2:] = ['oldroot99']
+            r = self.run_script(shell, 'install.sh', stdin='\n'.join(answers) + '\n', **env)
+            out = r.stdout + r.stderr
+            self.assertEqual(out.count('that is not the current password'), 1, out)
+            self.assertIn('confirmed: the password of openwrt-luci stays as it is', out)
+            self.assertIn('could not read /dev/block/by-name/boot_a', out)
+
     def test_every_question_has_a_variable(self):
         # an ask without one cannot be answered in answers mode: none may be added that way
         for name in ('install.sh', 'uninstall.sh', 'tools/storage.sh', 'tools/linux-mode.sh', 'tools/releases.sh'):
