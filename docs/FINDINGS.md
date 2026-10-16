@@ -6904,6 +6904,30 @@ showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
   `assoc_req_ies` (`sc2355/cmdevt.c` -> `common/report.c`), the same bytes that carry the station's own IEs. The
   parser accepts exactly one trailing element and rejects any second marker, which only holds if the firmware
   always appends its own; nothing proves it refuses an association without a completed SAE exchange. Open.
+* **Why it stays open (2026-10-16, PR #237, mixed WPA2-PSK/WPA3-SAE).** Traced through the driver: the only
+  carrier is `EVT_NEW_STATION`, `struct evt_new_station { is_connect; mac[6]; __le16 ie_len; ie[] }`
+  (`sc2355/cmdevt.h`). One length, one byte array: the station's association request IEs - bytes a client chose and
+  sent over the air - and the firmware's `dd 34 40:45:da:04 <PMK 32> <PMKID 16>` record sit in the same element list,
+  with no field, count, flag or MAC that says where the client's part ends. `cmdevt_report_new_station_evt` ->
+  `sprd_report_softap` (`common/report.c`) hands that list to `cfg80211_new_sta` as `assoc_req_ies` unchanged, and
+  hostapd sees it as the request IEs (`nl80211: Assoc Req IEs`). A client can put a record of the same shape as the
+  last element of its own association request, with a PMK it picked and that PMK's PMKID in its RSN element (the
+  PMKID check compares two values the same client supplied). It then finishes the 4-way handshake with a key it
+  knows - without the passphrase - in every case where the firmware forwards such an association without appending a
+  record of its own: an association with the SAE AKM after open authentication, a PMKSA-caching or reassociation path
+  that skips SAE, a firmware build that only appends on some paths. "Exactly one terminal record" defends only the
+  case where the firmware always appends after the client's bytes; the driver cannot tell either way, and neither can
+  hostapd (it never sees the SAE commit/confirm, so it cannot recompute the PMK). PR #237 does not change this
+  transport (its station-event rewrite adds bounds and logging, the same buffer still goes up whole). Closing it
+  needs one of: (a) a firmware-originated transport - a separate event, or a firmware-given boundary/length inside
+  `EVT_NEW_STATION` the driver uses to split the client's IEs from the result and pass the result out of band (and to
+  drop any record of that OUI/type found in the client's part); or (b) evidence from the air: a malicious-client probe
+  (for example a modified wpa_supplicant or injected frames) that associates with the SAE AKM, MFP and a forged
+  trailing record (1) after open authentication with no SAE at all, (2) after a failed SAE (wrong password), (3) with a
+  PMKID for a PMKSA the AP never had, on each firmware the opt-in allows - and shows the firmware refuses (1)-(3) or
+  always appends its own record after the client's. Until then the opt-in (the merged pure-SAE path) carries this
+  exposure, and a mixed-mode variant is not taken. Two driver robustness fixes from #237 that do not depend on it
+  (a NULL channel in `mgmt_tx`, the station event's bounds) were taken on their own.
 * **The stock driver printed secrets at `L_DBG`**: the SAE passphrase (`pwd is :%s`, `vendor.c`), a station PSK
   (`cfg80211.c`, `%s` on a buffer that is not NUL-terminated), every TX command and up to 400 bytes of every RX
   message on PCIe (`pcie.c`, `sdio.c`), the `NEW_STATION` event (`cmdevt.c`). The default level is `L_INFO` and this
