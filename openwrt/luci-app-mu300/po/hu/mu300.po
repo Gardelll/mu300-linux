@@ -2750,8 +2750,8 @@ msgstr "IPv6-védelem"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "Aktív: az alagúton kívüli IPv6 elutasítva"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "Amíg a VPN fut, az IPv6 soha nem megy ki egy azt nem szállító alagút mellett: azonnal elutasításra kerül, így a programok és a LAN-kliensek kiszivárogtatás vagy várakozás helyett IPv4-re váltanak. Automatikus: a WireGuard a konfigurációja IPv6-címeit használja, a többi motor IPv4-en marad."
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "Amíg a VPN fut, az IPv6 soha nem megy ki egy azt nem szállító alagút mellett: azonnal elutasításra kerül, így a programok és a LAN-kliensek kiszivárogtatás vagy várakozás helyett IPv4-re váltanak. Automatikus: a WireGuard és az OpenVPN a konfigurációjuk IPv6-címeit használja; az Xray, a sing-box és a mihomo esetében minden indításkor ellenőrzésre kerül, hogy az IPv6 működik-e az alagúton át, és csak akkor szállítják; a dae IPv4-en marad."
 
 msgid "%d ms"
 msgstr "%d ms"

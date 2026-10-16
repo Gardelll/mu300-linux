@@ -2750,8 +2750,8 @@ msgstr "Gardă IPv6"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "Activ: IPv6 în afara tunelului este refuzat"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "Cât timp VPN-ul este pornit, IPv6 nu iese niciodată pe lângă un tunel care nu îl transportă: este refuzat imediat, astfel că programele și clienții din LAN revin la IPv4 în loc să scape sau să aștepte. Automat: WireGuard folosește adresele IPv6 din configurația sa, celelalte motoare rămân pe IPv4."
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "Cât timp VPN-ul este pornit, IPv6 nu iese niciodată pe lângă un tunel care nu îl transportă: este refuzat imediat, astfel că programele și clienții din LAN revin la IPv4 în loc să scape sau să aștepte. Automat: WireGuard și OpenVPN folosesc adresele IPv6 din configurația lor; pentru Xray, sing-box și mihomo, la fiecare pornire se verifică dacă IPv6 funcționează prin tunel, și numai atunci îl transportă; dae rămâne pe IPv4."
 
 msgid "%d ms"
 msgstr "%d ms"

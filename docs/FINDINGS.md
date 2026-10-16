@@ -4708,6 +4708,29 @@ device, and either installer on a unit with this table.** The shrink itself has 
 issue #2); whether Android formats a 64 GB `userdata` that was shrunk this way after a vendor flash is not known.
 `uninstall.ps1` does not offer to grow `userdata` back; `uninstall.sh` does.
 
+### 59. The VPN page said "the other engines stay IPv4": with the module's IPV6=auto they are asked now (#202)
+
+Issue #202, third point: with `IPV6=auto` a sing-box tunnel stayed IPv4 whatever its server could do. That was what
+auto meant, and what the VPN page says under IPv6: "Automatic: WireGuard uses the IPv6 addresses of its config, the
+other engines stay IPv4." The change is in the VPN module
+([mu300-linux-vpn FINDINGS 26n](https://github.com/dikeckaan/mu300-linux-vpn/blob/main/docs/FINDINGS.md)): Xray,
+sing-box and mihomo are asked at every start - an HTTP request to two IPv6-only addresses through the tunnel, before
+any IPv6 is routed into it - and carry IPv6 only after an answer; `mu300-vpn status --json` says who decided
+(`ipv6.source`: `probe`, `setting` or `config`). Measured there on the U30 Air, both answers on all three engines.
+
+Here only the sentence changes, in the page and in every catalog: "Automatic: WireGuard and OpenVPN use the IPv6
+addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the
+tunnel, and carry it only then; dae stays IPv4." The page's two rows need nothing: "The tunnel carries IPv6" reads
+`ipv6.tunnel`, which is the answer, and "IPv6 guard" stays "Active" beside a tunnel that carries IPv6 because it
+was asked (the module keeps the guard up through such a run: there is no moment between "refused" and "in the
+tunnel"), which is what its text says: IPv6 outside the tunnel is refused. The chip on the overview takes
+`ipv6.tunnel` first, so it says "IPv6 in the tunnel".
+
+With a module from before this (v2.0.1 and earlier) the sentence is ahead of the device: there auto leaves those
+engines on IPv4, as the old sentence said. **Not looked at in a browser:** the page was not opened for this change
+(one string; `tools/luci-i18n.py check` passes), and the translations of the new sentence were written with it,
+not read by a speaker of each language.
+
 ### 60. `/run` takes files from every user: the daemons' directories there are checked, and a squatted name is put out of the way (review of #145/#149)
 
 Found while reviewing the call audio and voice API branches on F50-B (2026-10-13).

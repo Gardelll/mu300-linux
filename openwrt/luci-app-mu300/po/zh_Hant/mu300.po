@@ -2745,8 +2745,8 @@ msgstr "IPv6 防護"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "生效中：拒絕通道外的 IPv6"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "VPN 執行時，IPv6 絕不會在不承載它的通道之外連出：會被立即拒絕，使程式和 LAN 用戶端退回使用 IPv4，而不是外洩或等待。自動：WireGuard 使用其設定中的 IPv6 位址，其他引擎維持 IPv4。"
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "VPN 執行時，IPv6 絕不會在不承載它的通道之外連出：會被立即拒絕，使程式和 LAN 用戶端退回使用 IPv4，而不是外洩或等待。自動：WireGuard 和 OpenVPN 使用其設定中的 IPv6 位址；Xray、sing-box 和 mihomo 在每次啟動時檢測 IPv6 能否通過通道，僅在可以時才承載 IPv6；dae 維持 IPv4。"
 
 msgid "%d ms"
 msgstr "%d ms"

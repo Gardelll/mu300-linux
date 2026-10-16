@@ -2750,8 +2750,8 @@ msgstr "Penjaga IPv6"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "Aktif: IPv6 di luar terowongan ditolak"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "Saat VPN aktif, IPv6 tidak pernah keluar di samping terowongan yang tidak membawanya: langsung ditolak, sehingga program dan klien LAN beralih ke IPv4 alih-alih bocor atau menunggu. Otomatis: WireGuard memakai alamat IPv6 dari konfigurasinya, mesin lain tetap IPv4."
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "Saat VPN aktif, IPv6 tidak pernah keluar di samping terowongan yang tidak membawanya: langsung ditolak, sehingga program dan klien LAN beralih ke IPv4 alih-alih bocor atau menunggu. Otomatis: WireGuard dan OpenVPN memakai alamat IPv6 dari konfigurasinya; untuk Xray, sing-box, dan mihomo, setiap kali mulai diperiksa apakah IPv6 berfungsi melalui terowongan, dan hanya saat itu IPv6 dibawa; dae tetap IPv4."
 
 msgid "%d ms"
 msgstr "%d ms"

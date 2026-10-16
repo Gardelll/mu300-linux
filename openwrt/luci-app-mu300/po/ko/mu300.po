@@ -2750,8 +2750,8 @@ msgstr "IPv6 가드"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "작동 중: 터널 밖의 IPv6는 거부됨"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "VPN이 켜져 있는 동안 IPv6는 이를 전달하지 않는 터널 옆으로 나가지 않습니다. 즉시 거부되므로 프로그램과 LAN 클라이언트는 누수되거나 기다리는 대신 IPv4로 전환합니다. 자동: WireGuard는 구성의 IPv6 주소를 사용하고, 다른 엔진은 IPv4를 유지합니다."
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "VPN이 켜져 있는 동안 IPv6는 이를 전달하지 않는 터널 옆으로 나가지 않습니다. 즉시 거부되므로 프로그램과 LAN 클라이언트는 누수되거나 기다리는 대신 IPv4로 전환합니다. 자동: WireGuard와 OpenVPN은 구성의 IPv6 주소를 사용합니다. Xray, sing-box, mihomo는 시작할 때마다 IPv6가 터널을 통해 동작하는지 확인하고, 동작할 때만 IPv6를 전달합니다. dae는 IPv4를 유지합니다."
 
 msgid "%d ms"
 msgstr "%d ms"

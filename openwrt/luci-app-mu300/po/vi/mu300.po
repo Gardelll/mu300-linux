@@ -2750,8 +2750,8 @@ msgstr "Bảo vệ IPv6"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "Đang hoạt động: IPv6 ngoài đường hầm bị từ chối"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "Khi VPN đang bật, IPv6 không bao giờ đi ra bên cạnh một đường hầm không truyền nó: nó bị từ chối ngay, nên chương trình và máy khách LAN chuyển sang IPv4 thay vì rò rỉ hoặc chờ đợi. Tự động: WireGuard dùng các địa chỉ IPv6 trong cấu hình của nó, các công cụ khác giữ IPv4."
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "Khi VPN đang bật, IPv6 không bao giờ đi ra bên cạnh một đường hầm không truyền nó: nó bị từ chối ngay, nên chương trình và máy khách LAN chuyển sang IPv4 thay vì rò rỉ hoặc chờ đợi. Tự động: WireGuard và OpenVPN dùng các địa chỉ IPv6 trong cấu hình của chúng; với Xray, sing-box và mihomo, mỗi lần khởi động đều kiểm tra xem IPv6 có hoạt động qua đường hầm không, và chỉ khi đó chúng mới truyền IPv6; dae giữ IPv4."
 
 msgid "%d ms"
 msgstr "%d ms"

@@ -79,7 +79,7 @@ or dae list), refreshed by hand or on a schedule; a refresh overwrites edits mad
 |---|---|---|
 | `KILL_SWITCH` | 1 | nothing but the tunnel leaves the device, also while the tunnel is down |
 | `TAILSCALE` | 1 | Tailscale's traffic through the tunnel |
-| `IPV6` | auto | `auto`: IPv6 through the tunnel when the tunnel carries it, otherwise IPv6 is **blocked** beside the tunnel so nothing leaks past the kill switch (the IPv6 guard, v2); `1` always, `0` never |
+| `IPV6` | auto | `auto`: IPv6 through the tunnel when the tunnel carries it (a WireGuard or OpenVPN config's own IPv6 address; Xray, sing-box and mihomo are asked at every start, with a fetch through the tunnel, from the module release after v2.0.1 - before that they stay IPv4), otherwise IPv6 is **blocked** beside the tunnel so nothing leaks past the kill switch (the IPv6 guard, v2); `1` always, `0` never |
 | `REMOTE_DNS` | 1.1.1.1 | DNS for the device and its clients, through the tunnel |
 | `LAN_CIDRS` | empty | more networks that stay local (the device's own LAN always does) |
 

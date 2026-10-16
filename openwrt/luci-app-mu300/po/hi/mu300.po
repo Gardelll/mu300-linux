@@ -2750,8 +2750,8 @@ msgstr "IPv6 गार्ड"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "सक्रिय: टनल के बाहर IPv6 अस्वीकार है"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "VPN चालू होने पर, IPv6 उस टनल के बगल से कभी बाहर नहीं जाता जो उसे नहीं ले जाती: उसे तुरंत अस्वीकार कर दिया जाता है, ताकि प्रोग्राम और LAN क्लाइंट लीक करने या इंतज़ार करने के बजाय IPv4 पर लौट आएँ। स्वचालित: WireGuard अपने कॉन्फ़िग के IPv6 पते इस्तेमाल करता है, बाकी इंजन IPv4 पर रहते हैं।"
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "VPN चालू होने पर, IPv6 उस टनल के बगल से कभी बाहर नहीं जाता जो उसे नहीं ले जाती: उसे तुरंत अस्वीकार कर दिया जाता है, ताकि प्रोग्राम और LAN क्लाइंट लीक करने या इंतज़ार करने के बजाय IPv4 पर लौट आएँ। स्वचालित: WireGuard और OpenVPN अपने कॉन्फ़िग के IPv6 पते इस्तेमाल करते हैं; Xray, sing-box और mihomo के लिए हर शुरुआत पर जाँचा जाता है कि IPv6 टनल से होकर काम करता है या नहीं, और तभी वे उसे ले जाते हैं; dae IPv4 पर रहता है।"
 
 msgid "%d ms"
 msgstr "%d ms"

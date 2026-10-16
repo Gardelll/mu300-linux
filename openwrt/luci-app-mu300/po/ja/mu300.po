@@ -2750,8 +2750,8 @@ msgstr "IPv6 ガード"
 msgid "Active: IPv6 outside the tunnel is refused"
 msgstr "有効: トンネル外の IPv6 は拒否されます"
 
-msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard uses the IPv6 addresses of its config, the other engines stay IPv4."
-msgstr "VPN の稼働中、IPv6 を運ばないトンネルの横から IPv6 が外へ出ることはありません。すぐに拒否されるので、プログラムや LAN クライアントは漏えいや待機ではなく IPv4 に切り替わります。自動: WireGuard は設定内の IPv6 アドレスを使い、他のエンジンは IPv4 のままです。"
+msgid "While the VPN is up, IPv6 never leaves beside a tunnel that does not carry it: it is refused at once, so programs and LAN clients fall back to IPv4 instead of leaking or waiting. Automatic: WireGuard and OpenVPN use the IPv6 addresses of their config; Xray, sing-box and mihomo are asked at every start whether IPv6 works through the tunnel, and carry it only then; dae stays IPv4."
+msgstr "VPN の稼働中、IPv6 を運ばないトンネルの横から IPv6 が外へ出ることはありません。すぐに拒否されるので、プログラムや LAN クライアントは漏えいや待機ではなく IPv4 に切り替わります。自動: WireGuard と OpenVPN は設定内の IPv6 アドレスを使います。Xray、sing-box、mihomo は起動のたびに IPv6 がトンネル経由で通るかを確認し、通る場合だけ IPv6 を運びます。dae は IPv4 のままです。"
 
 msgid "%d ms"
 msgstr "%d ms"
