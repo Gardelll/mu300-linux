@@ -351,7 +351,8 @@ class Model(unittest.TestCase):
         c = model.Choices()
         src = (TOP / 'install.sh').read_text()
         # each default below is the default of the question in install.sh
-        self.assertIn('ask choice "$(t \'Choice\')" 3 MU300_ANS_SYSTEMS', src)
+        # (both where both fit, systems_default; the window narrows it after the check the same way: controller.py)
+        self.assertIn('if [ $SIZE -ge $NEED_BOTH ]; then echo 3; elif [ $SIZE -ge $NEED_UBUNTU ]; then echo 1; else echo 2; fi', src)
         self.assertEqual((c.ubuntu, c.openwrt), (True, True))
         self.assertIn('ask _w "$(t \'Choice\')" 1 MU300_OPENWRT', src)
         self.assertEqual(c.openwrt_flavor, 'plain')

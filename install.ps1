@@ -911,6 +911,18 @@ function ChooseStorage([string]$SdDev, [int64]$SdBytes, [int64]$InternalBytes, [
     if ($Answer -eq 'internal' -or $Answer -eq 'sd') { return $Answer }
     throw 'invalid choice'
 }
+# What Enter chooses (install.sh's systems_default): both when both fit, else Ubuntu when it fits, else OpenWrt. It was
+# always 3, and on the 804 MiB a make-room run of 0.79 GiB leaves Enter stopped the reinstall (FINDINGS 153).
+function SystemsDefault([int64]$Size, [int64]$NeedUbuntu, [int64]$NeedBoth) {
+    if ($Size -ge $NeedBoth) { return '3' } elseif ($Size -ge $NeedUbuntu) { return '1' } else { return '2' }
+}
+# The line under "that choice needs ..." that names the choice that fits here (install.sh's too_small_for_choice);
+# empty when nothing does
+function ChoiceThatFits([int64]$Size, [int64]$NeedOpenWrt, [int64]$NeedUbuntu) {
+    if ($Size -ge $NeedUbuntu) { return (T 'Choose 1 (Ubuntu) or 2 (OpenWrt) instead: one system fits here.') }
+    if ($Size -ge $NeedOpenWrt) { return (T 'Choose 2 (OpenWrt) instead: it fits here.') }
+    return ''
+}
 # The systems a choice stands for (1 Ubuntu, 2 OpenWrt, 3 both), the way install.sh's choose_systems has them. OpenWrt is
 # plain (1) or with the MU300 control panel (2, "openwrt-luci" then stands in the list instead of "openwrt"); $Preset
 # is MU300_OPENWRT (plain|luci) and answers without asking, an empty $Which is the default (plain).
@@ -1614,7 +1626,8 @@ if ($PKG) {
     $need = if ($PM.OS -eq 'ubuntu') { $NEED_UBUNTU } else { $NEED_OPENWRT }
     if ($SIZE -lt $need) {
         $needMib = [int64]($need / 1MB); $haveMib = [int64]($SIZE / 1MB)
-        Die (T 'that choice needs about {1} MiB and this device has {2} MiB of free space' $needMib $haveMib)
+        $fit = if ($SIZE -ge $NEED_OPENWRT) { "`n" + (T 'An OpenWrt zip of this release fits here.') } else { '' }
+        Die ((T 'that choice needs about {1} MiB and this device has {2} MiB of free space' $needMib $haveMib) + $fit)
     }
 } else {
 Write-Host ('  ' + (T '1) Ubuntu LTS: 24.04 or 26.04, asked next (full distribution, apt, ~500 MiB RAM in use)'))
@@ -1624,11 +1637,18 @@ if ($SIZE -lt $NEED_BOTH) {
     $fits = if ($SIZE -ge $NEED_UBUNTU) { T 'one system fits, not both' } else { T 'only OpenWrt fits' }
     Write-Host ('  ' + (T '(this device has {1}: {2})' (Gib $SIZE) $fits))
 }
-switch (Ask (T 'Choice') '3' 'MU300_ANS_SYSTEMS') {
+switch (Ask (T 'Choice') (SystemsDefault $SIZE $NEED_UBUNTU $NEED_BOTH) 'MU300_ANS_SYSTEMS') {
     '1' { $OSES = @('ubuntu') }
     '2' { $OSES = @('openwrt') }
     '3' { $OSES = @('ubuntu', 'openwrt') }
     default { Die (T 'invalid choice') }
+}
+# a choice that does not fit stops here, before the question of which OpenWrt, and says which one fits
+$need = if ($OSES.Count -eq 2) { $NEED_BOTH } elseif ($OSES[0] -eq 'ubuntu') { $NEED_UBUNTU } else { $NEED_OPENWRT }
+if ($SIZE -lt $need) {
+    $needMib = [int64]($need / 1MB); $haveMib = [int64]($SIZE / 1MB)
+    $fit = ChoiceThatFits $SIZE $NEED_OPENWRT $NEED_UBUNTU
+    Die ((T 'that choice needs about {1} MiB and this device has {2} MiB of free space' $needMib $haveMib) + $(if ($fit) { "`n" + $fit } else { '' }))
 }
 if ($OSES -contains 'openwrt') {
     $owPreset = [string]$env:MU300_OPENWRT
@@ -1641,11 +1661,6 @@ if ($OSES -contains 'openwrt') {
         $owAnswer = Ask (T 'Choice') '1' 'MU300_OPENWRT'
     }
     try { $OSES = @(ChooseOpenWrt $OSES $owPreset $owAnswer) } catch { Die (T 'invalid choice') }
-}
-$need = if ($OSES.Count -eq 2) { $NEED_BOTH } elseif ($OSES[0] -eq 'ubuntu') { $NEED_UBUNTU } else { $NEED_OPENWRT }
-if ($SIZE -lt $need) {
-    $needMib = [int64]($need / 1MB); $haveMib = [int64]($SIZE / 1MB)
-    Die (T 'that choice needs about {1} MiB and this device has {2} MiB of free space' $needMib $haveMib)
 }
 $BOOT_OS = $OSES[0]
 if ($OSES.Count -eq 2) {

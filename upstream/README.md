@@ -27,23 +27,25 @@ merged) describes the same GIC/UART/timer layout; this device is derived from th
 ## Build and test
 ```sh
 docker build -t mu300-mainline-build upstream/
-docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.57) into it, checked against kernel.org
+docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.57) into it, signatures checked (keys/)
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build.sh
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build-modules.sh
 upstream/make-bundle.sh mu300-kernel-6.18.tar.gz        # Image for LK, generic ramdisk segment, modules
 # on the device: MU300_KERNEL_BUNDLE=/path/mu300-kernel-6.18.tar.gz mu300-update boot
 ```
-The build stops on anything that drifts silently: a patch that neither applies nor is applied, a config option
+The build stops on a kernel tarball whose signatures do not check out (`verify-kernel-src.sh`: kernel.org's signed
+`sha256sums.asc` and the releaser's `tar.sign`, against the keys pinned in `keys/`, FINDINGS 161) and on anything
+that drifts silently: a patch that neither applies nor is applied, a config option
 Kconfig does not take (unless listed in `config-ignored.txt`), a port edit whose anchor moved, or a module whose
 vermagic does not match the kernel. `tools/make-release.sh` packages the same bundle as `mu300-kernel-6.18.tar.gz`.
 
-The config is allnoconfig plus `mu300-mainline.config`, and then `all-modules.py` (FINDINGS 130): every other
+The config is allnoconfig plus `mu300-mainline.config`, and then `all-modules.py` (FINDINGS 163): every other
 tristate option the boards can use becomes a module - USB devices of every class, filesystems, netfilter, protocols,
 crypto, block, media, iio, hwmon - while what the fragment built in stays built in (checked), bools change only where
 `all-modules.config` opens a family, and `all-modules.exclude` keeps out test/debug code, PCI cards, and the drivers
 of chips only a board's device tree wires up. `check-dt-modules.py` then fails the build if a module would bind to a
 node of the vendor device tree (`dt-compatibles.txt`) by itself. `MU300_ALL_MODULES=0` builds the fragment alone.
-On the devices `mu300-modprobe-guard` (the kernel's module helper from boot on; FINDINGS 130) keeps the modules of
+On the devices `mu300-modprobe-guard` (the kernel's module helper from boot on; FINDINGS 163) keeps the modules of
 `/opt/mu300/lib/autoload-blocked` (rare protocols, filesystems, line disciplines) from being loaded on demand;
 root loads them with `modprobe NAME`.
 In the fragment, what the board and the boot need is built in, along with

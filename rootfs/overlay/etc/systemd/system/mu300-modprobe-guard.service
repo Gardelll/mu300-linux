@@ -1,5 +1,5 @@
 [Unit]
-Description=MU300: rare protocols and filesystems not loaded on demand (mu300-modprobe-guard, FINDINGS 130)
+Description=MU300: rare protocols and filesystems not loaded on demand (mu300-modprobe-guard, FINDINGS 163)
 DefaultDependencies=no
 After=local-fs.target systemd-sysctl.service
 Before=sysinit.target

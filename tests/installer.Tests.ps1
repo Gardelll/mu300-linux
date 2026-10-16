@@ -15,7 +15,7 @@ function Check($name, $got, $want) {
 
 # the functions under test, straight from install.ps1
 $ast = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $Top "install.ps1"), [ref]$null, [ref]$null)
-$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'AndroidLines', 'LinuxAdbSerials', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused', 'PackageDir', 'PackageManifest', 'PackageCheck'
+$want = 'LoadLanguage', 'T', 'NormalizeAnswer', 'AndroidLines', 'LinuxAdbSerials', 'Gib', 'ChooseStorage', 'StorageDefault', 'InternalOverCard', 'SdState', 'SdKernelOk', 'InstallEnvText', 'ChooseOpenWrt', 'AdbPubKey', 'BootchainLine', 'BootchainRefused', 'PackageDir', 'PackageManifest', 'PackageCheck', 'SystemsDefault', 'ChoiceThatFits'
 $defs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $want -contains $n.Name }, $true)
 foreach ($d in $defs) { . ([scriptblock]::Create($d.Extent.Text)) }
 foreach ($w in 'LoadLanguage', 'T', 'NormalizeAnswer') {
@@ -88,6 +88,16 @@ $bare = ChooseOpenWrt @('openwrt') 'luci' ''
 Check 'owrt bare result unrolls'  ($bare -is [string]) $true
 $site = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
 Check 'owrt call site wraps in @()'  ($site -match '\$OSES = @\(ChooseOpenWrt ') $true
+# ---- SystemsDefault, ChoiceThatFits: Enter chooses what fits; a refusal names it (FINDINGS 153) -----------------------
+LoadLanguage 'en'
+Check 'systems default both'      (SystemsDefault 2400MB 1600MB 2400MB) '3'
+Check 'systems default one'       (SystemsDefault 2399MB 1600MB 2400MB) '1'
+Check 'systems default openwrt'   (SystemsDefault 804MB 1600MB 2400MB) '2'
+Check 'fits openwrt'              (ChoiceThatFits 804MB 800MB 1600MB) 'Choose 2 (OpenWrt) instead: it fits here.'
+Check 'fits one'                  (ChoiceThatFits 2000MB 800MB 1600MB) 'Choose 1 (Ubuntu) or 2 (OpenWrt) instead: one system fits here.'
+Check 'fits nothing'              (ChoiceThatFits 700MB 800MB 1600MB) ''
+Check 'systems default call site' ($site -match 'Ask \(T ''Choice''\) \(SystemsDefault \$SIZE ') $true
+LoadLanguage 'tr'   # (as the checks below have always run)
 foreach ($pair in @(@('', 'openwrt'), @('luci', 'openwrt-luci'))) {
     $OSES = @(ChooseOpenWrt @('openwrt') $pair[0] '')
     Check "owrt single [$($pair[1])] first"  $OSES[0] $pair[1]

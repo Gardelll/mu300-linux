@@ -688,7 +688,9 @@ package_choices() {
     [ "$DEVICE" != v50 ] || [ "$KERNEL" != 5.4 ] ||
         die "$(t 'The ZTE V50 runs a mainline kernel only: take the zip for kernel 6.18 or 7.2 of this release')"
     need=$NEED_OPENWRT; [ "$OSES" = ubuntu ] && need=$NEED_UBUNTU
-    [ $SIZE -ge $need ] || die "$(t 'that choice needs about {1} MiB and this device has {2} MiB of free space' "$((need / 1048576))" "$((SIZE / 1048576))")"
+    _fit=; [ $SIZE -lt $NEED_OPENWRT ] || _fit=$(t "An OpenWrt zip of this release fits here.")
+    [ $SIZE -ge $need ] || die "$(t 'that choice needs about {1} MiB and this device has {2} MiB of free space' "$((need / 1048576))" "$((SIZE / 1048576))")${_fit:+
+$_fit}"
 }
 # --- package-choices end
 if [ -n "$PKG" ]; then
@@ -698,12 +700,28 @@ echo "  $(t '1) Ubuntu LTS: 24.04 or 26.04, asked next (full distribution, apt, 
 echo "  $(t '2) OpenWrt {1} (router, LuCI web UI, ~140 MiB RAM in use)' "$OWRT_VER")"
 echo "  $(t '3) both (switch later with: mu300-os ubuntu|openwrt)')"
 [ $SIZE -lt $NEED_BOTH ] && echo "  $(t '(this device has {1}: {2})' "$(gib $SIZE)" "$([ $SIZE -ge $NEED_UBUNTU ] && t 'one system fits, not both' || t 'only OpenWrt fits')")"
-ask choice "$(t 'Choice')" 3 MU300_ANS_SYSTEMS
 # --- choose-systems begin
+# systems_default: what Enter chooses - both when both fit, else Ubuntu when it fits, else OpenWrt (the window chooses
+# so too). It was always 3: on the 804 MiB a make-room run of 0.79 GiB leaves, Enter stopped with "that choice needs
+# about 2400 MiB", which reads as "make room again" on a reinstall (FINDINGS 153).
+systems_default() {
+    if [ $SIZE -ge $NEED_BOTH ]; then echo 3; elif [ $SIZE -ge $NEED_UBUNTU ]; then echo 1; else echo 2; fi
+}
+# too_small_for_choice NEED: the refusal of a choice that does not fit here, with the choice that does
+too_small_for_choice() {
+    _fit=$(t 'Choose 2 (OpenWrt) instead: it fits here.')
+    [ $SIZE -lt $NEED_UBUNTU ] || _fit=$(t 'Choose 1 (Ubuntu) or 2 (OpenWrt) instead: one system fits here.')
+    [ $SIZE -ge $NEED_OPENWRT ] || _fit=
+    die "$(t 'that choice needs about {1} MiB and this device has {2} MiB of free space' "$(($1 / 1048576))" "$((SIZE / 1048576))")${_fit:+
+$_fit}"
+}
 # choose_systems: OSES from $choice (1 Ubuntu, 2 OpenWrt, 3 both); OpenWrt is asked which one (MU300_OPENWRT=plain|luci
 # answers without asking), "openwrt-luci" then stands in OSES instead of "openwrt"; BOOT_OS is the system that boots.
+# A choice that does not fit stops before the question of which OpenWrt.
 choose_systems() {
-    case $choice in 1) OSES=ubuntu ;; 2) OSES=openwrt ;; 3) OSES="ubuntu openwrt" ;; *) die "$(t 'invalid choice')" ;; esac
+    case $choice in 1) OSES=ubuntu; need=$NEED_UBUNTU ;; 2) OSES=openwrt; need=$NEED_OPENWRT ;; 3) OSES="ubuntu openwrt"; need=$NEED_BOTH ;;
+        *) die "$(t 'invalid choice')" ;; esac
+    [ $SIZE -ge $need ] || too_small_for_choice $need
     case " $OSES " in *" openwrt "*)
         case ${MU300_OPENWRT:-} in
             plain) _w=1 ;;
@@ -717,9 +735,6 @@ choose_systems() {
         esac
         case $_w in 1) ;; 2) OSES=$(echo "$OSES" | sed 's/openwrt/openwrt-luci/') ;; *) die "$(t 'invalid choice')" ;; esac ;;
     esac
-    need=$NEED_OPENWRT; [ "$OSES" = ubuntu ] && need=$NEED_UBUNTU
-    case $OSES in "ubuntu openwrt"*) need=$NEED_BOTH ;; esac
-    [ $SIZE -ge $need ] || die "$(t 'that choice needs about {1} MiB and this device has {2} MiB of free space' "$((need / 1048576))" "$((SIZE / 1048576))")"
     BOOT_OS=${OSES%% *}
     case $OSES in *" "*)
         _names=$(echo "$OSES" | tr ' ' '/')
@@ -728,6 +743,7 @@ choose_systems() {
     esac
 }
 # --- choose-systems end
+ask choice "$(t 'Choice')" "$(systems_default)" MU300_ANS_SYSTEMS
 choose_systems
 UBUNTU=24.04
 case " $OSES " in *" ubuntu "*) if [ $MODE = prebuilt ]; then
