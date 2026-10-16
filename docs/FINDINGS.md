@@ -149,6 +149,7 @@ what replaced it. The table below gives each section's state.
 | 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
 | 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
 | 104 | The U30 Air's live SIM switch turned mobile data back on that the user had switched off (kanoqwq 2d3b6f3f) | current (fixed; unit tests only, not run on a device) |
+| 105 | The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written (kanoqwq 2af101f8) | current (patch 0018; built for 7.2.10, a model test of the callback; not run on a device) |
 | 106 | Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes (kanoqwq 0e19fe32) | current (fixed in the mainline module and as a 5.4 patch; both built; not run on a device) |
 | 110 | The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it | current (unit and Node tests against the real mu300-api; the device protocol run with the page's modules over WebUSB on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-16: six defects fixed; rows 6, 9, 16 and the Android restart not run) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
@@ -8830,6 +8831,59 @@ on either bearer and no redial in the log. `switch 1`: the same back (`sim_slot`
 `switch 1` with SIM1 in use and data off: `switched`, no bearer wait. Data on (`ifup wan`), `switch 2`: SIM2 has no
 data, so `no_data`, rolled back to SIM1, wan up again on SIM1 with a new address (unchanged behaviour). The case
 "data on, `switch 2` dials SIM2" could not be run: SIM2 has no service here.
+
+### 105. The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written
+
+From kanoqwq's clean-tf-7.2 `2af101f8` ("complete U30 Air power, LED and PD dock support"), his patch 0017 ("retain
+live soc before reset"), on top of the same 0006/0010/0011 as ours (his copies are byte for byte ours). Rewritten here
+as `upstream/patches/0018-power-sc27xx-fuel-gauge-UMP9620-capacity-kept-at-power-off.patch`; his code read, not run.
+
+**What it is about.** The capacity a U30 Air boots with, under Linux or Android, is the one in the FGU's always-on
+user area (§33d). Since 0011 the driver writes it there whenever somebody reads the capacity and its whole percent
+has changed. Two gaps:
+
+* **Nobody has to read it before a power-off.** Here mu300-power reads it every 10 s (its loop), so the gap is at most
+  a loop; without that daemon (stopped, or a power-off right after a change, which is when the low-battery power-off
+  runs) the next boot starts from an older value. A `.shutdown` callback now reads the capacity once more under the
+  driver's lock, writes it (0-100) and the boot mode "normal power-on" with it. Only on UMP9620 with a battery present:
+  the F50 and the V50 have none (their FGU reports made-up values), SC2731 keeps mainline's behaviour, and a probe
+  that never finished (no driver data) is skipped. A failure is a `dev_warn`, never a stop: a power-off must go on.
+* **The user-area writes could be skipped.** The area is written in three steps: CLEAR (the mask), SET (the value),
+  CLEAR back to 0. `regmap_update_bits()` reads a register first and does not write when the bits already read back
+  as wanted. What these two registers read back is not documented; kano found that a skipped step loses the value
+  ("retained SET/CLEAR registers require unconditional writes even when their readback is unchanged"). The six writes
+  of `save_boot_mode()` and `save_last_cap()` are now `regmap_write_bits()`, which always writes. The values are the
+  same; each write was already followed by the datasheet's 200 us wait. Whether a skip ever happened on our boards is
+  not known: nothing here measured the read-back.
+
+**Built** for 7.2.10 in a copy of the `mu300-mainline` volume's tree (all of our patches, then this one;
+`CONFIG_FUEL_GAUGE_SC27XX=y`, `W=1`): no warning. The file is the same in our 6.18.56 tree, so the patch applies there
+too. **Unit tests:** `tests/test_fgu_shutdown.py` compiles the callback as the patch adds it against stubs of the
+driver's helpers: the capacity kept and clamped, the boot mode with it, nothing written after a failed read or a
+failed capacity write, the lock released on every path, nothing on SC2731, without a battery or without driver data;
+`tests/test_static.py` checks the patch's lines.
+
+**Device checklist (before merge; U30 Air, either system on a mainline kernel with this patch; an F50 for the
+negative):**
+
+    cat /sys/class/power_supply/sc27xx-fgu/capacity          # note it, e.g. 63
+    dmesg | grep -i 'boot capacity'                          # this boot's start
+    # run on battery until the capacity has dropped a few percent, stop mu300-power (systemctl stop mu300-power /
+    # /etc/init.d/mu300-power stop), let it drop one more percent without reading it, then poweroff
+    # power on: dmesg 'boot capacity N % (saved 0x...)' with N the last value, not the one of the last read
+    reboot; dmesg | grep -i 'battery capacity not kept'     # nothing
+    # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
+    # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
+
+**Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
+built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
+callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
+(saved 0x050)` every boot, the same as the capacity read before each reboot, no warning or oops. The battery stayed at
+80 % (`Not charging` on USB), so a capacity that changed without being read was not produced, and `poweroff` was not
+run: the U30 Air has a battery, so nothing here can switch it on again without a button. The low-battery power-off
+of `mu300-power` was not reached (not drained); it ends in the same `poweroff` path. F50-B (Ubuntu, no battery),
+7.2.11 + 0018: boots, the fuel gauge's messages are the same as without 0018 (it reads `boot capacity` from the user
+area as before), the reboot completed with nothing new in the log. Android after Linux was not checked.
 
 ### 106. Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes
 
