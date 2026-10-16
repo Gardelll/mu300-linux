@@ -156,6 +156,7 @@ what replaced it. The table below gives each section's state.
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 | 152 | The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware and its guide (it was the other way round); stock's network light shows the SIM in use, not 4G/5G (not changed) | current (read from the stock firmware and ZTE's guide; not yet looked at on a device) |
+| 154 | The U30 Air's network LED shows the SIM in use, as ZTE's firmware and its guide: white the nano-SIM (slot 0), blue the eSIM (slot 1), red no service, the target's colour blinking during a live switch; no longer 4G/5G | current (read from the stock firmware and ZTE's guide; unit tests; not yet looked at on a device) |
 
 ## Hardware and firmware facts
 
@@ -2752,6 +2753,9 @@ at a time, while someone watched the device, showed where they are:
 | network | red | the PMIC's keypad backlight sink (`keyboard-backlight`) |
 | Wi-Fi | white | LDO VDDCAMA1 |
 | Wi-Fi | blue | LDO VDDCAMA2 |
+
+**Update 2026-10-16:** the network light's white and blue mean the SIM in use (white slot 0, blue slot 1), not 5G and
+4G (§154).
 
 **Update 2026-10-16:** which Wi-Fi colour means which band was a guess here, and the wrong way round (§152): ZTE's
 firmware lights the white one (VDDCAMA1) on 5 GHz and the blue one (VDDCAMA2) on 2.4 GHz.
@@ -8433,4 +8437,62 @@ light by the SIM in use, not by the access technology: 11 (VDDCAMA0, white) for 
 set on this unit. The guide says the same (blue: the built-in eSIM in use, white: the nano-SIM; blinking while the SIM
 is switched; white/blue with red flashing: no internet on that SIM). §33f's "blue on 4G, white on 5G" was sampled
 with the radio off and `vddcama0` lit on 5G, which a nano-SIM in slot 0 would also explain. `mu300-led` still shows
-4G/5G.
+4G/5G. **Update:** changed in §154.
+
+### 154. The U30 Air's network LED: the SIM in use, as ZTE's firmware (white slot 0, blue slot 1, red no service)
+
+**Status: current** (read from the stock firmware and ZTE's guide, 2026-10-16; unit tests; not yet looked at on a
+device).
+
+**What was wrong.** `mu300-led` lit the U30 Air's network light blue on 4G (`net_blue`) and white on 5G (LDO
+VDDCAMA0, `zte-ldo0`), as on the F50. §152 found that ZTE's firmware does not do that on this device: its
+`NotificationManagerService.setNetLight()` (U30 Air backup, build `U30Air_SSV1.0.0B14`, `system/framework/services.jar`)
+picks the colour by `mSimSlotId`, not by the access technology:
+
+- SIM ready and connected: `mWifiLight.setFlashing(11, ...)` for slot 0, `12` for slot 1 (dual SIM; a single-SIM
+  build always 11). The lights HAL (`vendor.sprd.hardware.lights-service`, the keyboard light's handler) lights
+  VDDCAMA0 for 11 (white) and `net_blue` for 12 (blue).
+- No SIM or not connected (`!mSimReady || !mNetConnected`), or `mNetValue` 1: 13, the red (`keyboard-backlight`); with
+  `FLASH_NONETWORK` a runnable flashes it instead.
+- A SIM switch (`zte.intent.action.sim_switch`): `mSwitching`, the light first off (10), then `switchSimRunnable`
+  until the new card is up.
+- The variant that picks by 4G/5G, `ZTE_FEATURE_UFI_LIGHT_V1`, is not set on this unit.
+
+ZTE's guide for the U30 Air (https://oss.ztedevices.com/prod/cn/2024/12/20241213641.pdf, the network light) says the
+same: blue, the built-in eSIM in use; white, the nano-SIM; blinking while the SIM is switched; red, no service; white
+or blue with red flashing, no internet on that SIM. Slot 0 is the nano-SIM (`mu300-sim select external`), slot 1 the
+eSIM (`internal`). §33f's "blue on 4G, white on 5G" was sampled with the radio off and `vddcama0` lit on 5G, which the
+nano-SIM in slot 0 explains as well.
+
+**The change** (`rootfs/overlay/opt/mu300/bin/mu300-led`, one program for Ubuntu and OpenWrt):
+
+- U30 Air, `data on` and `data 5g` (mobile-data still says which; the F50 and the V50 keep 4G/5G): white
+  (`zte-ldo0`, `vddcama0_status` under 5.4) for slot 0, blue (`net_blue`) for slot 1, the other colour and the red
+  dark. `data error` is red alone and `data off` dark, as before.
+- The slot is this boot's pin, `/run/mu300/sim-slot`, which the AT daemons and mobile-data read too (the saved
+  choice is never read: it is tomorrow's). `mu300-led` never creates the file (that would pin a slot before
+  `init.d/mu300-atd` chose one); missing or anything but `1` is slot 0. A `1` counts only on OpenWrt, where
+  `mu300-sim` supports slot 1 on the U30 Air; on Ubuntu `mu300-sim active` answers 0 for it, and so does the LED.
+- A live switch (`mu300-sim-u30 switch`, OpenWrt): once the old connection is taken down, `mu300-led data
+  switching <target>` makes the target card's colour blink (the timer trigger, 0.5 s on, 0.5 s off; the 5.4 kernel's
+  LDO switches have no trigger, so there it is steady). netifd's teardown of the old connection comes whenever it
+  comes; its `data off`/`data error` leave the blink alone while `/run/mu300/sim-switching` is there and the switch was
+  announced. The dial on the new card (`led_up`, refused while the switch marker exists) shows its colour steady; a
+  rollback's dial the old card's. A switch that ends without a dial (no data on either card, a radio left unknown and a
+  reboot) clears the marker, and the next `off`/`error` is shown as usual. The blink survives the LED timeout and idle
+  like every other state (`sleep` puts it out, `wake` starts it again).
+- The call is cosmetic: `mu300-sim-u30` ignores a missing or failing `mu300-led` (`MU300_LED_CMD` for tests).
+
+**Not done.** ZTE's "white or blue with red flashing" for a SIM without internet: here a card registered but
+without data is dark (`data off`), as before; whether that should flash red as well is the owner's call.
+
+**Tests** (`tests/test_device_scripts.py`, `Led`, every shell): both slots with `on`, `5g`, `on` (no colour change
+with the technology), `error` and `off`; the slot sources (none: slot 0 and no file made; `1` on Ubuntu: slot 0; junk:
+slot 0; `1` on OpenWrt: blue); the switch blink (the timer trigger and its delays, held through `off` and `error` while
+switching, kept across `sleep`/`wake`, steady on the next `on`, released once the marker is gone, a bad slot refused,
+other devices unaffected); the 5.4 LDO switch steady. `tests/test_sim_hot.py`: the switch calls `mu300-led data
+switching <slot>` after `ifdown wan` with the marker set, and a failing or missing `mu300-led` changes nothing.
+
+**On a device (to do):** a U30 Air on OpenWrt with both cards: the network light white on the nano-SIM, blue on the
+eSIM, whatever 4G or 5G; blinking during a live switch from the panel, steady in the new colour when data is up; red
+with no SIM; Ubuntu on the U30 Air white.
