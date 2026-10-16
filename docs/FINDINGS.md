@@ -155,6 +155,7 @@ what replaced it. The table below gives each section's state.
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
+| 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 
 ## Hardware and firmware facts
 
@@ -8446,3 +8447,62 @@ was never resized (sectors 12275712..120500223 throughout).
 **Open.** install.sh does not compare the partition table on the disk with what the running kernel shows before it
 uses the region (offer_repartition does, for userdata); only the grow path of uninstall.sh can make them differ, and
 it now says to restart.
+
+### 156. The release smoke test: tools/smoke.py
+
+**Status: current** (unit tests with fakes, `tests/test_smoke.py`; not yet run against a device).
+
+**What it replaces.** After a release the maintainers updated a few boards by hand - an F50 with Ubuntu, an F50 with
+OpenWrt, the U30 Air with OpenWrt and the control panel, sometimes the Magisk zip from Android - and looked at the
+version, the kernel, the services, the hotspot, mobile data and the VPN afterwards. `tools/smoke.py` does that from a
+local config of the boards (`tools/smoke.json`, ignored by git; `tools/smoke.example.json`) and prints one line per
+check and board. docs/RELEASING.md describes the fields, the checks and what stays manual.
+
+**Identity before anything.** The address does not say which board answers: every F50 is 192.168.77.1 on its USB
+network and every U30 Air 192.168.78.1, and an F50-B and an F50-C on the bench look the same. So no command runs before every board of the run has been identified: the SSH host key from `ssh-keyscan` must have the
+config's SHA256 fingerprint (computed in Python from the key blob, the way `ssh-keygen -lf` does: SHA-256 of the
+decoded blob, base64 without padding), and only that key goes into a known_hosts file of the run, used with
+`StrictHostKeyChecking=yes` and no other known_hosts file. Then `/proc/sys/kernel/hostname`, `mu300-device --json`'s
+device and system (docs/ADB-INTERFACE.md; a release without `--json` prints the device alone) and the adb serial when
+the config has one. One mismatch on any board and the run stops with exit status 2 before a single command that
+changes something: the boards that did match are not touched either. After the reboot the same checks run again.
+
+**Android only when the config says so.** The Magisk path goes through Android (the zip installs from Magisk; a board
+in Linux is first sent there with `mu300-next-boot android`). A board takes that path only with `"allow_android":
+true`: the config validation refuses it otherwise, for the U30 Air and every other model, and the one function that
+sends a board to Android checks the setting again. The other paths reboot only when `/etc/mu300/default-boot` is
+`linux`, checked in the state before the update and again on the device in the reboot script itself: on a device
+whose default boot is Android a reboot goes to Android by itself (the U30 Air on 2026-10-12, see `reboot_goes_to_android`
+in mu300-update).
+
+**No secret leaves the device.** The VPN's files under `/etc/mu300/*vpn*` hold keys and passwords. They are hashed on the
+device (`find /etc/mu300 -path '*vpn*' -type f -exec sha256sum {} \;`), and only the hashes come back; the report says
+`unchanged (N files)` or names the changed, gone and new files, never a hash. Of `mu300-vpn status --json` six fields
+are kept (enabled, running, the kill switch setting, the profile id, the engine, whether the tunnel is up): no
+address, no exit IP, no profile name.
+
+**Commands from validated values only.** Every value of the config that reaches a command line - host, user, port,
+serials, the mirror URL, the device path, the zip's name, `mu300-update`'s arguments, the tag (FINDINGS 125's two
+forms) - must match a strict pattern whole (letters, digits and a few of `. _ - : / ~`; no `..` component), and the
+config is JSON with duplicate keys and unknown fields refused. The device side is four fixed scripts sent on `sh -s`'s
+standard input, with no value of the config in them. Every subprocess has a timeout; the waits for the reboot are
+bounded (`down`, `boot`), and so are the update itself (`apply`, an hour) and the zip's install.
+
+**The update paths**, read from mu300-update and the docs: online is `MU300_RELEASE=TAG mu300-update apply`; a mirror
+adds `MU300_RELEASE_URL=<mirror>/TAG` (as in docs/update-device-test.md; a `file://` URL needs curl on the device,
+busybox wget has none); `--from DIR` takes a release directory on the device, which the harness can fill with `scp`
+from a local release directory; the Magisk zip is `adb push` and `su -c 'magisk --install-module ...'`, as
+android/magisk/README.md installs a module from a computer, then `adb reboot`. A failed update is not followed by a
+reboot.
+
+**Tests.** `tests/test_smoke.py` runs the harness against a fake transport (simulated boards answering the identity
+and state scripts, rebooting on a fake clock, an Android side on adb): hostile config values, every identity mismatch
+refused with no changing call made, Android never reached without `allow_android`, a default boot of Android never
+rebooted, the comparisons, a board that never comes back (the run ends at the timeout), the Magisk path's order, the
+dry run with a transport that fails on any call, the report's lines and exit codes, and the device scripts under each
+shell with `sh -n`. The fingerprint is compared with `ssh-keygen -lf` on a key made for the test.
+
+**Open.** Not run against a device yet: the state script's commands (`systemctl list-units`, `iw dev`, `ip -4 -o`,
+`/etc/init.d/* running`) are each in use on the images, but the whole script has run only on a computer. A Magisk
+install on a device without Linux cannot be identified after its first boot (its SSH host key is new), so that path is
+for an update over an installed system.
