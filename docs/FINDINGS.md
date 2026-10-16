@@ -8439,6 +8439,60 @@ is switched; white/blue with red flashing: no internet on that SIM). §33f's "bl
 with the radio off and `vddcama0` lit on 5G, which a nano-SIM in slot 0 would also explain. `mu300-led` still shows
 4G/5G. **Update:** changed in §154.
 
+### 153. A reinstall after an uninstall on a device that made room: "it asks to repartition again"
+
+**The report** (a user, through the owner, 2026-10-16): a device whose userdata the installer had shrunk (the make-room
+path, the 32 GB variant), uninstalled and installed again; the installer asked to repartition again.
+
+**What can ask that.** Only `offer_repartition` (install.sh) / `OfferRepartition` (install.ps1) makes room, and only
+when the region behind the last partition is under 700 MiB (install.sh, after `region_probe`; install.ps1 the same
+test after `FreeRegion`). The window offers it from the same facts (`makeroom.*`), the web installer and the Magisk
+zip never (the zip says "make room with the installer for computers" when the region is under 700 MiB or too small
+for its system). `region_probe` and `resume_region` are the same arithmetic, so the region a reinstall finds is
+exactly the one the make-room run reserved (F50-C: userdata ends at sector 120500223, the region starts at
+120504320 and holds 804 MiB, both before and after the uninstall). A finished resumed installation is `installed` in
+its transaction, which `resume.py find` skips, so a reinstall is never taken for a resume (F50-C's transaction in
+`~/mu300-backups` was `installed`). Android does not touch the GPT (a factory reset formats userdata in place).
+
+So a reinstall asks to make room only where the space really went back to userdata - **the uninstaller's own
+question**: "Grow userdata back over the freed space? ... Say yes only if this installer shrank it." On exactly this
+device the installer did shrink it, so the text invited the yes; it did not say that a reinstall then has to make room
+again, with another reset of Android. uninstall.sh (and the window's checkbox, which drives it) is the only path that
+can grow it, and only after yes and ERASE; uninstall.ps1 has no such question. That is the likely cause of the
+report.
+
+**What a reinstall without the grow met (F50-C, plain OpenWrt v2026.10.16.1 k6.18 in the 804 MiB region).**
+- `uninstall.sh` WIPE=quick, GROW=no; `install.sh --check`: "data check: 14 of 16 samples contain data", "WARNING:
+  the unpartitioned space is not empty; it may be used by this firmware" - the quick erase zeroes 64 MiB, the old
+  files stay. The install then wants the word `overwrite`. No make-room question; the reinstall (systems 2) went
+  through.
+- `uninstall.sh` WIPE=secure: 0 of 16 samples, "OK: free and empty, but small: OpenWrt fits, Ubuntu does not".
+- **Enter at "What should be installed?"** chose 3 (both) on the 804 MiB region, asked which OpenWrt, and stopped:
+  "that choice needs about 2400 MiB and this device has 804 MiB of free space". For someone who made room before,
+  that reads as "make room again". install.ps1 had the same default.
+- The uninstaller said "overwrite the whole 0 GiB region" and "overwriting 0 GiB" (integer GiB of 804 MiB).
+
+**Changed.**
+- install.sh `systems_default` / install.ps1 `SystemsDefault`: Enter chooses what fits - 3 where both fit, 1 where
+  only one does (Ubuntu, as the window chooses after its check), 2 where only OpenWrt does. A choice that does not fit
+  stops right after the question, before "which OpenWrt", and names the one that fits ("Choose 2 (OpenWrt) instead:
+  it fits here."; a package of a system that does not fit: "An OpenWrt zip of this release fits here.").
+- uninstall.sh: the grow question says to answer no when Linux may be installed again, and that after yes a new
+  installation has to make room again (another reset of Android); the window's checkbox the same. After a grow it says
+  to restart before anything else: Android's kernel keeps the table it booted with, and an installer run before the
+  restart reads the partition ends from sysfs - it would take the space just given to userdata for free space.
+- uninstall.sh / uninstall.ps1: the quick erase says that a later installation finds the space not empty and asks for
+  `overwrite`; sizes in MiB.
+
+**Device run of the change (F50-C).** After the secure uninstall: MU300_ANS_SYSTEMS=3 stops with the line above and
+"Choose 2 (OpenWrt) instead: it fits here." before anything is written; Enter shows `Choice [2]` and installs plain
+OpenWrt v2026.10.16.1 on 6.18 into the same region (MU300-INSTALL-OK, root's password checked on the device). userdata
+was never resized (sectors 12275712..120500223 throughout).
+
+**Open.** install.sh does not compare the partition table on the disk with what the running kernel shows before it
+uses the region (offer_repartition does, for userdata); only the grow path of uninstall.sh can make them differ, and
+it now says to restart.
+
 ### 154. The U30 Air's network LED: the SIM in use, as ZTE's firmware (white slot 0, blue slot 1, red no service)
 
 **Status: current** (read from the stock firmware and ZTE's guide, 2026-10-16; unit tests; not yet looked at on a
