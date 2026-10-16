@@ -5551,6 +5551,19 @@ Update page gained the same setting - a *Mirror (release files)* field, written 
 command - an account that may use that page's write access can change the source as well, and its read access is what
 shows the address in force.)
 
+**When the mirror is not there.** A run whose mirror cannot be reached says so once and takes the rest of that run
+from github.com - but only for a mirror that is really absent: curl's connect-class failures (6 7 35 52), or a stall
+(28, 56) before a single byte arrived. A transfer that delivered bytes and then stalled is a working mirror on a bad
+line, and the run resumes from it with `-C -`, because the people who set a mirror are often the ones who cannot
+reach GitHub. The fallback happens by itself only for an https mirror on a public name: a plain-http mirror or a
+private address / LAN-only name is almost always a copy on the LAN, kept so the release does not come over a metered
+SIM, and there the update stops and says why. `MU300_MIRROR_FALLBACK=0|1` in the same file decides it for every
+mirror (the file only, never the environment). A self-update handover passes the state on
+(`MU300_MIRROR_FELL_BACK=1` in the environment of the release's own updater, which then does not wait for the same
+mirror again); the panel's adapter clears that variable like every other source variable. With the mirror field,
+`curl` joined the OpenWrt image so the exit codes exist there too: every OpenWrt update download moved from
+uclient-fetch to curl, mirror or not.
+
 **What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
 (`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's
 ubus endpoint takes POSTs with a session. Every parameter is a fixed word, a release tag

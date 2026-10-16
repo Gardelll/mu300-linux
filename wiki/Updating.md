@@ -106,11 +106,14 @@ answer too: the run keeps taking the files from it rather than moving to GitHub,
 setting exists for.
 
 If the device is on a metered link, that fallback can be the expensive answer - the release would come over mobile
-data. One line in the same file turns it off, and an update your mirror cannot serve then fails, exactly as it did
-before there was a mirror:
+data. So it only happens by itself for an **https mirror on a public name**. A plain-`http://` mirror, or one on a
+private address or a LAN-only name (`192.168.x.x`, `10.x.x.x`, `172.16-31.x.x`, `nas.lan`, `box.local`, a name
+without a dot), is usually a copy on your own network; when it is off, the update stops and says why instead of
+quietly taking the release from GitHub over the SIM. One line in the same file decides it for every mirror:
 
 ```
-MU300_MIRROR_FALLBACK=0
+MU300_MIRROR_FALLBACK=0    # never fall back: an update your mirror cannot serve fails
+MU300_MIRROR_FALLBACK=1    # always fall back, LAN and http mirrors too
 ```
 
 ## What an update keeps
