@@ -8513,3 +8513,45 @@ boot. "Back to the stock voltages" needs no word. Nothing changes before the nex
 **Not known, and what the device test has to show.** Whether DVFS_INIT with a negative value behaves as the analysis
 says (kano never ran one); the voltages the firmware then reports (PAIR_GET) against the regulators' readback; the
 SRAM rail (moved with the CPU rail, not visible from Linux); the U30 Air's SML; the gap above.
+
+**F50-C, 2026-10-16/17: device plan steps 1-8 and 10 (OpenWrt v2026.10.16.1, with this PR's driver and init on
+6.18.57).** SML: both copies are `ff478269...`, the known build (the same as F50-B's). `dcdc_max` is 1596875 uV.
+
+* **Offset 0.** The driver reports `applied`, `0,0,0`, `stage=cpu-voltage 0,0,0` and `DVFS_INIT flag 0x00000000`.
+  All three tables match 6.18.56's OPP lines exactly. Thermal zones, cooling maps, the Wi-Fi AP, mobile data and USB
+  all come up. Three reboots gave the same result.
+* **The DVFS start delay, measured.** `register cpufreq driver success` comes at 2.03 s on 6.18.56. With this PR it
+  comes at 5.28-5.56 s with 0,0,0 and at 6.38-6.61 s with an offset (DVFS_INIT runs at 4.9-5.3 s). So DVFS starts
+  3.3-4.6 s later in every boot.
+* **Offsets applied:**
+  * `-3125,0,0` (flag `0x00008300`), `-3125,-3125,-3125` (`0x83838300`) and `-6250,-6250,0` (`0x00868600`). In each
+    case, the offset domains' tables are exactly 3125 or 6250 uV lower and the other domains' tables are unchanged.
+    The `vddcpu1`/`vddcpu2` readback follows the live OPP, so it is a spot value (for example 746875 and 743750 uV).
+  * Each value passed a 10-minute `mu300-cpu voltage stress` with no oops. Each got its good mark at 10 minutes, and
+    the next clean reboot applied it again and re-armed it.
+  * No instability up to this round's limit (-6250 uV). Nothing beyond it was tried.
+  * `+3125,0,0` (flag `0x00000300`) raised every OPP by 3125 uV, and no OPP was cut.
+* **Taken back:**
+  * A sysrq panic with `-6250,-6250,0` good gave `unclean-end`.
+  * A watchdog reset during the `+3125,0,0` trial (procd stopped feeding: `ubus call system watchdog
+    '{"stop":true}'`) gave `unclean-end`. After that reset the board was off USB for about 17 minutes and came up in
+    Android.
+  * A clean reboot 33 s into a trial gave `no-good-mark`.
+  * `/etc/init.d/mu300-cpu-voltage stop` keeps `armed`, and `reboot` removes it.
+  * `off` followed by a reboot gives step 1's tables again.
+  * No USB power cut was tested: F50-C's Mac port has no port power switching.
+* **The CLI on a kernel without the offset.** On 6.18.56 the CLI reports `unsupported` and refuses `set`. It printed
+  "can't open .../voltage_limits" to stderr; that is fixed in this PR, with a test.
+* **Mainline thermal (not the offset, but it decides how the stress test has to be run):**
+  * Mainline's soc-thmzone does not hold this load. It has passive trips at 70 and 85 C, all three cpufreq maps are
+    bound, and thermal-guard is "watching only".
+  * At stock voltages, the toolkit's CPU stress (8 awk loops) took the SoC from 44 to 102.6 C in under 3 minutes.
+    Twice it went on to thermal-guard's 105 C power-off.
+  * The first trial of `-3125,0,0` ended that way. It was a clean shutdown, so the reason recorded is `no-good-mark`,
+    not a crash.
+  * For the stress runs above, scaling_max_freq was capped one step at 96 C, which kept the SoC under 97 C.
+  * The 5.4 kernel held a `yes` load at 80-91 C.
+* **The eMMC after hot shutdowns.** After each of those hot shutdowns or reboots, the next boot found no eMMC (`root-offset
+  not-found`, `losetup: /dev/mmcblk0: No such file`) and took the 300 s rescue reboot. This happened 5 times in this
+  run.
+* **Not run here:** the panels (plain OpenWrt has neither LuCI nor Cockpit) and the U30 Air's firmware check.
