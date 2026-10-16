@@ -148,6 +148,7 @@ what replaced it. The table below gives each section's state.
 | 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; measured on the F50, Android with Magisk, 2026-10-15; the U30 Air's sysfs name read from Linux) |
 | 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
 | 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
+| 106 | Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes (kanoqwq 0e19fe32) | current (fixed in the mainline module and as a 5.4 patch; both built; not run on a device) |
 | 110 | The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it | current (unit and Node tests against the real mu300-api; the device protocol run with the page's modules over WebUSB on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-16: six defects fixed; rows 6, 9, 16 and the Android restart not run) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
@@ -8241,3 +8242,57 @@ three have the same logic in these places):
   time of publishing and was right.
 * The graphical installer and the installers' beta question are newer than v2026.10.27 (`tools/release_pick.py` is
   not in those tags); they go by the time of publishing too, now with the tag order on top.
+### 106. Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes
+
+From kanoqwq's clean-tf-7.2 `0e19fe32` ("fix Unisoc WPA3 hotspots"): among his firmware-SAE changes to
+`sc2355/cmdevt.c` are three return values in `sc2355_send_cmd_recv_rsp()`, which our driver (mainline module and the
+5.4 vendor driver, the same code at this point) has as he found them. Taken in our words; his SAE part is not
+(below).
+
+**What it was.** `sc2355_send_cmd_recv_rsp()` returned 0 without sending anything in three cases:
+
+* `cmdevt_lock_cmd()` refused the command lock: the driver is going away (`SPRD_CMD_EXIT_VAL` added to the count) or,
+  with `DRV_RESET_SELF`, the CP has asserted. `ret` was still the API check's 0.
+* `block_cmd_after_close`: between the CLOSE of the last interface and the WCN power-off, every command but CLOSE.
+* `change_iface_block_cmd`: during an interface type change with one mode open, every command but CLOSE and OPEN.
+
+The last two also left `*rlen` as the caller had set it (the size of its reply buffer), so the caller took its own
+buffer for the firmware's answer. `sc2355_get_station()` copies the reply into the station's signal, rates and
+failures whatever the return value, and `sprd_cfg80211_get_station()` reports them when the return is 0: the bytes of
+an uninitialised stack structure went to nl80211, whose GET_STATION any local user may ask (`iw dev wlan0 link`). A
+small leak of kernel stack in a narrow window (the hotspot stopping or changing mode, or the module unloading), but
+one. And every setting sent in those windows "succeeded" with the firmware never seeing it.
+
+**Changed (mainline `upstream/modules/sprd_wlan_combo/sc2355/cmdevt.c`, and the same as
+`kernel/patches/wlan_combo-unsent-cmd-error.patch` for 5.4):** the refused lock returns `-EIO`, the two blocked
+windows `-EBUSY` with `*rlen` 0 (the API-check failure keeps its own value and message); `get_station`'s reply
+structure starts zeroed, which also covers a reply shorter than the structure. Callers that only test for non-zero
+now see the failure: a userspace setting tried in those windows gets `EBUSY` instead of a silent no-op.
+
+**Not taken from `0e19fe32`.** The firmware-SAE bridge (driver: `sae.h`, `SAE_OFFLOAD_AP`, `max_num_akm_suites = 3`, a
+`CMD_SET_SAE_PARAM` status check; hostapd: `unisoc_sae_import()`, his patched wpad packages in every image). It imports
+the PMK from a vendor element (`dd 34 40 45 da 04`) at the end of the association IEs of `NEW_STATION`, which is the
+same design as our opt-in SAE work (`docs/U30AIR-SAE.md`, open PR #237) and has the same open question that
+`docs/U30AIR-SAE-HANDOFF.md` describes: that buffer carries client-controlled association IEs, and nothing shows that
+the element came from the firmware. His guard (one such element, at the end, or a cached PMKSA) is syntax, not
+provenance; a client that does PMKSA caching without a fresh firmware element and brings its own is the case to rule
+out. His build also turns the bridge on for every `sae`/`psk-sae` BSS on this driver, while ours is an opt-in. Left
+to that work; nothing of it here. Also not taken: his `wpad` replacement, the graphical installer (Tauri) and his
+desktop installer changes.
+
+**Built** (2026-10-16, compared with the same build of `main`): the mainline module for 7.2.10 against the
+`mu300-mainline` volume's tree, 92 warnings before and after, none in the changed lines; the 5.4 driver: the
+thirteen `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver, and every object compiles
+(the final ThinLTO link was not run: it needs a writable kernel output tree). **Unit tests:** `tests/test_wifi_tx_path.py`
+(`WifiCommandNotSent`) reads the source and the 5.4 patch.
+
+**Device checklist (before merge; F50 and U30 Air, 6.18, 7.2 and 5.4, the hotspot on):**
+
+    dmesg -C
+    wifi down; wifi up   (OpenWrt)  /  systemctl restart mu300-hotspot  (Ubuntu)   # the hotspot comes back, clients rejoin
+    dmesg | grep -E 'need block cmd'               # the blocked commands, if any, as before
+    # while restarting the hotspot, ask for the station from another shell as a normal user:
+    while :; do iw dev wlan0 link; done            # no made-up signal/rates; errors are fine
+    # switch the Wi-Fi client mode on and off (the wifi-client command or LuCI), then the hotspot again: comes back
+    # the U30 Air's Wi-Fi key (2.4 <-> 5 GHz, off/on): every change takes effect
+    rmmod sprd_wlan_combo; modprobe sprd_wlan_combo (or reboot): Wi-Fi comes up, no oops
