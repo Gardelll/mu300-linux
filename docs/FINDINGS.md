@@ -8514,6 +8514,30 @@ command line; the rounds a file names are taken between 10000 and 5000000 only.
    stdin, and the keys file written aside and renamed (never through a link: ubuntu's home is its own). A step that
    fails is reported and the others go on (exit 1).
 
+**Security review of the first version (before merge).** An imported file is untrusted, and three holes were found
+and closed:
+
+1. *Values that become options.* Values of the file reach command lines as positional arguments (`mu300-vpn profile
+   add TYPE NAME -`, `profile set ID KEY VALUE`, `settings set KEY VALUE`, `subscription add NAME - --type T
+   --interval N`, `lock apply KIND VALUE`). A value starting with `-` (`--json`, `--insecure`) would be read as an
+   option. The profile type's rule allowed `-` first (`[a-z0-9-]+`), and option values were only "one line of text".
+   Now every value that goes onto a command line passes `arg`: taken exactly from the step (no trailing newline lost
+   to `$(...)`), not empty, no control character, never starting with `-`. The type is `[a-z0-9][a-z0-9-]{0,15}`,
+   subscription type and interval are checked again where they are used, the profile id the module answers must look
+   like one, and a lock value goes through mu300-api's rule and `arg`. No `--` was added to the module or the lock
+   tool: nothing reaches them that could be taken for an option.
+2. *A line break inside a value.* Each of `allowed` (`is_ascii_line`, then `grep -x`), `text_ok` and `hash_ok` refused
+   one already, so `HASH\nroot:HASH` never matched. But the format's patterns used `test("^...$")`, and jq's `^` and
+   `$` are the ends of a line, not of the value. So an option key `A\nB` passed the format, and the shell then split
+   it into two keys. The patterns now use `\A...\z`, and every one-line field refuses any control character at the
+   format level. `chpasswd -e` gets exactly one line, `root:` or `ubuntu:` and a hash checked again just before.
+3. *Keys split into words.* `for _k in $(jq -r '.options | keys[]')` is now a loop over indices with each key read
+   exactly, and checked against an anchored pattern.
+
+Tests for each: `--json` as a type, a type and an option key with a line break, a hash followed by a second shadow
+line, a lock value with a line break, `--help` and `-x` as lock values (the lock tool is never called), `--insecure`
+as an option value, `--json` as a subscription name and `-x` as the active profile.
+
 **The API and the panel.** `mu300-api backup.export {passphrase, with_password}` answers `{"name","encrypted","file"}`
 - the one reply that carries secrets on purpose - and `backup.import {file, passphrase, dry_run, force, only, skip}`
 answers a dry run at once (`valid`, `text`) and otherwise starts the restore as the job (`job.status`); the request may
