@@ -2127,10 +2127,25 @@ Say (T 'Installing the on-device switch (Magisk module)')
 $ModSrc = Join-Path $Top 'android\magisk\mu300-linux-switch'
 $Mod = '/data/adb/modules/mu300_linux_switch'
 $MTmp = "$T/mu300-magisk"
+# the module of this release, as its Magisk zip installs it (android/magisk/installer/module.prop.in, the version and
+# versionCode of tools/make-magisk-zips.sh), not the generic "v1.0" one (docs/FINDINGS.md 131); a build of the
+# checkout has no release tag and keeps the generic one
+$PropSrc = Join-Path $ModSrc 'module.prop'
+$PropKey = $(if ($Release) { TagKey $Release } else { $null })
+if ($null -ne $PropKey) {
+    $pk = [string]$PropKey
+    $code = $(if ($pk.StartsWith('2')) { $pk.Substring(1) } else { $pk.Substring(1, $pk.Length - 3) })
+    $sys = (@($OSES | ForEach-Object { if ($_ -eq 'ubuntu') { "ubuntu-$UBUNTU" } else { $_ } }) -join ' ')
+    $prop = [IO.File]::ReadAllText((Join-Path $Top 'android\magisk\installer\module.prop.in'))
+    $prop = $prop.Replace('@TAG@', $Release).Replace('@CODE@', $code).Replace('@SYSTEM@', $sys).Replace('@KERNEL@', $KERNEL)
+    $PropSrc = Join-Path $Work 'module.prop'
+    [IO.File]::WriteAllText($PropSrc, $prop)
+}
 if ((SuDo 'magisk -v')) {
     Quiet { adb shell "rm -rf $MTmp" } | Out-Null
     Quiet { adb shell "mkdir -p $MTmp/system/bin" } | Out-Null
-    foreach ($f in 'module.prop', 'switch.sh', 'action.sh', 'bootchain.sh') {
+    Quiet { PushUnix $PropSrc "$MTmp/module.prop" } | Out-Null
+    foreach ($f in 'switch.sh', 'action.sh', 'bootchain.sh') {
         Quiet { PushUnix (Join-Path $ModSrc $f) "$MTmp/$f" } | Out-Null
     }
     Quiet { PushUnix (Join-Path $ModSrc 'system\bin\mu300-linux') "$MTmp/system/bin/mu300-linux" } | Out-Null

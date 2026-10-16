@@ -1185,7 +1185,10 @@ write_linux_boot "$WORK/boot-linux-slot$LINUX_SLOT.img"
 # on-device switch for later: one command in Android instead of plugging into a computer (needs Magisk)
 step switch 96
 say "$(t 'Installing the on-device switch (Magisk module)')"
-sh "$TOP/tools/install-magisk-module.sh" || echo "  $(t '(skipped; the installer keeps working either way)')"
+# (the module of this release, as its Magisk zip installs it: not the generic one, FINDINGS 131)
+MU300_MODULE_TAG="${RELEASE:-}" MU300_MODULE_KERNEL="$KERNEL" \
+MU300_MODULE_SYSTEM="$(for o in $OSES; do if [ "$o" = ubuntu ]; then printf 'ubuntu-%s ' "${UBUNTU:-24.04}"; else printf '%s ' "$o"; fi; done)" \
+    sh "$TOP/tools/install-magisk-module.sh" || echo "  $(t '(skipped; the installer keeps working either way)')"
 
 step done 100
 say "$(t 'Done. Rebooting into {1}' "$BOOT_OS")"
