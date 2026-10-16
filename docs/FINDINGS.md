@@ -154,7 +154,7 @@ what replaced it. The table below gives each section's state.
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
-| 131 | An update writes only what changed: the new image's binaries that the installed system has byte for byte become second names of its files (never text, never `etc`, `var` or the user's places), the room counted before anything is written by every installer and by `mu300-update`, nothing left behind by a run that fails or is cut off, and the computer installer's switch module of the release | current (unit tests; the zip, `mu300-update apply` with rollback, and the computer installer on an F50, plain OpenWrt with Docker in its 804 MiB region, 2026-10-16; Ubuntu in containers) |
+| 131 | An update writes only what changed: the new image's binaries that the installed system has byte for byte become second names of its files (never text, never `etc`, `var` or the user's places), the room counted before anything is written by every installer and by `mu300-update`, nothing left behind by a run that fails or is cut off, and the computer installer's switch module of the release | current (unit tests; the zip, `mu300-update apply` with rollback, and the computer installer on an F50, plain OpenWrt with Docker in its 804 MiB region, 2026-10-16; Ubuntu 24.04 by `mu300-update` with rollback on an F50, 2026-10-17) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
@@ -8472,6 +8472,19 @@ bundle the test releases carry (it has no `mu300-pwcheck`: "UNVERIFIABLE", §126
 At the end v2026.10.16.1's own zip (`MU300_DOWNGRADE=yes` and `MU300_PASSWORD=ubuntu` in `/data/adb/mu300-install.conf`,
 which it removes), the Docker zone and network that .82's first boot had added removed with `uci`, the test's boot and
 temporary files removed: F50-C in Android, v2026.10.16.1, root's password `ubuntu`.
+
+**On F50-B** (Ubuntu 24.04, kernel 7.2.10, 32 GB region, no internet; 2026-10-17), `mu300-update apply --from` a
+release directory on the device, each time with a manifest of the running system taken first: v2026.10.16.1 -> .80
+"249 MB ... not written again; 99 MB are written" (528 files of the user's, 32 MB, copied for the rollback; used
++163 MiB with `ubuntu.old` kept and the kernel's modules); booted, `is-system-running` "running", no failed unit.
+.80 -> .81 "249 MB ... not written again; 101 MB are written"; booted, the changed `ethtool` ran. Both times
+`ubuntu.old` was the manifest taken before `apply` but for the updater `apply` replaces first and what the running
+system itself wrote meanwhile and at its shutdown (the journal, `wtmp`, `random-seed`, systemd's private `tmp`
+directories: all under `/var` and `/tmp`, never linked); after .81 had booted nothing more had changed in it.
+`rollback` and a reboot: .80 again, equal to its manifest but for the updater and a `pstore` file the boot writes.
+Back to v2026.10.16.1 by `apply --from ... --downgrade` (its own updater: the whole image, and 217 MB "carried",
+the device's files copied as before), `clean`, the test's files removed. The computer installer on Ubuntu was not
+run: F50-B's Android has the same adb serial as F50-C, which was in Android.
 
 **Not changed.** The panel's "Free space needed" (`space_needed` in `status` and `releases`) is still the old rule of
 1 GB and 1 GB per system: shown, never enforced, and no longer what `apply` checks when the release has manifests.
