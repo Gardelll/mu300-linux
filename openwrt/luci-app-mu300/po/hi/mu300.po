@@ -40,6 +40,9 @@ msgstr "डिवाइस प्रबंधन"
 msgid "Update"
 msgstr "अपडेट करें"
 
+msgid "Backup of settings"
+msgstr "सेटिंग्स का बैकअप"
+
 msgid "Languages"
 msgstr "भाषाएँ"
 
@@ -318,6 +321,75 @@ msgstr "अनुरोध विफल"
 
 msgid "(empty)"
 msgstr "(खाली)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "पासफ़्रेज़ (8 या अधिक अक्षर)"
+
+msgid "The passphrase again"
+msgstr "पासफ़्रेज़ दोबारा"
+
+msgid "Download the backup"
+msgstr "बैकअप डाउनलोड करें"
+
+msgid "Back up the settings"
+msgstr "सेटिंग्स का बैकअप लें"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "एक फ़ाइल जिसमें हॉटस्पॉट, मोबाइल डेटा और APN, नेटवर्क लॉक, VPN प्रोफ़ाइल और सेटिंग्स, SMS फ़ॉरवर्डिंग, LAN पता, होस्ट नाम, समय क्षेत्र और SSH कुंजियाँ हैं। इसमें पासवर्ड हैं: पासफ़्रेज़ से यह एन्क्रिप्ट होती है, और केवल वही पासफ़्रेज़ इसे फिर खोलता है।"
+
+msgid "Include the login password"
+msgstr "लॉगिन पासवर्ड भी शामिल करें"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "पासफ़्रेज़, यदि फ़ाइल एन्क्रिप्टेड है"
+
+msgid "Show what would change"
+msgstr "दिखाएँ क्या बदलेगा"
+
+msgid "Restore"
+msgstr "पुनर्स्थापित करें"
+
+msgid "The file is larger than 4 MiB"
+msgstr "फ़ाइल 4 MiB से बड़ी है"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "फ़ाइल की सेटिंग्स इनकी जगह लेंगी। हॉटस्पॉट, मोबाइल डेटा या LAN फिर से शुरू हो सकते हैं, और यह पेज कुछ पल के लिए कनेक्शन खो सकता है।"
+
+msgid "Restore from a backup"
+msgstr "बैकअप से पुनर्स्थापित करें"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "फ़ाइल का हर मान पहले जाँचा जाता है; एक भी अस्वीकार हो तो कुछ नहीं बदलता। जो समान है उसे छुआ नहीं जाता, और इस डिवाइस की कोई VPN प्रोफ़ाइल, सदस्यता या SSH कुंजी हटाई नहीं जाती।"
+
+msgid "Keep this device's login password"
+msgstr "इस डिवाइस का लॉगिन पासवर्ड रखें"
+
+msgid "Take a file of another device model"
+msgstr "दूसरे डिवाइस मॉडल की फ़ाइल स्वीकार करें"
+
+msgid "The two passphrases differ"
+msgstr "दोनों पासफ़्रेज़ अलग हैं"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "पासफ़्रेज़ में 8 या अधिक अक्षर चाहिए"
+
+msgid "Saved (encrypted)"
+msgstr "सहेजा गया (एन्क्रिप्टेड)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "सहेजा गया। फ़ाइल एन्क्रिप्टेड नहीं है: इसमें पासवर्ड हैं, इसे सुरक्षित रखें।"
+
+msgid "Choose a backup file first"
+msgstr "पहले एक बैकअप फ़ाइल चुनें"
+
+msgid "Restoring…"
+msgstr "पुनर्स्थापित हो रहा है…"
+
+msgid "Restored"
+msgstr "पुनर्स्थापित"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "पुनर्स्थापना पूरी नहीं हुई: ऊपर की पंक्तियाँ देखें"
 
 msgid "Loading…"
 msgstr "लोड हो रहा है…"
@@ -3234,6 +3306,9 @@ msgstr "अज्ञात अपडेट ऑपरेशन"
 
 msgid "Invalid update request"
 msgstr "अमान्य अपडेट अनुरोध"
+
+msgid "The backup tool gave no valid reply"
+msgstr "बैकअप टूल ने कोई मान्य उत्तर नहीं दिया"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

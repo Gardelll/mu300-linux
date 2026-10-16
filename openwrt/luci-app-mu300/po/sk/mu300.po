@@ -40,6 +40,9 @@ msgstr "Správa zariadenia"
 msgid "Update"
 msgstr "Aktualizovať"
 
+msgid "Backup of settings"
+msgstr "Záloha nastavení"
+
 msgid "Languages"
 msgstr "Jazyky"
 
@@ -318,6 +321,75 @@ msgstr "Požiadavka zlyhala"
 
 msgid "(empty)"
 msgstr "(prázdne)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Heslová fráza (aspoň 8 znakov)"
+
+msgid "The passphrase again"
+msgstr "Heslová fráza znova"
+
+msgid "Download the backup"
+msgstr "Stiahnuť zálohu"
+
+msgid "Back up the settings"
+msgstr "Zálohovať nastavenia"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Jeden súbor s hotspotom, mobilnými dátami a APN, zámkami siete, profilmi a nastaveniami VPN, preposielaním SMS, adresou LAN, názvom hostiteľa, časovým pásmom a kľúčmi SSH. Obsahuje heslá: s heslovou frázou sa zašifruje a otvorí ho len tá fráza."
+
+msgid "Include the login password"
+msgstr "Zahrnúť prihlasovacie heslo"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Heslová fráza, ak je súbor zašifrovaný"
+
+msgid "Show what would change"
+msgstr "Ukázať, čo by sa zmenilo"
+
+msgid "Restore"
+msgstr "Obnoviť"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Súbor je väčší ako 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Nastavenia zo súboru nahradia tieto. Hotspot, mobilné dáta alebo LAN sa môžu reštartovať a táto stránka môže na chvíľu stratiť spojenie."
+
+msgid "Restore from a backup"
+msgstr "Obnoviť zo zálohy"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Každá hodnota súboru sa najprv skontroluje; ak je jedna odmietnutá, nič sa nezmení. Čo je rovnaké, zostane, a žiadny profil VPN, odber ani kľúč SSH tohto zariadenia sa neodstráni."
+
+msgid "Keep this device's login password"
+msgstr "Ponechať prihlasovacie heslo tohto zariadenia"
+
+msgid "Take a file of another device model"
+msgstr "Prijať súbor z iného modelu zariadenia"
+
+msgid "The two passphrases differ"
+msgstr "Heslové frázy sa líšia"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Heslová fráza musí mať aspoň 8 znakov"
+
+msgid "Saved (encrypted)"
+msgstr "Uložené (zašifrované)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Uložené. Súbor nie je zašifrovaný: obsahuje heslá, uložte ho bezpečne."
+
+msgid "Choose a backup file first"
+msgstr "Najprv vyberte súbor zálohy"
+
+msgid "Restoring…"
+msgstr "Obnovuje sa…"
+
+msgid "Restored"
+msgstr "Obnovené"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Obnovenie sa nedokončilo: pozri riadky vyššie"
 
 msgid "Loading…"
 msgstr "Načítava sa…"
@@ -3234,6 +3306,9 @@ msgstr "Neznáma operácia aktualizácie"
 
 msgid "Invalid update request"
 msgstr "Neplatná požiadavka na aktualizáciu"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Nástroj zálohy nedal platnú odpoveď"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

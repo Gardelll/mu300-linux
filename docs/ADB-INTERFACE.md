@@ -133,6 +133,8 @@ module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `p
 | `system.reboot` `system.boot` `system.bootos` | -, `target` `linux android lock unlock`, `os` | - |
 | `update.check` `update.apply` `kernel.set` `extra.install` `extra.remove` | -, -, `version`, `name`, `name` | `job` |
 | `extra.list`, `logs` | -, `lines` | `extras`, `text` |
+| `backup.export` | `passphrase` (8-256 characters: the file is encrypted), `with_password` (bool: the login password's hash) | `name encrypted file`: the backup as text (mu300-backup, FINDINGS 155); the one answer that carries secrets on purpose |
+| `backup.import` | `file` (the text of a backup, 4 MiB at most), `passphrase`, `dry_run` (bool), `force` (bool: a file of another model), `only`/`skip` (sections, comma-separated) | dry run: `valid text` (what would change, or why the file is refused); else `job` |
 | `job.status` | `from` (a line number) | `job`: `kind state rc started ended text next cancel` |
 | `job.cancel`, `job.clear` | - | - |
 

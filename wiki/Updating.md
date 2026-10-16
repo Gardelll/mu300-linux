@@ -278,6 +278,38 @@ does not start any more, run the computer installer and choose `update`.
 **From v2026.10.14 or older** an update prints "could not arm the Linux slot for a trial", because the older
 `mu300-next-boot` does not know `--trial`. The fallback to Android after failed boots still works.
 
+## Backing up your settings
+
+An update keeps your settings, but a new installation, a second device or a broken card do not. `mu300-backup` (Ubuntu
+and OpenWrt; on OpenWrt with the control panel also **System > Backup of settings**, and `backup.export` /
+`backup.import` of `mu300-api` for the device manager) writes them into one file:
+
+```sh
+mu300-backup export --encrypt              # asks for a passphrase twice; ./mu300-backup-HOST-DATE.enc, 0600
+mu300-backup export -o /root/settings.json --with-password   # not encrypted, with the login password's hash
+mu300-backup show settings.enc             # where it comes from and what it holds (no secret)
+mu300-backup import settings.enc --dry-run # what would change
+mu300-backup import settings.enc           # change it
+```
+
+What it holds: the hotspot (name, password, band, channel, hidden, on/off), mobile data (APN, PDP type,
+authentication, user, password, data roaming), the SIM used at boot, the network locks (OpenWrt with the control
+panel), the VPN module's own profiles, subscriptions and settings and whether it is on, SMS forwarding (OpenWrt with
+the control panel), the LAN address, host name, time zone, SSH on/off, the login user's SSH keys, and with
+`--with-password` the hash of the login password.
+
+* **The file holds secrets.** It is written readable by root alone; with a passphrase (`--encrypt`,
+  `--passphrase-file FILE`) it is encrypted with AES-256 (openssl, PBKDF2 with 600000 rounds), and a file changed
+  afterwards is refused.
+* **Every value is checked first**, by the same rules as the setting itself (the hotspot's, the APN's, the lock
+  page's, the VPN module's); one refused value and nothing is changed. What is the same is left alone; nothing is
+  removed (no VPN profile, subscription or SSH key of the device).
+* **A file of another model** (an F50 backup on a U30 Air) is refused unless you add `--force`. A file from the other
+  system (Ubuntu to OpenWrt or back) gives what both have; the rest is listed as skipped. OpenWrt cannot read
+  Ubuntu's yescrypt password hash: leave the password out there (`--skip password`).
+* Subscriptions are fetched again when they are restored, so the device needs internet for them; VPN profiles that
+  came from a subscription come back with it.
+
 ## Do not
 
 * Do not use OpenWrt's `sysupgrade` or flash OpenWrt firmware images.

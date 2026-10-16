@@ -40,6 +40,9 @@ msgstr "デバイス管理"
 msgid "Update"
 msgstr "更新"
 
+msgid "Backup of settings"
+msgstr "設定のバックアップ"
+
 msgid "Languages"
 msgstr "言語"
 
@@ -318,6 +321,75 @@ msgstr "リクエスト失敗"
 
 msgid "(empty)"
 msgstr "(空)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "パスフレーズ（8 文字以上）"
+
+msgid "The passphrase again"
+msgstr "パスフレーズをもう一度"
+
+msgid "Download the backup"
+msgstr "バックアップをダウンロード"
+
+msgid "Back up the settings"
+msgstr "設定をバックアップ"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "ホットスポット、モバイルデータと APN、ネットワークロック、VPN プロファイルと設定、SMS 転送、LAN アドレス、ホスト名、タイムゾーン、SSH 鍵をまとめた 1 つのファイルです。パスワードを含みます。パスフレーズを付けると暗号化され、そのパスフレーズでしか開けません。"
+
+msgid "Include the login password"
+msgstr "ログインパスワードも含める"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "パスフレーズ（ファイルが暗号化されている場合）"
+
+msgid "Show what would change"
+msgstr "変更内容を表示"
+
+msgid "Restore"
+msgstr "復元"
+
+msgid "The file is larger than 4 MiB"
+msgstr "ファイルが 4 MiB を超えています"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "ファイルの設定で現在の設定を置き換えます。ホットスポット、モバイルデータ、LAN が再起動し、このページの接続が一時的に切れることがあります。"
+
+msgid "Restore from a backup"
+msgstr "バックアップから復元"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "ファイルの値はすべて先に検査され、1 つでも拒否されると何も変更されません。同じ設定はそのままで、このデバイスの VPN プロファイル、サブスクリプション、SSH 鍵は削除されません。"
+
+msgid "Keep this device's login password"
+msgstr "このデバイスのログインパスワードを保持"
+
+msgid "Take a file of another device model"
+msgstr "別のデバイスモデルのファイルを受け入れる"
+
+msgid "The two passphrases differ"
+msgstr "2 つのパスフレーズが一致しません"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "パスフレーズは 8 文字以上必要です"
+
+msgid "Saved (encrypted)"
+msgstr "保存しました（暗号化）"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "保存しました。ファイルは暗号化されていません。パスワードを含むので安全に保管してください。"
+
+msgid "Choose a backup file first"
+msgstr "先にバックアップファイルを選んでください"
+
+msgid "Restoring…"
+msgstr "復元中…"
+
+msgid "Restored"
+msgstr "復元しました"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "復元が完了しませんでした。上の行を確認してください"
 
 msgid "Loading…"
 msgstr "読み込み中…"
@@ -3234,6 +3306,9 @@ msgstr "不明な更新操作です"
 
 msgid "Invalid update request"
 msgstr "無効な更新リクエストです"
+
+msgid "The backup tool gave no valid reply"
+msgstr "バックアップツールから有効な応答がありません"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

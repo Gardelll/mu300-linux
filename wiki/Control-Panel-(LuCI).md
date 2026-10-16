@@ -62,6 +62,10 @@ Pick it at install ("Which OpenWrt?" -> 2, or `MU300_OPENWRT=luci`), or switch a
   device without internet, going back to the previous version, the kernel choice (see
   [Updating](Updating#from-the-browser-openwrt-with-the-control-panel)). The home page says when a newer release is
   out.
+* **System > Backup of settings:** your settings as one file (with a passphrase it is encrypted) and back: the
+  hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address,
+  host name, time zone, SSH keys and, if you ask, the login password. **Show what would change** checks the file
+  first; **Restore** applies only what differs (see [Updating](Updating#backing-up-your-settings)).
 * **System > Languages:** interface language, and the lang extra.
 * **System > Power:** the active power profile and why (in your language), battery, power source and the charger's
   input current, the idle settings of the three profiles, the saver threshold and the charge limit (0-100 %, U30 Air).

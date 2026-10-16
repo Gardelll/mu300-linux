@@ -40,6 +40,9 @@ msgstr "Διαχείριση συσκευής"
 msgid "Update"
 msgstr "Ενημέρωση"
 
+msgid "Backup of settings"
+msgstr "Αντίγραφο ασφαλείας ρυθμίσεων"
+
 msgid "Languages"
 msgstr "Γλώσσες"
 
@@ -318,6 +321,75 @@ msgstr "Το αίτημα απέτυχε"
 
 msgid "(empty)"
 msgstr "(κενό)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Φράση πρόσβασης (8 χαρακτήρες ή περισσότεροι)"
+
+msgid "The passphrase again"
+msgstr "Η φράση πρόσβασης ξανά"
+
+msgid "Download the backup"
+msgstr "Λήψη αντιγράφου"
+
+msgid "Back up the settings"
+msgstr "Αντίγραφο των ρυθμίσεων"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Ένα αρχείο με το hotspot, τα δεδομένα κινητής και το APN, τα κλειδώματα δικτύου, τα προφίλ και τις ρυθμίσεις VPN, την προώθηση SMS, τη διεύθυνση LAN, το όνομα κεντρικού υπολογιστή, τη ζώνη ώρας και τα κλειδιά SSH. Περιέχει κωδικούς: με φράση πρόσβασης κρυπτογραφείται, και μόνο αυτή η φράση το ανοίγει ξανά."
+
+msgid "Include the login password"
+msgstr "Να περιληφθεί ο κωδικός σύνδεσης"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Φράση πρόσβασης, αν το αρχείο είναι κρυπτογραφημένο"
+
+msgid "Show what would change"
+msgstr "Εμφάνιση του τι θα άλλαζε"
+
+msgid "Restore"
+msgstr "Επαναφορά"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Το αρχείο είναι μεγαλύτερο από 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Οι ρυθμίσεις του αρχείου αντικαθιστούν αυτές. Το hotspot, τα δεδομένα κινητής ή το LAN μπορεί να επανεκκινήσουν, και η σελίδα μπορεί να χάσει τη σύνδεση για λίγο."
+
+msgid "Restore from a backup"
+msgstr "Επαναφορά από αντίγραφο"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Κάθε τιμή του αρχείου ελέγχεται πρώτα· αν απορριφθεί μία, δεν αλλάζει τίποτα. Ό,τι είναι ίδιο μένει ως έχει, και κανένα προφίλ VPN, συνδρομή ή κλειδί SSH της συσκευής δεν αφαιρείται."
+
+msgid "Keep this device's login password"
+msgstr "Διατήρηση του κωδικού σύνδεσης της συσκευής"
+
+msgid "Take a file of another device model"
+msgstr "Αποδοχή αρχείου άλλου μοντέλου συσκευής"
+
+msgid "The two passphrases differ"
+msgstr "Οι δύο φράσεις διαφέρουν"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Η φράση πρόσβασης θέλει 8 χαρακτήρες ή περισσότερους"
+
+msgid "Saved (encrypted)"
+msgstr "Αποθηκεύτηκε (κρυπτογραφημένο)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Αποθηκεύτηκε. Το αρχείο δεν είναι κρυπτογραφημένο: περιέχει κωδικούς, φυλάξτε το με ασφάλεια."
+
+msgid "Choose a backup file first"
+msgstr "Επιλέξτε πρώτα ένα αρχείο αντιγράφου"
+
+msgid "Restoring…"
+msgstr "Επαναφορά…"
+
+msgid "Restored"
+msgstr "Επαναφέρθηκε"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Η επαναφορά δεν ολοκληρώθηκε: δείτε τις παραπάνω γραμμές"
 
 msgid "Loading…"
 msgstr "Φόρτωση…"
@@ -3234,6 +3306,9 @@ msgstr "Άγνωστη λειτουργία ενημέρωσης"
 
 msgid "Invalid update request"
 msgstr "Μη έγκυρο αίτημα ενημέρωσης"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Το εργαλείο αντιγράφων δεν έδωσε έγκυρη απάντηση"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

@@ -40,6 +40,9 @@ msgstr "إدارة الجهاز"
 msgid "Update"
 msgstr "تحديث"
 
+msgid "Backup of settings"
+msgstr "نسخة احتياطية من الإعدادات"
+
 msgid "Languages"
 msgstr "اللغات"
 
@@ -318,6 +321,75 @@ msgstr "فشل الطلب"
 
 msgid "(empty)"
 msgstr "(فارغ)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "عبارة المرور (8 أحرف أو أكثر)"
+
+msgid "The passphrase again"
+msgstr "عبارة المرور مرة أخرى"
+
+msgid "Download the backup"
+msgstr "تنزيل النسخة الاحتياطية"
+
+msgid "Back up the settings"
+msgstr "نسخ الإعدادات احتياطيًا"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "ملف واحد فيه نقطة الاتصال وبيانات الجوال ونقطة الوصول APN وأقفال الشبكة وملفات VPN وإعداداتها وإعادة توجيه الرسائل وعنوان LAN واسم المضيف والمنطقة الزمنية ومفاتيح SSH. يحتوي على كلمات مرور: مع عبارة مرور يُشفَّر، ولا يفتحه مرة أخرى إلا تلك العبارة."
+
+msgid "Include the login password"
+msgstr "تضمين كلمة مرور تسجيل الدخول"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "عبارة المرور إذا كان الملف مشفرًا"
+
+msgid "Show what would change"
+msgstr "عرض ما سيتغير"
+
+msgid "Restore"
+msgstr "استعادة"
+
+msgid "The file is larger than 4 MiB"
+msgstr "الملف أكبر من 4 ميبيبايت"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "إعدادات الملف تحل محل هذه. قد تعيد نقطة الاتصال أو بيانات الجوال أو الشبكة المحلية التشغيل، وقد تفقد هذه الصفحة الاتصال للحظة."
+
+msgid "Restore from a backup"
+msgstr "الاستعادة من نسخة احتياطية"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "تُفحص كل قيمة في الملف أولًا؛ إذا رُفضت قيمة واحدة لا يتغير شيء. ما هو مطابق يبقى كما هو، ولا يُحذف أي ملف VPN أو اشتراك أو مفتاح SSH من هذا الجهاز."
+
+msgid "Keep this device's login password"
+msgstr "الإبقاء على كلمة مرور تسجيل الدخول لهذا الجهاز"
+
+msgid "Take a file of another device model"
+msgstr "قبول ملف من طراز جهاز آخر"
+
+msgid "The two passphrases differ"
+msgstr "عبارتا المرور مختلفتان"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "تحتاج عبارة المرور إلى 8 أحرف أو أكثر"
+
+msgid "Saved (encrypted)"
+msgstr "تم الحفظ (مشفر)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "تم الحفظ. الملف غير مشفر: يحتوي على كلمات مرور، احفظه في مكان آمن."
+
+msgid "Choose a backup file first"
+msgstr "اختر ملف نسخة احتياطية أولًا"
+
+msgid "Restoring…"
+msgstr "جارٍ الاستعادة…"
+
+msgid "Restored"
+msgstr "تمت الاستعادة"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "لم تكتمل الاستعادة: انظر الأسطر أعلاه"
 
 msgid "Loading…"
 msgstr "جارٍ التحميل…"
@@ -3234,6 +3306,9 @@ msgstr "عملية تحديث غير معروفة"
 
 msgid "Invalid update request"
 msgstr "طلب تحديث غير صالح"
+
+msgid "The backup tool gave no valid reply"
+msgstr "لم تعطِ أداة النسخ الاحتياطي ردًا صالحًا"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

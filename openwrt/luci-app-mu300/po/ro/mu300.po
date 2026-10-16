@@ -40,6 +40,9 @@ msgstr "Gestionare dispozitiv"
 msgid "Update"
 msgstr "Actualizează"
 
+msgid "Backup of settings"
+msgstr "Copie de rezervă a setărilor"
+
 msgid "Languages"
 msgstr "Limbi"
 
@@ -318,6 +321,75 @@ msgstr "Cererea a eșuat"
 
 msgid "(empty)"
 msgstr "(gol)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Frază de acces (cel puțin 8 caractere)"
+
+msgid "The passphrase again"
+msgstr "Fraza de acces din nou"
+
+msgid "Download the backup"
+msgstr "Descarcă copia"
+
+msgid "Back up the settings"
+msgstr "Salvează setările"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Un fișier cu hotspotul, datele mobile și APN-ul, blocările de rețea, profilurile și setările VPN, redirecționarea SMS, adresa LAN, numele gazdei, fusul orar și cheile SSH. Conține parole: cu o frază de acces este criptat, și doar acea frază îl deschide din nou."
+
+msgid "Include the login password"
+msgstr "Include parola de autentificare"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Fraza de acces, dacă fișierul este criptat"
+
+msgid "Show what would change"
+msgstr "Arată ce s-ar schimba"
+
+msgid "Restore"
+msgstr "Restaurează"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Fișierul depășește 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Setările din fișier le înlocuiesc pe acestea. Hotspotul, datele mobile sau LAN-ul pot reporni, iar această pagină poate pierde conexiunea pentru un moment."
+
+msgid "Restore from a backup"
+msgstr "Restaurează dintr-o copie"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Fiecare valoare din fișier este verificată întâi; dacă una este refuzată, nu se schimbă nimic. Ce este la fel rămâne neatins și niciun profil VPN, abonament sau cheie SSH a acestui dispozitiv nu este șters."
+
+msgid "Keep this device's login password"
+msgstr "Păstrează parola de autentificare a acestui dispozitiv"
+
+msgid "Take a file of another device model"
+msgstr "Acceptă un fișier de la alt model de dispozitiv"
+
+msgid "The two passphrases differ"
+msgstr "Cele două fraze diferă"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Fraza de acces trebuie să aibă cel puțin 8 caractere"
+
+msgid "Saved (encrypted)"
+msgstr "Salvat (criptat)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Salvat. Fișierul nu este criptat: conține parole, păstrați-l în siguranță."
+
+msgid "Choose a backup file first"
+msgstr "Alegeți mai întâi un fișier de copie"
+
+msgid "Restoring…"
+msgstr "Se restaurează…"
+
+msgid "Restored"
+msgstr "Restaurat"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Restaurarea nu s-a terminat: vedeți rândurile de mai sus"
 
 msgid "Loading…"
 msgstr "Se încarcă…"
@@ -3234,6 +3306,9 @@ msgstr "Operațiune de actualizare necunoscută"
 
 msgid "Invalid update request"
 msgstr "Cerere de actualizare nevalidă"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Instrumentul de copiere nu a dat un răspuns valid"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

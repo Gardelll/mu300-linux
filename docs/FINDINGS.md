@@ -155,6 +155,7 @@ what replaced it. The table below gives each section's state.
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
+| 155 | The settings as one file and back: `mu300-backup export|import|show` (Ubuntu and OpenWrt), `mu300-api backup.export/backup.import`, System > Backup of settings in the panel; a passphrase seals it (openssl enc has no GCM: AES-256-CBC with the SHA-256 of the contents inside), every value checked by its setter's own rules before anything changes | current (unit tests on the fake device of test_api, hostile files included; not yet run on a device) |
 
 ## Hardware and firmware facts
 
@@ -8446,3 +8447,94 @@ was never resized (sectors 12275712..120500223 throughout).
 **Open.** install.sh does not compare the partition table on the disk with what the running kernel shows before it
 uses the region (offer_repartition does, for userdata); only the grow path of uninstall.sh can make them differ, and
 it now says to restart.
+
+### 155. The settings as one file, and back (`mu300-backup`)
+
+**Status: current** (unit tests on the fake device of `tests/test_api.py`; not yet run on a device).
+
+**Why.** An update keeps the settings (§85), a new installation, a second device or a lost card do not: the hotspot,
+the APN, the locks, the VPN profiles, SMS forwarding, the keys were typed in again by hand.
+
+**What.** `rootfs/overlay/opt/mu300/bin/mu300-backup` (one program for Ubuntu and OpenWrt; it takes mu300-api's helpers
+by sourcing it as a library, `MU300_LIB=1`):
+
+- `export [-o FILE|-] [--encrypt] [--with-password] [--only S,...]`: one JSON document,
+  `{"format":"mu300-backup","version":1,"created","source":{device,system,release,hostname},"sections":{...}}`, with
+  the sections `wifi` (name, password, band, channel, hidden, on), `data` (APN, PDP type, authentication, user,
+  password, data roaming), `sim` (the boot SIM), `locks` (the lock tool's saved `mode endc lte nr cell`,
+  openwrt-luci), `vpn` (on/off, the active profile's name, the settings `KILL_SWITCH TAILSCALE IPV6 REMOTE_DNS
+  BOOTSTRAP_DNS LAN_CIDRS`, the profiles the user made - name, type, configuration, options; OpenVPN's user and
+  password from `auth.txt` - and the subscriptions with their address), `sms_forward` (the panel's settings, secrets
+  included, openwrt-luci), `lan`, `system` (host name, time zone, SSH on/off), `ssh_keys` (the login user's: root's
+  `/etc/dropbear/authorized_keys` on OpenWrt, ubuntu's `~/.ssh/authorized_keys` on Ubuntu; a line with options in
+  front is left out, and said so) and with `--with-password` `password` (the hash from `/etc/shadow`). Settings are
+  read where they live (hotspot.conf, mobile-data.conf, lan.conf or UCI; the VPN module's `profile show --json
+  --reveal` and `subscription show --reveal`, which it gives root alone). Never in a file: the path of an engine
+  binary (`XRAY`, `SING_BOX`, ...: a file that set one would choose what runs as root), profiles that came from a
+  subscription (it brings them back), runtime state.
+- The file is written 0600 (aside, then renamed; never through a link); without `-o` it is
+  `./mu300-backup-HOST-DATE.json` (`.enc` when sealed).
+- `import FILE|- [--dry-run] [--force] [--only|--skip S,...]`, `show FILE`.
+
+**The seal.** `openssl enc -aes-256-gcm` was the first choice and does not exist: OpenSSL 3's `enc` refuses AEAD
+ciphers ("AEAD ciphers not supported"; LibreSSL's takes the name and writes no tag at all). `age` ships in neither
+image; `openssl` does in both (Ubuntu's `openssl`, OpenWrt's `openssl-util`, which the VPN module needs). So:
+`MU300-BACKUP-ENCRYPTED 1`, a line naming `cipher=aes-256-cbc kdf=pbkdf2 digest=sha256 iter=600000`, then
+`openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 -a` of `sha256=<hex>` + the document. The key and the IV
+both come from the passphrase and the file's salt; the SHA-256 inside the encryption is checked before the document is
+read, so a wrong passphrase, a changed character or a cut file is refused ("the file was changed after it was
+encrypted"). The passphrase (8-256 characters) reaches openssl on a pipe of its own (`-pass fd:3`), never on its
+command line; the rounds a file names are taken between 10000 and 5000000 only.
+
+**The import.** In order, and nothing changed until the end of step 4:
+
+1. The file (4 MiB at most) is opened and checked against the format with one jq program: every key known, every
+   value of its kind and size, no control character in anything but a VPN configuration and SMS forwarding's
+   texts. Anything else and the whole file is refused (exit 2).
+2. A file of another device type is refused without `--force`; one of the other system gives what both have
+   (locks and SMS forwarding are skipped where there is no panel, and said so).
+3. This device is read in the same form, and one jq program lists the steps: only what differs. Secrets are compared
+   and never shown ("the password changes"). Nothing is removed: a VPN profile, subscription or SSH key the file
+   lacks stays. Locks the device has and the file has not are reset first (`lock reset`, the verified one, §48),
+   then the file's are applied.
+4. Every step is checked by the rules of what will apply it: mu300-api's setters in a new check mode
+   (`MU300_API_CHECK=1`: `wifi.set wifi.power data.set sim.select lock.set lan.set system.hostname system.timezone
+   system.ssh` stop after their own field checks with `{"ok":1,"checked":true}`), the forwarding adapter's
+   (`MU300_FWD_CHECK=1`, after its checks, before it writes), and for the rest mu300-backup's own (VPN names by
+   mu300-api's rule, types, configurations as text, subscription addresses `https://` only, settings by the module's
+   own rules; SSH keys as OpenSSH public keys; a password hash as SHA-512/SHA-256 crypt, bcrypt or yescrypt -
+   yescrypt not on OpenWrt, whose musl cannot read it). One refusal and nothing is changed (exit 1); "unsupported"
+   (no hotspot.conf yet, no VPN module) skips that step. `--dry-run` stops here.
+5. The steps run (what can cut the connection last: SSH keys, password, SMS forwarding, VPN, SIM, mobile data, locks,
+   system, hotspot, LAN): through mu300-api's setters, the lock tool directly (one at a time: through the panel each
+   would start detached and the next would find the lock busy), the forwarding adapter (with `clear` naming the
+   secrets the file has none of: the adapter keeps a saved secret that comes empty), the VPN module's CLI (a
+   configuration and a subscription's address on its stdin; OpenVPN's user and password into the profile's
+   `auth.txt`, since `profile set` takes them on its command line), `chpasswd -e` (busybox's on OpenWrt) on its
+   stdin, and the keys file written aside and renamed (never through a link: ubuntu's home is its own). A step that
+   fails is reported and the others go on (exit 1).
+
+**The API and the panel.** `mu300-api backup.export {passphrase, with_password}` answers `{"name","encrypted","file"}`
+- the one reply that carries secrets on purpose - and `backup.import {file, passphrase, dry_run, force, only, skip}`
+answers a dry run at once (`valid`, `text`) and otherwise starts the restore as the job (`job.status`); the request may
+be 6 MiB for this method alone. The file and the passphrase reach mu300-backup on its stdin (the job's input file is
+root's and removed when the job starts). On openwrt-luci, System > Backup of settings (`view/mu300/backup.js`) calls
+`mu300dash backup_export/backup_import/backup_job`, which pass the request to mu300-api; `run_m` keeps their replies
+out of the call log (their length only). The file is made in the browser and never stored on the device. The panel's
+page is in every catalog of the panel. No page on Ubuntu's Cockpit panel yet: the API is there for it and for the
+web installer's device manager.
+
+**Tests** (`tests/test_backup.py`, every shell): every section exported on Ubuntu, OpenWrt and openwrt-luci, the mode,
+no link followed, no engine path; the seal (wrong passphrase, one character changed, rounds from a hostile header,
+a short passphrase); a dry run that changes nothing and a restore of what differs (hotspot.conf, mobile data's
+roaming, lan.conf, the keys merged, `chpasswd -e` with the hash on stdin); a round trip with a fake VPN CLI (profiles,
+subscription, settings, active, on); another model with and without `--force`; an OpenWrt file on Ubuntu; hostile
+files (17 refused by the format, 11 by the setters' rules, 7 VPN values), each leaving the device as it was; the lock
+tool (reset, then the file's locks) and the real forwarding adapter (refusing an `ftp://` address, nothing written);
+the API methods and the job. In none of them a secret in an argument list, a job file or what is printed.
+`tests/test_sms_forward.py`: the adapter's check mode.
+
+**On a device (to do):** export and import on an F50 with Ubuntu and on a U30 Air with openwrt-luci (the VPN on, a
+subscription, locks); an Ubuntu file on OpenWrt; the panel's page (download, preview, restore while connected over the
+hotspot whose password changes); the size limit through rpcd/ubus (about 1 MiB for one message) with a large VPN
+configuration.
