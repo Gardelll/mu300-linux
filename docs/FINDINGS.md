@@ -6508,8 +6508,49 @@ Seen, not changed here:
 * `Deleted again` on the F50 listed `/etc/rc[2-5].d/S01ssh`: a real change on that unit (an earlier test had disabled
   `ssh.service`), not a false line.
 
-**Not run**: part 7 (the Magisk zip from Android, the computer installer: the F50's Android could not be addressed
-apart from another F50 in use), the page in a browser (its backend was driven), the 5.4 kernel, an SD card.
+**Part 7: the Magisk zip from Android and the computer installer (2026-10-16, a third F50).** Two more releases
+built from this branch and never published, v2026.10.16.90 (T1) and v2026.10.16.91 (T2; four-field tags of the day,
+#249), the same way (mainline kernels built at the branch's commit, signed, the Magisk zips of both). The F50 had a
+plain OpenWrt v2026.10.27 on kernel 6.18 in its internal region (804 MiB, 613 MiB free; installed by the make-room
+resume the day before), the carrier's data working without a VPN, no SD card. Planted with `experiment.py plant /
+openwrt sys.json --live` (45 items; python3 from Alpine, musl, run by its own loader from the test directory, so
+nothing of it is a package of the system) after `apk add nano` (a package the update has to install again).
+
+| step | how | result |
+|---|---|---|
+| v2026.10.27 -> T1 | T1's `mu300-magisk-...-openwrt-k6.18.zip` by `magisk --install-module` from Android (first `MU300_DRY_RUN=1`: the plan said "update: openwrt v2026.10.27 -> T1: everything you added ... is kept") | "carrying everything of yours ... over", 2515 files, 44 MB, by link (no copy kept: 438 MiB free after); set aside `/www/index.html`, `/etc/banner.failsafe`, `/etc/banner` deleted again, nano listed. After the restart: T1, kernel 6.18.56, verify 32 kept, 1 held, 3 by design, 1 lost (`/etc/uci-defaults/99-user`, run and deleted by OpenWrt at boot), 8 changed (below); nano installed again at the first boot ("1 of 1 ... are back") |
+| T1 -> T2 | `install.sh` of T2's unpacked zip (`MU300_PACKAGE`, answers mode, `MU300_ANS_EXISTING=update`) | 2082 files, 16 MB; the same verify; both reports in `mu300-update report` |
+| T2 -> T1, the zip | T1's zip over T2 | refused: "The installed openwrt is T2, and this zip is T1, an older release", nothing written |
+| T2 -> T1, the computer | T1's package by `install.sh` | **went through without a word** (below, fixed); with the fix: refused on the device before anything was written, "boot_b and misc were not changed"; with `MU300_DOWNGRADE=yes`: through, everything carried |
+
+Every way kept the planted state as `mu300-update apply` does (part 2), with two differences that come from Android,
+not from the carry block:
+* **The 8 "changed" items** are directories, symbolic links and a FIFO the carry makes anew (only files go by link):
+  made from Android, each gets `security.selinux` = `u:object_r:unlabeled:s0` from Android's kernel. Nothing of the
+  user's is lost or altered (the ACL, the capability, the user attribute are all there); every file the installers
+  ever unpacked from Android carries the same label, and OpenWrt and Ubuntu here do not use SELinux.
+* **The password.** The zip does not keep a well-known one (`default_hash`, since issue #167): root's `ubuntu`, set by
+  the computer installer, became the image's own, none ("root's password is the images' own again: none, until one
+  is set"; the plan says so before). `mu300-update` keeps the hash, and `install.sh` sets the one it asks for. By
+  decision, not changed here; a zip update over a device with `ubuntu` leaves root without a password.
+
+Found and fixed on this branch:
+* **`install.sh` (and `install.ps1`) took an older release.** `android-install.sh` had no downgrade check: only
+  `mu300-update` and the Magisk installer had one, so the computer's installers put T1 over T2 without asking. It now
+  reads each image's `etc/mu300/image-version` from its tarball (Android's toybox `tar -xzOf`, measured) and refuses
+  an older release than the installed system (the release-tag order) before it writes anything; `MU300_DOWNGRADE=yes`
+  in front of `install.sh` / `install.ps1` allows it, and the Magisk installer passes on its own decision
+  (`DOWNGRADE` in the env file). Tests: `test_android_install.Downgrade`.
+* The update texts of `install.sh`, `install.ps1` and the window still said "settings and data (/etc/mu300, users and
+  home directories, SSH host keys, UCI)"; they now say that everything added or changed is kept (en, tr, zh).
+
+Seen, not changed: run seconds after Android had booted, with `ANDROID_SERIAL` naming it, `install.sh` once found
+no Android answering and, because two other boards on the computer were in Linux, offered to reboot "the device" out
+of Linux (answers mode stopped at that question; a minute later the same run found Android). Answered yes it would
+have stopped too: `linux-mode.sh` reboots nothing over SSH while more than one board is in Linux.
+
+**Not run**: the page in a browser (its backend was driven), the 5.4 kernel, an SD card, Ubuntu through the zip or the
+computer installer.
 
 **Not measured, or not on a device.**
 * Before 2026-10-16 nothing of this ran on an F50 or a U30 Air: not the helper on the devices' kernels (5.4 vendor, mainline) and

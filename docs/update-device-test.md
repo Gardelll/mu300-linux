@@ -2,7 +2,7 @@
 
 What docs/FINDINGS.md 85 measured in containers (and `tests/update-experiment` on the images of a real release
 build), to be run on the **F50 with Ubuntu** and the **U30 Air with OpenWrt and the control panel** in one go,
-before the release that brings it is promoted. Run on both devices on 2026-10-16 (FINDINGS 85, "On the devices"; part 7 not yet). Every step says what to
+before the release that brings it is promoted. Run on both devices on 2026-10-16 (FINDINGS 85, "On the devices"; part 7 on a third F50 with OpenWrt, the same day). Every step says what to
 expect; what differs goes into FINDINGS 85 with the device, the release and the kernel.
 
 Two updates are measured on each device: **the first one**, from the newest published release (v2026.10.27: no
@@ -222,6 +222,10 @@ reboot      # then: ls -l /srv/big.img, part 2's verify, and "sudo mu300-update 
   in `/data/adb/mu300-install.conf`.
 * The computer installer: `MU300_RELEASE_URL=http://127.0.0.1:8000/download/$T2 ./install.sh`, answer **update**:
   `[device] carrying everything of yours in the previous ubuntu over`, the report. No `<os>.old` on this path.
+  An older release's package is refused on the device before anything is written (`the installed ubuntu is T2, and
+  this installation is T1, an older release`); `MU300_DOWNGRADE=yes` in front of `install.sh` allows it.
+* In answers mode set `ANDROID_SERIAL` to the board in Android and leave `MU300_ANS_REBOOT_ANDROID` unset: a run
+  started while Android is still coming up stops at that question instead of waiting (FINDINGS 85, part 7).
 
 ## 8. Afterwards, and what to bring back
 
