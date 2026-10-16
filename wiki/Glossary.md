@@ -24,7 +24,7 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **KVM:** A Linux feature for running virtual machines fast. *Here:* `/dev/kvm` exists on all three kernels.
 
-**zram:** Compressed swap kept in RAM, so more fits in memory. *Here:* `mu300-zram` adds lz4 zram of half the RAM.
+**zram:** Compressed swap kept in RAM, so more fits in memory. *Here:* `mu300-zram` adds lz4 zram of half the RAM, on by default; `sudo mu300-zram off` turns it off and `/etc/mu300/zram.conf` sets size, compressor and swappiness.
 
 **OTG / USB host:** Normally the device is the "guest" on your computer's USB; in host mode it is the "boss" and you can plug things into it. *Here:* the U30 Air can be a USB host on the mainline kernels (`sudo mu300-usb host`); the F50's port is its power supply, so no.
 

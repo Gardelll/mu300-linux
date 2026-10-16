@@ -132,7 +132,8 @@ trying it costs you the server.
     machine you use over SSH or the web interface;
   * no speaker or microphone: voice calls with audio, through the modem's audio DSP, are work in progress and carry
     no sound yet (see [What works](#what-works-and-what-does-not));
-  * about 1.4 GB of RAM, because the modem firmware reserves most of the rest.
+  * about 1.4 GB of RAM, because the modem firmware reserves most of the rest. Compressed swap in RAM (zram, half the
+    RAM, lz4) is on by default and stretches it; `sudo mu300-zram off` turns it off.
 
 ## Before you start
 
@@ -455,6 +456,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Connect the device to someone else's Wi-Fi | `sudo mu300-toolkit` → Network → Wi-Fi → "Join a network", or `sudo wifi-client scan` then `sudo wifi-client connect "NAME"` (it asks for the password); see [Wi-Fi client](#wi-fi-client) |
 | Update to the newest release | `sudo mu300-update check` then `sudo mu300-update apply`. The device looks for a new release at boot and every 6 hours and says so at login and in `mu300-toolkit`; it never installs one by itself |
 | Fixed TTL for mobile data (so the operator cannot tell hotspot traffic from the device's own) | `sudo mu300-ttl set 64` (`sudo mu300-ttl off` goes back to the default), `mu300-toolkit` -> Network -> TTL, or LuCI Cellular -> TTL. On the mainline kernels the rule is in tc and flow offloading stays on; on 5.4 it is in nftables and offloading is off while a TTL is set |
+| Compressed swap in RAM (zram) | On by default on every system and kernel: half the RAM (~700 MB of swap), lz4, priority 100, `vm.swappiness` 100. `mu300-zram` shows it and what it costs; `sudo mu300-zram off` / `on` (kept across reboots and updates), or `mu300-toolkit` → System → Compressed swap. Size, compressor (`zstd` packs ~3.5:1 against lz4's ~2.5:1, for more CPU) and swappiness: `/etc/mu300/zram.conf`, see `/opt/mu300/lib/zram.conf.example` (FINDINGS 162) |
 | Switch between OpenWrt and Ubuntu | `sudo mu300-os openwrt` / `sudo mu300-os ubuntu` (`openwrt-luci` for the one with the control panel) |
 | Failed boots in a row before it falls back to Android (1-6, default 5) | `sudo mu300-next-boot attempts N` |
 | Keep Linux for good: never back to Android by itself, only by hand | `sudo mu300-next-boot lock` (or "Lock Linux" on the panel's home page); `unlock` goes back to the attempts. See [Locked Linux](#locked-linux) |

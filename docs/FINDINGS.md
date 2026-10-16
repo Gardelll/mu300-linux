@@ -1221,7 +1221,7 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
 * Not needed on Linux: `logobuffer` (9 MiB, there is no display) and `sysdump-uboot` (16 MiB, bootloader crash dumps).
   `kernel/patches/of-reserved-mem-skip.patch` adds `CONFIG_OF_RESERVED_MEM_SKIP` (the boot image command line is not
   passed on by LK, so a cmdline option alone would not work); MemTotal grew from 1447 to 1473 MiB.
-* `mu300-zram.service` adds lz4 zram swap of half the RAM (swappiness 100).
+* `mu300-zram.service` adds lz4 zram swap of half the RAM (swappiness 100); settings and the off switch: 162.
 
 
 ### 28. Mali-G57 GPU (OpenCL) without Android
@@ -8446,3 +8446,56 @@ was never resized (sectors 12275712..120500223 throughout).
 **Open.** install.sh does not compare the partition table on the disk with what the running kernel shows before it
 uses the region (offer_repartition does, for userdata); only the grow path of uninstall.sh can make them differ, and
 it now says to restart.
+
+### 162. zram by default: one script for every system, settings in a file, an off switch, zstd on mainline
+
+**What was there.** zram swap has been on since 27: `zram-start` (Ubuntu's and Arch's `mu300-zram.service` before
+`swap.target`, OpenWrt's `mu300-hw`) made lz4 zram of half of MemTotal, priority 100, `vm.swappiness=100`,
+`vm.page-cluster=0`. Nothing could change it or turn it off short of masking the unit. Its "already on" check was
+`swapon --show`, which OpenWrt's busybox `swapon` does not have (so it never saw a live swap there); its `-p` is in
+OpenWrt's busybox (`FEATURE_SWAPON_PRI` default y in 25.12's `Config-defaults.in`), as are `mkswap` and `swapoff`.
+
+**Kernels.**
+- 5.4 vendor (`kernel/linux.config`): `ZRAM=m` (the fragment's `=y` is refused, `fragment-rejected.txt`), `ZSMALLOC=m`,
+  `ZRAM_WRITEBACK`/`ZRAM_DEDUP`; zram there compresses through the crypto API, and `CRYPTO_LZ4`, `CRYPTO_ZSTD` are
+  built in, `CRYPTO_LZO` a module: every compressor is offered. Left as it is.
+- 6.18.56 and 7.2.10 as shipped (`upstream/out*/kernel.config`): `SWAP`, `ZRAM`, `ZSMALLOC`, `ZRAM_BACKEND_LZ4`,
+  default lz4, all built in; `ZSTD_COMPRESS`/`ZSTD_DECOMPRESS` built in already (for `CRYPTO_ZSTD`) but
+  `ZRAM_BACKEND_ZSTD` not set, so `comp_algorithm` offered `[lz4]` alone. `mu300-mainline.config` now sets
+  `ZRAM_BACKEND_ZSTD=y`: a bool, the library is there, so the Image grows by the backend's glue only (a few KiB).
+  Both versions have the option with the same `select`s (`drivers/block/zram/Kconfig` at v6.18 and v7.2).
+- PR #256 (every module): `all-modules.py` keeps every `=y` at `=y` and leaves bools alone outside the families it
+  opens, so zram, zsmalloc and both backends stay built in; nothing here depends on a module.
+
+**Why not systemd's zram-generator or OpenWrt's zram-swap.** Ubuntu ships `systemd-zram-generator`, but the same
+script serves Ubuntu, Arch and OpenWrt (busybox), with one settings file, and has run since 27; a second mechanism
+would only add a place where the two disagree. OpenWrt's `zram-swap` depends on `kmod-zram`, a 6.12 module that the
+image removes with every other kmod (the kernels are ours). The images install neither (a test checks).
+
+**Changed.**
+- `mu300-zram` (on `PATH`): `start` (the boot; `zram-start` stays as the name OpenWrt's `mu300-hw` calls), `stop`,
+  `on`/`off` (now and for every boot: `ZRAM_ENABLE` in `/etc/mu300/zram.conf`, a file of the user, kept by updates),
+  `status` (size, compressor, priority, and what the swapped-out pages cost: `mm_stat`'s orig_data_size against
+  mem_used_total), `brief` (a line in `mu300-toolkit info`). The toolkit's System menu has "Compressed swap (zram)".
+- Settings, each optional and checked (a value out of range or not a number takes the default):
+  `ZRAM_SIZE_PERCENT` (50; 1-200), `ZRAM_ALGORITHM` (lz4; one the kernel does not offer falls back to lz4, logged),
+  `ZRAM_PRIORITY` (100), `ZRAM_SWAPPINESS` (100; 0-200, and 100 where the kernel refuses more: 5.4 stops at 100).
+  `/opt/mu300/lib/zram.conf.example` explains them; it is in `/opt/mu300` so OpenWrt has it too.
+- The "already on" check reads `/proc/swaps`; under a live zram `start` only sets the sysctls again, it never resets
+  the device. `off` swaps off first and resets only after that worked: with too little free RAM for what zram holds,
+  swapoff fails, zram stays on and the command says why.
+
+**Sizes and memory.** MemTotal is ~1473 MiB (27), so the default is ~736 MiB of swap. An empty zram costs nothing
+(zsmalloc allocates per stored page); a full one holds those pages in about 736/2.5 ~ 290 MiB with lz4 or ~210 MiB
+with zstd (typical anonymous memory; text and JSON pack better, already-compressed data worse), plus about 0.1 % of
+the swap size for zram's own table. Swappiness 100 weighs swap and file cache equally, which suits a swap that is RAM;
+up to 200 makes sense on mainline when file cache matters more (a busy Docker/KVM host with little I/O), it is a
+setting rather than a new default because no device run has compared the two.
+
+**Tests.** `tests/test_zram.py` under each shell, against a fake `/sys/block/zram0` and `/proc`: defaults, every
+setting, the fallback compressor, hostile and out-of-range values, switched off, already on, no zram in the kernel,
+`on`/`off` keeping the other settings, a failed swapoff, `status`/`brief`; the wiring (unit, the three images,
+`mu300-hw`, `PATH`), no second zram setup in any image, both mainline compressors and 5.4's options.
+
+**Open.** No device run yet: zram at boot on each system and kernel, the off switch over a reboot, `zstd` on mainline
+(`comp_algorithm` should list `lz4 zstd` now), and memory pressure (Docker and a KVM guest) with lz4 against zstd.

@@ -253,7 +253,8 @@ any command.</p>
 <pre><code>sudo mu300-toolkit                       <span class="c"># the menu</span>
 mu300-toolkit top                        <span class="c"># temperatures, CPU, RAM, network speed</span>
 sudo mu300-toolkit profile performance   <span class="c"># also eco, balanced</span>
-sudo mu300-toolkit stress all 10         <span class="c"># a stability test under load</span></code></pre>
+sudo mu300-toolkit stress all 10         <span class="c"># a stability test under load</span>
+mu300-zram                               <span class="c"># compressed swap in RAM: status (sudo mu300-zram off|on)</span></code></pre>
 <p>Optional parts are called extras:</p>
 <pre><code>mu300-extra list
 sudo mu300-extra install lang            <span class="c"># more web interface languages (OpenWrt)</span>
@@ -339,7 +340,8 @@ sudo mu300-usb adb on                   <span class="c"># and off: sudo mu300-us
 <li><strong>Bluetooth:</strong> BlueZ; scanning works.</li>
 <li><strong>GPU:</strong> the Mali-G57 runs OpenCL 3.0, with no screen.</li>
 <li><strong>KVM:</strong> <code>/dev/kvm</code> on all three kernels, for virtual machines.</li>
-<li><strong>Memory:</strong> about 1.4 GB usable, plus compressed swap in RAM (zram).</li>
+<li><strong>Memory:</strong> about 1.4 GB usable, plus compressed swap in RAM (zram, on by default: half the RAM, lz4;
+<code>sudo mu300-zram off</code> turns it off, <code>/etc/mu300/zram.conf</code> sets size and compressor).</li>
 <li><strong>Web interface languages (OpenWrt):</strong> English, Turkish and Simplified Chinese out of the box; 40
 more for LuCI and 29 more for the control panel with the <code>lang</code> extra. Switch under System &gt; System &gt;
 Language and Style, or System &gt; Languages on the control panel. The panel's other translations are machine
