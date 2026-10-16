@@ -154,6 +154,7 @@ what replaced it. The table below gives each section's state.
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
+| 131 | An update writes only what changed: the new image's binaries that the installed system has byte for byte become second names of its files (never text, never `etc`, `var` or the user's places), the room counted before anything is written by every installer and by `mu300-update`, nothing left behind by a run that fails or is cut off, and the computer installer's switch module of the release | current (unit tests; the zip, `mu300-update apply` with rollback, and the computer installer on an F50, plain OpenWrt with Docker in its 804 MiB region, 2026-10-16; Ubuntu 24.04 by `mu300-update` with rollback on an F50, 2026-10-17) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
@@ -6452,8 +6453,9 @@ not have is carried (but the files of packages, and the project's own, which are
 them the update goes on without, and the report says they are in the previous system. A deletion cannot be told
 either: what the user deleted of the image is back (but services and sudo rules, above).
 
-**Room, and the previous system.** `apply` keeps the old system whole as `<os>.old` for `rollback`, so the user's
-files are copied, and there must be room: what is to be written plus 5 % and 32 MB against `df`. When there is
+**Room, and the previous system.** (Since §131 the new image is not unpacked whole: its unchanged binaries and the
+device's own files are second names of the old system's, and every way to update counts the room first.) `apply`
+keeps the old system whole as `<os>.old` for `rollback`, so the user's files are copied, and there must be room: what is to be written plus 5 % and 32 MB against `df`. When there is
 not, it says how much is needed and how much is free, removes `<os>.new` and changes nothing; `apply --no-rollback`
 then carries by link - the files become second names of the old system's, no data is copied, 8 MB of margin - and
 the old system goes aside as `<os>.broken`, which `rollback` does not offer and the next `apply` or `clean` removes
@@ -8348,6 +8350,146 @@ with the right one - checked (journal replayed, `mu300-pwcheck`), kept; with a w
 written; after these two `ubuntu` logged in over ssh and a wrong password was refused. `MU300_KEEP_PASSWORD=no` with
 `MU300_PASSWORD` - the new one logged in, `ubuntu` no longer. The zip's `computer/install.sh` (answers mode, keep, the
 right password): pushed the zip's `mu300-pwcheck` and busybox, confirmed, updated, and `ubuntu` logged in afterwards.
+
+### 131. An update writes only what changed: the unchanged binaries of the new image are the installed ones
+
+**Status: current** (unit tests; the zip, `mu300-update apply` and the computer installer on F50-C, plain OpenWrt with
+Docker in the image, kernel 6.18, in its 804 MiB region, 2026-10-16, with six signed test releases that were never
+published; Ubuntu measured in containers).
+
+**What was wrong.** Every way to update - `mu300-update apply`, the Magisk zip, the computer installers
+(`tools/android-install.sh`) - unpacked the whole new image as `<os>.new` beside the running system, then carried the
+user's files over (§85) and swapped: room for a second copy of the system. With Docker in the image (§130) plain
+OpenWrt is 472 MiB of the F50's 775 (the device's own files included), and a zip update stopped at `tar: No space left
+on device`; Ubuntu with Docker would need about 1.63 GiB in a region of 1.6. A run that failed or was cut off left
+`<os>.new` behind (F50-C: the disk at 98 % until it was removed by hand). And `mu300-update apply` wanted 1 GB plus
+1 GB per system free before it downloaded anything, which an 804 MiB region never has.
+
+**The change.** A file of the new image that the installed system has byte for byte - the same type, mode, owner,
+size and content, and no extended attribute but Android's SELinux label - is not written again: it becomes a second
+name (a hard link) of the installed file. Only what changed takes room (`mu300-update`, the `delta` block).
+
+* The new image's manifest (`etc/mu300/image-manifest.gz`; for `mu300-update` before the download the release's
+  `mu300-*-rootfs.manifest.gz`) says what its files are; `mu300-carry same OLD` hashes the installed files that could
+  match (same path, mode, owner and size) and says which are equal, and whether each is a binary or text.
+* `mu300-carry tarfilter OLD LIST LOG` sits between `gzip -dc` and `tar -x`: it passes the tar stream on without the
+  listed files and compares each with the installed file **byte for byte as the stream passes** - a file that changed
+  after it was looked at is written after all (what had passed already is sent again from the installed file, which
+  it equalled). A hard link of the archive to a file left out is left out too. GNU long names, pax headers and plain
+  ustar are read; a member with extended attributes in the archive, or a name with `..`, is never left out.
+  `mu300-carry tarlink OLD NEW < LOG` then makes the links, gives the directories back the times tar gave them, and
+  refuses unless the log ends with tarfilter's end of the archive.
+* The new image's own parts do it: its `mu300-update`, `mu300-carry` and static busybox are taken out of the tarball
+  first (a pass over it that writes 3 MB into a directory of the Linux filesystem only root can enter); the system's
+  or Android's tar still unpacks. Old updaters hand over to the release's own before anything (`apply`'s self-update,
+  §86), and the zip and the computer installers are the release's own: no older release has to know about this. An
+  image without these parts, a release without manifests, or `MU300_DELTA=0`: the whole image, as before.
+
+**What is linked, and what never is.** Two names of one file are one file: what is done to it through one name -
+written into, truncated, given another mode - happens to the other system's too. Package managers never do that
+(dpkg and apk unpack beside a file and rename it over; so do depmod, ldconfig, Python's byte-compiler and the VPN
+module's link hook), but an editor does (nano and busybox vi write into the file; vim does for a file with two
+names), and so do `cp FILE EXISTING`, `>>` and `chmod`. So:
+
+| linked | never linked |
+|---|---|
+| binaries (a NUL byte in the file) under `usr` (not `usr/local`), `bin`, `sbin`, `lib*`, `opt/mu300` | text anywhere: scripts, units, Python and Perl modules, the project's own scripts - whatever an editor opens |
+| the binaries of the device's own files the installers pack (`mu300-vendor-OS.tar.gz`: firmware, Android's userspace) | `etc`, `var`, `root`, `home`, `srv`, `www`, `usr/local`, `opt/<other>`: what the user and the system change |
+| in the carry step, `mu300-update apply` too: the device's own files of the old system (`V` lines of the plan, second names in every mode, never a copy: 181 MiB on F50-C) | `lib/apk`, `usr/lib/opkg` (package databases), `usr/lib/locale/locale-archive` (`localedef` adds to it in place) |
+
+The update itself never writes into such a file afterwards: the carry block replaces whole files (`mu300-carry`
+unlinks what is in the way), accounts and the report are renamed into place, and the one place that copied over a
+file of a system - `modules.builtin` and `modules.builtin.modinfo` into Ubuntu's `lib/modules` - now removes it first.
+`rollback`, `clean` and the swaps only rename and unlink. What remains: a user who `cp`s over a program of the image
+or `chmod`s one while the previous version is kept for a rollback changes that version's too; `apply` says so
+("shares N MB of programs and libraries ... replace such a file, never write into it"). The price of never linking
+text: on Ubuntu 24.04 76 MiB (Python, Perl, scripts) are written at every update, on OpenWrt 2.5 MiB.
+
+**Room, before anything is written.**
+
+* The installers (`android-install.sh`: the zip and `install.sh` alike) count every system they install before the
+  first write: the files of the new image that are not linked (4 KiB blocks), a block per directory and per long
+  symbolic link, 2 % and 16 MB for directories and the journal, the device's files that are not linked (a pass of
+  tarfilter over their pack), 8 MB for the carry by link. Too little: "not enough room on the Linux partition: N MB
+  needed ..., M MB free", "nothing was changed", and the run ends before the boot chain or anything else is touched.
+  With `MU300_DELTA=0` the room of the whole image is counted and checked the same way.
+* `mu300-update apply` counts before it downloads (`update_need`): the download (the size in GitHub's list of the
+  release's files, what a mirror answers to a HEAD request, or the file of `--from`), what unpacking writes (the
+  release's manifest against the installed system, hashed by the running system's helper: exact with one that has
+  `same`, else every file there byte for byte counts, text too), the copy of the user's files for the rollback
+  (`carry_need`, which no longer counts the device's own files: they are links), the kernel, extras and VPN module.
+  After the download `apply_one` counts again with the new image's own helper, exactly, and stops with nothing
+  changed (the downloads removed) when it does not fit. A release without manifests: the old rule.
+
+**Nothing left behind.** `apply` removes what an update that was cut off left (`<os>.new`, the work directories)
+before it counts, and its EXIT trap removes the system it was making when it ends before the switch (an error, ^C,
+a kill). The installers do the same at their start ("removed openwrt.new, left by an installation that did not
+finish") and remove the half-made system when unpacking fails.
+
+**The switch module of the computer installer.** `tools/install-magisk-module.sh` installed the module's generic
+`module.prop` (`v1.0`) over the zip's module of the release (seen on F50-C). It now writes
+`android/magisk/installer/module.prop.in` with the release, versionCode, system and kernel as `make-magisk-zips.sh`
+does (`install.sh` passes them, `install.ps1` the same); a build of the checkout keeps the generic one.
+
+**Measured in containers** (the image unpacked, the plan and the unpack of the delta block, `du` of both systems
+together; "whole image" is what every update wrote before):
+
+| update | whole image | written now | linked | text kept out |
+|---|---|---|---|---|
+| OpenWrt v2026.10.16.1 -> .80 (the same packages, this updater) | 58.3 MiB | 8.0 MiB | 50.4 MiB | 2.4 MiB |
+| OpenWrt .80 -> .81 (a few files changed) | 60.3 MiB | 9.3 MiB | 51.0 MiB | 2.7 MiB |
+| OpenWrt v2026.10.16.1 -> .82 (Docker added: 190 MiB new) | 250.5 MiB | 207.5 MiB | 43.0 MiB | 2.4 MiB |
+| OpenWrt with Docker .82 -> .83 (a few files changed) | 252.5 MiB | 10.0 MiB | 242.5 MiB | 2.7 MiB |
+| Ubuntu 24.04 v2026.10.16.1 -> .80 | 349.2 MiB | 99.4 MiB | 249.8 MiB | 74.5 MiB |
+| Ubuntu 24.04 .80 -> .81 | 351.2 MiB | 101.3 MiB | 249.8 MiB | 74.7 MiB |
+
+The plan's count was within 0.6 MiB of what `du` measured each time. Ubuntu with Docker (§130) was not built here:
+Docker's 260 MiB are binaries and are linked whenever they did not change, so such an update writes about the same
+100 MiB as Ubuntu without Docker, instead of 608 MiB of image and the device's 205: well within the 1.6 GiB the
+installers ask for, and `NEED_UBUNTU` is left as it is.
+
+**On F50-C** (Android 12, the internal region of 804 MiB at offset 61698211840, plain OpenWrt, kernel 6.18). The test
+releases were made from the published v2026.10.16.1 by repacking its images with this branch's updater and helper
+(each "changed" one with a new text file, a new 2 MiB binary and bytes appended to `/usr/sbin/xl2tpd`), signed with
+the project's key, their zips by `make-magisk-zips.sh`: v2026.10.16.80 and .81 (OpenWrt and Ubuntu 24.04), .82 (plain
+OpenWrt with Docker, built by `openwrt/build-rootfs.sh` with `MU300_DOCKER=1` from this branch with `docker-in-images`
+merged for the build only), .83, .84 and .85 (.82 with a few files changed each). Free space from Android (read only,
+the journal replayed) or `df` on the device:
+
+| step | how | free before | result | free after |
+|---|---|---|---|---|
+| v2026.10.16.1 -> .82 (Docker) | the .82 zip from Android | 506 MiB | "43 MB ... not written again; 208 MB are written" | 314 MiB |
+| .82 -> .83 as before | the .83 zip with `MU300_DELTA=0` (the whole image) | 310 MiB | refused before anything was written: "464 MB needed ..., 310 MB free", "nothing was changed" | 310 MiB |
+| .82 -> .83 | the .83 zip | 310 MiB | "243 MB ... not written again; 10 MB are written"; booted, `docker info` 29.6.1, its data beside the systems | 288 MiB |
+| .83 -> .84 | `mu300-update apply` from a mirror on the computer, the previous version kept | 287 MiB | first refused, wrongly: the count (532 MB) took the device's files as a copy and guessed the download - fixed (`carry_need`, HEAD). Then "242 MB ... not written again; 10 MB are written", the kernel and boot image updated | 185 MiB (`openwrt.old`, and the previous boot image and its modules) |
+| the kept previous version | `openwrt.old` against a manifest of the running .83 taken before `apply` (every file's type, mode, owner, hash) | | the same but `/opt/mu300/bin/mu300-update`, which `apply` replaces with the release's updater before it starts (§86); the same again after .84 had booted and run dockerd | |
+| rollback | `mu300-update rollback`, reboot | | .83 again, its manifest the one taken before the update (but that updater) | |
+| .83 -> .85 | the .85 zip's `computer/install.sh`, answers mode, update | 223 MiB | "243 MB ... not written again; 11 MB are written"; the Magisk module afterwards **v2026.10.16.85** (before this change: the generic v1.0); booted, Docker ran | 223 MiB |
+| a cut-off run | a 150 MiB `openwrt.new` planted, then the .80 zip (`MU300_DOWNGRADE=yes`) | 73 MiB | "removed openwrt.new, left by an installation that did not finish", "44 MB ... not written again; 16 MB are written" | 442 MiB |
+
+The computer installer's "keep the password" could not check OpenWrt's `$5$` hash with the v2026.10.16.1 kernel
+bundle the test releases carry (it has no `mu300-pwcheck`: "UNVERIFIABLE", §126); answered no, with the same password.
+At the end v2026.10.16.1's own zip (`MU300_DOWNGRADE=yes` and `MU300_PASSWORD=ubuntu` in `/data/adb/mu300-install.conf`,
+which it removes), the Docker zone and network that .82's first boot had added removed with `uci`, the test's boot and
+temporary files removed: F50-C in Android, v2026.10.16.1, root's password `ubuntu`.
+
+**On F50-B** (Ubuntu 24.04, kernel 7.2.10, 32 GB region, no internet; 2026-10-17), `mu300-update apply --from` a
+release directory on the device, each time with a manifest of the running system taken first: v2026.10.16.1 -> .80
+"249 MB ... not written again; 99 MB are written" (528 files of the user's, 32 MB, copied for the rollback; used
++163 MiB with `ubuntu.old` kept and the kernel's modules); booted, `is-system-running` "running", no failed unit.
+.80 -> .81 "249 MB ... not written again; 101 MB are written"; booted, the changed `ethtool` ran. Both times
+`ubuntu.old` was the manifest taken before `apply` but for the updater `apply` replaces first and what the running
+system itself wrote meanwhile and at its shutdown (the journal, `wtmp`, `random-seed`, systemd's private `tmp`
+directories: all under `/var` and `/tmp`, never linked); after .81 had booted nothing more had changed in it.
+`rollback` and a reboot: .80 again, equal to its manifest but for the updater and a `pstore` file the boot writes.
+Back to v2026.10.16.1 by `apply --from ... --downgrade` (its own updater: the whole image, and 217 MB "carried",
+the device's files copied as before), `clean`, the test's files removed. The computer installer on Ubuntu was not
+run: F50-B's Android has the same adb serial as F50-C, which was in Android.
+
+**Not changed.** The panel's "Free space needed" (`space_needed` in `status` and `releases`) is still the old rule of
+1 GB and 1 GB per system: shown, never enforced, and no longer what `apply` checks when the release has manifests.
+`mu300-update apply` copies a kernel bundle's modules into the new system and keeps the previous set with the previous
+boot image (about 60 MB on F50-C with 6.18), as before.
 
 ### 132. Every OpenWrt release shipped its web server's TLS key: one private key for all devices of an image
 
