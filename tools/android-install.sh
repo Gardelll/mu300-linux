@@ -366,7 +366,8 @@ for os in $OSES; do
     done
     vt=; if [ -f $T/mu300-vendor-$os.tar.gz ]; then vt=$T/mu300-vendor-$os.tar.gz; fi
     echo none > $w/room
-    if [ -n "$bb" ] && [ "${MU300_DELTA:-1}" != 0 ]; then
+    # (MU300_DELTA=0 in the environment: the whole image is unpacked; the room for that is counted all the same)
+    if [ -n "$bb" ]; then
         stage_run "compare $os" 3600 sh -c 'MU300_LIB= "$1" sh "$2/root/opt/mu300/bin/mu300-update" delta-room "$3" "$2" "$4" "$5" > "$2/room.new" && mv "$2/room.new" "$2/room"; true' \
             sh $bb $w $M/$os $os "$vt" || exit 1
     fi
