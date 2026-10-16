@@ -155,6 +155,7 @@ what replaced it. The table below gives each section's state.
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
+| 151 | The U30 Air's battery LED shows the battery as ZTE's firmware (white from 60 %, blue from 10 %, red below; breathing on the PMIC's curve while charging; no timeout on outside power, nor for the low-battery red), read at every tick of `mu300-buttons` | current (unit tests; ZTE's behaviour from the stock firmware and its guide; not yet watched on a device) |
 
 ## Hardware and firmware facts
 
@@ -2765,6 +2766,9 @@ changes under a live connection.
 
 The PMIC's LED also carries the heat alarm (`thermal-guard`, now running on 5.4 too, where it only watches): one
 colour at a time, since the white outshines red and blue when they are mixed.
+
+**Update 2026-10-16:** the battery LED shows the battery now, as ZTE's firmware does, instead of white for "Linux
+is up" (§151).
 
 ### 33g. The U30 Air's NFC tag
 
@@ -8392,3 +8396,56 @@ LuCI login page, as did HTTP; a second run kept the new key. Then the boot path:
 in `/etc/uci-defaults`, a reboot: the script ran and was gone, uhttpd had made another new pair (EC:94:0E...), LuCI
 answered over both. Through all of it the VPN stayed up with the same exit IP, and the sha256 of every file of
 `/etc/config` and `/etc/mu300/vpn*` was the same as before.
+
+### 151. The U30 Air's battery LED shows the battery, as ZTE's firmware
+
+**Status: current** (unit tests; ZTE's behaviour read from the stock firmware and ZTE's guide, 2026-10-16; not yet
+watched on a device, see the PR's checklist).
+
+**Before.** The battery LED (the PMIC's RGB LED, `sc27xx-bltc`; its green channel is white) was lit white while Linux
+ran (`mu300-led power on`), blinked 1 s / 1 s in the charging boot, and timed out with the others after LED_TIMEOUT.
+Nothing showed the charge. kano's fork (kanoqwq/mu300-linux, branch clean-tf-7.2, commit 2af101f8) made it blue and
+breathing while charging, white when full, red blinking at 15 % and below, and kept every LED lit on outside power;
+the thresholds and colours were his choice.
+
+**What ZTE's firmware does.** Read from a U30 Air's own backup (build `U30Air_SSV1.0.0B14`, the `super` partition's
+logical partitions taken apart offline, nothing run, no device booted into Android):
+
+- `system/framework/services.jar`, `ZteBatteryService$ZteLed.updateLightsLocked()`, the branch for the U30
+  ("IndicatingLed ufi with battery", gated by `ro.vendor.feature.zte_leds_for_u30`): white (`0x007800`: the green
+  channel at 120) at 60 % and above, blue (`0x0000c8`: 200) from 10 %, red (`0x960000`: 150) below; not charging (Full
+  included) `setFlashing(colour, 1, 0, 0)`, steady; charging `setFlashing(colour, 1, 800, 1200)`.
+- The lights HAL (`vendor.sprd.hardware.lights-service`, the battery handler): an on or off time under 125 ms is
+  steady (trigger `none`, the brightness written); otherwise the `pattern` trigger with
+  `hw_pattern` "b 2on/5 b 3on/5 b 2off/5 b 3off/5": for 800/1200 "b 320 b 480 b 480 b 720", the PMIC's own
+  rise/high/fall/low curve, a 2 s breath.
+- `NotificationManagerService`: every LED goes dark 15 s after boot, a key press or an unplug, unless the device is
+  charging or full on the charger; `ZteBatteryService.turnOffUfiBatteryLight()` leaves the battery LED on below
+  10 %, so the red does not time out.
+- Power-off charging (`ztecharger`) lights the same colours with another curve and 5 % for red; not used here (LK's
+  charging boot comes to Linux, §36).
+
+ZTE's guide for the U30 Air (国际漫游指南, https://oss.ztedevices.com/prod/cn/2024/12/20241213641.pdf, item 4, the battery
+light) agrees: 红色常亮：电池电量低。蓝色常亮：电池电量中等。白色常亮：电池电量高或满。红色、蓝色或白色闪烁：充电中 (steady
+red: low; steady blue: medium; steady white: high or full; red, blue or white blinking: charging).
+
+**Now.** `mu300-led` draws the three channels from the battery (U30 Air only; the F50's same LED is its network light,
+the V50's PMIC LEDs are never written):
+
+- the fuel gauge's capacity and status (`sc27xx-fgu` on mainline, `battery` on 5.4) and outside power from the
+  charger's `online` (`bq256xx-charger`; `usb`/`ac` on 5.4); the gauge's status alone only where no charger says
+  anything, since it says Charging for a while after an unplug (kano saw it);
+- ZTE's colours, levels and thresholds; breathing on the pattern trigger with ZTE's curve
+  (`CONFIG_LEDS_TRIGGER_PATTERN`, now in the mainline config; the port's `leds-sc27xx-bltc` has had `pattern_set`
+  all along), a timer blink 800/1200 ms where there is no pattern trigger; the curve is written only when the state
+  changes, so a tick does not restart the breath;
+- on outside power no LED times out; an unplug starts the timeout again from then (ZTE's 15 s; LED_TIMEOUT here,
+  60 s by default); below 10 % on the battery the red stays lit whatever the timeout; `power off` (shutdown) puts it
+  out for good;
+- the heat alarm's siren goes over it (`thermal-guard`), and the battery LED is drawn again as the battery is then
+  when the alarm ends; mu300-power's idle still darkens everything but the low-battery red.
+
+The battery is read at every tick of `mu300-buttons` (every 5 s, `mu300-led tick`, which then lets the LEDs time out
+as `sleep --if-due` did), so a plug or a crossing of 60 % or 10 % shows within 5 s, with no new event wiring on
+Ubuntu or OpenWrt. `mu300-led battery` does it on demand. The charging boot (`charge on`) shows the charge the same
+way instead of the white blink.
