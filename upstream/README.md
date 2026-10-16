@@ -27,13 +27,15 @@ merged) describes the same GIC/UART/timer layout; this device is derived from th
 ## Build and test
 ```sh
 docker build -t mu300-mainline-build upstream/
-docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.56) into it, checked against kernel.org
+docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.56) into it, signatures checked (keys/)
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build.sh
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build-modules.sh
 upstream/make-bundle.sh mu300-kernel-6.18.tar.gz        # Image for LK, generic ramdisk segment, modules
 # on the device: MU300_KERNEL_BUNDLE=/path/mu300-kernel-6.18.tar.gz mu300-update boot
 ```
-The build stops on anything that drifts silently: a patch that neither applies nor is applied, a config option
+The build stops on a kernel tarball whose signatures do not check out (`verify-kernel-src.sh`: kernel.org's signed
+`sha256sums.asc` and the releaser's `tar.sign`, against the keys pinned in `keys/`, FINDINGS 161) and on anything
+that drifts silently: a patch that neither applies nor is applied, a config option
 Kconfig does not take (unless listed in `config-ignored.txt`), a port edit whose anchor moved, or a module whose
 vermagic does not match the kernel. `tools/make-release.sh` packages the same bundle as `mu300-kernel-6.18.tar.gz`.
 
