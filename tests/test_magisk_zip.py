@@ -150,6 +150,7 @@ MAGISK = {'META-INF/com/google/android/update-binary', 'META-INF/com/google/andr
 ALLOWED = MAGISK | COMPUTER
 # a signed release's zips carry its signature too
 SIGNATURE = 'mu300/SHA256SUMS.sig'
+PWCHECK = 'mu300/mu300-pwcheck'       # the password checker, in the zips of releases whose kernel bundle has it
 ASSETS = ('mu300-kernel.tar.gz', 'mu300-kernel-6.18.tar.gz', 'mu300-kernel-7.2.tar.gz', 'mu300-openwrt-rootfs.tar.gz',
           'mu300-openwrt-luci-rootfs.tar.gz', 'mu300-ubuntu-rootfs.tar.gz', 'mu300-ubuntu-26.04-rootfs.tar.gz')
 
@@ -164,12 +165,16 @@ def tar_with(members):
     return buf.getvalue()
 
 
-def fake_release(rel):
-    """REL laid out like a release's assets: tiny tarballs with the right names (the 5.4 one holds ./busybox)"""
+def fake_release(rel, pwcheck=False):
+    """REL laid out like a release's assets: tiny tarballs with the right names (the 5.4 one holds ./busybox, and with
+    PWCHECK ./mu300-pwcheck, as the bundles from FINDINGS 126 on)"""
     rel.mkdir(parents=True)
     sums = []
     for a in ASSETS:
-        data = tar_with({'./busybox': b'#!busybox\n', './x': a.encode()} if a == 'mu300-kernel.tar.gz' else {'./x': a.encode()})
+        k = {'./busybox': b'#!busybox\n', './x': a.encode()}
+        if pwcheck:
+            k['./mu300-pwcheck'] = b'\x7fELF pwcheck\n'
+        data = tar_with(k if a == 'mu300-kernel.tar.gz' else {'./x': a.encode()})
         (rel / a).write_bytes(data)
         sums.append(f'{hashlib.sha256(data).hexdigest()}  {a}\n')
     upd = b'#!/bin/sh\n'
@@ -235,6 +240,20 @@ class Builder(unittest.TestCase):
         self.assertEqual(z.read('mu300/busybox'), b'#!busybox\n')
         self.assertEqual(z.read('mu300/SHA256SUMS'), (self.rel / 'SHA256SUMS').read_bytes())
         self.assertNotIn(SIGNATURE, names)
+
+    def test_the_password_checker_of_the_bundle_goes_into_every_zip(self):
+        # tools/pwcheck: in the 5.4 bundle of the releases that have it, and then in every zip; older bundles: none
+        self.build()
+        self.assertNotIn(PWCHECK, zipfile.ZipFile(self.tmp / 'out/mu300-magisk-v2026.10.06-openwrt-k6.18.zip').namelist())
+        rel = self.tmp / 'v2026.10.07'
+        fake_release(rel, pwcheck=True)
+        shutil.rmtree(self.tmp / 'out', ignore_errors=True)
+        r = self.build(rel=rel)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        zips = sorted((self.tmp / 'out').glob('*.zip'))
+        self.assertEqual(len(zips), 11)
+        for zp in zips:
+            self.assertEqual(zipfile.ZipFile(zp).read(PWCHECK), b'\x7fELF pwcheck\n', zp.name)
 
     def test_a_signed_release_puts_its_signature_into_every_zip(self):
         (self.rel / 'SHA256SUMS.sig').write_text('untrusted comment: signed by key 0102030405060708\nRWQx\n')
@@ -527,7 +546,7 @@ class ReleaseZips(ShellTest):
                 names = set(z.namelist())
                 m = dict(l.split('=', 1) for l in z.read('mu300/manifest').decode().split('\n') if '=' in l)
                 payload = {f'payload/{m["KERNEL_ASSET"]}', f'payload/{m["ROOTFS_ASSET"]}'}
-                self.assertEqual(names - {SIGNATURE}, ALLOWED | payload, zp.name)
+                self.assertEqual(names - {SIGNATURE, PWCHECK}, ALLOWED | payload, zp.name)
                 for n, key in ((m['KERNEL_ASSET'], 'SHA256_KERNEL'), (m['ROOTFS_ASSET'], 'SHA256_ROOTFS')):
                     h = hashlib.sha256()
                     with z.open(f'payload/{n}') as f:

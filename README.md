@@ -322,6 +322,11 @@ nothing is changed. **no** asks a new password, typed twice. A system the update
 password. In answers mode: `MU300_ANS_KEEP_PASSWORD`, `MU300_ANS_CURRENT_PASSWORD` (one try,
 [docs/INSTALLER-AUTOMATION.md](docs/INSTALLER-AUTOMATION.md)).
 
+The check runs nothing of the installed Linux system on Android's side: it uses the project's own `mu300-pwcheck`
+(static, libxcrypt) and busybox from the release's kernel bundle. Releases up to v2026.10.16.1 have no
+`mu300-pwcheck`: with them an Ubuntu password (yescrypt) cannot be checked and the installer stops; answer **no** then
+(FINDINGS 126).
+
 If the device is running Linux rather than Android when you start, the installer notices and offers to reboot it
 into Android for you over SSH.
 
@@ -735,7 +740,9 @@ delete the zip, or the file from it, after the install. The installer never show
 takes these lines only from the zip: `MU300_PASSWORD` and `MU300_PASSWORD_RESET` in `/data/adb/mu300-install.conf`
 are not used by an update (they still set the password of a system installed new), so a line left there cannot reset
 the password at a later update. The computer's installers ask the same question at the terminal (their **update**,
-above).
+above). The check uses only the zip's own tools (`mu300/mu300-pwcheck`, `mu300/busybox`), never a program of the
+installed Linux; a zip of a release up to v2026.10.16.1 has no `mu300-pwcheck` and cannot check an Ubuntu (yescrypt)
+password: it stops, and without `MU300_KEEP_PASSWORD` the password is kept unchecked.
 
 ### Starting Linux from Android without a computer
 

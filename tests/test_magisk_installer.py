@@ -1473,11 +1473,8 @@ class Install(InstallerCase):
                 self.assertFalse((self.fake.root / 'data/adb/mu300-linux-password.txt').exists())
 
     def check_env(self):
-        """the chroot of android-pwcheck.sh runs the command here (perl, openssl of this machine)"""
-        chroot = self.tmp / 'fake-chroot'
-        chroot.write_text('#!/bin/sh\nshift\nexec "$@"\n')
-        chroot.chmod(0o755)
-        return {'MU300_CHROOT': str(chroot)}
+        """nothing of the Linux system runs: the check takes the zip's own tools (here the fake busybox's mkpasswd)"""
+        return {}
 
     def test_keep_with_the_current_password(self):
         # MU300_KEEP_PASSWORD=yes and the right current password in the zip: kept, and the plan says it was checked.
@@ -1888,55 +1885,96 @@ class Password(ShellTest):
             self.assertEqual(len(seen), 20)
 
 
-def _crypt_with(tool, setting, pw):
-    """the crypt of PW with SETTING by this machine's TOOL (perl, openssl), or None where it cannot"""
-    try:
-        if tool == 'perl':
-            out = subprocess.run(['perl', '-e', 'print crypt($ARGV[0], $ARGV[1]) // ""', pw, setting],
-                                 capture_output=True, text=True, timeout=10).stdout
-        else:
-            m, salt = setting.split('$')[1], setting.split('$')[2]
-            out = subprocess.run(['openssl', 'passwd', '-' + m, '-salt', salt, pw], capture_output=True, text=True,
-                                 timeout=10).stdout.strip()
-    except (OSError, subprocess.SubprocessError):
-        return None
-    return out if out.startswith(setting.rsplit('$', 1)[0] if tool == 'perl' else '$' + setting.split('$')[1] + '$') else None
-
-
 # a yescrypt hash of "old secret 1" as Ubuntu 24.04's chpasswd made it
 YESCRYPT = '$y$j9T$yozuPAQ4fDSQH5fJzaFQd/$Z6UKqnHQMcZqZNJ18QIV5mTrJ7raj2y7MDipRg8bUj.'
+_PWBIN = None
+
+
+def pwcheck_binary():
+    """tools/pwcheck/mu300-pwcheck.c built with this machine's compiler and libcrypt (libxcrypt), when it can be and
+    knows yescrypt; else None (macOS: no libxcrypt)"""
+    global _PWBIN
+    if _PWBIN is None:
+        _PWBIN = ''
+        cc = shutil.which('cc') or shutil.which('gcc')
+        if cc:
+            out = Path(tempfile.mkdtemp(prefix='mu300-pwcheck-')) / 'mu300-pwcheck'
+            r = subprocess.run([cc, '-O2', '-Wall', '-Wextra', '-Werror', '-o', str(out), str(TOP / 'tools/pwcheck/mu300-pwcheck.c'), '-lcrypt'],
+                               capture_output=True)
+            if r.returncode == 0:
+                t = subprocess.run([str(out)], input=f'old secret 1\n{YESCRYPT}\n', capture_output=True, text=True)
+                if t.stdout == 'MATCH\n':
+                    _PWBIN = str(out)
+    return _PWBIN or None
 
 
 class PwCheck(ShellTest):
-    """tools/android-pwcheck.sh: one word out, never a password or a hash; the hash computed by the system's own tools
-    (a chroot that, here, runs this machine's perl and openssl)"""
+    """tools/android-pwcheck.sh: one word out, never a password or a hash; the hash computed by the project's own tools
+    only (mu300-pwcheck, a busybox's mkpasswd), never by anything of the Linux system it looks at, which would run with
+    Android's root"""
 
     def setUp(self):
         super().setUp()
         self.root = self.tmp / 'sys'
         (self.root / 'etc').mkdir(parents=True)
-        (self.root / 'usr/bin').mkdir(parents=True)
-        self.chroot = self.tmp / 'chroot'
-        self.chroot.write_text('#!/bin/sh\nshift\nexec "$@"\n')
-        self.chroot.chmod(0o755)
-
-    def tool(self, name):
-        p = self.root / 'usr/bin' / name
-        p.write_text('')                         # only looked at with -x; the chroot runs this machine's
-        p.chmod(0o755)
+        # programs of the "Linux system" that must never run: each leaves a mark when it does
+        self.mark = self.tmp / 'ran'
+        for d in ('usr/bin', 'bin', 'usr/sbin', 'sbin'):
+            (self.root / d).mkdir(parents=True, exist_ok=True)
+            for n in ('perl', 'openssl', 'busybox', 'sh', 'mkpasswd', 'chroot', 'env'):
+                f = self.root / d / n
+                f.write_text(f'#!/bin/sh\necho "$0" >> "{self.mark}"\necho MATCH\n')
+                f.chmod(0o755)
+        self.bb = self.tmp / 'bb'
+        self.bb.write_text(UBB)
+        self.bb.chmod(0o755)
+        # a chroot on PATH that leaves a mark too
+        self.path = self.tmp / 'path'
+        self.path.mkdir()
+        c = self.path / 'chroot'
+        c.write_text(f'#!/bin/sh\necho chroot >> "{self.mark}"\n')
+        c.chmod(0o755)
 
     def check(self, shell, line, pw=None, user='root', **env):
         (self.root / 'etc/shadow').write_text('daemon:*:1::\n' + line + '\n')
         args = ['-s'] if pw is None else []
         r = self.script(shell, TOP / 'tools/android-pwcheck.sh', *args, self.root, user,
-                        stdin='' if pw is None else pw + '\n', MU300_CHROOT=str(self.chroot), **env)
+                        stdin='' if pw is None else pw + '\n',
+                        PATH=f'{self.path}:{os.environ["PATH"]}', **env)
         h = line.split(':')[1]
         if len(h) > 2:
             self.assertNotIn(h, r.stdout + r.stderr)
         if pw:
             self.assertNotIn(pw, r.stdout + r.stderr)
         self.assertRegex(r.stdout, r'^(SET|EMPTY|LOCKED|NOUSER|MATCH|NOMATCH|UNVERIFIABLE)\n$')
+        self.assertFalse(self.mark.exists(), 'a program of the Linux system (or chroot) was run: ' +
+                         (self.mark.read_text() if self.mark.exists() else ''))
         return r.stdout.strip(), r.returncode
+
+    def test_runs_nothing_of_the_system_it_checks(self):
+        # the script: no chroot, nothing started from ROOT
+        src = (TOP / 'tools/android-pwcheck.sh').read_text()
+        code = '\n'.join(l for l in src.splitlines() if not l.lstrip().startswith('#'))
+        self.assertNotIn('chroot', code)
+        # a path under ROOT in a command's place (first word of a command, after | ; && || { ( then do else), or any
+        # of its bin directories named at all
+        self.assertNotRegex(code, r'(^|[;&|{(]|\bthen|\bdo|\belse|\bexec|\benv)\s*"?\$\{?ROOT')
+        self.assertNotRegex(code, r'\$\{?ROOT\}?/(usr/)?s?bin\b|/lib/ld-|LD_')
+        # and when it runs, with every program of the system set to say MATCH: none ran, nothing matched
+        for shell in self.each_shell():
+            for line in ('root:$6$saltsalt$abc:1::', f'root:{YESCRYPT}:1::', 'root:$1$abc$def:1::'):
+                self.assertEqual(self.check(shell, line, 'x'), ('UNVERIFIABLE', 1), line)
+
+    def test_links_are_not_followed(self):
+        # a link is resolved on Android's side, where it could name any of Android's files
+        secret = self.tmp / 'android-shadow'
+        secret.write_text('root::1::\n')
+        for shell in self.each_shell():
+            (self.root / 'etc/shadow').unlink(missing_ok=True)
+            (self.root / 'etc/shadow').symlink_to(secret)
+            r = self.script(shell, TOP / 'tools/android-pwcheck.sh', '-s', self.root, 'root')
+            self.assertEqual(r.stdout, 'NOUSER\n')
+            (self.root / 'etc/shadow').unlink()
 
     def test_states(self):
         for shell in self.each_shell():
@@ -1952,39 +1990,46 @@ class PwCheck(ShellTest):
             self.assertEqual(self.check(shell, 'root::19000::::::', 'x'), ('NOMATCH', 1))
             self.assertEqual(self.check(shell, 'root:!$6$x$y:19000::::::', 'x'), ('LOCKED', 1))
             self.assertEqual(self.check(shell, 'root:$6$x$y:19000::::::', ''), ('NOMATCH', 1))
-            # nothing here computes it
-            self.assertEqual(self.check(shell, 'root:$6$saltsalt$abc:19000::::::', 'x'), ('UNVERIFIABLE', 1))
 
     def test_the_zips_busybox(self):
-        # MU300_PWCHECK_BB: the Magisk zip's busybox mkpasswd (here the fake device's, tests/fakedevice.py)
-        bb = self.tmp / 'bb'
-        bb.write_text(UBB)
-        bb.chmod(0o755)
+        # MU300_PWCHECK_BB: the zip's busybox mkpasswd (here the fake device's, tests/fakedevice.py), MD5- and
+        # SHA-crypt only; a salt that is not crypt's alphabet is never handed to it
         h = '$6$saltsalt$' + b'right one'.hex()[:20]
         for shell in self.each_shell():
-            self.assertEqual(self.check(shell, f'root:{h}:1::', 'right one', MU300_PWCHECK_BB=str(bb)), ('MATCH', 0))
-            self.assertEqual(self.check(shell, f'root:{h}:1::', 'wrong one', MU300_PWCHECK_BB=str(bb)), ('NOMATCH', 1))
+            self.assertEqual(self.check(shell, f'root:{h}:1::', 'right one', MU300_PWCHECK_BB=str(self.bb)), ('MATCH', 0))
+            self.assertEqual(self.check(shell, f'root:{h}:1::', 'wrong one', MU300_PWCHECK_BB=str(self.bb)), ('NOMATCH', 1))
+            self.assertEqual(self.check(shell, f'root:{YESCRYPT}:1::', 'x', MU300_PWCHECK_BB=str(self.bb)),
+                             ('UNVERIFIABLE', 1))
+            self.assertEqual(self.check(shell, 'root:$6$-P;x$abc:1::', 'x', MU300_PWCHECK_BB=str(self.bb)),
+                             ('UNVERIFIABLE', 1))
 
-    def test_openwrt_openssl(self):
-        # OpenWrt: its openssl passwd (MD5-, SHA-256- and SHA-512-crypt: what its passwd and LuCI write)
-        self.tool('openssl')
-        for setting in ('$1$abcdefgh$', '$5$abcdefghijklmnop$', '$6$abcdefghijklmnop$'):
-            h = _crypt_with('openssl', setting, 'root pw 1')
-            if not h:
-                self.skipTest(f"this machine's openssl cannot make {setting}")
-            for shell in self.each_shell():
-                self.assertEqual(self.check(shell, f'root:{h}:1::', 'root pw 1'), ('MATCH', 0), setting)
-                self.assertEqual(self.check(shell, f'root:{h}:1::', 'root pw 2'), ('NOMATCH', 1), setting)
-
-    def test_ubuntu_yescrypt_with_perl(self):
-        # Ubuntu: perl's crypt() (libxcrypt), for the yescrypt its passwd writes
-        if _crypt_with('perl', YESCRYPT, 'old secret 1') != YESCRYPT:
-            self.skipTest("this machine's crypt() has no yescrypt")
-        self.tool('perl')
+    def test_the_projects_checker(self):
+        # MU300_PWCHECK_BIN: tools/pwcheck/mu300-pwcheck.c (libxcrypt): yescrypt (Ubuntu's passwd), SHA- and MD5-crypt
+        b = pwcheck_binary()
+        if not b:
+            self.skipTest('no C compiler with a libcrypt that knows yescrypt')
+        sha = subprocess.run(['openssl', 'passwd', '-5', '-salt', 'abcdefgh', 'root pw 1'], capture_output=True,
+                             text=True).stdout.strip() if shutil.which('openssl') else ''
         for shell in self.each_shell():
-            self.assertEqual(self.check(shell, f'ubuntu:{YESCRYPT}:1::', 'old secret 1', user='ubuntu'), ('MATCH', 0))
-            self.assertEqual(self.check(shell, f'ubuntu:{YESCRYPT}:1::', 'old secret 2', user='ubuntu'), ('NOMATCH', 1))
-            self.assertEqual(self.check(shell, f'ubuntu:{YESCRYPT}:1::', '', user='ubuntu'), ('NOMATCH', 1))
+            self.assertEqual(self.check(shell, f'ubuntu:{YESCRYPT}:1::', 'old secret 1', user='ubuntu',
+                                        MU300_PWCHECK_BIN=b), ('MATCH', 0))
+            self.assertEqual(self.check(shell, f'ubuntu:{YESCRYPT}:1::', 'old secret 2', user='ubuntu',
+                                        MU300_PWCHECK_BIN=b), ('NOMATCH', 1))
+            if sha.startswith('$5$'):
+                self.assertEqual(self.check(shell, f'root:{sha}:1::', 'root pw 1', MU300_PWCHECK_BIN=b), ('MATCH', 0))
+                self.assertEqual(self.check(shell, f'root:{sha}:1::', 'root pw 2', MU300_PWCHECK_BIN=b), ('NOMATCH', 1))
+            # a method libxcrypt does not know, a malformed hash
+            self.assertEqual(self.check(shell, 'root:$9$abc$def:1::', 'x', MU300_PWCHECK_BIN=b), ('UNVERIFIABLE', 1))
+
+    def test_the_checker_alone(self):
+        b = pwcheck_binary()
+        if not b:
+            self.skipTest('no C compiler with a libcrypt that knows yescrypt')
+        for stdin, out, rc in ((f'old secret 1\n{YESCRYPT}\n', 'MATCH\n', 0), (f'nope\n{YESCRYPT}\n', 'NOMATCH\n', 1),
+                               ('x\n\n', 'UNVERIFIABLE\n', 2), ('x\n', 'UNVERIFIABLE\n', 2),
+                               ('x\n' + 'a' * 5000 + '\n', 'UNVERIFIABLE\n', 2)):
+            r = subprocess.run([b], input=stdin, capture_output=True, text=True)
+            self.assertEqual((r.stdout, r.returncode), (out, rc), stdin[:20])
 
 
 if __name__ == '__main__':

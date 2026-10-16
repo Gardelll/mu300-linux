@@ -153,7 +153,7 @@ what replaced it. The table below gives each section's state.
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
-| 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
+| 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 
 ## Hardware and firmware facts
 
@@ -8259,27 +8259,44 @@ password and wrote it over the old one; `mu300-update apply` on the device keeps
 the current one and it checks against the installed system's hash (an empty one is confirmed by an empty entry). No:
 a new one, typed twice. Fresh installs as before.
 
-**Checking a password against an installed system** (`tools/android-pwcheck.sh`, run as root on Android over the
-read-only mount of the Linux filesystem; it prints one word - `MATCH`, `NOMATCH`, `LOCKED`, `NOUSER`, `UNVERIFIABLE`
-- and never the password or the hash; the password comes on standard input, the hash never leaves the device):
+**Checking a password against an installed system** (`tools/android-pwcheck.sh`, run as root on Android over a
+mount of the Linux filesystem; it prints one word - `MATCH`, `NOMATCH`, `LOCKED`, `NOUSER`, `UNVERIFIABLE` - and never
+the password or the hash; the password comes on standard input, the hash never leaves the device):
 
 * What the images hold, measured: Ubuntu 24.04's `passwd` and `chpasswd` write yescrypt (`$y$j9T$...`); OpenWrt
   25.12's `passwd` (busybox) and so LuCI write SHA-256-crypt (`$5$`, seen on F50-C); the installers write
   SHA-512-crypt (`$6$`); OpenWrt's image has root empty.
-* The release's static busybox (the 5.4 bundle's, Ubuntu's `busybox-static` 1.36.1, in every zip as `mu300/busybox`)
-  has `mkpasswd` with des, md5, sha256 and sha512 only: asked for yescrypt it silently made an MD5 hash. Python's
-  `crypt` is gone in 3.13, macOS's libc has no yescrypt, and Windows has nothing: the check cannot run on the
-  computer for every system.
-* So the check runs on the device with the installed system's own tools, in a `chroot` (Android and Linux share the
-  architecture): Ubuntu's `perl` (`perl-base` is essential) through libxcrypt's `crypt()` - yescrypt, SHA-crypt,
-  MD5-crypt, bcrypt; OpenWrt's `openssl passwd -1/-5/-6 -salt` (its image has `/usr/bin/openssl`). The zip first tries
-  its busybox `mkpasswd` for `$1$`/`$5$`/`$6$` (no chroot needed). A hash with `rounds=` goes to perl; a method nothing
-  computes is `UNVERIFIABLE`. An empty entry matches only an empty field (`passwd -d` and LuCI never store a hash of the
-  empty password).
-* On F50-C (Android 13, kernel 5.4.254, OpenWrt v2026.10.16.1): `chroot <mount>/openwrt /usr/bin/openssl` under
-  Android's toybox `chroot` and `env -i`: right password `MATCH`, wrong `NOMATCH`, empty `NOMATCH`. Ubuntu's perl in a
-  chroot on Android's kernel was not run on a device (no Ubuntu on F50-C); in a container with Ubuntu 24.04's perl a
-  `chpasswd` hash checks (unit test).
+* **Nothing of the Linux system is run.** The first version of this check ran the system's own `perl` (Ubuntu) or
+  `openssl` (OpenWrt) in a `chroot`. That is Android's root executing programs, libraries and a loader that the Linux
+  system controls - a Linux system that has been tampered with would get Android's root during the update (review of
+  the pushed branch). So the hash is computed only by the project's own tools, and what is read from the Linux
+  filesystem is data: the shadow line, read with `sed`, its hash handed to the checker on standard input (a busybox
+  salt only as an argument's value, and only of crypt's alphabet); `ROOT`, `ROOT/etc` and `ROOT/etc/shadow` must not be
+  links (a link is resolved on Android's side). A test runs the check against a system whose `perl`, `openssl`,
+  `busybox`, `sh` and `chroot` all answer `MATCH` and leave a mark: none may run.
+* **`mu300-pwcheck`** (`tools/pwcheck/mu300-pwcheck.c`): a few lines around libxcrypt's `crypt_r()`, linked
+  statically, built with the other helper binaries in `tools/make-release.sh` (`mu300-kbuild`, Ubuntu 20.04's
+  libxcrypt 4.4.10, which has yescrypt; the build checks a real Ubuntu yescrypt hash and stops if it fails) and put
+  into the 5.4 kernel bundle beside busybox. The zips take it from there as `mu300/mu300-pwcheck`; the computer's
+  installers take it from the package, or from the release's kernel bundle, which they now fetch (and check against
+  `SHA256SUMS`) before the question instead of after it, and push it. It knows every method of libxcrypt: yescrypt,
+  SHA-crypt with or without `rounds=`, MD5-crypt, bcrypt. Measured on F50-C's Android (5.4 kernel): a yescrypt hash of
+  Ubuntu 24.04 `MATCH` and `NOMATCH` as it should.
+* **The bundle's busybox** (`mkpasswd`: des, md5, sha256, sha512 - asked for yescrypt it silently makes an MD5 hash)
+  checks MD5- and SHA-crypt without `rounds=` when there is no `mu300-pwcheck`: the releases up to v2026.10.16.1 have
+  none, so their zips (and the computer's installers with such a release) check OpenWrt's passwords but answer
+  `UNVERIFIABLE` for Ubuntu's yescrypt: the installer then stops, and the way out is to answer no (or, in a zip, to
+  remove `MU300_KEEP_PASSWORD`, which keeps the password without a check).
+* An empty entry matches only an empty field (`passwd -d` and LuCI never store a hash of the empty password).
+* **A journal not replayed.** The installers look at an installed system through a read-only mount without journal
+  replay (`ro,noload`), so a dry run writes nothing. On F50-C the region's superblock had `needs_recovery` set
+  (incompat flags `0x46`) after OpenWrt sessions: OpenWrt's reboot does not unmount the root filesystem, and what was
+  committed last is then only in the journal, which a noload view does not show - an `/etc/shadow` from before the
+  last `passwd` would be checked. So the password check mounts with the journal replayed first (`MU300_RO=recover` of
+  `android-mount-mu300root.sh`, a plain `ro` mount: what Linux itself does at its next boot, and what the update does
+  anyway); the zip does this only when a check was asked for (`MU300_KEEP_PASSWORD=yes`), the computer's installers
+  for the check, not for the first look at which systems have a password. A stale shadow was not caught in the act;
+  the other noload reads (which systems and releases are there, the VPN probe) are older than this and were left.
 
 **The computer's installers** (`install.sh`, `install.ps1`, the window, and an unpacked zip's `computer/`, which is the
 same `install.sh`): an update first looks at the systems it replaces (`pw_states`, a read-only mount) and, when one
@@ -8316,4 +8333,10 @@ with `MU300_KEEP_PASSWORD=no`, `MU300_PASSWORD=...`: the new one logs in over ss
 same zip unpacked on a Mac, its `computer/install.sh` in answers mode against F50-C: a wrong current password stopped
 it at the question ("not confirmed. Nothing was changed"); the right one passed the check, the update installed
 (`kept the accounts and passwords of the previous openwrt`) and `root`/`ubuntu` logged in afterwards, the hash still
-the `$5$` one `passwd` had written. `install.ps1` and the window were run against the fake adb only.
+the `$5$` one `passwd` had written. `install.ps1` and the window were run against the fake adb only. (These runs
+were of the first version, whose check ran OpenWrt's `openssl` in a chroot: its verdicts are the ones the busybox and
+`mu300-pwcheck` give for the same hashes, see the unit tests.) The second version's `mu300-pwcheck`, built in
+`mu300-kbuild` as `make-release.sh` does, on F50-C's Android through `android-pwcheck.sh`: Ubuntu 24.04's yescrypt hash
+`MATCH` with the right password, `NOMATCH` with another, `UNVERIFIABLE` without the checker. Its zips were not
+installed again on F50-C: from 08:34 on another session installed its own zips there (release v2026.10.16.97, which
+left root without a password), so the device was left to it.

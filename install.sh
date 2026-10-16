@@ -860,6 +860,37 @@ fi
 # the user did not ask for (run again and answer no to set a new one). The systems installed new, and an update whose
 # user says no, get the new password asked for below.
 KEEP_PW_OSES=; NEW_PW_OSES=$OSES; pw1=
+# pw_tools: what computes the hash on the device (tools/storage.sh, pw_tools_push): the project's own tools, never a
+# program of the Linux system being checked (it would run with Android's root). From an unpacked zip its mu300/
+# (mu300-pwcheck when its release has one, and busybox); for prebuilt images the release's 5.4 kernel bundle, fetched
+# and checked against SHA256SUMS now (the installation takes it from there later: it is downloaded once). --build has
+# neither: then only an empty password can be confirmed (answer no to set one).
+pw_tools() {
+    PW_BIN= PW_BB=
+    if [ -n "$PKG" ]; then
+        [ ! -s "$PKG/mu300/mu300-pwcheck" ] || PW_BIN=$PKG/mu300/mu300-pwcheck
+        [ ! -s "$PKG/mu300/busybox" ] || PW_BB=$PKG/mu300/busybox
+        return 0
+    fi
+    [ $MODE = prebuilt ] && [ -n "${RELEASE:-}" ] || return 0
+    _rel=$WORK/release/$RELEASE _base=${MU300_RELEASE_URL:-https://github.com/$REPO/releases/download/$RELEASE}
+    mkdir -p "$_rel" "$WORK/pwtools" || return 0
+    curl -fsSL -o "$_rel/SHA256SUMS" "$_base/SHA256SUMS" 2>/dev/null || return 0
+    _want=$(awk '$2 == "mu300-kernel.tar.gz" || $2 == "*mu300-kernel.tar.gz" {print $1}' "$_rel/SHA256SUMS")
+    [ -n "$_want" ] || return 0
+    _have=$( (shasum -a 256 "$_rel/mu300-kernel.tar.gz" 2>/dev/null || sha256sum "$_rel/mu300-kernel.tar.gz" 2>/dev/null) | cut -d' ' -f1)
+    if [ "$_have" != "$_want" ]; then
+        fetch "$_base/mu300-kernel.tar.gz" "$_rel/mu300-kernel.tar.gz.part" || { rm -f "$_rel/mu300-kernel.tar.gz.part"; return 0; }
+        _have=$( (shasum -a 256 "$_rel/mu300-kernel.tar.gz.part" 2>/dev/null || sha256sum "$_rel/mu300-kernel.tar.gz.part") | cut -d' ' -f1)
+        [ "$_have" = "$_want" ] || { rm -f "$_rel/mu300-kernel.tar.gz.part"; return 0; }
+        mv "$_rel/mu300-kernel.tar.gz.part" "$_rel/mu300-kernel.tar.gz"
+    fi
+    tar -xzOf "$_rel/mu300-kernel.tar.gz" ./mu300-pwcheck > "$WORK/pwtools/mu300-pwcheck" 2>/dev/null &&
+        [ -s "$WORK/pwtools/mu300-pwcheck" ] && PW_BIN=$WORK/pwtools/mu300-pwcheck
+    tar -xzOf "$_rel/mu300-kernel.tar.gz" ./busybox > "$WORK/pwtools/busybox" 2>/dev/null &&
+        [ -s "$WORK/pwtools/busybox" ] && PW_BB=$WORK/pwtools/busybox
+    return 0
+}
 if [ $UPDATE = 1 ]; then
     pw_have=
     for l in $(pw_states "$OSES" | tr -d '\r'); do
@@ -874,6 +905,7 @@ if [ $UPDATE = 1 ]; then
         ask keep_pw "$(t 'Keep the current password? (yes/no)')" yes MU300_ANS_KEEP_PASSWORD
         case $keep_pw in
             yes)
+                pw_tools
                 for os in $pw_have; do
                     case $os in ubuntu) pwu=ubuntu ;; *) pwu=root ;; esac
                     osv=$(echo "$os" | tr 'a-z-' 'A-Z_')

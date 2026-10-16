@@ -53,6 +53,9 @@ PW_FILE_SDCARD=$SDCARD/mu300-linux-password.txt
 MAGISKBIN=${MAGISKBIN:-/data/adb/magisk}
 MAGISKBOOT=${MAGISKBOOT:-$MAGISKBIN/magiskboot}
 UBB=${MU300_UBB:-$D/busybox}             # the release's static busybox: its mkpasswd
+# the project's own password checker (tools/pwcheck; static, libxcrypt), in zips whose kernel bundle has it: what checks
+# a current password (android-pwcheck.sh), never a program of the Linux system that is checked
+PWBIN=${MU300_PWBIN:-$D/mu300-pwcheck}
 DEVSH=${MU300_DEVICE_SH:-/system/bin/sh}
 ANDROID_SH=${MU300_ANDROID_SH:-/system/bin/sh}
 APATH=${MU300_ANDROID_PATH:-/system/bin:/system/xbin:/vendor/bin}
@@ -251,6 +254,7 @@ env_check() {
     [ -n "${MU300_SKIP_ROOT_CHECK:-}" ] || [ "$(id -u)" = 0 ] || die "$(t 'this installer needs root')"
     [ -x "$MAGISKBOOT" ] || die "$(t "Magisk's magiskboot was not found; install this zip with Magisk 26 or newer")"
     chmod 755 "$UBB" 2>/dev/null || true
+    [ ! -f "$PWBIN" ] || chmod 755 "$PWBIN" 2>/dev/null || true
 }
 detect_device() {
     _m="$(getprop ro.product.model) / $(getprop ro.product.device)"
@@ -375,9 +379,10 @@ cleanup() {  # every exit
 }
 
 # ---- what to do
-mount_target() {  # mount_target DIR [ro]: the Linux filesystem of the plan, with Android's mount helper
+mount_target() {  # mount_target DIR [ro|recover]: the Linux filesystem of the plan, with Android's mount helper
+    # (recover: read only after the journal is replayed, android-mount-mu300root.sh)
     cp "$D/android-mount-mu300root.sh" "$W/" || return 1
-    _ro=; [ "${2:-}" != ro ] || _ro=1
+    _ro=; [ "${2:-}" != ro ] || _ro=1; [ "${2:-}" != recover ] || _ro=recover
     if [ "$SD_MODE" = 1 ]; then
         asw MU300_RO="$_ro" MU300_SD_DEV="$SD_DEV" "$ANDROID_SH" "$W/android-mount-mu300root.sh" "$1"
     else
@@ -476,14 +481,18 @@ inspect_target() {  # which systems the existing filesystem holds, its Ubuntu re
     # system this zip replaces (HAVE_VERSION; empty when it is not there or does not say): mounted read-only
     HAVE_SYSTEMS=; HAVE_UBUNTU=; HAVE_ACCOUNTS=0; HAVE_VERSION=; PW_CHECK=
     [ "$existing" = yes ] && [ "$FORMAT" = 0 ] || return 0
-    mount_target "$W/mnt" ro || die "$(t 'could not mount the existing Linux filesystem')"
+    # with a password to check, the files as Linux left them: the journal is replayed first (a noload view can hold
+    # the shadow from before the last passwd; android-mount-mu300root.sh). Else nothing is written, a dry run included.
+    _how=ro
+    if [ "${MU300_KEEP_PASSWORD:-}" = yes ] && [ -n "${ZIP_MU300_KEEP_PASSWORD:-}" ]; then _how=recover; fi
+    mount_target "$W/mnt" "$_how" || die "$(t 'could not mount the existing Linux filesystem')"
     for _os in ubuntu openwrt openwrt-luci; do [ -d "$W/mnt/$_os" ] && HAVE_SYSTEMS="$HAVE_SYSTEMS $_os"; done
     _u=root; [ "$OS" != ubuntu ] || _u=ubuntu
     if grep -q "^$_u:" "$W/mnt/$OS/etc/shadow" 2>/dev/null && [ ! -e "$W/mnt/$OS/etc/.mu300-accounts-from-image" ]; then
         HAVE_ACCOUNTS=1
         if [ "${MU300_KEEP_PASSWORD:-}" = yes ] && [ -n "${ZIP_MU300_KEEP_PASSWORD:-}" ]; then
             PW_CHECK=$(printf '%s\n' "${MU300_CURRENT_PASSWORD:-}" |
-                asw MU300_PWCHECK_BB="$UBB" "$ANDROID_SH" "$D/android-pwcheck.sh" "$W/mnt/$OS" "$_u" 2>/dev/null | tail -n1) || true
+                asw MU300_PWCHECK_BIN="$PWBIN" MU300_PWCHECK_BB="$UBB" "$ANDROID_SH" "$D/android-pwcheck.sh" "$W/mnt/$OS" "$_u" 2>/dev/null | tail -n1) || true
         fi
     fi
     HAVE_UBUNTU=$(sed -n 's/^VERSION_ID="\(.*\)"/\1/p' "$W/mnt/ubuntu/usr/lib/os-release" 2>/dev/null | head -n1)

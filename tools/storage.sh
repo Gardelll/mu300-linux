@@ -189,16 +189,32 @@ pw_states() {
     adb push "$TOP/tools/android-mount-mu300root.sh" "$TOP/tools/android-pwcheck.sh" $T/ >/dev/null 2>&1 || return 0
     su_do "$(pw_mount_env) MU300_RO=1 sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { for o in $1; do case \$o in ubuntu) u=ubuntu ;; *) u=root ;; esac; echo \$o:\$(sh $T/android-pwcheck.sh -s $T/mu300pw/\$o \$u); done; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; true"
 }
+# pw_tools_push: the project's own tools that compute the hash - never a program of the Linux system being checked,
+# which would run with Android's root (FINDINGS 126) - pushed once: PW_BIN (mu300-pwcheck, every method) and PW_BB (a
+# busybox with mkpasswd: MD5- and SHA-crypt), files on this computer the caller found (install.sh's pw_tools); PW_ENV
+# the environment android-pwcheck.sh gets for them. Without either it can confirm only an empty password.
+pw_tools_push() {
+    [ -z "${PW_ENV+set}" ] || return 0
+    PW_ENV=
+    if [ -n "${PW_BIN:-}" ] && adb push "$PW_BIN" $T/mu300-pwcheck >/dev/null 2>&1; then
+        PW_ENV="MU300_PWCHECK_BIN=$T/mu300-pwcheck"
+    fi
+    if [ -n "${PW_BB:-}" ] && adb push "$PW_BB" $T/mu300-pwbb >/dev/null 2>&1; then
+        PW_ENV="$PW_ENV MU300_PWCHECK_BB=$T/mu300-pwbb"
+    fi
+    [ -z "$PW_ENV" ] || su_do "chmod 755 $T/mu300-pwcheck $T/mu300-pwbb; true" >/dev/null
+}
 # pw_check OS PASSWORD: MATCH, NOMATCH, LOCKED, NOUSER or UNVERIFIABLE (nothing: the filesystem did not mount). The
 # password goes to the device in a file of this user's alone, which android-pwcheck.sh reads on its standard input and
 # the same command removes; never on a command line.
 pw_check() {
     case $1 in ubuntu) _pu=ubuntu ;; *) _pu=root ;; esac
+    pw_tools_push
     _pf=$(umask 077; mktemp "${TMPDIR:-/tmp}/mu300-pw.XXXXXX") || return 0
     printf '%s\n' "$2" > "$_pf"
     if ! adb push "$_pf" $T/mu300-pwcheck.in >/dev/null 2>&1; then rm -f "$_pf"; return 0; fi
     rm -f "$_pf"
-    su_do "chmod 600 $T/mu300-pwcheck.in; $(pw_mount_env) MU300_RO=1 sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { sh $T/android-pwcheck.sh $T/mu300pw/$1 $_pu < $T/mu300-pwcheck.in; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; rm -f $T/mu300-pwcheck.in; true"
+    su_do "chmod 600 $T/mu300-pwcheck.in; $(pw_mount_env) MU300_RO=recover sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { $PW_ENV sh $T/android-pwcheck.sh $T/mu300pw/$1 $_pu < $T/mu300-pwcheck.in; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; rm -f $T/mu300-pwcheck.in; true"
 }
 
 # The free eMMC region: from the first 2 MiB boundary after the last partition to the last one before the backup

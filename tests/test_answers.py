@@ -340,7 +340,8 @@ class Fetch(ShellTest):
 class Device(ShellTest):
     """A scratch HOME, the fake adb first on PATH, and no self-update: nothing here can reach a real device or GitHub."""
 
-    BASE = dict(MU300_NO_SELF_UPDATE=1, MU300_LANG='en', MU300_IP='127.0.0.1', MU300_RELEASE='v2026.10.23')
+    BASE = dict(MU300_NO_SELF_UPDATE=1, MU300_LANG='en', MU300_IP='127.0.0.1', MU300_RELEASE='v2026.10.23',
+                MU300_RELEASE_URL='http://127.0.0.1:9/no-release')
 
     def setUp(self):
         super().setUp()
@@ -782,6 +783,34 @@ class Install(Device):
             self.assert_no_secret_anywhere('old secret')
             self.assert_no_secret_anywhere('oldroot99')
             self.assertEqual((r.stdout + r.stderr).count('oldroot99'), 0)
+
+    def test_the_check_uses_the_releases_own_tools(self):
+        # android-pwcheck.sh runs nothing of the Linux system it checks: the release's 5.4 bundle (its mu300-pwcheck and
+        # busybox) is fetched, checked against SHA256SUMS, pushed, and handed to it; the installation reuses the file
+        import hashlib, io, tarfile
+        rel = self.tmp / 'rel'
+        rel.mkdir()
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode='w:gz') as t:
+            for name, data in (('./busybox', b'#!bb\n'), ('./mu300-pwcheck', b'\x7fELF pwcheck\n')):
+                i = tarfile.TarInfo(name); i.size = len(data); t.addfile(i, io.BytesIO(data))
+        (rel / 'mu300-kernel.tar.gz').write_bytes(buf.getvalue())
+        (rel / 'SHA256SUMS').write_text(hashlib.sha256(buf.getvalue()).hexdigest() + '  mu300-kernel.tar.gz\n')
+        for shell in self.each_shell():
+            self.device(pull=False, existing=True, passwords={'ubuntu': 'old secret 1'})
+            r, ev, asked = self.install(shell, dict(self.UPDATE, MU300_ANS_KEEP_PASSWORD='yes',
+                                                    MU300_ANS_CURRENT_PASSWORD='old secret 1'),
+                                        MU300_RELEASE_URL=rel.as_uri())
+            self.assertIn('confirmed: the password of ubuntu stays as it is', r.stdout, r.stdout + r.stderr)
+            pushed = [c['argv'][-1] for c in self.calls('push')]
+            self.assertIn('/data/local/tmp/mu300-pwcheck', pushed)
+            self.assertIn('/data/local/tmp/mu300-pwbb', pushed)
+            check = [c['cmd'] for c in self.calls() if '< /data/local/tmp/mu300-pwcheck.in' in (c['cmd'] or '')]
+            self.assertTrue(check and 'MU300_PWCHECK_BIN=/data/local/tmp/mu300-pwcheck MU300_PWCHECK_BB=/data/local/tmp/mu300-pwbb sh '
+                            in check[0], check)
+            self.assertNotIn('chroot', ' '.join(check))
+            self.assertTrue((self.tmp / 'work/release/v2026.10.23/mu300-kernel.tar.gz').exists())
+            self.assert_nothing_written()
 
     def test_keep_with_a_wrong_current_password_stops(self):
         for shell in self.each_shell():

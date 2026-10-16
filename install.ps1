@@ -997,7 +997,7 @@ function PwStates($oses, $existing, $sdMode, $sdDev, $off, $size) {
 # PwCheck OS PASSWORD: MATCH, NOMATCH, LOCKED, NOUSER or UNVERIFIABLE (nothing: the filesystem did not mount). The
 # password goes to the device in a file (LF, UTF-8 without a BOM) removed from this computer at once, which
 # android-pwcheck.sh reads on its standard input and the same command removes on the device; never on a command line.
-function PwCheck($os, [string]$pw, $sdMode, $sdDev, $off, $size) {
+function PwCheck($os, [string]$pw, $sdMode, $sdDev, $off, $size, [string]$pwEnv) {
     $u = if ($os -eq 'ubuntu') { 'ubuntu' } else { 'root' }
     $f = [IO.Path]::GetTempFileName()
     $pushed = $false
@@ -1008,10 +1008,68 @@ function PwCheck($os, [string]$pw, $sdMode, $sdDev, $off, $size) {
     } finally { Remove-Item -LiteralPath $f -ErrorAction SilentlyContinue }
     if (-not $pushed) { return '' }
     $envs = PwMountEnv $sdMode $sdDev $off $size
-    $out = SuDo "chmod 600 $T/mu300-pwcheck.in; $envs MU300_RO=1 sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { sh $T/android-pwcheck.sh $T/mu300pw/$os $u < $T/mu300-pwcheck.in; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; rm -f $T/mu300-pwcheck.in; true"
+    $out = SuDo "chmod 600 $T/mu300-pwcheck.in; $envs MU300_RO=recover sh $T/android-mount-mu300root.sh $T/mu300pw >/dev/null 2>&1 && { $pwEnv sh $T/android-pwcheck.sh $T/mu300pw/$os $u < $T/mu300-pwcheck.in; sh $T/android-mount-mu300root.sh -u $T/mu300pw >/dev/null 2>&1 && rmdir $T/mu300pw 2>/dev/null; }; rm -f $T/mu300-pwcheck.in; true"
     $last = @(([string]$out -split "`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ })
     if ($last.Count -eq 0) { return '' }
     return $last[-1]
+}
+# PwTools: the project's own tools that compute the hash on the device (install.sh's pw_tools, tools/storage.sh's
+# pw_tools_push) - never a program of the Linux system being checked, which would run with Android's root (FINDINGS
+# 126). From an unpacked zip its mu300\ (mu300-pwcheck when its release has one, and busybox); else the release's 5.4
+# kernel bundle, fetched into the release's folder and checked against SHA256SUMS now (the download step finds it
+# there and does not fetch it again). Both pushed, made executable once; returns the environment android-pwcheck.sh
+# gets for them ('' without: then only an empty password can be confirmed, anything else is UNVERIFIABLE).
+function PwTools {
+    $bin = ''; $bb = ''
+    try {
+        if ($PKG) {
+            foreach ($n in 'mu300-pwcheck', 'busybox') {
+                $f = Join-Path $PKG "mu300\$n"
+                if ((Test-Path -LiteralPath $f -PathType Leaf) -and (Get-Item -LiteralPath $f).Length -gt 0) {
+                    if ($n -eq 'busybox') { $bb = $f } else { $bin = $f }
+                }
+            }
+        } elseif ($Release) {
+            $rel = "$Work\release\$Release"; $dir = "$Work\pwtools"
+            New-Item -ItemType Directory -Force -Path $rel, $dir | Out-Null
+            $base = if ($ReleaseUrl) { $ReleaseUrl } else { "https://github.com/$Repo/releases/download/$Release" }
+            Invoke-WebRequest "$base/SHA256SUMS" -OutFile "$rel\SHA256SUMS" -UseBasicParsing
+            $want = ''
+            foreach ($line in Get-Content "$rel\SHA256SUMS") {
+                $q = $line -split '\s+', 2
+                if ($q.Count -eq 2 -and $q[1].TrimStart('*') -eq 'mu300-kernel.tar.gz') { $want = $q[0].ToLower() }
+            }
+            if (-not $want) { return '' }
+            $k = "$rel\mu300-kernel.tar.gz"
+            $have = if (Test-Path -LiteralPath $k) { (Get-FileHash -LiteralPath $k -Algorithm SHA256).Hash.ToLower() } else { '' }
+            if ($have -ne $want) {
+                Fetch "$base/mu300-kernel.tar.gz" "$k.part" | Out-Null
+                if ((Get-FileHash -LiteralPath "$k.part" -Algorithm SHA256).Hash.ToLower() -ne $want) {
+                    Remove-Item -LiteralPath "$k.part" -ErrorAction SilentlyContinue
+                    return ''
+                }
+                Move-Item -Force -LiteralPath "$k.part" -Destination $k
+            }
+            foreach ($n in 'mu300-pwcheck', 'busybox') {
+                Remove-Item -LiteralPath "$dir\$n" -ErrorAction SilentlyContinue
+                Quiet { & tar -xzf $k -C $dir "./$n" } | Out-Null
+                if ((Test-Path -LiteralPath "$dir\$n" -PathType Leaf) -and (Get-Item -LiteralPath "$dir\$n").Length -gt 0) {
+                    if ($n -eq 'busybox') { $bb = "$dir\$n" } else { $bin = "$dir\$n" }
+                }
+            }
+        }
+    } catch { return '' }
+    $envs = @()
+    if ($bin) {
+        Quiet { adb push $bin "$T/mu300-pwcheck" } | Out-Null
+        if ($LASTEXITCODE -eq 0) { $envs += "MU300_PWCHECK_BIN=$T/mu300-pwcheck" }
+    }
+    if ($bb) {
+        Quiet { adb push $bb "$T/mu300-pwbb" } | Out-Null
+        if ($LASTEXITCODE -eq 0) { $envs += "MU300_PWCHECK_BB=$T/mu300-pwbb" }
+    }
+    if ($envs.Count -gt 0) { SuDo "chmod 755 $T/mu300-pwcheck $T/mu300-pwbb; true" | Out-Null }
+    return ($envs -join ' ')
 }
 # ReadSecret QUESTION: one line typed without echo (the -Answers queue: its next line)
 function ReadSecret($question) {
@@ -1730,6 +1788,7 @@ if ($UPDATE -eq 1) {
         Write-Host ('    ' + (T 'no   set a new password'))
         switch (Ask (T 'Keep the current password? (yes/no)') 'yes' 'MU300_ANS_KEEP_PASSWORD') {
             'yes' {
+                $pwEnv = PwTools
                 foreach ($os in $pwHave) {
                     $pwu = if ($os -eq 'ubuntu') { 'ubuntu' } else { 'root' }
                     $osv = $os.ToUpper().Replace('-', '_')
@@ -1749,7 +1808,7 @@ if ($UPDATE -eq 1) {
                             $cur = ReadSecret $q
                         }
                         Progress 'question' 'id' $cid 'text' $q 'default' '' 'secret' '1'
-                        $res = PwCheck $os ([string]$cur) $SD_MODE $SD_DEV $OFF $SIZE
+                        $res = PwCheck $os ([string]$cur) $SD_MODE $SD_DEV $OFF $SIZE $pwEnv
                         $cur = $null
                         Info "password.$os" $res
                         if ($res -eq 'MATCH') {
