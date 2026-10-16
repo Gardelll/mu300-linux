@@ -157,6 +157,7 @@ what replaced it. The table below gives each section's state.
 | 131 | An update writes only what changed: the new image's binaries that the installed system has byte for byte become second names of its files (never text, never `etc`, `var` or the user's places), the room counted before anything is written by every installer and by `mu300-update`, nothing left behind by a run that fails or is cut off, and the computer installer's switch module of the release | current (unit tests; the zip, `mu300-update apply` with rollback, and the computer installer on an F50, plain OpenWrt with Docker in its 804 MiB region, 2026-10-16; Ubuntu 24.04 by `mu300-update` with rollback on an F50, 2026-10-17) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 | 138 | `mu300-atd` died at its first open of a SIPC tty that was not ready (a failed `exec` redirection ends dash and ash): it waits for the channel now, holding the command fifo (#226) | current (unit tests under dash, bash and busybox ash; not on a device) |
+| 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 
@@ -2800,7 +2801,7 @@ cycling red / white / off, and `vddcama0` lit on 5G. mu300-led now follows it (b
 without service); `mobile-data` reads the access technology (`AT+COPS?`) again on every watchdog round, since it
 changes under a live connection.
 
-The PMIC's LED also carries the heat alarm (`thermal-guard`, now running on 5.4 too, where it only watches): one
+The PMIC's LED also carries the heat alarm (`thermal-guard`, now running on 5.4 too; whether it also caps there, §139): one
 colour at a time, since the white outshines red and blue when they are mixed.
 
 ### 33g. The U30 Air's NFC tag
@@ -4245,6 +4246,38 @@ kernel changed.
 
 Open: the U30 Air (same SoC, its own DTB) is untested; its `thmzone-cells` may name other zones, which the module
 reads from the tree. Not taken, as the review decided: the fork's CPU voltage-offset driver.
+
+### 139. thermal-guard asks the vendor 5.4 kernel too whether it throttles (#229)
+
+§48 let `thermal-guard` decide by the release: "every 5.x we ship is the vendor kernel, which throttles and protects
+itself" (§18: `sprd_cpu_cooling` binds the clusters to `soc-thmzone`, 70/85/110 C), so on 5.4 it ran the LED alarm
+only - no cap, no power-off. Issue #229 (F50, openwrt-luci v2026.10.25, 5.4.254, sustained load): the SoC passed
+80 C with the alarm flashing, and after about 30 minutes the unit reset by itself, no panic and no pstore; its dmesg
+had `sprd_cpu_cooling: get thermal zone ank0-thmzone failed` for `ank0`-`ank5`, `prometheus6-tzone0` and
+`prometheus7-thmzone`. Not measured on our boards: the report and the code.
+
+* **What those lines say and what they do not.** The zone names are not the F50's (its tree has `lit0-3`, `mid4-6`,
+  `big7`, `ank0-5` among the physical zones, §48, with no trips, and `soc-thmzone` with them): the driver looks up a
+  list of names that is partly another board's, so the lines alone do not show that the `soc-thmzone` binding failed
+  on that unit too. Whether the vendor kernel throttled there is not known; that it reset hot under load is.
+* **Now the release decides nothing.** The question §48 asks mainline - an enabled zone with a passive trip at or below
+  HOT that has every cpufreq cooling device bound and reads within 15 C of the hottest zone - is asked on every kernel.
+  `native_cpu_cooling` already counts 5.4's cooling-device names (`thermal-cpufreq-N`) beside mainline's
+  (`cpufreq-cpuN`). Where 5.4 binds as §18 measured, the guard watches only, as on mainline with `mu300_thermal`;
+  where it does not, the guard caps at 85 C and lifts at 75 C, as on mainline without the module. The 105 C power-off
+  now holds on 5.4 too (its own critical trip is 110 C, when the zone works). A first round that finds no such zone
+  logs `no kernel thermal zone throttles the CPUs (kernel <release>): capping cpufreq here ...`, so the device's own
+  log says which way it went.
+* **The cost where 5.4 does throttle with cooling devices of another name.** Then the guard does not see it and caps
+  too: two caps on one clock, the lower wins (§48), so the CPUs run slower than the kernel alone would let them while
+  hot - the safe side of the mistake. Reading the 5.4 thermal sysfs on a board (below) settles it.
+
+Tests: `tests/test_device_scripts.py` `ThermalGuard` - 5.4 without a bound zone caps and powers off at CRIT like
+mainline (the test that pinned "5.4 only watches" is replaced), 5.4 with its zone bound through `thermal-cpufreq-N`
+watches only and keeps the power-off.
+
+Open: the 5.4 thermal sysfs on an F50 and a U30 Air (`/sys/class/thermal/thermal_zone*/{type,mode,trip_point_*}`,
+the `cdev*` links and `cooling_device*/type`) and which way the guard goes there; a load run on 5.4.
 ### 49. The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only
 
 The panel showed IMEI, IMSI and ICCID but not the SIM's own number (MSISDN). Ported from kanoqwq's fork
