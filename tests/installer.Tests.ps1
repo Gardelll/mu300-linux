@@ -89,6 +89,7 @@ Check 'owrt bare result unrolls'  ($bare -is [string]) $true
 $site = [IO.File]::ReadAllText((Join-Path $Top 'install.ps1'))
 Check 'owrt call site wraps in @()'  ($site -match '\$OSES = @\(ChooseOpenWrt ') $true
 # ---- SystemsDefault, ChoiceThatFits: Enter chooses what fits; a refusal names it (FINDINGS 153) -----------------------
+LoadLanguage 'en'
 Check 'systems default both'      (SystemsDefault 2400MB 1600MB 2400MB) '3'
 Check 'systems default one'       (SystemsDefault 2399MB 1600MB 2400MB) '1'
 Check 'systems default openwrt'   (SystemsDefault 804MB 1600MB 2400MB) '2'
