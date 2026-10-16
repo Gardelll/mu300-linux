@@ -153,7 +153,7 @@ what replaced it. The table below gives each section's state.
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
-| 130 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocol families and filesystems not loaded on demand (`mu300-modprobe-guard`, review of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, 2026-10-16; the guard run on the U30 Air only; dockur stops at its own RAM check: the boards have 1.4 GB) |
+| 130 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, two reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB) |
 
 ## Hardware and firmware facts
 
@@ -8373,43 +8373,66 @@ its previous one again, as before):
 (The device runs above were made with the set before the review below; the review took modules out on each
 kernel: 63 of 6.18.57, 42 of 7.2.11 - the dead protocol families - and changed nothing else.)
 
-**On-demand loading: the answer to the security review of #256.** With the whole set installed, every module is
-one any user can have loaded: the kernel runs its module helper whenever code asks for something a module provides
-- `socket(AF_TIPC, ...)` asks for `net-pf-30`, a mount attempt for `fs-<type>` (a user namespace is enough to get
-that far), a line discipline for `tty-ldisc-<n>`. Rarely used protocols have been the way in for many local root
-holes. What changed:
+**On-demand loading: the answer to two security reviews of #256.** With the whole set installed, every module is
+one any user can have loaded: the kernel runs its module helper (`sysctl kernel.modprobe`) as root whenever code
+asks for something a module provides - a socket family (`net-pf-29`), a sock_diag or genetlink handler, a link kind
+(`rtnl-link-lowpan`), a filesystem (`fs-hfs`; a mount attempt in a user namespace is enough), a line discipline.
+Rarely used protocols have been the way in for many local root holes. What changed:
 
 * Not built at all (`all-modules.exclude`, with reasons): the `n_gsm` and `n_hdlc` line disciplines, ATM (and the
   DSL modems on it), ISDN, AX.25/NET/ROM/ROSE and the amateur-radio drivers (the `HAMRADIO` switch of the first
   version is gone), X.25/LAPB and the WAN cards, AppleTalk, Phonet, RDS, CAIF, KCM, SMC, QRTR, AF_RXRPC with the AFS
-  client, DCCP, the parallel port and HSI. GAMEPORT stays: sound and joystick drivers select it, and it has no way
-  in for a user.
-* Built, but not loaded on demand: TIPC, SCTP, CAN, NFC, IEEE 802.15.4 (6LoWPAN), AF_VSOCK, and old filesystems
-  (adfs, affs, befs, bfs, coda, cramfs, efs, gfs2, hfs, hpfs, jfs, minix, nilfs2, ocfs2, omfs, orangefs, qnx4/6,
-  romfs, sysv, ufs, vxfs, ceph). `sysctl kernel.modprobe` points at `/opt/mu300/bin/mu300-modprobe-guard`
-  (`etc/sysctl.d/98-mu300-modules.conf`, in both images), which refuses the aliases of
-  `/opt/mu300/lib/autoload-blocked` with a line in the kernel log and hands everything else to `/sbin/modprobe`
-  unchanged. Root loads a refused module deliberately with `modprobe tipc` (that runs `/sbin/modprobe` itself, not
-  the guard), and `touch /etc/mu300/autoload-allow-all` switches the refusal off. A `modprobe.d` blacklist could not
-  do this on both systems: kmod's blacklist stops aliases only, as wanted, but OpenWrt's kmodloader resolves
-  aliases too and its only blacklist (`/etc/modules.conf`) refuses the module to an explicit `modprobe` as well.
-  Filesystems people plug in (ext4, vfat, exFAT, NTFS, HFS+, btrfs, XFS, F2FS, ISO 9660, UDF, NFS, CIFS) load on
-  demand as before.
-* `dev.tty.ldisc_autoload = 0` in the same file: line disciplines load on demand for root only. Both mainline
-  kernels have it 0 already (`LDISC_AUTOLOAD` is not set); the file makes it so on 5.4 too.
+  client, DCCP, the parallel port and HSI: 63 modules fewer on 6.18.57, 42 on 7.2.11. GAMEPORT stays (sound and
+  joystick drivers select it; no user can reach it).
+* Built, but never loaded on demand: 77 modules listed by name in `/opt/mu300/lib/autoload-blocked` - TIPC, SCTP,
+  CAN (`can`, `can_raw`, `can_bcm`, `can_gw`, `can_isotp`, `can_j1939`; `can_dev` for USB CAN adapters stays), NFC
+  and its drivers, IEEE 802.15.4/6LoWPAN and its radios, the line-discipline modules (`slcan`, `can327`, `slip`,
+  `ppp_synctty`, `pps_ldisc`, `nci_uart`), and old filesystems (adfs, affs, befs, bfs, ceph, coda, cramfs, efs,
+  gfs2, hfs, hpfs, jfs, minix, nilfs2, ocfs2, omfs, orangefs, qnx4/6, romfs, ufs). Kept loadable on purpose:
+  `l2tp_*` (L2TP VPNs; OpenWrt carries xl2tpd) and `vsock` (`vhost_vsock` for VMs depends on it).
+* `/opt/mu300/bin/mu300-modprobe-guard` becomes the kernel's helper at boot (`mu300-modprobe-guard.service` in
+  `sysinit.target` on Ubuntu, OpenWrt's `mu300-hw`). It refuses by MODULE, not by request string: the first review
+  showed that matching request strings is bypassable (one module answers to its name, `-`/`_` spellings, several
+  socket aliases, genetlink and rtnl-link aliases, a filesystem's names). The guard makes a table of every listed
+  module's names and aliases - the `alias=` strings of the module file itself, normalized as modprobe does (`-` =
+  `_` outside `[...]`) - and refuses a request that matches any of them with modprobe's own glob rules, with a line
+  in the kernel log; everything else goes to `/sbin/modprobe` unchanged. The list holds every module that depends on
+  a listed one, so no request reaches them through a dependency either. That is not academic: upstream TIPC has no
+  `net-pf-30` alias at all, `socket(AF_TIPC)` never loads it; the way to it is `tipc_diag`, which pulls `tipc` in.
+  Root loads a refused module with `modprobe NAME` (that runs `/sbin/modprobe` itself), and
+  `touch /etc/mu300/autoload-allow-all` keeps the guard off.
+* The table is made once per boot and kernel in `/run/mu300-modprobe-guard` (root's, mode 700) before the guard
+  takes over, never inside a request: OpenWrt's `modinfo` reads all 3000 modules on every call, and a first version
+  that asked it for each listed module took 7.2 s inside the first request of the boot (on that boot the U30 Air's
+  mobile downlink stayed dead, which could not be pinned on it, and has not recurred since). Reading the strings from
+  the files takes 2.0 s, at boot, in the background. A table gone stale (the running kernel's modules reinstalled) is
+  made again on the spot. A request for an alias of a module that is not installed is handed on: modprobe finds
+  nothing for it either.
+* `make-bundle.sh` runs `check-autoload-blocked.py` against the build: every module depending on a listed one must
+  be listed, the real guard script (under `sh`) must refuse every alias and both spellings of the name of every
+  listed module (280 requests on 7.2.11) without calling modprobe, and must hand on the names and aliases of the
+  modules the systems load every day (nft, wireguard, overlay, usb-storage, vfat, tun, bridge, veth, br_netfilter,
+  xt_*, kvm, vhost_net, vhost_vsock, l2tp, macvtap, can_dev...: 88 requests). `tests/test_all_modules.py` runs the
+  same check on a sample of the 7.2.11 build under sh, busybox sh and dash.
+* `dev.tty.ldisc_autoload = 0` (`etc/sysctl.d/98-mu300-modules.conf`): line disciplines load on demand for root only.
+  Both mainline kernels have it 0 already (`LDISC_AUTOLOAD` is not set); the file makes it so on 5.4 too.
 
-Measured on the U30 Air (openwrt-luci, 6.18.57 of this branch, the guard and the sysctl file put in by hand,
-2026-10-16), with a static test program that drops to uid/gid 65534 before it opens its sockets:
+Measured on both boards (2026-10-16): F50-B Ubuntu 24.04 with 7.2.11, the U30 Air openwrt-luci with 6.18.57, the
+guard, its unit or hook and the sysctl file put in by hand. A static test program drops to uid/gid 65534 before it
+opens its sockets:
 
-| | as `nobody`, the guard in place | as root, `modprobe tipc can-raw sctp` | as `nobody`, `kernel.modprobe = /sbin/modprobe` (control) |
-|---|---|---|---|
-| AF_TIPC, AF_CAN, SCTP | `Address family not supported` / `Protocol not supported`, nothing loaded | loaded, the sockets open | (still loaded from the root step: they do not unload) |
-| AF_NFC, AF_IEEE802154 | refused, nothing loaded | - | `nfc`, `ieee802154`, `ieee802154_socket` loaded by `nobody` |
-| kernel log | `mu300: on-demand loading of net-pf-30 refused (root: modprobe the module by name; FINDINGS 130)` (and -29, -2-proto-132, -39, -36) | | |
+| | Ubuntu, 7.2.11 | OpenWrt, 6.18.57 |
+|---|---|---|
+| the guard at boot | `the kernel's helper; 77 modules not loaded on demand, 203 names and aliases` (unit active; boot 5.3 s + 34.7 s, as before) | the same line (from `mu300-hw`) |
+| `nobody`: AF_TIPC, AF_CAN, SCTP, AF_NFC, AF_IEEE802154, AF_RDS | all refused, nothing loaded | the same |
+| root: `ip link add ... type lowpan`, `mount -t hfs` | `rtnl-link-lowpan (ieee802154_6lowpan) refused`, `fs-hfs (hfs) refused` | the same |
+| `nobody` in its own user and net namespace: `ip link add ... type lowpan` | refused, nothing loaded | (no setpriv) |
+| root: `modprobe tipc can-raw sctp` | loaded, the sockets open | the same |
+| on demand through the guard | vcan, wireguard, vxlan, geneve, gretap, l2tp (`ip l2tp add tunnel`); Docker with dockur: NAT networking, `compose up` and down, a KVM guest | vcan; the owner's VPN (sing-box, kill switch) up with its exit IP over flowing mobile data, two boots |
 
-Still loaded on demand through the guard: `vcan` (`ip link add ... type vcan`, rtnl-link-vcan), `hfsplus` (a mount
-attempt); `fs-hfs` was refused. The boot was unchanged: the VPN came up with its kill switch, no oops. The Ubuntu
-side uses the same files through systemd-sysctl; it was not run on a board (F50-B was in another test).
+The kernel log names the module: `mu300: on-demand loading of net-pf-29 (can) refused (root: modprobe can; FINDINGS
+130)`. In a control run of the first version, with the system's modprobe as the helper, `nobody` did load `nfc`,
+`ieee802154` and `ieee802154_socket` by opening sockets. No oops in any of these runs.
 
 **User namespaces** (read, not changed): unprivileged user namespaces are open on both systems (`unshare -Ur` works
 for `ubuntu` on F50-B; `user.max_user_namespaces = 7949`). The mainline kernels have no AppArmor, so Ubuntu 24.04's
