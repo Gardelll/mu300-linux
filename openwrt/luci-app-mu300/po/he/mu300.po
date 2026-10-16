@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "התקני קירור"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "בדיקת עומס התחילה"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "נשמר: ייכנס לתוקף באתחול הבא"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "היסט מתח CPU (ניסיוני)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "ניסיוני: שינוי מתח ה-CPU עלול לגרום למכשיר לפעול באופן לא יציב, להשחית את הנתונים שלך ולגרום נזק קבוע למכשיר שלך. השימוש הוא באחריותך הבלעדית."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "היסט מתח CPU אינו זמין"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "לא זמין עם ליבה זו (ליבת mainline מגרסה זו ואילך כוללת אותו)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "כבוי: מתחי היצרן"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "ישתנה באתחול הבא"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "אתחול ניסיון: נשמר לאחר שאתחול זה פועל 10 דקות"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "נשמר: ההיסט הזה עבר את אתחול הניסיון שלו"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "אתחול איתו הסתיים ללא כיבוי תקין"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "אתחול הניסיון שלו הסתיים לפני 10 דקות"
 
 msgid "invalid value"
-msgstr ""
+msgstr "ערך לא חוקי"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "קושחת SoC לא מוכרת"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "נדחה על ידי הליבה"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "הליבה לא הצליחה להפעיל איתו את שינוי תדר ה-CPU"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "היסטים ב-µV לשלושת תחומי ה-CPU (ליבות CPU 0-3, 4-6 ו-7), בצעדים שלמים. היסט חדש נכנס לתוקף באתחול הבא, כניסיון: הוא נשמר לאחר שאתחול זה פועל 10 דקות, ומבוטל (חוזר ל-0) אם אתחול איתו מסתיים בקריסה, באיפוס של watchdog או בהפסקת חשמל."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "פועל כעת (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "נשמר לאתחול הבא (µV)"
 
 msgid "State"
 msgstr "מצב"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "בוטל אוטומטית: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "קושחת ה-SoC של מכשיר זה אינה אחת שקידוד המתח שלה ידוע: אפשריים רק מתחי היצרן."
 
 msgid "Domain"
-msgstr ""
+msgstr "תחום"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "היסט כעת (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "הצעד הגבוה ביותר"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "היסט חדש (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "גבולות: %d עד %d µV, בצעדים של %d µV."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "שמירה לאתחול הבא"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "כל היסט חייב להיות כפולה של %d µV בין %d ל-%d."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "הקלד %s לאישור."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "חזרה למתחי היצרן"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "הקלד %s לאישור:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "הפעלת בדיקת עומס CPU של 10 דקות"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "בדוק היסט חדש תחת עומס במהלך אתחול הניסיון שלו. המכשיר עלול לקרוס אם המתח נמוך מדי; האתחול הבא פועל אז במתחי היצרן."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "בדיקת עומס פועלת."
 
 msgid "USB role"
 msgstr "תפקיד USB"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "פעולת מתח CPU לא מוכרת"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "בקשת מתח CPU לא חוקית"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "היסט מתח CPU לא חוקי"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "הקלד את מילת האישור כדי להחיל היסט מתח"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "משך בדיקת עומס לא חוקי"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "מתאם החבילות לא החזיר תשובה תקינה"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "לא ניתן היה לקרוא את היסט מתח ה-CPU"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "היסט מתח ה-CPU נדחה"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "לא ניתן היה לכבות את היסט מתח ה-CPU"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "לא ניתן היה להפעיל את בדיקת העומס"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

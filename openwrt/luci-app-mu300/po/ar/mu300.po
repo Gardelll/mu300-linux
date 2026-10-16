@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "أجهزة التبريد"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "بدأ اختبار الإجهاد"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "تم الحفظ: يسري عند إعادة التشغيل التالية"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "إزاحة جهد CPU (تجريبي)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "تجريبي: تغيير جهد CPU قد يجعل الجهاز غير مستقر، ويُتلف بياناتك، ويُلحق ضررًا دائمًا بجهازك. استخدمه على مسؤوليتك الخاصة بالكامل."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "إزاحة جهد CPU غير متاحة"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "غير متاح مع هذه النواة (تتضمنه نواة mainline من هذا الإصدار أو أحدث)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "معطّل: جهود المصنع"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "يتغير عند إعادة التشغيل التالية"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "إقلاع تجريبي: يُعتمد بعد أن يعمل هذا الإقلاع 10 دقائق"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "معتمد: اجتازت هذه الإزاحة إقلاعها التجريبي"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "انتهى إقلاع بها دون إيقاف تشغيل سليم"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "انتهى إقلاعها التجريبي قبل مرور 10 دقائق"
 
 msgid "invalid value"
-msgstr ""
+msgstr "قيمة غير صالحة"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "برنامج SoC ثابت غير معروف"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "رفضته النواة"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "تعذّر على النواة بدء تحجيم تردد CPU بها"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "الإزاحات بوحدة µV لنطاقات CPU الثلاثة (الأنوية 0-3 و4-6 و7)، بخطوات كاملة. تسري الإزاحة الجديدة عند إعادة التشغيل التالية كتجربة: تُعتمد بعد أن يعمل ذلك الإقلاع 10 دقائق، وتُلغى (تعود إلى 0) إذا انتهى إقلاع بها بانهيار أو إعادة ضبط من watchdog أو انقطاع في الكهرباء."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "يعمل الآن (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "محفوظ للإقلاع التالي (µV)"
 
 msgid "State"
 msgstr "الحالة"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "تم التراجع تلقائيًا: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "البرنامج الثابت لـ SoC في هذا الجهاز ليس من الأنواع المعروف ترميز الجهد فيها: لا يمكن إلا استخدام جهود المصنع."
 
 msgid "Domain"
-msgstr ""
+msgstr "النطاق"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "الإزاحة الآن (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "أعلى خطوة"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "الإزاحة الجديدة (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "الحدود: من %d إلى %d µV، بخطوات قدرها %d µV."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "حفظ للإقلاع التالي"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "يجب أن تكون كل إزاحة من مضاعفات %d µV بين %d و%d."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "اكتب %s للتأكيد."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "العودة إلى جهود المصنع"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "اكتب %s للتأكيد:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "تشغيل اختبار إجهاد CPU لمدة 10 دقائق"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "اختبر الإزاحة الجديدة تحت الحمل أثناء إقلاعها التجريبي. قد ينهار الجهاز إذا كان الجهد منخفضًا جدًا؛ عندها يعمل الإقلاع التالي بجهود المصنع."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "اختبار إجهاد قيد التشغيل."
 
 msgid "USB role"
 msgstr "دور USB"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "عملية جهد CPU غير معروفة"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "طلب جهد CPU غير صالح"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "إزاحة جهد CPU غير صالحة"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "اكتب كلمة التأكيد لتطبيق إزاحة الجهد"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "مدة اختبار الإجهاد غير صالحة"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "لم يُرجع محوّل الحزم ردًا صالحًا"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "تعذّرت قراءة إزاحة جهد CPU"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "رُفضت إزاحة جهد CPU"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "تعذّر إيقاف إزاحة جهد CPU"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "تعذّر بدء اختبار الإجهاد"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "Dispositifs de refroidissement"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "Test de charge démarré"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "Enregistré : prend effet au prochain redémarrage"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "Décalage de tension CPU (EXPÉRIMENTAL)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "Expérimental : modifier la tension du CPU peut rendre l'appareil instable, corrompre vos données et endommager définitivement votre appareil. Utilisation entièrement à vos risques et périls."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "Décalage de tension CPU indisponible"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "Non disponible avec ce noyau (un noyau mainline de cette version ou d'une version ultérieure le propose)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "Désactivé : tensions d'origine"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "Change au prochain redémarrage"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "Démarrage d'essai : conservé une fois que ce démarrage a tourné 10 minutes"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "Conservé : ce décalage a réussi son démarrage d'essai"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "un démarrage avec ce décalage s'est terminé sans arrêt propre"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "son démarrage d'essai s'est terminé avant 10 minutes"
 
 msgid "invalid value"
-msgstr ""
+msgstr "valeur non valide"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "firmware SoC inconnu"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "refusé par le noyau"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "le noyau n'a pas pu lancer la gestion de fréquence du CPU avec ce décalage"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "Décalages en µV pour les trois domaines CPU (cœurs 0-3, 4-6 et 7), par pas entiers. Un nouveau décalage prend effet au prochain redémarrage, à l'essai : il est conservé une fois que ce démarrage a tourné 10 minutes, et abandonné (retour à 0) si un démarrage avec lui se termine par un plantage, une réinitialisation par le watchdog ou une coupure de courant."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "Actif maintenant (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "Enregistré pour le prochain démarrage (µV)"
 
 msgid "State"
 msgstr "État"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "Annulé automatiquement : %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "Le firmware SoC de cet appareil ne fait pas partie de ceux dont l'encodage de tension est connu : seules les tensions d'origine sont possibles."
 
 msgid "Domain"
-msgstr ""
+msgstr "Domaine"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "Décalage actuel (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "Palier le plus haut"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "Nouveau décalage (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "Limites : %d à %d µV, par pas de %d µV."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "Enregistrer pour le prochain démarrage"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "Chaque décalage doit être un multiple de %d µV compris entre %d et %d."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "Saisissez %s pour confirmer."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "Revenir aux tensions d'origine"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "Saisissez %s pour confirmer :"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "Lancer un test de charge CPU de 10 minutes"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "Testez un nouveau décalage sous charge pendant son démarrage d'essai. L'appareil peut planter si la tension est trop basse ; le démarrage suivant utilise alors les tensions d'origine."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "Un test de charge est en cours."
 
 msgid "USB role"
 msgstr "Rôle USB"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "Opération de tension CPU inconnue"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "Requête de tension CPU non valide"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "Décalage de tension CPU non valide"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "Saisissez le mot de confirmation pour appliquer un décalage de tension"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "Durée de test de charge non valide"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "L'adaptateur des paquets n'a pas donné de réponse valide"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "Impossible de lire le décalage de tension CPU"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "Le décalage de tension CPU a été refusé"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "Impossible de désactiver le décalage de tension CPU"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "Impossible de démarrer le test de charge"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "Kylenheter"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "Stresstest startat"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "Sparat: gäller från nästa omstart"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "CPU-spänningsoffset (EXPERIMENTELLT)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "Experimentellt: att ändra CPU-spänningen kan göra enheten instabil, förstöra dina data och skada din enhet permanent. Används helt på egen risk."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "CPU-spänningsoffset är inte tillgänglig"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "Inte tillgänglig med den här kärnan (en mainline-kärna från den här versionen eller senare har det)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "Av: fabriksspänningarna"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "Ändras vid nästa omstart"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "Provstart: behålls när den här starten har varit igång i 10 minuter"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "Behållen: den här offseten klarade sin provstart"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "en start med den slutade utan en ren avstängning"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "dess provstart slutade före 10 minuter"
 
 msgid "invalid value"
-msgstr ""
+msgstr "ogiltigt värde"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "okänd SoC-firmware"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "avvisad av kärnan"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "kärnan kunde inte starta CPU-frekvensskalningen med den"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "Offsetar i µV för de tre CPU-domänerna (CPU-kärnor 0-3, 4-6 och 7), i hela steg. En ny offset gäller från nästa omstart, på prov: den behålls när den starten har varit igång i 10 minuter, och slopas (tillbaka till 0) om en start med den slutar med en krasch, en watchdog-återställning eller ett strömavbrott."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "Körs nu (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "Sparat till nästa start (µV)"
 
 msgid "State"
 msgstr "Tillstånd"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "Automatiskt återtagen: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "Enhetens SoC-firmware är inte en vars spänningskodning är känd: endast fabriksspänningarna är möjliga."
 
 msgid "Domain"
-msgstr ""
+msgstr "Domän"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "Offset nu (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "Högsta steg"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "Ny offset (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "Gränser: %d till %d µV, i steg om %d µV."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "Spara till nästa start"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "Varje offset måste vara en multipel av %d µV mellan %d och %d."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "Skriv %s för att bekräfta."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "Tillbaka till fabriksspänningarna"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "Skriv %s för att bekräfta:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "Kör ett 10 minuter långt CPU-stresstest"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "Testa en ny offset under last under dess provstart. Enheten kan krascha om spänningen är för låg; nästa start körs då med fabriksspänningarna."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "Ett stresstest körs."
 
 msgid "USB role"
 msgstr "USB-roll"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "Okänd CPU-spänningsåtgärd"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "Ogiltig CPU-spänningsbegäran"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "Ogiltig CPU-spänningsoffset"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "Skriv bekräftelseordet för att tillämpa en spänningsoffset"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "Ogiltig längd på stresstestet"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "Paketadaptern gav inget giltigt svar"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "CPU-spänningsoffseten kunde inte läsas"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "CPU-spänningsoffseten avvisades"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "CPU-spänningsoffseten kunde inte stängas av"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "Stresstestet kunde inte startas"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

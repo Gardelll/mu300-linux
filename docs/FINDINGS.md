@@ -8392,3 +8392,124 @@ LuCI login page, as did HTTP; a second run kept the new key. Then the boot path:
 in `/etc/uci-defaults`, a reboot: the script ran and was gone, uhttpd had made another new pair (EC:94:0E...), LuCI
 answered over both. Through all of it the VPN stayed up with the same exit IP, and the sha256 of every file of
 `/etc/config` and `/etc/mu300/vpn*` was the same as before.
+
+## The CPU voltage offset
+
+### 133. The CPU voltage offset (EXPERIMENTAL): one value per boot, from the initramfs, taken back after a crash
+
+**Status: built, not yet device-tested.** Both mainline kernels (6.18.57 and 7.2.11, the trees of PR #256) build with
+it, and the unit tests pass (`tests/test_cpu_voltage.py`); no board has run it yet (the test plan is in the PR). It
+can permanently damage a device: every front end says so in English, Turkish and Chinese and wants the word
+`EXPERIMENTAL` typed before it saves anything but zero. Based on kano's work (github.com/kanoqwq/mu300-linux,
+`clean-tf-7.2` @ 3386928: the firmware analysis, the flag encoding and the read-only cpufreq attributes), deferred in
+the review of his fork (`docs/superpowers/reviews/2026-10-11-kano-clean-tf-7.2.md`) and taken now on the owner's
+decision, with the in-kernel limits and the boot guard that review asked for.
+
+**How the firmware takes an offset (kano's analysis).** Linux never sets a CPU voltage on this SoC: the SML/ATF
+firmware runs DVFS, and the kernel asks through SIP calls. The one call that takes an offset is DVFS_INIT
+(`0x8200060b`), once per boot: byte 0 of its flag word is the vendor's `androidboot.dvfs_set`, bytes 1-3 are domains
+0-2 (CPUs 0-3, 4-6, 7), bit 7 the sign (lower) and bits 0-6 whole millivolts. The firmware moves the CPU **and the
+SRAM** voltage tables by `ceil(mV * 1000 / 3125)` steps of its 3.125 mV selector. kano verified +3125 uV and back to
+0 on one F50 (all 31 OPPs up exactly 3125 uV, `vddcpu1`/`vddcpu2` read 753125 uV); nothing negative was ever run.
+
+**Why DVFS waits for the initramfs, and why the driver stays built in.** The offset can only be given to DVFS_INIT,
+and a second DVFS_INIT is not an option: whether the firmware then adds the offset again (tables moved in place) is
+not known, and finding out on a device means risking exactly the damage this guards against. So the value has to be
+known before DVFS starts, and the user's setting lives on the Linux disk, which only the initramfs can read (the
+command line is built into the kernel: `CMDLINE_FORCE`). kano made the driver `=m` and loaded it from a userspace
+script (S08 on OpenWrt), which delays every boot's DVFS until then and needs `EXPORT_SYMBOL_GPL(topology_set_freq_scale)`
+patched into mainline. Ours keeps `CONFIG_ARM_SPRD_CPUFREQ_V2=y` and no mainline patch: the driver probes as before
+(cluster setup, SIP handles, the DCDC limit) and then holds only DVFS_INIT and the cpufreq registration until
+`/sys/module/sprd_cpufreq_v2_driver/parameters/voltage_offset_uv` is written. boot/init writes it right after the
+Linux disk is mounted (and after the boot-tries backstop): `0,0,0` for the stock call, which is every boot without the
+setting. Nothing written within 45 s (`SPRD_VOLT_WAIT_S`; longer than init's longest card wait, 8 + 30 s), and the
+driver starts DVFS at the stock voltages by itself; the rescue path (no Linux disk) writes `0,0,0` at once.
+
+* **The gap.** DVFS (and with it the cpufreq cooling devices) now starts at the root mount rather than at the
+  driver's probe. On mainline the root is mounted at 5.0-5.2 s (§31l, F50 #1, 6.18.55, card) - after the initramfs'
+  vendor modules, its partition lookup and the USB gadget. The driver probes at device_initcall, about a second in, so
+  the CPUs stay at the bootloader's clocks for an estimated 4 s more than before, in every boot, offset or not. The
+  stock Android and our 5.4 kernel already load `sprd-cpufreq-v2.ko` from the initramfs (module 20 of
+  `boot/module-order.txt`), so the vendor's own gap is of this kind; nothing that needs cpufreq loads earlier on
+  mainline (`upstream/module-order.txt` has no cpufreq user; `wcn_bsp`'s frequency QoS and `mu300_thermal` load after
+  switch_root). Not measured yet: the device test reads the `DVFS waits for voltage_offset_uv` and
+  `register cpufreq driver success` timestamps, and compares with a 6.18.57 kernel without this change.
+* **Kernel and init travel together.** `upstream/make-bundle.sh` puts boot/init into the kernel's generic ramdisk, and
+  every way a mainline kernel is installed writes that ramdisk with it; an older initramfs with this kernel would only
+  cost the 45 s wait, never an offset.
+
+**The limits, in the kernel** (`sprd-cpufreq-v2-voltage.h`, pure functions the tests compile on the host):
+
+* **-25000 to +12500 uV**, a whole number of 3125 uV steps (8 down, 4 up; kano allowed -50..+25 mV). 3125 uV is the
+  firmware's selector step and the UMP9620 CPU DCDCs' own (`ump9620-regulator.c`: 3125 uV, 0..1596875 uV). Undervolt
+  is what is worth having on a router (less heat, less power); 25 mV is about 4 % of the ~650 mV middle of the table
+  and inside what vendors keep as margin, and a smaller range is easier to widen later than to find too wide. The
+  encoding is floor(mV), and the firmware's ceil gives back exactly the steps asked for: the tests check every step
+  of the range and of the 7-bit field.
+* **All three or none.** The three values are parsed (exactly three decimal integers, at most 6 digits) and checked
+  before anything is encoded, and DVFS_INIT applies the three in one call: a domain is never left half set. A value
+  is refused with `-ERANGE`, `-EINVAL`, `-EOPNOTSUPP` or `-EBUSY`, and the initramfs then writes `0,0,0`.
+* **A raise never past the DCDC maximum.** A positive value needs the lowest `regulator-max-microvolt` of the PMIC's
+  `DCDC_CPU1` and `DCDC_CPU2` nodes in the device tree (`voltage_limits`'s `dcdc_max`); without one, a raise is
+  refused. With one, every OPP the firmware reports after DVFS_INIT is compared with it, and the first one above it
+  ends the frequency table: the firmware's index is the table's, so only the top can go, and cpufreq never asks for
+  that step. Which DCDC feeds which domain is not known (two rails for three domains), so the lower maximum counts for
+  all. The firmware writes the PMIC itself, so Linux cannot check a voltage before it is set - only make sure no
+  frequency that would need it is ever requested.
+* **Only the stock call when in doubt.** Zero is the vendor's flag word exactly. A non-zero value is refused when the
+  vendor's `androidboot.dvfs_set` already uses the upper bytes (meaning unknown), on anything that is not
+  `sprd,ums9620`, when DVFS is off for debugging (magic 0x5A), and once DVFS runs (`-EBUSY`: one value per boot).
+* **Who can set it.** Never the command line: the parameter refuses any write before `SYSTEM_RUNNING`, which is when
+  the command line is parsed (a built-in driver's parameters can be given there). A write needs `CAP_SYS_ADMIN`, and
+  the sysfs file is 0644 root. The driver cannot be unbound (`suppress_bind_attrs`) and refuses a second probe.
+
+**The boot guard, in the initramfs** (boot/init, `cpu-voltage`; tested against a fake driver and disk). It never
+stops a boot: anything unclear is `0,0,0`. Files in `.mu300` of the Linux disk: `cpu-voltage` (the request, written by
+`mu300-cpu voltage set`), `cpu-voltage-trial`, `cpu-voltage-good`, `cpu-voltage-armed`, `cpu-voltage-rejected`.
+
+* A new value runs once, as its **trial boot** (`trial` written before it is applied). It is **good** once that boot
+  has been up 10 minutes (`mu300-cpu voltage mark-good`: a systemd timer, an OpenWrt procd instance) and runs from
+  then on. A trial boot that ends before its good mark, cleanly or not, gets no second one.
+* Every boot with an offset writes `armed` and syncs it **before** the kernel gets the value; only a clean shutdown
+  or reboot removes it (`mu300-cpu voltage shutdown`: a systemd unit's ExecStop that acts only while the system is
+  stopping - `systemctl stop` is not a shutdown -, and on OpenWrt the K10 link's `shutdown` action, never `stop`). A
+  boot that finds `armed` - a crash, a panic (`panic=5`, the lockup panics), a watchdog reset, `reboot -f`, a power
+  cut - drops the offset: `0,0,0`, the request cleared, the reason in `rejected` for the panels. The power cut is
+  counted too: it cannot be told from a hang, and the price is setting the value again.
+* A value the initramfs cannot check is never written: not three whole steps in range (the same check as the CLI,
+  kept identical by a test), or a **SoC firmware not known**: both `sml_a` and `sml_b` of the eMMC must have the
+  SHA-256 of the F50 build kano read (`ff4782690fd805ff54fe34853ef8ee5c7e51c3259e20077c55373b50a4b259c2`). The U30
+  Air's SML is not on the list until a device test reads it; any other firmware gets only the stock voltages.
+* A value the kernel refuses (a raise without a DCDC maximum) falls back to `0,0,0` in the same boot, and the
+  request is cleared.
+* The boot-tries backstop still applies: N boots that never reach `mu300-boot-ok` go to Android, and the boot after a
+  crash already runs at the stock voltages.
+
+**The front ends.** `mu300-cpu voltage status|set A,B,C --confirm EXPERIMENTAL|off|stress [MIN] [--background]|warning`
+(root only for anything that writes; `opt/mu300/lib/cpu-voltage-warning.txt` holds the warning in the three
+languages); LuCI System > CPU (`mu300dash` `cpu_voltage_get`, read ACL, and `cpu_voltage_set`, write ACL; the shape
+checked there and again in `unisoc-modem/cpu`, the limits in mu300-cpu and the kernel); the Ubuntu panel's Power page
+(Cockpit, administrative access, an argument array); mu300-toolkit Performance > 4. Each shows the warning first,
+saves nothing but zero without the word, and offers the 10-minute CPU stress test (mu300-toolkit's) for the trial
+boot. "Back to the stock voltages" needs no word. Nothing changes before the next reboot.
+
+**kano's code, reviewed** (3386928: the driver hunk, `cpu-voltage-platform`, `mu300-cpu-driver`, the plugin's
+`cpu-voltage.uc`):
+
+* Taken: the flag encoding (floor mV, sign bit), the one-shot guard and `suppress_bind_attrs`, the read-only cpufreq
+  attributes (`scaling_voltage_table`, `scaling_voltage_offset`, `scaling_voltage_domain`; the table read returns
+  `-EIO` on a failed pair instead of the raw SIP error, and a policy without driver data gives `-ENODEV`), the SML
+  hash and the armed-marker idea.
+* Changed: `=y` instead of `=m` (no `topology_set_freq_scale` export, no userspace-timed DVFS); the value from the
+  initramfs, with the trial/good/armed rules instead of "armed at load, cleared at shutdown" alone (which never asks
+  whether a value has ever completed a boot); -25..+12.5 mV instead of -50..+25; the vendor's upper flag bytes kept
+  for the stock call (kano cleared them in every boot, which changes the stock call wherever LK sets them) and a
+  non-zero value refused when they are set; a raise only under the DCDC maximum; a 0444 `module_param_array` became a
+  root-only write-once parameter that the command line cannot set; the SML partitions looked up on the eMMC only,
+  the way init finds misc (kano's took `/dev/disk/by-partlabel` first, which a card can also provide).
+* Not taken: the S08 module loader, the TF/standalone layout, `cpu-voltage.uc`'s per-cluster presets (-3.125 and
+  -6.25 mV buttons: ours has no presets, every value is typed).
+
+**Not known, and what the device test has to show.** Whether DVFS_INIT with a negative value behaves as the analysis
+says (kano never ran one); the voltages the firmware then reports (PAIR_GET) against the regulators' readback; the
+SRAM rail (moved with the CPU rail, not visible from Linux); the U30 Air's SML; the gap above.

@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "냉각 장치"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "스트레스 테스트를 시작했습니다"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "저장됨: 다음 재부팅 시 적용됩니다"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "CPU 전압 오프셋(실험적)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "실험적 기능: CPU 전압을 변경하면 장치가 불안정해지고, 데이터가 손상되며, 장치가 영구적으로 손상될 수 있습니다. 모든 위험은 전적으로 사용자 본인이 부담합니다."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "CPU 전압 오프셋을 사용할 수 없음"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "이 커널에서는 사용할 수 없습니다(이 릴리스 이후의 메인라인 커널에서 지원)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "끔: 공장 출하 전압"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "다음 재부팅 시 변경됨"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "시험 부팅: 이 부팅이 10분간 유지되면 확정됨"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "확정됨: 이 오프셋이 시험 부팅을 통과했습니다"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "이 오프셋으로 부팅한 뒤 정상 종료 없이 끝났습니다"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "시험 부팅이 10분이 되기 전에 끝났습니다"
 
 msgid "invalid value"
-msgstr ""
+msgstr "잘못된 값"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "알 수 없는 SoC 펌웨어"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "커널이 거부함"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "커널이 이 오프셋으로 CPU 스케일링을 시작하지 못했습니다"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "세 CPU 도메인(코어 0-3, 4-6, 7)의 오프셋(µV 단위, 정수 단계). 새 오프셋은 다음 재부팅 시 시험으로 적용됩니다. 해당 부팅이 10분간 유지되면 확정되고, 이 오프셋으로 부팅한 뒤 크래시, 워치독 리셋 또는 전원 차단으로 끝나면 폐기됩니다(0으로 복귀)."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "현재 동작 중(µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "다음 부팅용으로 저장됨(µV)"
 
 msgid "State"
 msgstr "상태"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "자동으로 취소됨: %s µV(%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "이 장치의 SoC 펌웨어는 전압 인코딩이 알려진 펌웨어가 아닙니다. 공장 출하 전압만 사용할 수 있습니다."
 
 msgid "Domain"
-msgstr ""
+msgstr "도메인"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "현재 오프셋(µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "최고 단계"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "새 오프셋(µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "범위: %d~%d µV, %d µV 단위."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "다음 부팅용으로 저장"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "각 오프셋은 %d µV의 배수이며 %d에서 %d 사이여야 합니다."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "확인하려면 %s을(를) 입력하세요."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "공장 출하 전압으로 되돌리기"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "확인하려면 %s을(를) 입력하세요:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "10분 CPU 스트레스 테스트 실행"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "새 오프셋을 시험 부팅 중에 부하 상태에서 테스트합니다. 전압이 너무 낮으면 장치가 크래시할 수 있으며, 그러면 다음 부팅은 공장 출하 전압으로 동작합니다."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "스트레스 테스트가 실행 중입니다."
 
 msgid "USB role"
 msgstr "USB 역할"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "알 수 없는 CPU 전압 작업"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "잘못된 CPU 전압 요청"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "잘못된 CPU 전압 오프셋"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "전압 오프셋을 적용하려면 확인 단어를 입력하세요"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "잘못된 스트레스 테스트 시간"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "패키지 어댑터가 유효한 응답을 주지 않았습니다"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "CPU 전압 오프셋을 읽을 수 없습니다"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "CPU 전압 오프셋이 거부되었습니다"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "CPU 전압 오프셋을 끌 수 없습니다"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "스트레스 테스트를 시작할 수 없습니다"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

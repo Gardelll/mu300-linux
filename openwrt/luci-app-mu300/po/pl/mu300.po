@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "Urządzenia chłodzące"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "Test obciążeniowy uruchomiony"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "Zapisano: zacznie działać po następnym ponownym uruchomieniu"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "Przesunięcie napięcia CPU (EKSPERYMENTALNE)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "Funkcja eksperymentalna: zmiana napięcia CPU może spowodować niestabilność urządzenia, uszkodzić Twoje dane i trwale uszkodzić Twoje urządzenie. Korzystasz z niej wyłącznie na własne ryzyko."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "Przesunięcie napięcia CPU niedostępne"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "Niedostępne w tym jądrze (ma je jądro mainline z tego wydania lub nowszego)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "Wyłączone: fabryczne napięcia"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "Zmieni się po następnym ponownym uruchomieniu"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "Uruchomienie próbne: zostaje zachowane, gdy to uruchomienie działa 10 minut"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "Zachowane: to przesunięcie przeszło swoje uruchomienie próbne"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "uruchomienie z nim zakończyło się bez poprawnego wyłączenia"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "jego uruchomienie próbne zakończyło się przed upływem 10 minut"
 
 msgid "invalid value"
-msgstr ""
+msgstr "nieprawidłowa wartość"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "nieznane oprogramowanie układowe SoC"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "odrzucone przez jądro"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "jądro nie mogło z nim uruchomić skalowania częstotliwości CPU"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "Przesunięcia w µV dla trzech domen CPU (rdzenie 0-3, 4-6 i 7), w całych krokach. Nowe przesunięcie zaczyna działać po następnym ponownym uruchomieniu, próbnie: zostaje zachowane, gdy to uruchomienie działa 10 minut, i porzucone (powrót do 0), jeśli uruchomienie z nim zakończy się awarią, resetem przez watchdog lub zanikiem zasilania."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "Działa teraz (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "Zapisane na następne uruchomienie (µV)"
 
 msgid "State"
 msgstr "Stan"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "Wycofane automatycznie: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "Oprogramowanie układowe SoC tego urządzenia nie należy do tych, których kodowanie napięcia jest znane: możliwe są tylko fabryczne napięcia."
 
 msgid "Domain"
-msgstr ""
+msgstr "Domena"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "Obecne przesunięcie (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "Najwyższy krok"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "Nowe przesunięcie (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "Limity: od %d do %d µV, w krokach co %d µV."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "Zapisz na następne uruchomienie"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "Każde przesunięcie musi być wielokrotnością %d µV z zakresu od %d do %d."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "Wpisz %s, aby potwierdzić."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "Powrót do fabrycznych napięć"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "Wpisz %s, aby potwierdzić:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "Uruchom 10-minutowy test obciążeniowy CPU"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "Przetestuj nowe przesunięcie pod obciążeniem podczas jego uruchomienia próbnego. Urządzenie może się zawiesić, jeśli napięcie jest zbyt niskie; następne uruchomienie działa wtedy na fabrycznych napięciach."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "Trwa test obciążeniowy."
 
 msgid "USB role"
 msgstr "Rola USB"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "Nieznana operacja napięcia CPU"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "Nieprawidłowe żądanie napięcia CPU"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "Nieprawidłowe przesunięcie napięcia CPU"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "Wpisz słowo potwierdzenia, aby zastosować przesunięcie napięcia"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "Nieprawidłowa długość testu obciążeniowego"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "Adapter pakietów nie zwrócił prawidłowej odpowiedzi"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "Nie udało się odczytać przesunięcia napięcia CPU"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "Przesunięcie napięcia CPU zostało odrzucone"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "Nie udało się wyłączyć przesunięcia napięcia CPU"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "Nie udało się uruchomić testu obciążeniowego"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

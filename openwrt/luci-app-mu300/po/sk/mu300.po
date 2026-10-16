@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "Chladiace zariadenia"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "Záťažový test spustený"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "Uložené: prejaví sa pri ďalšom reštarte"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "Posun napätia CPU (EXPERIMENTÁLNE)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "Experimentálne: zmena napätia CPU môže spôsobiť nestabilitu zariadenia, poškodiť vaše dáta a natrvalo poškodiť vaše zariadenie. Používate ju výlučne na vlastné riziko."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "Posun napätia CPU nie je k dispozícii"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "S týmto jadrom nie je k dispozícii (má ho jadro mainline z tohto vydania alebo novšie)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "Vypnuté: továrenské napätia"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "Zmení sa pri ďalšom reštarte"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "Skúšobné spustenie: zachová sa, keď toto spustenie beží 10 minút"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "Zachované: tento posun prešiel skúšobným spustením"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "spustenie s ním skončilo bez čistého vypnutia"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "jeho skúšobné spustenie skončilo skôr ako za 10 minút"
 
 msgid "invalid value"
-msgstr ""
+msgstr "neplatná hodnota"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "neznámy firmvér SoC"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "odmietnuté jadrom"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "jadro s ním nedokázalo spustiť škálovanie frekvencie CPU"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "Posuny v µV pre tri domény CPU (jadrá CPU 0-3, 4-6 a 7), v celých krokoch. Nový posun sa prejaví pri ďalšom reštarte ako skúšobný: zachová sa, keď toto spustenie beží 10 minút, a zahodí sa (späť na 0), ak spustenie s ním skončí pádom, resetom watchdogu alebo výpadkom napájania."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "Teraz beží (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "Uložené pre ďalšie spustenie (µV)"
 
 msgid "State"
 msgstr "Stav"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "Automaticky vrátené: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "Firmvér SoC tohto zariadenia nepatrí medzi tie, ktorých kódovanie napätia je známe: možné sú iba továrenské napätia."
 
 msgid "Domain"
-msgstr ""
+msgstr "Doména"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "Aktuálny posun (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "Najvyšší stupeň"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "Nový posun (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "Limity: %d až %d µV, v krokoch po %d µV."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "Uložiť pre ďalšie spustenie"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "Každý posun musí byť násobkom %d µV v rozsahu %d až %d."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "Na potvrdenie napíšte %s."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "Späť na továrenské napätia"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "Na potvrdenie napíšte %s:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "Spustiť 10-minútový záťažový test CPU"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "Otestujte nový posun pod záťažou počas jeho skúšobného spustenia. Ak je napätie príliš nízke, zariadenie môže spadnúť; ďalšie spustenie potom beží s továrenskými napätiami."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "Prebieha záťažový test."
 
 msgid "USB role"
 msgstr "Rola USB"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "Neznáma operácia s napätím CPU"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "Neplatná požiadavka na napätie CPU"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "Neplatný posun napätia CPU"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "Na použitie posunu napätia napíšte potvrdzovacie slovo"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "Neplatná dĺžka záťažového testu"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "Adaptér balíkov nevrátil platnú odpoveď"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "Posun napätia CPU sa nepodarilo prečítať"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "Posun napätia CPU bol odmietnutý"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "Posun napätia CPU sa nepodarilo vypnúť"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "Záťažový test sa nepodarilo spustiť"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

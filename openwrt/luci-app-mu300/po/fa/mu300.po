@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "دستگاه‌های خنک‌کننده"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "تست استرس شروع شد"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "ذخیره شد: در راه‌اندازی مجدد بعدی اعمال می‌شود"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "جابه‌جایی ولتاژ CPU (آزمایشی)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "آزمایشی: تغییر ولتاژ CPU می‌تواند دستگاه را ناپایدار کند، داده‌های شما را خراب کند و به دستگاه شما آسیب دائمی بزند. استفاده از آن تماماً با مسئولیت خود شماست."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "جابه‌جایی ولتاژ CPU در دسترس نیست"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "با این هسته در دسترس نیست (هسته‌ی mainline این نسخه یا جدیدتر آن را دارد)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "خاموش: ولتاژهای کارخانه"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "در راه‌اندازی مجدد بعدی تغییر می‌کند"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "راه‌اندازی آزمایشی: وقتی این راه‌اندازی 10 دقیقه کار کند حفظ می‌شود"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "حفظ شد: این جابه‌جایی راه‌اندازی آزمایشی خود را با موفقیت گذراند"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "یک راه‌اندازی با آن بدون خاموش شدن درست پایان یافت"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "راه‌اندازی آزمایشی آن پیش از 10 دقیقه پایان یافت"
 
 msgid "invalid value"
-msgstr ""
+msgstr "مقدار نامعتبر"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "میان‌افزار SoC ناشناخته"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "هسته آن را رد کرد"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "هسته نتوانست مقیاس‌دهی فرکانس CPU را با آن آغاز کند"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "جابه‌جایی‌ها بر حسب µV برای سه دامنه‌ی CPU (هسته‌های پردازنده 0-3، 4-6 و 7)، در گام‌های کامل. جابه‌جایی جدید در راه‌اندازی مجدد بعدی به‌صورت آزمایشی اعمال می‌شود: وقتی آن راه‌اندازی 10 دقیقه کار کند حفظ می‌شود، و اگر راه‌اندازی با آن با خرابی، بازنشانی watchdog یا قطع برق پایان یابد کنار گذاشته می‌شود (به 0 برمی‌گردد)."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "اکنون در حال اجرا (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "ذخیره‌شده برای راه‌اندازی بعدی (µV)"
 
 msgid "State"
 msgstr "وضعیت"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "به‌طور خودکار پس گرفته شد: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "میان‌افزار SoC این دستگاه از آن‌هایی نیست که رمزگذاری ولتاژشان شناخته شده است: فقط ولتاژهای کارخانه ممکن است."
 
 msgid "Domain"
-msgstr ""
+msgstr "دامنه"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "جابه‌جایی کنونی (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "بالاترین پله"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "جابه‌جایی جدید (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "محدوده: %d تا %d µV، با گام‌های %d µV."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "ذخیره برای راه‌اندازی بعدی"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "هر جابه‌جایی باید مضربی از %d µV بین %d و %d باشد."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "برای تأیید %s را تایپ کنید."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "بازگشت به ولتاژهای کارخانه"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "برای تأیید %s را تایپ کنید:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "اجرای تست استرس 10 دقیقه‌ای CPU"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "جابه‌جایی جدید را در طول راه‌اندازی آزمایشی‌اش زیر بار آزمایش کنید. اگر ولتاژ خیلی پایین باشد ممکن است دستگاه از کار بیفتد؛ در آن صورت راه‌اندازی بعدی با ولتاژهای کارخانه اجرا می‌شود."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "یک تست استرس در حال اجراست."
 
 msgid "USB role"
 msgstr "نقش USB"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "عملیات ولتاژ CPU ناشناخته"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "درخواست ولتاژ CPU نامعتبر"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "جابه‌جایی ولتاژ CPU نامعتبر"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "برای اعمال جابه‌جایی ولتاژ، واژه‌ی تأیید را تایپ کنید"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "مدت تست استرس نامعتبر"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "آداپتور بسته‌ها پاسخ معتبری نداد"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "جابه‌جایی ولتاژ CPU خوانده نشد"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "جابه‌جایی ولتاژ CPU رد شد"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "جابه‌جایی ولتاژ CPU خاموش نشد"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "تست استرس آغاز نشد"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

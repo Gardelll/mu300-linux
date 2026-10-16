@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "Kühlgeräte"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "Stresstest gestartet"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "Gespeichert: wirkt ab dem nächsten Neustart"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "CPU-Spannungsoffset (EXPERIMENTELL)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "Experimentell: Eine Änderung der CPU-Spannung kann das Gerät instabil machen, Ihre Daten unbrauchbar machen und Ihr Gerät dauerhaft beschädigen. Die Nutzung erfolgt vollständig auf eigenes Risiko."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "CPU-Spannungsoffset nicht verfügbar"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "Mit diesem Kernel nicht verfügbar (ein Mainline-Kernel dieses Releases oder neuer bietet es)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "Aus: die Werksspannungen"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "Ändert sich beim nächsten Neustart"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "Probestart: bleibt erhalten, sobald dieser Start 10 Minuten läuft"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "Übernommen: dieser Offset hat seinen Probestart bestanden"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "ein Start damit endete ohne sauberes Herunterfahren"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "sein Probestart endete vor Ablauf von 10 Minuten"
 
 msgid "invalid value"
-msgstr ""
+msgstr "ungültiger Wert"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "unbekannte SoC-Firmware"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "vom Kernel abgelehnt"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "der Kernel konnte damit die CPU-Taktsteuerung nicht starten"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "Offsets in µV für die drei CPU-Domänen (Kerne 0-3, 4-6 und 7), in ganzen Schritten. Ein neuer Offset wirkt ab dem nächsten Neustart, zur Probe: Er bleibt erhalten, sobald dieser Start 10 Minuten läuft, und wird verworfen (zurück auf 0), wenn ein Start damit mit einem Absturz, einem Watchdog-Reset oder einem Stromausfall endet."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "Jetzt aktiv (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "Für den nächsten Start gespeichert (µV)"
 
 msgid "State"
 msgstr "Zustand"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "Automatisch zurückgenommen: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "Die SoC-Firmware dieses Geräts gehört nicht zu denen, deren Spannungskodierung bekannt ist: Nur die Werksspannungen sind möglich."
 
 msgid "Domain"
-msgstr ""
+msgstr "Domäne"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "Offset jetzt (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "Höchste Stufe"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "Neuer Offset (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "Grenzen: %d bis %d µV, in Schritten von %d µV."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "Für den nächsten Start speichern"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "Jeder Offset muss ein Vielfaches von %d µV zwischen %d und %d sein."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "Geben Sie zur Bestätigung %s ein."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "Zurück zu den Werksspannungen"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "Geben Sie zur Bestätigung %s ein:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "10-minütigen CPU-Stresstest starten"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "Testen Sie einen neuen Offset während seines Probestarts unter Last. Ist die Spannung zu niedrig, kann das Gerät abstürzen; der nächste Start läuft dann mit den Werksspannungen."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "Ein Stresstest läuft."
 
 msgid "USB role"
 msgstr "USB-Rolle"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "Unbekannte CPU-Spannungsoperation"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "Ungültige CPU-Spannungsanfrage"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "Ungültiger CPU-Spannungsoffset"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "Geben Sie das Bestätigungswort ein, um einen Spannungsoffset anzuwenden"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "Ungültige Stresstest-Dauer"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "Der Paket-Adapter gab keine gültige Antwort"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "Der CPU-Spannungsoffset konnte nicht gelesen werden"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "Der CPU-Spannungsoffset wurde abgelehnt"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "Der CPU-Spannungsoffset konnte nicht abgeschaltet werden"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "Der Stresstest konnte nicht gestartet werden"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

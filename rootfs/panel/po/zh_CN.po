@@ -255,88 +255,88 @@ msgid "Power"
 msgstr "电源"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "CPU 电压偏移（实验性）"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "实验性功能：修改 CPU 电压可能导致设备不稳定、损坏您的数据，并可能对您的设备造成永久性损坏。风险完全由您自行承担。"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "此内核不支持（本版本或更新版本的主线内核支持）。"
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "关闭：出厂电压"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "将在下次重启时更改"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "试用启动：本次启动运行满 10 分钟后保留"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "已保留：此偏移已通过试用启动"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "使用该偏移的一次启动未正常关机就结束了"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "其试用启动在 10 分钟内结束"
 
 msgid "invalid value"
-msgstr ""
+msgstr "无效值"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "未知的 SoC 固件"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "被内核拒绝"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "内核无法以此偏移启动 CPU 调频"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "三个 CPU 电压域（核心 0-3、4-6 和 7）的偏移，单位 µV，须为整数步长。新的偏移在下次重启时以试用方式生效：该次启动运行满 10 分钟后保留；若使用它的启动以崩溃、看门狗复位或断电结束，则丢弃（恢复为 0）。"
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "当前运行（µV）"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "已保存，下次启动生效（µV）"
 
 msgid "Taken back automatically: $0 µV ($1)"
-msgstr ""
+msgstr "已自动撤销：$0 µV（$1）"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "此设备的 SoC 固件不在已知电压编码的版本之列：只能使用出厂电压。"
 
 msgid "Domain $0 (cores $1), now $2 µV, highest step $3"
-msgstr ""
+msgstr "电压域 $0（核心 $1），当前 $2 µV，最高档位 $3"
 
 msgid "Limits: $0 to $1 µV, in steps of $2 µV."
-msgstr ""
+msgstr "范围：$0 至 $1 µV，步长 $2 µV。"
 
 msgid "Type $0 to confirm:"
-msgstr ""
+msgstr "输入 $0 以确认："
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "保存，下次启动生效"
 
 msgid "Each offset must be a multiple of $0 µV between $1 and $2."
-msgstr ""
+msgstr "每个偏移必须是 $0 µV 的整数倍，且介于 $1 和 $2 之间。"
 
 msgid "Type $0 to confirm."
-msgstr ""
+msgstr "输入 $0 以确认。"
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "恢复出厂电压"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "运行 10 分钟 CPU 压力测试"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "在试用启动期间于负载下测试新的偏移。电压过低时设备可能崩溃；之后的下次启动将使用出厂电压。"
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "压力测试正在运行。"
 
 msgid "A profile sets the CPU governor and the per-cluster frequency limits, inside the hardware frequency table; the kernel keeps throttling at its thermal limit in every profile."
 msgstr "配置会在硬件频率表范围内设置 CPU 调速器和每个簇的频率上下限；在任何配置下，内核到达温度上限时都会继续降频。"

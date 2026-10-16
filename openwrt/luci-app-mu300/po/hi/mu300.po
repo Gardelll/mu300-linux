@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "कूलिंग उपकरण"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "स्ट्रेस टेस्ट शुरू हुआ"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "सहेजा गया: अगले रीबूट पर लागू होगा"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "CPU वोल्टेज ऑफ़सेट (प्रायोगिक)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "प्रायोगिक: CPU वोल्टेज बदलने से डिवाइस अस्थिर हो सकता है, आपका डेटा खराब हो सकता है और आपके डिवाइस को स्थायी नुकसान पहुँच सकता है। इसका उपयोग पूरी तरह अपने जोखिम पर करें।"
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "CPU वोल्टेज ऑफ़सेट उपलब्ध नहीं है"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "इस कर्नेल के साथ उपलब्ध नहीं (इस रिलीज़ या बाद के mainline कर्नेल में यह है)।"
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "बंद: फ़ैक्टरी वोल्टेज"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "अगले रीबूट पर बदलेगा"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "परीक्षण बूट: यह बूट 10 मिनट चलने के बाद रखा जाएगा"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "रखा गया: इस ऑफ़सेट ने अपना परीक्षण बूट पास किया"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "इसके साथ एक बूट साफ़ शटडाउन के बिना समाप्त हुआ"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "इसका परीक्षण बूट 10 मिनट से पहले समाप्त हो गया"
 
 msgid "invalid value"
-msgstr ""
+msgstr "अमान्य मान"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "अज्ञात SoC फ़र्मवेयर"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "कर्नेल ने अस्वीकार किया"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "कर्नेल इसके साथ CPU स्केलिंग शुरू नहीं कर सका"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "तीन CPU डोमेन (CPU कोर 0-3, 4-6 और 7) के लिए µV में ऑफ़सेट, पूरे चरणों में। नया ऑफ़सेट अगले रीबूट पर परीक्षण के रूप में लागू होता है: वह बूट 10 मिनट चलने के बाद इसे रखा जाता है, और यदि इसके साथ कोई बूट क्रैश, watchdog रीसेट या बिजली कटने से समाप्त होता है तो इसे हटा दिया जाता है (वापस 0 पर)।"
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "अभी चल रहा (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "अगले बूट के लिए सहेजा गया (µV)"
 
 msgid "State"
 msgstr "स्थिति"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "स्वचालित रूप से वापस लिया गया: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "इस डिवाइस का SoC फ़र्मवेयर उनमें से नहीं है जिनकी वोल्टेज एन्कोडिंग ज्ञात है: केवल फ़ैक्टरी वोल्टेज संभव हैं।"
 
 msgid "Domain"
-msgstr ""
+msgstr "डोमेन"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "अभी का ऑफ़सेट (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "सबसे ऊँचा चरण"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "नया ऑफ़सेट (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "सीमाएँ: %d से %d µV, %d µV के चरणों में।"
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "अगले बूट के लिए सहेजें"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "हर ऑफ़सेट %d µV का गुणज होना चाहिए, %d और %d के बीच।"
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "पुष्टि करने के लिए %s टाइप करें।"
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "फ़ैक्टरी वोल्टेज पर वापस जाएँ"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "पुष्टि करने के लिए %s टाइप करें:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "10 मिनट का CPU स्ट्रेस टेस्ट चलाएँ"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "नए ऑफ़सेट को उसके परीक्षण बूट के दौरान लोड में जाँचें। वोल्टेज बहुत कम होने पर डिवाइस क्रैश हो सकता है; तब अगला बूट फ़ैक्टरी वोल्टेज पर चलता है।"
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "एक स्ट्रेस टेस्ट चल रहा है।"
 
 msgid "USB role"
 msgstr "USB भूमिका"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "अज्ञात CPU वोल्टेज ऑपरेशन"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "अमान्य CPU वोल्टेज अनुरोध"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "अमान्य CPU वोल्टेज ऑफ़सेट"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "वोल्टेज ऑफ़सेट लागू करने के लिए पुष्टि शब्द टाइप करें"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "अमान्य स्ट्रेस टेस्ट अवधि"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "पैकेज एडेप्टर ने मान्य जवाब नहीं दिया"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "CPU वोल्टेज ऑफ़सेट पढ़ा नहीं जा सका"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "CPU वोल्टेज ऑफ़सेट अस्वीकार कर दिया गया"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "CPU वोल्टेज ऑफ़सेट बंद नहीं किया जा सका"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "स्ट्रेस टेस्ट शुरू नहीं किया जा सका"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

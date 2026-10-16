@@ -410,109 +410,109 @@ msgid "Cooling devices"
 msgstr "Jäähdytyslaitteet"
 
 msgid "Stress test started"
-msgstr ""
+msgstr "Kuormitustesti käynnistetty"
 
 msgid "Saved: it takes effect at the next reboot"
-msgstr ""
+msgstr "Tallennettu: tulee voimaan seuraavassa uudelleenkäynnistyksessä"
 
 msgid "CPU voltage offset (EXPERIMENTAL)"
-msgstr ""
+msgstr "CPU:n jännitesiirtymä (KOKEELLINEN)"
 
 msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
-msgstr ""
+msgstr "Kokeellinen: CPU:n jännitteen muuttaminen voi tehdä laitteesta epävakaan, turmella tietosi ja vahingoittaa laitettasi pysyvästi. Käytä täysin omalla vastuullasi."
 
 msgid "CPU voltage offset unavailable"
-msgstr ""
+msgstr "CPU:n jännitesiirtymä ei ole käytettävissä"
 
 msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
-msgstr ""
+msgstr "Ei käytettävissä tällä ytimellä (tämän julkaisun tai uudemman mainline-ytimessä se on)."
 
 msgid "Off: the stock voltages"
-msgstr ""
+msgstr "Pois: tehdasjännitteet"
 
 msgid "Changes at the next reboot"
-msgstr ""
+msgstr "Muuttuu seuraavassa uudelleenkäynnistyksessä"
 
 msgid "Trial boot: kept once this boot has been up 10 minutes"
-msgstr ""
+msgstr "Koekäynnistys: säilytetään, kun tämä käynnistys on ollut käynnissä 10 minuuttia"
 
 msgid "Kept: this offset passed its trial boot"
-msgstr ""
+msgstr "Säilytetty: tämä siirtymä läpäisi koekäynnistyksensä"
 
 msgid "a boot with it ended without a clean shutdown"
-msgstr ""
+msgstr "käynnistys sen kanssa päättyi ilman siistiä sammutusta"
 
 msgid "its trial boot ended before 10 minutes"
-msgstr ""
+msgstr "sen koekäynnistys päättyi ennen 10 minuutin kulumista"
 
 msgid "invalid value"
-msgstr ""
+msgstr "virheellinen arvo"
 
 msgid "unknown SoC firmware"
-msgstr ""
+msgstr "tuntematon SoC-laiteohjelmisto"
 
 msgid "refused by the kernel"
-msgstr ""
+msgstr "ydin hylkäsi sen"
 
 msgid "the kernel could not start CPU scaling with it"
-msgstr ""
+msgstr "ydin ei pystynyt käynnistämään CPU:n taajuudensäätöä sen kanssa"
 
 msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
-msgstr ""
+msgstr "Siirtymät µV:inä kolmelle CPU-alueelle (suoritinytimet 0-3, 4-6 ja 7), kokonaisina askelina. Uusi siirtymä tulee voimaan seuraavassa uudelleenkäynnistyksessä koekäyttönä: se säilytetään, kun se käynnistys on ollut käynnissä 10 minuuttia, ja hylätään (takaisin 0:aan), jos käynnistys sen kanssa päättyy kaatumiseen, watchdog-nollaukseen tai sähkökatkoon."
 
 msgid "Running now (µV)"
-msgstr ""
+msgstr "Käytössä nyt (µV)"
 
 msgid "Saved for the next boot (µV)"
-msgstr ""
+msgstr "Tallennettu seuraavaa käynnistystä varten (µV)"
 
 msgid "State"
 msgstr "Tila"
 
 msgid "Taken back automatically: %s µV (%s)"
-msgstr ""
+msgstr "Peruttu automaattisesti: %s µV (%s)"
 
 msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
-msgstr ""
+msgstr "Tämän laitteen SoC-laiteohjelmisto ei ole sellainen, jonka jännitekoodaus tunnetaan: vain tehdasjännitteet ovat mahdollisia."
 
 msgid "Domain"
-msgstr ""
+msgstr "Alue"
 
 msgid "Offset now (µV)"
-msgstr ""
+msgstr "Siirtymä nyt (µV)"
 
 msgid "Highest step"
-msgstr ""
+msgstr "Korkein askel"
 
 msgid "New offset (µV)"
-msgstr ""
+msgstr "Uusi siirtymä (µV)"
 
 msgid "Limits: %d to %d µV, in steps of %d µV."
-msgstr ""
+msgstr "Rajat: %d – %d µV, %d µV:n askelin."
 
 msgid "Save for the next boot"
-msgstr ""
+msgstr "Tallenna seuraavaa käynnistystä varten"
 
 msgid "Each offset must be a multiple of %d µV between %d and %d."
-msgstr ""
+msgstr "Jokaisen siirtymän on oltava %d µV:n monikerta välillä %d – %d."
 
 msgid "Type %s to confirm."
-msgstr ""
+msgstr "Vahvista kirjoittamalla %s."
 
 msgid "Back to the stock voltages"
-msgstr ""
+msgstr "Takaisin tehdasjännitteisiin"
 
 msgid "Type %s to confirm:"
-msgstr ""
+msgstr "Vahvista kirjoittamalla %s:"
 
 msgid "Run a 10-minute CPU stress test"
-msgstr ""
+msgstr "Suorita 10 minuutin CPU-kuormitustesti"
 
 msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
-msgstr ""
+msgstr "Testaa uutta siirtymää kuormituksessa sen koekäynnistyksen aikana. Laite voi kaatua, jos jännite on liian matala; seuraava käynnistys käyttää silloin tehdasjännitteitä."
 
 msgid "A stress test is running."
-msgstr ""
+msgstr "Kuormitustesti on käynnissä."
 
 msgid "USB role"
 msgstr "USB-rooli"
@@ -3320,19 +3320,19 @@ msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
 msgid "Unknown CPU voltage operation"
-msgstr ""
+msgstr "Tuntematon CPU-jännitetoiminto"
 
 msgid "Invalid CPU voltage request"
-msgstr ""
+msgstr "Virheellinen CPU-jännitepyyntö"
 
 msgid "Invalid CPU voltage offset"
-msgstr ""
+msgstr "Virheellinen CPU:n jännitesiirtymä"
 
 msgid "Type the confirmation word to apply a voltage offset"
-msgstr ""
+msgstr "Kirjoita vahvistussana jännitesiirtymän käyttöön ottamiseksi"
 
 msgid "Invalid stress test length"
-msgstr ""
+msgstr "Virheellinen kuormitustestin kesto"
 
 msgid "The packages adapter gave no valid reply"
 msgstr "Pakettisovitin ei antanut kelvollista vastausta"
@@ -3552,16 +3552,16 @@ msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
 
 msgid "The CPU voltage offset could not be read"
-msgstr ""
+msgstr "CPU:n jännitesiirtymää ei voitu lukea"
 
 msgid "The CPU voltage offset was refused"
-msgstr ""
+msgstr "CPU:n jännitesiirtymä hylättiin"
 
 msgid "The CPU voltage offset could not be turned off"
-msgstr ""
+msgstr "CPU:n jännitesiirtymää ei voitu poistaa käytöstä"
 
 msgid "The stress test could not be started"
-msgstr ""
+msgstr "Kuormitustestiä ei voitu käynnistää"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
