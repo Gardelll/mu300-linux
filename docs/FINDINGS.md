@@ -161,6 +161,7 @@ what replaced it. The table below gives each section's state.
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
+| 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
 
 ## Hardware and firmware facts
 
@@ -4279,6 +4280,94 @@ watches only and keeps the power-off.
 
 Open: the 5.4 thermal sysfs on an F50 and a U30 Air (`/sys/class/thermal/thermal_zone*/{type,mode,trip_point_*}`,
 the `cdev*` links and `cooling_device*/type`) and which way the guard goes there; a load run on 5.4.
+### 166. Mainline's soc-thmzone did not hold a full CPU load: step_wise followed the sensors' noise
+
+PR #272's device test (§133, F50-C, 6.18.56/6.18.57) found that the toolkit's 10-minute CPU stress (8 awk loops)
+took the SoC from 44 to 102.6 C in under 3 minutes, and twice on to `thermal-guard`'s 105 C power-off, with
+`soc-thmzone` bound (§48: passive 70/85 C, the three cpufreq maps) and the guard "watching only". The vendor 5.4
+kernel holds the same load at 80-91 C. After five of those hot shutdowns or reboots the next boot found no eMMC (§133;
+HS400ES when hot, #226 / PR #283).
+
+**Measured again (F50-C, OpenWrt v2026.10.16.1, 6.18.56, 2026-10-17)**, one sample a second of the zone's
+temperature and the three cooling devices' `cur_state` (`cpufreq-cpu0/4/7`, `max_state` 9/9/10), 8 awk loops:
+38 C at 0 s, 85 C at 23 s, 90.9 C at 120 s, 95.3 C at 150 s, 98.5 C at 185 s (stopped there by the test's own
+safety limit). The states never went past **3**, and flapped 0-1-2-3-0 between one sample and the next. So the
+kernel throttled, but by one or two steps where the load needs four or five.
+
+**The cause: the trend.** What was checked and is not it: the zone's polling (`polling-delay 1000`,
+`polling-delay-passive 100`, as the DT says), the governor (`step_wise`, the only one in `mu300-mainline.config`),
+the trips (the maps are on the 85 C trip, hysteresis 1 C), the maps' limits (`THERMAL_NO_LIMIT` both ways: every
+step of every cluster), the clusters (all three bound, the A76s too), the zone the cooling devices are bound to (the
+module's `soc-thmzone`, `cdevN_trip_point` 1). What is it: `gov_step_wise.c` (6.18.56 and 7.2.10 alike) steps a
+bound cooling device one up on a *raising* trend and one **down** on a *dropping* one while the zone is above the
+trip, and lifts the whole of it on one *dropping* reading under the trip. Without a `get_trend` op the core's trend
+is this reading against the last one, 100 ms earlier. The zone's reading is the hottest of eleven on-die sensors,
+which moves by a degree or more between two polls whatever the load does; the die itself follows the CPU power within
+a second (85 to 77 C within a second of a release, back to 88 C a second later). So the state was a random walk
+around zero, raised and lowered on noise, while the package crept up at about 0.1 C/s. The vendor kernel throttles the
+same zone with the power allocator (IPA, `sustainable-power 3000`) and cluster hotplug (`thermal-cpu-N` cooling
+devices); mainline has neither for this SoC (IPA would need a kernel with the governor and an energy model for
+`sprd-cpufreq-v2`, i.e. new kernel images).
+
+**The fix, in the module** (`upstream/modules/mu300_thermal`, no new kernel image; built for 6.18.56 and 7.2.10, no
+warning): `mu300_thermal` gives the zone a `get_trend` (`mu300_trend.h`, plain C the tests compile on the host). It
+keeps the last 32 readings and takes the slope between the mean of the last half second and the mean of half a second
+about a second earlier, with a dead band of 1 C/s:
+
+* at or above the trip + 3 C (88 C): raising, a step more every poll, unless the SoC is falling by more than 1 C/s;
+* from the trip less its hysteresis (84 C) to 88 C: raising above the trip when the slope rises; one step back, at
+  most one a second, when the slope falls or the SoC is under the trip; else stable (the state is kept);
+* from 80 to 84 C: stable. step_wise would lift every step at once here on a dropping trend, and the die is 10-20 C
+  hotter within a second of that under a full load (fix 1 below did that);
+* under 80 C: dropping (the cooling is lifted).
+
+The rate limit is the zone's, shared by its two passive trips; at the temperatures where it matters the 70 C trip is
+3 C or more below and answers raising or stable without touching it.
+
+| Run (8 awk loops, 10 min) | at 30 / 60 / 120 / 180 / 300 / 450 / 570 s, C | peak | mean 2-10 min | above 90 C | awk iterations |
+|---|---|---|---|---|---|
+| before (release module) | 85.1 / 84.3 / 90.9 / 97.3 / - / - / - | 98.5 at 185 s, stopped | - | - | - |
+| fix 1 (1-s slope, no averaging, margin 5 C) | 86.0 / 90.4 / 90.7 / 86.8 / 86.3 / 85.8 / 83.7 | 96.5 | 88.1 | 25 % | 1 124.6 M |
+| fix (this PR) | 82.2 / 84.6 / 82.0 / 81.0 / 82.7 / 81.7 / 82.4 | 91.2 (one sample) | 82.3 | 0.2 % | 1 094.8 M |
+
+With the fix the states climb to 2 within 30 s, 3-4 by 3 minutes and 5 by 6.5 minutes, and stay; the clusters ran
+at 1334 / 1627 / 1475 MHz on average (2-10 min) of 2002 / 2301 / 2210. Fix 1 swung 84-92 C with the states going
+0-8 and back every few seconds. The cost of holding 82 C instead of swinging around 88 C is 2.7 % of the work done (awk
+iterations). The power-off never came near: before, it would have come at about 4 minutes. Not run on 7.2.10 (the
+module is built; the governor and the core's trend code are the same, `diff` of `gov_step_wise.c` and
+`thermal_helpers.c` empty).
+
+**Belt and braces.**
+
+* **`thermal-guard`** no longer only watches when a bound zone throttles: when the hottest sensor reaches 92 C
+  anyway (`MU300_THERMAL_BACKSTOP`), it lowers `scaling_max_freq` one step a round on top of the kernel's cap, the
+  A76 clusters (policy4, policy7) from 92 C, the A55 cluster (policy0) too from 95 C (`MU300_THERMAL_BACKSTOP_ALL`), and
+  lifts its caps a step a round again at or below 85 C (HOT), never above a profile's ceiling. It logs once per hot
+  spell: `kernel thermal zone soc-thmzone does not hold the SoC (... mC): capping cpufreq on top of it ...`. The marker
+  says `backstop`, so a restart of the guard (which looks like a handoff to it) does not lift those caps at once. The
+  105 C power-off stays. This holds on every kernel where a zone is bound, the vendor 5.4 too (§139).
+* **The toolkit's stress test** stops itself when the hottest sensor reaches 95 C (`MU300_STRESS_LIMIT`), kills the
+  load and starts its summary with `STOPPED EARLY after mm:ss: the SoC reached N C, the limit is 95 C ...`, so the test
+  recommended for checking a device never powers it off.
+
+**Device test of the two (F50-C, same day, 6.18.56).** The release `mu300_thermal.ko` back in (the runaway one), the
+running `thermal-guard` replaced by this one, then the new `mu300-toolkit stress cpu 10` from 45.8 C: `kernel thermal
+zone soc-thmzone does not hold the SoC (92652 mC): capping cpufreq on top of it ...` at 85 s, once; from there the
+SoC stayed at 85-91 C (mean 87.6 C from 2 to 10 minutes, peak 92.6 C), the A76 clusters one step under the kernel's
+cap, no stop at 95 C needed and no power-off; the toolkit's summary: max 93 C, averages 1560 / 1783 / 1669 MHz. After
+the load the guard lifted its caps by itself (`scaling_max_freq` 2002 / 2301 / 2210 MHz, marker gone). The stop, with
+`MU300_STRESS_LIMIT=80000`: `STOPPED EARLY after 00:03: the SoC reached 88 C, the limit is 80 C ...`, no awk left.
+Each of the four runs started at 41-51 C after a cool-down, and none ended in a hot reboot.
+
+Tests: `tests/test_mu300_thermal.py` (the trend compiled on the host: noise is no trend, the bands, the rate limit,
+the lower trip; a plant model of step_wise against a die that follows the power within half a second, where the core's
+trend passes 95 C and this one holds it under 90 C on average), `test_device_scripts.ThermalGuard` (the backstop:
+A76 clusters from 92 C, all from 95 C, logged once, lifted at HOT up to the profile's ceiling only, the power-off at
+105 C still) and `ToolkitStress` (stops at the first sample at 96.5 C with the message; the limit configurable).
+
+Open: the eMMC after a hot shutdown (PR #283's HS200 fallback); a run on 7.2.10 and on the U30 Air; whether a governor
+with an energy model (IPA, as the vendor kernel) is worth new kernel images.
+
 ### 49. The SIM's own number in the panel: CNUM, else the IMS identity, on full rounds only
 
 The panel showed IMEI, IMSI and ICCID but not the SIM's own number (MSISDN). Ported from kanoqwq's fork
