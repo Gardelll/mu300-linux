@@ -2752,6 +2752,9 @@ at a time, while someone watched the device, showed where they are:
 | Wi-Fi | white | LDO VDDCAMA1 |
 | Wi-Fi | blue | LDO VDDCAMA2 |
 
+**Update 2026-10-16:** which Wi-Fi colour means which band was a guess here, and the wrong way round (§152): ZTE's
+firmware lights the white one (VDDCAMA1) on 5 GHz and the blue one (VDDCAMA2) on 2.4 GHz.
+
 The device tree's six other GPIO LEDs (`pwr_green`, `net_red`, `net_green`, `net_white`, `wifi_blue`,
 `wifi_white`) light nothing; they come from a ZTE board file shared with other products, and Android never writes
 them either. The lights that never went out were the LDO ones: ZTE's `zte_ldo_leds` switches the camera supplies
@@ -8392,3 +8395,41 @@ LuCI login page, as did HTTP; a second run kept the new key. Then the boot path:
 in `/etc/uci-defaults`, a reboot: the script ran and was gone, uhttpd had made another new pair (EC:94:0E...), LuCI
 answered over both. Through all of it the VPN stayed up with the same exit IP, and the sha256 of every file of
 `/etc/config` and `/etc/mu300/vpn*` was the same as before.
+
+### 152. The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware
+
+**Status: current** (read from the stock firmware and ZTE's own guide, 2026-10-16; not yet looked at on a device).
+
+**What was wrong.** §33f found which element is where (the Wi-Fi light's white is LDO VDDCAMA1, its blue LDO VDDCAMA2)
+but not what ZTE means by them, and `mu300-led` lit blue on 5 GHz and white on 2.4 GHz. kano's fork (kanoqwq/mu300-linux,
+branch clean-tf-7.2, commit 2af101f8, "complete U30 Air power, LED and PD dock support") has them the other way round,
+white on 5 GHz and blue on 2.4 GHz, as the V50's lamp is (§95).
+
+**What ZTE's firmware does.** Read from a U30 Air's own backup (build `U30Air_SSV1.0.0B14`, slot a; the `super`
+partition's logical partitions taken apart offline, nothing run, no device booted into Android):
+
+- `system/framework/services.jar`, `NotificationManagerService.updateLightsLocked()`: the hotspot off gives
+  `mWifiLight.setFlashing(100, 2, 0, 0)`; on, a `packed-switch` on `mWifiBand` (from
+  `WifiManager.getSoftApConfiguration().getBand()`) with the one key 1 (`BAND_2GHZ`) gives 102, every other band
+  (`BAND_5GHZ` = 2, combinations) 101. `mWifiLight` is `getLight(1)`, the keyboard light.
+- `vendor/bin/hw/vendor.sprd.hardware.lights-service`, the keyboard light's handler ("setLightKeyboard"): with flash
+  mode 2, 100 writes 0 to both `zte_ldo_leds/vddcama1_status` and `vddcama2_status`, 101 lights `vddcama1` alone, 102
+  `vddcama2` alone. The path is gated by `ro.vendor.feature.zte_leds_for_u30=true` and `zte_feature_ufi_light=true`
+  (`vendor/build.prop`, and the same in the unit's getprop).
+- So 5 GHz is VDDCAMA1, white; 2.4 GHz VDDCAMA2, blue; steady, never blinking.
+
+ZTE's guide for the U30 Air (国际漫游指南, https://oss.ztedevices.com/prod/cn/2024/12/20241213641.pdf, item 5, the Wi-Fi
+light) says the same: 白色常亮：Wi-Fi 5 GHz 启用。蓝色常亮：Wi-Fi 2.4GHz 启用。灭：Wi-Fi 关闭、关机或待机模式 (steady white: 5 GHz
+on; steady blue: 2.4 GHz on; off: Wi-Fi off, powered off or standby).
+
+**The change.** `mu300-led` maps the 5 GHz hotspot to `zte-ldo1` and 2.4 GHz to `zte-ldo2` (mainline's `leds-zte-ldo`,
+and `vddcama1/2_status` under 5.4). The README, the wiki's hardware notes and the website's feature pages (English,
+Turkish, Chinese) say white 5 GHz, blue 2.4 GHz.
+
+**Not changed here, for a look on the device.** The same `NotificationManagerService.setNetLight()` picks the network
+light by the SIM in use, not by the access technology: 11 (VDDCAMA0, white) for SIM slot 0, 12 (`net_blue`) for slot 1,
+13 (`keyboard-backlight`, red) without service; the variant that picks by 4G/5G (`ZTE_FEATURE_UFI_LIGHT_V1`) is not
+set on this unit. The guide says the same (blue: the built-in eSIM in use, white: the nano-SIM; blinking while the SIM
+is switched; white/blue with red flashing: no internet on that SIM). §33f's "blue on 4G, white on 5G" was sampled
+with the radio off and `vddcama0` lit on 5G, which a nano-SIM in slot 0 would also explain. `mu300-led` still shows
+4G/5G.
