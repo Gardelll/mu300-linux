@@ -246,7 +246,11 @@ sudo mu300-cpu profile saving            <span class="c"># 或 balanced（默认
 <pre><code>sudo mu300-nfc                 <span class="c"># 显示标签内容</span>
 sudo mu300-nfc wifi            <span class="c"># 写入热点名称和密码</span></code></pre>
 <pre><code>sudo mu300-usb host            <span class="c"># U30 Air，主线内核：接 OTG 转接头，由电池供 5 V</span>
-sudo mu300-usb device          <span class="c"># 切回连接电脑（每次开机的默认状态）</span></code></pre>
+sudo mu300-usb device          <span class="c"># 切回连接电脑（每次开机的默认状态）</span>
+sudo mu300-usb pd on           <span class="c"># 实验性，默认关闭：由 USB-C 供电协议（PD）决定角色</span></code></pre>
+<p>打开 USB-C PD 后（U30 Air，主线内核，尚未在设备上实测），插上 OTG 转接头端口会自动成为主机；接上自带充电器的 PD
+扩展坞时，U30 Air 一边充电，一边用 <code>sudo mu300-usb host</code> 向扩展坞请求主机角色，扩展坞的 USB 口和网口就能用。只用
+5 V；<code>sudo mu300-usb pd off</code> 恢复原样。</p>
 <p>F50 的 USB 口就是它的电源，所以没有 USB 主机模式；长按电源键 3 秒关机。</p>
 </section>
 

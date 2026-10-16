@@ -8392,3 +8392,62 @@ LuCI login page, as did HTTP; a second run kept the new key. Then the boot path:
 in `/etc/uci-defaults`, a reboot: the script ran and was gone, uhttpd had made another new pair (EC:94:0E...), LuCI
 answered over both. Through all of it the VPN stayed up with the same exit IP, and the sha256 of every file of
 `/etc/config` and `/etc/mu300/vpn*` was the same as before.
+
+### 150. USB-C power delivery on the U30 Air: the UMP9620's port controller under TCPM (EXPERIMENTAL, off by default)
+
+**Status: experimental** (built against 6.18.57 and 7.2.11, unit tests; not run on a device yet, see the PR's device
+checklist). Off unless `sudo mu300-usb pd on`.
+
+**What for.** A PD dock with its own charger (USB-C charger in, USB-A ports and Ethernet out) is meant to charge the
+U30 Air and have it as its USB host at once; ZTE's Android does that. Mainline had no driver for the PMIC's Type-C
+and PD blocks: VBUS came from a GPIO, the source's Rp was read by the charger (§40, patch 0012), and `mu300-usb host`
+put the data role and the 5 V boost together, so a dock could either charge it or be its device, not both.
+
+**Where it comes from.** kano (kanoqwq/mu300-linux, branch clean-tf-7.2, commit 2af101f8, "complete U30 Air power, LED
+and PD dock support") put Unisoc's `sc27xx_pd.c` register sequences under mainline's TCPM: a 654-line driver, a charger
+patch (his 0018) that makes the boost a regulator and lets a PD contract set the input current, and `mu300-usb` asking
+`/sys/class/typec/port0/data_role`. On his unit a computer gave device + sink, and a dock with its charger gave host +
+sink after a manual data role swap (an RTL8153 on the dock came up in the LAN); the dock's own switch to host did not
+happen, and his last receive fix was not run against the dock again. Unisoc's originals were read for this review from
+ZTE's U30 Air kernel (Enceka/android_kernel_zte_ums9620_mifi_u30air: `drivers/usb/typec/tcpm/sc27xx_pd.c`,
+`drivers/usb/typec/sc27xx_typec.c`, `sprd_tcpm.c`).
+
+**Review of kano's driver.** What it does right: the Type-C block keeps its own state machine (attach, detach, the CC
+pin), which is how Unisoc uses it too; TCPM is registered last and unregistered first (its workers use the port);
+TX_OK and a received GoodCRC complete one transmission once; the RX FIFO is flushed after each frame (on the device it
+holds the CRC behind the frame, which was taken for the next header before); the VBUS GPIO's extcon covers VBUS
+changes without a CC event; and it binds only where the Type-C node has `use_pdhub_c2c`. What was changed:
+
+| | kano's version | now |
+|---|---|---|
+| on by default | built in, bound at every boot | a module, and probe returns at once unless `enable=1` (`mu300-usb pd on`); Ubuntu's udev does not load it (`modprobe.d` blacklist) |
+| boards | `use_pdhub_c2c` | that, the PD node enabled, and `/charger_policy_service` (the U30 Air only, as patch 0016); the F50's PD node is disabled, the V50 has no charger policy service |
+| 5 V out | `regulator_enable` whenever TCPM asked | the charger's `otg-vbus` regulator refuses while an outside supply is on VBUS (power good, VBUS_STAT not its own boost), after 100 ms for it to go (a power role swap) |
+| a boost left on by a crash in host mode | stayed on: `mu300-usb boot` skipped its check with the port controller there | switched off by the charger at probe, before anything can use the port |
+| VCONN | the PMIC's VCONN switch on whenever TCPM asked, a cable's Ra reported | never: ZTE's firmware does not source it (no `vconn-supply` on the PD node, so Unisoc's `set_vconn` fails) and which CC pin the switch drives is not known; Ra not reported |
+| missing `vbus-supply` | a dummy regulator (`devm_regulator_get`): "5 V on" with nothing on | an error (`devm_regulator_get_optional`) |
+| shutdown and unload | PD clocks off; the Type-C block left in whatever mode TCPM last set | the clocks stay on (the module enable covers the Type-C block LK and Android rely on); the Type-C block's mode and enable registers put back as the boot left them (the PMIC keeps them across a reboot: a block left source-only would not let a charger see a sink); boost off; device |
+| calibration | the Type-C trim written before the PD clocks were on | clocks, then calibration, in Unisoc's order, in TCPM's init |
+| message IDs | not cleared at a new session, the TX ID not at a hard reset | both FIFOs emptied and both IDs cleared at every new PD session and every hard reset, sent or received (Unisoc's `sc27xx_pd_reset`) |
+| input current | passed on after any received message, the Rp-based values TCPM reports included | only for an explicit contract (the partner sent Source_Capabilities): in PD 3.0 a source's Rp only says whether the sink may talk (SinkTxOk is Rp 3 A whatever it offers), so §40's Rp current would be wrong under a contract; without one the charger's BC1.2/Rp choice stays |
+| data role at unplug | stayed host (TCPM never hands it back at a detach) | device at once when the Type-C block says detached |
+| locking | `set_cc`, `set_roles`, `set_pd_rx` without the driver's lock | every callback that touches the PD block holds it; TCPM is called with it held only where TCPM merely queues |
+| receive errors | enabled as an interrupt and ignored | not enabled (Unisoc counts them and switches the interrupt off after 100 in two minutes) |
+| PDOs | source 5 V 500 mA, sink 5 V 2 A | source 5 V 400 mA (ZTE's own, from the board's connector node), Rp default; sink 5 V 2 A (the charger's DCP current) |
+
+Still open, for the device (the PR's checklist): whether the Type-C block follows a mode change while attached
+(TCPM's Try.SNK and power role swaps write it; Unisoc's driver never did, it signals a swap through `WC_REG`), whether
+a hard reset we send raises TX_OK, whether a second frame can sit behind the first in the RX FIFO (the FIFO level is at
+debug level: `echo 'module ump9620_tcpc +p' > /sys/kernel/debug/dynamic_debug/control`), and why the dock did not swap
+to host by itself on kano's unit (TCPM accepts a partner's DR_Swap; it does not start one).
+
+**The pieces.** `upstream/patches/0019` (charger: the boost as the `otg-vbus` regulator, refused against an outside
+supply, a stale boost off at probe, a PD contract's input current kept across VBUS events and dropped with VBUS),
+`0020` (`drivers/usb/typec/tcpm/ump9620-tcpc.c`, one file); `CONFIG_TYPEC`, `CONFIG_TYPEC_TCPM` and
+`CONFIG_TYPEC_UMP9620` as modules on both kernels. `mu300-usb pd on|off|status` loads the module with `enable=1` (and
+at every boot while on, `/etc/mu300/usb-pd`) or unloads it; while it is bound `host`/`device` ask TCPM for a data role
+swap and write no charger register, `device` is refused while the port powers what is plugged in (an OTG adapter:
+unplugging it is the way back), and a partner without PD on outside power (a hub with a charger) still gets host
+written directly, with the boost off, as before. `boot` keeps switching a stale boost off, unless the port controller
+is bound (then the boost is its source role).
+

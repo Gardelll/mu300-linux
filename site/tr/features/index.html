@@ -299,7 +299,12 @@ söner, hotspot ve modem kapalı).</p>
 <pre><code>sudo mu300-nfc                 <span class="c"># etiketi gösterir</span>
 sudo mu300-nfc wifi            <span class="c"># hotspot'un adını ve şifresini yazar</span></code></pre>
 <pre><code>sudo mu300-usb host            <span class="c"># U30 Air, ana hat çekirdekler: OTG adaptörü, pilden 5 V</span>
-sudo mu300-usb device          <span class="c"># bilgisayara dönüş (her açılışta varsayılan)</span></code></pre>
+sudo mu300-usb device          <span class="c"># bilgisayara dönüş (her açılışta varsayılan)</span>
+sudo mu300-usb pd on           <span class="c"># DENEYSEL, varsayılan kapalı: rolleri USB-C güç dağıtımı (PD) seçer</span></code></pre>
+<p>USB-C güç dağıtımı açıkken (U30 Air, ana hat çekirdekler, henüz cihazda denenmedi) OTG adaptörü portu kendiliğinden
+host yapar; kendi şarj aleti takılı bir PD dock U30 Air'i şarj ederken <code>sudo mu300-usb host</code> dock'tan host
+rolünü ister, böylece dock'un USB portları ve Ethernet'i çalışır. Yalnızca 5 V; <code>sudo mu300-usb pd off</code> geri
+döner.</p>
 <p>F50'de USB portu güç girişidir, bu yüzden USB host kipi yoktur; güç düğmesini 3 s basılı tutmak onu kapatır.</p>
 </section>
 

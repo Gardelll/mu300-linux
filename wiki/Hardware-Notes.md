@@ -110,6 +110,12 @@ the device lands in Android about 20 minutes later. The cause is still open.
   password into the tag (also `url`, `text`, `clear`, `on`/`off`).
 * **USB host (§33e):** `sudo mu300-usb host` with an OTG adapter, on the mainline kernels: flash drives (FAT, exFAT),
   keyboards, mice, USB modems and Ethernet adapters. `sudo mu300-usb device` goes back (the default at every boot).
+* **USB-C power delivery (§150, EXPERIMENTAL, off by default):** `sudo mu300-usb pd on` (mainline kernels) hands the
+  port to the kernel's Type-C/PD stack (TCPM, the `ump9620-tcpc` module, after kano's port): a computer makes it a
+  device, an OTG adapter or a USB device a host with 5 V out, and a PD dock with its own charger charges it while
+  `sudo mu300-usb host` asks the dock for the host role (USB ports and Ethernet on the dock). Only 5 V, at most 2 A in
+  and 400 mA out; the charger refuses 5 V out while anything else supplies VBUS. `sudo mu300-usb pd off` goes back
+  to the manual host mode; `mu300-usb pd status` shows the roles. Not tested on a device yet.
 * **Address:** `192.168.78.1`, so an F50 (`192.168.77.1`) and a U30 Air can be plugged into one computer (§33b).
 
 ## F50 specifics
