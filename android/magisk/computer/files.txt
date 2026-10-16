@@ -27,6 +27,7 @@ tools/linux-mode.sh
 tools/android-bootchain.sh
 tools/android-install.sh
 tools/android-mount-mu300root.sh
+tools/android-pwcheck.sh
 tools/install-magisk-module.sh
 tools/resize-last-partition.py
 tools/vendor-overlay.py
@@ -48,4 +49,5 @@ i18n/zh.tsv
 gui/mu300-gui.py
 gui/mu300gui
 android/magisk/mu300-linux-switch
+android/magisk/installer/module.prop.in
 rootfs/overlay/opt/mu300/lib/vpn-orphan.sh

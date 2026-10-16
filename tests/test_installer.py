@@ -497,8 +497,13 @@ class InstallEnv(ShellTest):
             self.assertEqual(list(e), ['OFF', 'SIZE', 'OFF_S', 'SIZE_S', 'FORMAT', 'OSES', 'WIPE_LEGACY', 'UPDATE',
                                        'BOOT_OS', 'DEFAULT_LINUX', 'BOOT_ATTEMPTS', 'IMPORT_HOTSPOT', 'KERNEL',
                                        'SD_MODE', 'SD_DEV', 'INTERNAL_EXISTS', 'ADB', 'ADB_KEY', 'SYNC_BOOTCHAIN',
-                                       'PWHASH'])
+                                       'PWHASH', 'KEEP_PW_OSES'])
             self.assertEqual(e['SYNC_BOOTCHAIN'], '1')
+            self.assertEqual(e['KEEP_PW_OSES'], '""')
+            # an update that keeps the passwords of the systems the user confirmed
+            out = self.write_env(shell, **dict(self.COMMON, FORMAT=0, UPDATE=1), SIZE=34776023040, INT_SIZE='', SD_MODE=0,
+                                 SD_DEV='', INTERNAL_EXISTS=1, KEEP_PW_OSES='ubuntu openwrt')
+            self.assertEqual(self.parse(out)['KEEP_PW_OSES'], '"ubuntu openwrt"')
 
     def test_internal_mode(self):
         for shell in self.each_shell():
@@ -1155,6 +1160,29 @@ class ChooseSystems(ShellTest):
             self.assertIn('DIE invalid choice', self.run_choose(shell, 2, '7\n'), shell)
             self.assertIn('DIE that choice needs', self.run_choose(shell, 3, '2\n', size=2), shell)
             self.assertIn('OSES=openwrt-luci', self.run_choose(shell, 2, '2\n', size=1), shell)
+
+    def run_default(self, shell, size):
+        m = re.search(r'# --- choose-systems begin\n(.*?)# --- choose-systems end', self.SRC, re.S)
+        code = (f'NEED_OPENWRT=1; NEED_UBUNTU=2; NEED_BOTH=3; SIZE={size}; ' + m.group(1) + 'systems_default')
+        return self.sh(shell, code).stdout.strip()
+
+    def test_enter_chooses_what_fits(self):
+        # FINDINGS 153: on the 804 MiB a make-room run leaves, Enter (3) stopped the reinstall with "needs 2400 MiB"
+        for shell in self.each_shell():
+            self.assertEqual([self.run_default(shell, s) for s in (100, 3, 2, 1)], ['3', '3', '1', '2'], shell)
+        self.assertIn('ask choice "$(t \'Choice\')" "$(systems_default)" MU300_ANS_SYSTEMS', self.SRC)
+        self.assertNotIn('ask choice "$(t \'Choice\')" 3 MU300_ANS_SYSTEMS', self.SRC)
+
+    def test_a_choice_that_does_not_fit_names_the_one_that_does(self):
+        for shell in self.each_shell():
+            out = self.run_choose(shell, 3, '1\n', size=1)
+            self.assertIn('DIE that choice needs', out, shell)
+            self.assertIn('Choose 2 (OpenWrt) instead: it fits here.', out, shell)
+            # it stops before the question of which OpenWrt
+            self.assertNotIn('ASKED', out, shell)
+            out = self.run_choose(shell, 3, '1\n', size=2)
+            self.assertIn('Choose 1 (Ubuntu) or 2 (OpenWrt) instead: one system fits here.', out, shell)
+            self.assertNotIn('instead', self.run_choose(shell, 2, '1\n', size=0), shell)
 
 
 if __name__ == '__main__':
