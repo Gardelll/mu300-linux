@@ -310,12 +310,97 @@
         load();
     };
 
-    /* Power and CPU: mu300-cpu status --json and profile NAME, mu300-power status (text) */
+    /* Power and CPU: mu300-cpu status --json and profile NAME, mu300-power status (text); the CPU voltage offset
+     * (EXPERIMENTAL: mu300-cpu voltage status --json, set A,B,C --confirm EXPERIMENTAL, off, stress 10 --background) */
     pages.power = function (root) {
         var cpu = card(_('CPU profile'), 'mu-cpu'), pw = card(_('Power'), 'mu-power');
+        var volt = card(_('CPU voltage offset (EXPERIMENTAL)'), 'mu-cpuv');
         root.appendChild(cpu);
+        root.appendChild(volt);
         root.appendChild(pw);
-        var cb = cpu.appendChild(el('div')), pb = pw.appendChild(el('div'));
+        var cb = cpu.appendChild(el('div')), pb = pw.appendChild(el('div')), vb = volt.appendChild(el('div'));
+        var WORD = 'EXPERIMENTAL';
+        function arr(a) { return Array.isArray(a) && a.length === 3 ? a.map(String).join(', ') : '-'; }
+        function loadVolt() {
+            cmdJson([ 'mu300-cpu', 'voltage', 'status', '--json' ]).then(function (v) {
+                clear(vb);
+                vb.appendChild(note(_('Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk.'), 'danger-box'));
+                if (!v.kernel || v.phase === 'unsupported') {
+                    vb.appendChild(note(_('Not available with this kernel (a mainline kernel of this release or later has it).')));
+                    return;
+                }
+                var lim = v.limits || {};
+                var lo = typeof lim.min === 'number' ? lim.min : -25000, hi = typeof lim.max === 'number' ? lim.max : 12500;
+                var step = typeof lim.step === 'number' && lim.step > 0 ? lim.step : 3125;
+                var phases = { off: _('Off: the stock voltages'), pending: _('Changes at the next reboot'),
+                    trial: _('Trial boot: kept once this boot has been up 10 minutes'),
+                    good: _('Kept: this offset passed its trial boot') };
+                var reasons = { 'unclean-end': _('a boot with it ended without a clean shutdown'),
+                    'no-good-mark': _('its trial boot ended before 10 minutes'), 'invalid': _('invalid value'),
+                    'unknown-firmware': _('unknown SoC firmware'), 'kernel-refused': _('refused by the kernel'),
+                    'kernel-failed': _('the kernel could not start CPU scaling with it') };
+                vb.appendChild(note(_('Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut.')));
+                vb.appendChild(row(_('Running now (µV)'), arr(v.applied)));
+                vb.appendChild(row(_('Saved for the next boot (µV)'), arr(v.requested)));
+                vb.appendChild(row(_('State'), phases[v.phase] || String(v.phase || '-')));
+                if (v.rejected && typeof v.rejected === 'object')
+                    vb.appendChild(note(cockpit.format(_('Taken back automatically: $0 µV ($1)'), arr(v.rejected.offsets),
+                        reasons[v.rejected.reason] || String(v.rejected.reason || '?')), 'error'));
+                var fwOk = v.firmware === 'known';
+                if (!fwOk)
+                    vb.appendChild(note(_('The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible.'), 'warn'));
+                var cur = Array.isArray(v.requested) && v.requested.length === 3 ? v.requested : [ 0, 0, 0 ];
+                var inputs = [];
+                (Array.isArray(v.domains) ? v.domains : []).forEach(function (d) {
+                    var i = typeof d.domain === 'number' ? d.domain : -1;
+                    if (i < 0 || i > 2) return;
+                    var tbl = Array.isArray(d.table) ? d.table : [], top = tbl.length ? tbl[tbl.length - 1] : null;
+                    inputs[i] = el('input', { type: 'number', id: 'mu-cpuv-in' + i, min: String(lo), max: String(hi),
+                        step: String(step), value: String(typeof cur[i] === 'number' ? cur[i] : 0) });
+                    vb.appendChild(el('label', { 'for': 'mu-cpuv-in' + i, text: cockpit.format(_('Domain $0 (cores $1), now $2 µV, highest step $3'),
+                        String(i), String(d.cpus || ''), String(typeof d.offset === 'number' ? d.offset : '-'),
+                        Array.isArray(top) ? (top[0] / 1000).toFixed(0) + ' MHz / ' + (top[1] / 1000).toFixed(2) + ' mV' : '-') }));
+                    vb.appendChild(inputs[i]);
+                });
+                vb.appendChild(note(cockpit.format(_('Limits: $0 to $1 µV, in steps of $2 µV.'), String(lo), String(hi), String(step))));
+                var word = el('input', { type: 'text', id: 'mu-cpuv-word', autocomplete: 'off', spellcheck: 'false', placeholder: WORD });
+                vb.appendChild(el('label', { 'for': 'mu-cpuv-word', text: cockpit.format(_('Type $0 to confirm:'), WORD) }));
+                vb.appendChild(word);
+                var bar = el('div', { 'class': 'mu-actions' });
+                var save = button(_('Save for the next boot'), function () {
+                    var vals = [];
+                    for (var i = 0; i < 3; i++) {
+                        var n = inputs[i] ? Number(inputs[i].value) : NaN;
+                        if (!isFinite(n) || Math.floor(n) !== n || n < lo || n > hi || n % step !== 0) {
+                            toast(cockpit.format(_('Each offset must be a multiple of $0 µV between $1 and $2.'), String(step), String(lo), String(hi)), 'error');
+                            return;
+                        }
+                        vals.push(String(n));
+                    }
+                    var offs = vals.join(',');
+                    if (offs === '0,0,0') { act(save, [ 'mu300-cpu', 'voltage', 'off' ], undefined, loadVolt); return; }
+                    if (word.value !== WORD) { toast(cockpit.format(_('Type $0 to confirm.'), WORD), 'error'); word.focus(); return; }
+                    act(save, [ 'mu300-cpu', 'voltage', 'set', offs, '--confirm', WORD ], undefined, loadVolt);
+                }, 'danger');
+                if (!fwOk || inputs.length !== 3) save.disabled = true;
+                var off = button(_('Back to the stock voltages'), function () {
+                    act(off, [ 'mu300-cpu', 'voltage', 'off' ], undefined, loadVolt);
+                });
+                var stress = v.stress || {};
+                var sb = button(_('Run a 10-minute CPU stress test'), function () {
+                    act(sb, [ 'mu300-cpu', 'voltage', 'stress', '10', '--background' ], undefined, loadVolt);
+                });
+                if (stress.running) sb.disabled = true;
+                bar.appendChild(save);
+                bar.appendChild(off);
+                bar.appendChild(sb);
+                vb.appendChild(bar);
+                vb.appendChild(note(_('Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages.')));
+                if (stress.running) vb.appendChild(note(_('A stress test is running.'), 'warn'));
+                if (stress.last) vb.appendChild(pre(String(stress.last)));
+            }, function (ex) { clear(vb).appendChild(note(errText(ex), 'error')); });
+        }
+        loadVolt();
         function load() {
             cmdJson([ 'mu300-cpu', 'status', '--json' ]).then(function (s) {
                 clear(cb);

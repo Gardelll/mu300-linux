@@ -283,6 +283,22 @@ yaklaşık %60'ıyla sınırlı: daha serin, daha az güç), <strong>balanced</s
 işini yapmaya devam eder. Kontrol panelinde: Sistem &gt; CPU.</p>
 <pre><code>mu300-cpu status
 sudo mu300-cpu profile saving            <span class="c"># ya da balanced (varsayılan), performance</span></code></pre>
+<h3 id="cpu-voltage">İşlemci voltaj kaydırma (deneysel)</h3>
+<div class="callout warn">
+<strong>Deneysel: cihazınıza kalıcı zarar verebilir</strong>
+<p>Bu özellik deneyseldir ve cihazınıza kalıcı zarar verebilirsiniz. Tüm risk size aittir.</p>
+</div>
+<p>Mainline çekirdeklerde (6.18 ve 7.2) işlemci voltajı çekirdek kümesi başına (CPU 0-3, 4-6 ve 7) biraz
+kaydırılabilir: 25 mV aşağıdan 12.5 mV yukarıya, 3.125 mV'lik adımlarla. Varsayılan kapalıdır (0). Yeni bir değer bir
+sonraki yeniden başlatmada tek bir deneme açılışı olarak uygulanır; o açılış 10 dakika açık kalırsa kalıcı olur, çökme,
+watchdog sıfırlaması ya da elektrik kesintisiyle biten her açılış onu geri alır (0'a döner). Kodlaması bilinmeyen SoC
+yazılımında reddedilir (şimdilik yalnızca F50'ninki biliniyor). Ayarlandığı her yer önce <code>EXPERIMENTAL</code>
+yazmanızı ister: kontrol panelinde Sistem &gt; CPU, Ubuntu panelinin Güç sayfası, <code>mu300-toolkit</code> ve
+komut satırı. Yazılım kodlamasını <a href="https://github.com/kanoqwq">kano</a> çözdü.</p>
+<pre><code>sudo mu300-cpu voltage status
+sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL   <span class="c"># µV: CPU 0-3, 4-6, 7</span>
+sudo mu300-cpu voltage stress 10                                  <span class="c"># deneme açılışında yük altında sınayın</span>
+sudo mu300-cpu voltage off                                        <span class="c"># sonraki açılışta fabrika değerleri</span></code></pre>
 <p>Şarj cihazı takıldığı için başlamış bir açılış, Wi-Fi tuşuna basana kadar şarj açılışı olarak kalır (LED yanıp
 söner, hotspot ve modem kapalı).</p>
 </section>
