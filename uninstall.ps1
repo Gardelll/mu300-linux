@@ -332,9 +332,10 @@ Step 'choices' 25
 Say 'What should be removed?'
 $wipe = 'keep'
 if ($OFF -gt 0) {
-    Write-Host "  secure  overwrite the whole $([int64]($SIZE / 1GB)) GiB region and verify (recommended, takes a few"
+    Write-Host "  secure  overwrite the whole $([int64]($SIZE / 1MB)) MiB region and verify (recommended, takes a few"
     Write-Host '          minutes; your files are really gone afterwards)'
-    Write-Host '  quick   only erase the filesystem headers (fast, but the files stay readable on the flash)'
+    Write-Host '  quick   only erase the filesystem headers (fast, but the files stay readable on the flash; an'
+    Write-Host '          installation into this space later finds it not empty and asks for the word overwrite)'
     Write-Host '  keep    leave the Linux filesystem in place (it just never boots again)'
     $wipe = Ask 'Erase the Linux filesystem: secure / quick / keep' 'secure' 'MU300_ANS_WIPE'
     if ($wipe -eq 'full') { $wipe = 'secure' }
@@ -415,7 +416,7 @@ if ($wipe -ne 'keep') {
     if ($wipe -eq 'quick') {
         SuDo "dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=64 conv=notrunc 2>/dev/null; sync" | Out-Null
     } else {
-        Write-Host "overwriting $([int64]($mib / 1024)) GiB, this takes a few minutes"
+        Write-Host "overwriting $mib MiB, this takes a few minutes"
         SuDo "command -v blkdiscard >/dev/null && blkdiscard -o $OFF -l $SIZE /dev/block/mmcblk0 2>/dev/null; dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=$mib conv=notrunc 2>/dev/null; sync" | Out-Null
     }
     $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($OFF + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
