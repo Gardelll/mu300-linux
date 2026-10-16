@@ -156,6 +156,7 @@ what replaced it. The table below gives each section's state.
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 | 155 | The settings as one file and back: `mu300-backup export|import|show` (Ubuntu and OpenWrt), `mu300-api backup.export/backup.import`, System > Backup of settings in the panel; a passphrase seals it (openssl enc has no GCM: AES-256-CBC with the SHA-256 of the contents inside), every value checked by its setter's own rules before anything changes | current (unit tests on the fake device of test_api, hostile files included; not yet run on a device) |
+| 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 
 ## Hardware and firmware facts
 
@@ -8562,3 +8563,53 @@ the API methods and the job. In none of them a secret in an argument list, a job
 subscription, locks); an Ubuntu file on OpenWrt; the panel's page (download, preview, restore while connected over the
 hotspot whose password changes); the size limit through rpcd/ubus (about 1 MiB for one message) with a large VPN
 configuration.
+
+### 161. Mainline kernel sources: two signatures, pinned keys, fail closed
+
+**Status: current** (unit tests with throwaway keys; the real 6.18.56 and 7.2.10 releases and seven kinds of
+tampering checked in the build image, 2026-10-16).
+
+**What was there.** `upstream/build.sh` - the one place that downloads a kernel.org tarball, for local builds, the
+Mainline kernel build workflow and the release workflow alike - fetched `linux-$KV.tar.xz` and piped
+`sha256sums.asc` through `grep | sha256sum -c`. That checks the download against a list fetched over the same
+connection from the same host, and never looks at the list's signature: whoever can change the tarball (a CDN node, a
+mirror, TLS interception on a build host) can change the list with it. And `grep` read the whole file, so a line put
+in front of the clearsigned block would have counted as well as a signed one.
+
+**What it does now.** `upstream/verify-kernel-src.sh DIR KV`, run by `build.sh` before anything is unpacked:
+
+1. `gpgv --keyring keys/kernel-autosigner.gpg --output SUMS sha256sums.asc`: kernel.org's checksum list must carry a
+   good signature of the autosigner (kernel.org's off-the-network signing system); only the signed text, as gpgv
+   writes it out, is searched for the tarball's line, which must be there exactly once and match its SHA-256;
+2. `xz -dc linux-KV.tar.xz | gpgv --keyring keys/kernel-releasers.gpg linux-KV.tar.sign -`: the releaser's own
+   signature over the uncompressed tar (Linus Torvalds for a mainline release, Greg Kroah-Hartman or Sasha Levin for
+   a stable one). kernel.org's signature page says the autosigner's lists do "NOT" replace developer signatures, so
+   both are required, from two different keyrings: a releaser's key cannot sign the list, nor the autosigner the tar.
+
+For each, gpgv must exit 0 and report `GOODSIG` and no `BADSIG`/`ERRSIG`/`EXPSIG`/`EXPKEYSIG`/`REVKEYSIG`/`NO_PUBKEY`,
+and the primary fingerprint of `VALIDSIG` must be listed in the keyring's `.fpr` file. Any failure, and a missing
+`gpgv`, `xz` or file, stops the build; `build.sh` deletes the download. The tarball unpacks into
+`/src/.download-KV/` and is moved to `/src/linux-KV` last, so an interrupted unpack never leaves a tree that the next
+run takes as fetched (it used to: the tree's existence was the only test). The check costs about 3 s per kernel
+(the second xz pass). The build image lists `gpgv` (Ubuntu's base image has it already, as apt's dependency).
+
+**The keys** (`upstream/keys/README.md`): the autosigner `B8868C80BA62A1FFFAF5FDA9632D3A06589DA6B1`, Linus
+`ABAF11C65A2970B130ABE3C479BE3E4300411886`, Greg `647F28654894E3BD457199BE38DBBDC86092693E`, Sasha
+`E27E5D8A3403A2EF66873BBCDEA66FF797772CDC`; none expires. Fetched from kernel.org's WKD and from the pgpkeys
+repository on git.kernel.org, which agreed; signature.html prints the three releasers' fingerprints (not the
+autosigner's). keys.openpgp.org serves them without user IDs, so it was no source. A source tree that is already
+in a build volume (`/src/linux-KV`, from before this change) is not checked again: `docker volume rm mu300-mainline`
+to fetch it anew. CI runners start with a new volume every run.
+
+**Checked** in `mu300-mainline-build` (gpgv 2.4.8), with the files from cdn.kernel.org: 6.18.56 (Greg) and 7.2.10
+pass; refused, each with its own message: a byte appended to the tarball (SHA-256 mismatch), a hash changed inside
+the signed list (BAD signature), a fake tarball with its hash in a line put before the clearsigned block (the
+signed line wins: mismatch), 7.2.10's `tar.sign` next to 6.18.56 (BAD signature), the releasers' keyring as the
+autosigner's (no public key), Greg not in `kernel-releasers.fpr` ("not pinned"), no gpgv on PATH. The fetch block
+of `build.sh` itself, run in a new volume for 7.2.10, verified and unpacked it. `tests/test_kernel_src_signature.py`
+repeats these against throwaway ed25519 keys (skipped where gpg is missing; GitHub's Ubuntu runners have it), and
+parses the committed keyrings' packets to pin their fingerprints to the `.fpr` files, the README and the test.
+
+**Not covered here:** the OpenWrt rootfs download (`openwrt/build-rootfs.sh`) still checks `sha256sums` without
+OpenWrt's signature (`sha256sums.asc`/`.sig`); the vendor 5.4 sources are git checkouts pinned by commit hash
+(`kernel/build-all.sh`), which no tarball signature applies to.
