@@ -155,6 +155,7 @@ what replaced it. The table below gives each section's state.
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
+| 137 | The SMS webhook's custom body: the placeholder was Feishu's body, which WeCom refuses behind an HTTP 200; body presets for WeCom/DingTalk and Feishu/Lark that also fill in the answer check (#259) | current (unit tests; not sent to a real service) |
 
 ## Hardware and firmware facts
 
@@ -4875,6 +4876,29 @@ Not measured: any real service; the translations on a device (the test unit ran 
 built without them, so the page's new strings were English); what uclient does with an answer whose `Content-Length`
 is wrong or that never ends (the helper's 15 s timeout is unchanged). The unit tests (`tests/test_sms_forward.py`)
 ran under dash and bash on macOS and under busybox ash with busybox 1.37 as awk in a Debian container.
+
+### 137. The SMS webhook's custom body: a placeholder no service refuses, and presets per service (#259)
+
+The *Custom body* field (§54) showed `{"msg_type":"text","content":{"text":"{message}"}}` as its placeholder: the
+Feishu/Lark custom-bot body. A WeCom group robot answers that body (and the standard one, and plain text) with HTTP 200
+and `{"errcode":40008,"errmsg":"invalid message type"}`; with the answer check (§58) empty, which is its default, the
+page's test then said "delivered" (issue #259, measured by the reporter with curl from a device; another user's WeCom
+works with `{"msgtype":"text","text":{"content":"{message}"}}` and the check `errcode=0`). Not sent from our boards to a
+real service.
+
+* **The placeholder** is now `{"text":"{message}"}`, the shape of no Chinese chat service in particular (Slack's
+  incoming webhook takes it). A placeholder is pasted as it is; it should not look like the answer for one service.
+* **Body presets** under the field, as the answer check has them: *WeCom, DingTalk* fills in
+  `{"msgtype":"text","text":{"content":"{message}"}}` (the two take the same text body), *Feishu, Lark*
+  `{"msg_type":"text","content":{"text":"{message}"}}`. A preset also sets the type to JSON and, only when the
+  answer check is empty, the check that service needs (`errcode=0`, `code=0`, both §58 presets), so the test reports
+  the service's verdict and not the HTTP status. A check the user wrote is left alone; nothing is saved until Save.
+  No new message (the menu reuses *Presets*; the service names are not translated, as in the check presets).
+* The sources are §58's table (DingTalk's text body from the same third-party write-ups as its reply).
+
+Test: `tests/test_sms_forward.py` `test_the_pages_body_presets_are_what_the_services_take` - each preset body, through
+`mu300-sms-forward` with a hostile sender and text, is one valid JSON document of that service's shape, and its check
+is one of the page's check presets.
 
 ### 66. The OpenWrt image build tries a package download again
 
