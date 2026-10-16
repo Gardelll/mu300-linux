@@ -49,7 +49,7 @@ with the ref `main` (the job refuses any other ref, and a tag or release that al
 workflow takes `make-release.sh --next-tag`; a tag given must be `vYYYY.MM.DD.N` of today), and prerelease left on. It builds the 5.4 kernel, the mainline 6.18 and 7.2 kernels and their modules (about an hour the first time;
 about five minutes while the kernel outputs are still in the Actions cache, which they are until `kernel/`, `upstream/`
 or the newest kernel.org version changes), runs `tools/make-release.sh --publish --prerelease` and dispatches the Magisk
-zips. Then try the prerelease on a device, edit its notes, and promote it with
+zips. Then try the prerelease on a device (`tools/smoke.py`, the smoke test: [RELEASING.md](RELEASING.md)), edit its notes, and promote it with
 `gh release edit TAG --prerelease=false --latest`: only then do the installers and `mu300-update` offer it. A release the
 workflow made has no `tools/gpu/cltest` (it is built locally against Android's libraries and is not in the repository;
 `make-release.sh` includes it only when it is there), so `mu300-toolkit`'s GPU stress item is absent on such a release;
