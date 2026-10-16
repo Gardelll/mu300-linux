@@ -8337,6 +8337,11 @@ the `$5$` one `passwd` had written. `install.ps1` and the window were run agains
 were of the first version, whose check ran OpenWrt's `openssl` in a chroot: its verdicts are the ones the busybox and
 `mu300-pwcheck` give for the same hashes, see the unit tests.) The second version's `mu300-pwcheck`, built in
 `mu300-kbuild` as `make-release.sh` does, on F50-C's Android through `android-pwcheck.sh`: Ubuntu 24.04's yescrypt hash
-`MATCH` with the right password, `NOMATCH` with another, `UNVERIFIABLE` without the checker. Its zips were not
-installed again on F50-C: from 08:34 on another session installed its own zips there (release v2026.10.16.97, which
-left root without a password), so the device was left to it.
+`MATCH` with the right password, `NOMATCH` with another, `UNVERIFIABLE` without the checker. Then, once another
+session that had used F50-C in between was done, the second version's zips (built from the v2026.10.16.1 assets, with
+that `mu300-pwcheck` added as `mu300/mu300-pwcheck` as a release with it in its bundle carries it), over the published
+v2026.10.16.1 OpenWrt with root's password `ubuntu` (`$5$`): no file - "kept, not checked"; `MU300_KEEP_PASSWORD=yes`
+with the right one - checked (journal replayed, `mu300-pwcheck`), kept; with a wrong one - refused before anything was
+written; after these two `ubuntu` logged in over ssh and a wrong password was refused. `MU300_KEEP_PASSWORD=no` with
+`MU300_PASSWORD` - the new one logged in, `ubuntu` no longer. The zip's `computer/install.sh` (answers mode, keep, the
+right password): pushed the zip's `mu300-pwcheck` and busybox, confirmed, updated, and `ubuntu` logged in afterwards.
