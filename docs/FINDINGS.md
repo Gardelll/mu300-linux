@@ -153,6 +153,7 @@ what replaced it. The table below gives each section's state.
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
+| 130 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB) |
 
 ## Hardware and firmware facts
 
@@ -8241,3 +8242,133 @@ three have the same logic in these places):
   time of publishing and was right.
 * The graphical installer and the installers' beta question are newer than v2026.10.27 (`tools/release_pick.py` is
   not in those tags); they go by the time of publishing too, now with the tag order on top.
+
+### 130. Linux 6.18.57 and 7.2.11 with every module the boards can use, KVM, and what Docker and dockur/windows-arm need
+
+**Versions.** 7.2.11 (stable) and 6.18.57 (longterm), both of 2026-10-15. kernel.org's `sha256sums.asc` for v6.x and
+v7.x carry a good signature of the checksum autosigner (`B886 8C80 BA62 A1FF FAF5 FDA9 632D 3A06 589D A6B1`, fetched
+by WKD), and both tarballs match it (`build.sh` checks the sums; the signature was checked by hand). `build.sh` and
+`build-modules.sh` default to 6.18.57; the release workflow takes the newest of each series from kernel.org anyway.
+All 17 patches (`patches/*` and `patches/6.18/0007`) and every `port/install.py` edit apply unchanged to both trees:
+none is upstream yet, none was dropped or changed.
+
+**All modules (`upstream/all-modules.py`).** Not allmodconfig. After the fragment, every option declared `tristate`
+in the tree that is off becomes `m`, `olddefconfig`, again until nothing changes (a fixpoint: a module whose
+dependencies are only now met comes in on the next round). The rules:
+
+* Bools stay as the fragment leaves them, except the ones `all-modules.config` turns on because they only open a
+  family: the Wi-Fi vendors (USB sticks), joysticks, tablets, touch screens (the USB ones), TV/radio/SDR, ALSA's
+  `snd-aloop`/`snd-dummy`, iSCSI, AX.25, the legacy iptables/ebtables tables, `/dev/hidraw`; and it keeps
+  `DRM_FBDEV_EMULATION` off (no framebuffer console). A bool that only became visible with a new driver takes its
+  default, except that the ones that look like debugging or tests go off again (6-7 per kernel).
+* PCI cards are left out: the expansion runs once with `PCI=n`, and only what survives there is taken (the only PCIe
+  link is the soldered Marlin3).
+* `all-modules.exclude` keeps out test/debug/benchmark code, ASoC, display panels, the SoC GPU drivers (panfrost and
+  co. would bind next to the vendor Mali driver), VFIO (no mainline IOMMU driver for this SoC), legacy gadget drivers
+  and the dummy UDC (mu300-usb takes the first UDC), and by directory the drivers of chips that only a board's device
+  tree wires up (regulators, MFDs, power supplies, clocks, pins, PHYs, camera sensors, DSA switches, platform host
+  controllers, MACs, NAND...). A `keep` line takes a USB part of such a directory back in (`MMC_VUB300`,
+  `TOUCHSCREEN_USB_COMPOSITE`, LED triggers and the multicolor/flash LED classes HID drivers need). Tuners,
+  demodulators and webcam sensors are still built when a USB driver selects them.
+* It stops the build when a built-in option changed, and when something it must not turn on came on. Both fired while
+  the rules were written: `MMC_BLOCK` would have become a module (`depends on RPMB || !RPMB` - the eMMC driver), and
+  `BT_HCIUART` the same through `SERIAL_DEV_BUS`/`POWER_SEQUENCING`; `EXT4_USE_FOR_EXT2` would have gone with
+  `EXT2_FS`, `I3C_OR_I2C` with `I3C`; `PERF_EVENTS` (kept off, 31p) came with CoreSight; `IOMMU_DMA`/`OF_IOMMU`
+  and `CMA`/`DMA_CMA` (the DMA path of every vendor-tree device with an `iommus` property, and the vendor's
+  `shared-dma-pool` regions as CMA) came with panfrost/etnaviv, `IOMMU_API` with VFIO. Each is excluded, with the
+  reason, in `all-modules.exclude`.
+* `check-dt-modules.py` (in `build-modules.sh`) then fails the build when a module's `of:` alias matches a compatible
+  of the vendor device tree (`dt-compatibles.txt`: all 314 strings of the F50's and the U30 Air's
+  `/proc/device-tree`): udev would load it at boot and it would drive SoC hardware next to the vendor drivers. It
+  caught `spi_sprd` (`sprd,sc9860-spi`). On the device, F50-B then still loaded `sc27xx_vibra` (it bound nothing):
+  every Spreadtrum/Unisoc driver the fragment does not name is out now. Two rules were too broad and the device
+  test showed it (ebtables and the Logitech HID drivers were missing); both are fixed.
+* `make-bundle.sh` checks the Image's embedded config against `all-modules.report` too (what the expansion added),
+  as against the fragment. `MU300_ALL_MODULES=0` builds the fragment alone.
+
+| | 6.18.56 (v2026.10.16.1) | 6.18.57 | 7.2.10 (v2026.10.16.1) | 7.2.11 |
+|---|---|---|---|---|
+| options newly `m` / bools newly `y` | | 2419 / 202 | | 2484 / 209 |
+| modules in the bundle | 435 | 3010 | 442 | 3077 |
+| modules unpacked | 28.5 MB | 124.9 MB | 30.1 MB | 132.1 MB |
+| `mu300-kernel-*.tar.gz` | 20.3 MB | 53.7 MB | 21.0 MB | 55.7 MB |
+| Image as LK loads it (bytes) | 23 996 424 | 24 655 880 | 24 750 088 | 25 606 152 |
+| generic ramdisk segment (bytes) | 1 833 133 | 1 833 154 | 1 834 504 | 1 834 499 |
+| build tree (`out-*`) | 2.8 GB | 6.7 GB | 2.9 GB | 6.9 GB |
+
+The boot image grows only by the Image (+0.66 and +0.86 MB): the generic ramdisk still loads only
+`module-order.txt`. The Image grows by what the new drivers select into the core (netpoll for netconsole, devlink,
+DPLL, quota, hidraw, I2C slave, CRC/crypto library code). Docker's `contrib/check-config.sh`: the fragment alone
+missed ten "generally necessary" options (the legacy `iptable_*`/`ip6table_*` tables, `IP_NF_NAT`,
+MASQUERADE...), both new configs miss none; the optional misses are `CGROUP_PERF` (needs `PERF_EVENTS`, kept off),
+SELinux/AppArmor (not built) and ZFS.
+
+**One bundle, no separate extra.** The whole set stays in `mu300-kernel-<series>.tar.gz`. Its size is far below
+GitHub's 2 GB per asset (the largest Magisk zip, Ubuntu 26.04 with 7.2, goes from 134 MB to about 170 MB). A split
+would put one module set into two packages whose dependencies cross (the HID drivers need the multicolor LED class,
+the netfilter targets their cores) and which `depmod` and kmodloader must see together, and an installer would have
+to decide which half a device gets. On the device the cost is disk: about 100 MB more per installed mainline kernel
+and system (Ubuntu 135 MiB under `extra/`, OpenWrt 125 MiB flat), plus the previous set `mu300-update` keeps for
+`rollback-boot`. The OpenWrt images carry the 6.18 set as before (`build-rootfs.sh`), so they grow by the same ~96 MiB
+unpacked (~33 MB in the tarball). Plain OpenWrt in an 804 MiB region (F50-C, 613 MiB free in section 85) keeps
+about 517 MiB free, and about 270 MiB after a kernel switch (the new set and the kept previous one). A copy that
+does not fit fails safe: `kernel_modules_into_systems` returns an error, `mu300-update` puts the previous modules
+back and leaves the boot image unchanged.
+
+**KVM.** The firmware starts every CPU at EL2 on both boards, and both new kernels run KVM in VHE mode (F50-B,
+7.2.11; 6.18.57 the same with 568/664 trap handlers):
+```
+CPU: All CPU(s) started at EL2
+kvm [1]: IPA Size Limit: 40 bits
+kvm [1]: GICv3: no GICV resource entry
+kvm [1]: disabling GICv2 emulation
+kvm [1]: GIC system register CPU interface enabled
+kvm [1]: VHE mode initialized successfully
+```
+A guest ran: Alpine 3.22's aarch64 `vmlinuz-virt` + `initramfs-virt` (6.12.110) under `qemu-system-aarch64
+-machine virt,accel=kvm,gic-version=3 -cpu host -smp 2 -m 256`, pinned to the A76 cores 4-7 (`-cpu host` needs one
+core type; the A55/A76 mix is why), QEMU 11.1 from the dockur image, on 7.2.10, 7.2.11 and 6.18.57 alike: the guest
+logs `Booting Linux on physical CPU 0x0000000000 [0x414fd0b0]` (an A76), `smccc: KVM: hypervisor services detected`
+and reaches Alpine's initramfs shell. The U30 Air logs the same EL2/VHE lines on both kernels (it has no QEMU).
+
+**Docker and dockur/windows-arm** (on F50-B with Docker 29.1.3 from Ubuntu's archive, installed from .debs and
+removed again). What the container needs from the host: `/dev/kvm` (writable), `/dev/net/tun`, `NET_ADMIN`, a bridge
+and a tap for its NAT mode, iptables (nft or legacy) with `nat` (DNAT, MASQUERADE) and `mangle`, `/dev/vhost-net`
+and macvtap for its DHCP mode, passt as the fallback. `docker compose up` with its `compose.yml` (image
+`dockurr/windows-arm`, loaded from `docker save`, restart off):
+
+| | 7.2.10 (released) | 7.2.11 (this config) |
+|---|---|---|
+| `docker compose up` | fails: `Unable to enable DNAT rule ... Extension DNAT revision 0 not supported, missing kernel module?` (no `xt_nat`) | starts, ports published |
+| dockur's network stage | `Failed to configure IP tables` -> "falling back to user-mode networking" (passt) | `Mode: NAT` (bridge `docker`, tap `qemu`, DNAT/MASQUERADE rules in place) |
+| its KVM check, `info kvm` in its QEMU | passes, `kvm support: enabled` | the same |
+| its RAM check | `Windows 11 requires at least 2.0 GB of RAM, but only 668 MB can be allocated.` | the same (580 MB) |
+
+The kernel side is complete now, and the board is not: 1.4 GB of RAM cannot hold Windows 11 (2 GB minimum). With
+`RAM_CHECK=N` the container goes on to download Windows, which F50-B (no internet) could not; nothing past that was
+tried. Small Linux guests run.
+
+**Device tests** (2026-10-16, bundles installed with `MU300_KERNEL_BUNDLE=... MU300_RELEASE=v2026.10.16.1
+mu300-update kernel <series>`; each board then went back to its released kernel, with the v2026.10.27 boot image as
+its previous one again, as before):
+
+* F50-B, Ubuntu 24.04, 7.2.11 (twice: before and after the last exclusions) and 6.18.57: boots, kernel 5.3 s,
+  userspace 34 s, no oops or warning, no failed unit; the 5 GHz access point, Bluetooth, USB network, the mobile
+  bearer (an address and an IPv6 prefix; this carrier passes no traffic without a VPN, and the released 7.2.10 did
+  the same in the same minute), cpufreq and thermal. udev loads `drm` (systemd's `modprobe@drm`) and our
+  `extra-modules` loads `snd-aloop` (for mu300-voice), which exists now. `modprobe` of 109 names across the classes
+  (iptables tables, ebtables, SCTP, TIPC, batman-adv, Open vSwitch, USB serial/net/storage, btrfs/jfs/nilfs2/erofs/
+  gfs2/ocfs2/ceph/xfs, dm-raid/dm-vdo/bcache/drbd, NVMe-TCP, iSCSI, btusb, rtw88/rtw89/mt7921u/carl9170/ath9k_htc/
+  rt2800usb/brcmfmac, uvcvideo, em28xx, DVB, snd-usb-audio, HID, xpad, wacom, i2c-tiny-usb, gs_usb, NFC, vhost_net,
+  macvtap...): 94 load, 10 are built in, 5 are not modules by design (reiserfs is gone since 6.13, `iio_dummy` and
+  VFIO excluded, two names of the list were wrong: `hid-cp2112`, `can-j1939`); 252 modules loaded at once, no oops.
+* U30 Air, openwrt-luci, 6.18.57 and 7.2.11: boots in under a minute with the owner's VPN profile (sing-box, kill
+  switch on) back up and its exit IP answering, the access point, the charger and fuel gauge (80 %), the LEDs, mobile
+  data under the VPN; KVM in VHE mode. kmodloader handles 3010 modules: one `modprobe` takes 0.1 s, the 109-name
+  sample 10.8 s, no oops, the VPN up throughout. At boot it loads 114 modules (100 before): the `/etc/modules.d`
+  lists of the OpenWrt kmod packages name the legacy `iptable_filter`/`iptable_mangle`, `ipt_REJECT` and some `xt_`
+  targets, which exist now; such a table is only set up when iptables-legacy uses it. The VPN configuration is
+  byte-for-byte what it was (checksums compared after the restore).
+
+Not done: no ZTE V50 to read its compatibles from (`dt-compatibles.txt` has the F50's and the U30 Air's); no
+release was built or tagged; the boards ran the bundles built here, the CI workflows build the kernels.
