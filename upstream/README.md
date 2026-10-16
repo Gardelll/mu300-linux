@@ -43,6 +43,9 @@ crypto, block, media, iio, hwmon - while what the fragment built in stays built 
 `all-modules.config` opens a family, and `all-modules.exclude` keeps out test/debug code, PCI cards, and the drivers
 of chips only a board's device tree wires up. `check-dt-modules.py` then fails the build if a module would bind to a
 node of the vendor device tree (`dt-compatibles.txt`) by itself. `MU300_ALL_MODULES=0` builds the fragment alone.
+On the devices `mu300-modprobe-guard` (the kernel's module helper, `etc/sysctl.d/98-mu300-modules.conf`) keeps the
+rare protocol families and filesystems of `/opt/mu300/lib/autoload-blocked` from being loaded on demand by any user;
+root loads them with `modprobe NAME`.
 In the fragment, what the board and the boot need is built in, along with
 KVM (`/dev/kvm`; the CPUs start at EL2); what only matters once used - netfilter extras, tunnels, IPsec, tc,
 filesystems, USB modems/adapters/Wi-Fi sticks, device mapper - is a module. `build-modules.sh` installs the

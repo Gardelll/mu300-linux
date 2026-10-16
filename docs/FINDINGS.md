@@ -153,7 +153,7 @@ what replaced it. The table below gives each section's state.
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
-| 130 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB) |
+| 130 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocol families and filesystems not loaded on demand (`mu300-modprobe-guard`, review of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, 2026-10-16; the guard run on the U30 Air only; dockur stops at its own RAM check: the boards have 1.4 GB) |
 
 ## Hardware and firmware facts
 
@@ -8258,7 +8258,7 @@ dependencies are only now met comes in on the next round). The rules:
 
 * Bools stay as the fragment leaves them, except the ones `all-modules.config` turns on because they only open a
   family: the Wi-Fi vendors (USB sticks), joysticks, tablets, touch screens (the USB ones), TV/radio/SDR, ALSA's
-  `snd-aloop`/`snd-dummy`, iSCSI, AX.25, the legacy iptables/ebtables tables, `/dev/hidraw`; and it keeps
+  `snd-aloop`/`snd-dummy`, iSCSI, the legacy iptables/ebtables tables, `/dev/hidraw`; and it keeps
   `DRM_FBDEV_EMULATION` off (no framebuffer console). A bool that only became visible with a new driver takes its
   default, except that the ones that look like debugging or tests go off again (6-7 per kernel).
 * PCI cards are left out: the expansion runs once with `PCI=n`, and only what survives there is taken (the only PCIe
@@ -8288,12 +8288,12 @@ dependencies are only now met comes in on the next round). The rules:
 
 | | 6.18.56 (v2026.10.16.1) | 6.18.57 | 7.2.10 (v2026.10.16.1) | 7.2.11 |
 |---|---|---|---|---|
-| options newly `m` / bools newly `y` | | 2419 / 202 | | 2484 / 209 |
-| modules in the bundle | 435 | 3010 | 442 | 3077 |
-| modules unpacked | 28.5 MB | 124.9 MB | 30.1 MB | 132.1 MB |
-| `mu300-kernel-*.tar.gz` | 20.3 MB | 53.7 MB | 21.0 MB | 55.7 MB |
+| options newly `m` / bools newly `y` | | 2359 / 197 | | 2443 / 206 |
+| modules in the bundle | 435 | 2947 | 442 | 3035 |
+| modules unpacked | 28.5 MB | 121.9 MB | 30.1 MB | 130.0 MB |
+| `mu300-kernel-*.tar.gz` | 20.3 MB | 52.7 MB | 21.0 MB | 55.0 MB |
 | Image as LK loads it (bytes) | 23 996 424 | 24 655 880 | 24 750 088 | 25 606 152 |
-| generic ramdisk segment (bytes) | 1 833 133 | 1 833 154 | 1 834 504 | 1 834 499 |
+| generic ramdisk segment (bytes) | 1 833 133 | 1 833 152 | 1 834 504 | 1 834 499 |
 | build tree (`out-*`) | 2.8 GB | 6.7 GB | 2.9 GB | 6.9 GB |
 
 The boot image grows only by the Image (+0.66 and +0.86 MB): the generic ramdisk still loads only
@@ -8304,7 +8304,7 @@ MASQUERADE...), both new configs miss none; the optional misses are `CGROUP_PERF
 SELinux/AppArmor (not built) and ZFS.
 
 **One bundle, no separate extra.** The whole set stays in `mu300-kernel-<series>.tar.gz`. Its size is far below
-GitHub's 2 GB per asset (the largest Magisk zip, Ubuntu 26.04 with 7.2, goes from 134 MB to about 170 MB). A split
+GitHub's 2 GB per asset (the largest Magisk zip, Ubuntu 26.04 with 7.2, goes from 134 MB to about 168 MB). A split
 would put one module set into two packages whose dependencies cross (the HID drivers need the multicolor LED class,
 the netfilter targets their cores) and which `depmod` and kmodloader must see together, and an installer would have
 to decide which half a device gets. On the device the cost is disk: about 100 MB more per installed mainline kernel
@@ -8369,6 +8369,54 @@ its previous one again, as before):
   lists of the OpenWrt kmod packages name the legacy `iptable_filter`/`iptable_mangle`, `ipt_REJECT` and some `xt_`
   targets, which exist now; such a table is only set up when iptables-legacy uses it. The VPN configuration is
   byte-for-byte what it was (checksums compared after the restore).
+
+(The device runs above were made with the set before the review below; the review took modules out on each
+kernel: 63 of 6.18.57, 42 of 7.2.11 - the dead protocol families - and changed nothing else.)
+
+**On-demand loading: the answer to the security review of #256.** With the whole set installed, every module is
+one any user can have loaded: the kernel runs its module helper whenever code asks for something a module provides
+- `socket(AF_TIPC, ...)` asks for `net-pf-30`, a mount attempt for `fs-<type>` (a user namespace is enough to get
+that far), a line discipline for `tty-ldisc-<n>`. Rarely used protocols have been the way in for many local root
+holes. What changed:
+
+* Not built at all (`all-modules.exclude`, with reasons): the `n_gsm` and `n_hdlc` line disciplines, ATM (and the
+  DSL modems on it), ISDN, AX.25/NET/ROM/ROSE and the amateur-radio drivers (the `HAMRADIO` switch of the first
+  version is gone), X.25/LAPB and the WAN cards, AppleTalk, Phonet, RDS, CAIF, KCM, SMC, QRTR, AF_RXRPC with the AFS
+  client, DCCP, the parallel port and HSI. GAMEPORT stays: sound and joystick drivers select it, and it has no way
+  in for a user.
+* Built, but not loaded on demand: TIPC, SCTP, CAN, NFC, IEEE 802.15.4 (6LoWPAN), AF_VSOCK, and old filesystems
+  (adfs, affs, befs, bfs, coda, cramfs, efs, gfs2, hfs, hpfs, jfs, minix, nilfs2, ocfs2, omfs, orangefs, qnx4/6,
+  romfs, sysv, ufs, vxfs, ceph). `sysctl kernel.modprobe` points at `/opt/mu300/bin/mu300-modprobe-guard`
+  (`etc/sysctl.d/98-mu300-modules.conf`, in both images), which refuses the aliases of
+  `/opt/mu300/lib/autoload-blocked` with a line in the kernel log and hands everything else to `/sbin/modprobe`
+  unchanged. Root loads a refused module deliberately with `modprobe tipc` (that runs `/sbin/modprobe` itself, not
+  the guard), and `touch /etc/mu300/autoload-allow-all` switches the refusal off. A `modprobe.d` blacklist could not
+  do this on both systems: kmod's blacklist stops aliases only, as wanted, but OpenWrt's kmodloader resolves
+  aliases too and its only blacklist (`/etc/modules.conf`) refuses the module to an explicit `modprobe` as well.
+  Filesystems people plug in (ext4, vfat, exFAT, NTFS, HFS+, btrfs, XFS, F2FS, ISO 9660, UDF, NFS, CIFS) load on
+  demand as before.
+* `dev.tty.ldisc_autoload = 0` in the same file: line disciplines load on demand for root only. Both mainline
+  kernels have it 0 already (`LDISC_AUTOLOAD` is not set); the file makes it so on 5.4 too.
+
+Measured on the U30 Air (openwrt-luci, 6.18.57 of this branch, the guard and the sysctl file put in by hand,
+2026-10-16), with a static test program that drops to uid/gid 65534 before it opens its sockets:
+
+| | as `nobody`, the guard in place | as root, `modprobe tipc can-raw sctp` | as `nobody`, `kernel.modprobe = /sbin/modprobe` (control) |
+|---|---|---|---|
+| AF_TIPC, AF_CAN, SCTP | `Address family not supported` / `Protocol not supported`, nothing loaded | loaded, the sockets open | (still loaded from the root step: they do not unload) |
+| AF_NFC, AF_IEEE802154 | refused, nothing loaded | - | `nfc`, `ieee802154`, `ieee802154_socket` loaded by `nobody` |
+| kernel log | `mu300: on-demand loading of net-pf-30 refused (root: modprobe the module by name; FINDINGS 130)` (and -29, -2-proto-132, -39, -36) | | |
+
+Still loaded on demand through the guard: `vcan` (`ip link add ... type vcan`, rtnl-link-vcan), `hfsplus` (a mount
+attempt); `fs-hfs` was refused. The boot was unchanged: the VPN came up with its kill switch, no oops. The Ubuntu
+side uses the same files through systemd-sysctl; it was not run on a board (F50-B was in another test).
+
+**User namespaces** (read, not changed): unprivileged user namespaces are open on both systems (`unshare -Ur` works
+for `ubuntu` on F50-B; `user.max_user_namespaces = 7949`). The mainline kernels have no AppArmor, so Ubuntu 24.04's
+`kernel.apparmor_restrict_unprivileged_userns` does not exist here, and there is no Debian-style
+`unprivileged_userns_clone`. `kernel.unprivileged_bpf_disabled = 2` on both. That is why the filesystem aliases are
+in the list: inside a user namespace an ordinary user gets as far as the kernel's request for `fs-<type>`. Docker
+and dockur run as root and need none of this.
 
 Not done: no ZTE V50 to read its compatibles from (`dt-compatibles.txt` has the F50's and the U30 Air's); no
 release was built or tagged; the boards ran the bundles built here, the CI workflows build the kernels.
