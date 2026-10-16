@@ -20,8 +20,8 @@ a device that does not opt in on both counts.
   sends `CMD_SET_SAE_PARAM` to the chip) and the IE buffer of the `NEW_STATION` event.
 - **Kernels.** One driver source serves 5.4 (the vendor tree plus
   `kernel/patches/wlan_combo-*.patch`) and 6.18/7.2 (`upstream/modules/sprd_wlan_combo`),
-  and the vendor command is in both. Measured on 7.2.9, and on 7.2.10 up to
-  `AP-ENABLED` (no client). On 5.4 and 6.18 the
+  and the vendor command is in both. Ordinary SAE client connections were
+  measured on 7.2.9 and 7.2.10 (the 2026-10-16 record below). On 5.4 and 6.18 the
   driver builds with these changes and the option has never been run.
 - **Devices.** The switch is the option, not a check of the device. The driver
   refuses the vendor command unless the firmware reports soft-AP WPA3
@@ -119,8 +119,9 @@ kernel 7.2.10, r9 pair built with the helper, this branch's `sprd_wlan_combo`):
 | Hotspot off on purpose (the Wi-Fi key's marker, the `wifi-iface` or the radio disabled) | left alone, no line |
 | Option on, r9, pure SAE | `U30 SAE: firmware runtime parameters configured`, `AP-ENABLED` 5 s after `wifi up` and 41.6 s after power-on; the guard does nothing |
 
-No Wi-Fi client was available in that run: nothing above says a client can join
-the SAE hotspot with r9 on 7.2.10 (Snrat's record below is for 7.2.9).
+No Wi-Fi client was available in that maintainer run. A later independent
+Linux-client run on 7.2.10 is recorded below; the table above keeps its original
+validation boundary.
 
 ## Outstanding PMK trust boundary (why this stays experimental)
 
@@ -318,6 +319,54 @@ a second BSS or changing security mode/password by reload; those operations
 require the full restart described above. APK replacement after a later upgrade needs revalidation.
 
 ## Validation and limits
+
+### 2026-10-16: Linux 7.2.10 client and recovery run
+
+On a U30 Air, the official `mu300-kernel-7.2.tar.gz` from
+[v2026.10.16.1](https://github.com/dikeckaan/mu300-linux/releases/tag/v2026.10.16.1)
+supplied Linux 7.2.10 and its matching WCN/WLAN modules (bundle SHA-256
+`9c6513a0cec14e8eb836e37bcede5aa1fb6db2a979082d4110186177445e098d`).
+The OpenWrt 25.12.5 rootfs was the locally assembled main `37bc95a` system,
+with the exact `1a5b72db` guard and the previously SDK-built r9 hostapd pair.
+No new APK or kernel/module compilation is claimed. This was a kernel update
+of that existing system, not a clean installation of the full release image.
+
+The independent client was Linux with Intel BE200 and wpa_supplicant 2.11,
+using a second managed interface with SAE, RSN and required PMF. The computer's
+home Wi-Fi kept its default route and DNS. Wi-Fi checks bound the test interface;
+USB remained the management path for the radio changes. The single AP kept
+Auto/VHT80, selected channel 149, and used `sae_pwe=0` and the offload option.
+
+| Case | Observed result |
+|---|---|
+| Pure SAE client join | DHCP succeeded. AP log showed firmware PMK handoff, `auth_alg=sae` and `EAPOL-4WAY-HS-COMPLETED`; router HTTP and certificate-verified TLS 1.2 HTTPS over Wi-Fi returned 200 |
+| Wrong client passphrase | Four SAE authentication rejections (`auth_type=3`, status 1) during the bounded connection attempt; the client did not connect. Restoring the correct passphrase connected and returned router HTTP 200. This was not a 60-second continuous-attempt test or an AP-password rotation test |
+| Real unsupported-mode recovery | With a timed configuration restore ready over USB, changing the single AP to `sae-mixed` with the option retained and fully restarting wpad/Wi-Fi failed setup. Manual guard `verify` with a 10-second wait restored an ENABLED WPA2 AP, kept the password and saved the timestamped reason. The client joined with WPA-PSK and transferred data |
+| Return to SAE | Restoring the original wireless file byte-for-byte and fully restarting wpad/Wi-Fi allowed a fresh SAE connection and router HTTP 200. Test fallback files were removed afterwards |
+| Further software reboot on 7.2.10 | USB/SSH returned without unplugging. A fresh SAE join, DHCP, router HTTP and certificate-verified TLS 1.2 HTTPS all passed; no WPA2 fallback occurred |
+| Final state | Original wireless file unchanged; AP ENABLED; active/default SIM2 and WAN up. Linux-first and five-failed-boots fallback remained in place. Android's boot-partition checksum was unchanged |
+
+Three 24 MiB random-file HTTP downloads over SAE measured 11.66, 16.26 and
+15.18 MB/s; the same downloads over the recovered WPA2 AP measured 7.72,
+10.64 and 13.44 MB/s. The client shared a physical Wi-Fi adapter with the home
+connection on another channel, and this was a sequential, unshielded test:
+these numbers establish working transfers, not a performance advantage of
+either mode.
+
+The **first transition from 7.2.9 to 7.2.10 did not recover USB or the hotspot
+until the USB cable was replugged**. The saved console covered the old system's
+reboot tail and did not establish a panic or a cause. The subsequent software
+reboot on 7.2.10 passed as recorded above; do not generalize that to every boot
+or omit the first transition's failure.
+
+The module pair came from the official bundle, not the original r8 failure
+stack. This run does not close that outage, PMK provenance, replacement-wpad
+boot behavior, multi-BSS, other client OSes or other kernels. Ordinary joins,
+password rejection and the four-way handshake do not authenticate the origin
+of the imported PMK. The hostapd recipe remains experimental and default-off.
+Raw device/client logs and configurations remain private.
+
+### Earlier device records
 
 The maintainer recovered the #165 test device to its stock Wi-Fi stack and
 updated it to v2026.10.21. The original r8 live-add trace was lost after a
