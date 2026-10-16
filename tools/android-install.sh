@@ -354,7 +354,7 @@ for x in ubuntu openwrt openwrt-luci; do
         fi
     done
 done
-need=0
+need=0 whole=
 for os in $OSES; do
     [ -f $T/mu300-$os.tar.gz ] || continue
     w=$M/.mu300-delta-$os
@@ -375,6 +375,7 @@ for os in $OSES; do
     case ${1:-none} in
         delta|full)
             echo $1 > $w/mode
+            if [ $1 = full ]; then whole=1; fi
             n=$(( $2 + $2 / 50 + 16384 + ${4:-0} + 8192 ))
             need=$((need + n))
             if [ $1 = delta ]; then
@@ -387,7 +388,9 @@ set --
 free=$(df -Pk $M | awk 'NR == 2 { print $4 }')
 if [ "${free:-0}" -lt $need ]; then
     for os in $OSES; do rm -rf $M/.mu300-delta-$os; done
-    say "not enough room on the Linux partition: $((need / 1024)) MB needed for $OSES (the new release's files that are not in the installed system as they are), $(( ${free:-0} / 1024 )) MB free"
+    what="the new release's files that are not in the installed system as they are"
+    [ -z "$whole" ] || what="the whole new release, unpacked beside what is installed"
+    say "not enough room on the Linux partition: $((need / 1024)) MB needed for $OSES ($what), $(( ${free:-0} / 1024 )) MB free"
     say "nothing was changed"
     exit 1
 fi
