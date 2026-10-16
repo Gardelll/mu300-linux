@@ -148,6 +148,7 @@ what replaced it. The table below gives each section's state.
 | 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; measured on the F50, Android with Magisk, 2026-10-15; the U30 Air's sysfs name read from Linux) |
 | 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
 | 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
+| 104 | The U30 Air's live SIM switch turned mobile data back on that the user had switched off (kanoqwq 2d3b6f3f) | current (fixed; unit tests only, not run on a device) |
 | 110 | The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it | current (unit and Node tests against the real mu300-api; the device protocol run with the page's modules over WebUSB on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-16: six defects fixed; rows 6, 9, 16 and the Android restart not run) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
@@ -8766,3 +8767,65 @@ parses the committed keyrings' packets to pin their fingerprints to the `.fpr` f
 **Not covered here:** the OpenWrt rootfs download (`openwrt/build-rootfs.sh`) still checks `sha256sums` without
 OpenWrt's signature (`sha256sums.asc`/`.sig`); the vendor 5.4 sources are git checkouts pinned by commit hash
 (`kernel/build-all.sh`), which no tarball signature applies to.
+
+### 104. The U30 Air's live SIM switch turned mobile data back on that the user had switched off
+
+From kanoqwq's clean-tf-7.2 `2d3b6f3f` ("complete U30 Air support"), where he took our dual-SIM controller
+(`mu300-sim-u30`, §74) into his tree and changed it: "when the user has switched the WAN off, it stays off after the
+switch; an explicit choice is saved as the boot default". Ours did not do that. Read in his code, rewritten here; none
+of it run on a device.
+
+**What ours did.** A live switch (`mu300-sim switch 1|2`, the Dual SIM page's buttons) takes the wan down, moves the
+radio, and then brings the wan up on the target with `ifup wan` (and on the way back after a failure, and after a busy
+channel). It also removed `/run/mu300-mobile-data-down`, the marker that `mobile-data down` leaves so that its
+watchdog does not dial again. So with mobile data switched off - the panel's button, `ifdown wan`, the data cap, all
+of which leave netifd's `autostart` off (`sim_wan_held_down`, §74) - a switch turned it back on: the `ifup` dialled
+the new card at once, and even without it the watchdog, its marker gone, would have found no context and run
+`ifup wan` itself ("mobile data lost, reconnecting"). For a user who turned data off for the cost (a card without a
+plan, abroad: the roaming hold of §120 is a separate thing and is not affected) that is data they did not ask for. The
+switch then also waited a minute for a bearer and, when none came because data was off, treated the target as a card
+without data: back to the previous card, or `no_data_kept`.
+
+**Changed.** The switch reads `sim_wan_held_down` before it touches anything. When the wan was held down:
+
+* no `ifup` anywhere (`wan_back`), and the watchdog's marker stays: data stays off on whichever card is in use, after
+  a switch, a rollback (`rolled_back`) or a busy channel (nothing changed);
+* after the radio sequence the target is published, saved as the boot default and reported `switched`, with no wait
+  for a bearer there cannot be (his choice, taken: the user chose the card; a second card with its connection off is
+  kept by the boot check as well, `mu300-sim2-warmup`). It is not added to `sim-data-seen`: no data was seen on it;
+* `switch <the card in use>` saves it as the default without asking for data.
+
+With mobile data on, nothing changes: the marker goes, `ifup`, the minute's wait, the way back without data.
+
+**Not taken from the same change.** His `wait_wan_down` (after `ifdown`, up to 15 s until netifd's status says
+`"up": false` and not `pending`) before the radio sequence. netifd sets the interface to its teardown state inside
+the `down` call itself, and its status reports a tearing-down interface as `"up": false, "pending": false` already:
+the check passes at once and does not wait for the protocol's teardown. What it was for, the old card's teardown
+(`mobile-data down`, AT commands) running into the switch, is covered here by `mu300-at`'s gate: while the switch
+holds its lock every AT client but the switch is told "busy" (§74). His per-SIM early lock replay after a switch and
+his `unisoc_modem.main.data_sim` storage belong to his per-SIM locks and his configuration layout; not taken.
+
+**Unit tests** (`tests/test_sim_hot.py`, the netifd stub reporting `"autostart": false` until an `ifup`): a switch
+both ways with data off (no `ifup`, the marker kept, the default saved, nothing in `sim-data-seen`); a failed switch
+and a busy channel with data off (no `ifup`, the marker kept); the card in use saved without data; with data on the
+marker still goes and the target is dialled. The first three fail on the previous script.
+
+**Device checklist (before merge; U30 Air, openwrt-luci, live switching on and both cards in):**
+
+    # data off: the panel's mobile data switch, or ifdown wan
+    ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # false, false
+    ls /run/mu300-mobile-data-down                                   # there
+    mu300-sim switch 2; ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # still false, false
+    ls /run/mu300-mobile-data-down; uci get network.wan.sim_slot     # still there; 1 (the boot default: SIM2)
+    sleep 70; ifconfig sipa_eth8 | grep inet                         # nothing: the watchdog did not dial
+    mu300-sim switch 1                                               # the same, back
+    # data on again (the panel or ifup wan): a switch dials the target and saves it once it has data, as before
+    mu300-sim switch 2; mu300-sim status                             # switched, wan up on sipa_eth8
+
+**Device test (2026-10-17, U30 Air, openwrt-luci v2026.10.16.1 with this `mu300-sim-u30`, live switching on, SIM1
+with data, SIM2 registered emergency-only).** Data off with `ifdown wan`: `up` false, `autostart` false, the marker
+there. `switch 2`: `switched`, `active`/`default` 2, wan still down, marker kept, `sim_slot` 1; 70 s later no address
+on either bearer and no redial in the log. `switch 1`: the same back (`sim_slot` 0), still nothing after 70 s.
+`switch 1` with SIM1 in use and data off: `switched`, no bearer wait. Data on (`ifup wan`), `switch 2`: SIM2 has no
+data, so `no_data`, rolled back to SIM1, wan up again on SIM1 with a new address (unchanged behaviour). The case
+"data on, `switch 2` dials SIM2" could not be run: SIM2 has no service here.
