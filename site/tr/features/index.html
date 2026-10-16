@@ -339,7 +339,8 @@ her açılışta başlatır. <code>docker</code> grubu root ile eşdeğerdir: i�
 190 MB, OpenWrt'nin kurulduğu en küçük alanda güncellemeye yer bırakmazdı.</p>
 <p>İmajlar ve konteynerler sistemlerin yanında, <code>/mnt/mu300-disk/docker/&lt;sistem&gt;</code> içinde durur:
 güncelleme ve geri alma onları ne kopyalar ne de kaybeder. Docker nftables arka ucunu kullanır; konteynerler internete
-çıkar, yayınlanan portlara hotspot ve USB istemcilerinden erişilir, mobil ağdan erişilmez. Üç çekirdekte de çalışır.</p>
+çıkar, yayınlanan portlara hotspot ve USB istemcilerinden erişilir, mobil ağdan erişilmez; konteynerler cihazın
+kendi servislerine (SSH, web panelleri) bağlanamaz. Üç çekirdekte de çalışır.</p>
 <pre><code>docker run --rm hello-world
 docker compose up -d</code></pre>
 </section>

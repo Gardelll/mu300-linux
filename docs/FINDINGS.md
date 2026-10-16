@@ -8311,7 +8311,7 @@ through, and an accept in Docker's table does not end the packet's way through f
 `/etc/uci-defaults/95-mu300-docker` adds, once (the marker `/etc/mu300/docker-zone`), the zone `docker`: devices
 `docker0`, `br-+` and `!br-lan` and subnet 172.16.0.0/12, which fw4 matches together (`iifname "br-*" iifname != "br-lan"
 ip saddr 172.16.0.0/12`), with Docker's `default-address-pools` set to that range in `/etc/docker/daemon.json`;
-forwardings docker -> wan and lan -> docker, none from wan. Measured: containers on the default bridge and on a compose
+input and forward REJECT (below); forwardings docker -> wan and lan -> docker, none from wan. Measured: containers on the default bridge and on a compose
 network reach the internet (masqueraded by Docker), a LAN client (a network namespace on br-lan, and the Mac over USB)
 reaches a published port and still reaches the internet, and a container does not reach a LAN client by itself. The
 package's init script reads `/etc/docker/daemon.json` (`alt_config_file`), so an `apk add` on the device keeps these
@@ -8320,6 +8320,30 @@ settings (its own `/etc/config/dockerd` is written as `.apk-new`). The zone has 
 dockerd enabled, its network reload took docker0 from the dockerd that had just made it (`adding interface ... to bridge
 docker0 failed: Device does not exist`, F50-C, 5.4); with them in place it changes nothing (network and firewall
 unchanged across that boot, and Docker working, measured).
+
+**Containers are kept off the device itself (security review of this change).** The first version of the zone had
+input and forward ACCEPT: any container - often a third party's image - could open the router's own services (dropbear,
+uhttpd/LuCI, ubus over rpcd, dnsmasq), so a compromised container was a way into the device. Now the zone has input
+REJECT and forward REJECT (output ACCEPT), and no docker -> lan forwarding. Containers need nothing from the router:
+on the default bridge Docker gives them the host's upstream resolvers (8.8.8.8 when the host has only 127.0.0.1), on a
+user network its own resolver at 127.0.0.11 asks from the host's side, through loopback; DHCP is Docker's IPAM. Two
+containers on one network talk over their bridge, which is switched and never reaches the firewall (Docker 29 did not
+load br_netfilter, measured on 7.2; `13-mu300-docker.conf` keeps bridge filtering off where it is loaded), and Docker's
+own nftables chains drop what goes from one Docker network to another whatever fw4 says (measured on Ubuntu, whose
+forward policy is accept: a container on another network timed out against the compose service, one on its network got
+the page) - forward REJECT adds the same refusal in fw4. Measured with fw4's own ruleset (`fw4 print` of the image's
+config, loaded with nft in a network namespace setup like the device's: br-lan, docker0, a compose bridge, sipa_eth0):
+from a container the router's ports 22, 80 and 53 on its Docker and LAN addresses were refused, as were a container of
+another Docker network and a LAN client; a LAN client reached a container's port and the router's SSH. This review came
+before any release had the zone, so no device has the old one (and the marker would keep a changed one as it is).
+Ubuntu: Docker's nftables backend opens nothing of the host (no iptables rules, no FORWARD policy) and `docker run -p`
+publishes on every address, but what comes from the cellular side for a published port is DNATed and then dropped in
+`mu300_filter`'s forward chain (`iifname "sipa_eth*" counter drop` after established), and from a Wi-Fi uplink by
+wifi-client's table in the same way; docker-proxy's own listeners (IPv6, hairpin) are behind the input chain's drop for
+those interfaces. `firewall.nft` now drops what comes from `docker0` and the `br-*` bridges other than br-lan to the
+device itself (after established): measured on F50-B, a container got no answer from the device's SSH on 172.17.0.1 and
+on its LAN address 192.168.79.1 (drop counters rising), resolved names, and a LAN client still had SSH and the published
+port. On Ubuntu a container can open connections to LAN clients, as on any Docker host (the forward policy is accept).
 
 The feed's kmods for Docker add `/etc/modules.d` entries (br_netfilter, the legacy iptables tables, btrfs, raid6) that
 ubox would load at every boot of a mainline kernel that has them as modules; the image build removes the ones Docker's

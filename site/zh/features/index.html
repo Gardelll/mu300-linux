@@ -272,7 +272,7 @@ sudo mu300-usb adb on                   <span class="c"># 关闭：sudo mu300-us
 （控制面板系统上再加 <code>luci-app-dockerman</code>），然后 <code>/etc/init.d/dockerd start</code>。这 190 MB
 会让 OpenWrt 所装的最小区域没有空间再更新。</p>
 <p>镜像和容器放在系统旁边的 <code>/mnt/mu300-disk/docker/&lt;系统&gt;</code> 中：更新和回滚既不复制也不丢失它们。Docker
-使用 nftables 后端；容器可以上网，发布的端口可从热点和 USB 客户端访问，不能从移动网络访问。三个内核都可用。</p>
+使用 nftables 后端；容器可以上网，发布的端口可从热点和 USB 客户端访问，不能从移动网络访问；容器无法连接设备本身的服务（SSH、网页面板）。三个内核都可用。</p>
 <pre><code>docker run --rm hello-world
 docker compose up -d</code></pre>
 </section>

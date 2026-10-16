@@ -782,9 +782,11 @@ The store is the classic `overlay2` one (no second, compressed copy of every ima
 
 **Networking:** Docker uses its nftables backend (no iptables rules, nothing changed in the firewall of the device).
 Containers reach the internet over mobile data or the Wi-Fi client; a port you publish (`-p 8080:80`) is reachable from
-the hotspot and USB clients, and **not** from the mobile network. On OpenWrt every Docker network is in the firewall
-zone `docker` (172.16.0.0/12, the range Docker is given there); to publish to the mobile network, add a forwarding
-`wan -> docker`. Docker works on all three kernels (5.4, 6.18, 7.2).
+the hotspot and USB clients, and **not** from the mobile network. Containers cannot open anything on the device
+itself (SSH, the web panels, LuCI, ubus): the firewall drops what comes from Docker's bridges to the device (their DNS
+works all the same). On OpenWrt every Docker network is in the firewall zone `docker` (172.16.0.0/12, the range Docker
+is given there), which reaches the internet but not the LAN, and one Docker network does not reach another; to publish
+to the mobile network, add a forwarding `wan -> docker`. Docker works on all three kernels (5.4, 6.18, 7.2).
 
 ### Languages
 

@@ -345,7 +345,8 @@ starts it at every boot. The <code>docker</code> group is as good as root: keep 
 would not leave room for an update in the smallest region OpenWrt is installed in.</p>
 <p>Images and containers live beside the systems, in <code>/mnt/mu300-disk/docker/&lt;system&gt;</code>: updates and
 rollbacks neither copy nor lose them. Docker uses its nftables backend; containers reach the internet, published ports
-are reachable from the hotspot and USB clients, not from the mobile network. Works on all three kernels.</p>
+are reachable from the hotspot and USB clients, not from the mobile network, and containers cannot open the
+device's own services (SSH, the web panels). Works on all three kernels.</p>
 <pre><code>docker run --rm hello-world
 docker compose up -d</code></pre>
 </section>

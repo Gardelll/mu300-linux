@@ -44,5 +44,7 @@ not touch it: nothing is copied, nothing is lost. Each system (ubuntu, openwrt, 
 
 Docker uses its **nftables** backend: its own tables (`ip docker-bridges`), no iptables rules, and it never changes the
 device's firewall. Containers reach the internet; published ports are reachable from the hotspot and USB clients, not
-from the mobile network. On OpenWrt the firewall zone `docker` holds every Docker network (172.16.0.0/12): add a
-forwarding `wan -> docker` to publish to the mobile network. Works on kernels 5.4, 6.18 and 7.2.
+from the mobile network. Containers cannot open anything on the device itself (SSH, the web panels, LuCI, ubus); their
+DNS still works. On OpenWrt the firewall zone `docker` holds every Docker network (172.16.0.0/12): it reaches the
+internet, not the LAN, and one Docker network does not reach another; add a forwarding `wan -> docker` to publish to the
+mobile network. Works on kernels 5.4, 6.18 and 7.2.
