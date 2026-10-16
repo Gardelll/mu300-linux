@@ -158,6 +158,7 @@ what replaced it. The table below gives each section's state.
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
+| 170 | "Failed to send request: Operation not permitted" behind the VPN's kill switch: uclient's connect error, the tunnel down; the failure now names the kill switch, one try instead of four; vpn-dae refused before the download on a kernel that cannot run it | current (reproduced in an OpenWrt 25.12 container with sing-box and the kill switch, 2026-10-17) |
 
 ## Hardware and firmware facts
 
@@ -8699,3 +8700,52 @@ parses the committed keyrings' packets to pin their fingerprints to the `.fpr` f
 **Not covered here:** the OpenWrt rootfs download (`openwrt/build-rootfs.sh`) still checks `sha256sums` without
 OpenWrt's signature (`sha256sums.asc`/`.sig`); the vendor 5.4 sources are git checkouts pinned by commit hash
 (`kernel/build-all.sh`), which no tarball signature applies to.
+
+### 170. "Failed to send request: Operation not permitted" behind the VPN's kill switch
+A report from the owner's U30 Air (openwrt-luci v2026.10.16.1, a sing-box profile, the kill switch on):
+`mu300-extra install vpn-dae` printed `Failed to send request: Operation not permitted` four times, then
+`cannot download SHA256SUMS of the VPN module` and `the VPN module could not be downloaded (is the device online?
+...)`. After `mu300-vpn killswitch off` (which restarts the VPN) the same command downloaded the tarball.
+
+**What the message means.** uclient-fetch (OpenWrt's `wget`) prints `Failed to send request: %s` with
+`strerror(rc)`, where `rc` is uclient's own error code, not an errno: `UCLIENT_ERROR_CONNECT` is 1, and
+`strerror(1)` is "Operation not permitted". So the line says only "no connection could be made" - a name that did
+not resolve, a refused or dropped connect, a timeout - never anything about permissions. The four lines are
+`fetch_stdout`'s four tries.
+
+**Reproduced** in an OpenWrt 25.12 container (the real uclient-fetch and busybox) with the uplink renamed
+`sipa_eth0`, mu300-vpn's kill switch ruleset, sing-box 1.14.1 with the TUN config `gen_singbox` writes
+(`auto_route`, `strict_route`, `default_mark` 0x2d0) and a shadowsocks server in a second container, running
+v2026.10.16.1's own `mu300-extra` and `mu300-update`:
+
+| | the router's own traffic (`ip route get 140.82.121.3`) | kill switch drops | result |
+|---|---|---|---|
+| tunnel up | `dev sbtun`, table 2022 (sing-box's rules 9000-9010: `from 0.0.0.0 iif lo lookup 2022`) | 0 | downloaded through the tunnel and installed in 4 s |
+| tunnel down | `dev sipa_eth0` (main) | 40 packets | the report's output, line for line, after 253 s |
+
+So the device's own traffic does go through the tunnel when it is up - for sing-box by its `auto_route`, for xray,
+mihomo, WireGuard, OpenVPN and dae by the core's `routes_up` (rule 9010 sends everything unmarked to table 2022, the
+device's own packets included) - and the kill switch drops it, as it promises, when the tunnel is down. Nothing in
+`mu300-extra install` or `mu300-vpn engine install` stops the tunnel: the download is made with the engine that is
+running, and the new engine is unpacked beside it. The report's "four failures, then success after killswitch off"
+is a tunnel that was not carrying traffic at that moment and came back with the restart that `killswitch off` does
+(`killswitch_cmd`: `svc restart`); a restart with the kill switch left on would have done the same. With the
+kill switch off, a first try made while the restarted engine was not up yet failed once and the retry went through.
+
+**Changed** (`mu300-update`, used by `mu300-extra`): `vpn_ks_blocks` - the kill switch's table `inet mu300_vpn` is
+there (and is not mu300-vpn's own download window, which has the `fetch4` set) and `ip route get` sends this device's
+traffic to `sipa_eth*` or the Wi-Fi client, or nowhere. Then the failure says `blocked by the VPN kill switch: the
+VPN is on and its tunnel is not up, and nothing leaves this device outside it - see mu300-vpn status, and try again
+once the tunnel is up; offline: mu300-extra install NAME --from DIR` instead of "is the device online?", for the VPN
+module, the other extras and `mu300-update check/apply/kernel/boot`; and `fetch_stdout` stops after the first try
+(one minute instead of four: the kill switch drops the next three the same way). Nothing is let through: no
+exemption for downloads, the LAN untouched.
+
+**dae before the download.** `mu300-extra install vpn-dae` now checks the running kernel first, as the module's
+`dae_kernel_ok` does (5.17 or newer, `/sys/kernel/btf/vmlinux`): on the 5.4 vendor kernel it refuses before 17 MB
+are fetched and 56 MB unpacked (`MU300_DAE_ANY_KERNEL=1` for a kernel the device is about to boot). The mainline
+kernels of v2026.10.16.1 (6.18.56, 7.2.10) have BTF and the BPF JIT (`upstream/mu300-mainline.config`, 31p). The
+v2.0.3 `vpn-dae` tarball installs with v2026.10.16.1's `mu300-extra` both online (tunnel up) and with `--from`.
+
+**Open:** why the U30's tunnel was not carrying traffic at that moment, and why the owner's later try ended in
+"vpn-dae was not installed" after the download completed: the device itself could not be examined for this entry.
