@@ -154,6 +154,11 @@ what replaced it. The table below gives each section's state.
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
+| 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
+| 131 | An update writes only what changed: the new image's binaries that the installed system has byte for byte become second names of its files (never text, never `etc`, `var` or the user's places), the room counted before anything is written by every installer and by `mu300-update`, nothing left behind by a run that fails or is cut off, and the computer installer's switch module of the release | current (unit tests; the zip, `mu300-update apply` with rollback, and the computer installer on an F50, plain OpenWrt with Docker in its 804 MiB region, 2026-10-16; Ubuntu 24.04 by `mu300-update` with rollback on an F50, 2026-10-17) |
+| 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
+| 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
+| 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 
 ## Hardware and firmware facts
 
@@ -6449,8 +6454,9 @@ not have is carried (but the files of packages, and the project's own, which are
 them the update goes on without, and the report says they are in the previous system. A deletion cannot be told
 either: what the user deleted of the image is back (but services and sudo rules, above).
 
-**Room, and the previous system.** `apply` keeps the old system whole as `<os>.old` for `rollback`, so the user's
-files are copied, and there must be room: what is to be written plus 5 % and 32 MB against `df`. When there is
+**Room, and the previous system.** (Since §131 the new image is not unpacked whole: its unchanged binaries and the
+device's own files are second names of the old system's, and every way to update counts the room first.) `apply`
+keeps the old system whole as `<os>.old` for `rollback`, so the user's files are copied, and there must be room: what is to be written plus 5 % and 32 MB against `df`. When there is
 not, it says how much is needed and how much is free, removes `<os>.new` and changes nothing; `apply --no-rollback`
 then carries by link - the files become second names of the old system's, no data is copied, 8 MB of margin - and
 the old system goes aside as `<os>.broken`, which `rollback` does not offer and the next `apply` or `clean` removes
@@ -8242,6 +8248,459 @@ three have the same logic in these places):
   time of publishing and was right.
 * The graphical installer and the installers' beta question are newer than v2026.10.27 (`tools/release_pick.py` is
   not in those tags); they go by the time of publishing too, now with the tag order on top.
+
+### 126. An update's password: kept, and checked when the user asks (the Magisk zip and the computer's installers)
+
+**What happened.** The v2026.10.16.1 smoke test on an F50 (F50-C: Android, internal OpenWrt, kernel 6.18) updated
+OpenWrt with that release's Magisk zip, and root's password was empty afterwards, while the plan had said the
+accounts and passwords are kept. Two rules met. The zip carries no password (issue #167: a system it installs gets
+the images' well-known one, Ubuntu's `ubuntu`/`ubuntu`, OpenWrt's `root` with none). And to decide whether a system
+"has accounts of its own" it compared the installed hash with the image's and with a SHA-crypt hash of `ubuntu`
+(`default_hash`): a root whose password was `ubuntu` - what the computer's installer sets when asked for it, and what
+the project's tests use - counted as "the images' own", so the update put the images' own back, which for OpenWrt is
+none. An empty root counted the same. The computer's installers had the opposite gap: an update always asked a new
+password and wrote it over the old one; `mu300-update apply` on the device keeps passwords.
+
+**The owner's rule (2026-10-16).** On an update, ask whether to keep the password. Yes: keep it, after the user types
+the current one and it checks against the installed system's hash (an empty one is confirmed by an empty entry). No:
+a new one, typed twice. Fresh installs as before.
+
+**Checking a password against an installed system** (`tools/android-pwcheck.sh`, run as root on Android over a
+mount of the Linux filesystem; it prints one word - `MATCH`, `NOMATCH`, `LOCKED`, `NOUSER`, `UNVERIFIABLE` - and never
+the password or the hash; the password comes on standard input, the hash never leaves the device):
+
+* What the images hold, measured: Ubuntu 24.04's `passwd` and `chpasswd` write yescrypt (`$y$j9T$...`); OpenWrt
+  25.12's `passwd` (busybox) and so LuCI write SHA-256-crypt (`$5$`, seen on F50-C); the installers write
+  SHA-512-crypt (`$6$`); OpenWrt's image has root empty.
+* **Nothing of the Linux system is run.** The first version of this check ran the system's own `perl` (Ubuntu) or
+  `openssl` (OpenWrt) in a `chroot`. That is Android's root executing programs, libraries and a loader that the Linux
+  system controls - a Linux system that has been tampered with would get Android's root during the update (review of
+  the pushed branch). So the hash is computed only by the project's own tools, and what is read from the Linux
+  filesystem is data: the shadow line, read with `sed`, its hash handed to the checker on standard input (a busybox
+  salt only as an argument's value, and only of crypt's alphabet); `ROOT`, `ROOT/etc` and `ROOT/etc/shadow` must not be
+  links (a link is resolved on Android's side). A test runs the check against a system whose `perl`, `openssl`,
+  `busybox`, `sh` and `chroot` all answer `MATCH` and leave a mark: none may run.
+* **`mu300-pwcheck`** (`tools/pwcheck/mu300-pwcheck.c`): a few lines around libxcrypt's `crypt_r()`, linked
+  statically, built with the other helper binaries in `tools/make-release.sh` (`mu300-kbuild`, Ubuntu 20.04's
+  libxcrypt 4.4.10, which has yescrypt; the build checks a real Ubuntu yescrypt hash and stops if it fails) and put
+  into the 5.4 kernel bundle beside busybox. The zips take it from there as `mu300/mu300-pwcheck`; the computer's
+  installers take it from the package, or from the release's kernel bundle, which they now fetch (and check against
+  `SHA256SUMS`) before the question instead of after it, and push it. It knows every method of libxcrypt: yescrypt,
+  SHA-crypt with or without `rounds=`, MD5-crypt, bcrypt. Measured on F50-C's Android (5.4 kernel): a yescrypt hash of
+  Ubuntu 24.04 `MATCH` and `NOMATCH` as it should.
+* **The bundle's busybox** (`mkpasswd`: des, md5, sha256, sha512 - asked for yescrypt it silently makes an MD5 hash)
+  checks MD5- and SHA-crypt without `rounds=` when there is no `mu300-pwcheck`: the releases up to v2026.10.16.1 have
+  none, so their zips (and the computer's installers with such a release) check OpenWrt's passwords but answer
+  `UNVERIFIABLE` for Ubuntu's yescrypt: the installer then stops, and the way out is to answer no (or, in a zip, to
+  remove `MU300_KEEP_PASSWORD`, which keeps the password without a check).
+* An empty entry matches only an empty field (`passwd -d` and LuCI never store a hash of the empty password).
+* **A journal not replayed.** The installers look at an installed system through a read-only mount without journal
+  replay (`ro,noload`), so a dry run writes nothing. On F50-C the region's superblock had `needs_recovery` set
+  (incompat flags `0x46`) after OpenWrt sessions: OpenWrt's reboot does not unmount the root filesystem, and what was
+  committed last is then only in the journal, which a noload view does not show - an `/etc/shadow` from before the
+  last `passwd` would be checked. So the password check mounts with the journal replayed first (`MU300_RO=recover` of
+  `android-mount-mu300root.sh`, a plain `ro` mount: what Linux itself does at its next boot, and what the update does
+  anyway); the zip does this only when a check was asked for (`MU300_KEEP_PASSWORD=yes`), the computer's installers
+  for the check, not for the first look at which systems have a password. A stale shadow was not caught in the act;
+  the other noload reads (which systems and releases are there, the VPN probe) are older than this and were left.
+
+**The computer's installers** (`install.sh`, `install.ps1`, the window, and an unpacked zip's `computer/`, which is the
+same `install.sh`): an update first looks at the systems it replaces (`pw_states`, a read-only mount) and, when one
+has a login password of its own (set, empty or locked), asks *Keep the current password? (yes/no)*, default yes. Yes
+asks the current password of each such system once, without echo, sends it to the device in a file of the user's
+alone (pushed, read by the check on standard input, removed in the same command) and stops after three wrong tries:
+**nothing is changed** and the message says to run again and answer no. Stopping was chosen over falling back to "set
+a new password": the user asked to keep it, a run that turns that into a new password is a surprise, and nothing is
+written before the question, so stopping costs nothing. `LOCKED` and `UNVERIFIABLE` stop the same way. No asks a new
+password typed twice (the old question). A system the update installs new still gets the new password; the device's
+`android-install.sh` leaves the accounts of `KEEP_PW_OSES` exactly as they were whatever `PWHASH` says. Answers mode:
+`MU300_ANS_KEEP_PASSWORD`, `MU300_ANS_CURRENT_PASSWORD` (or `..._UBUNTU`, `..._OPENWRT`, `..._OPENWRT_LUCI`), secrets
+like `MU300_ANS_PASSWORD`, one try; the verdict is an `info` event `password.<system>`.
+
+**The Magisk zip.** Nothing can be typed while Magisk installs a zip (and the devices have no keys a module could
+read), so its answers are a `mu300-install.conf`, and for the password of an update only one **inside the zip**: at
+its top (`zip mu300-magisk-...zip mu300-install.conf`; `customize.sh` unpacks it and hands it over as
+`MU300_ZIP_CONF`, and it wins over every other file), in its `mu300/`, or `MU300_ANSWERS` of a caller. Without one an
+update keeps the accounts and passwords as they are - every password, the images' own and none included, as
+`mu300-update` does - and the plan and the end say "kept, not checked". `MU300_KEEP_PASSWORD=yes` with
+`MU300_CURRENT_PASSWORD` keeps it once it checks (no such line: the empty password); anything else stops before
+anything is written, with the way out in the message. `MU300_KEEP_PASSWORD=no` with `MU300_PASSWORD` sets a new one
+(a file is not typed, so it is given once); `no` alone or `MU300_PASSWORD_RESET=yes` puts the images' own back. An
+update no longer takes `MU300_PASSWORD` or `MU300_PASSWORD_RESET` from `/data/adb/mu300-install.conf` (a line left
+there would reset the password at every later update); a new system still does. `MU300_KEEP_PASSWORD` and
+`MU300_CURRENT_PASSWORD` from any other file are reported and ignored. The machine plan gains `password_checked`.
+
+**On the device** (F50-C, 2026-10-16, a zip of this branch built with `tools/make-magisk-zips.sh` from the
+v2026.10.16.1 assets, OpenWrt k6.18, Android locale Chinese; root's password set to `ubuntu` with `passwd` first):
+the zip without a file: "kept, not checked", root still `ubuntu` (the next run's check confirmed it); with
+`MU300_KEEP_PASSWORD=yes`, `MU300_CURRENT_PASSWORD=ubuntu`: checked, kept, ssh with `ubuntu` works and a wrong one is
+refused; with a wrong current password: refused before anything was written (exit 1, the module not installed);
+with `MU300_KEEP_PASSWORD=no`, `MU300_PASSWORD=...`: the new one logs in over ssh, `ubuntu` no longer does. Then the
+same zip unpacked on a Mac, its `computer/install.sh` in answers mode against F50-C: a wrong current password stopped
+it at the question ("not confirmed. Nothing was changed"); the right one passed the check, the update installed
+(`kept the accounts and passwords of the previous openwrt`) and `root`/`ubuntu` logged in afterwards, the hash still
+the `$5$` one `passwd` had written. `install.ps1` and the window were run against the fake adb only. (These runs
+were of the first version, whose check ran OpenWrt's `openssl` in a chroot: its verdicts are the ones the busybox and
+`mu300-pwcheck` give for the same hashes, see the unit tests.) The second version's `mu300-pwcheck`, built in
+`mu300-kbuild` as `make-release.sh` does, on F50-C's Android through `android-pwcheck.sh`: Ubuntu 24.04's yescrypt hash
+`MATCH` with the right password, `NOMATCH` with another, `UNVERIFIABLE` without the checker. Then, once another
+session that had used F50-C in between was done, the second version's zips (built from the v2026.10.16.1 assets, with
+that `mu300-pwcheck` added as `mu300/mu300-pwcheck` as a release with it in its bundle carries it), over the published
+v2026.10.16.1 OpenWrt with root's password `ubuntu` (`$5$`): no file - "kept, not checked"; `MU300_KEEP_PASSWORD=yes`
+with the right one - checked (journal replayed, `mu300-pwcheck`), kept; with a wrong one - refused before anything was
+written; after these two `ubuntu` logged in over ssh and a wrong password was refused. `MU300_KEEP_PASSWORD=no` with
+`MU300_PASSWORD` - the new one logged in, `ubuntu` no longer. The zip's `computer/install.sh` (answers mode, keep, the
+right password): pushed the zip's `mu300-pwcheck` and busybox, confirmed, updated, and `ubuntu` logged in afterwards.
+
+### 131. An update writes only what changed: the unchanged binaries of the new image are the installed ones
+
+**Status: current** (unit tests; the zip, `mu300-update apply` and the computer installer on F50-C, plain OpenWrt with
+Docker in the image, kernel 6.18, in its 804 MiB region, 2026-10-16, with six signed test releases that were never
+published; Ubuntu measured in containers).
+
+**What was wrong.** Every way to update - `mu300-update apply`, the Magisk zip, the computer installers
+(`tools/android-install.sh`) - unpacked the whole new image as `<os>.new` beside the running system, then carried the
+user's files over (§85) and swapped: room for a second copy of the system. With Docker in the image (§130) plain
+OpenWrt is 472 MiB of the F50's 775 (the device's own files included), and a zip update stopped at `tar: No space left
+on device`; Ubuntu with Docker would need about 1.63 GiB in a region of 1.6. A run that failed or was cut off left
+`<os>.new` behind (F50-C: the disk at 98 % until it was removed by hand). And `mu300-update apply` wanted 1 GB plus
+1 GB per system free before it downloaded anything, which an 804 MiB region never has.
+
+**The change.** A file of the new image that the installed system has byte for byte - the same type, mode, owner,
+size and content, and no extended attribute but Android's SELinux label - is not written again: it becomes a second
+name (a hard link) of the installed file. Only what changed takes room (`mu300-update`, the `delta` block).
+
+* The new image's manifest (`etc/mu300/image-manifest.gz`; for `mu300-update` before the download the release's
+  `mu300-*-rootfs.manifest.gz`) says what its files are; `mu300-carry same OLD` hashes the installed files that could
+  match (same path, mode, owner and size) and says which are equal, and whether each is a binary or text.
+* `mu300-carry tarfilter OLD LIST LOG` sits between `gzip -dc` and `tar -x`: it passes the tar stream on without the
+  listed files and compares each with the installed file **byte for byte as the stream passes** - a file that changed
+  after it was looked at is written after all (what had passed already is sent again from the installed file, which
+  it equalled). A hard link of the archive to a file left out is left out too. GNU long names, pax headers and plain
+  ustar are read; a member with extended attributes in the archive, or a name with `..`, is never left out.
+  `mu300-carry tarlink OLD NEW < LOG` then makes the links, gives the directories back the times tar gave them, and
+  refuses unless the log ends with tarfilter's end of the archive.
+* The new image's own parts do it: its `mu300-update`, `mu300-carry` and static busybox are taken out of the tarball
+  first (a pass over it that writes 3 MB into a directory of the Linux filesystem only root can enter); the system's
+  or Android's tar still unpacks. Old updaters hand over to the release's own before anything (`apply`'s self-update,
+  §86), and the zip and the computer installers are the release's own: no older release has to know about this. An
+  image without these parts, a release without manifests, or `MU300_DELTA=0`: the whole image, as before.
+
+**What is linked, and what never is.** Two names of one file are one file: what is done to it through one name -
+written into, truncated, given another mode - happens to the other system's too. Package managers never do that
+(dpkg and apk unpack beside a file and rename it over; so do depmod, ldconfig, Python's byte-compiler and the VPN
+module's link hook), but an editor does (nano and busybox vi write into the file; vim does for a file with two
+names), and so do `cp FILE EXISTING`, `>>` and `chmod`. So:
+
+| linked | never linked |
+|---|---|
+| binaries (a NUL byte in the file) under `usr` (not `usr/local`), `bin`, `sbin`, `lib*`, `opt/mu300` | text anywhere: scripts, units, Python and Perl modules, the project's own scripts - whatever an editor opens |
+| the binaries of the device's own files the installers pack (`mu300-vendor-OS.tar.gz`: firmware, Android's userspace) | `etc`, `var`, `root`, `home`, `srv`, `www`, `usr/local`, `opt/<other>`: what the user and the system change |
+| in the carry step, `mu300-update apply` too: the device's own files of the old system (`V` lines of the plan, second names in every mode, never a copy: 181 MiB on F50-C) | `lib/apk`, `usr/lib/opkg` (package databases), `usr/lib/locale/locale-archive` (`localedef` adds to it in place) |
+
+The update itself never writes into such a file afterwards: the carry block replaces whole files (`mu300-carry`
+unlinks what is in the way), accounts and the report are renamed into place, and the one place that copied over a
+file of a system - `modules.builtin` and `modules.builtin.modinfo` into Ubuntu's `lib/modules` - now removes it first.
+`rollback`, `clean` and the swaps only rename and unlink. What remains: a user who `cp`s over a program of the image
+or `chmod`s one while the previous version is kept for a rollback changes that version's too; `apply` says so
+("shares N MB of programs and libraries ... replace such a file, never write into it"). The price of never linking
+text: on Ubuntu 24.04 76 MiB (Python, Perl, scripts) are written at every update, on OpenWrt 2.5 MiB.
+
+**Room, before anything is written.**
+
+* The installers (`android-install.sh`: the zip and `install.sh` alike) count every system they install before the
+  first write: the files of the new image that are not linked (4 KiB blocks), a block per directory and per long
+  symbolic link, 2 % and 16 MB for directories and the journal, the device's files that are not linked (a pass of
+  tarfilter over their pack), 8 MB for the carry by link. Too little: "not enough room on the Linux partition: N MB
+  needed ..., M MB free", "nothing was changed", and the run ends before the boot chain or anything else is touched.
+  With `MU300_DELTA=0` the room of the whole image is counted and checked the same way.
+* `mu300-update apply` counts before it downloads (`update_need`): the download (the size in GitHub's list of the
+  release's files, what a mirror answers to a HEAD request, or the file of `--from`), what unpacking writes (the
+  release's manifest against the installed system, hashed by the running system's helper: exact with one that has
+  `same`, else every file there byte for byte counts, text too), the copy of the user's files for the rollback
+  (`carry_need`, which no longer counts the device's own files: they are links), the kernel, extras and VPN module.
+  After the download `apply_one` counts again with the new image's own helper, exactly, and stops with nothing
+  changed (the downloads removed) when it does not fit. A release without manifests: the old rule.
+
+**Nothing left behind.** `apply` removes what an update that was cut off left (`<os>.new`, the work directories)
+before it counts, and its EXIT trap removes the system it was making when it ends before the switch (an error, ^C,
+a kill). The installers do the same at their start ("removed openwrt.new, left by an installation that did not
+finish") and remove the half-made system when unpacking fails.
+
+**The switch module of the computer installer.** `tools/install-magisk-module.sh` installed the module's generic
+`module.prop` (`v1.0`) over the zip's module of the release (seen on F50-C). It now writes
+`android/magisk/installer/module.prop.in` with the release, versionCode, system and kernel as `make-magisk-zips.sh`
+does (`install.sh` passes them, `install.ps1` the same); a build of the checkout keeps the generic one.
+
+**Measured in containers** (the image unpacked, the plan and the unpack of the delta block, `du` of both systems
+together; "whole image" is what every update wrote before):
+
+| update | whole image | written now | linked | text kept out |
+|---|---|---|---|---|
+| OpenWrt v2026.10.16.1 -> .80 (the same packages, this updater) | 58.3 MiB | 8.0 MiB | 50.4 MiB | 2.4 MiB |
+| OpenWrt .80 -> .81 (a few files changed) | 60.3 MiB | 9.3 MiB | 51.0 MiB | 2.7 MiB |
+| OpenWrt v2026.10.16.1 -> .82 (Docker added: 190 MiB new) | 250.5 MiB | 207.5 MiB | 43.0 MiB | 2.4 MiB |
+| OpenWrt with Docker .82 -> .83 (a few files changed) | 252.5 MiB | 10.0 MiB | 242.5 MiB | 2.7 MiB |
+| Ubuntu 24.04 v2026.10.16.1 -> .80 | 349.2 MiB | 99.4 MiB | 249.8 MiB | 74.5 MiB |
+| Ubuntu 24.04 .80 -> .81 | 351.2 MiB | 101.3 MiB | 249.8 MiB | 74.7 MiB |
+
+The plan's count was within 0.6 MiB of what `du` measured each time. Ubuntu with Docker (§130) was not built here:
+Docker's 260 MiB are binaries and are linked whenever they did not change, so such an update writes about the same
+100 MiB as Ubuntu without Docker, instead of 608 MiB of image and the device's 205: well within the 1.6 GiB the
+installers ask for, and `NEED_UBUNTU` is left as it is.
+
+**On F50-C** (Android 12, the internal region of 804 MiB at offset 61698211840, plain OpenWrt, kernel 6.18). The test
+releases were made from the published v2026.10.16.1 by repacking its images with this branch's updater and helper
+(each "changed" one with a new text file, a new 2 MiB binary and bytes appended to `/usr/sbin/xl2tpd`), signed with
+the project's key, their zips by `make-magisk-zips.sh`: v2026.10.16.80 and .81 (OpenWrt and Ubuntu 24.04), .82 (plain
+OpenWrt with Docker, built by `openwrt/build-rootfs.sh` with `MU300_DOCKER=1` from this branch with `docker-in-images`
+merged for the build only), .83, .84 and .85 (.82 with a few files changed each). Free space from Android (read only,
+the journal replayed) or `df` on the device:
+
+| step | how | free before | result | free after |
+|---|---|---|---|---|
+| v2026.10.16.1 -> .82 (Docker) | the .82 zip from Android | 506 MiB | "43 MB ... not written again; 208 MB are written" | 314 MiB |
+| .82 -> .83 as before | the .83 zip with `MU300_DELTA=0` (the whole image) | 310 MiB | refused before anything was written: "464 MB needed ..., 310 MB free", "nothing was changed" | 310 MiB |
+| .82 -> .83 | the .83 zip | 310 MiB | "243 MB ... not written again; 10 MB are written"; booted, `docker info` 29.6.1, its data beside the systems | 288 MiB |
+| .83 -> .84 | `mu300-update apply` from a mirror on the computer, the previous version kept | 287 MiB | first refused, wrongly: the count (532 MB) took the device's files as a copy and guessed the download - fixed (`carry_need`, HEAD). Then "242 MB ... not written again; 10 MB are written", the kernel and boot image updated | 185 MiB (`openwrt.old`, and the previous boot image and its modules) |
+| the kept previous version | `openwrt.old` against a manifest of the running .83 taken before `apply` (every file's type, mode, owner, hash) | | the same but `/opt/mu300/bin/mu300-update`, which `apply` replaces with the release's updater before it starts (§86); the same again after .84 had booted and run dockerd | |
+| rollback | `mu300-update rollback`, reboot | | .83 again, its manifest the one taken before the update (but that updater) | |
+| .83 -> .85 | the .85 zip's `computer/install.sh`, answers mode, update | 223 MiB | "243 MB ... not written again; 11 MB are written"; the Magisk module afterwards **v2026.10.16.85** (before this change: the generic v1.0); booted, Docker ran | 223 MiB |
+| a cut-off run | a 150 MiB `openwrt.new` planted, then the .80 zip (`MU300_DOWNGRADE=yes`) | 73 MiB | "removed openwrt.new, left by an installation that did not finish", "44 MB ... not written again; 16 MB are written" | 442 MiB |
+
+The computer installer's "keep the password" could not check OpenWrt's `$5$` hash with the v2026.10.16.1 kernel
+bundle the test releases carry (it has no `mu300-pwcheck`: "UNVERIFIABLE", §126); answered no, with the same password.
+At the end v2026.10.16.1's own zip (`MU300_DOWNGRADE=yes` and `MU300_PASSWORD=ubuntu` in `/data/adb/mu300-install.conf`,
+which it removes), the Docker zone and network that .82's first boot had added removed with `uci`, the test's boot and
+temporary files removed: F50-C in Android, v2026.10.16.1, root's password `ubuntu`.
+
+**On F50-B** (Ubuntu 24.04, kernel 7.2.10, 32 GB region, no internet; 2026-10-17), `mu300-update apply --from` a
+release directory on the device, each time with a manifest of the running system taken first: v2026.10.16.1 -> .80
+"249 MB ... not written again; 99 MB are written" (528 files of the user's, 32 MB, copied for the rollback; used
++163 MiB with `ubuntu.old` kept and the kernel's modules); booted, `is-system-running` "running", no failed unit.
+.80 -> .81 "249 MB ... not written again; 101 MB are written"; booted, the changed `ethtool` ran. Both times
+`ubuntu.old` was the manifest taken before `apply` but for the updater `apply` replaces first and what the running
+system itself wrote meanwhile and at its shutdown (the journal, `wtmp`, `random-seed`, systemd's private `tmp`
+directories: all under `/var` and `/tmp`, never linked); after .81 had booted nothing more had changed in it.
+`rollback` and a reboot: .80 again, equal to its manifest but for the updater and a `pstore` file the boot writes.
+Back to v2026.10.16.1 by `apply --from ... --downgrade` (its own updater: the whole image, and 217 MB "carried",
+the device's files copied as before), `clean`, the test's files removed. The computer installer on Ubuntu was not
+run: F50-B's Android has the same adb serial as F50-C, which was in Android.
+
+**Not changed.** The panel's "Free space needed" (`space_needed` in `status` and `releases`) is still the old rule of
+1 GB and 1 GB per system: shown, never enforced, and no longer what `apply` checks when the release has manifests.
+`mu300-update apply` copies a kernel bundle's modules into the new system and keeps the previous set with the previous
+boot image (about 60 MB on F50-C with 6.18), as before.
+
+### 132. Every OpenWrt release shipped its web server's TLS key: one private key for all devices of an image
+
+**Status: current** (unit tests; the shipped keys' fingerprints taken from every published release; the field fix run
+on the U30 Air, by hand and at boot, 2026-10-16).
+
+**What was wrong.** The uhttpd package makes its key pair (`/etc/uhttpd.key`, `/etc/uhttpd.crt`) when apk installs it,
+and since v2026.10.13 apk installs it in the image build: the pair was in the published rootfs tarball, so every device
+that installed one image had the same private key for LuCI over HTTPS, and anyone who downloads the release has it
+(a man in the middle on the LAN, or anyone the device's HTTPS is reachable to, could pose as the device's LuCI and read
+the password typed into it). uhttpd only makes a pair when there is none, so a device kept the shipped one for good.
+Found while working on Docker in the images (PR #258), on F50-C: its key was v2026.10.16.1's plain OpenWrt one.
+
+**Which releases.** `gh release list`, then each published `mu300-openwrt-rootfs.tar.gz` and
+`mu300-openwrt-luci-rootfs.tar.gz` (60 tarballs, 41 releases) streamed through `tar` for `etc/uhttpd.key` and hashed,
+nothing kept: the 28 tarballs from v2026.09.17 to v2026.10.12 have no key (the listing checked: uhttpd, no key file);
+the 32 of v2026.10.13 to v2026.10.27 and v2026.10.16.1 each have one, all different (one key per image build, the
+same for every device of that image). Assets that were replaced on a release before this was looked at, and images
+built by hand, are not on the list.
+
+**The build.** `openwrt/build-rootfs.sh` removes the pair from the image and fails if a key is still there; the audit
+of `tools/make-release.sh` refuses a tarball with `etc/uhttpd.key` (the same hunk as PR #258's). uhttpd makes the
+device its own pair at its first start: px5g (px5g-mbedtls, in both images; openssl is there too) with the
+`key_type ec` of `/etc/config/uhttpd`, an EC P-256 key and a self-signed certificate valid for 397 days.
+
+**The devices.** `/etc/uci-defaults/92-mu300-uhttpd-key` (both images) holds the 32 fingerprints (sha256 of the key
+file; never a key) and removes `/etc/uhttpd.key` and `/etc/uhttpd.crt`, and the pair of any uhttpd section whose
+`key` points elsewhere, when the key file is byte for byte one of them; a key not on the list (made on the device,
+or the user's own) is never touched, nor an empty file. uci-defaults run at boot before uhttpd (START 50), so uhttpd
+starts with no pair and makes one. Every update brings the file again (it removed itself when it ran, and
+mu300-update does not carry that removal over), so it runs on the first boot of every image, whatever way it came:
+mu300-update with the old image's manifest already leaves the image's key behind (it is the old image's file, not
+the user's), but without the manifest, and the Magisk zip and computer installer paths that carry `/etc`, would keep
+it. A device on an old release keeps the shipped key until it updates; by hand, the same script then
+`/etc/init.d/uhttpd restart`, or `rm /etc/uhttpd.key /etc/uhttpd.crt; /etc/init.d/uhttpd restart`. The browser warns
+once about the new self-signed certificate (or about a changed one, where it had an exception for the old); LuCI over
+plain HTTP is not affected.
+
+**Measured on the U30 Air** (openwrt-luci v2026.10.16.1, VPN profile `cengiz-abi`, sing-box, kill switch on). Its key
+was v2026.10.16.1's openwrt-luci one (0523f54e...). After a root-only backup of `/etc/uhttpd.*` and the VPN settings:
+the script by hand removed the pair and logged it; `uhttpd restart` made an EC P-256 pair (px5g, "Generating EC private
+key"), not on the list; HTTPS answered with the new certificate (SHA-256 69:88:5C... before, B2:05:9C... after) and the
+LuCI login page, as did HTTP; a second run kept the new key. Then the boot path: the shipped pair put back, the script
+in `/etc/uci-defaults`, a reboot: the script ran and was gone, uhttpd had made another new pair (EC:94:0E...), LuCI
+answered over both. Through all of it the VPN stayed up with the same exit IP, and the sha256 of every file of
+`/etc/config` and `/etc/mu300/vpn*` was the same as before.
+
+### 153. A reinstall after an uninstall on a device that made room: "it asks to repartition again"
+
+**The report** (a user, through the owner, 2026-10-16): a device whose userdata the installer had shrunk (the make-room
+path, the 32 GB variant), uninstalled and installed again; the installer asked to repartition again.
+
+**What can ask that.** Only `offer_repartition` (install.sh) / `OfferRepartition` (install.ps1) makes room, and only
+when the region behind the last partition is under 700 MiB (install.sh, after `region_probe`; install.ps1 the same
+test after `FreeRegion`). The window offers it from the same facts (`makeroom.*`), the web installer and the Magisk
+zip never (the zip says "make room with the installer for computers" when the region is under 700 MiB or too small
+for its system). `region_probe` and `resume_region` are the same arithmetic, so the region a reinstall finds is
+exactly the one the make-room run reserved (F50-C: userdata ends at sector 120500223, the region starts at
+120504320 and holds 804 MiB, both before and after the uninstall). A finished resumed installation is `installed` in
+its transaction, which `resume.py find` skips, so a reinstall is never taken for a resume (F50-C's transaction in
+`~/mu300-backups` was `installed`). Android does not touch the GPT (a factory reset formats userdata in place).
+
+So a reinstall asks to make room only where the space really went back to userdata - **the uninstaller's own
+question**: "Grow userdata back over the freed space? ... Say yes only if this installer shrank it." On exactly this
+device the installer did shrink it, so the text invited the yes; it did not say that a reinstall then has to make room
+again, with another reset of Android. uninstall.sh (and the window's checkbox, which drives it) is the only path that
+can grow it, and only after yes and ERASE; uninstall.ps1 has no such question. That is the likely cause of the
+report.
+
+**What a reinstall without the grow met (F50-C, plain OpenWrt v2026.10.16.1 k6.18 in the 804 MiB region).**
+- `uninstall.sh` WIPE=quick, GROW=no; `install.sh --check`: "data check: 14 of 16 samples contain data", "WARNING:
+  the unpartitioned space is not empty; it may be used by this firmware" - the quick erase zeroes 64 MiB, the old
+  files stay. The install then wants the word `overwrite`. No make-room question; the reinstall (systems 2) went
+  through.
+- `uninstall.sh` WIPE=secure: 0 of 16 samples, "OK: free and empty, but small: OpenWrt fits, Ubuntu does not".
+- **Enter at "What should be installed?"** chose 3 (both) on the 804 MiB region, asked which OpenWrt, and stopped:
+  "that choice needs about 2400 MiB and this device has 804 MiB of free space". For someone who made room before,
+  that reads as "make room again". install.ps1 had the same default.
+- The uninstaller said "overwrite the whole 0 GiB region" and "overwriting 0 GiB" (integer GiB of 804 MiB).
+
+**Changed.**
+- install.sh `systems_default` / install.ps1 `SystemsDefault`: Enter chooses what fits - 3 where both fit, 1 where
+  only one does (Ubuntu, as the window chooses after its check), 2 where only OpenWrt does. A choice that does not fit
+  stops right after the question, before "which OpenWrt", and names the one that fits ("Choose 2 (OpenWrt) instead:
+  it fits here."; a package of a system that does not fit: "An OpenWrt zip of this release fits here.").
+- uninstall.sh: the grow question says to answer no when Linux may be installed again, and that after yes a new
+  installation has to make room again (another reset of Android); the window's checkbox the same. After a grow it says
+  to restart before anything else: Android's kernel keeps the table it booted with, and an installer run before the
+  restart reads the partition ends from sysfs - it would take the space just given to userdata for free space.
+- uninstall.sh / uninstall.ps1: the quick erase says that a later installation finds the space not empty and asks for
+  `overwrite`; sizes in MiB.
+
+**Device run of the change (F50-C).** After the secure uninstall: MU300_ANS_SYSTEMS=3 stops with the line above and
+"Choose 2 (OpenWrt) instead: it fits here." before anything is written; Enter shows `Choice [2]` and installs plain
+OpenWrt v2026.10.16.1 on 6.18 into the same region (MU300-INSTALL-OK, root's password checked on the device). userdata
+was never resized (sectors 12275712..120500223 throughout).
+
+**Open.** install.sh does not compare the partition table on the disk with what the running kernel shows before it
+uses the region (offer_repartition does, for userdata); only the grow path of uninstall.sh can make them differ, and
+it now says to restart.
+
+### 156. The release smoke test: tools/smoke.py
+
+**Status: current** (unit tests with fakes, `tests/test_smoke.py`; not yet run against a device).
+
+**What it replaces.** After a release the maintainers updated a few boards by hand - an F50 with Ubuntu, an F50 with
+OpenWrt, the U30 Air with OpenWrt and the control panel, sometimes the Magisk zip from Android - and looked at the
+version, the kernel, the services, the hotspot, mobile data and the VPN afterwards. `tools/smoke.py` does that from a
+local config of the boards (`tools/smoke.json`, ignored by git; `tools/smoke.example.json`) and prints one line per
+check and board. docs/RELEASING.md describes the fields, the checks and what stays manual.
+
+**Identity before anything.** The address does not say which board answers: every F50 is 192.168.77.1 on its USB
+network and every U30 Air 192.168.78.1, and an F50-B and an F50-C on the bench look the same. So no command runs before every board of the run has been identified: the SSH host key from `ssh-keyscan` must have the
+config's SHA256 fingerprint (computed in Python from the key blob, the way `ssh-keygen -lf` does: SHA-256 of the
+decoded blob, base64 without padding), and only that key goes into a known_hosts file of the run, used with
+`StrictHostKeyChecking=yes` and no other known_hosts file. Then `/proc/sys/kernel/hostname`, `mu300-device --json`'s
+device and system (docs/ADB-INTERFACE.md; a release without `--json` prints the device alone) and the adb serial when
+the config has one. One mismatch on any board and the run stops with exit status 2 before a single command that
+changes something: the boards that did match are not touched either. After the reboot the same checks run again.
+
+**Android only when the config says so.** The Magisk path goes through Android (the zip installs from Magisk; a board
+in Linux is first sent there with `mu300-next-boot android`). A board takes that path only with `"allow_android":
+true`: the config validation refuses it otherwise, for the U30 Air and every other model, and the one function that
+sends a board to Android checks the setting again. The other paths reboot only when `/etc/mu300/default-boot` is
+`linux`, checked in the state before the update and again on the device in the reboot script itself: on a device
+whose default boot is Android a reboot goes to Android by itself (the U30 Air on 2026-10-12, see `reboot_goes_to_android`
+in mu300-update).
+
+**No secret leaves the device.** The VPN's files under `/etc/mu300/*vpn*` hold keys and passwords. They are hashed on the
+device (`find /etc/mu300 -path '*vpn*' -type f -exec sha256sum {} \;`), and only the hashes come back; the report says
+`unchanged (N files)` or names the changed, gone and new files, never a hash. Of `mu300-vpn status --json` six fields
+are kept (enabled, running, the kill switch setting, the profile id, the engine, whether the tunnel is up): no
+address, no exit IP, no profile name.
+
+**Commands from validated values only.** Every value of the config that reaches a command line - host, user, port,
+serials, the mirror URL, the device path, the zip's name, `mu300-update`'s arguments, the tag (FINDINGS 125's two
+forms) - must match a strict pattern whole (letters, digits and a few of `. _ - : / ~`; no `..` component), and the
+config is JSON with duplicate keys and unknown fields refused. The device side is four fixed scripts sent on `sh -s`'s
+standard input, with no value of the config in them. Every subprocess has a timeout; the waits for the reboot are
+bounded (`down`, `boot`), and so are the update itself (`apply`, an hour) and the zip's install.
+
+**The update paths**, read from mu300-update and the docs: online is `MU300_RELEASE=TAG mu300-update apply`; a mirror
+adds `MU300_RELEASE_URL=<mirror>/TAG` (as in docs/update-device-test.md; a `file://` URL needs curl on the device,
+busybox wget has none); `--from DIR` takes a release directory on the device, which the harness can fill with `scp`
+from a local release directory; the Magisk zip is `adb push` and `su -c 'magisk --install-module ...'`, as
+android/magisk/README.md installs a module from a computer, then `adb reboot`. A failed update is not followed by a
+reboot.
+
+**Tests.** `tests/test_smoke.py` runs the harness against a fake transport (simulated boards answering the identity
+and state scripts, rebooting on a fake clock, an Android side on adb): hostile config values, every identity mismatch
+refused with no changing call made, Android never reached without `allow_android`, a default boot of Android never
+rebooted, the comparisons, a board that never comes back (the run ends at the timeout), the Magisk path's order, the
+dry run with a transport that fails on any call, the report's lines and exit codes, and the device scripts under each
+shell with `sh -n`. The fingerprint is compared with `ssh-keygen -lf` on a key made for the test.
+
+**Open.** Not run against a device yet: the state script's commands (`systemctl list-units`, `iw dev`, `ip -4 -o`,
+`/etc/init.d/* running`) are each in use on the images, but the whole script has run only on a computer. A Magisk
+install on a device without Linux cannot be identified after its first boot (its SSH host key is new), so that path is
+for an update over an installed system.
+
+### 161. Mainline kernel sources: two signatures, pinned keys, fail closed
+
+**Status: current** (unit tests with throwaway keys; the real 6.18.56 and 7.2.10 releases and seven kinds of
+tampering checked in the build image, 2026-10-16).
+
+**What was there.** `upstream/build.sh` - the one place that downloads a kernel.org tarball, for local builds, the
+Mainline kernel build workflow and the release workflow alike - fetched `linux-$KV.tar.xz` and piped
+`sha256sums.asc` through `grep | sha256sum -c`. That checks the download against a list fetched over the same
+connection from the same host, and never looks at the list's signature: whoever can change the tarball (a CDN node, a
+mirror, TLS interception on a build host) can change the list with it. And `grep` read the whole file, so a line put
+in front of the clearsigned block would have counted as well as a signed one.
+
+**What it does now.** `upstream/verify-kernel-src.sh DIR KV`, run by `build.sh` before anything is unpacked:
+
+1. `gpgv --keyring keys/kernel-autosigner.gpg --output SUMS sha256sums.asc`: kernel.org's checksum list must carry a
+   good signature of the autosigner (kernel.org's off-the-network signing system); only the signed text, as gpgv
+   writes it out, is searched for the tarball's line, which must be there exactly once and match its SHA-256;
+2. `xz -dc linux-KV.tar.xz | gpgv --keyring keys/kernel-releasers.gpg linux-KV.tar.sign -`: the releaser's own
+   signature over the uncompressed tar (Linus Torvalds for a mainline release, Greg Kroah-Hartman or Sasha Levin for
+   a stable one). kernel.org's signature page says the autosigner's lists do "NOT" replace developer signatures, so
+   both are required, from two different keyrings: a releaser's key cannot sign the list, nor the autosigner the tar.
+
+For each, gpgv must exit 0 and report `GOODSIG` and no `BADSIG`/`ERRSIG`/`EXPSIG`/`EXPKEYSIG`/`REVKEYSIG`/`NO_PUBKEY`,
+and the primary fingerprint of `VALIDSIG` must be listed in the keyring's `.fpr` file. Any failure, and a missing
+`gpgv`, `xz` or file, stops the build; `build.sh` deletes the download. The tarball unpacks into
+`/src/.download-KV/` and is moved to `/src/linux-KV` last, so an interrupted unpack never leaves a tree that the next
+run takes as fetched (it used to: the tree's existence was the only test). The check costs about 3 s per kernel
+(the second xz pass). The build image lists `gpgv` (Ubuntu's base image has it already, as apt's dependency).
+
+**The keys** (`upstream/keys/README.md`): the autosigner `B8868C80BA62A1FFFAF5FDA9632D3A06589DA6B1`, Linus
+`ABAF11C65A2970B130ABE3C479BE3E4300411886`, Greg `647F28654894E3BD457199BE38DBBDC86092693E`, Sasha
+`E27E5D8A3403A2EF66873BBCDEA66FF797772CDC`; none expires. Fetched from kernel.org's WKD and from the pgpkeys
+repository on git.kernel.org, which agreed; signature.html prints the three releasers' fingerprints (not the
+autosigner's). keys.openpgp.org serves them without user IDs, so it was no source. A source tree that is already
+in a build volume (`/src/linux-KV`, from before this change) is not checked again: `docker volume rm mu300-mainline`
+to fetch it anew. CI runners start with a new volume every run.
+
+**Checked** in `mu300-mainline-build` (gpgv 2.4.8), with the files from cdn.kernel.org: 6.18.56 (Greg) and 7.2.10
+pass; refused, each with its own message: a byte appended to the tarball (SHA-256 mismatch), a hash changed inside
+the signed list (BAD signature), a fake tarball with its hash in a line put before the clearsigned block (the
+signed line wins: mismatch), 7.2.10's `tar.sign` next to 6.18.56 (BAD signature), the releasers' keyring as the
+autosigner's (no public key), Greg not in `kernel-releasers.fpr` ("not pinned"), no gpgv on PATH. The fetch block
+of `build.sh` itself, run in a new volume for 7.2.10, verified and unpacked it. `tests/test_kernel_src_signature.py`
+repeats these against throwaway ed25519 keys (skipped where gpg is missing; GitHub's Ubuntu runners have it), and
+parses the committed keyrings' packets to pin their fingerprints to the `.fpr` files, the README and the test.
+
+**Not covered here:** the OpenWrt rootfs download (`openwrt/build-rootfs.sh`) still checks `sha256sums` without
+OpenWrt's signature (`sha256sums.asc`/`.sig`); the vendor 5.4 sources are git checkouts pinned by commit hash
+(`kernel/build-all.sh`), which no tarball signature applies to.
+
 ### 105. The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written
 
 From kanoqwq's clean-tf-7.2 `2af101f8` ("complete U30 Air power, LED and PD dock support"), his patch 0017 ("retain
@@ -8284,3 +8743,13 @@ negative):**
     reboot; dmesg | grep -i 'battery capacity not kept'     # nothing
     # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
     # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
+
+**Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
+built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
+callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
+(saved 0x050)` every boot, the same as the capacity read before each reboot, no warning or oops. The battery stayed at
+80 % (`Not charging` on USB), so a capacity that changed without being read was not produced, and `poweroff` was not
+run: the U30 Air has a battery, so nothing here can switch it on again without a button. The low-battery power-off
+of `mu300-power` was not reached (not drained); it ends in the same `poweroff` path. F50-B (Ubuntu, no battery),
+7.2.11 + 0018: boots, the fuel gauge's messages are the same as without 0018 (it reads `boot capacity` from the user
+area as before), the reboot completed with nothing new in the log. Android after Linux was not checked.
