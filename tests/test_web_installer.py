@@ -109,7 +109,12 @@ class Strings(unittest.TestCase):
     def test_every_sentence_the_code_asks_for_exists(self):
         en = self.s['en']
         app = (WI / 'app.js').read_text()
-        asked = set(re.findall(r'(?<![A-Za-z.])t\("([a-z0-9-]+\.[a-z0-9.-]+)"', app)) | set(re.findall(r'[?:] "([a-z]+\.[a-z0-9.-]+)"', app))
+        manager = (WI / 'manager.js').read_text()
+        asked = set()
+        for src in (app, manager):
+            asked |= set(re.findall(r'(?<![A-Za-z.])t\("([a-z0-9-]+\.[a-z0-9.-]+)"', src)) | set(re.findall(r'[?:] "([a-z]+\.[a-z0-9.-]+)"', src))
+        # the manager's confirmations (consequence()) are keys of their own
+        asked |= set(re.findall(r'key: (?:[^"]*\? )?"(mgr\.confirm\.[a-z-]+)"', manager)) | set(re.findall(r'"(mgr\.confirm\.[a-z-]+)"', manager))
         # a key that ends in a dot is a family, completed at run time: checked below
         # (an error's code is asked for as "err." + code)
         known = lambda k: k in en or 'err.' + k in en or any(e.startswith('err.' + k + '.') for e in en)
@@ -152,6 +157,19 @@ class Strings(unittest.TestCase):
         fam['review.pw.'] = {'given', 'kept', 'image'}
         fam['wizard.step.'] = set(re.search(r'WSTEPS = \[(.*?)\]', app).group(1).replace('"', '').split(', '))
         fam['storage.sd.'] = {'yes', 'no', 'foreign', 'none', 'small'}
+        # the device manager (manager.js): its tabs, the words mu300-api answers with, its jobs and its refusals
+        fam['mgr.tab.'] = set(re.search(r'TABS = \[(.*?)\]', manager).group(1).replace('"', '').split(', '))
+        fam['mgr.reg.'] = {'home', 'roaming', 'searching', 'denied', 'none', 'emergency'}
+        fam['mgr.sec.'] = {'wpa2', 'wpa2-wpa3', 'wpa3', 'open', 'other'}
+        fam['mgr.data.'] = {'up', 'down', 'off'}
+        fam['mgr.usb.role.'] = {'host', 'device'}
+        fam['mgr.vpn.ipv6.'] = {'0', '1', 'auto'}
+        api = (TOP / 'rootfs/overlay/opt/mu300/bin/mu300-api').read_text()
+        fam['mgr.job.kind.'] = set(re.findall(r'job_start ([a-z-]+) ', api)) - {'KIND'}
+        fam['err.dev.api-'] = set(re.findall(r'refuse ([a-z-]+)', api)) - {'CODE'}
+        fam['err.dev.'].discard('api-')     # (device.js's DeviceError("api-" + code): the family above)
+        self.assertIn('bad-value', fam['err.dev.api-'])
+        self.assertIn('update-apply', fam['mgr.job.kind.'])
         for prefix, names in fam.items():
             self.assertTrue(names, prefix)
             for n in names:

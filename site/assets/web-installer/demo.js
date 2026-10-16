@@ -1,4 +1,5 @@
-// The page without a device: ?demo=android | installed | small | linux. Made-up answers behind the same calls as
+// The page without a device: ?demo=android | installed | small | linux | linux-old (a release without mu300-api,
+// FINDINGS 110). Made-up answers behind the same calls as
 // device.js, so that the whole wizard can be looked at (and its three languages read) before a device is plugged in.
 // Nothing here opens a USB device, and nothing is written anywhere. Loaded only when the address asks for it.
 import { GIB } from "./flow.js";
@@ -144,8 +145,61 @@ class DemoLinux {
   async toAndroid(onLine) { return this._say(onLine, ["next boot: android"]); }
   logs(onLine) { return this._say(onLine, ["--- mu300-update version", "v2026.10.23", "--- dmesg (last 300 lines)", "[    3.201] sprd-sdhci 20300000.sdio: card claimed", "[   12.911] wlan0: aa:bb:cc:dd:ee:ff associated", "[   14.002] modem: IMEI 867530012345678 registered"]); }
   async reboot() { await wait(300); }
+
+  // the device manager's mu300-api, made up (?demo=linux; ?demo=linux-old is a release without it)
+  async hello() {
+    if (this.old) return null;
+    const { API_METHODS } = await import("./device.js");
+    return { ok: 1, api: 1, system: "ubuntu", device: "f50", release: "v2026.10.23", methods: [...API_METHODS],
+      features: { vpn: true, vpn_extra: true, wifi_client: true, sms: "cli", locks: false, forward: false, dual_sim: true, battery: false, usb_role: false, wpa3: false, luci: false },
+      job: { kind: "", state: "none" } };
+  }
+  async api(method, req = {}) {
+    await wait(200);
+    this.log(`# mu300-api ${method}: ok`);
+    const j = this.job;
+    const A = {
+      overview: { os: "ubuntu 24.04", device: "f50", release: "v2026.10.23", kernel: "6.18.56-mu300", kernel_choice: this.kernel, hostname: "mu300", uptime: 5025,
+        memory: { total_kb: 3900000, avail_kb: 2700000 }, storage: { root: null, disk: { size: 20000000, used: 6000000, avail: 14000000 } },
+        signal: { operator: "Demo Telekom", rat: "LTE", registration: "home", rsrp: -92, rsrq: -11.5 }, data: { state: "up", iface: "sipa_eth0", address: "10.64.12.7/30" },
+        traffic: { cycle: { used: 3221225472 } }, battery: null, temperatures: [{ name: "soc-thmzone", millicelsius: 47250 }],
+        hotspot: { ssid: "MU300-DEMO", enabled: true }, vpn: { installed: true }, lan: "192.168.77.1", boot: { default: "linux", os: this.bootOs, systems: ["ubuntu", "openwrt-luci"] } },
+      "wifi.get": { enabled: true, client_mode: false, ssid: "MU300-DEMO", band: "5", channel: "auto", channel_live: 36, country: "TR", security: "wpa2", hidden: false, password_set: true,
+        channels: { "2.4": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 5: [36, 40, 44, 48] }, clients: [{ mac: "aa:bb:cc:dd:ee:01", ip: "192.168.77.23", name: "laptop" }] },
+      "wificlient.status": { active: false, text: "not connected (the hotspot has the radio)" },
+      "wificlient.scan": { text: "SIGNAL  SECURITY  NAME\n-48     WPA2      Home\n-71     WPA2/3    Office" },
+      "data.get": { state: "up", iface: "sipa_eth0", address: "10.64.12.7/30", apn: "", pdp: "IP", auth: "", user: "", password_set: false,
+        signal: { operator: "Demo Telekom", rat: "LTE", registration: "home" }, sim: { active: 1, default: 1, slot1_supported: 1 }, roaming_switch: false },
+      "vpn.status": { installed: true, status: { enabled: false, profile: "p-1", profile_name: "Home server", ...(req.exit_ip ? { exit_ip: "203.0.113.7" } : {}) } },
+      "vpn.profiles": { profiles: [{ id: "p-1", name: "Home server", type: "vless", active: true }, { id: "p-2", name: "Backup", type: "wireguard" }] },
+      "vpn.subs": { subscriptions: [] }, "vpn.settings": { settings: { KILL_SWITCH: "off", IPV6: "auto" } }, "vpn.logs": { log: "xray: started\nxray: 203.0.113.7:443 connected" },
+      "sms.list": { data: { store: "SM", messages: [{ index: [1], sender: "+905551112233", time: "26/10/14 09:12", parts: 1, have: 1, text: "Your code is 123456" }] } },
+      "lan.get": { ip: "192.168.77.1", default_ip: "192.168.77.1", usb_role: "", usb_role_switch: false, adb: { state: "on", auth: "open", keys: 0 } },
+      "system.get": { hostname: "mu300", timezone: "Europe/Istanbul", user: "ubuntu", ssh: true, release: "v2026.10.23", kernel: "6.18.56-mu300", kernel_choice: this.kernel,
+        boot: { default: "linux", attempts: 5, locked: false, os: this.bootOs, systems: ["ubuntu", "openwrt-luci"] },
+        extras: [{ name: "vpn", installed: true, release: "v2.0.1" }, { name: "panel", installed: false, release: "" }, { name: "lang", installed: false, release: "" }] },
+      logs: { text: "--- mu300-update version\nv2026.10.23\n--- dmesg\n[    3.201] sprd-sdhci 20300000.sdio: card claimed" },
+      "job.status": { job: j ? { ...j, text: j.lines.slice(req.from || 0, j.at).join("\n"), next: j.at } : { kind: "", state: "none", rc: null, text: "", next: 0, cancel: false } },
+    };
+    if (j && method === "job.status") {
+      j.at = Math.min(j.lines.length, j.at + 1);
+      if (j.at === j.lines.length) Object.assign(j, { state: "done", rc: 0 });
+    }
+    const jobs = { "update.check": ["==> installed: v2026.10.23", `==> newest release: ${TAG}`, "an update is available"], "update.apply": [`==> downloading ${TAG}`, "==> unpacking ubuntu", "==> boot image updated; reboot to start it"],
+      "kernel.set": ["==> kernel: downloading", "==> boot image written and verified"], "extra.install": ["==> downloading the extra", "==> installed"], "extra.remove": ["removed"],
+      "vpn.install": ["==> downloading the VPN module", "==> installed"], "vpn.engine_install": ["==> engine installed"], "vpn.add_url": ["profile p-3 added"], "vpn.sub_add": ["subscription s-1 added"],
+      "vpn.sub_refresh": ["refreshed"], "wificlient.join": ["joining", "connected"], "wificlient.leave": ["the hotspot is back"] };
+    if (jobs[method]) {
+      this.job = { kind: method.replace(".", "-"), state: "running", rc: null, lines: jobs[method], at: 0, cancel: true, started: Date.now() };
+      return { ok: 1, job: this.job.kind };
+    }
+    if (method === "job.clear") this.job = null;
+    if (method === "kernel.set") this.kernel = req.version;
+    return { ok: 1, ...(A[method] || {}) };
+  }
 }
 
 export function makeDemo(kind, log) {
+  if (kind === "linux-old") { const d = new DemoLinux(log); d.old = true; return d; }
   return kind === "linux" ? new DemoLinux(log) : new DemoAndroid(kind, log);
 }

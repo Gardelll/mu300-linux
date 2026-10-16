@@ -147,6 +147,7 @@ what replaced it. The table below gives each section's state.
 | 101 | The Magisk switch built its misc block under a fixed name in the adb shell user's directory | current (fixed; measured on the F50, Android with Magisk, 2026-10-15; the U30 Air's sysfs name read from Linux) |
 | 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
 | 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
+| 110 | The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it | current (unit and Node tests against the real mu300-api; the device protocol run with the page's modules over WebUSB on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-16: six defects fixed; rows 6, 9, 16 and the Android restart not run) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
 | 112 | Making room by a reset, and the installation that resumes afterwards: kano's transaction, Android's recovery formats the encrypted `userdata`, the checks of the resumed run (`f6b0668d`, `0e19fe32`) | experimental; unit tests and tests against fakes (a fake eMMC); not run on a device, here or by kano |
 | 120 | Data roaming: a switch of our own in the dial and its watchdog (no switch of the modem's is known), the network's word for roaming, and a test hook | current (unit tests; checklist items 1-5 run on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-15, through the test hook; no SIM that really roams) |
@@ -6541,6 +6542,133 @@ another cause than runtime PM.
 4. `ls /sys/class/leds` has `v50:net1:*`, `v50:wifi:*`; `sudo mu300-led test` lights each lamp in turn.
 5. Mobile data on SIM 1, the hotspot on 5 GHz and 2.4 GHz (the Wi-Fi lamp white, then blue).
 6. Several reboots, then `sudo dumpe2fs -h` of the Linux filesystem: `FS Error count` absent or 0, files kept.
+
+## The device manager
+
+### 110. The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it
+
+**What was asked.** The owner, 2026-10-15: the web installer should also manage a device that runs our Linux - the
+Wi-Fi name, the VPN and so on, everything about the device - over the same WebUSB connection. Until then it had a
+small view (status, update check, kernel, restart, back to Android, logs) made of single shell commands.
+
+**The design.** The page composes no command and reimplements nothing. The device has one entry point,
+`/opt/mu300/bin/mu300-api METHOD`, with a fixed list of methods and the request as one JSON object on stdin; it answers
+one JSON object. Its interface is documented as stable in `docs/ADB-INTERFACE.md` (field `api`, now `1`).
+
+* **Reading the request** without jq (Ubuntu has it, OpenWrt does not) or jsonfilter (the reverse): `lib/json.awk`, one
+  program for busybox awk, mawk and gawk. A request is a flat object of strings, numbers, booleans and null, keys
+  `[a-z][a-z0-9_]{0,31}`; a nested value, a key twice, a raw control character, `\u0000` (or any control character
+  other than tab, newline and CR, escaped or not), a lone surrogate, trailing text or more than 64 KiB is
+  `bad-request` before any method runs. The same program re-serialises a tool's JSON answer (`mode=check`) before it
+  is put into a reply, so a tool cannot break the reply it is part of; a tool's answer that is not JSON is `null` or
+  `failed`, never pasted in.
+* **Every field by its own rule**, an unknown field refused: fixed words, numbers in ranges, an SSID by hostapd's and
+  wifi-client's rule (1-32 bytes, no control character, no space first or last), a WPA2 passphrase (8-63 printable
+  ASCII), an APN by 3GPP's characters and credentials by `mobile-data.conf`'s own rule (FINDINGS 65: printable ASCII,
+  no quote or backslash, at most 64), a channel from `lib/wifi-channels.sh` for the band and the country (never DFS,
+  FINDINGS 42), a LAN address private and at `.1`, a host name by RFC 1123, a time zone that exists in the zoneinfo,
+  a VPN link by the scheme list `mu300vpn` uses, an `https://` URL, an adb public key by its shape.
+* **Values reach a tool** as one argument that a pattern has already kept from starting with `-`, or on its stdin. The
+  secrets only ever on stdin or in the file they belong in: the hotspot password into `hotspot.conf` (0600) or UCI
+  through `uci batch` on stdin, the APN password into `mobile-data.conf` (0600) or UCI the same way, a VPN link or
+  config on `mu300-vpn profile import -`'s stdin (a here-document: the variable is expanded once and never read
+  again), a VPN URL and a Wi-Fi password into a 0600 file of the root-only job directory that the job opens as its
+  stdin and removes before the command runs, the login password on `chpasswd`'s stdin (Ubuntu) or the static
+  busybox's `chpasswd -c sha512` (OpenWrt, whose own busybox has none). Nothing secret is read back: `password_set`
+  says whether there is one.
+* **Shared code paths.** The CLIs of `/opt/mu300/bin` are the shared layer: `mu300-wifi-band` for a band change on
+  OpenWrt, `wifi-client`, `mu300-sim`, `mu300-traffic`, `sms`, `mu300-usb`, `mu300-next-boot`, `mu300-os`,
+  `mu300-update`, `mu300-extra`, and the VPN module's `mu300-vpn` (the same machine-readable CLI the LuCI pages reach
+  through `mu300vpn` and Cockpit calls directly). Mobile data on and off is mu300-traffic's own way (`ifup/ifdown wan`,
+  `systemctl start/stop mu300-mobile-data.service`). What only the OpenWrt control panel has - band and cell locks,
+  the SMS pool, SMS forwarding - is delegated on openwrt-luci to its backend, called as rpcd calls it
+  (`/usr/libexec/rpcd/mu300dash call METHOD` with the request on stdin: no `ubus call` with a secret in its argv), with
+  the same field rules applied first; elsewhere those methods are `unsupported`. The overview's radio, battery and
+  temperature readings are those of `mu300-panel info` (Cockpit's page); the panel extra keeps its own copy for
+  systems that have no mu300-api - a release-independent extra cannot rely on it yet.
+* **Long work is the job**: `update.check`, `update.apply`, `kernel.set`, `extra.install/remove`, `vpn.install`,
+  `vpn.engine_install`, `vpn.add_url`, `vpn.sub_add`, `vpn.sub_refresh`, `wificlient.join/leave`. One at a time
+  (flock, and the state), started with `setsid` so that adbd's SIGHUP at the end of the shell, a closed tab or a pulled
+  cable does not reach it; its output in `/run/mu300-api/job/log`, its status in `rc`. `job.status {from: N}` gives the
+  lines from N (whole lines while it runs, at most 400, each cut at 400 bytes, an address's path and query replaced by
+  `...`). `hello` names the job, so a page that connects later follows it from the start. An update, a kernel or an
+  extra's removal cannot be cancelled half way.
+* **WPA3 (FINDINGS 80)** is never switched on: the option needs a patched hostapd and a full `wifi down; wifi up`, and
+  a live change took a U30 Air's radio down. A hotspot already set to SAE by hand is shown as such and kept; a change
+  of its password restarts it with `wifi down; wifi up`, never `wifi reload`. An open hotspot gets `psk2` with its
+  first password.
+* **Hidden SSID on Ubuntu** is new in `hotspot-start` (`HIDDEN=1` -> `ignore_broadcast_ssid=1`).
+* **adb's keys mode** (FINDINGS 70) is only switched on together with the page's own key (`adb.auth {mode: keys, key}`:
+  the key goes to `mu300-usb adb key -` first; a key that is refused leaves the mode alone), and every change of adb,
+  the USB role, the LAN, the hotspot, mobile data and a restart runs two seconds after the answer (`setsid`), so the
+  answer reaches the page first.
+
+**The page.** `manager.js`: tabs Overview, Wi-Fi, Mobile data, VPN, SMS, USB and LAN, System. Every action whose
+consequence reaches the page's own connection or the device's uplink asks first, saying what happens and how to get
+back (the USB host role and adb's mode end the connection; a restart; mobile data off when it is the only uplink; a
+kill switch; the LAN address, which does not touch adb). Secret fields start empty ("unchanged"), are shown only
+while "show" is ticked, are emptied once saved and are added to the page's masker. The overview, the job and the
+log are masked as everything else on the page; the diagnostics file leaves out SSIDs, user names, addresses and
+message texts. A release without mu300-api (hello prints the marker) gets the earlier small view with a note to
+update.
+
+**Tested**: `tests/test_api.py` (every method's validation and its calls into stub tools, hostile values, the
+secrets in no argv, reply or file but their own, the job; dash, bash and busybox sh, busybox's awk where there is
+busybox), `tests/web/manager.test.mjs` (the page's adapter and the Manager against a fake adbd whose shell runs the
+real mu300-api), the strings test across en/tr/zh.
+
+**On the devices (2026-10-16).** The protocol of `docs/web-installer.md` ran with the page's own modules from Node over
+WebUSB (the `usb` package; device.js `LinuxDevice`, manager.js `Manager`, the device picked by its full serial; no
+browser) on a U30 Air (openwrt-luci, OpenWrt 25.12.5, v2026.10.27, kernel 6.18.56, the owner's VPN up with its kill
+switch) and an F50 (Ubuntu 24.04, v2026.10.27, kernel 7.2.10), with this branch's mu300-api, json.awk, path-commands
+and hotspot-start copied over the release (and #248's data roaming files, which data.get reads). Every setting
+changed was set back afterwards from a copy taken first.
+
+| # | U30 Air (openwrt-luci) | F50 (Ubuntu) |
+|---|---|---|
+| 1-2 | hello, every tab read; the overview, locks, VPN (the owner's profile, kill switch, engine), SMS pool and forwarding summary as LuCI has them | every tab read; locks `unsupported` (as designed) |
+| 3 | SSID `Test "1" $(x) it's` and a password with a quote, a double quote, `$( )`, a backtick, a semicolon, a pipe, an ampersand and a backslash: **two defects** (below), fixed; then uci and hostapd byte for byte as sent, encryption psk2 kept; 2.4 GHz ch 11 (**a defect**, fixed), 5 GHz back on 36/VHT80, ch 44 and back | the same values byte for byte in hotspot.conf (0600) and hostapd.conf; 2.4 ch 11, 5 back (`iw dev`); **"off" for 20 s after each change** (fixed) |
+| 4 | hidden: `ignore_broadcast_ssid=1`, back to 0 | the same (`HIDDEN=1`; hostapd.conf rewritten about 7 s after the answer) |
+| 5 | `wireless.radio0.disabled=1`, no interface; on again | `mu300-hotspot` disabled and stopped; enabled and running again |
+| 6 | - | scan refused in AP mode by wifi-client (this driver): the reason was its last hint line, now the whole message (fixed); no join (no network whose password was at hand) |
+| 7 | `ifdown`/`ifup wan` (autostart false/true), the VPN back on the same exit address | the service stopped (no address) and started (address back) |
+| 8 | APN `internet`, PAP, a user and a password with `$`, a backtick, a semicolon, a pipe, an ampersand and spaces: uci byte for byte (after the fix), the page shows the user, never the password; cleared again (`apn` empty deletes the option) | the same in mobile-data.conf (0600), the dial restarted with it; credentials cleared; bad APN/user/password values refused |
+| 9-10 | sim.get; lock.get; lock.set LTE `1,3` (the owner's own setting, set again: queued and applied) - the bands were not changed | sim.get; lock.get `unsupported` |
+| 12 | a made-up VLESS link beside the owner's profile: added, renamed (quotes), listed, removed; the owner's profile active throughout | the module installed by the job (v2.0.1 with vpn-xray), a made-up link added, renamed, removed; a link with `-o` and an `http://` one refused; the extras removed again |
+| 13 | `7000 KALAN` through the panel's pool: sent, the carrier's answer arrived | the same through `sms`; the answer deleted by id |
+| 14 | 192.168.90.1 and back: **the page lost the device** (below) | 192.168.90.1 and back: **the old address stayed on br-lan** (fixed); the Mac kept its old lease (no new address without reconnecting) |
+| 15 | keys only with the page's key: the connection dropped, came back signed with it, `auth: keys`, one key; open again (the key file removed by hand) | the same |
+| 16 | not run: the host role would take the USB connection away, and this unit must not be reached any other way | - |
+| 17 | hostname and back; a time zone is refused as `unsupported` ("zoneinfo for ...", even the current one: OpenWrt has no zoneinfo, as designed); the same password set again and SSH login with it; SSH off (refused) and on | hostname, time zone Europe/Berlin and back; the same password again, SSH login; SSH off (refused) and on; /etc/shadow restored afterwards |
+| 18 | update.check: "Up to date." | the same |
+| 19 | not run (this unit must not fall back to Android) | 6.18 by the job and a restart: 6.18.56; 7.2 by the job failed with the job's "could not reach GitHub" (the carrier passed no traffic without the VPN by then) and was put back from the release's files by hand |
+| 20 | `lang` installed and removed by the job | not run (the panel extra installs Cockpit from the archive) |
+| 21 | logs read | logs read; the page's log never had a password |
+| 22 | Android as the default and Linux again (no restart: this unit must stay in Linux) | the same (no restart) |
+
+Defects found and fixed on this branch:
+* **busybox awk (OpenWrt 25.12, busybox 1.37) and gsub**: json.awk's `gsub(/\\/, "\\\\")` gave one backslash there, so a
+  string's quote came out unescaped and a backslash was lost. On the U30 Air every answer with an SSID holding a quote
+  was no JSON (`wifi.get`: `bad-answer`), `\n` in a tool's text became `n`, and a request's backslash vanished on the
+  way to uci (a hotspot password stored without it). json.awk now replaces literally (`rep`); a static test keeps
+  backslashes out of every gsub replacement in json.awk and mu300-api (the unit tests use busybox only where the
+  machine has one, and an older one at that).
+* **A band with a channel on OpenWrt**: the channel was dropped (mu300-wifi-band puts a new band on auto): "2.4 GHz,
+  channel 11" came up on 6. The channel is set after the band now.
+* **Ubuntu's hotspot "off" right after a change**: `systemctl is-active` says `activating` for about 20 s (its
+  ExecStartPost checks); `activating` counts as on.
+* **lan-start kept the old LAN address** on br-lan (`ip addr replace` adds): both until the next boot. The old one is
+  removed now. Clients keep their lease until they reconnect: the page's note says so now.
+* **OpenWrt re-enumerates the USB gadget on every LAN ifup** (`hotplug.d/iface/10-mu300-usb`, for macOS's DHCP), so a
+  LAN change ends the page's connection there: the page asks with its own text for OpenWrt and expects to lose the
+  device (`leaves`), as for adb's mode.
+* **A tool's refusal** was its last line only; it is the last message with its indented lines now.
+
+Seen and left: the job box shows curl's progress meter as lines (`mu300-extra`, `mu300-update`); `wificlient.status`'s
+text named the old SSID on OpenWrt after a change (wifi-client's own reading). **Not run**: a Wi-Fi join (6), the SIM
+switch (9: the U30's second card registers for emergency only, the F50's needs a restart), the USB host role (16),
+Update now (18: the update itself is #224's test), the restart into Android (22), the real page in Chrome (the
+chooser and the folder picker are browser UI), plain OpenWrt and a V50.
 
 ## Data roaming
 

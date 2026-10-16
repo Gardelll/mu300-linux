@@ -336,6 +336,8 @@ than Magisk, and the device's own download over real mobile data. The installers
 * "Restart into Android" in the page makes Android the default boot (it is `mu300-next-boot android`); "Make Linux
   the default again" in the page's Linux view, or `mu300-next-boot linux`, undoes it.
 
+With the device in Linux, the same page is a manager for its Wi-Fi, mobile data, VPN, SMS and system settings: [Device Manager](Device-Manager).
+
 How it is built and how to test it: [docs/web-installer.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/web-installer.md).
 
 ## Installing from Android with a Magisk zip (no computer)
