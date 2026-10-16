@@ -155,6 +155,7 @@ what replaced it. The table below gives each section's state.
 | 125 | Release names: the day of the release and its number (`vYYYY.MM.DD.N`), newer than every three-field tag; one comparer per language against one table; what the updaters and installers up to v2026.10.27 do with them | current (unit tests in sh, Python, JavaScript and PowerShell; the old clients read from their code, not run) |
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
+| 138 | `mu300-atd` died at its first open of a SIPC tty that was not ready (a failed `exec` redirection ends dash and ash): it waits for the channel now, holding the command fifo (#226) | current (unit tests under dash, bash and busybox ash; not on a device) |
 
 ## Hardware and firmware facts
 
@@ -735,6 +736,39 @@ Two ways of timing out a read do **not** work here, and both fail silently:
 
 Apply `stty` to the already-open descriptor (`stty raw -echo <&3`), never `stty -F /dev/stty_nr1`: the `-F` form is
 an extra open and close of the device, which takes the channel away from whoever owns it (13b).
+
+### 138. A SIPC tty that is not ready yet: `mu300-atd` waits for it instead of dying at the first open (#226)
+
+Issue #226 (F50, OpenWrt, 6.18, v2026.10.23): after a cold boot the panel said "AT backend no response", and the log
+had `mu300-atd: line 116: can't create /dev/stty_nr2: No such device` (nr1, nr2, nr6, nr7) and then nothing from the
+daemon. The nodes exist before the channels work: an open gives `ENODEV` until the modem has started its sbuf
+(§74 measured the same for the U30 Air's second group, whose owners wait for `sbuf_5_006, state: 1,`). The init
+scripts wait only for the node (`[ -c ]`, `wait_and_exec`), so the daemon opened too early.
+
+* **Why it was gone and not "cannot open".** `open_tty` did `exec 3<>"$DEV" || return 1`. A failed redirection on
+  `exec`, a special built-in, ends a non-interactive POSIX shell: dash and busybox ash exit on the spot (busybox ash
+  in alpine:3 and dash on macOS, 2026-10-16: the line after it never ran; bash outside POSIX mode returns). The
+  `|| return 1` and the "cannot open" line were dead code, and so was the failure branch of the reopen in the loop.
+  procd's `respawn 3600 10 0` (no limit) and systemd's `Restart=always` start it again 10 s later, so on a modem
+  that does come up late the daemon would come back; on #226's unit it never could, because the modem itself never
+  started: the reporter found that the eMMC failed (`mmc_select_hs400es failed, error -84`, no `mmcblk0`), so there
+  was no modem image to load. That part is not this daemon's (see the issue).
+* **Now.** `command exec 3<>"$DEV"` (through `command` a redirection error is an ordinary failure), and the first
+  open is tried again every 2 s for up to `MU300_AT_OPEN_WAIT` seconds (240), with one line when the wait starts
+  (`... is not ready (the modem has not started its AT channels)`), one when it ends (`ready after N s`) or gives up
+  (`did not become ready in 240 s: the modem has not started`, exit 1: the supervisor starts it again, one line
+  per round instead of one every 10 s). The command fifo exists during the wait, so `mu300-at` queues at the daemon
+  and never takes its direct path to the tty (a second reader on the channel once it works). A reopen in the loop
+  that fails ends the daemon as it always did in effect (the client gets an empty answer first), and its fresh start
+  waits for the channel.
+* **Not changed.** No wait on `/dev/sipc_sbuf` for slot 0: 5.4's seqfile is not known to read the same line
+  (§74), and a wait that never ends is a boot without WAN. Whether a failed open does anything to the channel is not
+  measured; the releases before this one opened every 10 s under procd and the modem answered once it was up (#170).
+
+Tests: `tests/test_device_scripts.py` `Atd`: a tty that cannot be opened (a link to `/dev/tty` in a process without
+a controlling terminal) is waited for, then turned into a pty: the daemon takes it and answers; one that never opens
+ends the wait after `MU300_AT_OPEN_WAIT` with exit 1 and leaves no fifo or owner; under dash and bash here, busybox
+ash in CI. The waiting test fails on the daemon before this change (it is gone after the first open).
 
 ### 13d. Memory shared with the modem must not be mapped write-back (mainline)
 The modem and the AP share regions that are reserved **inside** System RAM (no `no-map` in the device tree), and
