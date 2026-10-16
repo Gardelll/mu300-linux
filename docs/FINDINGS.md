@@ -8775,3 +8775,40 @@ and dockur run as root and need none of this.
 
 Not done: no ZTE V50 to read its compatibles from (`dt-compatibles.txt` has the F50's and the U30 Air's); no
 release was built or tagged; the boards ran the bundles built here, the CI workflows build the kernels.
+
+**The third review's guard on the boards (2026-10-17)**, the same bundles, the guard, list, sysctl file and unit (or
+`mu300-hw`'s line) of this branch. F50-B Ubuntu 7.2.11 and 6.18.57, U30 Air openwrt-luci 6.18.57:
+
+* The guard is the helper from boot (`/proc/sys/kernel/modprobe`), its table 219 names and aliases of 85 modules
+  (Ubuntu's `modules.dep` adds no module outside the list: the list is closed). Making it: 1.0-1.2 s in
+  `sysinit.target` on F50-B (boot 39.7 s on 7.2.11, 40.2 s on 6.18.57, 39.7 s on 7.2.10 before), 2.05 s in the
+  background on the U30 Air. One request through it: 0.11 s against kmodloader's 0.10 s.
+* As `nobody` (a static probe): sockets of AF_TIPC, AF_CAN raw/bcm, SCTP, AF_NFC, AF_IEEE802154, AF_VSOCK and AF_RDS,
+  sock_diag dumps of TIPC and VSOCK, and generic netlink lookups of `TIPCv2`, `nfc`, `nl802154`: all refused, nothing
+  loaded; `wireguard`'s genl family still found. On Ubuntu, in an unprivileged user+mount+net namespace: `mount -t
+  hfs` and `ip link add type lowpan` refused, `type vcan` and `type wireguard` work.
+* Root's `mount -t hfs|vxfs|freevxfs` refused; through the guard as the kernel calls it, refused: `tipc`,
+  `tipc-diag`, `net-pf-16-proto-4-type-30` (tipc_diag), `-type-40` (vsock_diag), `-type-2-132` (sctp_diag),
+  `net-pf-16-proto-16-family-TIPCv2|nfc`, `net-pf-29`, `net-pf-40`, `rtnl-link-lowpan`, `fs-hfs`, `fs-vxfs`,
+  `fs-gfs2meta`, `tty-ldisc-17`, and the dependants `vhost_vsock` and `vsock-loopback`; the kernel log names each.
+  Root's `modprobe tipc sctp can-raw vsock` loads them.
+* Everyday on-demand loads still work: vxlan, geneve, ip_gre (gretap), l2tp_netlink (`ip l2tp`), vcan load; wireguard,
+  veth, bridge, tun, overlay, vfat, nf_tables and usb-storage are built in on both kernels.
+* Without a table (the table moved away, the cache directory given to `nobody`): `net-pf-*`, `fs-*`, `rtnl-*`,
+  `tty-ldisc-*` refused with `(no alias table)`, the listed names refused, `nf_tables`, `usb-storage`,
+  `crypto-sha256`, `l2tp_ppp` handed on. The log's hint said `root: modprobe no alias table`; it names the request
+  now (`tests/test_all_modules.py`).
+* KVM: `VHE mode initialized successfully` on both kernels on F50-B and on the U30 Air. No oops on any board.
+* U30 Air: the owner's VPN (sing-box, kill switch on) up after two boots of 6.18.57 with the exit IP answering and
+  HTTPS through the tunnel over mobile data. On a third boot of 6.18.57 (with 0018 of #261, and the dual-SIM live
+  switching turned on for #260's test) the mobile downlink stayed dead: `sipa_eth0` received 0 bytes while sending,
+  and an `ifdown`/`ifup wan` did not bring it back. The released 6.18.56 with live switching on had a working downlink
+  the boot after; one occurrence in four U30 Air boots of 6.18.57 here (and one in the earlier runs above), not pinned on
+  anything yet.
+* `mount -o loop` of a fresh image fails with "already mounted or mount point busy" on Ubuntu with 7.2.11, 6.18.57
+  and the released 7.2.10 alike (`losetup -f` then `mount` works): util-linux's, not this kernel's.
+
+The mainline workflow at this branch's head (`gh workflow run mainline.yml -f kv=...`): 7.2.11 run 38969488015 and
+6.18.57 run 38969491239 passed; after the build the runner (ubuntu-24.04-arm) had 99 GB free on `/` (145 GB), the
+volume held 8.7 GB (7.2.11) and 8.3 GB (6.18.57). The release job builds both into one volume, about 17 GB beside the
+5.4 build: no cleanup is needed. Both workflows print `df` and the volume's size after the kernels now.
