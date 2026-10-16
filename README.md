@@ -340,7 +340,12 @@ For OpenWrt use `ssh root@192.168.77.1`, or open `http://192.168.77.1` in a brow
 address is `192.168.78.1` instead.
 
 The Wi-Fi network the device broadcasts is its hotspot; unless you chose otherwise it uses the name and password
-copied from Android.
+copied from Android. It is **WPA2-PSK (CCMP) only**, on every device: WPA3 (SAE) is disabled on this Wi-Fi chip,
+because the U30 Air's firmware WPA3 could let a client in without the password
+([docs/U30AIR-SAE.md](docs/U30AIR-SAE.md), FINDINGS 80 and 163). A hotspot that was set to WPA3 is switched to WPA2
+with the same password at the first boot of a newer image (or switched off, never left open, if it has no usable
+password), and LuCI shows a notice saying so; choosing WPA3 in LuCI leaves that access point down, with a line in
+the log.
 
 ### OpenWrt with the MU300 control panel
 

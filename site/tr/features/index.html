@@ -153,6 +153,7 @@ sudo systemctl restart mu300-hotspot</code></pre>
 sürücüsü radar algılayamaz; dosyada ya da LuCI'de seçilen bir DFS kanalının yerine 36. kanal (36-48'e izin verilmeyen
 ülkelerde 149) kullanılır ve günlükte nedeni yazar (v2026.10.20'den beri; önceki sürümlerde hotspot böyle bir kanalda hiç
 başlamıyordu).</p>
+<p>Hotspot <strong>yalnızca WPA2-PSK (CCMP)</strong> kullanır, her cihazda. WPA3 (SAE) bu Wi-Fi çipinde güvenlik nedeniyle kapalı: WPA3 değişimini çipin yazılımı kendisi yapar ve anahtarı geri verme biçimi bir istemcinin parolasız bağlanmasına izin verebilir (<a href="https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md">neden</a>). WPA3'e ayarlı bir hotspot sonraki açılışta aynı parolayla WPA2'ye geçirilir (kullanılabilir bir parolası yoksa açık bırakılmaz, kapatılır) ve LuCI bir bildirim gösterir; LuCI'de WPA3 seçilirse o erişim noktası başlatılmaz.</p>
 <p>Wi-Fi çipinin yazılımı çökerse sürücü çipi sıfırlar ve Wi-Fi kendiliğinden geri gelir; hotspot olarak da, başka bir
 ağın istemcisi olarak da: testlerde 15 ile 20 saniye içinde, 6.18 ve 7.2'de. Çip 70 saniye içinde sıfırlanamazsa
 cihaz donup kalmak yerine düzgünce yeniden başlar.</p>
