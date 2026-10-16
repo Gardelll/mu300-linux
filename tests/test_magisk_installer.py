@@ -783,6 +783,9 @@ class Plan(InstallerCase):
         self.assertIn('v2026.10.06 is the OLDER release (MU300_DOWNGRADE=yes)', r.stdout)
         r = self.run_installer(trusted='MU300_DOWNGRADE=yes\n')
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        # android-install.sh checks the release order again before it writes anything (its downgrade block): it is
+        # told that this one was allowed
+        self.assertIn('DOWNGRADE=1\n', (self.fake.root / 'install.env').read_text())
         self.assertNotRegex((self.fake.root / 'data/adb/mu300-install.conf').read_text(), r'(?m)^\s*MU300_DOWNGRADE\s*=')
         # not an older release: the same one, a newer zip, a system that does not say, another system's version
         for system, tag in (('openwrt', 'v2026.10.06'), ('openwrt', 'v2026.10.05'), ('openwrt', 'dev'), ('ubuntu', 'v2026.10.25')):
@@ -1245,6 +1248,7 @@ class Install(InstallerCase):
         env = (self.fake.root / 'install.env').read_text()
         self.assertIn('correct horse'.encode().hex()[:20], env)
         self.assertIn('PW_SET=1\n', env)
+        self.assertIn('DOWNGRADE=0\n', env)
         self.assertNotIn('correct horse', r.stdout)
         self.assertIn(f'password:       the one from {self.conf_path()} (not shown)', r.stdout)
         self.assertIn(f'password for root: the one from {self.conf_path()}', r.stdout)

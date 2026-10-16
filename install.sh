@@ -55,6 +55,8 @@
 #   MU300_ANS_CONFIRM=INSTALL              the summary's question; @stdin waits for it on standard input
 # The Linux slot gets the boot chain of Android's slot (uboot, sml, teecfg, trustos, vbmeta; backed up first):
 # MU300_SYNC_BOOTCHAIN=0 skips that.
+# An update never goes back to an older release by itself (the device refuses before it writes anything: the older
+# release's updater may not carry over everything of the user's): MU300_DOWNGRADE=yes allows it.
 # It first brings this copy of the project up to date with GitHub (MU300_NO_SELF_UPDATE=1 skips that), and asks for
 # the language (MU300_LANG=en|tr|zh skips that). Started by a person at a terminal for a plain installation, it then
 # offers the graphical installer of gui/, a window that drives this script (MU300_GUI=0: never ask, MU300_GUI=1:
@@ -829,8 +831,8 @@ if [ $existing = no ]; then
 else
     echo
     echo "  $(t 'A MU300 Linux installation is already on this device.')"
-    echo "    $(t 'update  reinstall the systems and keep settings and data (/etc/mu300, users and home directories,')"
-    echo "    $(t '        SSH host keys, OpenWrt UCI config; the hotspot settings are kept too)')"
+    echo "    $(t 'update  install the new release over the systems and keep everything you added or changed in them')"
+    echo "    $(t '        (files, settings, accounts; packages you installed come back at the first boot)')"
     echo "    $(t 'wipe    erase the Linux filesystem and install from scratch')"
     ask mode "$(t 'update or wipe')" update MU300_ANS_EXISTING
     case $mode in
@@ -1043,7 +1045,7 @@ echo "  $(t 'extras:         {1}' "$(x=; [ -z "$EXTRA_VPN" ] || x=vpn; [ -z "$EX
 echo "  $(t 'adb to Linux:   {1}' "$([ "$ADB" = 1 ] && t 'on, only for the adb key of this computer' || t 'on, for every computer: a root shell without a password (on the device: mu300-usb adb auth keys, or mu300-usb adb off)')")"
 echo "  $(t 'default boot:   {1}' "$([ $DEFAULT_LINUX = 1 ] && t 'Linux (Android after {1} failed boots in a row)' "$BOOT_ATTEMPTS" || t 'Android, Linux on demand')")"
 echo "  $(t 'filesystem:     {1}' "$([ $FORMAT = 0 ] && t 'keep existing' || { [ $SD_MODE = 1 ] && t 'CREATE new ext4 (erases the SD card)' || t 'CREATE new ext4 (erases the Linux region)'; })")"
-[ $UPDATE = 1 ] && echo "  $(t 'update:         settings and user data of the chosen systems are kept, everything else is replaced')"
+[ $UPDATE = 1 ] && echo "  $(t 'update:         everything you added to the chosen systems or changed in them is kept (/etc/mu300/update-report)')"
 [ $UPDATE = 0 ] && [ $FORMAT = 0 ] && echo "  $(t 'note:           the chosen systems are installed fresh; their previous files and settings are replaced')"
 if [ $SD_MODE = 1 ]; then
     echo "  $(t 'writes:         SD card {1}, boot_{2}, 32 bytes of misc (the eMMC region, boot_{3}, GPT and userdata are not touched)' "$SD_DEV" "$LINUX_SLOT" "$ANDROID_SLOT")"
@@ -1073,6 +1075,8 @@ done
 [ -z "$EXTRA_PANEL" ] || adb push "$EXTRA_PANEL" $T/mu300-extra-panel.tar.gz >/dev/null
 env=$(mktemp)
 write_install_env > "$env"
+# an update to an older release: the device refuses it unless told (tools/android-install.sh, the downgrade block)
+[ "${MU300_DOWNGRADE:-}" != yes ] || echo DOWNGRADE=1 >> "$env"
 adb push "$env" $T/mu300-install.env >/dev/null; rm -f "$env"
 step device 80
 say "$(t 'Installing on the device')"

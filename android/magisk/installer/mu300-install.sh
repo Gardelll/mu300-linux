@@ -775,11 +775,12 @@ build_password() {
 
 # ---- install: the systems, then the boot image, then misc
 # mu300-install.env as install.sh writes it (storage.sh): OFF and INT_SIZE are the internal region, SIZE the region
-# or, in SD mode, the card; plus PW_SET (build_password), which install.sh does not write
+# or, in SD mode, the card; plus PW_SET (build_password) and DOWNGRADE (plan_choices), which install.sh does not write
 install_env() {
     OFF=$INT_OFF; SIZE=$INT_SIZE
     if [ "$SD_MODE" = 1 ]; then SIZE=$SD_BYTES; fi
-    ( umask 077; { write_install_env && echo "PW_SET=$PW_SET"; } > "$W/mu300-install.env" ) ||
+    # DOWNGRADE: plan_choices let an older release through (MU300_DOWNGRADE=yes); android-install.sh checks again
+    ( umask 077; { write_install_env && echo "PW_SET=$PW_SET" && echo "DOWNGRADE=${DOWNGRADE:-0}"; } > "$W/mu300-install.env" ) ||
         die "$(t 'could not write {1}' "$W/mu300-install.env")"
 }
 install_systems() {

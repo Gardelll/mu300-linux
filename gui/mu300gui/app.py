@@ -771,7 +771,7 @@ class App:
         if ch.place_existing(f):
             o, i = card(body, _('Linux is already installed there'), style='Accent')
             add(o)
-            ttk.Radiobutton(i, text=_('Update: reinstall the systems and keep settings and data'), variable=self.v['existing'], value='update', style='Accent.TRadiobutton').pack(anchor='w')
+            ttk.Radiobutton(i, text=_('Update: install the new release and keep everything you added or changed'), variable=self.v['existing'], value='update', style='Accent.TRadiobutton').pack(anchor='w')
             ttk.Label(i, text=_('/etc/mu300, users and home directories, SSH host keys, OpenWrt\'s UCI configuration and the hotspot settings are kept.'),
                       style='Accent.Small.TLabel', wraplength=640, justify='left').pack(anchor='w', padx=(S5, 0), pady=(0, S2))
             ttk.Radiobutton(i, text=_('Wipe: erase the Linux filesystem and install from scratch'), variable=self.v['existing'], value='wipe', style='Accent.TRadiobutton').pack(anchor='w')

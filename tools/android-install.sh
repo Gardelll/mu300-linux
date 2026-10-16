@@ -12,6 +12,8 @@
 #   UPDATE=0|1         keep everything of the user's in the systems being reinstalled (the carry block of the new
 #                      image's mu300-update; MU300_UPDATE_KEEP=list in the environment: only the list of places an
 #                      update kept before the first release with a four-field tag)
+#   DOWNGRADE=0|1      with UPDATE=1: 1 lets an image of an older release replace a system (see the downgrade block);
+#                      not set or 0: that is refused before anything is written
 #   BOOT_OS            system started by the initramfs
 #   DEFAULT_LINUX=0|1  keep booting Linux (otherwise every Linux boot is one-shot and returns to Android)
 #   BOOT_ATTEMPTS=1-6  with DEFAULT_LINUX=1: failed boots in a row before Android (.mu300/boot-attempts)
@@ -301,6 +303,36 @@ fi
 MU300_OFF=$OFF MU300_SIZE=$SIZE sh $T/android-mount-mu300root.sh $M
 trap 'sync; sh $T/android-mount-mu300root.sh -u $M >/dev/null 2>&1; true' EXIT
 fi
+
+# --- downgrade begin
+# Never back to an older release by itself, as mu300-update and the Magisk installer: the new image's updater does
+# the carrying over, and an older one may not carry everything of the user's (one from before the first release with
+# a four-field tag keeps only a list of places). Checked before anything is written. The release of the new image is
+# its etc/mu300/image-version, read from the tarball; a system or an image that does not say which release it is
+# (a build of the checkout: "dev") is not held back (newer: the release-tag block). DOWNGRADE=1 in the env file
+# allows it: install.sh with MU300_DOWNGRADE=yes, the Magisk installer after its own check (MU300_DOWNGRADE=yes).
+image_release() {  # image_release TARBALL: the release the image says it is (nothing when it does not say)
+    { tar -xzOf "$1" ./etc/mu300/image-version 2>/dev/null || tar -xzOf "$1" etc/mu300/image-version 2>/dev/null; } |
+        head -n1 || true
+}
+downgrade_check() {
+    [ "${UPDATE:-0}" = 1 ] || return 0
+    for _dg in $OSES; do
+        [ -d "$M/$_dg" ] || continue
+        _dh=$(head -n1 "$M/$_dg/etc/mu300/image-version" 2>/dev/null) || _dh=
+        _dn=$(image_release "$T/mu300-$_dg.tar.gz")
+        newer "$_dh" "$_dn" || continue
+        if [ "${DOWNGRADE:-0}" = 1 ]; then
+            say "$_dg: going back from $_dh to $_dn, an older release (MU300_DOWNGRADE=yes)"
+            continue
+        fi
+        say "the installed $_dg is $_dh, and this installation is $_dn, an older release. Going back to an older release is not done by itself: the older release may not carry over everything you added to the system."
+        say "nothing was changed. To install it all the same: MU300_DOWNGRADE=yes in front of the installer (a release before the first release with a four-field tag then keeps only settings, users and home directories), or wipe to start fresh"
+        return 1
+    done
+}
+# --- downgrade end
+downgrade_check || exit 1
 
 # --- bootchain begin
 # The Linux slot's uboot, sml, teecfg, trustos and vbmeta become the ones of Android's slot (android-bootchain.sh),
