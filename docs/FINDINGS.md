@@ -9047,3 +9047,32 @@ A station's figures on the U30 Air (one client): `signal 0 dBm`, `tx bitrate (un
 with this module and with the released one alike (the access point side reports what the firmware gives; not this
 change). Not run: a station whose link the F50 reports in client mode (no network it may join here), iperf.
 
+
+### 174. The dashboard showed IMEI and IMSI as null for hours: a partial identity read was cached for 6 h
+
+Seen on the U30 Air (2026-10-17): the dashboard's IMEI and IMSI were `--` for hours after a boot. The collector
+(`openwrt/luci-app-mu300/root/usr/libexec/unisoc-modem/cell`) keeps the module and SIM identity in a 6 h cache on flash
+(`/etc/unisoc-modem/sim.json`, `sim-slot1.json` for the U30 Air's second slot) and wrote it whenever **any** of IMEI,
+IMSI and ICCID had been read. On a boot round where the modem was not ready yet, `AT+CGSN` and `AT+CIMI` ran into their
+2 s timeout while `AT+CCID` answered, so `"imei":null,"imsi":null` was cached and served for the next 6 hours.
+
+**The fix.** Only a complete identity (IMEI, IMSI and ICCID all read) goes on flash. A partial read is shown for that
+round and kept in the runtime directory (`/var/run/unisoc-modem/sim.json.partial`) for 60 s, then asked again; it never
+replaces a complete cache (an expired complete one is shown meanwhile and stays). A cache without them that an earlier
+version wrote is read again on the next full round. No SIM, or a SIM still waiting for its PIN, is the same partial
+case: re-read once a minute on full rounds (six short commands), so a SIM that becomes ready shows within a minute
+instead of after 6 h. The answers are parsed strictly now: the value is a line of its own after an optional
+`+CGSN:`-like prefix, and an error line is none (with `tr -cd '0-9'`, `+CME ERROR: 10` was IMEI "10").
+
+**ICCIDs with letters.** `tr -cd '0-9' | cut -c1-20` dropped the A-F that some eSIM profiles and operators have in
+the ICCID. It is 18 to 22 hex nibbles now, upper case; the `F` that pads a 19-digit ICCID to 20 nibbles is dropped as
+before. The panel (`home.js` `paintIdent`) masks any string the same way (first 4, last 3), so it needed no change;
+a test covers a hex one.
+
+**Device test (U30 Air, OpenWrt, 2026-10-17)**, the changed `cell` copied over the released one; identifiers masked
+in every output. With an `MU300_AT` wrapper failing `AT+CGSN` and separate run/cache directories: round 1 showed
+`imei:null` with IMSI and ICCID, wrote no `sim.json`, wrote the partial; round 2 within the minute asked no `AT+CGSN`;
+with the partial aged 61 s and the wrapper passing, round 3 filled the IMEI, wrote a complete `sim.json` and removed
+the partial; with that cache aged 7 h and `AT+CGSN` failing again, the cache stayed byte for byte and the IMEI was
+still shown. The live path: `sim.json` removed, one normal full round wrote a complete one, and `ubus call mu300dash
+status` (what the dashboard reads) carried IMEI, IMSI and ICCID.
