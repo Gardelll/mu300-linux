@@ -97,6 +97,7 @@ Check 'fits openwrt'              (ChoiceThatFits 804MB 800MB 1600MB) 'Choose 2 
 Check 'fits one'                  (ChoiceThatFits 2000MB 800MB 1600MB) 'Choose 1 (Ubuntu) or 2 (OpenWrt) instead: one system fits here.'
 Check 'fits nothing'              (ChoiceThatFits 700MB 800MB 1600MB) ''
 Check 'systems default call site' ($site -match 'Ask \(T ''Choice''\) \(SystemsDefault \$SIZE ') $true
+LoadLanguage 'tr'   # (as the checks below have always run)
 foreach ($pair in @(@('', 'openwrt'), @('luci', 'openwrt-luci'))) {
     $OSES = @(ChooseOpenWrt @('openwrt') $pair[0] '')
     Check "owrt single [$($pair[1])] first"  $OSES[0] $pair[1]
