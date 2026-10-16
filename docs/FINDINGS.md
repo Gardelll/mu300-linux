@@ -8241,3 +8241,110 @@ three have the same logic in these places):
   time of publishing and was right.
 * The graphical installer and the installers' beta question are newer than v2026.10.27 (`tools/release_pick.py` is
   not in those tags); they go by the time of publishing too, now with the tag order on top.
+
+### 130. Docker in the images: Ubuntu's packages, OpenWrt ready to install, the data beside the systems
+
+**Status: current** (Ubuntu 24.04 on F50-B, kernel 7.2.10; plain OpenWrt on F50-C, kernels 6.18.56 and 5.4, in a region
+of 804 MiB; test releases v2026.10.16.97 and .98 built from the branch with v2026.10.16.1's kernels, never published).
+
+**What is in which image.**
+
+| system | Docker | image installed (4 KiB blocks) | tarball | Magisk zip (k7.2) |
+|---|---|---|---|---|
+| Ubuntu 24.04 | installed: `docker.io` 29.1.3, `containerd` 2.2.1, `runc` 1.3.4, `docker-compose-v2` 2.40.3 | 345 -> 608 MiB | 95 -> 175 MiB | 122 -> 206 MB |
+| Ubuntu 26.04 | installed: `docker.io` 29.1.3, `containerd` 2.2.2, `runc` 1.4.0, `docker-compose-v2` 2.40.3 | 384 -> 649 MiB | 107 -> 188 MiB | 134 -> 220 MB |
+| OpenWrt | ready: settings and firewall zone; `apk add dockerd docker docker-compose` (29.6.1, compose 5.1.4) | 58 MiB (251 with Docker in it) | 21 MiB (86) | 45 MB (113) |
+| OpenWrt with the panel | ready, as OpenWrt; `luci-app-dockerman` adds LuCI > Docker | 61 MiB (254 with Docker) | 23 MiB (87) | 46 MB (114) |
+
+Ubuntu's own packages, not docker-ce: they come from the archive the image already uses, `apt` updates them with
+everything else, and they are the versions Ubuntu supports (Docker 29 in both releases). containerd's stress tool, its
+command line (`ctr`) and the `docker trust` plugin are left out with dpkg `path-exclude` (55 MB that `docker` and
+`docker compose` do not use; upgrades do not bring them back). OpenWrt: the 25.12 feed's packages (`containerd-stress`
+and `ctr` removed in the image build when `MU300_DOCKER=1`).
+
+**Why OpenWrt has it ready and not installed.** With Docker in the image, plain OpenWrt's system on F50-C was 472 MiB
+(with the device's vendor files, 205 MiB) of the region's 775. The first install fits; the next update by zip does not:
+it unpacks the new system beside the old one before it carries the user's files over, and the zip of the same release
+stopped at `tar: No space left on device` (nothing was changed, as the installer says; it left `openwrt.new`, 300 MB,
+on the disk until the next run cleans it, and the disk was 98% full meanwhile). Without Docker the system is 263 MiB and
+the update fits. Docker installed with `apk` is a package of the device, which an update does not copy (it is installed
+again at the first boot), but on 800 MiB its 190 MB in the old system still leave too little room for the new one: the
+README says to remove the packages before such an update and add them after it (the data stays). `MU300_DOCKER=1`
+builds an OpenWrt image with Docker in it (and `luci-app-dockerman` on the panel system); one such image ran Docker on
+6.18 on F50-C.
+
+The same arithmetic for Ubuntu: 608 + 205 MiB per system, twice during a zip update, is about 1.63 GiB, more than the
+1.6 GiB region the installers allow for Ubuntu. Ubuntu keeps Docker installed (it is the system people install Docker on,
+and usually on far more room: F50-B has 32 GB); its minimum with room for an update should become 2.0 GiB (install.sh's
+`NEED_UBUNTU`, install.ps1, the Magisk installer's figures), or the update should link the new image's files that are
+byte for byte the old image's instead of unpacking them again. Neither is in this change.
+
+**Started when used, not at boot.** Ubuntu: `docker.socket` is enabled, `docker.service` and `containerd.service` are
+not; the first `docker` command started both in 1.8 s. dockerd and containerd took 115 + 50 MB RSS after a compose run
+(F50-B, 7.2), 85 + 44 MB on OpenWrt 6.18, 63 + 31 MB on 5.4: memory a dongle without containers keeps.
+`systemd-networkd-wait-online.service` is disabled in the image, so `docker.service`'s `Wants=network-online.target`
+does not wait. OpenWrt: the image build removes the enable link apk makes; an `apk add` on the device enables it (the
+package's post-install), which the README says.
+
+**The data lives beside the systems.** `data-root` is `/mnt/mu300-disk/docker/<system>` (ubuntu, openwrt,
+openwrt-luci): on the Linux partition next to `ubuntu/`, `openwrt/` and `extra/`, outside the directory a system boots
+from. An update unpacks the new system and carries the user's files of the old one into it (FINDINGS 85);
+`/var/lib/docker` inside the system would be carried too - copied in full when the old version is kept for a rollback
+(`mu300-update apply`), and its overlay2 layers are what fills a device. Outside, the carry never sees it: nothing is
+copied, nothing is left behind in `<os>.old`, and a rollback finds the same images and containers. Measured on F50-C:
+v2026.10.16.1 -> .97 (Docker in the image; images loaded, a compose project with `restart: unless-stopped`) -> .98
+(Docker not in the image) -> `apk add`: the images and the compose container were there and running, on 5.4 after 6.18;
+on F50-B .1 -> .98 by `mu300-update apply --from` the zip, then the rollback. A system without `/mnt/mu300-disk` (one at
+the root of the partition, from before the systems had directories) keeps the data inside itself and has it carried as
+before; `mu300-carry` keeps extended attributes and device nodes, so overlay2's whiteouts and opaque directories survive
+that too. The classic overlay2 store (`"features": {"containerd-snapshotter": false}`): on a fresh install Docker 29 uses
+containerd's image store, which keeps every image twice (the compressed blobs and the unpacked snapshots) and in
+containerd's own root.
+
+**The firewall: Docker's nftables backend.** `"firewall-backend": "nftables"` (Docker 29, experimental): Docker writes
+its own tables (`ip docker-bridges`, and `ip6 docker-bridges` on Ubuntu) and no iptables rules. With iptables Docker sets
+the iptables FORWARD policy to DROP when it turns forwarding on, which would stop the hotspot's forwarding on Ubuntu, and
+its rules need `xt_addrtype`, which the 5.4 kernel does not have (below). On Ubuntu `mu300_filter`'s forward policy is
+accept, so nothing else is needed; `"ip-forward": false` keeps Docker from refusing to start while the system forwards
+nothing (mobile-data and wifi-client turn forwarding on). On OpenWrt fw4's forward chain rejects what no zone lets
+through, and an accept in Docker's table does not end the packet's way through fw4's chain. So
+`/etc/uci-defaults/95-mu300-docker` adds, once (the marker `/etc/mu300/docker-zone`), the zone `docker`: devices
+`docker0`, `br-+` and `!br-lan` and subnet 172.16.0.0/12, which fw4 matches together (`iifname "br-*" iifname != "br-lan"
+ip saddr 172.16.0.0/12`), with Docker's `default-address-pools` set to that range in `/etc/docker/daemon.json`;
+forwardings docker -> wan and lan -> docker, none from wan. Measured: containers on the default bridge and on a compose
+network reach the internet (masqueraded by Docker), a LAN client (a network namespace on br-lan, and the Mac over USB)
+reaches a published port and still reaches the internet, and a container does not reach a LAN client by itself. The
+package's init script reads `/etc/docker/daemon.json` (`alt_config_file`), so an `apk add` on the device keeps these
+settings (its own `/etc/config/dockerd` is written as `.apk-new`). The zone has the names of the package's `uciadd`
+(network `docker`, bridge device `docker0`), made in advance: when `uciadd` had to add them at the first boot with
+dockerd enabled, its network reload took docker0 from the dockerd that had just made it (`adding interface ... to bridge
+docker0 failed: Device does not exist`, F50-C, 5.4); with them in place it changes nothing (network and firewall
+unchanged across that boot, and Docker working, measured).
+
+The feed's kmods for Docker add `/etc/modules.d` entries (br_netfilter, the legacy iptables tables, btrfs, raid6) that
+ubox would load at every boot of a mainline kernel that has them as modules; the image build removes the ones Docker's
+packages add, and `/etc/sysctl.d/13-mu300-docker.conf` turns bridge firewalling off again after the package's
+`12-br-netfilter-ip.conf` turned it on (with br_netfilter loaded, every frame between hotspot and USB clients would go
+through fw4; that happens after an `apk add` on the device).
+
+**Kernels (moby's `check-config.sh`).** Every "generally necessary" option is there in the three kernels (namespaces,
+cgroups v2 with cpu, cpuset, io, memory and pids, veth, bridge, overlayfs, nf_tables with NAT, masquerade, fib and ct,
+seccomp, keys). What is missing matters for the iptables backend, which the images do not use, or is optional:
+* 5.4 (`kernel/linux.config`): `NETFILTER_XT_MATCH_ADDRTYPE` (Docker's iptables rules need it: dockerd with the iptables
+  backend cannot start on 5.4), `BRIDGE_NETFILTER`, `IP6_NF_NAT`, `IP6_NF_TARGET_MASQUERADE`, `NETFILTER_XT_MATCH_IPVS`;
+  optional `CGROUP_HUGETLB`, `NET_CLS_CGROUP`, `CFS_BANDWIDTH` (`docker run --cpus`), `IP_VS*` (swarm), `IP_SCTP`.
+  Not changed here.
+* 6.18 and 7.2 (the v2026.10.16.1 builds of `upstream/mu300-mainline.config`): the legacy iptables tables
+  (`IP_NF_FILTER`, `IP_NF_NAT`, `IP_NF_MANGLE`, `IP_NF_RAW`, `IP_NF_TARGET_MASQUERADE`, `IP_NF_TARGET_REDIRECT` and the
+  IPv6 ones; the images' iptables is iptables-nft, which does not use them) and `NETFILTER_XT_NAT` (iptables-nft's
+  DNAT and SNAT: `docker run -p` with the iptables backend); optional `CGROUP_PERF`, `IP_SCTP`, `CRYPTO_GHASH`
+  (encrypted overlay networks, 7.2).
+* None of them: AppArmor or SELinux (Docker runs without a profile).
+
+**Found on the way: every OpenWrt device had the same TLS key.** The uhttpd package makes its key pair when apk installs
+it in the image build, and the published images carried `/etc/uhttpd.key` (v2026.10.16.1's plain OpenWrt: sha256
+ad78a3f7..., the same on F50-C as in the release tarball): LuCI over HTTPS used one private key on every device, and
+anyone who downloads the release has it. The image build removes the pair now (uhttpd makes its own at the first start,
+as it does whenever the pair is missing: F50-C got one), and the audit of `make-release.sh` refuses an image with
+`etc/uhttpd.key`. An update to such an image takes the old key away with the old image (the image's file, not the
+user's); a key the device made itself is the user's and is kept (the way back to v2026.10.16.1 kept F50-C's).

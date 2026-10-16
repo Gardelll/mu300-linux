@@ -115,6 +115,7 @@ LAN setting pins the address).
 * **A Wi-Fi hotspot** (5 GHz or 2.4 GHz) and **USB networking**: plug it into a computer and it shows up as a network adapter.
 * **SSH access** at `192.168.77.1` (U30 Air: `192.168.78.1`), plus a USB serial console.
 * **Bluetooth** and the **Mali GPU** (OpenCL; no screen output).
+* **Docker** on Ubuntu, ready to use (`docker run`, `docker compose`); on OpenWrt one `apk add` away, already set up.
 * **`mu300-toolkit`**, a menu like `raspi-config`: temperatures, CPU and RAM use, network speeds, performance
   profiles, stress tests, VPN and services.
 * **Android stays installed.** One command switches back.
@@ -740,6 +741,50 @@ mu300-update apply`). Module v1 (the engines inside the vpn extra) keeps both it
 system whose VPN is on with its kill switch and has lost the module fails closed: mobile data and the Wi-Fi client stay
 down until it is installed again (`mu300-extra install vpn`) or the VPN is turned off. A missing engine fails closed
 too, behind the kill switch, while the service fetches it again; mu300-toolkit says which one.
+
+### Docker
+
+**Ubuntu** (24.04 and 26.04) comes with Docker: Ubuntu's own `docker.io` (Docker 29), `containerd`, `runc` and the
+compose plugin (`docker-compose-v2`). The user `ubuntu` is in the `docker` group, so `docker` works without `sudo`:
+
+```sh
+docker run --rm hello-world             # the first docker command starts the engine (about two seconds)
+docker compose up -d                    # in a directory with a compose.yaml
+sudo systemctl enable docker            # start it at every boot (containers with a restart policy come back by themselves)
+sudo systemctl disable docker           # back to the default: started by its socket on first use
+```
+
+It is not started at boot: `docker.socket` starts it on the first `docker` command, because the engine and
+containerd take some 165 MB of RAM that a device without containers can keep. Membership of the `docker` group is as
+good as root (a container can mount `/`): give it only to accounts you trust - `sudo gpasswd -d ubuntu docker` takes
+it away, `docker` then needs `sudo`.
+
+**OpenWrt** (both systems) has Docker **ready, not installed**: its settings and its firewall zone are in the image,
+the programs (190 MB) are one command away. In the image they would be there twice while an update unpacks the new
+system next to the old one, and an update by zip or installer would no longer fit the smallest region OpenWrt is
+installed in (800 MiB).
+
+```sh
+apk update && apk add dockerd docker docker-compose        # control panel system: also luci-app-dockerman (LuCI > Docker)
+/etc/init.d/dockerd start               # now; "/etc/init.d/dockerd enable" starts it at every boot ("disable": not)
+docker run --rm hello-world
+```
+
+Packages added on the device are installed again after each update (it needs internet then). On an 800 MiB region an
+update needs that room for the new system: `apk del dockerd docker docker-compose` first, and `apk add` them again
+after it - your images and containers stay where they are.
+
+**Where Docker keeps its data:** not in the system, but beside it on the Linux partition:
+`/mnt/mu300-disk/docker/<system>` (`ubuntu`, `openwrt`, `openwrt-luci`; `docker info` says `Docker Root Dir`). An update
+and a rollback leave it alone - images, containers and volumes are neither copied nor lost - and each system has its own.
+The store is the classic `overlay2` one (no second, compressed copy of every image). Settings:
+`/etc/docker/daemon.json` (an update keeps your changes).
+
+**Networking:** Docker uses its nftables backend (no iptables rules, nothing changed in the firewall of the device).
+Containers reach the internet over mobile data or the Wi-Fi client; a port you publish (`-p 8080:80`) is reachable from
+the hotspot and USB clients, and **not** from the mobile network. On OpenWrt every Docker network is in the firewall
+zone `docker` (172.16.0.0/12, the range Docker is given there); to publish to the mobile network, add a forwarding
+`wan -> docker`. Docker works on all three kernels (5.4, 6.18, 7.2).
 
 ### Languages
 

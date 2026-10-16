@@ -98,6 +98,7 @@
 <li><a href="#battery">Battery, power and LEDs</a></li>
 <li><a href="#u30air">U30 Air extras</a></li>
 <li><a href="#panels">Web panels, a terminal in the browser, adb</a></li>
+<li><a href="#docker">Docker</a></li>
 <li><a href="#more">Bluetooth, GPU, KVM, languages</a></li>
 <li><a href="#limits">What does not work</a></li>
 </ol>
@@ -331,6 +332,22 @@ and only a computer whose key you authorised gets in; anyone with an authorised 
 your own computers. The installer asks whether to turn it on for the computer it runs on.</p>
 <pre><code>sudo mu300-usb adb key adbkey.pub       <span class="c"># the computer's ~/.android/adbkey.pub, copied to the device</span>
 sudo mu300-usb adb on                   <span class="c"># and off: sudo mu300-usb adb off</span></code></pre>
+</section>
+
+<section id="docker">
+<h2>Docker</h2>
+<p><strong>Ubuntu</strong> (24.04 and 26.04) comes with Docker 29 and compose (Ubuntu's <code>docker.io</code> and
+<code>docker-compose-v2</code>); the user <code>ubuntu</code> is in the <code>docker</code> group. The engine starts on
+the first <code>docker</code> command, not at boot (it takes some 165 MB of RAM); <code>sudo systemctl enable docker</code>
+starts it at every boot. The <code>docker</code> group is as good as root: keep only trusted accounts in it.</p>
+<p><strong>OpenWrt</strong> has Docker ready, not installed: <code>apk add dockerd docker docker-compose</code> (and
+<code>luci-app-dockerman</code> on the control panel system), then <code>/etc/init.d/dockerd start</code>. The 190 MB
+would not leave room for an update in the smallest region OpenWrt is installed in.</p>
+<p>Images and containers live beside the systems, in <code>/mnt/mu300-disk/docker/&lt;system&gt;</code>: updates and
+rollbacks neither copy nor lose them. Docker uses its nftables backend; containers reach the internet, published ports
+are reachable from the hotspot and USB clients, not from the mobile network. Works on all three kernels.</p>
+<pre><code>docker run --rm hello-world
+docker compose up -d</code></pre>
 </section>
 
 <section id="more">
