@@ -379,7 +379,7 @@ class Extras(ShellTest):
         self.assertLess(SRC.index('\nextra_vpn_precheck $M\n'), SRC.index('mv $M/$os.new $M/$os'))
         self.assertIn('\nextra_from_push $M\n', SRC)
         # the previous system is looked at before it is removed
-        self.assertLess(SRC.index('extra_keep_vpn $M $M/$os'), SRC.index('stage_run "replace $os" 900 rm -rf $M/$os\n'))
+        self.assertLess(SRC.index('extra_keep_vpn $M $M/$os'), SRC.index('mv $M/$os $M/$os.broken; fi\n'))
 
 def make_tar(path, files):
     with tarfile.open(path, 'w:gz') as t:
@@ -388,6 +388,106 @@ def make_tar(path, files):
             ti = tarfile.TarInfo(name)
             ti.size = len(data)
             t.addfile(ti, io.BytesIO(data))
+
+
+class Downgrade(ShellTest):
+    """The downgrade block: an update never puts an older release over a system by itself - the computer's installers
+    reach this script without the Magisk installer's own check (install.sh, install.ps1). Run on a fake T and M."""
+
+    def setUp(self):
+        super().setUp()
+        self.T = self.tmp / 'T'
+        self.M = self.T / 'mu300root'
+        self.M.mkdir(parents=True)
+        tags = re.search(r'# --- release-tag begin\n(.*?)# --- release-tag end', SRC, re.S)
+        block = re.search(r'# --- downgrade begin\n(.*?)# --- downgrade end', SRC, re.S)
+        self.assertIsNotNone(tags, 'android-install.sh has no release-tag block')
+        self.assertIsNotNone(block, 'android-install.sh has no downgrade block')
+        self.code = tags.group(1) + block.group(1)
+
+    def setup_systems(self, installed, image, os_='openwrt', member='./etc/mu300/image-version'):
+        shutil.rmtree(self.M, ignore_errors=True)
+        self.M.mkdir(parents=True)
+        if installed is not None:
+            (self.M / os_ / 'etc' / 'mu300').mkdir(parents=True)
+            (self.M / os_ / 'etc' / 'mu300' / 'image-version').write_text(installed + '\n')
+        files = {'./etc/shadow': 'root:*:19000:0:99999:7:::\n'}
+        if image is not None:
+            files[member] = image + '\n'
+        make_tar(self.T / f'mu300-{os_}.tar.gz', files)
+
+    def check(self, shell, **env):
+        e = dict(OSES='openwrt', UPDATE='1')
+        e.update(env)
+        pre = f'say() {{ echo "[device] $*"; }}\nT="{self.T}"; M="{self.M}"\n'
+        r = self.sh(shell, pre + self.code + '\ndowngrade_check; echo "rc=$?"', **e)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r.stdout
+
+    def test_an_older_release_is_refused(self):
+        # the tags' order, not their text: every vYYYY.MM.DD.N is newer than every vYYYY.MM.DD, N is a number
+        for installed, image in (('v2026.10.16.91', 'v2026.10.16.90'), ('v2026.10.16.1', 'v2026.10.27'),
+                                 ('v2026.10.16.10', 'v2026.10.16.2'), ('v2026.10.28', 'v2026.10.27')):
+            self.setup_systems(installed, image)
+            for shell in self.each_shell():
+                out = self.check(shell)
+                self.assertIn('rc=1\n', out, (installed, image))
+                self.assertIn(f'the installed openwrt is {installed}, and this installation is {image}, an older release',
+                              out)
+                self.assertIn('MU300_DOWNGRADE=yes', out)
+
+    def test_allowed_with_downgrade(self):
+        self.setup_systems('v2026.10.16.91', 'v2026.10.16.90')
+        for shell in self.each_shell():
+            out = self.check(shell, DOWNGRADE='1')
+            self.assertIn('rc=0\n', out)
+            self.assertIn('openwrt: going back from v2026.10.16.91 to v2026.10.16.90, an older release', out)
+
+    def test_what_is_not_held_back(self):
+        # a newer or the same release, the member named without ./, a system or an image that does not say which
+        # release it is (a build of the checkout), no system of that kind yet, and an installation that is no update
+        for installed, image, env, member in (
+                ('v2026.10.16.90', 'v2026.10.16.91', {}, './etc/mu300/image-version'),
+                ('v2026.10.27', 'v2026.10.16.1', {}, './etc/mu300/image-version'),
+                ('v2026.10.16.90', 'v2026.10.16.90', {}, './etc/mu300/image-version'),
+                ('v2026.10.16.90', 'v2026.10.16.91', {}, 'etc/mu300/image-version'),
+                ('dev', 'v2026.10.16.90', {}, './etc/mu300/image-version'),
+                ('v2026.10.16.91', 'dev', {}, './etc/mu300/image-version'),
+                ('v2026.10.16.91', None, {}, './etc/mu300/image-version'),
+                (None, 'v2026.10.16.90', {}, './etc/mu300/image-version'),
+                ('v2026.10.16.91', 'v2026.10.16.90', {'UPDATE': '0'}, './etc/mu300/image-version')):
+            self.setup_systems(installed, image, member=member)
+            for shell in self.each_shell():
+                out = self.check(shell, **env)
+                self.assertIn('rc=0\n', out, (installed, image, env))
+                self.assertNotIn('older release', out)
+        # with the member named without ./, an older image is still found
+        self.setup_systems('v2026.10.16.91', 'v2026.10.16.90', member='etc/mu300/image-version')
+        for shell in self.each_shell():
+            self.assertIn('rc=1\n', self.check(shell))
+
+    def test_every_system_of_the_installation(self):
+        self.setup_systems('v2026.10.16.91', 'v2026.10.16.90', os_='ubuntu')
+        (self.M / 'openwrt').mkdir()
+        make_tar(self.T / 'mu300-openwrt.tar.gz', {'./etc/mu300/image-version': 'v2026.10.16.91\n'})
+        for shell in self.each_shell():
+            out = self.check(shell, OSES='openwrt ubuntu')
+            self.assertIn('rc=1\n', out)
+            self.assertIn('the installed ubuntu is v2026.10.16.91', out)
+
+    def test_wiring(self):
+        # checked once the filesystem is mounted and before anything is written to it or to the boot chain; the
+        # computer's installers pass MU300_DOWNGRADE=yes on as DOWNGRADE=1, the Magisk installer its own decision
+        call = SRC.index('\ndowngrade_check || exit 1\n')
+        self.assertLess(SRC.index("trap 'sync; sh $T/android-mount-mu300root.sh -u $M"), call)
+        self.assertLess(call, SRC.index('# --- bootchain begin'))
+        self.assertLess(call, SRC.index('# --- legacy-wipe begin'))
+        self.assertLess(call, SRC.index('# --- install-os begin'))
+        self.assertIn('[ "${MU300_DOWNGRADE:-}" != yes ] || echo DOWNGRADE=1 >> "$env"', (TOP / 'install.sh').read_text())
+        self.assertIn("if ($env:MU300_DOWNGRADE -eq 'yes') { $envText += \"DOWNGRADE=1`n\" }",
+                      (TOP / 'install.ps1').read_text())
+        self.assertIn('echo "DOWNGRADE=${DOWNGRADE:-0}"',
+                      (TOP / 'android' / 'magisk' / 'installer' / 'mu300-install.sh').read_text())
 
 
 class Systems(ShellTest):
@@ -800,7 +900,9 @@ class Stages(ShellTest):
         self.assertIn('stage_run "unpack $os" 3600 tar -xzpf $tarball -C $M/$os.new', SRC)
         self.assertIn('stage_run "unpack $os vendor" 900 tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new', SRC)
         self.assertIn('stage_run "clean $os" 900 rm -rf $M/$os.new\n', SRC)
-        self.assertIn('    stage_run "replace $os" 900 rm -rf $M/$os\n    mv $M/$os.new $M/$os\n', SRC)
+        # the old system goes aside and is removed, bounded, once the new one is in place
+        self.assertIn('    if [ -d $M/$os ]; then mv $M/$os $M/$os.broken; fi\n    mv $M/$os.new $M/$os\n'
+                      '    stage_run "replace $os" 900 rm -rf $M/$os.broken\n', SRC)
         self.assertIn('[ "${SD_MODE:-0}" != 1 ] || stage_run flush 1800 sync\nstall_clear\n', SRC)
         self.assertLess(SRC.index('stage_run flush 1800 sync'), SRC.index('echo MU300-INSTALL-OK'))
         self.assertIn('trap sd_exit EXIT', SRC)

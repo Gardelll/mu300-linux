@@ -110,8 +110,11 @@ sudo reboot</code></pre>
 <li>Every file is downloaded and checked first; nothing changes before all of them are there.</li>
 <li>The new system is unpacked <strong>beside</strong> the old one and swapped in only at the end, so an interrupted
 download cannot leave a half-updated system.</li>
-<li>Your settings, users, <code>/usr/local</code>, the Wi-Fi and modem files from your device, and the installed
-extras are carried over. The VPN module is brought to its latest release, its core and its engines as one set.</li>
+<li><strong>Everything you added to the system or changed in it is carried over</strong>: files in any directory
+(<code>/etc/wireguard</code>, a service you wrote, crontabs, <code>/var/lib/docker</code>, <code>/opt</code>, home
+directories), the settings you changed, accounts and passwords, services as you turned them on or off, the Wi-Fi and
+modem files from your device and the installed extras. Each release lists its own files, so the update can tell
+them from yours. The VPN module is brought to its latest release, its core and its engines as one set.</li>
 <li>The kernel and boot image are updated too. A new kernel gets its first starts on the usual attempts, so one that
 does not start sends the device back to Android on its own.</li>
 </ol>
@@ -133,8 +136,15 @@ sudo mu300-update apply</code></pre>
 <pre><code>wget -O /opt/mu300/bin/mu300-update https://github.com/dikeckaan/mu300-linux/releases/latest/download/mu300-update
 mu300-update apply</code></pre>
 </div>
+<p>Where your version of a file and the release's meet, your settings win and the release's programs win; whatever
+had to step aside is saved under <code>/etc/mu300/update-kept/</code> and listed in <code>/etc/mu300/update-report</code>
+(<code>sudo mu300-update report</code>; in the control panel under System &gt; Update). An update never opens what you
+closed: a service you turned off stays off. All of this from the first release with a four-field tag (vYYYY.MM.DD.N) on; up to v2026.10.27 an update kept only a
+list of places (settings, users, home directories, <code>/usr/local</code>). The details are on the wiki's
+<a href="https://github.com/dikeckaan/mu300-linux/wiki/Updating#what-an-update-keeps">Updating</a> page.</p>
 <p>A computer works too: run the installer again and answer <code>update</code>. It reinstalls the systems, writes a
-fresh boot image and keeps your settings and data.</p>
+fresh boot image and keeps everything of yours, as <code>apply</code> does. So does a Magisk zip of the new release
+installed over what is there.</p>
 <p><strong>Packages you installed yourself</strong> (<code>apk add</code>, <code>apt install</code>) are not in the
 release's image. The update lists them, keeps their OpenWrt settings aside so they cannot act without their program,
 and the new system installs them again at its first boot once it is online. <code>mu300-user-packages status</code>
@@ -149,7 +159,8 @@ where it is.</p>
 <section id="rollback">
 <h2>Rolling back</h2>
 <p>The previous version is kept as <code>&lt;os&gt;.old</code> until you clean it up, and the previous boot image is
-kept too.</p>
+kept too. Your files are then on the disk twice; when there is no room for that, <code>apply</code> says so and changes
+nothing, and <code>sudo mu300-update apply --no-rollback</code> updates without keeping the previous version.</p>
 <pre><code>sudo mu300-update rollback        <span class="c"># back to the previous system</span>
 sudo mu300-update rollback-boot   <span class="c"># back to the previous kernel and boot image</span>
 sudo mu300-update clean           <span class="c"># delete the kept previous version</span></code></pre>

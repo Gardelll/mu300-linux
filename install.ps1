@@ -1659,8 +1659,8 @@ if ($existing -eq 'no') {
 } else {
     Write-Host ''
     Write-Host ('  ' + (T 'A MU300 Linux installation is already on this device.'))
-    Write-Host ('    ' + (T 'update  reinstall the systems and keep settings and data (/etc/mu300, users and home directories,'))
-    Write-Host ('    ' + (T '        SSH host keys, OpenWrt UCI config; the hotspot settings are kept too)'))
+    Write-Host ('    ' + (T 'update  install the new release over the systems and keep everything you added or changed in them'))
+    Write-Host ('    ' + (T '        (files, settings, accounts; packages you installed come back at the first boot)'))
     Write-Host ('    ' + (T 'wipe    erase the Linux filesystem and install from scratch'))
     switch (Ask (T 'update or wipe') 'update' 'MU300_ANS_EXISTING') {
         'update' { $UPDATE = 1 }
@@ -1859,7 +1859,7 @@ Write-Host ('  ' + (T 'adb to Linux:   {1}' $(if ($ADB -eq 1) { T 'on, only for 
 Write-Host ('  ' + (T 'default boot:   {1}' $(if ($DEFAULT_LINUX -eq 1) { T 'Linux (Android after {1} failed boots in a row)' $BOOT_ATTEMPTS } else { T 'Android, Linux on demand' })))
 $fsText = if ($FORMAT -eq 0) { T 'keep existing' } elseif ($SD_MODE -eq 1) { T 'CREATE new ext4 (erases the SD card)' } else { T 'CREATE new ext4 (erases the Linux region)' }
 Write-Host ('  ' + (T 'filesystem:     {1}' $fsText))
-if ($UPDATE -eq 1) { Write-Host ('  ' + (T 'update:         settings and user data of the chosen systems are kept, everything else is replaced')) }
+if ($UPDATE -eq 1) { Write-Host ('  ' + (T 'update:         everything you added to the chosen systems or changed in them is kept (/etc/mu300/update-report)')) }
 if ($SD_MODE -eq 1) {
     Write-Host ('  ' + (T 'writes:         SD card {1}, boot_{2}, 32 bytes of misc (the eMMC region, boot_{3}, GPT and userdata are not touched)' $SD_DEV $LINUX_SLOT $ANDROID_SLOT))
 } else {
@@ -1883,11 +1883,14 @@ if ($EXTRA_VPN) { & adb push $EXTRA_VPN "$T/mu300-extra-vpn.tar.gz" | Out-Null }
 # the web panel goes as the panel extra; Ubuntu's first boot installs Cockpit from it in the background (mu300-extra link)
 if ($EXTRA_PANEL) { & adb push $EXTRA_PANEL "$T/mu300-extra-panel.tar.gz" | Out-Null }
 $envFile = "$Work\mu300-install.env"
-WriteUnix $envFile (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_SIZE; FORMAT = $FORMAT; OSES = $OSES
+$envText = (InstallEnvText @{ OFF = $OFF; SIZE = $SIZE; INT_SIZE = $INT_SIZE; FORMAT = $FORMAT; OSES = $OSES
     WIPE_LEGACY = $WIPE_LEGACY; UPDATE = $UPDATE; BOOT_OS = $BOOT_OS; DEFAULT_LINUX = $DEFAULT_LINUX
     BOOT_ATTEMPTS = $BOOT_ATTEMPTS; IMPORT_HOTSPOT = $IMPORT_HOTSPOT; KERNEL = $KERNEL; SD_MODE = $SD_MODE
     SD_DEV = $SD_DEV; INTERNAL_EXISTS = $INTERNAL_EXISTS; ADB = $ADB; ADB_KEY = $ADB_KEY
     SYNC_BOOTCHAIN = $SYNC_BOOTCHAIN; PWHASH = $PWHASH })
+# an update to an older release: the device refuses it unless told (tools/android-install.sh, the downgrade block)
+if ($env:MU300_DOWNGRADE -eq 'yes') { $envText += "DOWNGRADE=1`n" }
+WriteUnix $envFile $envText
 & adb push $envFile "$T/mu300-install.env" | Out-Null
 Remove-Item $envFile
 Step 'device' 80

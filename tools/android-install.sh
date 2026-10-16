@@ -9,7 +9,11 @@
 #   OSES="ubuntu openwrt openwrt-luci"  systems to (re)install from $T/mu300-<os>.tar.gz
 #                      (plus mu300-vendor-<os>.tar.gz with the device's own vendor files for prebuilt images)
 #   WIPE_LEGACY=0|1    remove a first-generation Ubuntu that lives directly in the filesystem root
-#   UPDATE=0|1         keep the settings and user data of the systems being reinstalled
+#   UPDATE=0|1         keep everything of the user's in the systems being reinstalled (the carry block of the new
+#                      image's mu300-update; MU300_UPDATE_KEEP=list in the environment: only the list of places an
+#                      update kept before the first release with a four-field tag)
+#   DOWNGRADE=0|1      with UPDATE=1: 1 lets an image of an older release replace a system (see the downgrade block);
+#                      not set or 0: that is refused before anything is written
 #   BOOT_OS            system started by the initramfs
 #   DEFAULT_LINUX=0|1  keep booting Linux (otherwise every Linux boot is one-shot and returns to Android)
 #   BOOT_ATTEMPTS=1-6  with DEFAULT_LINUX=1: failed boots in a row before Android (.mu300/boot-attempts)
@@ -300,6 +304,36 @@ MU300_OFF=$OFF MU300_SIZE=$SIZE sh $T/android-mount-mu300root.sh $M
 trap 'sync; sh $T/android-mount-mu300root.sh -u $M >/dev/null 2>&1; true' EXIT
 fi
 
+# --- downgrade begin
+# Never back to an older release by itself, as mu300-update and the Magisk installer: the new image's updater does
+# the carrying over, and an older one may not carry everything of the user's (one from before the first release with
+# a four-field tag keeps only a list of places). Checked before anything is written. The release of the new image is
+# its etc/mu300/image-version, read from the tarball; a system or an image that does not say which release it is
+# (a build of the checkout: "dev") is not held back (newer: the release-tag block). DOWNGRADE=1 in the env file
+# allows it: install.sh with MU300_DOWNGRADE=yes, the Magisk installer after its own check (MU300_DOWNGRADE=yes).
+image_release() {  # image_release TARBALL: the release the image says it is (nothing when it does not say)
+    { tar -xzOf "$1" ./etc/mu300/image-version 2>/dev/null || tar -xzOf "$1" etc/mu300/image-version 2>/dev/null; } |
+        head -n1 || true
+}
+downgrade_check() {
+    [ "${UPDATE:-0}" = 1 ] || return 0
+    for _dg in $OSES; do
+        [ -d "$M/$_dg" ] || continue
+        _dh=$(head -n1 "$M/$_dg/etc/mu300/image-version" 2>/dev/null) || _dh=
+        _dn=$(image_release "$T/mu300-$_dg.tar.gz")
+        newer "$_dh" "$_dn" || continue
+        if [ "${DOWNGRADE:-0}" = 1 ]; then
+            say "$_dg: going back from $_dh to $_dn, an older release (MU300_DOWNGRADE=yes)"
+            continue
+        fi
+        say "the installed $_dg is $_dh, and this installation is $_dn, an older release. Going back to an older release is not done by itself: the older release may not carry over everything you added to the system."
+        say "nothing was changed. To install it all the same: MU300_DOWNGRADE=yes in front of the installer (a release before the first release with a four-field tag then keeps only settings, users and home directories), or wipe to start fresh"
+        return 1
+    done
+}
+# --- downgrade end
+downgrade_check || exit 1
+
 # --- bootchain begin
 # The Linux slot's uboot, sml, teecfg, trustos and vbmeta become the ones of Android's slot (android-bootchain.sh),
 # before anything else is installed: a failure stops here, and the installers then write no boot image. The images
@@ -466,12 +500,12 @@ upk_pending() {
         awk '$1 == "x" { d[$2] = 1; next } NF > 1 && !($2 in d) { print $2 }'
 }
 # What belongs to the new image, not to the device, in the directories an update keeps: its version and package
-# lists in etc/mu300 (an update carried the old ones over: every update then reported the version it replaced), and
+# lists and its manifest in etc/mu300 (the old ones, carried over, made every update report the version it replaced), and
 # the names of its own files in etc/config (never set aside). image_own_save NEW before the settings are copied,
 # image_own_restore NEW after; upk_record removes what they keep in NEW/.mu300-image.
 image_own_save() {
     rm -rf "$1/.mu300-image"; mkdir -p "$1/.mu300-image" || return 1
-    for _uf in image-version image-packages packages.txt; do
+    for _uf in image-version image-packages packages.txt image-manifest.gz; do
         [ ! -f "$1/etc/mu300/$_uf" ] || cp "$1/etc/mu300/$_uf" "$1/.mu300-image/$_uf" || return 1
     done
     for _uf in "$1"/etc/config/*; do [ ! -e "$_uf" ] || echo "${_uf##*/}"; done > "$1/.mu300-image/config"
@@ -479,7 +513,7 @@ image_own_save() {
 image_own_restore() {
     [ -d "$1/.mu300-image" ] || return 0
     mkdir -p "$1/etc/mu300" || return 1
-    for _uf in image-version image-packages packages.txt; do
+    for _uf in image-version image-packages packages.txt image-manifest.gz; do
         if [ -f "$1/.mu300-image/$_uf" ]; then cp "$1/.mu300-image/$_uf" "$1/etc/mu300/$_uf" || return 1
         # a list of the old image would describe the wrong one (the version stays: "unknown" says less)
         elif [ "$_uf" != image-version ]; then rm -f "$1/etc/mu300/$_uf"; fi
@@ -696,6 +730,12 @@ for os in $OSES; do
     tarball=$T/mu300-$os.tar.gz
     [ -f $tarball ] || { say "missing $tarball"; exit 1; }
     say "installing $os"
+    # an earlier run that died between moving the old system aside and putting the new one in place: the old one
+    # is the installed system again (its files may be the only names of the user's data)
+    if [ ! -d $M/$os ] && [ -d $M/$os.broken ]; then
+        mv $M/$os.broken $M/$os
+        say "$os: an earlier installation was cut off; the system it was replacing is back in place"
+    fi
     # the writes to the card run bounded (the stage block); on the eMMC as they are
     stage_run "clean $os" 900 rm -rf $M/$os.new
     mkdir $M/$os.new
@@ -707,73 +747,113 @@ for os in $OSES; do
         stage_run "unpack $os vendor" 900 tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new
         rm -f $T/mu300-vendor-$os.tar.gz
     fi
-    # update: carry the settings and user data of the previous installation over to the new system
+    # update: everything of the user's in the previous installation goes into the new system. The new image brings
+    # what does it (mu300-update's carry block, mu300-carry, a static busybox: docs/FINDINGS.md 85) and it is run from
+    # there, by that busybox - one implementation for mu300-update apply, install.sh and the Magisk zip, with nothing
+    # of it copied here and none of Android's own tools in it (toybox's cp breaks hard links and makes sparse files
+    # dense). By link: the old system is not kept on this path, so its files become the new system's without a copy,
+    # which needs no room. MU300_UPDATE_KEEP=list (environment), or an image without those parts: the update as it
+    # was, keeping the list of places below.
     if [ "${UPDATE:-0}" = 1 ] && [ -d $M/$os ]; then
-        # the new image's version and package lists, and the names of its own etc/config files (upk_record)
-        image_own_save "$M/$os.new"
-        case $os in
-            ubuntu) keep="etc/mu300 etc/ssh etc/hostname etc/localtime etc/timezone etc/fstab home root srv usr/local var/lib/bluetooth" ;;
-            openwrt|openwrt-*) keep="etc/config etc/mu300 etc/unisoc-modem etc/dropbear etc/rc.local etc/crontabs root" ;;
-        esac
-        kept=
-        for k in $keep; do
-            [ -e "$M/$os/$k" ] || continue
-            mkdir -p "$M/$os.new/$(dirname $k)"
-            rm -rf "$M/$os.new/$k.image"
-            [ "$k" = etc/config ] && [ -d "$M/$os.new/$k" ] && mv "$M/$os.new/$k" "$M/$os.new/$k.image"
-            rm -rf "$M/$os.new/$k"
-            cp -a "$M/$os/$k" "$M/$os.new/$k" && kept="$kept $k"
-            # OpenWrt: the old settings, plus the config files of the image's packages the old system did not have
-            # (as mu300-update does; the old etc/config alone dropped e.g. /etc/config/sqm)
-            if [ -d "$M/$os.new/$k.image" ]; then
-                for f in "$M/$os.new/$k.image"/* "$M/$os.new/$k.image"/.[!.]*; do
-                    [ -e "$f" ] || [ -L "$f" ] || continue
-                    [ -e "$M/$os.new/$k/${f##*/}" ] || [ -L "$M/$os.new/$k/${f##*/}" ] || cp -a "$f" "$M/$os.new/$k/"
-                done
-                rm -rf "$M/$os.new/$k.image"
-                # the stray files of v2026.10.18 (the old system's, or that image's own) do not stay
-                stale_config_clean "$M/$os.new"
-            fi
+        carried=0
+        cbb=
+        for b in $M/$os.new/usr/bin/busybox $M/$os.new/opt/mu300/bin/busybox; do
+            if [ -z "$cbb" ] && [ -f $b ] && [ ! -L $b ] && [ -x $b ]; then cbb=$b; fi
         done
-        # services the user enabled or disabled themselves: copy the extra symlinks over, but only when the unit
-        # they point at exists in the new system (stale units from an older release must not come back)
+        if [ "${MU300_UPDATE_KEEP:-all}" != list ] && [ -n "$cbb" ] && [ -x $M/$os.new/opt/mu300/bin/mu300-carry ] &&
+            grep -q '^# --- carry begin' $M/$os.new/opt/mu300/bin/mu300-update 2>/dev/null && $cbb true 2>/dev/null; then
+            say "carrying everything of yours in the previous $os over"
+            crc=0
+            rm -f $M/$os.new/.mu300-carried
+            # its output names the user's files: kept on the Linux filesystem, which is root's, for the moment it takes
+            # to pass it on - never in $T (/data/local/tmp belongs to the shell user, who could plant a link there)
+            clog=$M/$os.new.carry-log
+            rm -rf $clog
+            ( umask 077; MU300_LIB='' $cbb sh $M/$os.new/opt/mu300/bin/mu300-update carry $M/$os $M/$os.new $os link > $clog 2>&1 ) || crc=$?
+            while IFS= read -r l; do say "$l"; done < $clog
+            rm -f $clog
+            # done is what the block says at its very end, with this file: a run without it did not do the work
+            if [ $crc = 0 ] && [ ! -e $M/$os.new/.mu300-carried ]; then crc=1; fi
+            rm -f $M/$os.new/.mu300-carried
+            if [ $crc != 0 ]; then
+                rm -rf $M/$os.new
+                say "$os: carrying your files over failed; $os was not replaced, and nothing of it was changed"
+                exit 1
+            fi
+            carried=1
+        elif [ "${MU300_UPDATE_KEEP:-all}" != list ]; then
+            say "this image does not bring what carries everything over (mu300-carry): keeping the settings an update always kept"
+        fi
         extra=
-        case $os in
-            ubuntu)
-                for w in $M/$os/etc/systemd/system/*.wants; do
-                    [ -d "$w" ] || continue
-                    t=${w##*/}
-                    for l in "$w"/*; do
-                        # -L, not -e: the links point at absolute paths inside the Linux root, so from Android
-                        # they all look broken
+        if [ $carried = 0 ]; then
+            # the new image's version and package lists, and the names of its own etc/config files (upk_record)
+            image_own_save "$M/$os.new"
+            case $os in
+                ubuntu) keep="etc/mu300 etc/ssh etc/hostname etc/localtime etc/timezone etc/fstab home root srv usr/local var/lib/bluetooth" ;;
+                openwrt|openwrt-*) keep="etc/config etc/mu300 etc/unisoc-modem etc/dropbear etc/rc.local etc/crontabs root" ;;
+            esac
+            kept=
+            for k in $keep; do
+                [ -e "$M/$os/$k" ] || continue
+                mkdir -p "$M/$os.new/$(dirname $k)"
+                rm -rf "$M/$os.new/$k.image"
+                [ "$k" = etc/config ] && [ -d "$M/$os.new/$k" ] && mv "$M/$os.new/$k" "$M/$os.new/$k.image"
+                rm -rf "$M/$os.new/$k"
+                cp -a "$M/$os/$k" "$M/$os.new/$k" && kept="$kept $k"
+                # OpenWrt: the old settings, plus the config files of the image's packages the old system did not have
+                # (as mu300-update does; the old etc/config alone dropped e.g. /etc/config/sqm)
+                if [ -d "$M/$os.new/$k.image" ]; then
+                    for f in "$M/$os.new/$k.image"/* "$M/$os.new/$k.image"/.[!.]*; do
+                        [ -e "$f" ] || [ -L "$f" ] || continue
+                        [ -e "$M/$os.new/$k/${f##*/}" ] || [ -L "$M/$os.new/$k/${f##*/}" ] || cp -a "$f" "$M/$os.new/$k/"
+                    done
+                    rm -rf "$M/$os.new/$k.image"
+                    # the stray files of v2026.10.18 (the old system's, or that image's own) do not stay
+                    stale_config_clean "$M/$os.new"
+                fi
+            done
+            # services the user enabled or disabled themselves: copy the extra symlinks over, but only when the unit
+            # they point at exists in the new system (stale units from an older release must not come back)
+            case $os in
+                ubuntu)
+                    for w in $M/$os/etc/systemd/system/*.wants; do
+                        [ -d "$w" ] || continue
+                        t=${w##*/}
+                        for l in "$w"/*; do
+                            # -L, not -e: the links point at absolute paths inside the Linux root, so from Android
+                            # they all look broken
+                            [ -L "$l" ] || [ -e "$l" ] || continue
+                            u=${l##*/}
+                            if [ -L "$M/$os.new/etc/systemd/system/$t/$u" ]; then continue; fi
+                            [ -e "$M/$os.new/etc/systemd/system/$u" ] || [ -e "$M/$os.new/usr/lib/systemd/system/$u" ] || continue
+                            mkdir -p "$M/$os.new/etc/systemd/system/$t"
+                            cp -a "$l" "$M/$os.new/etc/systemd/system/$t/$u" && extra="$extra $u"
+                        done
+                    done ;;
+                openwrt|openwrt-*)
+                    for l in $M/$os/etc/rc.d/*; do
                         [ -L "$l" ] || [ -e "$l" ] || continue
                         u=${l##*/}
-                        if [ -L "$M/$os.new/etc/systemd/system/$t/$u" ]; then continue; fi
-                        [ -e "$M/$os.new/etc/systemd/system/$u" ] || [ -e "$M/$os.new/usr/lib/systemd/system/$u" ] || continue
-                        mkdir -p "$M/$os.new/etc/systemd/system/$t"
-                        cp -a "$l" "$M/$os.new/etc/systemd/system/$t/$u" && extra="$extra $u"
-                    done
-                done ;;
-            openwrt|openwrt-*)
-                for l in $M/$os/etc/rc.d/*; do
-                    [ -L "$l" ] || [ -e "$l" ] || continue
-                    u=${l##*/}
-                    if [ -L "$M/$os.new/etc/rc.d/$u" ]; then continue; fi
-                    [ -x "$M/$os.new/etc/init.d/${u#S??}" ] || [ -x "$M/$os.new/etc/init.d/${u#K??}" ] || continue
-                    cp -a "$l" "$M/$os.new/etc/rc.d/$u" && extra="$extra $u"
-                done ;;
-        esac
-        say "kept from the previous $os:$kept"
-        image_own_restore "$M/$os.new"
-        # the packages installed on the device: written down, their settings set aside, put back at the first boot
-        # (mu300-user-packages), as mu300-update apply does
-        say "packages installed on the device in the previous $os:"
-        upk=$(upk_record "$M/$os" "$M/$os.new" "$os") ||
-            { rm -rf $M/$os.new; say "$upk"; say "$os: could not write down the packages installed on the device; $os was not replaced"; exit 1; }
-        printf '%s\n' "$upk" | while IFS= read -r l; do say "$l"; done
-        rm -rf "$M/$os.new/.mu300-image"
+                        if [ -L "$M/$os.new/etc/rc.d/$u" ]; then continue; fi
+                        [ -x "$M/$os.new/etc/init.d/${u#S??}" ] || [ -x "$M/$os.new/etc/init.d/${u#K??}" ] || continue
+                        cp -a "$l" "$M/$os.new/etc/rc.d/$u" && extra="$extra $u"
+                    done ;;
+            esac
+            say "kept from the previous $os:$kept"
+            image_own_restore "$M/$os.new"
+            # the packages installed on the device: written down, their settings set aside, put back at the first boot
+            # (mu300-user-packages), as mu300-update apply does
+            say "packages installed on the device in the previous $os:"
+            upk=$(upk_record "$M/$os" "$M/$os.new" "$os") ||
+                { rm -rf $M/$os.new; say "$upk"; say "$os: could not write down the packages installed on the device; $os was not replaced"; exit 1; }
+            printf '%s\n' "$upk" | while IFS= read -r l; do say "$l"; done
+            rm -rf "$M/$os.new/.mu300-image"
+        fi
         if [ -f "$M/$os/etc/shadow" ]; then
-            merge_accounts "$M/$os" "$M/$os.new" || { say "could not carry the accounts of $os over; nothing was replaced"; exit 1; }
+            # (carried over by the carry block already, when that ran)
+            if [ $carried = 0 ]; then
+                merge_accounts "$M/$os" "$M/$os.new" || { say "could not carry the accounts of $os over; nothing was replaced"; exit 1; }
+            fi
             # the log line says what the shadow will hold: with a hash, or PW_SET=1 (the Magisk installer's
             # MU300_PASSWORD_RESET=yes, or a system that still had the images' accounts), the system's own account
             # gets PWHASH below, and only the other accounts keep their passwords
@@ -796,8 +876,13 @@ for os in $OSES; do
         sed -i "s|^$pwu:[^:]*:|$pwu:$PWHASH:|" $M/$os.new/etc/shadow
     fi
     rm -f $M/$os.new$ACCOUNTS_MARK
-    stage_run "replace $os" 900 rm -rf $M/$os
+    # The old system goes aside under a name of its own and is removed when the new one is in place: files carried
+    # by link are the same files in both, and a run that died between these steps must not leave a state in which
+    # the next one would delete them (see the top of this loop). <os>.broken: the name mu300-update removes too.
+    stage_run "replace $os" 900 rm -rf $M/$os.broken
+    if [ -d $M/$os ]; then mv $M/$os $M/$os.broken; fi
     mv $M/$os.new $M/$os
+    stage_run "replace $os" 900 rm -rf $M/$os.broken
     R=$M/$os
     if [ "${SD_MODE:-0}" = 1 ]; then sd_fstab $R; fi
     mkdir -p $R/etc/mu300

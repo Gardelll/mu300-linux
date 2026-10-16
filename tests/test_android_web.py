@@ -665,6 +665,20 @@ class Uninstall(WebCase):
         return subprocess.run([BUSYBOX, 'sh', '-c', f'MU300_LIB=1; . "{self.stage}/android-web.sh"; ' + code],
                               capture_output=True, text=True, env=self.web_env(MU300_WEB_STAGE=self.stage, **extra), timeout=60)
 
+    def test_a_job_that_ends_while_it_is_looked_at_is_done(self):
+        # the job writes its status (rc) and ends; a look that found no status yet and then no process saw it end
+        # in between: done, never "interrupted" (follow then printed "EXIT interrupted" for an install that went well)
+        job = self.root() / 'job'
+        job.mkdir(parents=True)
+        (job / 'kind').write_text('install\n')
+        dead = subprocess.Popen(['true']); dead.wait()
+        (job / 'pid').write_text(f'{dead.pid}\n')
+        code = ('boot_now > "$JOB/boot"; '
+                'kill() { [ "$1" = -0 ] && [ ! -e "$JOB/rc.once" ] && : > "$JOB/rc.once" && echo 0 > "$JOB/rc"; command kill "$@"; }; '
+                'job_state; rm -f "$JOB/rc"; job_state')
+        r = self.lib(code)
+        self.assertEqual(r.stdout.split(), ['done', 'interrupted'], r.stderr)
+
     def test_misc_that_does_not_verify_gets_its_old_block_back(self):
         self.installed()
         misc = self.fake.root / 'dev/block/by-name/misc'
@@ -1015,8 +1029,9 @@ class Bounds(FetchCase):
 
     def test_a_server_that_sends_more_than_the_release_names_cannot_fill_the_storage(self):
         # 5 MB for a file of 100 000 bytes: the downloader's own file size limit stops the write, and what the file
-        # had grown to when the stub looked is at most the size rounded up to a block
-        w = self.wget(f'{self.SAYS}{self.OUT}head -c 5000000 /dev/zero >> "$out" 2>/dev/null; wc -c < "$out" > "$STUBLOG/grew"')
+        # had grown to when the stub looked is at most the size rounded up to a block. (The stub outlives the watch's
+        # kill, which may come first - the file is past the size once the limit stopped it - so that it can look.)
+        w = self.wget(f'trap "" TERM; {self.SAYS}{self.OUT}head -c 5000000 /dev/zero >> "$out" 2>/dev/null; wc -c < "$out" > "$STUBLOG/grew"')
         t0 = time.time()
         rc, out = self.fetch(w, 100000)
         self.assertEqual(rc, '13', out)

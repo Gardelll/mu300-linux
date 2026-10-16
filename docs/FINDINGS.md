@@ -137,6 +137,7 @@ what replaced it. The table below gives each section's state.
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
+| 85 | An update keeps everything the user made: the image's manifest tells its files from the user's, one carry block for `mu300-update`, the installers and the Magisk zip, and never less protected than the user left it | current (unit tests, real release images in containers, and the device protocol on a U30 Air, openwrt-luci, and an F50, Ubuntu, 2026-10-16, with two unpublished signed releases of the branch: everything carried; two defects fixed; the Android path not run) |
 | 86 | Updating from the panel: System > Update, an update from a file (a release's Magisk zip), and release signatures (`SHA256SUMS.sig`) | current (unit tests, a page test under Node, the commands in the image's container; the device protocol run on a U30 Air on openwrt-luci, 2026-10-15; F50 and Ubuntu not run) |
 | 90 | The data watchdog took a modem that did not answer for a lost bearer, and redialled a working connection (after kanoqwq's 3cbf37fc) | current (fixed; measured on the U30 Air, openwrt-luci v2026.10.27, 6.18.56, 2026-10-15; the OpenWrt watchdog's messages now reach the log) |
 | 91 | The relay monitor read SIM1's bearer in a dual-SIM boot on SIM2, believed any +CGCONTRDP, and dropped the hint after a burst (after kanoqwq's 3cbf37fc) | current (fixed; SIM1 measured on the U30 Air, openwrt-luci v2026.10.27, relay mode, 2026-10-15; the SIM2 choice only under the device's shell, no dual-SIM boot) |
@@ -6147,6 +6148,503 @@ Kernel 5.4, which issue #194's unit runs: whether its `/dev/sipc_sbuf` reads the
 if not, the `brokers-missing` row above is what happens). A truly empty position and a PIN-locked card with the
 current rule, on hardware. The restart after `no-radio` (the `no-data` restart, which is the same code, ran). The
 F50: unit tests, and the default path on the U30 Air. An M3.
+
+### 85. An update keeps everything the user made
+
+The owner's requirement: people must be able to update to a new release without losing any data, in any way - by
+`mu300-update apply`, by the computer installers' **update**, and by a Magisk zip installed over what is there.
+Until v2026.10.27 an update kept a list of places (`keep_list`: `/etc/mu300`, `/etc/ssh`, home directories,
+`/usr/local`, OpenWrt's `/etc/config`, a few more), the accounts, and the packages added on the device (installed
+again at the first boot, §32c); the image replaced everything else. **Measured in
+containers only: no device was free for this work.** The protocol for a device is docs/update-device-test.md.
+
+**What was lost, measured.** `tests/update-experiment` installs a published image into an ext4 filesystem, plants
+user state in it (67 kinds on Ubuntu, 52 on OpenWrt: files in every place, odd names, owners, extended attributes,
+hard links, a sparse file, image files changed, deleted and of another kind, accounts, a package), updates it by
+the real code - the installed system's own `mu300-update apply` run inside that system (chroot), which fetches the
+new release's updater from a local server as on a device, and the install loop of `tools/android-install.sh` under
+mksh with toybox's commands and the one true awk first on `PATH`, as on Android - and compares every attribute.
+The two columns "before" are v2026.10.23 updated to v2026.10.25, both as published; the two columns "after" are
+the same old system updated with this change (what the new release is there: see "After the change" below). A row
+is *lost* when what the user had is nowhere in the new system, *changed* when it is there with another attribute
+or is back after a deletion, *set aside* when it is not in its place but saved. Ubuntu 24.04:
+
+| item | before: `mu300-update apply` | before: installer, Magisk zip | **after:** `mu300-update apply` | **after:** installer, Magisk zip |
+|---|---|---|---|---|
+| files with odd names (space, newline, leading dash, UTF-8, backslash, glob characters, 250 characters, quotes, $(...), tab) | kept | kept | kept | kept |
+| modes and owners: 0000, setuid 4755, a sticky 1777 directory, a 0700 directory of uid 1000, a file of an id no account has (4242:4343) | kept | kept | kept | kept |
+| extended attributes: user.*, a file capability (cap_net_bind_service), a POSIX ACL on a directory, trusted.overlay.opaque on a directory (a container layer) | kept | changed: extended attributes gone | kept | kept |
+| three names of one file (hard links), two of them in one directory | kept | changed: hard link broken | kept | kept |
+| a sparse file (256 MiB long, one block of data) | kept | changed: no longer sparse | kept | kept |
+| symbolic links: relative, absolute, dangling, to a directory; one with its own date | kept | kept | kept | kept |
+| a FIFO and a character device node | kept | kept | kept | kept |
+| a socket file (a program makes it again when it starts) | kept | kept | not carried, by design | not carried, by design |
+| modification times: a file (with nanoseconds) and its directory, from 2001 | kept | kept | kept | kept |
+| 2000 small files in 20 directories | kept | kept | kept | kept |
+| read-only files (a git object, mode 0444) | kept | kept | kept | kept |
+| a swap file (/swapfile, 8 MiB, mode 0600) | lost: gone | lost: gone | kept | kept |
+| /tmp and /var/tmp | not carried, by design | not carried, by design | not carried, by design | not carried, by design |
+| the mount point of another filesystem (/mnt/usb): the directory | lost: gone | lost: gone | kept | kept |
+| what is on that other filesystem (it stays there) | not carried, by design | - | not carried, by design | - |
+| /etc/mu300: hotspot and VPN settings | kept | kept | kept | kept |
+| /etc/hosts with a line added (an image file, modified) | lost: the image's file instead | lost: the image's file instead | kept | kept |
+| one of the project's own programs, edited (/opt/mu300/bin/mu300-wifi): the new release's must win, the edited one must not be thrown away | lost: gone | lost: gone | kept | kept |
+| /etc/netplan/60-user.yaml | lost: gone | lost: gone | kept | kept |
+| /etc/wireguard/wg0.conf (0600, in a 0700 directory) | lost: gone | lost: gone | kept | kept |
+| a hand-written systemd unit, enabled | lost: gone | lost: gone | kept | kept |
+| a drop-in for an image unit (/etc/systemd/system/ssh.service.d/override.conf) | lost: gone | lost: gone | kept | kept |
+| a masked unit (a link to /dev/null in /etc/systemd/system) | lost: gone | lost: gone | kept | kept |
+| an image service the user disabled (mu300-telnetd) | changed: back | changed: back | kept | kept |
+| an apt source and its key (/etc/apt/sources.list.d, /etc/apt/keyrings) | kept | kept | kept | kept |
+| a user's crontab (/var/spool/cron/crontabs/ubuntu, 0600) | lost: gone | lost: gone | kept | kept |
+| /etc/cron.d/backup | lost: gone | lost: gone | kept | kept |
+| a service's data directory (/var/lib/docker: a layer, a volume, a database file) | lost: gone | lost: gone | kept | kept |
+| /var/www/html/index.html | lost: gone | lost: gone | kept | kept |
+| software in /opt (/opt/myapp, a program and its data) | lost: gone | lost: gone | kept | kept |
+| /etc/ssh/sshd_config with a line changed | kept | kept | kept | kept |
+| /etc/ssh/sshd_config.d/10-user.conf | kept | kept | kept | kept |
+| SSH host keys | kept | kept | kept | kept |
+| ~/.ssh/authorized_keys (0600, in a 0700 directory) | kept | kept | kept | kept |
+| shell history (~/.bash_history of ubuntu and of root) | kept | kept | kept | kept |
+| ~/.bashrc with a line added (an image file, modified) | kept | kept | kept | kept |
+| /etc/sysctl.d/99-user.conf | lost: gone | lost: gone | kept | kept |
+| /etc/sysctl.conf with a line added (an image file, modified) | lost: the image's file instead | lost: the image's file instead | kept | kept |
+| /etc/update-motd.d/10-help-text deleted (an image file the user removed) | changed: back | changed: back | kept | kept |
+| /etc/issue.net made a directory (the image has a file) | lost: gone, the image's kind of file instead | lost: gone, the image's kind of file instead | kept | kept |
+| /etc/resolv.conf made a file (the image has a symbolic link) | lost: the image's kind of file instead | lost: the image's kind of file instead | kept | kept |
+| /etc/skel made a symbolic link (the image has a directory) | lost: the image's kind of file instead | lost: the image's kind of file instead | kept | kept |
+| /var/log/myapp/app.log | lost: gone | lost: gone | kept | kept |
+| /var/log/wtmp and dpkg.log with entries (image files that grew) | lost: the image's file instead | lost: the image's file instead | kept | kept |
+| the journal (/var/log/journal/<machine-id>/system.journal) | lost: gone | lost: gone | kept | kept |
+| /etc/machine-id (written at the first boot; the image has an empty file) | lost: the image's file instead | lost: the image's file instead | kept | kept |
+| /usr/local/bin/mytool and /usr/local/lib | kept | kept | kept | kept |
+| /usr/lib/systemd/system/ssh.service edited in place (an image file outside /etc: the release's must win, the edit must not be thrown away) | lost: the image's file instead | lost: the image's file instead | set aside: in /etc/mu300/update-kept, in the report | set aside: in /etc/mu300/update-kept, in the report |
+| a file added under /usr (/usr/share/myfonts/x.ttf) | lost: gone | lost: gone | kept | kept |
+| /etc/fstab with a line added | kept | kept | kept | kept |
+| /etc/hostname | kept | kept | kept | kept |
+| /var/lib/bluetooth (paired devices) | kept | kept | kept | kept |
+| /etc/sudoers.d/90-kaan (0440) | lost: gone | lost: gone | kept | kept |
+| /etc/environment modified, /etc/profile.d/my.sh, /etc/rc.local | lost: gone, the image's file instead | lost: gone, the image's file instead | kept | kept |
+| /etc/systemd/network/50-user.network and /etc/systemd/resolved.conf.d/dns.conf | lost: gone | lost: gone | kept | kept |
+| a private key (/etc/ssl/private/my.key, 0640) and a CA of the user (/usr/local/share/ca-certificates) | lost: gone | lost: gone | kept | kept |
+| /etc/docker/daemon.json | lost: gone | lost: gone | kept | kept |
+| root's files (/root/.config/app/settings, /root/notes.txt) | kept | kept | kept | kept |
+| /srv/files/document.pdf | kept | kept | kept | kept |
+| data of the user's own service (/var/lib/myapp/db.sqlite, owned by a system account the user added) | lost: gone | lost: gone | kept | kept |
+| ubuntu's password changed | kept | kept | kept | kept |
+| a user added on the device (kaan, uid 1001) with a password and a home directory | kept | kept | kept | kept |
+| a system account added on the device (myapp, uid 777: its data is owned by it) | lost: the account is gone | lost: the account is gone | kept | kept |
+| /var/cache (downloaded packages) | not carried, by design | not carried, by design | not carried, by design | not carried, by design |
+| a package installed on the device: its program and files (/usr/bin/userpkg, /usr/share/userpkg): installed again at the first boot | installed again at the first boot | installed again at the first boot | installed again at the first boot | installed again at the first boot |
+| that package's configuration, changed by the user (/etc/userpkg/userpkg.conf) | lost: gone | lost: gone | kept | kept |
+| that package's data (/var/lib/userpkg/state.db) | lost: gone | lost: gone | kept | kept |
+
+* before, `mu300-update apply`: 3 by design, 2 changed, 27 kept, 34 lost, 1 reinstall
+* before, installer, Magisk zip: 2 by design, 5 changed, 24 kept, 34 lost, 1 not planted, 1 reinstall
+* after, `mu300-update apply`: 4 by design, 1 held, 61 kept, 1 reinstall
+* after, installer, Magisk zip: 3 by design, 1 held, 61 kept, 1 not planted, 1 reinstall
+
+OpenWrt:
+
+| item | before: `mu300-update apply` | before: installer, Magisk zip | **after:** `mu300-update apply` | **after:** installer, Magisk zip |
+|---|---|---|---|---|
+| files with odd names (space, newline, leading dash, UTF-8, backslash, glob characters, 250 characters, quotes, $(...), tab) | changed: time to the second only | kept | kept | kept |
+| modes and owners: 0000, setuid 4755, a sticky 1777 directory, a 0700 directory of uid 1000, a file of an id no account has (4242:4343) | changed: time to the second only | kept | kept | kept |
+| extended attributes: user.*, a file capability (cap_net_bind_service), a POSIX ACL on a directory, trusted.overlay.opaque on a directory (a container layer) | changed: time to the second only, extended attributes gone | changed: extended attributes gone | kept | kept |
+| three names of one file (hard links), two of them in one directory | changed: time to the second only | changed: hard link broken | kept | kept |
+| a sparse file (256 MiB long, one block of data) | changed: time to the second only, no longer sparse | changed: no longer sparse | kept | kept |
+| symbolic links: relative, absolute, dangling, to a directory; one with its own date | changed: time | kept | kept | kept |
+| a FIFO and a character device node | changed: time to the second only | kept | kept | kept |
+| a socket file (a program makes it again when it starts) | kept | kept | not carried, by design | not carried, by design |
+| modification times: a file (with nanoseconds) and its directory, from 2001 | changed: time to the second only | kept | kept | kept |
+| 2000 small files in 20 directories | changed: time to the second only | kept | kept | kept |
+| read-only files (a git object, mode 0444) | changed: time to the second only | kept | kept | kept |
+| a swap file (/swapfile, 8 MiB, mode 0600) | lost: gone | lost: gone | kept | kept |
+| /tmp and /var/tmp | not carried, by design | not carried, by design | not carried, by design | not carried, by design |
+| the mount point of another filesystem (/mnt/usb): the directory | lost: gone | lost: gone | kept | kept |
+| what is on that other filesystem (it stays there) | not carried, by design | - | not carried, by design | - |
+| /etc/mu300: hotspot and VPN settings | changed: time to the second only | kept | kept | kept |
+| /etc/hosts with a line added (an image file, modified) | lost: the image's file instead | lost: the image's file instead | kept | kept |
+| one of the project's own programs, edited (/opt/mu300/bin/mu300-wifi): the new release's must win, the edited one must not be thrown away | lost: gone | lost: gone | kept | kept |
+| /etc/config/network changed | changed: time to the second only | kept | kept | kept |
+| /etc/config/custom (a UCI file of the user) | changed: time to the second only | kept | kept | kept |
+| /www/mysite/index.html | lost: gone | lost: gone | kept | kept |
+| /www/index.html edited (an image file outside /etc: the release's must win, the edit must not be thrown away) | lost: the image's file instead | lost: the image's file instead | set aside: in /etc/mu300/update-kept, in the report | set aside: in /etc/mu300/update-kept, in the report |
+| /etc/crontabs/root | lost: gone | lost: gone | kept | kept |
+| /etc/hotplug.d/iface/99-user | lost: gone | lost: gone | kept | kept |
+| /etc/sysctl.conf with a line added (an image file, modified) | lost: the image's file instead | lost: the image's file instead | kept | kept |
+| /etc/sysctl.d/99-user.conf | lost: gone | lost: gone | kept | kept |
+| /usr/share/myapp/data (added under /usr/share) | lost: gone | lost: gone | kept | kept |
+| an init script of the user's own, enabled (/etc/init.d/myservice, /etc/rc.d/S99myservice) | lost: gone | lost: gone | kept | kept |
+| SSH host key and authorized_keys (/etc/dropbear) | changed: time to the second only | kept | kept | kept |
+| root's files (/root/.ash_history, /root/notes.txt, /root/.ssh/id_ed25519) | changed: time to the second only | kept | kept | kept |
+| /etc/rc.local changed | changed: time to the second only | kept | kept | kept |
+| /etc/firewall.user and /etc/nftables.d/10-user.nft | lost: gone | lost: gone | kept | kept |
+| /etc/dnsmasq.conf with a line added, /etc/ethers | lost: the image's file instead | lost: the image's file instead | kept | kept |
+| /etc/openvpn/client.ovpn (0600) | lost: gone | lost: gone | kept | kept |
+| software in /opt (/opt/user/tool) | lost: gone | lost: gone | kept | kept |
+| /etc/uci-defaults/99-user, /etc/profile.d/x.sh | lost: gone | lost: gone | kept | kept |
+| /etc/sysupgrade.conf with a line added | lost: the image's file instead | lost: the image's file instead | kept | kept |
+| the panel's saved locks (/etc/unisoc-modem/lock-state.d) | changed: time to the second only | kept | kept | kept |
+| /etc/banner deleted (an image file the user removed) | changed: back | changed: back | kept | kept |
+| /etc/banner.failsafe made a directory (the image has a file) | lost: gone, the image's kind of file instead | lost: gone, the image's kind of file instead | kept | kept |
+| /etc/TZ made a file (the image has a symbolic link) | lost: the image's kind of file instead | lost: the image's kind of file instead | kept | kept |
+| /usr/lib/lua/user.lua (added in a directory of packages) | lost: gone | lost: gone | kept | kept |
+| /etc/apk/repositories.d/customfeeds.list changed, a key added to /etc/apk/keys | lost: gone, the image's file instead | lost: gone, the image's file instead | kept | kept |
+| a kernel module built by hand (/lib/modules/6.99.0/hand.ko) and firmware (/lib/firmware/user.bin) | changed: time to the second only | lost: gone | kept | kept |
+| /etc/ssl/certs/user.crt | lost: gone | lost: gone | kept | kept |
+| an image service the user disabled (/etc/rc.d/S50cron removed) | changed: back | changed: back | kept | kept |
+| a user added on the device (kaan, uid 1001) with a password and a home directory | lost: gone | lost: gone | kept | kept |
+| root's password changed | kept | kept | kept | kept |
+| a package installed on the device: its program and init script (/usr/bin/userpkg, /etc/init.d/userpkg): installed again at the first boot | installed again at the first boot | installed again at the first boot | installed again at the first boot | installed again at the first boot |
+| that package's UCI settings (/etc/config/userpkg): set aside until the package is back, so that they cannot act without it | set aside: in /etc/mu300/orphaned-config | set aside: in /etc/mu300/orphaned-config | set aside: in /etc/mu300/orphaned-config, in the report | set aside: in /etc/mu300/orphaned-config, in the report |
+| that package's other settings, changed by the user (/etc/userpkg/settings.yaml) | lost: gone | lost: gone | kept | kept |
+| that package's data (/etc/userpkg/cache/rules.db, /usr/share/userpkg-data/geo.dat: made at run time, in no package) | lost: gone | lost: gone | kept | kept |
+
+* before, `mu300-update apply`: 2 by design, 20 changed, 1 held, 2 kept, 26 lost, 1 reinstall
+* before, installer, Magisk zip: 1 by design, 5 changed, 1 held, 16 kept, 27 lost, 1 not planted, 1 reinstall
+* after, `mu300-update apply`: 3 by design, 2 held, 46 kept, 1 reinstall
+* after, installer, Magisk zip: 2 by design, 2 held, 46 kept, 1 not planted, 1 reinstall
+
+Besides the lost files, the copies themselves were not faithful where `cp -a` was not GNU's. Measured in the
+container (the images' static busybox 1.36.1, Ubuntu 24.04's coreutils 9.4, Ubuntu's toybox 0.8.9 - not Android's
+own build of toybox, which was not at hand):
+
+| `cp -a` of | a sparse file (64 MiB, 8 blocks) | two names of one file | `user.*` attribute, file capability | time, fraction of the second | time of a symbolic link |
+|---|---|---|---|---|---|
+| GNU coreutils | sparse | one file | kept | kept | kept |
+| busybox 1.36.1 | dense: 131080 blocks | one file (within one run) | both gone | cut to the second | not kept |
+| toybox 0.8.9 | dense | two files | both gone (`--preserve=all`: the `user.*` one kept, the capability gone) | kept | kept |
+
+So on OpenWrt (busybox) every kept file lost the fraction of its second and its attributes, and a sparse file was
+written out in full; from Android hard links were broken as well. And the installers' update did not keep the
+system it replaced at all: `rm -rf` of the old one, then the rename of the new - a run that died in between left
+the kept files only in `<os>.new`, which the next run deletes first.
+
+**The change: the question is asked the other way round.** Not "which places are the user's" but "which files came
+with the image". Every image now carries the manifest of its own files, `etc/mu300/image-manifest.gz`: one line per
+file, `TYPE MODE UID GID SIZE SHA256 PATH` (the hash of a link is that of its target; `tools/image-manifest.py` has the
+format). With the manifest of the *old* image, everything in the old system that is not on it was made by the user
+(or by software they installed), and what is on it with other content was changed by them. The new system is the
+new image, plus all of that, by these rules (`mu300-update`, the block between `# --- carry begin` and `end`):
+
+| in the old system | goes |
+|---|---|
+| not the image's | to its place. Where the new image has a file of that name: under `/etc /var /home /root /srv /usr/local /opt /mnt /media` the user's is used and the release's is set aside; elsewhere, and where the release has a directory, the release's is used and the user's set aside |
+| the image's, changed, under those directories | the user's is used. When the new release changed that file too (a three-way conflict), the release's version is set aside for comparison. Under `/var` (logs, state) silently |
+| the image's, changed, elsewhere (`/usr /bin /lib /www`: programs) | the release's is used, the user's set aside. The same for the project's own programs wherever they are (`opt/mu300`, `usr/libexec/unisoc-modem`, the `mu300-*` units and init scripts, the commands linked into `/usr/local/bin`), for a package's script in `/etc/init.d` or `/etc/hotplug.d`, for `/etc/pam.d/common-*` (pam-auth-update writes them for the packages that are there: a line for a module of a package not installed yet would lock every login out) and for the image's own apt sources |
+| the image's, only owner or mode changed | given to the new image's file under the user's directories; elsewhere a mode the user narrowed is kept, and anything else is a line of the report |
+| the image's, deleted | under `/etc /home /root /srv /usr/local /opt /mnt /media` it stays deleted, and so does a service's enable link (`rc.d`, `*.wants`). Back, with a line of the report: the project's own programs, a script in `/etc/init.d` or `/etc/hotplug.d`, a file whose package the old system no longer lists (it went with a package upgrade), the files of a package that was removed and is part of the image. Never touched: `/etc/uci-defaults` (the scripts remove themselves when they ran, and must run again) |
+| the package manager's: its databases, `/etc/alternatives`, the files of packages | never file by file. Packages added on the device are installed again at the first boot, as before; a package's configuration file is carried as the user's, and its data, which is in no package, like everything else - nothing waits for the package but OpenWrt's UCI file, which is set aside as before so that it cannot act without its program (#116). A file that differs from the manifest because a package upgrade replaced it (dpkg's md5sums, apk's `Z:` sums say so) is not the user's and is not set aside |
+| below `/proc /sys /dev /run /tmp /var/tmp /var/cache`, sockets, Ubuntu's kernel modules, `/etc/ld.so.cache`, Python's caches under `/usr` | not carried |
+| on another filesystem | not carried: `mu300-carry` never leaves the filesystem of the system (by device number), and the mount point is carried as the directory it is. Through `/mnt/mu300-disk/<os>`, where the updater reads the system, nothing is mounted anyway |
+| accounts and owners | `merge_accounts` as before (users from 1000 on, passwords, groups), and the rule below |
+
+**Never less protected than the user left it.** Putting the release's file in place of the user's must not open
+what the user closed. The settings that protect the device are all in the user's directories and stay the user's:
+adb (`/etc/mu300/adb`, `adb_auth`, `adb_keys`: `off` or `keys` cannot become open), `sshd_config` and the project's
+own drop-in beside it, dropbear, host keys and `authorized_keys`, the firewall (`/etc/config/firewall`,
+`/etc/mu300/firewall.nft`, `nftables.d`), `vpn.conf` with its kill switch, `mobile-data.conf`, sudoers, sysctl, the
+panel's `rpcd` and `uhttpd` settings - with their modes (0600 stays 0600: `mu300-carry` copies the mode). Beyond that:
+* a service the user turned off stays off. An enable link that is gone stays gone (`*.wants`, `rc.d`), for the
+  project's own services too; a mask (a link to `/dev/null` in `/etc/systemd/system`) is the user's even over the
+  project's own unit; and a package the user removed, which is back because the image has it, comes back with its
+  services not enabled;
+* a mode the user narrowed is put on the new image's file also where the release's content is the one in use (a
+  program edited and made 0700, a script made non-executable);
+* an account of the new image that the old system did not have - the user deleted it, or the release added it - is
+  locked, so that it cannot come with the image's well-known password; `merge_accounts` keeps a locked account
+  locked, as before;
+* where the release's version does end up in use (a program file, a project unit, an init script,
+  `pam.d/common-*`), the report names the file.
+Without a manifest (below) the same holds, by deciding for the tighter side what cannot be told: besides the places
+of `keep_list`, `/etc/config`, sudoers, `sysctl`, `nftables`, `pam.d`, `modprobe.d`, `/etc/ssl/private`, the units and
+links in `/etc/systemd/system` and `/etc/rc.d`, crontabs and `rc.local` are the old system's; an enable link of the
+new image for a service the old system had and did not enable is removed, and so is a file in `/etc/sudoers.d` that
+the old system did not have - each with a line of the report. `tests/test_carry.py` (`NeverLessProtected`) plants
+each of these and looks at the new system, with a manifest and without. Found by a review of this change: an
+earlier draft counted every file the project's overlay puts under `/etc` as the project's own, which would have put
+the release's `sshd_config.d/10-mu300.conf` over one the user had tightened.
+
+**A file belongs to an account, not to a number.** The numbers differ between images (Ubuntu 24.04 and 26.04 number
+`messagebus`, `sshd`, `bluetooth`, `crontab` and others differently), and a wrong owner is a security fault: a
+service's private file in a login user's hands, a set-user-id program under another owner. So
+(`carry_accounts_plan`, before the plan and before a file is carried):
+* an owner the old system has a name for is carried by that name, under the number the name has in the new
+  system: the new image's when it has the account; else the old number when the new system does not use it; else
+  a free one (a system account added on the device: the highest below 1000; a user `merge_accounts` brings: the
+  lowest from 1000 on, with its group). Two accounts never end up with one number;
+* a number the old system has no name for stays the number - unless an account of the new system has that number:
+  the file would become that account's, so it is not put in place but set aside under `update-kept/.../user/`
+  (root's alone), with a line of the report. It never falls to root or to "whoever has the number now";
+* what gives a file the rights of its owner does not go to another number: the set-user-id and set-group-id bits
+  and a file capability are taken off a file whose owner's number changes, and the report names the file. With
+  the same number everything stays (bits, capabilities, ACLs);
+* names of one file and directories are treated the same; by link (`--no-rollback`, the installers) a file whose
+  owner's number changes is copied, so the old system's file is not touched;
+* after the accounts are written, every account of the old system is held against the plan the files were carried
+  for; a difference fails the update with nothing put in place.
+`tests/test_carry.py` (`Owners`): a system account the new image numbers differently, the same number, an account
+added on the device whose number the new image took (user and system), a number without a name that an account of
+the new image has, one that is free, and a passwd that does not match the plan. A third review asked for exactly
+this: the first draft mapped the accounts both images have and the system accounts added on the device, but let a
+user from 1000 on share a number the new image had given away, let a number without a name become the new
+account's, and kept set-id bits across the change.
+
+What is set aside goes to `/etc/mu300/update-kept/<old release>/user/<path>` (the user's version) or
+`.../image/<path>` (the release's), mode 700 - not beside the file as `name.mu300-new`: OpenWrt runs every file in
+`/etc/hotplug.d` and `/etc/uci-defaults`, whatever it is called. Every such decision is a line of
+`/etc/mu300/update-report`, which the update prints, `mu300-update report` shows again and a line at the next login
+points to (once; Ubuntu's motd, OpenWrt's `/etc/profile.d`); earlier reports stay below the new one.
+
+**Files are carried by a helper, not by `cp`.** `tools/carry/mu300-carry.c` (static, in every image as
+`opt/mu300/bin/mu300-carry`): `scan` (one line per entry, never leaving the filesystem), `sum` (sha256), `manifest`,
+and `copy`/`link`, which make a path in the new system what it is in the old one - content with its holes, owner,
+mode, every extended attribute, times to the nanosecond, names of one file as one file - and never write through a
+symbolic link of the new system (each directory on the way is opened without following links). The rules are shell
+and awk; hashing is done only where it decides something: a file of the manifest with the same size is hashed, one
+with another size is changed without it, and nothing is ever taken for the image's on its size or time alone.
+
+**One implementation for the three paths: the new image brings it.** `mu300-update apply` and
+`tools/android-install.sh` both run `busybox sh NEW/opt/mu300/bin/mu300-update carry OLD NEW OS MODE` - the new
+image's own carry block, by the new image's static busybox (the same binary in all four images: `usr/bin/busybox`
+on Ubuntu, `opt/mu300/bin/busybox` on OpenWrt; it prefers its own applets, so the commands are the same on Ubuntu,
+OpenWrt and Android) and its `mu300-carry`. Nothing of it is copied into `android-install.sh`, and none of
+Android's tools take part: what is needed there is a shell that can start a static program on the Linux
+filesystem. The run must end by leaving `NEW/.mu300-carried`; a run that ends without it failed, whatever its
+status (found by a test: with `MU300_LIB` in the environment the script defined its functions, left with status 0,
+and the caller took that for done). An image that does not bring these parts (built by hand without the helper) is
+updated the old way, with a line that says so; `MU300_UPDATE_KEEP=list` asks for the old way (kept for one release:
+`mu300-update`'s environment, the zip's `/data/adb/mu300-install.conf`, the environment of `android-install.sh`).
+
+**The old image's manifest.** A system from the first release with a four-field tag on has its own (taken only when its first line names the
+release the system says it is). For the releases before that, the new image has them:
+`opt/mu300/lib/image-manifests/<image>.gz`, made from the published images of v2026.09.21 to v2026.10.27 (36
+releases; `tools/image-manifest.py legacy` and `union`). Two releases of one image differ in a few dozen lines, so
+each file holds every distinct line once, with the releases that have it in front: 97 kB (openwrt), 101 kB
+(openwrt-luci), 480 kB (ubuntu-24.04), 599 kB (ubuntu-26.04), where the manifests one by one are 30 MB. An image has
+those of its own system (Ubuntu: both releases, for `MU300_UBUNTU`). They are part of the image, so they are checked
+with it (the release's `SHA256SUMS`, the zip's manifest), an update needs no download for them, and a zip works
+offline. Nothing has to be published for the old releases; for the record their manifests can be attached to them
+(commands below). The repacked images are larger by 0.6 MB (OpenWrt) to 2.0 MB (Ubuntu): the helper (0.7 MB, static), the image's own manifest (73 to 561 kB), the older ones.
+What is checked is what is used: the release the old system says it is is read once and picks the manifest; the
+file is copied once into the working directory and only that copy is checked and read; a manifest whose first line
+names another image or release, that is a link, or that has one line which is no manifest line (a path with `..`)
+is refused whole, and the update goes on as without one. A second review of this change found the first draft
+reading the old system's manifest three times (check, header, use), and three things more open than they should
+be, all closed: the working directory with the lists of the user's files (now 0700), the update report (0600 from
+the moment it exists; it names files under `/root` and `/home`), `update-kept` (0700 and root's, also when it came
+along from an earlier update with another mode; a file in it keeps its own mode and owner), and the installers'
+copy of the block's output, which was written to `/data/local/tmp` - the shell user's directory, where a planted
+link would have made root write through it - and is now on the Linux filesystem.
+The releases v2026.09.17 to v2026.09.20 have no `etc/mu300/image-version`, so a system installed from them does
+not say what it is.
+
+**Without a manifest** (those four releases, an image built by hand, a test build): everything the new image does
+not have is carried (but the files of packages, and the project's own, which are set aside), the places of
+`keep_list` and what protects the device (above) are the user's, and every other file that differs from the new image's is set aside under
+`update-kept/.../user/` - the old release's own files and the user's changes alike, they cannot be told apart
+(on OpenWrt v2026.10.23 that was 27 files of the old release beside the planted ones). When there is no room for
+them the update goes on without, and the report says they are in the previous system. A deletion cannot be told
+either: what the user deleted of the image is back (but services and sudo rules, above).
+
+**Room, and the previous system.** `apply` keeps the old system whole as `<os>.old` for `rollback`, so the user's
+files are copied, and there must be room: what is to be written plus 5 % and 32 MB against `df`. When there is
+not, it says how much is needed and how much is free, removes `<os>.new` and changes nothing; `apply --no-rollback`
+then carries by link - the files become second names of the old system's, no data is copied, 8 MB of margin - and
+the old system goes aside as `<os>.broken`, which `rollback` does not offer and the next `apply` or `clean` removes
+once it is not the running system. Never is anything of the user's deleted to make room. The installers' update
+has never kept the old system; it now carries by link (no room needed) and swaps safely: old to `<os>.broken`,
+new into place, then the removal, and a run that finds `<os>.broken` without `<os>` puts it back first.
+`rollback` is unchanged and returns the old system exactly (below). `apply` does not go to an *older* release by
+itself (`apply --downgrade`, the rule of the panel's update, §86; the zip: `MU300_DOWNGRADE=yes` from `/data/adb`
+only): the update is done by the release it installs, and one from before the first release with a four-field tag keeps the list only.
+
+**The Magisk zip.** Update was its default already (`MU300_MODE=update` when it finds a filesystem). Its plan now
+says what that means - `update: <os> <old> -> <new>: everything you added to it or changed in it is kept ...`, `not
+touched: <the other systems> and the extras` - and the example settings file says what `wipe` erases. The zip
+carries one system and one kernel: the other systems and `extra/` are not touched (measured in the installers' runs:
+every file of another system, of `extra/vpn` and of `.mu300` with its attributes before and after), the password
+stays the device's (tests, as before), an older zip over a newer system is refused, and nothing is downloaded.
+
+**After the change**, the same experiment; the new release is v2026.10.25's images repacked as v2026.10.26 with
+this branch's updater, helper and manifests (`tests/update-experiment/repack.sh`: no release was built - what a
+release build changes beyond that is not in these runs). The columns "after" of the two tables above: no row is
+lost, and none is changed. What is set aside is the program file edited in place (the rule) and, on OpenWrt, the
+package's UCI file (the rule of §32c); each is in the report. Ubuntu 26.04 and OpenWrt with the panel were run the
+same way and gave the same rows as these two (in the run without a manifest the one changed row is the deleted image file, which is back). In every `mu300-update apply` run the system kept for a rollback (`<os>.old`) was compared
+too: every planted item exactly as planted.
+
+The updates that are not the plain one (`tests/update-experiment/scenarios.sh`):
+
+| the update | the planted items |
+|---|---|
+| `apply --no-rollback` (OpenWrt): by link, the old system left as `openwrt.broken` | 46 kept, 2 set aside, 1 installed again, 3 not carried by design |
+| Ubuntu 24.04 moved to 26.04 (`MU300_UBUNTU=26.04`): owners follow the accounts' new numbers | 61 kept, 1 set aside, 1 installed again, 4 not carried by design |
+| an old system no manifest is known of (it says `dev`), `mu300-update apply` | 38 kept, 9 set aside, 1 installed again, 3 not carried by design, 1 changed |
+| the same, the installers' update (Ubuntu) | 52 kept, 9 set aside, 1 installed again, 3 not carried by design, 1 changed |
+| 2.5 GB of the user's where a copy does not fit: stopped, nothing changed (the old system verified) | 52 kept |
+| the same with `--no-rollback` | 46 kept, 2 set aside, 1 installed again, 3 not carried by design |
+| updated twice (to v2026.10.26, "rebooted", to v2026.10.27): the second update reads the first one's own manifest | 46 kept, 2 set aside, 1 installed again, 3 not carried by design |
+| `MU300_UPDATE_KEEP=list`: the update as it was | 27 kept, 1 installed again, 3 not carried by design, 2 changed, 34 lost |
+
+**On the devices (2026-10-16, `docs/update-device-test.md`).** Two releases built from this branch and never
+published, v2026.10.40 (T1) and v2026.10.41 (T2): `tools/make-release.sh` with the mainline kernels built at the
+branch's commit, signed with the project's key (`SHA256SUMS.sig`), the Magisk zips of T2 by `make-magisk-zips.sh`.
+The mirror was on each device (busybox `uhttpd` on 127.0.0.1 on the U30 Air, `file://` on the F50: no server on the
+computer), with the API files of §86 for the page's *Check*. A U30 Air (openwrt-luci, kernel 6.18.56, the owner's
+VPN with its kill switch over SIM1) and an F50 (Ubuntu 24.04, kernel 7.2.10; its carrier passed no traffic without a
+VPN that day, so python3, hello and tree came from files: a standalone CPython in the test directory, the two .deb
+by `dpkg -i`), both on v2026.10.27, `experiment.py plant / KIND sys.json --live` (63 items on Ubuntu, 46 on OpenWrt).
+
+| step | U30 Air (openwrt-luci) | F50 (Ubuntu) |
+|---|---|---|
+| 2. v2026.10.27 -> T1, terminal | "continuing with the mu300-update of T1", no "no list of the files"; carried 3456 files, 257 MB in 36 s (the whole apply); set aside: `/www/index.html` (held), `/etc/banner.failsafe` (image's in use), `/etc/banner` deleted again; python3 listed for the first boot. **The boot image was not written**: `/dev/mmcblk0p38` was a regular file of 50 MB in that boot (something had written to the path before this test; a restart makes /dev anew), and the updater refused to write to it and said so | 2588 files, 225 MB in 31 s; `/usr/lib/systemd/system/ssh.service` held, `/etc/issue.net` and `/etc/skel` (the user's in use), hello and tree listed; boot image T1 |
+| 2. verify | the copy for the rollback: every item kept; the new system before the restart: 42 kept, 1 held, 3 by design | 58 kept, 1 held, 4 by design |
+| 2. after the restart | 41 kept; `/etc/uci-defaults/99-user` gone (OpenWrt runs and deletes it at boot: by design); the VPN up on the same exit address; extras changed (below) | 55 kept; 3 "lost" that the booted system rewrote itself: `/etc/resolv.conf` (a link again), `/var/log/wtmp`, the planted journal file (journald set it aside as corrupt) - not the update's |
+| 3. T1 -> T2 | through the panel's backend (`ubus call mu300dash update_get/update_act/update_job`, what the page calls): *Check* offered T2 with "Free space needed" 2308456 KB (planted: 257 MB), the update "signed with the project's release key", 3460 files carried, the report on the page (`report_new` 1, then 0 after `mu300-update report`); again **from a file** (the zip put where `upload_begin` said, `upload_done` inspected it: T2, openwrt-luci, k6.18, signature valid, the SHA-256 of `SHA256SUMS-magisk`) | `inspect` of the zip (signature valid, fits), `apply --from` the zip with mobile data stopped: "signed with the project's release key", no download, 2593 files, 233 MB in 51 s |
+| 3. first boot | **python3 was not installed again** (below, fixed) | hello and tree wait for the internet (state offline: this F50 had none) |
+| 4. rollback + rollback-boot | T1 again, everything kept but the uci-defaults script | T1 again, as in part 2 |
+| 5. older release | T1 with T2 installed: refused (also with `MU300_DOWNGRADE=1`), nothing downloaded; `--downgrade`: through, everything kept | the same |
+| 6. no room, `--no-rollback` | - | a 27 GB file in /srv: refused before any download ("30722 MB needed, 2559 MB free", naming clean and --no-rollback); `--no-rollback`: through, `ubuntu.broken`, rollback "no previous version kept"; after the restart the file is there, verify as before, `clean` removed `ubuntu.broken` |
+| end | v2026.10.27 by `apply --downgrade --unsigned` (refused without each flag), then the system as it was before the plant | the same |
+
+Found and fixed on this branch:
+* **One dead feed kept every package from coming back on OpenWrt.** The planted `customfeeds.list` names
+  `example.invalid`; `apk update` then fails as a whole ("1 unavailable", exit 1) although every other feed answered,
+  `mu300-user-packages` took that for "offline", waited 300 s between tries and would give up after five boots:
+  python3 never came back on the U30 Air. Ubuntu had `apt_sources_check` for the same case; apk now counts as
+  online when fewer feeds were unavailable than are configured (`apk_update`; offline every feed is unavailable).
+  With it, python3 was installed again at once (`test_a_dead_feed_of_the_users_is_not_offline`).
+* **`experiment.py --live` replaced what the device needs**: the VPN's and the hotspot's settings (`ENABLE=0`: the
+  owner's VPN off after the restart), the SSH host keys and `PasswordAuthentication no`, root's crontab (a daily
+  reboot), the panel's saved band locks (applied at the next boot), and disabled cron or sysctl. With `--live` a
+  file the device has gets a line of the user's, host keys and saved locks are written down as they are, and no image
+  service is disabled.
+
+Seen, not changed here:
+* **The VPN module is brought to "latest" even when the installed one is newer**: v2.0.3 (a pre-release, installed
+  by hand) became v2.0.1 at the first update (`module_download` compares hashes, not versions; v2026.10.27's updater
+  does the same). Put back by hand afterwards.
+* The report's time on OpenWrt is UTC (22:19 for 01:19 local); on Ubuntu it is local.
+* When T1's and T2's boot images are the same bytes the second update says "boot: already up to date (T2)", and
+  `rollback-boot` then goes back to the image before T1.
+* `Deleted again` on the F50 listed `/etc/rc[2-5].d/S01ssh`: a real change on that unit (an earlier test had disabled
+  `ssh.service`), not a false line.
+
+**Part 7: the Magisk zip from Android and the computer installer (2026-10-16, a third F50).** Two more releases
+built from this branch and never published, v2026.10.16.90 (T1) and v2026.10.16.91 (T2; four-field tags of the day,
+#249), the same way (mainline kernels built at the branch's commit, signed, the Magisk zips of both). The F50 had a
+plain OpenWrt v2026.10.27 on kernel 6.18 in its internal region (804 MiB, 613 MiB free; installed by the make-room
+resume the day before), the carrier's data working without a VPN, no SD card. Planted with `experiment.py plant /
+openwrt sys.json --live` (45 items; python3 from Alpine, musl, run by its own loader from the test directory, so
+nothing of it is a package of the system) after `apk add nano` (a package the update has to install again).
+
+| step | how | result |
+|---|---|---|
+| v2026.10.27 -> T1 | T1's `mu300-magisk-...-openwrt-k6.18.zip` by `magisk --install-module` from Android (first `MU300_DRY_RUN=1`: the plan said "update: openwrt v2026.10.27 -> T1: everything you added ... is kept") | "carrying everything of yours ... over", 2515 files, 44 MB, by link (no copy kept: 438 MiB free after); set aside `/www/index.html`, `/etc/banner.failsafe`, `/etc/banner` deleted again, nano listed. After the restart: T1, kernel 6.18.56, verify 32 kept, 1 held, 3 by design, 1 lost (`/etc/uci-defaults/99-user`, run and deleted by OpenWrt at boot), 8 changed (below); nano installed again at the first boot ("1 of 1 ... are back") |
+| T1 -> T2 | `install.sh` of T2's unpacked zip (`MU300_PACKAGE`, answers mode, `MU300_ANS_EXISTING=update`) | 2082 files, 16 MB; the same verify; both reports in `mu300-update report` |
+| T2 -> T1, the zip | T1's zip over T2 | refused: "The installed openwrt is T2, and this zip is T1, an older release", nothing written |
+| T2 -> T1, the computer | T1's package by `install.sh` | **went through without a word** (below, fixed); with the fix: refused on the device before anything was written, "boot_b and misc were not changed"; with `MU300_DOWNGRADE=yes`: through, everything carried |
+
+Every way kept the planted state as `mu300-update apply` does (part 2), with two differences that come from Android,
+not from the carry block:
+* **The 8 "changed" items** are directories, symbolic links and a FIFO the carry makes anew (only files go by link):
+  made from Android, each gets `security.selinux` = `u:object_r:unlabeled:s0` from Android's kernel. Nothing of the
+  user's is lost or altered (the ACL, the capability, the user attribute are all there); every file the installers
+  ever unpacked from Android carries the same label, and OpenWrt and Ubuntu here do not use SELinux.
+* **The password.** The zip does not keep a well-known one (`default_hash`, since issue #167): root's `ubuntu`, set by
+  the computer installer, became the image's own, none ("root's password is the images' own again: none, until one
+  is set"; the plan says so before). `mu300-update` keeps the hash, and `install.sh` sets the one it asks for. By
+  decision, not changed here; a zip update over a device with `ubuntu` leaves root without a password.
+
+Found and fixed on this branch:
+* **`install.sh` (and `install.ps1`) took an older release.** `android-install.sh` had no downgrade check: only
+  `mu300-update` and the Magisk installer had one, so the computer's installers put T1 over T2 without asking. It now
+  reads each image's `etc/mu300/image-version` from its tarball (Android's toybox `tar -xzOf`, measured) and refuses
+  an older release than the installed system (the release-tag order) before it writes anything; `MU300_DOWNGRADE=yes`
+  in front of `install.sh` / `install.ps1` allows it, and the Magisk installer passes on its own decision
+  (`DOWNGRADE` in the env file). Tests: `test_android_install.Downgrade`.
+* The update texts of `install.sh`, `install.ps1` and the window still said "settings and data (/etc/mu300, users and
+  home directories, SSH host keys, UCI)"; they now say that everything added or changed is kept (en, tr, zh).
+
+Seen, not changed: run seconds after Android had booted, with `ANDROID_SERIAL` naming it, `install.sh` once found
+no Android answering and, because two other boards on the computer were in Linux, offered to reboot "the device" out
+of Linux (answers mode stopped at that question; a minute later the same run found Android). Answered yes it would
+have stopped too: `linux-mode.sh` reboots nothing over SSH while more than one board is in Linux.
+
+**Not run**: the page in a browser (its backend was driven), the 5.4 kernel, an SD card, Ubuntu through the zip or the
+computer installer.
+
+**Not measured, or not on a device.**
+* Before 2026-10-16 nothing of this ran on an F50 or a U30 Air: not the helper on the devices' kernels (5.4 vendor, mainline) and
+  under Android (a static aarch64 program started from the Linux filesystem by Magisk's root), not the time the
+  scan and the hashing take on the eMMC or an SD card, not a boot of an updated system. In the containers the
+  updated systems were only asked what can be asked without booting (`dpkg --audit` empty, `sshd -t`, `visudo -c`,
+  no unit that does not load, the accounts; OpenWrt: `uci show` without an error, every enabled service has its
+  script). The carry step of an Ubuntu system with 22 000 files and 1.3 GB of the user's took 13 s by copy and 7 s by link in the container (an Apple M-series host, measured before the last two reviews' changes); the scan of the old system alone 0.04 s, hashing a whole image 15 s. On the device's storage it will be slower, by how much is not known.
+* A system that has run differs from its image in ways an unpacked image does not: files the system writes or
+  removes by itself. Known and handled: uci-defaults, the package databases, `ld.so.cache`, `pam.d/common-*`,
+  accounts. Others would show as lines of the report nobody caused (`Back, though you had deleted them`, `Yours is
+  in use where the new release has another version`); the device test looks for them.
+* No release was built. `rootfs/assemble.sh` and `openwrt/build-rootfs.sh` were run as `tools/make-release.sh` runs them, for Ubuntu 24.04 and OpenWrt, with the kernel outputs of the main checkout: both images came out with the helper, their manifest (the same as `tools/image-manifest.py` makes from the tarball) and the older manifests of their own system, and v2026.10.23 updated to these two built images gave the rows of the tables above by both paths. `make-release.sh` itself (its audit, the manifests as assets, `SHA256SUMS`), the 26.04 and panel images and `install.sh`'s source build did not run.
+* What an update still does not keep, by decision: a package that cannot be installed again (not in a feed) -
+  its files stay in `<os>.old`, `mu300-user-packages status` says so, as before; choices in `/etc/alternatives`; a
+  kernel module built by hand on Ubuntu (OpenWrt's `lib/modules` is kept as before); what the running system
+  changes between `apply` and the reboot stays in the previous system (`apply` says: reboot soon).
+* Android's own toybox was not measured (Ubuntu's 0.8.9 was); it is not used for carrying any more.
+
+**With the panel's update (§86).** Both changes rewrote `apply`; they are one now. *Every source* - GitHub, a mirror,
+`apply --from` a Magisk zip or a release directory, a downgrade - ends in `apply_one`, which runs the new image's
+carry block, so what is said here holds for each (measured below for online and `--from`). *One word for an older
+release:* §86's `downgrade_ok` and `--downgrade` (`MU300_ALLOW_DOWNGRADE`); this change's own `MU300_DOWNGRADE`
+variable of `mu300-update` is gone before it was ever released (the zip's `MU300_DOWNGRADE=yes` setting stays the
+zip's), and the refusal now says why it matters: the older release's updater may not carry everything over. *One
+rule for room:* `space_needed N [CARRY_KB]` is what `apply` refuses with before it downloads and what the page shows
+(`status --sizes`, `releases`); `carry_need` adds the copy of the user's files kept for a rollback - the old system
+less its image's files as its manifest has them, with the carry's margin - and nothing for `--no-rollback` or for a
+system whose image's manifest is not there before the new image is (every release up to v2026.10.27: the first
+update to a release with this is counted only by the carry block's exact check after the unpack, which changes
+nothing when it fails - measured below). *The report on the page:* System > Update shows `/etc/mu300/update-report`
+as the carry block writes it, the newest update on top, cut at 6000 bytes with where the rest is, open while it is
+new. The manifests of v2026.10.26 and v2026.10.27, published while this waited, were added (36 releases of each
+image); one published before this is merged needs the same (`tools/image-manifest.py legacy`, `union`).
+
+**On a release build** (2026-10-15: `tools/make-release.sh` from the branch under a three-field test tag after v2026.10.27, not published, signed with
+the project's key; 5.4 and the mainline kernels of v2026.10.27; the Magisk zips by `tools/make-magisk-zips.sh`).
+The experiment from v2026.10.27 as published, now with a third path - the old system offline, given the new
+updater as a user of a release before `apply --from` does it, then `mu300-update apply --from` the release's zip of
+its system (`--unsigned`: v2026.10.27 has no key to check with) - `tests/update-experiment/results/built-*.md`:
+
+| image | `mu300-update apply` | installer, Magisk zip | `apply --from` the zip |
+|---|---|---|---|
+| Ubuntu 24.04 | 61 kept, 1 set aside, 1 installed again, 4 by design, **0 lost** | 61, 1, 1, 3, **0 lost** | 61, 1, 1, 4, **0 lost** |
+| Ubuntu 26.04 | 61, 1, 1, 4, **0 lost** | 61, 1, 1, 3, **0 lost** | 61, 1, 1, 4, **0 lost** |
+| OpenWrt | 46 kept, 2 set aside, 1 installed again, 3 by design, **0 lost** | 46, 2, 1, 2, **0 lost** | 46, 2, 1, 3, **0 lost** |
+| OpenWrt with the panel | 46, 2, 1, 3, **0 lost** | 46, 2, 1, 2, **0 lost** | 46, 2, 1, 3, **0 lost** |
+
+Nothing *changed*; the copy kept for a rollback (`<os>.old`) was the old system in every planted item, by both
+device paths; the other system and the extras beside it untouched. On OpenWrt, `--no-rollback` the same; 2.5 GB of
+the user's with 2.3 GB free: "not enough room to carry your files over beside the previous system: 2673 MB needed,
+2214 MB free", nothing changed, and through with `--no-rollback`; `MU300_UPDATE_KEEP=list` loses what it always did
+(34 of 67 on Ubuntu), as it says.
+
+**A test that failed now and then** (`test_magisk_installer...test_payload_replaced_after_verification_is_not_installed`,
+"checksum mismatch", about 1 run in 20 on this branch): the test made a zip, then the corrupt one, and the fake
+release's `tar_gz` put the time into the gzip header - when a second boundary fell between the two, the manifest
+the installer read was the second zip's and the payload the first's. No race in the installer (it checks a copy of
+the payload and uses only that copy). Made deterministic: 2 failures in 100 runs before, 0 in 200 after.
+
+**Manifests of the old releases, for the record** (optional: no updater reads them from there). For each tag from
+v2026.09.21 to v2026.10.27, with the tag's four images in `release/<tag>` as published:
+
+```sh
+python3 tools/image-manifest.py assets release/<tag> manifests/<tag>
+gh release upload <tag> -R dikeckaan/mu300-linux manifests/<tag>/*.manifest.gz
+```
+
+`rootfs/overlay/opt/mu300/lib/image-manifests/` was made from the same manifests (`tools/image-manifest.py legacy`,
+then `union`), each image downloaded and checked against its release's `SHA256SUMS` first.
 
 ### 71. A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found
 

@@ -182,7 +182,7 @@ First it brings your copy of the project up to date from GitHub and restarts its
 | *Install the web panel for Ubuntu?* (Ubuntu only) | Cockpit with the MU300 page, from the release's offline file (about 24 MB more; see [Control Panel (LuCI)](Control-Panel-(LuCI)#a-web-panel-on-ubuntu-cockpit)) | no, add it later with `mu300-extra install panel` |
 | *adb to Linux is on and lets every computer in ... Let in only this computer's adb key instead?* | adb to Linux over the cable is on by default, with a root shell and no password for anyone who plugs in a cable; `yes` closes it to all but the computer you install from (see [adb to Linux](#adb-to-linux)) | no (every computer; change it later with `mu300-usb adb auth keys` or `mu300-usb adb off`) |
 | *Which kernel?* 1) 5.4 2) 6.18 3) 7.2 | the core of Linux; see [Kernels](Kernels) | 1 (5.4), or 2 (6.18) for Ubuntu 26.04 |
-| *update or wipe* (only when Linux is already there) | `update` keeps settings and data, `wipe` starts fresh | update |
+| *update or wipe* (only when Linux is already there) | `update` keeps everything you added to the systems or changed in them (see [Updating](Updating#what-an-update-keeps)); `wipe` erases the Linux filesystem and starts fresh | update |
 | *Password for the "ubuntu" user (Ubuntu) and "root" (OpenWrt)* | your login password, at least 6 characters | choose a good one |
 
 **About the failed-boot count:** a boot counts as failed when it never finishes starting up (power goes, the battery
@@ -362,6 +362,34 @@ U30 Air and finds the place by itself. There is no Ubuntu 26.04 zip with kernel 
 Magisk cannot ask questions, so choices go in a settings file, `mu300-install.conf`. Shrinking `userdata` is not
 offered from a zip. The keys, where the file may live and the rules for erasing are in the
 [README](https://github.com/dikeckaan/mu300-linux#choosing-something-else-mu300-installconf).
+
+### Updating with a zip
+
+**Installing a zip over an installation is an update, and an update loses nothing.** That is what the zip does by
+itself when it finds Linux on the device; nothing has to be set. The plan it prints says so before anything is
+written (`update: openwrt v2026.10.27 -> vYYYY.MM.DD.N: everything you added to it or changed in it is kept ...`).
+
+* **Kept:** everything you added to the system or changed in it - files in any directory, settings, accounts,
+  services you enabled or disabled - exactly as with `mu300-update apply`
+  ([what an update keeps](Updating#what-an-update-keeps)). Packages you installed are installed again at the first
+  boot. What could not stay in its place is saved under `/etc/mu300/update-kept/` and listed in
+  `/etc/mu300/update-report`.
+* **Your password stays** the one the device has. (`MU300_PASSWORD` or `MU300_PASSWORD_RESET=yes` in
+  `/data/adb/mu300-install.conf` set another.)
+* **A zip carries one system and one kernel.** It updates the installed system of its kind (an OpenWrt zip updates
+  OpenWrt). The other installed systems and the extras (the VPN module) are not touched; a system that is not
+  installed yet is installed beside the others.
+* **No network is needed:** the zip has everything, also for a device that was installed long ago.
+* **No rollback copy:** the previous system is not kept on this path, so no room is needed for a second copy of
+  your files. (`mu300-update apply` on the device keeps one.)
+* **An older zip is refused** when the installed system of its kind is newer: an older release may not carry
+  everything over. `MU300_DOWNGRADE=yes` in `/data/adb/mu300-install.conf` allows it.
+* **`MU300_MODE=wipe`** (from `/data/adb/mu300-install.conf` only) is the opposite of an update: the Linux
+  filesystem is made anew, and every installed system, every file in them and the extras are erased. Android, its
+  data and the way back to Android are never touched by either.
+
+This holds for zips from the first release with a four-field tag (vYYYY.MM.DD.N) on. An older zip keeps only settings (`/etc/mu300`), accounts and home
+directories, `/usr/local`, SSH host keys and OpenWrt's UCI configuration.
 
 ## A Magisk zip on a computer
 
