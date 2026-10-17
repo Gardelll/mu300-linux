@@ -159,6 +159,7 @@ what replaced it. The table below gives each section's state.
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 131 | An update writes only what changed: the new image's binaries that the installed system has byte for byte become second names of its files (never text, never `etc`, `var` or the user's places), the room counted before anything is written by every installer and by `mu300-update`, nothing left behind by a run that fails or is cut off, and the computer installer's switch module of the release | current (unit tests; the zip, `mu300-update apply` with rollback, and the computer installer on an F50, plain OpenWrt with Docker in its 804 MiB region, 2026-10-16; Ubuntu 24.04 by `mu300-update` with rollback on an F50, 2026-10-17) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
+| 136 | A carrier name the catalog has in another case (`CHINA BROADNET`) stayed English: looked up without case and spacing, then by its PLMN (#231) | current (unit tests; a user's report, not measured on our boards) |
 | 137 | The SMS webhook's custom body: the placeholder was Feishu's body, which WeCom refuses behind an HTTP 200; body presets for WeCom/DingTalk and Feishu/Lark that also fill in the answer check (#259) | current (unit tests; not sent to a real service) |
 | 138 | `mu300-atd` died at its first open of a SIPC tty that was not ready (a failed `exec` redirection ends dash and ash): it waits for the channel now, holding the command fifo (#226) | current (unit tests under dash, bash and busybox ash; not on a device) |
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
@@ -4651,6 +4652,25 @@ alphabet): the report, the code and unit tests.
 
 Open: a name of two or more code units that are all decimal digits (U+8054 U+9010 would be `80549010`) stays hex
 under a character set other than UCS2 - the price of leaving digit names alone. Not seen in a report.
+### 136. A carrier name the catalog has in another case stayed English (#231)
+
+A Chinese panel showed `CHINA BROADNET` for a China Broadnet SIM (F50, OpenWrt, 6.18; issue #231): the modem
+answered `+COPS: 0,0,"CHINA BROADNET",11`, the catalogs have `msgid "China Broadnet"`, and a catalog key matches
+only exactly, so `_()` gave the name back unchanged and `carrierName` (`common.js`) returned it before it ever looked
+at the PLMN. Not measured on our boards (no such SIM): the report, the code and a unit test.
+
+* **The rule now** (`carrierName`): a name the catalog has exactly is translated, as before. Otherwise the name is
+  looked up again with its case and spacing folded among the five mainland carriers the panel already knows by
+  PLMN (`CARRIER_NAMES`, the same five messages, so no catalog changes), then by its PLMN (`PLMN_CN`); only a name
+  that is in neither is shown as the modem gave it. One effect beyond the report: a mainland network whose modem
+  name is not one of those five (`CMCC`, `CHN-CT`) is now named by its PLMN, as it was when COPS gave the numeric
+  format. Networks outside that table are untouched (`vodafone TR` stays `vodafone TR`).
+* The lookup is an own-property test, so a name like `constructor` is not answered from the object's prototype.
+* `tools/luci-i18n.py` allows a non-literal `_()` argument only for the names it lists; the call stays
+  `_(carrier.name)`, the one that list has.
+
+Test: `tests/test_luci_i18n.py` `Languages.test_carrier_name_whatever_its_case`, English and Simplified Chinese.
+
 ### 54. A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171)
 
 The webhook of §39 sent one of two fixed bodies (JSON or a form with `sender`, `time`, `text`, `device`,
