@@ -10792,3 +10792,40 @@ nothing changed (slot, both sets, `boot/` as they were); a filler that took the 
 was unpacking made `tar` fail with ENOSPC - `.mu300-update/boot` and the download were gone, the slot image and the set
 it runs with unchanged, and the board booted it afterwards with mobile data. F50-B: the rebuilt 7.2.11 and, after
 `rollback-boot`, the 7.2.11 it had both booted with their 52 modules and the mobile bearer up.
+
+### 178. A V50 updated from another installer's system found no system: its disk was where our init never looks (#290)
+
+**What was reported.** A ZTE V50 (MU3351) ran `20261016-u30air-pd`: a build of kanoqwq's fork (branch
+`clean-tf-7.2`, his Windows/macOS desktop installer of 2026-10-16), kernel 7.2.8 of his own. `mu300-update apply
+--from DIR --unsigned` to v2026.10.17.1 replaced the system and the boot image; the device then logged
+`stage=pmic-wdt-NOT-ready` at ~258 s and `stage=timer-reboot` at ~302 s, and LK went back to Android. Twice. The
+updater also said `could not arm the Linux slot for a trial (mu300-next-boot --trial): usage: ...`.
+
+**Why.** Both lines come from `boot/init`'s rescue path: the pmic-wdt wait (120 x 2 s) only runs after
+`stage=rootfs-unavailable`, i.e. when no system was mounted. 258 - 240 = 18 s: init gave up on the root at ~18 s and
+never switched root, so the modem, the USB network of the system and SSH never came; the rescue shell's USB address on
+a V50 is `192.168.79.1`, not the `192.168.77.1` that was tried. It is not the kernel and not the V50 as such: the
+generic ramdisk of v2026.10.16.1 and v2026.10.17.1 has the same init (sha256 576f8584...) and the same module list.
+kanoqwq's desktop installer has its own places for the system, which its boot image's init (his
+`desktop/boot/storage.sh`, chosen by `/etc/mu300-desktop-root-mode` in the ramdisk) knows and ours does not:
+* "Independent internal partition": a new GPT partition named `mu300root` (ext4, label `mu300root`);
+* "Userdata image": `mu300linux/openwrt.ext4` inside Android's userdata (F2FS), loop-mounted;
+* a TF card labelled `mu300sd` (ours finds that one).
+`mu300-update` keeps the installer's ramdisk as the device segment and appends the release's generic one, whose init
+replaces his: it looks only on the card and in the area after the eMMC's last partition. With the system in a GPT
+partition that area holds nothing (the partition *is* the last one), and the default offset neither.
+The `--trial` line: the running system's `mu300-next-boot` (his, from before `--trial`) answers with its usage line.
+
+**What changed (mu300-update).**
+* `root_layout` tells where the running system's disk is: from `/run/mu300-root-dev` when our init booted it, else
+  from `/run/mu300/disk-dev` (his init writes the device it mounted): a loop over a file is `image`, a partition
+  named `mu300root` is `part`. `bundle_finds_root`: an image never, a partition only with a bundle that lists
+  `gpt-root` in `./features` (none does yet). `apply` stops before it changes anything and `boot`/`kernel` before
+  they write, with the reason; everything that cannot be told is allowed as before.
+* `unlock_for_trial`: a `mu300-next-boot` that answers `--trial` with its usage line (exit 2) is passed over for the
+  copy in the system the update has just installed (the running system's name first, then the others).
+* Tests: `test_update.py` `test_a_disk_another_installer_put_elsewhere_keeps_the_boot_image`,
+  `test_a_next_boot_from_before_the_trial_hands_it_to_the_new_system`.
+
+**Not measured here**: nobody here has a V50 or a system installed by that installer; the layout is read from his
+source (commit `abc5a93c`). Booting a `mu300root` partition from our init is a separate change.
