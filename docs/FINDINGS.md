@@ -8880,8 +8880,11 @@ the other open PRs).**
   encrypted, taken with "from ubuntu, taken on openwrt: what both systems have" (hotspot, LAN address); a file with
   the login hash: F50-B's is `$6$`, which musl takes ("login password: changes"; the yescrypt refusal stays a unit
   test); the SSID changed in uci and restored by `import`, WAN still up.
-* **Not run:** the panel's page (plain OpenWrt has none; the U30 Air is another agent's), the VPN and lock sections,
-  the size limit through rpcd/ubus.
+* **The panel** (luci-app-mu300's files copied onto F50-C's plain OpenWrt for the test): System > Backup of settings
+  renders (passphrase twice, the login-password tick, restore with "Show what would change"; Restore disabled until
+  a preview), no console error; `ubus call mu300dash backup_export` returned the file, plain and sealed.
+* **Not run:** a download and restore through the page in a browser, the VPN and lock sections, the size limit
+  through rpcd/ubus.
 
 ### 156. The release smoke test: tools/smoke.py
 
