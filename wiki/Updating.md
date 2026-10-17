@@ -165,12 +165,13 @@ aside stays in `/etc/mu300/update-kept/` through later updates until you delete 
 ### Room, and going back
 
 `apply` keeps the previous system whole as `<os>.old`, exactly as it was when you updated, for `rollback`. Your
-files are therefore there twice until `sudo mu300-update clean`. Before it downloads anything, `apply` wants about
-1 GB free, 1 GB more for every system it updates, and room for the copy of what you added to each (counted from the
-list of files of the release you are on); the control panel shows the same figure. Once the new system is unpacked
-the copy is counted exactly once more. When the disk has no room, `apply` says how much is needed and how much is
-free, and changes nothing. Then either make room, or update without keeping the previous system (from a terminal;
-the panel always keeps it):
+files are therefore there twice until `sudo mu300-update clean`. An update writes only what changed: the programs
+and libraries of the new release that your system has byte for byte are not written again - the new system and the
+kept one share them (one file, two names) - so an update needs room for the download, the new release's changed
+files and the copy of what you added, not for a second system. Before it downloads anything `apply` counts that and
+says how much is needed and how much is free; the Magisk zip and the computer's installers count it the same way
+before they write anything. When the disk has no room, nothing is changed. Then either make room, or update without
+keeping the previous system (from a terminal; the panel always keeps it):
 
 ```sh
 sudo mu300-update apply --no-rollback    # your files are moved over, not copied: needs no room, and there is no rollback
@@ -178,6 +179,10 @@ sudo mu300-update apply --no-rollback    # your files are moved over, not copied
 
 Reboot soon after an update. The new system has your files as they were when `apply` ran; what the running system
 changes after that stays in the previous one.
+
+While the previous version is kept, replace a program of the system (a package upgrade does), never write into it:
+`cp myprog /usr/bin/prog` or a `chmod` of one changes the shared file in both versions. Text files (scripts,
+settings) and everything under `/etc`, `/var`, the home directories and `/usr/local` are never shared.
 
 `apply` never goes back to an **older** release by itself: the update is done by the release it installs, and one
 from before the first release with a four-field tag would keep only the list of places. `rollback` is the way back. (To install an older
