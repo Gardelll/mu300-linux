@@ -11233,7 +11233,7 @@ asked: another position may have its SIM power off and answer `+CME ERROR: 10` w
 and `mu300cell.sh`, with the internal SIM chosen (`mu300-sim select internal`, a slot without a card on this unit):
 the radio came on (SFUN=4 at 19 s), `AT+CPIN?` answered `+CME ERROR: 10`, the state `absent`, one line "SIM2: no
 card; mobile data waits for one", the WAN `SIM_MISSING` and unavailable, and no second dial in the following minutes
-(before: a dial every 80 s). An `ifup` ran one dial, which ended the same way; making the interface available ran one
+(before, by the code: a 60 s registration wait and a new dial 20 s later, for ever). An `ifup` ran one dial, which ended the same way; making the interface available ran one
 more. No `+ECIND` came on nr3 at that boot (nothing to filter). Back on the external card the state was `ready` and
 data came up as before. Not seen on a device: a card inserted or removed while running (no hands at the boards); the
 event path is covered by `tests/test_device_scripts.py` `SimState`.
