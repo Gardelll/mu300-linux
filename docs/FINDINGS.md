@@ -62,6 +62,7 @@ what replaced it. The table below gives each section's state.
 | 24 | No internal audio hardware | open |
 | 24b | A second board, from a clean install: where the stall actually is | open |
 | 24c | What the Rongyue E5 (kanoqwq/e5-linux) did, and what of it applies here | ported; untested with firmware |
+| 24d | A call carries audio: the voice port had no clock | uplink fixed (heard by the owner); downlink tap loses every other frame (open) |
 | 25 | SC2355 Bluetooth on BlueZ | current |
 | 31 | Ubuntu on 6.18, and what it takes | current (kernel now 6.18.56) |
 | 31a | Wi-Fi RX: sync_for_device stopped invalidating | current |
@@ -2164,6 +2165,95 @@ F50-B the userspace was run on the released 5.4 and on 7.2.10: without the drive
 kernel has no call audio (it used to say "run mu300-audio-dsp load", which cannot work there), `mu300-hfp` refuses
 an address that is not bonded, and nothing is left running. The call itself, on a headset or through the taps, is
 still unmeasured.
+
+### 24d. A call carries audio: the voice port had no clock
+Measured on F50-C on 2026-10-17 (OpenWrt v2026.10.17.3 on the 5.4 kernel, the private audio stack, the 41S DSP image
+of 24c). Six calls went to the owner's own phone, and he reported what he heard:
+
+| call | what was sent | what he heard |
+|---|---|---|
+| 1, kernel 6.18 (no DSP) | DTMF from the modem (`AT+EVTS` start and stop), `AT+SPMSTONE` / `AT+STONE` tones, `AT+SDTMF` | "some broken sounds, nothing meaningful" |
+| 2, kernel 5.4 + DSP | music into `FE_ST_VOICE_PCM_P` at 16 kHz, then `AT+STONE` | silence |
+| 3, kernel 5.4 + DSP, IIS port 1 clocked | Ode to Joy (8 kHz, 32 s) into `FE_ST_VOICE_PCM_P` | music "from the first second" |
+| 4, the same through `mu300-voice` | melody, then 6 s recorded from `FE_ST_VOICE_C` and played back | melody fine; his own voice came back unrecognisable ("slow motion, muffled") |
+| 5, as 4 with `VBC_SRC_DAC1/ADC2` = 16000 and 16 kHz taps | melody, then the echo | melody fine, then only crackle |
+| 6, nothing played; he counted aloud | four 8 s captures (clock / tap rate varied) | crackle the whole call |
+
+**The modem log is what found it.** The CP writes its own log to the `slog_nr` spool channel, which
+`modem-log-drain` throws away. `AT+ARMLOG=1` turns it on. The records hold the format string followed by the
+arguments as little-endian u32s, so `strings` alone gives the sequence and a few lines of Python give the
+values. In call 2 the modem did everything right. At alerting (`APP_MN_PROGRESS_IND`) it logged `AUDCTL: Start
+codec, mode:3`, `init_agdsp_sharedmem`, `agdsp access, check status OK`, enabled MCDT channel 6 in both
+directions and posted its command to the DSP. From then on it wrote 200 bytes of downlink into MCDT every 20 ms.
+**Every `mcdt_recv read_cnt` was 0**: the DSP returned no uplink frame in the whole call. The modem's own MCDT
+register dumps show channel 6's FIFO filling up (`0x565000fc` climbing to 0x200) and never draining. So the
+handover from the modem to the DSP works, and the DSP is what stands still. The note in 24b that "the modem never
+hands the call to the DSP" was an inference from the silent `/dev/audio_pipe_voice`, and it was wrong.
+
+**The DSP's call scene runs on VBC IIS port 1, and nothing clocks that port.** The voice DAC1/ADC2 muxes sit on
+`VBC_IIS_PORT_IIS1`. `VBC_IIS_MST_SEL_0_TYPE`, the setting tried before (24b), was already
+`VBC_MASTER_INTERNAL` at boot, and it only covers port 0. That is why it made `FE_ST_NORMAL_AP01` run in real
+time and left the call scene where it was. Bench test with the scene up and no call: `FE_ST_VOICE_C` stays at
+`hw_ptr` 0 until `VBC_IIS_MASTER_ENALBE = enable` **and** `VBC_IIS_MST_SEL_1_TYPE = VBC_MASTER_INTERNAL` are set.
+Then 2 s of capture comes back in 2 s. The checks:
+
+* `MST_SEL_2` or `MST_SEL_3` instead of 1: nothing moves.
+* `MST_SEL_1` without the master enable: nothing moves.
+
+`FE_ST_VOICE_PCM_P` still sits at its first buffer without a call. It moves once the modem feeds the scene. With
+both settings, call 3's modem log reads `read_cnt=200` on every 20 ms frame, and the playback tap took 32 s for
+32 s of audio.
+
+**The uplink works; the downlink tap is still wrong.** Call 4 used `mu300-voice` itself (`audio start dsp`, `tone`,
+one round of `echo`). The melody arrived. The capture tap `FE_ST_VOICE_C` (`VBC_DSP_VOICE_CAPTURE_TYPE` downlink)
+does carry the far end, but only half of it. Call 6 measured it with the owner counting aloud:
+
+| capture | port clock (`VBC_SRC_DAC1/ADC2`) | frames per second, in the call | content |
+|---|---|---|---|
+| 8 kHz | 0 (default) | 4000 (48000 frames in 12 s) | his voice, F0 115-145 Hz (right pitch) |
+| 16 kHz | 0 | 8000 (96320 in 12 s) | speech, little of it |
+| 16 kHz | 16000 | 16000 | all zero |
+| 8 kHz | 16000 | 8000 | all zero |
+
+At the default clock the pitch is right, so nothing is stretched. Instead, the 8 kHz capture shows a hard
+discontinuity every 160 samples, i.e. at every 20 ms frame boundary. The AP receives one 20 ms frame per 40 ms,
+and the frames it gets do not join up: every other downlink frame is lost. Echoed back, that is what he heard
+as broken "slow motion" speech. The modem is not the cause: in call 3 it handed over and took back a frame every
+20 ms (`read_cnt=200`).
+
+* Without a call, the same tap runs at the clock's rate. That is 8000 frames/s at the default, and 16000 with
+  `VBC_SRC_*` = 16000, which therefore sets the internal master's rate.
+* With `VBC_SRC_*` = 16000 in a call, the tap paces correctly but carries zeros. The far end then hears
+  crackle, so that setting is not the fix.
+
+Not solved here: why the DSP writes the downlink tap at half the frame rate. Next things to try:
+
+* the capture period / buffer sizes (only 160/960 and 320/1920 were used);
+* `FE_ST_CAPTURE_DSP` or `FE_ST_DUMP` instead of `FE_ST_VOICE_C`;
+* the scene at 16 kHz with the default clock.
+
+**With nothing playing into `FE_ST_VOICE_PCM_P`, the far end hears crackle.** In `UPLINK_ONLY` mode with no AP
+stream, the DSP sends whatever is in its buffer, not silence. A bridge has to keep that stream fed with silence for
+the whole call; `mu300-voice` only writes while `tone` or `echo` runs.
+
+**What `mu300-voice` does now.** The `dsp` route calls `dsp_clock`, which sets the master enable and the
+`MST_SEL_0/1` internal clock through the undo log. `audio start` sets it again once the scene is RUNNING, and
+`audio stop` puts the VBC back to slave mode. The `bt` route leaves it alone, because there the headset
+controller's PCM clocks IIS3.
+
+Other things learned along the way:
+
+* **Network DTMF is not a tone channel.** `AT+EVTS=1,<d>` / `AT+EVTS=0,<d>` (what the RIL sends), `AT+VTS`, and
+  `AT+VTD` (default 1) all work during a VoLTE call and return OK. They travel as RTP events, though, and what
+  reaches the far end is not a recognisable tune.
+* **`AT+STONE`, `AT+SPMSTONE`, `AT+SDTMF` and `AT+SPVLOOP` all return OK**, outside a call as well. The modem
+  hands its tone generator to the DSP (`CP_CMDQ_START_TONE`), so on 6.18 these do nothing. None of them gave a
+  heard tone on 5.4 before the clock fix either.
+* **The modem log costs nothing to keep open.** Stop `modem-log-drain` and read `/dev/slog_nr` in a loop: one
+  `dd` returns at every channel close. `AT+ARMLOG=0` turns the log off again.
+* The owner's SIP project used `FE_ST_VOICE_PCM_P` at 16 kHz with period 640 x2. That is the MU5358's vendor
+  scene, and on that board the HAL's own call scene clocks the port. Here 8 kHz with 160 / 960 is what was heard.
+  16 kHz was only tried without the clock (call 2).
 
 ## Bluetooth
 
