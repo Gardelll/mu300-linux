@@ -5,7 +5,8 @@
 .DESCRIPTION
     Run with the device booted in rooted Android and connected over USB (adb). It makes the slot Android runs from
     the boot slot in misc, copies Android's boot image over the Linux slot's (boot_a over boot_b; boot_b over boot_a
-    when Android runs from slot b), erases the Linux filesystem in the unpartitioned eMMC region and, when you say
+    when Android runs from slot b), erases the Linux filesystem in the unpartitioned eMMC region (or inside the GPT
+    partition named mu300root another installer made: its contents, never the partition) and, when you say
     so, the one on the SD card (ext4 labelled mu300sd; a card with any other filesystem is never touched), and
     removes the installer leftovers. Android's boot partition, the GPT, userdata and every other partition stay
     untouched.
@@ -290,29 +291,58 @@ Info 'device.model' $model; Info 'slot.android' $ANDROID_SLOT; Info 'slot.linux'
 
 Step 'find' 15
 Say 'Looking for the Linux installation'
-$parts = (SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)').Split(' ')
-if ($parts.Count -ne 2) { Die 'could not read the partition table from the device (is su granted? try again)' }
-[int64]$lastEnd = $parts[0]; [int64]$disk = $parts[1]
+# where the installers look and boot/init boots (tools/storage.sh's region_probe and region_find_existing, the same
+# command as install.ps1's): the free region behind the last partition, a GPT partition named mu300root that another
+# installer made (kanoqwq's desktop installer, FINDINGS 179), the old fixed offset
+# (no double quotes in a device command: Windows PowerShell 5.1 drops them on the way to adb)
+$parts = @((SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/mmcblk0/size)').Trim() -split '\s+')
+$nums = @($parts | Where-Object { $_ -match '^[0-9]+$' })
+$partList = @($parts | Where-Object { $_ -match '^part:[0-9]+:[0-9]+$' })
+$image = @($parts | Where-Object { $_ -eq 'image' }).Count
+if ($nums.Count -ne 2 -or ($nums.Count + $partList.Count + $image) -ne $parts.Count) { Die 'could not read the partition table from the device (is su granted? try again)' }
+if ($partList.Count -gt 1) { Die "the eMMC has $($partList.Count) partitions named mu300root, and which one holds Linux cannot be told; nothing was changed" }
+[int64]$lastEnd = $nums[0]; [int64]$disk = $nums[1]
 [int64]$OFF = 0; [int64]$SIZE = 0
 [int64]$start = [math]::Floor($lastEnd / 4096 + 1) * 4096 * 512
+$IN_PART = 0; [int64]$PART_OFF = -1; [int64]$PART_SIZE = 0; $PART_FS = 'none'
+if ($partList.Count -eq 1) {
+    $pp = $partList[0].Split(':')
+    $PART_OFF = [int64]$pp[1] * 512; $PART_SIZE = [int64]$pp[2] * 512
+}
 # a candidate past the end of the eMMC (a table that reaches the disk's end, issues #52/#65) is never read: that dd
 # never returns on the device
 function RegionOnDisk([int64]$bytes) { [math]::Floor(($bytes + 2048) / 512) -le $disk }
-foreach ($cand in @($start, 27762098176)) {
+# the free space behind the last partition and before the backup GPT, or wholly inside the partition named mu300root
+function RegionInBounds([int64]$o, [int64]$z) {
+    (([math]::Floor($o / 512) -ge $lastEnd) -and ([math]::Floor(($o + $z) / 512) -le ($disk - 34))) -or
+        (($PART_OFF -ge 0) -and ($o -ge $PART_OFF) -and (($o + $z) -le ($PART_OFF + $PART_SIZE)))
+}
+$cands = @($start); if ($PART_OFF -ge 0) { $cands += $PART_OFF }; $cands += [int64]27762098176
+foreach ($cand in $cands) {
     if (-not (RegionOnDisk $cand)) { continue }
+    if ($cand -eq 27762098176 -and $PART_OFF -ge 0 -and $cand -ge $PART_OFF -and $cand -lt ($PART_OFF + $PART_SIZE)) { continue }
     $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
+    # two bytes on the disk always read as four hex digits: anything else is no answer, never "no installation"
+    if ($m -notmatch '^[0-9a-f]{4}$') { Die 'no answer from the device while looking for the Linux filesystem; nothing was changed' }
     $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
+    if ($cand -eq $PART_OFF -and $m -eq '53ef') { $PART_FS = $(if ($l.Trim() -eq 'mu300root') { 'mu300root' } else { 'ext4' }) }
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {
         $blocks = [int64]((SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
-        $OFF = $cand; $SIZE = $blocks * 4096; break
+        $OFF = $cand; $SIZE = $blocks * 4096
+        # a filesystem in the partition is never larger than the partition
+        if ($cand -eq $PART_OFF) { $IN_PART = 1; if ($SIZE -gt $PART_SIZE) { $SIZE = $PART_SIZE } }
+        break
     }
 }
 if ($OFF -gt 0) {
-    if (($OFF / 512) -lt $lastEnd -or (($OFF + $SIZE) / 512) -gt ($disk - 34)) { Die 'the mu300root filesystem overlaps a partition, refusing to touch it' }
+    if (-not (RegionInBounds $OFF $SIZE)) { Die 'the mu300root filesystem overlaps a partition, refusing to touch it' }
     if ($OFF % 1MB -ne 0) { Die "unexpected filesystem offset $OFF" }
-    Write-Host "Linux filesystem: offset $OFF, $([int64]($SIZE / 1MB)) MiB"
+    if ([math]::Floor($SIZE / 1MB) -le 0) { Die 'the mu300root filesystem has no size, refusing to touch it' }
+    Write-Host "Linux filesystem: offset $OFF, $([math]::Floor($SIZE / 1MB)) MiB"
+    if ($IN_PART -eq 1) { Write-Host '  in the GPT partition named mu300root that another installer made: an erase empties the partition, the partition itself stays (remove it with the installer that made it)' }
 } else {
     Write-Host 'no mu300root filesystem found (already erased?)'
+    if ($PART_FS -eq 'ext4') { Write-Host '  the GPT partition named mu300root holds another Linux filesystem (not labelled mu300root): not this project''s, left as it is' }
 }
 # The SD card (tools/storage.sh's sd_probe): "<block device> <512-byte sectors> <type>" of the first mmc disk that
 # is not the eMMC - its first partition when it has one, the whole card otherwise; the type keeps a second eMMC or
@@ -326,13 +356,14 @@ if ($sd.Count -eq 3 -and $sd[2] -eq 'SD' -and $sd[1] -match '^[0-9]+$' -and [int
 if ($SD_HAS -eq 'yes') { Write-Host ('Linux filesystem on the SD card: {0}, {1:N1} GiB' -f $SD_DEV, ($SD_BYTES / 1GB)) }
 $BC = Hex32
 Info 'region.existing' $(if ($OFF -gt 0) { 'yes' } else { 'no' }); Info 'region.offset' $OFF; Info 'region.size' $SIZE
+Info 'region.partition' $IN_PART
 Info 'sd.device' $SD_DEV; Info 'sd.bytes' $SD_BYTES; Info 'sd.state' $SD_HAS
 
 Step 'choices' 25
 Say 'What should be removed?'
 $wipe = 'keep'
 if ($OFF -gt 0) {
-    Write-Host "  secure  overwrite the whole $([int64]($SIZE / 1MB)) MiB region and verify (recommended, takes a few"
+    Write-Host "  secure  overwrite the whole $([math]::Floor($SIZE / 1MB)) MiB region and verify (recommended, takes a few"
     Write-Host '          minutes; your files are really gone afterwards)'
     Write-Host '  quick   only erase the filesystem headers (fast, but the files stay readable on the flash; an'
     Write-Host '          installation into this space later finds it not empty and asks for the word overwrite)'
@@ -355,11 +386,14 @@ Write-Host ''
 Write-Host "  misc:     boot slot $ANDROID_SLOT (Android), Linux boot disabled"
 Write-Host "  boot_$($LINUX_SLOT):   replaced with a copy of boot_$ANDROID_SLOT (stock Android boot image)"
 if ($OFF -eq 0) { Write-Host '  Linux:    no installation on the eMMC' }
-else { Write-Host "  Linux:    $(if ($wipe -eq 'keep') { 'kept on the eMMC (not bootable)' } else { "$wipe erase of $([int64]($SIZE / 1MB)) MiB at offset $OFF" })" }
+else {
+    Write-Host "  Linux:    $(if ($wipe -eq 'keep') { 'kept on the eMMC (not bootable)' } else { "$wipe erase of $([math]::Floor($SIZE / 1MB)) MiB at offset $OFF" })"
+    if ($IN_PART -eq 1) { Write-Host '            (inside the GPT partition named mu300root: the partition stays, only its contents are erased)' }
+}
 if ($sdwipe -eq 'erase') { Write-Host "  SD card:  mu300sd filesystem erased ($SD_DEV, first 64 MiB)" }
 elseif ($SD_HAS -eq 'yes') { Write-Host "  SD card:  kept ($SD_DEV, not bootable)" }
 else { Write-Host '  SD card:  no installation' }
-Write-Host "  untouched: boot_$ANDROID_SLOT, GPT, userdata and all other partitions"
+Write-Host "  untouched: boot_$ANDROID_SLOT, GPT, userdata and all other partitions$(if ($IN_PART -eq 1) { ' (the partition named mu300root too: it stays)' })"
 # the word itself, in capitals (-cne: PowerShell's -ne does not tell uninstall from UNINSTALL)
 if ((Ask 'Type UNINSTALL to continue' 'no' 'MU300_ANS_CONFIRM') -cne 'UNINSTALL') { Die 'cancelled' }
 
@@ -412,9 +446,14 @@ if ($wipe -ne 'keep') {
     Say "Erasing the Linux filesystem ($wipe)"
     $busy = SuDo "for o in /sys/block/loop*/loop/offset; do [ x`$(cat `$o 2>/dev/null) = x$OFF ] && echo `${o%/loop/offset}; done"
     if ($busy) { Die "the Linux region is still attached ($busy); reboot Android and run again" }
-    [int64]$skip = $OFF / 1MB; [int64]$mib = $SIZE / 1MB
+    # whole MiB, rounded down ([int64] of a division rounds to even, and up would write past a partition's end)
+    [int64]$skip = [math]::Floor($OFF / 1MB); [int64]$mib = [math]::Floor($SIZE / 1MB)
+    # once more, in the units the writes use: every megabyte written lies in the free space or in the partition
+    if (-not (RegionInBounds ($skip * 1MB) ($mib * 1MB))) { Die 'the region does not lie in the free space; the filesystem was not erased' }
     if ($wipe -eq 'quick') {
-        SuDo "dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=64 conv=notrunc 2>/dev/null; sync" | Out-Null
+        # (never more than the filesystem: in a partition named mu300root that is the partition's end)
+        $n = [math]::Min(64, $mib)
+        SuDo "dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=$n conv=notrunc 2>/dev/null; sync" | Out-Null
     } else {
         Write-Host "overwriting $mib MiB, this takes a few minutes"
         SuDo "command -v blkdiscard >/dev/null && blkdiscard -o $OFF -l $SIZE /dev/block/mmcblk0 2>/dev/null; dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=$mib conv=notrunc 2>/dev/null; sync" | Out-Null

@@ -10890,7 +10890,37 @@ install.sh, install.ps1 and the Magisk zip (the web installer runs the zip's ins
 file, so `install.sh --check` run from a worktree took it for a downloaded copy and overwrote the uncommitted work
 in it with GitHub's main (it did, twice, during this work). `-e` now; install.ps1's `Test-Path` already saw both.
 
-**Not done**: uninstall.sh / uninstall.ps1 and tools/reset-password.sh still look only at the region and refuse
-such a partition (they say the filesystem overlaps a partition); removing the partition itself is the other
-installer's job. Not measured on a device that installer set up (nobody here has one); the partition here was
-made by hand to cover our own region.
+**The uninstallers and reset-password (follow-up, PR after #297).** `uninstall.sh`, `uninstall.ps1` and
+`tools/reset-password.sh` still had their own search (the region and the old fixed offset only): in this layout
+`uninstall.sh` said "no mu300root filesystem found (already erased?)" and would have left the system, and
+reset-password "no Linux filesystem found". They now use the same probe (`region_probe`/`region_find_existing`;
+uninstall.ps1 the same device command as install.ps1, a test compares them) and bounds (`region_in_bounds`):
+* uninstall in the partition: the plan says "inside the GPT partition named mu300root: the partition stays, only its
+  contents are erased"; quick zeroes the first 64 MiB (never more than the filesystem), secure the filesystem; the
+  GPT entry and the table are never written, and the "grow userdata back" step is not offered (userdata is not the
+  last partition then). Two partitions of that name: nothing is changed. Another ext4 there: "not this project's,
+  left as it is".
+* uninstall.ps1 counted MiB with `[int64]($SIZE / 1MB)`, which rounds (to even): a size that is not whole MiB - a
+  partition's can be - wrote up to 1 MiB past its end. `[math]::Floor` now.
+* reset-password mounts the filesystem inside the partition (`MU300_OFF` = the partition's start).
+* Tests: `test_answers.py` `UninstallInPartition` on the fake eMMC (`tests/fakegpt.py` layout `part64`): quick and
+  secure erase inside the partition, the bytes right in front of and behind it and the table unchanged; keep;
+  another ext4; two partitions; reset-password's mount.
+
+**On F50-C (2026-10-17), the same emulated layout** (entry 76 over sectors 120504320..122150911; table SHA-256
+a780d776.../dd499ab7... while emulated). Before: the region (804 MiB) imaged to the Mac (SHA-256 5259e15f..., equal
+to the device's), boot_b saved. main's uninstall.sh: "no mu300root filesystem found"; reset-password: "no Linux
+filesystem found". This branch: "Linux filesystem: offset 61698211840, 804 MiB / in the GPT partition named
+mu300root ...", reset-password "internal storage: offset 61698211840, 804 MiB, in the GPT partition named
+mu300root", mounted it and reset root's password of OpenWrt. A real `uninstall.sh` (quick): boot_b = boot_a, the
+first 64 MiB of the partition zero, magic gone, "the partition table is left alone", both GPT copies still
+a780d776/dd499ab7, `/dev/block/by-name/mu300root` still there; a second run: "no mu300root filesystem found". Then
+the region image written back (SHA-256 5259e15f... again), boot_b back (c600c020...), the module's remove marker
+taken away, the original table written back (af016e38.../99fb7db7..., read back after the reboot; 75 partitions),
+Android up, `su -c mu300-linux`: `/run/mu300-root-dev` `mmcblk0@61698211840`, OpenWrt 25.12.5 on 6.18.57, data up
+(ping 1.1.1.1), back to Android.
+
+**Not done**: removing the partition itself is the other installer's job. Not measured on a device that installer
+set up (nobody here has one); the partition here was made by hand to cover our own region.
+`tools/android-import-hotspot.sh` (no caller left) still mounts the old fixed offset and writes into the
+filesystem's top level, not a system's: it predates the region and the systems' directories.
