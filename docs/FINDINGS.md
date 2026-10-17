@@ -8827,6 +8827,15 @@ SRAM rail (moved with the CPU rail, not visible from Linux); the U30 Air's SML; 
 * **The DVFS start delay, measured.** `register cpufreq driver success` comes at 2.03 s on 6.18.56. With this PR it
   comes at 5.28-5.56 s with 0,0,0 and at 6.38-6.61 s with an offset (DVFS_INIT runs at 4.9-5.3 s). So DVFS starts
   3.3-4.6 s later in every boot.
+* **What the boot paid for it, and the fix (F50-B, Ubuntu 24.04, 7.2.11, 2026-10-17).** The init waited for
+  `applied` after writing 0,0,0 too. With poll logging in the ramdisk: written at 4.99 s, `queued` at 5.00 and 5.22,
+  `applied` only at 6.34 - the registration itself ends at 5.37, and the 200 ms poll after it took a second (forks
+  stall while the new perf domains rebuild the scheduler domains). systemd's kernel phase went from 5.3 s (the
+  released 7.2.11) to 6.7 s, on two boots. Now the stock call is handed over and not waited for (`cpuv_stock`): only
+  an offset is waited for, so that a DVFS_INIT that fails with it is still taken back in the same boot. After the
+  change: written at 4.98 s, switch_root at 5.03 s, kernel phase 5.19 s (userspace 34.7 s, as before); the
+  registration finishes at 6.35 s while systemd starts. DVFS itself still starts some 3 s later than on the probe,
+  with the CPUs at the bootloader's clocks until then; that is the price of an offset the firmware takes only once.
 * **Offsets applied:**
   * `-3125,0,0` (flag `0x00008300`), `-3125,-3125,-3125` (`0x83838300`) and `-6250,-6250,0` (`0x00868600`). In each
     case, the offset domains' tables are exactly 3125 or 6250 uV lower and the other domains' tables are unchanged.
