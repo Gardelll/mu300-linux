@@ -10706,3 +10706,82 @@ nothing. That is fixed below for both.
 Not done: Ubuntu on a device (the same code paths: `mobile-data up` starts the hook, the watchdog is the same
 script); why the engine stays dead after such a start (the VPN module, `dikeckaan/mu300-linux-vpn`: it could restart
 itself when its uplink changes, which would make the hook here unnecessary).
+
+### 177. A kernel update wanted 500 MB free at once since every module is built: it did not fit F50-C's 804 MiB region
+
+**Status: current** (unit tests, `tests/test_update.py` `KernelStep`; device-tested on F50-C, internal OpenWrt in the
+default 804 MiB region, and F50-B, Ubuntu 24.04, 2026-10-17).
+
+**What happened.** Since §163 a mainline bundle carries every module the boards can use: `mu300-kernel-6.18.tar.gz`
+is 52.7 MB and unpacks to 151 MB, 122 MB of it 2947 modules (7.2: 55 MB, 160 MB, 3034 modules). The kernel step of
+`mu300-update` (`boot_update`) kept the download while it unpacked the whole bundle into `.mu300-update/boot`, read the
+image in the slot (`body`, 30 to 36 MB), built the new one (`new`) and joined it with its vbmeta into a third copy
+(`new.all`, in `write_boot`); then it **copied** the set in place into `boot/prev.modules` (122 MB), **copied** the new
+set into every system (122 MB each) and **copied** `body` to `prev.body`. About 580 MB at the peak with one system,
+120 MB more for each further one. F50-C has 362 MB free after OpenWrt in its 804 MiB region: with the v2026.10.17.1
+updater a kernel update (6.18.57 to a rebuild of it) stopped with `cp: write error: No space left on device` while
+keeping the modules in place, said `nothing was changed` - true, the image was untouched - and left the unpacked bundle,
+the half-made image, the 52 MB download and a 105 MB partial `prev.modules` behind: 0 bytes free. A user who took the
+default region could not have taken any kernel update.
+
+Two more things filled the region over time: each kernel release a bundle brought left its set in the systems for good
+(F50-C had 6.18.56's 29 MB beside 6.18.57's - 120 MB each from now on), and an update with only the kernel to do asked
+`space_needed`'s 1 GB for a whole system before it started.
+
+**The fix** (`rootfs/overlay/opt/mu300/bin/mu300-update`):
+* **No copies of a module set.** The unpacked bundle, the systems and `boot/` are one filesystem, so a set gets more
+  names (`mod_link`: `ln`, `cp` only where a link cannot be made) and names are removed, never a file written into
+  (the delta block's second names, §131). The set in place goes to `prev.modules.new` as links; the new set goes into
+  each system as links to the unpacked files (one copy of 122 MB for Ubuntu and OpenWrt together); `rollback-boot`
+  puts the kept set back as links and it stays kept.
+* **The kept image and its set change together.** `prev.modules.new` becomes `prev.modules` (`prev_modules_commit`)
+  only with `prev.body`, just before the new image is written. A failure before that puts the set in place back and
+  leaves the image kept from before and its set as they were; a failed write puts the image read from the slot back
+  with its set (as before). The EXIT trap does the same for a run stopped between the modules and the image.
+* **One pass, and the download goes once unpacked.** Kernel, generic ramdisk, release and modules come out of the bundle
+  in one `tar` run (was four); the verified download is removed as soon as that worked, `Image` as soon as it is in the
+  new image, `body` is moved to `prev.body`, and `write_boot` writes the vbmeta behind the body with a second `dd`
+  instead of from a joined copy (a body that is not whole pages is joined as before; the Magisk installer uses the
+  same function).
+* **Room checked first, said in MB.** Before the download (`boot`, `kernel`): three times the bundle plus the bundle or
+  two images, whichever is more, and 16 MB (`kernel_need_kb`). After it, from the bundle itself (`boot_room`): its tar
+  stream, a block for each file, two images of the size in the slot less the download that goes, and 8 MB. `apply`
+  with only the kernel to do asks `kernel_need_kb` instead of 1 GB, and `update_need` counts the kernel step after the
+  images' downloads are gone. A refusal gives the MB needed and free and changes nothing:
+  `boot: not enough free space on the Linux partition for the kernel: 237 MB needed (...), 99 MB free and 29 MB in the
+  boot image kept for rollback-boot. Nothing was changed`.
+* **What the room may take back.** The image kept for rollback-boot (the one before the image in place) and its set
+  are replaced by every update that writes its image, and the device runs the image in place either way: when the room
+  is short they are given up first, together (`boot: the room is short: the boot image kept from before the one in
+  place (TAG) and its modules are given up`; rollback-boot then says none is kept). Module sets of releases no boot
+  image here runs go at the start of the step and after it: only the image in the slot, the kept image and the running
+  kernel need theirs - a switch to another kernel brings its own set. A release is read from the kernel's banner in
+  the image (`image_krel`, 1.6 s for 25 MB on the F50); when one is not known, nothing is removed. The vendor kernel's
+  sets (`5.4.*`) are the systems' own, and a directory without modules (OpenWrt's empty `6.12.94`) is never touched.
+* **Nothing left behind.** `boot_update` wraps the step: however it ends, `.mu300-update/boot` and `prev.modules.new`
+  go, and so does the bundle it downloaded when the step did not finish (`MU300_KERNEL_BUNDLE`, the caller's file,
+  never). Only `SHA256SUMS` and its tag stay in `.mu300-update`, as for any run.
+
+Hard links between the old and the new set (as §131 does for the systems' files) were measured and left out: two builds
+of 6.18.57 share 31 of 2946 module files byte for byte.
+
+**Peak, measured on the devices** (free KiB of the Linux partition sampled while the command ran):
+
+| | before (v2026.10.17.1 / main) | after |
+|---|---|---|
+| F50-B, Ubuntu, 7.2.11 to a rebuild (`boot`) | 446 MB peak, 130 MB more used after | 224 MB peak, 1 MB less used after |
+| F50-B, `rollback-boot` | (copies the kept set back) | 0 MB peak, 127 MB freed |
+| F50-C, OpenWrt, 362 MB free, 6.18.57 to a rebuild | failed: No space left on device, 0 bytes free after | 208 MB peak, 148 MB still free at the lowest |
+| F50-C, `kernel 7.2` (signed v2026.10.17.1 from a LAN mirror) | - | 210 MB peak |
+| F50-C, 7.2.11 to a rebuild after the kept image was given up | - | 213 MB peak |
+| F50-C, `kernel 6.18` with 216 MB free and an image kept | - | kept image given up, update done |
+
+**Device test (2026-10-17).** F50-C: each new kernel was booted from Android (`mu300-linux`): the rebuilt 6.18.57
+(#4 of 2026-10-16), after `rollback-boot` the release's 6.18.57 (#1), the release's 7.2.11 after `kernel 7.2`, the
+rebuilt 7.2.11 (#5), and the release's 6.18.57 again after `kernel 6.18`; every time all modules loaded (114 on 6.18,
+120 on 7.2, as before), no `disagrees about version`/`invalid module format` in dmesg, the hotspot up and mobile data
+reaching the internet. Forced failures: a 100 MB-free partition was refused before the download with the numbers and
+nothing changed (slot, both sets, `boot/` as they were); a filler that took the rest of the partition while the bundle
+was unpacking made `tar` fail with ENOSPC - `.mu300-update/boot` and the download were gone, the slot image and the set
+it runs with unchanged, and the board booted it afterwards with mobile data. F50-B: the rebuilt 7.2.11 and, after
+`rollback-boot`, the 7.2.11 it had both booted with their 52 modules and the mobile bearer up.
