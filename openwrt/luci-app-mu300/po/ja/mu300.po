@@ -481,6 +481,111 @@ msgstr "トリップポイント"
 msgid "Cooling devices"
 msgstr "冷却デバイス"
 
+msgid "Stress test started"
+msgstr "ストレステストを開始しました"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "保存しました：次回の再起動で有効になります"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU 電圧オフセット（実験的）"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "実験的機能：CPU 電圧を変更すると、デバイスが不安定になり、データが破損し、デバイスに恒久的な損傷を与えるおそれがあります。すべて自己責任でご使用ください。"
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU 電圧オフセットは利用できません"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "このカーネルでは利用できません（このリリース以降のメインラインカーネルで利用できます）。"
+
+msgid "Off: the stock voltages"
+msgstr "オフ：工場出荷時の電圧"
+
+msgid "Changes at the next reboot"
+msgstr "次回の再起動で変更されます"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "試行起動：この起動が 10 分間稼働すると確定します"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "確定：このオフセットは試行起動に合格しました"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "このオフセットでの起動が正常なシャットダウンなしに終了しました"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "試行起動が 10 分未満で終了しました"
+
+msgid "invalid value"
+msgstr "無効な値"
+
+msgid "unknown SoC firmware"
+msgstr "不明な SoC ファームウェア"
+
+msgid "refused by the kernel"
+msgstr "カーネルに拒否されました"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "カーネルがこのオフセットで CPU スケーリングを開始できませんでした"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "3 つの CPU ドメイン（コア 0-3、4-6、7）のオフセット（µV 単位、ステップの整数倍）。新しいオフセットは次回の再起動で試行として有効になります。その起動が 10 分間稼働すると確定し、そのオフセットでの起動がクラッシュ、ウォッチドッグによるリセット、または電源断で終了した場合は破棄されます（0 に戻ります）。"
+
+msgid "Running now (µV)"
+msgstr "現在の動作値（µV）"
+
+msgid "Saved for the next boot (µV)"
+msgstr "次回起動用に保存済み（µV）"
+
+msgid "State"
+msgstr "状態"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "自動的に取り消されました：%s µV（%s）"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "このデバイスの SoC ファームウェアは、電圧エンコードが判明しているものではありません。工場出荷時の電圧のみ使用できます。"
+
+msgid "Domain"
+msgstr "ドメイン"
+
+msgid "Offset now (µV)"
+msgstr "現在のオフセット（µV）"
+
+msgid "Highest step"
+msgstr "最高ステップ"
+
+msgid "New offset (µV)"
+msgstr "新しいオフセット（µV）"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "範囲：%d ～ %d µV、%d µV 刻み。"
+
+msgid "Save for the next boot"
+msgstr "次回起動用に保存"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "各オフセットは %d µV の倍数で、%d から %d の範囲である必要があります。"
+
+msgid "Type %s to confirm."
+msgstr "確認のため %s と入力してください。"
+
+msgid "Back to the stock voltages"
+msgstr "工場出荷時の電圧に戻す"
+
+msgid "Type %s to confirm:"
+msgstr "確認のため %s と入力してください："
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "10 分間の CPU ストレステストを実行"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "新しいオフセットを試行起動中に負荷をかけてテストします。電圧が低すぎるとデバイスがクラッシュすることがあります。その場合、次回の起動は工場出荷時の電圧で動作します。"
+
+msgid "A stress test is running."
+msgstr "ストレステストを実行中です。"
+
 msgid "USB role"
 msgstr "USB ロール"
 
@@ -1326,9 +1431,6 @@ msgstr "コード"
 
 msgid "Translated"
 msgstr "翻訳範囲"
-
-msgid "State"
-msgstr "状態"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "LuCI 自体の翻訳は OpenWrt によるものです。このパネルのトルコ語と中国語以外の翻訳は機械 (AI) 翻訳です。修正を歓迎します。"
@@ -3295,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "不明な CPU 電圧操作"
+
+msgid "Invalid CPU voltage request"
+msgstr "無効な CPU 電圧要求"
+
+msgid "Invalid CPU voltage offset"
+msgstr "無効な CPU 電圧オフセット"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "電圧オフセットを適用するには確認用の単語を入力してください"
+
+msgid "Invalid stress test length"
+msgstr "無効なストレステスト時間"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "パッケージアダプターから有効な応答がありません"
 
@@ -3514,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "CPU 電圧オフセットを読み取れませんでした"
+
+msgid "The CPU voltage offset was refused"
+msgstr "CPU 電圧オフセットが拒否されました"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "CPU 電圧オフセットをオフにできませんでした"
+
+msgid "The stress test could not be started"
+msgstr "ストレステストを開始できませんでした"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

@@ -481,6 +481,111 @@ msgstr "Điểm ngưỡng"
 msgid "Cooling devices"
 msgstr "Thiết bị làm mát"
 
+msgid "Stress test started"
+msgstr "Đã bắt đầu kiểm tra tải nặng"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Đã lưu: có hiệu lực ở lần khởi động lại tới"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Độ lệch điện áp CPU (THỬ NGHIỆM)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Thử nghiệm: thay đổi điện áp CPU có thể khiến thiết bị hoạt động không ổn định, làm hỏng dữ liệu của bạn và gây hư hại vĩnh viễn cho thiết bị của bạn. Bạn hoàn toàn tự chịu rủi ro khi sử dụng."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Không có độ lệch điện áp CPU"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Không khả dụng với kernel này (kernel mainline từ bản phát hành này trở về sau có tính năng này)."
+
+msgid "Off: the stock voltages"
+msgstr "Tắt: điện áp gốc của nhà sản xuất"
+
+msgid "Changes at the next reboot"
+msgstr "Thay đổi ở lần khởi động lại tới"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Khởi động thử: được giữ khi lần khởi động này chạy đủ 10 phút"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Đã giữ: độ lệch này đã vượt qua lần khởi động thử"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "một lần khởi động với độ lệch này đã kết thúc mà không tắt máy đúng cách"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "lần khởi động thử của nó kết thúc trước 10 phút"
+
+msgid "invalid value"
+msgstr "giá trị không hợp lệ"
+
+msgid "unknown SoC firmware"
+msgstr "firmware SoC không xác định"
+
+msgid "refused by the kernel"
+msgstr "bị kernel từ chối"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "kernel không thể khởi động điều chỉnh tần số CPU với độ lệch này"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Độ lệch tính bằng µV cho ba miền CPU (nhân 0-3, 4-6 và 7), theo từng bước nguyên. Độ lệch mới có hiệu lực ở lần khởi động lại tới, dưới dạng thử: nó được giữ khi lần khởi động đó chạy đủ 10 phút, và bị loại bỏ (về 0) nếu một lần khởi động với nó kết thúc bằng sự cố, watchdog đặt lại hoặc mất điện."
+
+msgid "Running now (µV)"
+msgstr "Đang chạy (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Đã lưu cho lần khởi động tới (µV)"
+
+msgid "State"
+msgstr "Trạng thái"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Tự động thu hồi: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Firmware SoC của thiết bị này không thuộc loại có mã hóa điện áp đã biết: chỉ có thể dùng điện áp gốc của nhà sản xuất."
+
+msgid "Domain"
+msgstr "Miền"
+
+msgid "Offset now (µV)"
+msgstr "Độ lệch hiện tại (µV)"
+
+msgid "Highest step"
+msgstr "Bậc cao nhất"
+
+msgid "New offset (µV)"
+msgstr "Độ lệch mới (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Giới hạn: %d đến %d µV, theo bước %d µV."
+
+msgid "Save for the next boot"
+msgstr "Lưu cho lần khởi động tới"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Mỗi độ lệch phải là bội số của %d µV trong khoảng %d đến %d."
+
+msgid "Type %s to confirm."
+msgstr "Nhập %s để xác nhận."
+
+msgid "Back to the stock voltages"
+msgstr "Quay về điện áp gốc của nhà sản xuất"
+
+msgid "Type %s to confirm:"
+msgstr "Nhập %s để xác nhận:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Chạy kiểm tra tải nặng CPU 10 phút"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Kiểm tra độ lệch mới dưới tải trong lần khởi động thử của nó. Thiết bị có thể gặp sự cố nếu điện áp quá thấp; khi đó lần khởi động tiếp theo sẽ chạy ở điện áp gốc của nhà sản xuất."
+
+msgid "A stress test is running."
+msgstr "Đang chạy kiểm tra tải nặng."
+
 msgid "USB role"
 msgstr "Vai trò USB"
 
@@ -1326,9 +1431,6 @@ msgstr "Mã"
 
 msgid "Translated"
 msgstr "Đã dịch"
-
-msgid "State"
-msgstr "Trạng thái"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Bản dịch riêng của LuCI đến từ OpenWrt. Các bản dịch của bảng điều khiển này, trừ tiếng Thổ Nhĩ Kỳ và tiếng Trung, là bản dịch máy (AI); rất hoan nghênh các góp ý sửa lỗi."
@@ -3295,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Thao tác điện áp CPU không xác định"
+
+msgid "Invalid CPU voltage request"
+msgstr "Yêu cầu điện áp CPU không hợp lệ"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Độ lệch điện áp CPU không hợp lệ"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Nhập từ xác nhận để áp dụng độ lệch điện áp"
+
+msgid "Invalid stress test length"
+msgstr "Thời lượng kiểm tra tải nặng không hợp lệ"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Bộ điều hợp gói không trả về phản hồi hợp lệ"
 
@@ -3514,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Không thể đọc độ lệch điện áp CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Độ lệch điện áp CPU đã bị từ chối"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Không thể tắt độ lệch điện áp CPU"
+
+msgid "The stress test could not be started"
+msgstr "Không thể bắt đầu kiểm tra tải nặng"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

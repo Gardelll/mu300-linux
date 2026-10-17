@@ -481,6 +481,111 @@ msgstr "Eşik noktaları"
 msgid "Cooling devices"
 msgstr "Soğutma aygıtları"
 
+msgid "Stress test started"
+msgstr "Stres testi başlatıldı"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Kaydedildi: sonraki yeniden başlatmada geçerli olur"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU voltaj ofseti (DENEYSEL)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Deneysel: Bu özellik deneyseldir ve cihazınıza kalıcı zarar verebilirsiniz. CPU voltajını değiştirmek cihazı kararsız yapabilir ve verilerinizi bozabilir. Tüm risk size aittir."
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU voltaj ofseti kullanılamıyor"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Bu kernel ile kullanılamaz (bu sürümün veya daha yeni bir sürümün mainline kerneli bunu içerir)."
+
+msgid "Off: the stock voltages"
+msgstr "Kapalı: fabrika voltajları"
+
+msgid "Changes at the next reboot"
+msgstr "Sonraki yeniden başlatmada değişir"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Deneme açılışı: bu açılış 10 dakika çalışınca korunur"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Korunuyor: bu ofset deneme açılışını geçti"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "bu ofsetle yapılan bir açılış temiz bir kapanış olmadan sona erdi"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "deneme açılışı 10 dakikadan önce sona erdi"
+
+msgid "invalid value"
+msgstr "geçersiz değer"
+
+msgid "unknown SoC firmware"
+msgstr "bilinmeyen SoC firmware'i"
+
+msgid "refused by the kernel"
+msgstr "kernel tarafından reddedildi"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "kernel bu ofsetle CPU ölçeklemesini başlatamadı"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Üç CPU alanı (çekirdek 0-3, 4-6 ve 7) için µV cinsinden ofsetler, tam adımlarla. Yeni bir ofset sonraki yeniden başlatmada deneme olarak geçerli olur: o açılış 10 dakika çalışınca korunur, bu ofsetle yapılan bir açılış çökme, watchdog sıfırlaması veya elektrik kesintisiyle biterse bırakılır (0'a döner)."
+
+msgid "Running now (µV)"
+msgstr "Şu an çalışan (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Sonraki açılış için kayıtlı (µV)"
+
+msgid "State"
+msgstr "Durum"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Otomatik olarak geri alındı: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Bu cihazın SoC firmware'i, voltaj kodlaması bilinenlerden biri değil: yalnızca fabrika voltajları kullanılabilir."
+
+msgid "Domain"
+msgstr "Alan"
+
+msgid "Offset now (µV)"
+msgstr "Şu anki ofset (µV)"
+
+msgid "Highest step"
+msgstr "En yüksek adım"
+
+msgid "New offset (µV)"
+msgstr "Yeni ofset (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Sınırlar: %d ile %d µV arası, %d µV adımlarla."
+
+msgid "Save for the next boot"
+msgstr "Sonraki açılış için kaydet"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Her ofset, %d µV'un katı olmalı ve %d ile %d arasında olmalıdır."
+
+msgid "Type %s to confirm."
+msgstr "Onaylamak için %s yazın."
+
+msgid "Back to the stock voltages"
+msgstr "Fabrika voltajlarına dön"
+
+msgid "Type %s to confirm:"
+msgstr "Onaylamak için %s yazın:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "10 dakikalık CPU stres testi çalıştır"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Yeni bir ofseti deneme açılışı sırasında yük altında test edin. Voltaj çok düşükse cihaz çökebilir; bu durumda sonraki açılış fabrika voltajlarıyla çalışır."
+
+msgid "A stress test is running."
+msgstr "Bir stres testi çalışıyor."
+
 msgid "USB role"
 msgstr "USB rolü"
 
@@ -1326,9 +1431,6 @@ msgstr "Kod"
 
 msgid "Translated"
 msgstr "Çeviri"
-
-msgid "State"
-msgstr "Durum"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "LuCI’nin kendi çevirileri OpenWrt’den gelir. Bu panelin Türkçe ve Çince dışındaki çevirileri makine (yapay zekâ) çevirisidir; düzeltmeler memnuniyetle karşılanır."
@@ -3288,6 +3390,21 @@ msgstr "İşlemci bağdaştırıcısı geçerli bir yanıt vermedi"
 msgid "Invalid CPU profile"
 msgstr "Geçersiz işlemci profili"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Bilinmeyen CPU voltaj işlemi"
+
+msgid "Invalid CPU voltage request"
+msgstr "Geçersiz CPU voltaj isteği"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Geçersiz CPU voltaj ofseti"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Voltaj ofsetini uygulamak için onay kelimesini yazın"
+
+msgid "Invalid stress test length"
+msgstr "Geçersiz stres testi süresi"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Paket bağdaştırıcısı geçerli bir yanıt vermedi"
 
@@ -3507,6 +3624,18 @@ msgstr "İşlemci profili okunamadı"
 
 msgid "The CPU profile could not be set"
 msgstr "İşlemci profili ayarlanamadı"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "CPU voltaj ofseti okunamadı"
+
+msgid "The CPU voltage offset was refused"
+msgstr "CPU voltaj ofseti reddedildi"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "CPU voltaj ofseti kapatılamadı"
+
+msgid "The stress test could not be started"
+msgstr "Stres testi başlatılamadı"
 
 msgid "Unknown CPU operation"
 msgstr "Bilinmeyen işlemci işlemi"

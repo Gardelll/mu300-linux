@@ -481,6 +481,111 @@ msgstr "Порогові точки"
 msgid "Cooling devices"
 msgstr "Пристрої охолодження"
 
+msgid "Stress test started"
+msgstr "Стрес-тест запущено"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Збережено: набуде чинності після наступного перезавантаження"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Зсув напруги CPU (ЕКСПЕРИМЕНТАЛЬНО)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Експериментальна функція: зміна напруги CPU може зробити пристрій нестабільним, пошкодити ваші дані й назавжди пошкодити ваш пристрій. Ви використовуєте її повністю на власний ризик."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Зсув напруги CPU недоступний"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Недоступно з цим ядром (є в mainline-ядрі цього випуску або новішого)."
+
+msgid "Off: the stock voltages"
+msgstr "Вимкнено: заводські напруги"
+
+msgid "Changes at the next reboot"
+msgstr "Зміниться після наступного перезавантаження"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Пробне завантаження: збережеться, коли це завантаження пропрацює 10 хвилин"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Збережено: цей зсув пройшов пробне завантаження"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "завантаження з ним завершилося без коректного вимкнення"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "його пробне завантаження завершилося раніше ніж за 10 хвилин"
+
+msgid "invalid value"
+msgstr "неприпустиме значення"
+
+msgid "unknown SoC firmware"
+msgstr "невідома прошивка SoC"
+
+msgid "refused by the kernel"
+msgstr "відхилено ядром"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "ядро не змогло запустити масштабування частоти CPU з ним"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Зсуви в µV для трьох доменів CPU (ядра CPU 0-3, 4-6 і 7), цілими кроками. Новий зсув набуває чинності після наступного перезавантаження, у пробному режимі: він зберігається, коли це завантаження пропрацює 10 хвилин, і скидається (назад до 0), якщо завантаження з ним завершиться збоєм, скиданням через watchdog або вимкненням живлення."
+
+msgid "Running now (µV)"
+msgstr "Працює зараз (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Збережено для наступного завантаження (µV)"
+
+msgid "State"
+msgstr "Стан"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Автоматично скасовано: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Прошивка SoC цього пристрою не належить до тих, чиє кодування напруги відоме: можливі лише заводські напруги."
+
+msgid "Domain"
+msgstr "Домен"
+
+msgid "Offset now (µV)"
+msgstr "Зсув зараз (µV)"
+
+msgid "Highest step"
+msgstr "Найвищий крок"
+
+msgid "New offset (µV)"
+msgstr "Новий зсув (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Межі: від %d до %d µV, з кроком %d µV."
+
+msgid "Save for the next boot"
+msgstr "Зберегти для наступного завантаження"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Кожен зсув має бути кратним %d µV і перебувати між %d і %d."
+
+msgid "Type %s to confirm."
+msgstr "Введіть %s для підтвердження."
+
+msgid "Back to the stock voltages"
+msgstr "Повернути заводські напруги"
+
+msgid "Type %s to confirm:"
+msgstr "Введіть %s для підтвердження:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Запустити 10-хвилинний стрес-тест CPU"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Перевірте новий зсув під навантаженням під час його пробного завантаження. За надто низької напруги пристрій може дати збій; тоді наступне завантаження пройде на заводських напругах."
+
+msgid "A stress test is running."
+msgstr "Триває стрес-тест."
+
 msgid "USB role"
 msgstr "Роль USB"
 
@@ -1326,9 +1431,6 @@ msgstr "Код"
 
 msgid "Translated"
 msgstr "Перекладено"
-
-msgid "State"
-msgstr "Стан"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Власні переклади LuCI взято з OpenWrt. Переклади цієї панелі, окрім турецького та китайського, машинні (ШІ); виправлення вітаються."
@@ -3295,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Невідома операція з напругою CPU"
+
+msgid "Invalid CPU voltage request"
+msgstr "Неприпустимий запит напруги CPU"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Неприпустимий зсув напруги CPU"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Введіть слово підтвердження, щоб застосувати зсув напруги"
+
+msgid "Invalid stress test length"
+msgstr "Неприпустима тривалість стрес-тесту"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Адаптер пакетів не дав коректної відповіді"
 
@@ -3514,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Не вдалося прочитати зсув напруги CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Зсув напруги CPU відхилено"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Не вдалося вимкнути зсув напруги CPU"
+
+msgid "The stress test could not be started"
+msgstr "Не вдалося запустити стрес-тест"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
