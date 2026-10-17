@@ -68,12 +68,12 @@ them. If that is not acceptable to you, do not install it.
 |---|---|---|
 | Board, chip | `ums9620_2h10_feimao`, Unisoc T760 (UMS9620) | the same |
 | Power | USB only | battery (4050 mAh), charger and fuel gauge |
-| LEDs used by Linux | as in ZTE's firmware: network (blue: 4G, white: 5G, red: no service), Wi-Fi (on while the hotspot is up) | as in ZTE's firmware: battery (white: Linux is up), network (blue: 4G, white: 5G, red: no service), Wi-Fi (white: 2.4 GHz, blue: 5 GHz) |
+| LEDs used by Linux | as in ZTE's firmware: network (blue: 4G, white: 5G, red: no service), Wi-Fi (on while the hotspot is up) | as in ZTE's firmware: battery (white from 60 %, blue from 10 %, red below; breathing while it charges; no timeout on the charger), network (the SIM in use - white: the nano-SIM, blue: the eSIM, blinking: switching to it; red: no service), Wi-Fi (white: 5 GHz, blue: 2.4 GHz) |
 | Heat alarm | the network LED flashes red, white, blue in turn: the SoC at 85 °C, until it cools down (`thermal-guard`) | the battery LED flashes red, white, blue in turn: the SoC at 85 °C or the battery at 50 °C, until they cool down (`thermal-guard`) |
 | USB network | `192.168.77.1` | `192.168.78.1` (so both can be plugged into one computer) |
 | Tested | everything below | 5.4, 6.18 and 7.2: USB, Wi-Fi hotspot, Bluetooth, mobile data, VPN, LEDs |
 | Battery | - | level, voltage, current, temperature and charging state in `mu300-toolkit`, the `openwrt-luci` dashboard and `/sys/class/power_supply` on every kernel (mainline: `sc27xx-fgu`). Charging: on 5.4 by the vendor charger stack; on 6.18 and 7.2 by the `bq256xx` driver (from v2026.10.12; the mainline kernels of v2026.10.11 and older leave charging off). From v2026.10.20: a **charge limit** of 0-100 % (`sudo mu300-power charge-limit 80`, `CHARGE_TO` in the power settings, System > Power on the panel; charging stops at the limit and resumes 5 points below it, and the battery is never held under 5 %), and on the mainline kernels the **Type-C current** the port advertises is read, so a 1.5 A or 3 A port charges at up to 2 A instead of 500 mA |
-| USB host (OTG) | - (its USB port is its power supply) | `sudo mu300-usb host` with an OTG adapter: flash drives (FAT, exFAT), keyboards and mice, USB modems and Ethernet adapters, with 5 V from the battery; `sudo mu300-usb device` back to the computer (the default at every boot). Mainline kernels; HDMI through USB-C adapters does not work |
+| USB host (OTG) | - (its USB port is its power supply) | `sudo mu300-usb host` with an OTG adapter: flash drives (FAT, exFAT), keyboards and mice, USB modems and Ethernet adapters, with 5 V from the battery; `sudo mu300-usb device` back to the computer (the default at every boot). Mainline kernels; HDMI through USB-C adapters does not work. **Experimental:** `sudo mu300-usb pd on` lets USB-C power delivery choose the roles (an OTG adapter: host by itself; a PD dock with its charger: charging, and `mu300-usb host` asks it for the host role); off by default (FINDINGS 150) |
 | SD card | the Linux filesystem can live on a card instead of the internal storage (see [Install](#install)) | no card slot |
 | Buttons | power: held 3 s shuts down | power: a short press wakes the LEDs (they go dark after 60 s), held 3 s shuts down; the Wi-Fi key switches the hotspot 2.4 / 5 GHz, held 3 s turns it off or on |
 | NFC | - | a phone held to the device joins the hotspot, as with ZTE's firmware: `sudo mu300-nfc` shows the tag, `wifi` writes the hotspot's name and password (again at every hotspot start), `url https://...` or `text ...` anything else, `clear` empties it, `on`/`off` is the NFC switch of ZTE's web interface (kept in the tag) |
@@ -132,7 +132,8 @@ trying it costs you the server.
     machine you use over SSH or the web interface;
   * no speaker or microphone: voice calls with audio, through the modem's audio DSP, are work in progress and carry
     no sound yet (see [What works](#what-works-and-what-does-not));
-  * about 1.4 GB of RAM, because the modem firmware reserves most of the rest.
+  * about 1.4 GB of RAM, because the modem firmware reserves most of the rest. Compressed swap in RAM (zram, half the
+    RAM, lz4) is on by default and stretches it; `sudo mu300-zram off` turns it off.
 
 ## Before you start
 
@@ -340,7 +341,12 @@ For OpenWrt use `ssh root@192.168.77.1`, or open `http://192.168.77.1` in a brow
 address is `192.168.78.1` instead.
 
 The Wi-Fi network the device broadcasts is its hotspot; unless you chose otherwise it uses the name and password
-copied from Android.
+copied from Android. It is **WPA2-PSK (CCMP) only**, on every device: WPA3 (SAE) is disabled on this Wi-Fi chip,
+because the U30 Air's firmware WPA3 could let a client in without the password
+([docs/U30AIR-SAE.md](docs/U30AIR-SAE.md), FINDINGS 80 and 175). A hotspot that was set to WPA3 is switched to WPA2
+with the same password at the first boot of a newer image (or switched off, never left open, if it has no usable
+password), and LuCI shows a notice saying so; choosing WPA3 in LuCI leaves that access point down, with a line in
+the log.
 
 ### OpenWrt with the MU300 control panel
 
@@ -455,6 +461,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Connect the device to someone else's Wi-Fi | `sudo mu300-toolkit` → Network → Wi-Fi → "Join a network", or `sudo wifi-client scan` then `sudo wifi-client connect "NAME"` (it asks for the password); see [Wi-Fi client](#wi-fi-client) |
 | Update to the newest release | `sudo mu300-update check` then `sudo mu300-update apply`. The device looks for a new release at boot and every 6 hours and says so at login and in `mu300-toolkit`; it never installs one by itself |
 | Fixed TTL for mobile data (so the operator cannot tell hotspot traffic from the device's own) | `sudo mu300-ttl set 64` (`sudo mu300-ttl off` goes back to the default), `mu300-toolkit` -> Network -> TTL, or LuCI Cellular -> TTL. On the mainline kernels the rule is in tc and flow offloading stays on; on 5.4 it is in nftables and offloading is off while a TTL is set |
+| Compressed swap in RAM (zram) | On by default on every system and kernel: half the RAM (~700 MB of swap), lz4, priority 100, `vm.swappiness` 100. `mu300-zram` shows it and what it costs; `sudo mu300-zram off` / `on` (kept across reboots and updates), or `mu300-toolkit` → System → Compressed swap. Size, compressor (`zstd` packs ~3.5:1 against lz4's ~2.5:1, for more CPU) and swappiness: `/etc/mu300/zram.conf`, see `/opt/mu300/lib/zram.conf.example` (FINDINGS 162) |
 | Switch between OpenWrt and Ubuntu | `sudo mu300-os openwrt` / `sudo mu300-os ubuntu` (`openwrt-luci` for the one with the control panel) |
 | Failed boots in a row before it falls back to Android (1-6, default 5) | `sudo mu300-next-boot attempts N` |
 | Keep Linux for good: never back to Android by itself, only by hand | `sudo mu300-next-boot lock` (or "Lock Linux" on the panel's home page); `unlock` goes back to the attempts. See [Locked Linux](#locked-linux) |

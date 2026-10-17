@@ -24,7 +24,7 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **KVM:** A Linux feature for running virtual machines fast. *Here:* `/dev/kvm` exists on all three kernels.
 
-**zram:** Compressed swap kept in RAM, so more fits in memory. *Here:* `mu300-zram` adds lz4 zram of half the RAM.
+**zram:** Compressed swap kept in RAM, so more fits in memory. *Here:* `mu300-zram` adds lz4 zram of half the RAM, on by default; `sudo mu300-zram off` turns it off and `/etc/mu300/zram.conf` sets size, compressor and swappiness.
 
 **OTG / USB host:** Normally the device is the "guest" on your computer's USB; in host mode it is the "boss" and you can plug things into it. *Here:* the U30 Air can be a USB host on the mainline kernels (`sudo mu300-usb host`); the F50's port is its power supply, so no.
 
@@ -88,7 +88,7 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **Wi-Fi client / station:** The device joining someone else's Wi-Fi, like a phone does. *Here:* `wifi-client`; the radio is either hotspot or client, decided at boot.
 
-**WPA2 / WPA3 / SAE:** Wi-Fi password security standards; SAE is the handshake WPA3 uses. *Here:* the driver has no SAE, so WPA3-only networks cannot be joined; WPA2 and mixed mode work.
+**WPA2 / WPA3 / SAE:** Wi-Fi password security standards; SAE is the handshake WPA3 uses. *Here:* the driver has no SAE, so WPA3-only networks cannot be joined (WPA2 and mixed mode work), and the hotspot is WPA2-PSK only: WPA3 on it is disabled for security ([U30AIR-SAE.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md)).
 
 **NCM / ECM / RNDIS:** Ways for a USB device to appear as a network card to a computer. *Here:* NCM is the default, ECM the fallback, RNDIS selectable.
 

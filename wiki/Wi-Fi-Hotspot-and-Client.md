@@ -12,10 +12,14 @@ network), not both at the same time. The hotspot is the default.
 * By default it uses the **name and password copied from Android** (the installer asks). Without that, a random
   password is generated and shown at login.
 * Wi-Fi clients and USB clients share one LAN, so they can see each other and the device.
-* The hotspot is **WPA2**. WPA3 is not in the images: on this chip the firmware does the WPA3 exchange itself, and the
-  only way to use it is an experimental build of your own for the U30 Air on OpenWrt, with an open security question
-  ([U30AIR-SAE.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md)). Choosing WPA3 in LuCI
-  on a normal image gives a hotspot that nothing can join.
+* The hotspot is **WPA2-PSK (CCMP) only**, on the F50, the U30 Air and the V50. WPA3 (SAE) is **disabled** on this
+  chip: its firmware does the WPA3 exchange itself, and the way it hands the key back could let a client in without
+  the password ([U30AIR-SAE.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md)). The
+  experimental U30 Air build that turned it on is gone. A hotspot that was set to WPA3 is switched to WPA2 with the
+  same password at the first boot of a newer image (switched off instead, never left open, if it has no usable
+  password); LuCI's Status > Overview and the control panel's home page show a notice until you dismiss it. Choosing
+  WPA3 (or WPA2/WPA3 mixed) in LuCI leaves that access point down, and the log says `WPA3/SAE is disabled on this
+  Wi-Fi chip ... WPA2-PSK only`.
 
 ### Change the name, password or band
 

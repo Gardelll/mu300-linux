@@ -68,6 +68,8 @@ boot/flash-trial.sh boot-mainline.img      # slot b only, falls back to Android
   PMIC reset works (30 s cycle instead of the ~320 s PM power cut).
 * `debug/install-probe.py` (`MU300_PROBE_STAGE=N` for `build.sh`): resets at a chosen boot stage; the cycle time tells
   whether the stage was reached. This located the custom-DTB hang in `setup_machine_fdt`.
+* `MU300_CMDLINE_EXTRA="..."` for `build.sh`: kernel arguments appended to the forced `CONFIG_CMDLINE` of a test build
+  (the bootloader's command line is not read), e.g. `sdhci_sprd.fail_hs400es=1` (FINDINGS 160). Never in a release.
 
 ## Newer kernels (7.x)
 
@@ -203,6 +205,9 @@ Fixes needed on top of the port:
   lines (three of its six banks): `patches/0014` maps them all, so the slot is detected by interrupt and an empty
   slot is left alone (issue #181: polled, it was initialised once a second and filled the log with "Got command
   interrupt ... even though no command operation was in progress" register dumps).
+- eMMC bring-up: some units fail HS400ES at a cold boot (`mmc_select_hs400es failed, error -84` on every attempt,
+  issue #226). `patches/0021` drops a failed timing from the host's caps, so mmc_rescan's next attempt takes HS200,
+  then HS/DDR52, then HS, and the board boots (FINDINGS 160).
 - UMP9620 PMIC watchdog, armed by LK for 300 s, is disabled by `ump9620-pmic-wdt-off`.
 - Userspace config: cgroups/namespaces/seccomp, bridge, nftables, IPv6, zram.
 - Thermal: vendor `sprd_thermal_r5p0` (19 on-die zones) with calibration from the UMS9620 eFuse; the eFuse

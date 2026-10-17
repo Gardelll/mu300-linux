@@ -153,6 +153,7 @@ sudo systemctl restart mu300-hotspot</code></pre>
 sürücüsü radar algılayamaz; dosyada ya da LuCI'de seçilen bir DFS kanalının yerine 36. kanal (36-48'e izin verilmeyen
 ülkelerde 149) kullanılır ve günlükte nedeni yazar (v2026.10.20'den beri; önceki sürümlerde hotspot böyle bir kanalda hiç
 başlamıyordu).</p>
+<p>Hotspot <strong>yalnızca WPA2-PSK (CCMP)</strong> kullanır, her cihazda. WPA3 (SAE) bu Wi-Fi çipinde güvenlik nedeniyle kapalı: WPA3 değişimini çipin yazılımı kendisi yapar ve anahtarı geri verme biçimi bir istemcinin parolasız bağlanmasına izin verebilir (<a href="https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md">neden</a>). WPA3'e ayarlı bir hotspot sonraki açılışta aynı parolayla WPA2'ye geçirilir (kullanılabilir bir parolası yoksa açık bırakılmaz, kapatılır) ve LuCI bir bildirim gösterir; LuCI'de WPA3 seçilirse o erişim noktası başlatılmaz.</p>
 <p>Wi-Fi çipinin yazılımı çökerse sürücü çipi sıfırlar ve Wi-Fi kendiliğinden geri gelir; hotspot olarak da, başka bir
 ağın istemcisi olarak da: testlerde 15 ile 20 saniye içinde, 6.18 ve 7.2'de. Çip 70 saniye içinde sıfırlanamazsa
 cihaz donup kalmak yerine düzgünce yeniden başlar.</p>
@@ -249,7 +250,8 @@ hiçbir komut ezberlemeden.</p>
 <pre><code>sudo mu300-toolkit                       <span class="c"># menü</span>
 mu300-toolkit top                        <span class="c"># sıcaklıklar, işlemci, RAM, ağ hızı</span>
 sudo mu300-toolkit profile performance   <span class="c"># eco ve balanced da var</span>
-sudo mu300-toolkit stress all 10         <span class="c"># yük altında kararlılık testi</span></code></pre>
+sudo mu300-toolkit stress all 10         <span class="c"># yük altında kararlılık testi</span>
+mu300-zram                               <span class="c"># RAM'de sıkıştırılmış takas: durum (sudo mu300-zram off|on)</span></code></pre>
 <p>İsteğe bağlı parçalara eklenti (extra) denir:</p>
 <pre><code>mu300-extra list
 sudo mu300-extra install lang            <span class="c"># daha fazla web arayüzü dili (OpenWrt)</span>
@@ -261,9 +263,9 @@ sudo mu300-extra remove vpn</code></pre>
 <p>Durum LED'leri ZTE'nin yazılımındakiyle aynı anlama gelir:</p>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col">LED</th><th scope="col">F50 / MU300</th><th scope="col">U30 Air</th></tr></thead><tbody>
-<tr><th scope="row">Ağ</th><td>mavi: 4G, beyaz: 5G, kırmızı: servis yok</td><td>mavi: 4G, beyaz: 5G, kırmızı: servis yok</td></tr>
-<tr><th scope="row">Wi-Fi</th><td>hotspot açıkken yanar</td><td>beyaz: 2.4 GHz, mavi: 5 GHz</td></tr>
-<tr><th scope="row">Pil</th><td>-</td><td>beyaz: Linux açık</td></tr>
+<tr><th scope="row">Ağ</th><td>mavi: 4G, beyaz: 5G, kırmızı: servis yok</td><td>kullanılan SIM: beyaz: nano-SIM, mavi: eSIM (ona geçilirken yanıp söner); kırmızı: servis yok</td></tr>
+<tr><th scope="row">Wi-Fi</th><td>hotspot açıkken yanar</td><td>beyaz: 5 GHz, mavi: 2.4 GHz</td></tr>
+<tr><th scope="row">Pil</th><td>-</td><td>ZTE'nin yazılımındaki gibi: %60 ve üstü beyaz, %10'dan itibaren mavi, altında kırmızı; şarj olurken nefes alır gibi yanıp söner; şarjdayken ışıklar sönmez</td></tr>
 <tr><th scope="row">Isı alarmı</th><td>ağ LED'i sırayla kırmızı, beyaz, mavi yanıp söner: çip 85 °C'de</td><td>pil LED'i sırayla kırmızı, beyaz, mavi yanıp söner: çip 85 °C'de ya da pil 50 °C'de</td></tr>
 </tbody></table></div>
 <pre><code>sudo mu300-led test            <span class="c"># hangi LED hangisi, öğrenin</span></code></pre>
@@ -299,7 +301,12 @@ söner, hotspot ve modem kapalı).</p>
 <pre><code>sudo mu300-nfc                 <span class="c"># etiketi gösterir</span>
 sudo mu300-nfc wifi            <span class="c"># hotspot'un adını ve şifresini yazar</span></code></pre>
 <pre><code>sudo mu300-usb host            <span class="c"># U30 Air, ana hat çekirdekler: OTG adaptörü, pilden 5 V</span>
-sudo mu300-usb device          <span class="c"># bilgisayara dönüş (her açılışta varsayılan)</span></code></pre>
+sudo mu300-usb device          <span class="c"># bilgisayara dönüş (her açılışta varsayılan)</span>
+sudo mu300-usb pd on           <span class="c"># DENEYSEL, varsayılan kapalı: rolleri USB-C güç dağıtımı (PD) seçer</span></code></pre>
+<p>USB-C güç dağıtımı açıkken (U30 Air, ana hat çekirdekler, henüz cihazda denenmedi) OTG adaptörü portu kendiliğinden
+host yapar; kendi şarj aleti takılı bir PD dock U30 Air'i şarj ederken <code>sudo mu300-usb host</code> dock'tan host
+rolünü ister, böylece dock'un USB portları ve Ethernet'i çalışır. Yalnızca 5 V; <code>sudo mu300-usb pd off</code> geri
+döner.</p>
 <p>F50'de USB portu güç girişidir, bu yüzden USB host kipi yoktur; güç düğmesini 3 s basılı tutmak onu kapatır.</p>
 </section>
 
@@ -333,7 +340,8 @@ sudo mu300-usb adb on                   <span class="c"># kapatmak: sudo mu300-u
 <li><strong>Bluetooth:</strong> BlueZ; tarama çalışır.</li>
 <li><strong>GPU:</strong> Mali-G57 OpenCL 3.0 çalıştırır, ekransız.</li>
 <li><strong>KVM:</strong> üç çekirdekte de sanal makineler için <code>/dev/kvm</code>.</li>
-<li><strong>Bellek:</strong> yaklaşık 1.4 GB kullanılabilir, artı RAM'de sıkıştırılmış takas (zram).</li>
+<li><strong>Bellek:</strong> yaklaşık 1.4 GB kullanılabilir, artı RAM'de sıkıştırılmış takas (zram, varsayılan olarak açık:
+RAM'in yarısı, lz4; <code>sudo mu300-zram off</code> kapatır, boyut ve sıkıştırıcı <code>/etc/mu300/zram.conf</code> içinde).</li>
 <li><strong>Web arayüzü dilleri (OpenWrt):</strong> kutudan çıktığı gibi İngilizce, Türkçe ve Basitleştirilmiş Çince;
 <code>lang</code> eklentisiyle LuCI için 40, kontrol paneli için 29 dil daha. System &gt; System &gt; Language and
 Style'dan ya da kontrol panelinde Sistem &gt; Diller'den (Languages) değiştirin. Panelin diğer çevirileri makine çevirisidir;
