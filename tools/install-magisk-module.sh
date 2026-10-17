@@ -35,9 +35,28 @@ if ! have_magisk; then
     exit 0
 fi
 
+# The module names the release it came with, as the Magisk zip's does (android/magisk/installer/module.prop.in, the same
+# version and versionCode as tools/make-magisk-zips.sh): an update from the computer replaced the zip's module of the
+# release with the generic one, "v1.0" (seen on an F50, docs/FINDINGS.md 131). MU300_MODULE_TAG (the release installed;
+# install.sh passes it), MU300_MODULE_SYSTEM, MU300_MODULE_KERNEL; without a release tag (a build of the checkout) the
+# generic module.prop.
+PROP=$SRC/module.prop
+TAG=${MU300_MODULE_TAG:-}
+. "$TOP/tools/releases.sh"
+if code=$(tag_key "$TAG"); then
+    case $code in 2*) code=${code#2} ;; *) code=${code#1}; code=${code%00} ;; esac
+    PROP=$(mktemp)
+    trap 'rm -f "$PROP"' EXIT
+    # (the values go into sed's replacement: what could break it is left out)
+    sys=$(printf '%s' "${MU300_MODULE_SYSTEM:-}" | tr -cd 'A-Za-z0-9. -' | sed 's/ *$//'); ker=$(printf '%s' "${MU300_MODULE_KERNEL:-}" | tr -cd '0-9.')
+    sed -e "s/@TAG@/$TAG/" -e "s/@CODE@/$code/" -e "s/@SYSTEM@/${sys:-MU300 Linux}/" -e "s/@KERNEL@/${ker:-?}/" \
+        "$TOP/android/magisk/installer/module.prop.in" > "$PROP"
+fi
+
 adb shell "rm -rf $TMP" >/dev/null 2>&1 || true
 adb shell "mkdir -p $TMP/system/bin" >/dev/null 2>&1
-for f in module.prop switch.sh action.sh bootchain.sh; do
+adb push "$PROP" "$TMP/module.prop" >/dev/null 2>&1
+for f in switch.sh action.sh bootchain.sh; do
     adb push "$SRC/$f" "$TMP/$f" >/dev/null 2>&1
 done
 adb push "$SRC/system/bin/mu300-linux" "$TMP/system/bin/mu300-linux" >/dev/null 2>&1

@@ -100,7 +100,9 @@ the device lands in Android about 20 minutes later. The cause is still open.
   off; on battery alone the boost supplies the 5 V as before.
 * **Charging boot:** a start caused by plugging in a charger stays a charging boot (LED blinking, hotspot and modem
   down) until the Wi-Fi key is pressed.
-* **LEDs (§33f):** battery (white: Linux is up), network (the SIM in use as ZTE's firmware, §154: white the nano-SIM,
+* **LEDs (§33f, §151):** battery as ZTE's firmware (white from 60 %, blue from 10 %, red below 10 %; steady on the
+  battery, breathing while it charges, steady white when full on the charger; on the charger no LED times out, and
+  the red does not either), network (the SIM in use as ZTE's firmware, §154: white the nano-SIM,
   blue the eSIM, blinking while a live switch goes to it; red no service), Wi-Fi (white 5 GHz, blue
   2.4 GHz, as ZTE's firmware and its guide, §152). `sudo mu300-led test` shows which is which.
 * **Heat alarm:** the battery LED flashes red, white, blue in turn when the chip reaches 85 °C or the battery 50 °C
