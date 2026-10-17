@@ -8641,6 +8641,26 @@ anyone who downloads the release has it. The image build removes the pair now (u
 as it does whenever the pair is missing: F50-C got one), and the audit of `make-release.sh` refuses an image with
 `etc/uhttpd.key`. An update to such an image takes the old key away with the old image (the image's file, not the
 user's); a key the device made itself is the user's and is kept (the way back to v2026.10.16.1 kept F50-C's).
+(Main has the same fix as its own section, 132.)
+
+**Again after the delta updates, 2026-10-17** (test builds of this branch with the other open PRs; F50-B Ubuntu 24.04
+7.2.11, F50-C plain OpenWrt 6.18.57 in its 804 MiB region):
+
+* **Ubuntu:** Docker 29.1.3, `ubuntu` in the `docker` group, `docker.service` inactive until the first command
+  (socket), data-root `/mnt/mu300-disk/docker/ubuntu` (kept through the next update), an image loaded offline, a
+  container on docker0 and one on a user network: neither reaches the device's SSH (172.17.0.1, 192.168.79.1); compose
+  publishes a port that the Mac reached over the LAN.
+* **OpenWrt, ready (the default):** `/etc/docker/daemon.json`, `/etc/config/dockerd` and the `docker` zone (input and
+  forward REJECT) are in place; `apk add dockerd docker docker-compose` (+234 MiB) started with data-root
+  `/mnt/mu300-disk/docker/openwrt`, overlay2, 29.6.1; a container reached the internet over mobile data and neither
+  the router's SSH nor its web server; compose published a port the Mac fetched over USB. `apk del` took it out again
+  (its modules.d entries too), and with it the package removed the zone and the `docker` interface (its ucidel) but
+  left the two forwardings: a later `apk add` makes the package's own zone, not this one (the uci-defaults script ran
+  once at the first boot). Noted, not changed.
+* **Docker in the OpenWrt image, now that updates write only what changed?** Measured, and still no: a
+  `MU300_DOCKER=1` image (90 MB tarball) as an update of F50-C's OpenWrt (392 MiB installed, 345 MiB free with the
+  download staged elsewhere) needs 422 MB with the rollback copy and 390 MB with `--no-rollback`, as mu300-update
+  counts it - it refuses before changing anything. The images keep Docker ready, not installed.
 
 ### 131. An update writes only what changed: the unchanged binaries of the new image are the installed ones
 
