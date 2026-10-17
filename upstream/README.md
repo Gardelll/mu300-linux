@@ -1,6 +1,6 @@
 # Mainline (LTS) kernel on the MU300
 
-Mainline **Linux 6.18.56** (the current longterm series) runs Ubuntu 24.04 and OpenWrt 25.12 on the ZTE F50 /
+Mainline **Linux 6.18.57** (the current longterm series) runs Ubuntu 24.04 and OpenWrt 25.12 on the ZTE F50 /
 MU300 (Unisoc UMS9620): all 8 CPUs (4×A55, 4×A76), eMMC, USB NCM + ACM, the 5 GHz hotspot, Bluetooth, the modem
 with mobile data (downlink and uplink), SMS, the VPN, the Mali GPU, thermal/cpufreq, the PMIC watchdog and
 reboot. `docs/FINDINGS.md` 31-31f has what it took and what is still open.
@@ -27,7 +27,7 @@ merged) describes the same GIC/UART/timer layout; this device is derived from th
 ## Build and test
 ```sh
 docker build -t mu300-mainline-build upstream/
-docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.56) into it, signatures checked (keys/)
+docker volume create mu300-mainline   # build.sh fetches linux-$KV (default 6.18.57) into it, signatures checked (keys/)
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build.sh
 docker run --rm -v mu300-mainline:/src -v "$PWD/upstream":/work mu300-mainline-build bash /work/build-modules.sh
 upstream/make-bundle.sh mu300-kernel-6.18.tar.gz        # Image for LK, generic ramdisk segment, modules
@@ -39,7 +39,16 @@ that drifts silently: a patch that neither applies nor is applied, a config opti
 Kconfig does not take (unless listed in `config-ignored.txt`), a port edit whose anchor moved, or a module whose
 vermagic does not match the kernel. `tools/make-release.sh` packages the same bundle as `mu300-kernel-6.18.tar.gz`.
 
-The config is allnoconfig plus `mu300-mainline.config`: what the board and the boot need is built in, along with
+The config is allnoconfig plus `mu300-mainline.config`, and then `all-modules.py` (FINDINGS 163): every other
+tristate option the boards can use becomes a module - USB devices of every class, filesystems, netfilter, protocols,
+crypto, block, media, iio, hwmon - while what the fragment built in stays built in (checked), bools change only where
+`all-modules.config` opens a family, and `all-modules.exclude` keeps out test/debug code, PCI cards, and the drivers
+of chips only a board's device tree wires up. `check-dt-modules.py` then fails the build if a module would bind to a
+node of the vendor device tree (`dt-compatibles.txt`) by itself. `MU300_ALL_MODULES=0` builds the fragment alone.
+On the devices `mu300-modprobe-guard` (the kernel's module helper from boot on; FINDINGS 163) keeps the modules of
+`/opt/mu300/lib/autoload-blocked` (rare protocols, filesystems, line disciplines) from being loaded on demand;
+root loads them with `modprobe NAME`.
+In the fragment, what the board and the boot need is built in, along with
 KVM (`/dev/kvm`; the CPUs start at EL2); what only matters once used - netfilter extras, tunnels, IPsec, tc,
 filesystems, USB modems/adapters/Wi-Fi sticks, device mapper - is a module. `build-modules.sh` installs the
 kernel's own modules (stripped) flat into `out/modules` next to the vendor ones, and the bundle ships them all;
@@ -62,8 +71,8 @@ boot/flash-trial.sh boot-mainline.img      # slot b only, falls back to Android
 
 ## Newer kernels (7.x)
 
-The whole port - kernel and all 31 out-of-tree modules - also builds against **7.2.10**, the newest stable release
-(2026-10-11), from the same sources as 6.18, and runs on the device: four boots out of four (2026-09-27) with the
+The whole port - kernel and all 31 out-of-tree modules - also builds against **7.2.11**, the newest stable release
+(2026-10-15), from the same sources as 6.18, and runs on the device: four boots out of four (2026-09-27) with the
 Wi-Fi access point, mobile data (18.7 MB/s), Bluetooth, the Mali GPU, cpufreq and the modem's AT channel working,
 and no warning or oops in the log. (7.2 is a stable, not a longterm release: 6.18 stays the base, 7.x is how the
 next jump is kept small.) One source serves both:
@@ -78,7 +87,7 @@ next jump is kept small.) One source serves both:
   release, so the next break shows up as a red run rather than at the next jump.
 
 Releases carry it as `mu300-kernel-7.2.tar.gz`: `sudo mu300-update kernel 7.2` on the device, or choice 3 in the
-installer. It is built next to 6.18: `OUTDIR=out-7.2 KV=7.2.10` for `build.sh` and `build-modules.sh`, and
+installer. It is built next to 6.18: `OUTDIR=out-7.2 KV=7.2.11` for `build.sh` and `build-modules.sh`, and
 `MU300_UPSTREAM_OUT=upstream/out-7.2` for `make-bundle.sh`; `tools/make-release.sh` packs both.
 
 ## Remaining mainline work (as of 2026-09-26)
