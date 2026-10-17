@@ -8,16 +8,22 @@
 #   mu300-panel link           the page into Cockpit, and Cockpit back after an update replaced the system (a
 #                              background job, the boot never waits for it); mu300-extra link runs it at every boot
 #   mu300-panel restore        that background job: install, again until the device is online (10 tries)
+#   mu300-panel configure      the configuration files only (no systemctl): mu300-update, for a system it installed
+#                              (MU300_SYSROOT)
 #   mu300-panel status         installed or not, and the address
 #   mu300-panel info           the device in one JSON object (the MU300 page's Overview)
 #   mu300-panel hotspot-set SSID    the hotspot's name and, from stdin (one line), its password; restarts it
 #
-# The panel is the LAN's only (spec: never on the cellular uplink): cockpit.socket listens on port 9090 bound to the
-# LAN bridge (BindToDevice=br-lan: USB and the hotspot), and the firewall drops everything new from sipa_eth* and a
-# Wi-Fi uplink in front of that anyway. Login is the Ubuntu account's password (PAM; root cannot log in, Cockpit's
-# own default), HTTPS with the certificate Cockpit makes itself, logged out after 15 minutes idle, and the login page
-# offers no "connect to another host". Root commands on the MU300 page run through Cockpit's administrative access
-# (sudo), argument by argument, never through a shell.
+# The panel is the LAN's only (spec: never on the cellular uplink): cockpit.socket listens on port 9090 of the LAN
+# address (lan.conf's LAN_IP, else the device's default: br-lan, USB and the hotspot), with FreeBind so it listens
+# from the start of the boot, before mu300-lan has put the address on br-lan; the firewall drops everything new from
+# sipa_eth* and a Wi-Fi uplink in front of that anyway. Not BindToDevice=br-lan: systemd makes the socket wait for
+# the device then, which only mu300-lan creates (after basic.target) - each boot waited 90 s for it and Cockpit's
+# socket failed (F50, 7.2.11). A changed LAN address: lan-start runs mu300-panel link, which moves the socket along.
+# Login is the Ubuntu account's password (PAM; root cannot log in, Cockpit's own default), HTTPS with the certificate
+# Cockpit makes itself, logged out after 15 minutes idle, and the login page offers no "connect to another host".
+# Root commands on the MU300 page run through Cockpit's administrative access (sudo), argument by argument, never
+# through a shell.
 set -u
 export PATH="$PATH:/opt/mu300/bin:/opt/mu300/busybox-bin:/usr/sbin:/sbin"
 R=${MU300_SYSROOT:-}
@@ -47,9 +53,16 @@ conf_text() {
     printf '[WebService]\nLoginTitle = MU300\n# no "connect to another host" on the login page\nLoginTo = false\n'
     printf '\n[Session]\n# minutes without activity before the session ends\nIdleTimeout = %s\n' "$IDLE"
 }
+# One IPv4 address, never a wildcard (no 0.0.0.0, no ::, no IPv6 at all): lan_ip always yields an address, a
+# malformed lan.conf falls back to the device's default. A packet from the uplink addressed to the LAN address
+# (Linux accepts it on any interface) meets the firewall's sipa_eth* drop, and before the firewall is loaded,
+# IPAddressAllow: only the LAN's /24 and the device itself may connect (cgroup BPF on the socket; reverse-path
+# filtering keeps LAN sources off the uplink).
 dropin_text() {
-    printf '%s (the panel extra): Cockpit on the LAN bridge only (USB and the hotspot), never on the uplink\n' "$MARK"
-    printf '[Socket]\nListenStream=\nListenStream=9090\nBindToDevice=br-lan\n'
+    _ip=$(lan_ip)
+    printf '%s (the panel extra): Cockpit on the LAN address only (USB and the hotspot), never on the uplink\n' "$MARK"
+    printf '[Socket]\nListenStream=\nListenStream=%s:9090\nFreeBind=yes\n' "$_ip"
+    printf 'IPAddressDeny=any\nIPAddressAllow=localhost %s.0/24\n' "${_ip%.*}"
 }
 # put_file FILE TEXT: written when it differs (atomically); 0 when it changed. A file of somebody else's
 # (no mark) is left alone, except the listen drop-in, which is ours by name.
@@ -78,7 +91,8 @@ link_page() {
 reload_socket() {
     systemctl daemon-reload 2>/dev/null || true
     systemctl enable cockpit.socket >/dev/null 2>&1 || true
-    systemctl restart cockpit.socket 2>/dev/null || true
+    # --no-block: link runs early in the boot (mu300-fixups, before sysinit.target), and the socket comes after it
+    systemctl --no-block restart cockpit.socket 2>/dev/null || true
 }
 
 # ---- packages ---------------------------------------------------------------------------------------------------
@@ -168,8 +182,14 @@ do_restore() {
     reload_socket
 }
 
+# the LAN address as lan-start takes it: lan.conf's LAN_IP, else the device's default (mu300-lan-ip)
 lan_ip() {
     _ip=$(sed -n 's/^LAN_IP=//p' "$R/etc/mu300/lan.conf" 2>/dev/null | tr -d "\"' " | head -n1)
+    case $_ip in *[!0-9.]*|*..*|.*|*.) _ip= ;; *.*.*.*) ;; *) _ip= ;; esac
+    # another system (MU300_SYSROOT, an update, maybe from Android): its own mu300-lan-ip
+    if [ -z "$_ip" ] && [ -n "$R" ] && [ -f "$R/opt/mu300/bin/mu300-lan-ip" ]; then
+        _ip=$(MU300_BIN=$R/opt/mu300/bin sh "$R/opt/mu300/bin/mu300-lan-ip" 2>/dev/null)
+    fi
     [ -n "$_ip" ] || _ip=$(mu300-lan-ip 2>/dev/null)
     echo "${_ip:-192.168.77.1}"
 }
@@ -291,9 +311,10 @@ case ${1:-status} in
     remove) do_remove ;;
     link) do_link ;;
     restore) do_restore ;;
+    configure) is_ubuntu || exit 0; configure || true ;;
     status) do_status ;;
     info) do_info ;;
     hotspot-set) shift; do_hotspot_set "$@" ;;
-    -h|--help|help) sed -n '2,20s/^# \{0,1\}//p' "$0" ;;
-    *) echo "usage: mu300-panel install|remove|link|restore|status|info|hotspot-set SSID" >&2; exit 2 ;;
+    -h|--help|help) sed -n '2,25s/^# \{0,1\}//p' "$0" ;;
+    *) echo "usage: mu300-panel install|remove|link|restore|configure|status|info|hotspot-set SSID" >&2; exit 2 ;;
 esac
