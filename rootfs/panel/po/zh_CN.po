@@ -404,11 +404,23 @@ msgstr "关闭"
 msgid "Turn on"
 msgstr "开启"
 
-msgid "Turn this SIM's radio off? It is no longer reachable for calls, SMS and data."
-msgstr "关闭此 SIM 卡的射频？之后它将无法接收通话、短信和数据。"
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "此 SIM 将无法通话、收发短信和使用数据，重启后其射频仍保持关闭，直到您再次开启。"
 
 msgid "in use"
 msgstr "使用中"
+
+msgid "All radios off (airplane mode)"
+msgstr "关闭所有射频（飞行模式）"
+
+msgid "Turn every SIM's radio off? No calls, SMS or mobile data until you turn them on again, also after a reboot."
+msgstr "关闭所有 SIM 的射频？在您再次开启之前（重启后也是如此），将无法通话、收发短信和使用移动数据。"
+
+msgid "All radios on"
+msgstr "开启所有射频"
+
+msgid "Kept across reboots: a radio that is off stays off until it is turned on here."
+msgstr "重启后保持：关闭的射频会一直关闭，直到在此处开启。"
 
 msgid "A radio change is under way."
 msgstr "射频正在切换。"

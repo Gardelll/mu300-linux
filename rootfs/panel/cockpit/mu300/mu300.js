@@ -476,12 +476,19 @@
                         if (i === 1 && !r.slot1_supported) return;
                         var b = button(v ? _('Turn off') : _('Turn on'), function () {
                             act(b, 'radio.set', { slot: i + 1, state: v ? 'off' : 'on' }, { done: rload,
-                                confirm: v ? _('Turn this SIM\'s radio off? It is no longer reachable for calls, SMS and data.') : null });
+                                confirm: v ? _('This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again.') : null });
                         });
                         rb.appendChild(el('div', { 'class': 'mu-row' }, [ el('span', { 'class': 'mu-k',
                             text: cockpit.format(_('SIM $0'), i + 1) + (r.active === i ? ' (' + _('in use') + ')' : '') }),
                             el('span', { 'class': 'mu-v', text: on(v) }), b ]));
                     });
+                    var off = button(_('All radios off (airplane mode)'), function () {
+                        act(off, 'radio.set', { slot: 'all', state: 'off' }, { done: rload,
+                            confirm: _('Turn every SIM\'s radio off? No calls, SMS or mobile data until you turn them on again, also after a reboot.') });
+                    }, 'danger');
+                    var all = button(_('All radios on'), function () { act(all, 'radio.set', { slot: 'all', state: 'on' }, { done: rload }); });
+                    rb.appendChild(actions([ r.all_off ? all : off ]));
+                    rb.appendChild(note(_('Kept across reboots: a radio that is off stays off until it is turned on here.')));
                     if (r.busy) rb.appendChild(note(_('A radio change is under way.'), 'warn'));
                 });
             };

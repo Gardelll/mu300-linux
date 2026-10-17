@@ -404,11 +404,23 @@ msgstr "Kapat"
 msgid "Turn on"
 msgstr "Aç"
 
-msgid "Turn this SIM's radio off? It is no longer reachable for calls, SMS and data."
-msgstr "Bu SIM'in radyosu kapatılsın mı? Artık aramalar, SMS ve veri için erişilemez."
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "Bu SIM ile arama, SMS ve veri olmaz; radyosu yeniden başlatmadan sonra da siz yeniden açana kadar kapalı kalır."
 
 msgid "in use"
 msgstr "kullanımda"
+
+msgid "All radios off (airplane mode)"
+msgstr "Tüm radyoları kapat (uçak modu)"
+
+msgid "Turn every SIM's radio off? No calls, SMS or mobile data until you turn them on again, also after a reboot."
+msgstr "Tüm SIM radyoları kapatılsın mı? Siz yeniden açana kadar arama, SMS ve mobil veri olmaz; yeniden başlatmadan sonra da."
+
+msgid "All radios on"
+msgstr "Tüm radyoları aç"
+
+msgid "Kept across reboots: a radio that is off stays off until it is turned on here."
+msgstr "Yeniden başlatmalarda korunur: kapalı bir radyo burada açılana kadar kapalı kalır."
 
 msgid "A radio change is under way."
 msgstr "Bir radyo değişikliği sürüyor."
