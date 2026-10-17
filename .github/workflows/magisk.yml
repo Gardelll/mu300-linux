@@ -107,10 +107,12 @@ jobs:
           git push -q --force "$remote" "HEAD:refs/heads/$TAG"
           echo "pushed: https://raw.githubusercontent.com/$MIRROR_REPO/$TAG/manifest.json"
           keep=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=30" --jq '[.[] | select(.draft | not) | select(.tag_name | startswith("v"))] | [(map(select(.prerelease | not)) | .[0].tag_name), (map(select(.prerelease)) | .[0].tag_name)] | .[] | select(. != null)')
+          # the mirror's default branch cannot be deleted (GitHub refuses, and the step failed on it)
+          default=$(git ls-remote --symref "$remote" HEAD | awk '$1 == "ref:" { sub("^refs/heads/", "", $2); print $2 }')
           for b in $(git ls-remote --heads "$remote" | awk '{ sub("^refs/heads/", "", $2); print $2 }'); do
             case "$b" in v[0-9]*) ;; *) continue ;; esac
             case "$b" in *[!0-9A-Za-z._-]*) continue ;; esac
-            [ "$b" != "$TAG" ] || continue
+            [ "$b" != "$TAG" ] && [ "$b" != "$default" ] || continue
             echo "$keep" | grep -qxF "$b" && continue
-            git push -q "$remote" --delete "$b" && echo "removed the mirror of $b"
+            git push -q "$remote" --delete "$b" && echo "removed the mirror of $b" || echo "could not remove the mirror of $b"
           done
