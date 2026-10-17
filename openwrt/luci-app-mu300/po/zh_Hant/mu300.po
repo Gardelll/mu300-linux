@@ -13,6 +13,9 @@ msgstr "行動網路"
 msgid "Dual SIM"
 msgstr "雙 SIM 卡"
 
+msgid "SIM settings"
+msgstr "SIM 卡設定"
+
 msgid "Network locks"
 msgstr "網路鎖定"
 
@@ -763,6 +766,12 @@ msgstr "刪除已儲存的值"
 msgid "Presets"
 msgstr "預設"
 
+msgid "Form (URL-encoded)"
+msgstr "表單（URL 編碼）"
+
+msgid "Plain text"
+msgstr "純文字"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "收到的簡訊進入簡訊池後即被轉寄。傳送失敗時 30 秒後重試，之後每次間隔加倍（最長一小時），共十次。"
 
@@ -801,12 +810,6 @@ msgstr "位址（http:// 或 https://）"
 
 msgid "Body"
 msgstr "內容"
-
-msgid "Form (URL-encoded)"
-msgstr "表單（URL 編碼）"
-
-msgid "Plain text"
-msgstr "純文字"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "欄位：sender、time、text、device、message（填好的範本）"
@@ -1991,6 +1994,33 @@ msgstr "切換到卡%d"
 # Dual SIM controls.
 msgid "Use SIM%d at next boot"
 msgstr "下次啟動使用卡%d"
+
+msgid "SIM settings are not available"
+msgstr "SIM 卡設定無法使用"
+
+msgid "Modem default"
+msgstr "模組預設"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "使用中"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "模組：%s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "將在該卡射頻下次啟動時傳送。"
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "每張卡的 VoLTE 和 VoNR，重新開機後保留，並在該卡每次啟動時重新下發。VoLTE 預設開啟，除非關閉；VoNR 在設定之前保持模組原狀。"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "收件人：號碼，例如 10086 或 +86..."
@@ -3426,9 +3456,18 @@ msgstr "無效的更新要求"
 msgid "The backup tool gave no valid reply"
 msgstr "備份工具沒有給出有效的回覆"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "此平台未提供行動數據整合"
+
+msgid "The SIM settings could not be read"
+msgstr "無法讀取 SIM 卡設定"
+
 # Dual SIM controls.
 msgid "Invalid SIM setting"
 msgstr "SIM 設定無效"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "模組未接受該設定，未儲存任何內容"
 
 # Dual SIM controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3597,9 +3636,6 @@ msgstr "請使用雙 SIM 控制頁或重新啟動來操作受管理的雙卡射�
 
 msgid "Radio did not come up"
 msgstr "射頻未能啟動"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "此平台未提供行動數據整合"
 
 msgid "The data roaming setting could not be saved"
 msgstr "無法儲存數據漫遊設定"

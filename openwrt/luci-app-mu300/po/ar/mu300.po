@@ -13,6 +13,9 @@ msgstr "الخلوي"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "إعدادات SIM"
+
 msgid "Network locks"
 msgstr "أقفال الشبكة"
 
@@ -763,6 +766,12 @@ msgstr "إزالة القيمة المحفوظة"
 msgid "Presets"
 msgstr "إعدادات جاهزة"
 
+msgid "Form (URL-encoded)"
+msgstr "نموذج (ترميز URL)"
+
+msgid "Plain text"
+msgstr "نص عادي"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "تُعاد توجيه الرسائل المستلمة فور وصولها إلى مجمّع الرسائل القصيرة. يُعاد إرسال التسليم الفاشل بعد 30 ثانية، ثم في كل مرة بعد ضعف المدة (ساعة على الأكثر)، عشر مرات إجمالًا."
 
@@ -801,12 +810,6 @@ msgstr "العنوان (http:// أو https://)"
 
 msgid "Body"
 msgstr "المحتوى"
-
-msgid "Form (URL-encoded)"
-msgstr "نموذج (ترميز URL)"
-
-msgid "Plain text"
-msgstr "نص عادي"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "الحقول: sender، time، text، device، message (القالب بعد ملئه)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "إعدادات SIM غير متاحة"
+
+msgid "Modem default"
+msgstr "افتراضي المودم"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "قيد الاستخدام"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "المودم: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "يُرسل إلى هذه الشريحة عند بدء تشغيل راديوها في المرة القادمة."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "VoLTE وVoNR لكل شريحة، تُحفظ بعد إعادة التشغيل وتُرسل من جديد كلما بدأت تلك الشريحة. VoLTE مفعّل ما لم يُطفأ؛ ويبقى VoNR كما في المودم حتى يُضبط."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "المستلم: رقم، مثل 10086 أو +86..."
@@ -3433,9 +3463,18 @@ msgstr "طلب تحديث غير صالح"
 msgid "The backup tool gave no valid reply"
 msgstr "لم تعطِ أداة النسخ الاحتياطي ردًا صالحًا"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "تكامل بيانات الجوال غير متوفر في هذه المنصة"
+
+msgid "The SIM settings could not be read"
+msgstr "تعذّرت قراءة إعدادات SIM"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "لم يقبل المودم الإعداد؛ لم يُحفظ شيء"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "لم يعمل الراديو"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "تكامل بيانات الجوال غير متوفر في هذه المنصة"
 
 msgid "The data roaming setting could not be saved"
 msgstr "تعذّر حفظ إعداد تجوال البيانات"

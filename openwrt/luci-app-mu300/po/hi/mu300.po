@@ -13,6 +13,9 @@ msgstr "सेल्युलर"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "SIM सेटिंग्स"
+
 msgid "Network locks"
 msgstr "नेटवर्क लॉक"
 
@@ -763,6 +766,12 @@ msgstr "सहेजा गया मान हटाएँ"
 msgid "Presets"
 msgstr "प्रीसेट"
 
+msgid "Form (URL-encoded)"
+msgstr "फ़ॉर्म (URL-एन्कोडेड)"
+
+msgid "Plain text"
+msgstr "सादा पाठ"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "प्राप्त संदेश SMS पूल में पहुँचते ही आगे भेजे जाते हैं। विफल डिलीवरी 30 सेकंड बाद फिर आज़माई जाती है, फिर हर बार दोगुने समय बाद (अधिकतम एक घंटा), कुल दस बार।"
 
@@ -801,12 +810,6 @@ msgstr "पता (http:// या https://)"
 
 msgid "Body"
 msgstr "बॉडी"
-
-msgid "Form (URL-encoded)"
-msgstr "फ़ॉर्म (URL-एन्कोडेड)"
-
-msgid "Plain text"
-msgstr "सादा पाठ"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "फ़ील्ड: sender, time, text, device, message (भरा हुआ टेम्पलेट)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "SIM सेटिंग्स उपलब्ध नहीं हैं"
+
+msgid "Modem default"
+msgstr "मॉडेम का डिफ़ॉल्ट"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "उपयोग में"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "मॉडेम: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "इस SIM का रेडियो अगली बार शुरू होने पर इसे भेजा जाएगा।"
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "हर SIM के लिए VoLTE और VoNR, रीबूट के बाद भी रहते हैं और वह SIM जब भी शुरू हो, फिर से भेजे जाते हैं। VoLTE बंद न करने तक चालू रहता है; VoNR सेट करने तक मॉडेम जैसा ही रहता है।"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "प्राप्तकर्ता: नंबर, जैसे 10086 या +86..."
@@ -3433,9 +3463,18 @@ msgstr "अमान्य अपडेट अनुरोध"
 msgid "The backup tool gave no valid reply"
 msgstr "बैकअप टूल ने कोई मान्य उत्तर नहीं दिया"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "इस प्लेटफ़ॉर्म पर मोबाइल डेटा एकीकरण उपलब्ध नहीं है"
+
+msgid "The SIM settings could not be read"
+msgstr "SIM सेटिंग्स पढ़ी नहीं जा सकीं"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "मॉडेम ने सेटिंग स्वीकार नहीं की; कुछ भी सहेजा नहीं गया"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "रेडियो चालू नहीं हुआ"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "इस प्लेटफ़ॉर्म पर मोबाइल डेटा एकीकरण उपलब्ध नहीं है"
 
 msgid "The data roaming setting could not be saved"
 msgstr "डेटा रोमिंग सेटिंग सहेजी नहीं जा सकी"

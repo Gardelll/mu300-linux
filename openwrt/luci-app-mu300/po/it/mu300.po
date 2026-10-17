@@ -13,6 +13,9 @@ msgstr "Cellulare"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "Impostazioni SIM"
+
 msgid "Network locks"
 msgstr "Blocchi di rete"
 
@@ -763,6 +766,12 @@ msgstr "Rimuovi il valore salvato"
 msgid "Presets"
 msgstr "Preimpostazioni"
 
+msgid "Form (URL-encoded)"
+msgstr "Modulo (codificato URL)"
+
+msgid "Plain text"
+msgstr "Testo semplice"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "I messaggi ricevuti vengono inoltrati appena arrivano nel pool SMS. Un invio non riuscito viene ritentato dopo 30 s, poi ogni volta dopo il doppio del tempo (al massimo un'ora), dieci volte in tutto."
 
@@ -801,12 +810,6 @@ msgstr "Indirizzo (http:// o https://)"
 
 msgid "Body"
 msgstr "Corpo"
-
-msgid "Form (URL-encoded)"
-msgstr "Modulo (codificato URL)"
-
-msgid "Plain text"
-msgstr "Testo semplice"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Campi: sender, time, text, device, message (il modello compilato)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "Impostazioni SIM non disponibili"
+
+msgid "Modem default"
+msgstr "Predefinito del modem"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "in uso"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "Modem: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "Inviato a questa SIM al prossimo avvio della sua radio."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "VoLTE e VoNR per ogni SIM, mantenuti dopo il riavvio e inviati di nuovo a ogni avvio di quella SIM. VoLTE è attivo se non lo si disattiva; VoNR resta come nel modem finché non viene impostato."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Destinatario: numero, ad es. 10086 o +86..."
@@ -3433,9 +3463,18 @@ msgstr "Richiesta di aggiornamento non valida"
 msgid "The backup tool gave no valid reply"
 msgstr "Lo strumento di backup non ha dato una risposta valida"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "L'integrazione dei dati mobili non è fornita da questa piattaforma"
+
+msgid "The SIM settings could not be read"
+msgstr "Impossibile leggere le impostazioni SIM"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "Il modem non ha accettato l'impostazione; non è stato salvato nulla"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "La radio non si è attivata"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "L'integrazione dei dati mobili non è fornita da questa piattaforma"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Impossibile salvare l'impostazione del roaming dati"

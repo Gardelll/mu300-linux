@@ -13,6 +13,9 @@ msgstr "セルラー"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "SIM 設定"
+
 msgid "Network locks"
 msgstr "ネットワークロック"
 
@@ -763,6 +766,12 @@ msgstr "保存済みの値を削除"
 msgid "Presets"
 msgstr "プリセット"
 
+msgid "Form (URL-encoded)"
+msgstr "フォーム（URL エンコード）"
+
+msgid "Plain text"
+msgstr "プレーンテキスト"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "受信したメッセージは SMS プールに届きしだい転送されます。送信に失敗すると 30 秒後に再試行し、その後は毎回 2 倍の間隔（最大 1 時間）で、合計 10 回試みます。"
 
@@ -801,12 +810,6 @@ msgstr "アドレス（http:// または https://）"
 
 msgid "Body"
 msgstr "本文"
-
-msgid "Form (URL-encoded)"
-msgstr "フォーム（URL エンコード）"
-
-msgid "Plain text"
-msgstr "プレーンテキスト"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "フィールド: sender, time, text, device, message（埋め込み済みテンプレート）"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "SIM 設定は利用できません"
+
+msgid "Modem default"
+msgstr "モデムの既定値"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "使用中"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "モデム: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "この SIM の無線が次に起動したときに送信されます。"
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "SIM ごとの VoLTE と VoNR。再起動後も保持され、その SIM が起動するたびに再送されます。VoLTE はオフにしない限りオン、VoNR は設定するまでモデムの状態のままです。"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "宛先: 番号 (例: 10086 または +86...)"
@@ -3433,9 +3463,18 @@ msgstr "無効な更新リクエストです"
 msgid "The backup tool gave no valid reply"
 msgstr "バックアップツールから有効な応答がありません"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "このプラットフォームではモバイルデータ連携が提供されていません"
+
+msgid "The SIM settings could not be read"
+msgstr "SIM 設定を読み取れませんでした"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "モデムが設定を受け付けませんでした。何も保存されていません"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "無線を起動できませんでした"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "このプラットフォームではモバイルデータ連携が提供されていません"
 
 msgid "The data roaming setting could not be saved"
 msgstr "データローミングの設定を保存できませんでした"
