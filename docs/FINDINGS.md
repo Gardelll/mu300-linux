@@ -168,6 +168,7 @@ what replaced it. The table below gives each section's state.
 | 152 | The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware and its guide (it was the other way round); stock's network light shows the SIM in use, not 4G/5G (not changed) | current (read from the stock firmware and ZTE's guide; not yet looked at on a device) |
 | 154 | The U30 Air's network LED shows the SIM in use, as ZTE's firmware and its guide: white the nano-SIM (slot 0), blue the eSIM (slot 1), red no service, the target's colour blinking during a live switch; no longer 4G/5G | current (read from the stock firmware and ZTE's guide; unit tests; not yet looked at on a device) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
+| 160 | The eMMC at a cold boot: a failed HS400ES (`error -84`, issue #226) no longer leaves the board without `mmcblk0`; the core drops the failed timing and the next attempt takes HS200, then HS/DDR52, then HS; a test hook `sdhci_sprd.fail_hs400es` | current (unit tests; both mainline kernels built; not run on a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 | 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
@@ -4300,6 +4301,87 @@ watches only and keeps the power-off.
 
 Open: the 5.4 thermal sysfs on an F50 and a U30 Air (`/sys/class/thermal/thermal_zone*/{type,mode,trip_point_*}`,
 the `cdev*` links and `cooling_device*/type`) and which way the guard goes there; a load run on 5.4.
+### 160. The eMMC at a cold boot: a failed HS400ES no longer ends the boot; the core falls back to HS200, then HS/DDR52
+
+**The report** (issue #226, a user, 6.18.56, release v2026.10.16.1): after a cold boot (powered off five minutes or
+more) the modem never came up, because there was no `mmcblk0` and so no modem firmware:
+
+    mmc0: SDHCI controller on 22200000.sdio [22200000.sdio] using ADMA 64-bit
+    mmc0: mmc_select_hs400es failed, error -84
+    mmc0: error -84 whilst initialising MMC card
+    ... the same three more times ...
+    mmc0: Failed to initialize a non-removable card
+
+Every cold boot of his failed; warm reboots of the same kernel sometimes came up at HS400ES; an unbind and bind of
+the host on the running system failed the same way. The vendor 5.4 kernel (its own eMMC driver) came up at HS400ES at
+200 MHz on the same unit. We saw it once ourselves, on an F50 after a sysrq reboot (§112's run: "on that boot the eMMC
+did not come up"); a normal reboot after it was fine. With the root on the eMMC that boot has no system at all.
+
+**What the log says.** -84 is -EILSEQ, a CRC error. `mmc_select_hs400es` prints its own message before the summary
+line for every step but two: the CMD13 status checks after the switch to HS at 52 MHz and after the host went to
+HS400 with the enhanced strobe (`mmc_switch_status(card, true)`, where a CRC error is fatal). There is no inner line,
+so it is one of those two, most likely the last: the card switched, the host latches the response with the strobe,
+and the CRC does not match. Why only at a cold start (the PHY's DLL, a delay value from the device tree, a supply
+still settling) is not known; it is not looked into here. The four lines are `mmc_rescan`'s four attempts (400, 300,
+200, 100 kHz initial clocks), each with a power cycle of the card, and every one went to HS400ES again.
+
+**Changed** (`upstream/patches/0021-mmc-HS400ES-failure-falls-back-to-HS200.patch`, both mainline kernels): when the
+timing selection of `mmc_init_card` fails (the selection itself, HS200 tuning or HS400 after it, HS400ES tuning,
+DDR52), the failed timing is taken out of the host's caps, with one warning (`mmc0: HS400ES failed (-84), the next
+initialisation uses HS200`), and the next attempt takes the next slower one: HS400ES (HS400 goes with it) -> HS200 ->
+HS with DDR52 -> HS. mmc_rescan's four attempts are exactly that ladder. The core chooses the card type from the host
+caps again at every initialisation, of a new card and of a known one (a reset, a resume), so the same lowering holds
+there. The core's own line then says which timing was taken: `mmc0: new HS200 MMC card at address 0001`. A boot whose
+HS400ES works runs no new code. The lowered caps last until the host is bound again, in practice until the next
+boot, which tries HS400ES again. A removed card (-ENOMEDIUM) lowers nothing; the SD slot is set up by `sd.c` and not
+touched.
+
+Considered and not taken: turning HS400ES off in the device tree for everyone (half the read speed on every unit
+that works; mainline runs on the stock device tree's capabilities); a retry inside `mmc_select_timing` without a
+power cycle (the card is half switched; mmc_rescan's attempts power it off and start again from CMD0); plain HS400
+with tuning as the first fallback (never run on this host: HS200 is the known-good step below).
+
+**Cost.** At HS200 the bus is 200 MHz single data rate, half of HS400ES's bus rate: sequential reads should drop
+from §93's 270-300 MB/s on the F50 to at most about 190 (not measured); writes (§93: 180-215 MB/s) are bound more by
+the eMMC itself. Only on a boot that fell back.
+
+**The test hook.** `sdhci_sprd.fail_hs400es=N` (sdhci-sprd module parameter, default 0, also writable at
+`/sys/module/sdhci_sprd/parameters/fail_hs400es`): the next N HS400ES selections get a CRC error (-EILSEQ) on every
+CMD13, only while a new card is set up at HS400ES - the failure of the report, at the place the log points to.
+Mainline forces its command line (`CONFIG_CMDLINE_FORCE`; the bootloader's and the boot image's `loglevel=5` are not
+read), so a test kernel gets it at build time: `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1` for
+`upstream/build.sh` appends it to `CONFIG_CMDLINE` after the config check. Releases never set it (a unit test checks
+the workflows).
+
+**Unit tests:** `tests/test_static.py` (`test_mainline_emmc_timing_falls_back`): the ladder, exactly the four timing
+failures routed through it, the hook off by default and limited to CMD13 during a new card's HS400ES, the build
+switch after the config check and in no workflow. **Built** locally, 2026-10-16: 6.18.56 and 7.2.10 with `build.sh` (the patch applied with no offset or fuzz, also to 6.18.57 and 7.2.11; no compiler warning in either file; both Images carry the new messages), and a 7.2.10 test build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`, whose `CONFIG_CMDLINE` and Image end with it. **On a device** (F50-B, Ubuntu 24.04, 2026-10-17; test kernels with this patch and the other open kernel PRs):
+7.2.11 and 6.18.57 normal boots: `new HS400 Enhanced strobe MMC card`, no fallback line, `ios` timing 10 at 200 MHz.
+A 7.2.11 build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`: `test: this HS400ES selection fails`,
+`mmc_select_hs400es failed, error -84`, `HS400ES failed (-84), the next initialisation uses HS200`, `error -84 whilst
+initialising MMC card`, then `new HS200 MMC card at address 0001` 0.33 s later; `ios` timing 9 (HS200) at 200 MHz,
+the system booted with mobile data and the hotspot, and the parameter read 0. Still not run: cold boots, the
+runtime rebind, throughput at HS200. Before that, the plan as written:
+
+    # 1. normal boots, both boards, 6.18 and 7.2: unchanged
+    dmesg | grep -iE 'mmc0|hs400|initialisation uses'     # "new HS400 Enhanced strobe MMC card", no fallback line
+    cat /sys/kernel/debug/mmc0/ios                          # timing spec: 10 (mmc HS400 enhanced strobe), 200 MHz
+    # 2. the forced failure: a test kernel built with MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1
+    dmesg | grep -iE 'mmc0'   # "test: this HS400ES selection fails", "mmc_select_hs400es failed, error -84",
+                              # "HS400ES failed (-84), the next initialisation uses HS200", "new HS200 MMC card"
+    cat /sys/kernel/debug/mmc0/ios                          # timing spec: 9 (mmc HS200); the system boots, modem up
+    cat /sys/module/sdhci_sprd/parameters/fail_hs400es     # 0
+    # with fail_hs400es=4: the same HS200 boot, and the parameter reads 3 (after the first failure the host has no
+    # HS400ES left to try)
+    # 3. on a running system with the root on the SD card (F50): the same without a reboot
+    echo 1 > /sys/module/sdhci_sprd/parameters/fail_hs400es
+    # nothing of the eMMC mounted; the modem stopped (its firmware partitions are on the eMMC)
+    echo 22200000.sdio > /sys/bus/platform/drivers/sdhci_sprd_r11/unbind
+    echo 22200000.sdio > /sys/bus/platform/drivers/sdhci_sprd_r11/bind
+    # 4. cold boots: power off >= 5 min, N times per board (the release kernel): count fallbacks; a unit like
+    #    #226's should now boot every time, at HS200 when HS400ES fails
+    # 5. at HS200: dd read/write throughput and a §93-style soak (write, verify, reboot, e2fsck -fn)
+
 ### 166. Mainline's soc-thmzone did not hold a full CPU load: step_wise followed the sensors' noise
 
 PR #272's device test (§133, F50-C, 6.18.56/6.18.57) found that the toolkit's 10-minute CPU stress (8 awk loops)
