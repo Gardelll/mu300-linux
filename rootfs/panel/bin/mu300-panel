@@ -101,14 +101,16 @@ reload_socket() {
 apt_env() { DEBIAN_FRONTEND=noninteractive APT_LISTCHANGES_FRONTEND=none "$@"; }
 # apt_net ARGS: apt-get for what needs the network, never without an end. Offline (or with only the VPN server
 # answering, as in some regions) a plain apt-get update waited on its connections for more than 10 minutes, while the
-# restore job and its lock held every other apt off (F50, after an offline mu300-update apply): 30 s per connection,
-# one retry, and the whole call ended after MU300_PANEL_APT_TIMEOUT seconds (600).
-APT_NET_OPTS="-o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=1"
+# restore job and its lock held every other apt off (F50, after an offline mu300-update apply): 10 s per connection,
+# no retry, and the whole call ends after MU300_PANEL_APT_TIMEOUT seconds (300). Measured offline on F50-B: 8
+# addresses of ports.ubuntu.com, the update failed after 81 s. --error-on=any: offline is a failure (apt-get update
+# returns 0 otherwise, and the install after it then waited again).
+APT_NET_OPTS="-o Acquire::http::Timeout=10 -o Acquire::https::Timeout=10 -o Acquire::Retries=0"
 apt_net() {
     _cmd=$1; shift
     if command -v timeout >/dev/null 2>&1; then
         # shellcheck disable=SC2086
-        apt_env timeout "${MU300_PANEL_APT_TIMEOUT:-600}" apt-get "$_cmd" $APT_NET_OPTS "$@"
+        apt_env timeout "${MU300_PANEL_APT_TIMEOUT:-300}" apt-get "$_cmd" $APT_NET_OPTS "$@"
     else
         # shellcheck disable=SC2086
         apt_env apt-get "$_cmd" $APT_NET_OPTS "$@"
@@ -127,7 +129,7 @@ install_pkgs() {
         say "the extra's packages did not install; trying Ubuntu's archive"
     fi
     say "installing Cockpit from Ubuntu's archive ($PKGS)"
-    apt_net update -q >/dev/null || { say "Ubuntu's archive cannot be reached (offline?)"; return 1; }
+    apt_net update -q --error-on=any >/dev/null || { say "Ubuntu's archive cannot be reached (offline?)"; return 1; }
     # downloaded into the extra first, then installed from there: the files stay for the next time
     _dl=$PANEL/.debs-new
     rm -rf "$_dl"
