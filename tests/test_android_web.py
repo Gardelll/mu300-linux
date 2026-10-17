@@ -187,7 +187,8 @@ class Status(WebCase):
         end = (((16 << 21) - 34) // 4096 - 1) * 4096
         self.assertEqual(s['disk'], 16 << 21)
         self.assertEqual(s['last_end'], last_end)
-        self.assertEqual(s['region'], {'off': start * 512, 'size': (end - start) * 512, 'existing': 'no', 'dirty': -1})
+        self.assertEqual(s['region'], {'off': start * 512, 'size': (end - start) * 512, 'existing': 'no', 'dirty': -1,
+                                       'part': 0, 'part_fs': 'none', 'part_count': 0, 'foreign_image': 0})
         self.assertEqual(s['parts'], [['userdata', 2048, 8 << 21]])
         self.assertEqual(s['sd'], {'dev': '', 'bytes': 0, 'small': 0, 'existing': 'no'})
         self.assertEqual(s['job'], {'state': 'none', 'kind': '', 'arg': '', 'rc': -1, 'step': 0, 'more': 0})
