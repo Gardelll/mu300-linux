@@ -2255,6 +2255,52 @@ Other things learned along the way:
   scene, and on that board the HAL's own call scene clocks the port. Here 8 kHz with 160 / 960 is what was heard.
   16 kHz was only tried without the clock (call 2).
 
+### 24e. Both directions at the right speed: the downlink from the VBC dump, the uplink at 16 kHz
+Measured on F50-C on 2026-10-17 (OpenWrt v2026.10.17.4 on the 5.4 kernel, the private audio stack, the 41S DSP
+image), with the IIS1 clock of 24d. Most calls were left ringing and hung up before the answer: the network's
+early-media ringback (425 Hz, one second on, about four off) is a reference tone that needs nobody on the other end.
+A few calls were answered by the owner, who counted aloud and then heard his recording played back.
+
+**`FE_ST_VOICE_C` stays at half rate whatever is changed.** The tap runs at 8000 frames/s until the modem starts the
+codec, two to four seconds into the dialling, and then at 4070-4090 frames/s for the rest of the call. Each 160-sample
+frame that does arrive holds the ringback at exactly 425 Hz, so nothing is stretched: every other 20 ms frame is
+missing. The mean step across a frame boundary is five to six times the step inside a frame. These changed nothing:
+
+* the call scene (`FE_ST_VOICE`) at 16 kHz instead of 8 kHz;
+* `VBC_SRC_DAC1` and `VBC_SRC_ADC2` = 16000, set before the scene starts or after it, together or `DAC1` alone;
+* two channels instead of one (without a call, the tap then moves 4000 frames/s, which is the same 8000 samples/s).
+
+The DSP's bandwidth messages on `/dev/audio_pipe_voice` said band 0 (NB) in every one of these calls.
+
+**The VBC dump of DAC1 carries the whole downlink.** `FE_ST_DUMP`, with `S_VBC_DUMP SWITCH` on and `VBC_DUMP_POS` =
+`DUMP_POS_DAC1_E`, records what DAC1 sends to the IIS1 port. That is the downlink after the DSP has finished with it.
+It runs at the VBC's own rate whatever hw_params asks: 47,990-48,000 frames/s on two equal channels. Mono, 8 kHz and
+16 kHz requests open as well, and still deliver about 48,000 frames/s. In an unanswered call the ringback came through
+it at 425.0 Hz with no seam (largest step against median step: 2). Above 4 kHz there is nothing (-63 dB), which is
+what an NB call gives. Decimated to 8 kHz, the owner's counting was continuous (seam ratio 1.15) at 8000 frames/s.
+`FE_ST_CAPTURE_DSP` refuses `PREPARE` (EINVAL) in this scene. Without the dump switch, so does `FE_ST_DUMP`.
+
+**`FE_ST_VOICE_PCM_P` is consumed at 16 kHz.** The uplink tap was played a 1 kHz tone, and `VBC_DSP_VOICE_CAPTURE_TYPE`
+was set to `VOICE_CAPTURE_UPLINK` so that `FE_ST_VOICE_C` showed what the DSP sends up. Opened at 8 kHz, the tone came
+back at 2000 Hz. Opened at 16 kHz with 320-frame periods, it came back at 1000 Hz. The owner heard the 8 kHz version
+of his own voice "like a child's" and the 16 kHz one at the right pitch. The melody of 24d played at 8 kHz was
+therefore an octave high and twice as fast. It was still recognisable as music, which is all that test checked.
+
+**Restarting a voice stream panics the kernel.** A PCM that underruns or overruns and is then prepared and started
+again on the same open runs `sprd_pcm_trigger` -> `vchan_tx_submit` with the DMA descriptor `hw_params` prepared once.
+The second submit corrupts the virt-dma list: `list_del corruption` in `__list_del_entry_valid`, a kernel panic, and
+the board hung off USB until it was power-cycled. This was hit once, by a client that recovered from an xrun with
+PREPARE + START. aplay and arecord do the same on an underrun (EPIPE). Clients of these streams must not stop them:
+`stop_threshold` = the boundary, and for playback `silence_size` = the boundary, so that the kernel fills a late write
+with silence. A stream that does stop has to be closed and opened again. The driver could re-prepare the descriptor
+in `prepare`; that is a fix for the private audio patches.
+
+**What uses this now.** For the dsp route, `mu300-voice audio start` switches the dump on at `DUMP_POS_DAC1_E` through
+its undo log (`MU300_VOICE_DUMP_TAP=0` leaves it off). `tone` plays at 16 kHz (`MU300_VOICE_PLAY_RATE`). `echo`
+records the dump and plays it back through alsa-lib's `plug`. That echo path has not yet been run in a call. The SIP
+gateway (the owner's sipserver, mu300 build) reads the dump and decimates it to 8 kHz behind a 47-tap low-pass. It
+writes the uplink at 16 kHz through a polyphase interpolator, and feeds silence for as long as the stream is open.
+
 ## Bluetooth
 
 ### 25. SC2355 Bluetooth on BlueZ
