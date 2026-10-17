@@ -11132,14 +11132,16 @@ Air's dual-SIM boots. There was no way to keep a card (or the device) off the ne
 **Now.** `/etc/mu300/sim-radio` is one line, `<slot 0> <slot 1>`, 1 on and 0 off; no file is `1 1`, as every release
 before. A line that is not one of the four counts as `1 1` and says so: a broken file must not take the device off
 the network for good. `mu300-sim-radio set 0|1|all on|off` saves it and, when it concerns the card in use, runs
-`mobile-data rf-apply`: off takes the data down (netifd restarts the WAN, whose dial ends with `SIM_RADIO_DISABLED`;
+`mobile-data rf-apply`: off takes the data down (netifd restarts the WAN, whose dial ends with `SIM_RADIO_DISABLED`
+and leaves the interface unavailable, so netifd does not retry; LuCI then shows it as "device not present";
 Ubuntu's connection goes down as `mobile-data down` takes it), then `AT+CFUN=4` on the card's own channel (flight mode:
 the SIM stays powered), read back; on brings the radio back (`AT+CFUN=1` from flight mode, the ordinary SFUN bring-up
-from the cold 0) and the data that was held for it. Data somebody had taken down (ifdown, the panel's button, the data
-cap, a stopped service) is not held and stays down. `all off` is the persistent airplane mode the owner asked for.
+from the cold 0) and the data that was held for it (netifd: the interface made available again, which netifd starts
+unless somebody took it down; Ubuntu: the hold marker). Data somebody had taken down (ifdown, the panel's button, the
+data cap, a stopped service) stays down. `all off` is the persistent airplane mode the owner asked for.
 
 Every path that brings a radio up asks first: `mobile-data`'s dial (exit 7 under netifd: `SIM_RADIO_DISABLED`, the
-restart blocked; Ubuntu: exit 0, the service stays up), the early warm-up (the radio stays at its cold CFUN 0 after the
+interface unavailable; Ubuntu: exit 0, the service stays up), the early warm-up (the radio stays at its cold CFUN 0 after the
 RIL handshake), the watchdog, mu300-power's resume, the modem reset (refused), the panel's lock apply (no SFUN restart;
 the locks take effect when the radio comes on), and on the U30 Air the cold start of the chosen card (put off without a
 verdict: the pending marker goes, no trial; `mu300-sim2-warmup --deferred` runs it when the radio is switched on) and
