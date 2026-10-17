@@ -10845,7 +10845,7 @@ install.sh, install.ps1 and the Magisk zip (the web installer runs the zip's ins
 120504320..122150911, the filesystem 205824 blocks of 4 KiB - exactly the region). One GPT entry was added (76,
 `mu300root`, type Linux filesystem) covering exactly that region, nothing moved: both GPT copies (first 34 and last
 33 sectors) were saved with their SHA-256 first, the new copies built and CRC-checked on the Mac
-(`scratchpad/scripts/gpt_add.py`), written with dd and read back. Android started normally with it
+(a few lines of Python), written with dd and read back. Android started normally with it
 (`/dev/block/by-name/mu300root -> mmcblk0p76`, `sys.boot_completed=1`).
 * **Release init (v2026.10.17.2) reproduces #290 exactly:** `stage=root-offset not-found (trying the default ...)`,
   `stage=sd-wait`, `stage=rootfs-unavailable` at 13.5 s, `stage=pmic-wdt-NOT-ready` at 257 s, `stage=timer-reboot`
