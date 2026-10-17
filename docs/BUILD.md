@@ -143,8 +143,9 @@ sudo mu300-next-boot linux     # every successful boot re-arms slot b (mu300-boo
 sudo mu300-next-boot android   # next reboot goes to Android and stays there
 sudo mu300-next-boot status
 ```
-Hotspot settings live in `/etc/mu300/hotspot.conf` (`SSID=`, `PSK=`, `BAND=5|2.4`, `CHANNEL=auto|n`, `COUNTRY=`); `tools/android-import-hotspot.sh`
-copies the current Android hotspot into it before the first boot, otherwise a random password is generated and shown at login.
+Hotspot settings live in `/etc/mu300/hotspot.conf` (`SSID=`, `PSK=`, `BAND=5|2.4`, `CHANNEL=auto|n`, `COUNTRY=`); the installers
+copy the current Android hotspot into it while they install (their hotspot question, `MU300_HOTSPOT=no` in the Magisk
+zip turns it off), otherwise a random password is generated and shown at login.
 
 From Android, `boot/android-boot-linux.sh boot-linux-slotb.img` boots the image already on `boot_b` again without reflashing.
 If Linux ever fails before `mu300-boot-ok` runs, LK sees `tries_remaining=1` on the next boot and falls back to Android.
