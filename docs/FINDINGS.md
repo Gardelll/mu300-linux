@@ -8869,6 +8869,14 @@ SRAM rail (moved with the CPU rail, not visible from Linux); the U30 Air's SML; 
   run.
 * **Not run here:** the panels (plain OpenWrt has neither LuCI nor Cockpit) and the U30 Air's firmware check.
 
+**F50-B, Ubuntu 24.04, 7.2.11, 2026-10-17** (test kernels with this branch and the other open kernel PRs). SML known,
+`dcdc_max` 1596875 uV. Offset 0 with the stock call handed over (above): `applied`, `0,0,0`, flag `0x00000000`, then
+`mu300-cpu voltage set -3125,0,0 --confirm EXPERIMENTAL` (without the word: refused) and a reboot: flag `0x00008300`,
+policy0's table exactly 3125 uV lower (650000 -> 646875 ... 834375 -> 831250), policy4 unchanged, `trial` and `armed`
+on the disk, the good-mark timer armed for 10 minutes; `off` and a clean reboot: `0,0,0`, `armed` gone. 6.18.57 on the
+same board: `0,0,0` handed over at 4.90 s, switch_root at 5.01 s. The LuCI CPU page (luci-app-mu300's files copied
+onto F50-C's plain OpenWrt, release kernel): the section with the warning and "Not available with this kernel".
+
 ### 153. A reinstall after an uninstall on a device that made room: "it asks to repartition again"
 
 **The report** (a user, through the owner, 2026-10-16): a device whose userdata the installer had shrunk (the make-room
