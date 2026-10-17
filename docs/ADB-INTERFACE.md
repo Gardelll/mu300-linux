@@ -114,8 +114,8 @@ module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `p
 | `data.set` | `apn` `pdp` (`IP`/`IPV6`/`IPV4V6`) `auth` (`none`/`pap`/`chap`/`both`) `user` `password` `clear_credentials` `roaming` (bool: `mobile-data roaming on` or `off`; alone it restarts nothing) | `restart` |
 | `data.power` | `state` | - |
 | `sim.get`, `sim.select` | -, `slot` 1/2 | `sim` (mu300-sim's JSON) |
-| `voice.get`, `voice.set` | -, `slot` 1/2 `kind` volte/vonr `state` on/off | `voice` (`mobile-data voice --json --read`: the saved choice per card, `live` what the card in use says), `text` (FINDINGS 181) |
-| `radio.get`, `radio.set` | -, `slot` 1/2/"all" `state` on/off | `radio` (`mu300-sim-radio status --json`: `enabled` per card, `all_off`, `active`, `busy`, `result`), `text`; `busy` while another change runs (FINDINGS 182) |
+| `voice.get`, `voice.set` | -, `slot` 1/2 `kind` volte/vonr `state` on/off | `voice` (`mobile-data voice --json --read`: the saved choice per card, `live` what the card in use says), `text` (FINDINGS 184) |
+| `radio.get`, `radio.set` | -, `slot` 1/2/"all" `state` on/off | `radio` (`mu300-sim-radio status --json`: `enabled` per card, `all_off`, `active`, `busy`, `result`), `text`; `busy` while another change runs (FINDINGS 185) |
 | `lock.get`, `lock.set` | -, `kind` (`mode endc lte nr cell reset`) `val` | `data`: the control panel's answer (openwrt-luci only) |
 | `vpn.status` | `exit_ip` (bool) | `installed`, `status` (mu300-vpn's JSON), `extra` |
 | `vpn.profiles`, `.subs`, `.settings` | - | `profiles`, `subscriptions`, `settings` (`KILL_SWITCH`, `IPV6`) |

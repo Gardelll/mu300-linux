@@ -149,7 +149,7 @@ what replaced it. The table below gives each section's state.
 | 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
 | 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
 | 104 | The U30 Air's live SIM switch turned mobile data back on that the user had switched off (kanoqwq 2d3b6f3f) | current (fixed; unit tests only, not run on a device) |
-| 105 | The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written (kanoqwq 2af101f8) | current (patch 0018; built for 7.2.10, a model test of the callback; not run on a device) |
+| 105 | The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written (kanoqwq 2af101f8) | current (patch 0018; the callback device-tested on the U30 Air, 2026-10-17; the always-written part superseded by 181: stock writes with `regmap_update_bits()`) |
 | 106 | Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes (kanoqwq 0e19fe32) | current (fixed in the mainline module and as a 5.4 patch; both built; not run on a device) |
 | 110 | The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it | current (unit and Node tests against the real mu300-api; the device protocol run with the page's modules over WebUSB on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-16: six defects fixed; rows 6, 9, 16 and the Android restart not run) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
@@ -175,6 +175,8 @@ what replaced it. The table below gives each section's state.
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
 | 170 | "Failed to send request: Operation not permitted" behind the VPN's kill switch: uclient's connect error, the tunnel down; the failure now names the kill switch, one try instead of four; vpn-dae refused before the download on a kernel that cannot run it | current (reproduced in an OpenWrt 25.12 container with sing-box and the kill switch, 2026-10-17) |
 | 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; on the U30 Air (OpenWrt, 6.18.57): refusal, migration, notice, the panel's save; no F50 yet) |
+| 180 | Wi-Fi access point: `get_station` answered any address with the interface's own counters and the station side's signal; now only this AP's stations, with nothing filled in (the firmware has no per-client figures), `-ENOENT` otherwise; `get_channel` link 0 only (kanoqwq f59a296) | current (mainline module and 5.4 patch built; unit tests; U30 Air 6.18.57 with a client, F50-B 7.2.11, 2026-10-17) |
+| 181 | The U30 Air's fuel gauge against the stock module: the user area's writes are `regmap_update_bits()` with a wait after the release (stock `save_last_cap` at 0x4ba4), no migration guess for a valid saved value, the charger's Full is 100 % with the battery current within `fullbatt-current` (kanoqwq f59a296 reviewed: his 4.2 V condition would refuse a real Full) | current (built for 6.18.57 and 7.2.11; unit tests; U30 Air 6.18.57, 2026-10-17: Full at 4.147 V gave 100 %, kept across a reboot) |
 
 ## Hardware and firmware facts
 
@@ -9524,6 +9526,9 @@ negative):**
     # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
     # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
 
+**Superseded in part (181):** the U30 Air's stock module writes the user area with `regmap_update_bits()`, as
+mainline does; kano retracted the report above, and 0018 no longer makes them `regmap_write_bits()`.
+
 **Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
 built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
 callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
@@ -10925,7 +10930,159 @@ set up (nobody here has one); the partition here was made by hand to cover our o
 `tools/android-import-hotspot.sh` (no caller left) still mounts the old fixed offset and writes into the
 filesystem's top level, not a system's: it predates the region and the systems' directories.
 
-### 181. VoLTE and VoNR per SIM, kept and replayed at every start of the card
+### 180. Wi-Fi access point: get_station answered for any address with the interface's own counters
+
+**Status: current** (device-tested on the U30 Air, 6.18.57, and F50-B, 7.2.11, 2026-10-17). From kanoqwq's `f59a296` (his notes: the access point no longer passes station
+or interface figures off as a client's): his `upstream/modules/sprd_wlan_combo/common/cfg80211.c` and
+`kernel/patches/wlan_combo-ap-stats-scope.patch`, read and taken in our words; his code not run.
+
+**What it was.** `sprd_cfg80211_get_station()` is the station side's: it reports the interface's own byte and packet
+counters (`ndev->stats`) and the firmware's GET_STATION, which describes the link to the access point the interface
+is connected to (signal, rates, TX failures). It never looked at the address it was asked about. On our access
+point, `iw dev wlan0 station get <MAC>` answered for any MAC, a client or not, with the whole interface's counters and
+a signal that belongs to no client; whatever asked for a station by address got those figures. Since issue #8, `dump_station` lists the access point's
+stations from the firmware's peer table with nothing filled in: the firmware keeps no per-client figures, so the two
+paths disagreed about the same station.
+
+Two smaller ones next to it: `get_channel` (5.15 and later) indexed `wdev->links[link_id]` with the caller's link id
+unchecked (cfg80211 passes 0 for a driver without MLO, which this one is; an index past the array is not ours to
+read), and `dump_station` took a negative index as the first station.
+
+**Changed** (mainline module and, the same code, `kernel/patches/wlan_combo-ap-stats-scope.patch` for 5.4): in AP and
+P2P-GO mode, `get_station` answers `-ENOENT` unless the address is one of this interface's entries in the peer table
+(as `dump_station` lists them, never the interface's own address), and for a station of ours returns it with nothing
+filled in, as `dump_station` does. `get_channel` answers for link 0 only. `dump_station` refuses a negative index. In
+station mode nothing changes. So per-client counters do not exist on this driver; `iw ... station dump` shows the
+clients and no numbers, and hostapd's own `hostapd_cli all_sta` is unchanged. On 5.4 the 5.15+ variant of `get_channel` is not built; the code is kept the same as the mainline copy.
+
+**The 5.4 patch** applies after the series before it with `patch --fuzz=0`, no offsets, and so does every later
+patch (the realme tree at `4381465c`, all fifteen `wlan_combo-*.patch` in their order). His version's hunks were
+written against his tree; ours is made against ours.
+
+**Built**: the mainline module for 6.18.57 and 7.2.11 (92 warnings, as before this change; none in the changed lines); the 5.4 driver with all fifteen patches, linked against the U30 Air's 5.4 tree (`sprd_wlan_combo.ko`, no warning, as without this patch). **Tests**: `test_static.py` (`test_wifi_ap_get_station_answers_for_its_stations_only`: the
+same lines in the mainline module and the 5.4 patch, the AP branch before anything of the station side's).
+
+**Device test (2026-10-17).** U30 Air, openwrt-luci v2026.10.17.3, its 6.18.57 kernel bundle rebuilt from this branch
+(`mu300-update kernel 6.18` with the local bundle; afterwards `rollback-boot` to the release), one client on the 5 GHz
+hotspot. Before: `iw dev wlan0 station get 02:11:22:33:44:55` (no such station) answered with rx 315820 / tx 980745
+bytes, `signal 0 dBm` and an rx bitrate, the same figures as for the real client. After: that address and the
+access point's own both `No such file or directory (-2)`; the client by `station get` and in `station dump` with no
+figures; `iwinfo wlan0 assoclist` lists it, `iwinfo info` channel 36, VHT80. The client stayed associated over two
+reboots and about 35 minutes, the VPN (sing-box, kill switch on) up throughout. F50-B (Ubuntu, 7.2.11, hotspot,
+no client): the release module also answered the made-up address with counters; with this branch's module loaded in
+its place (hotspot restarted, nothing rebooted) `-ENOENT`, an empty dump, channel 36; then the release module back.
+
+### 181. The U30 Air's fuel gauge against Unisoc's: the user area's writes, a migration guess, and the charger's Full
+
+**Status: current** (device-tested on the U30 Air, 6.18.57, 2026-10-17: a full charge to the charger's Full, two
+reboots; a power-off not run). Review of kanoqwq's `f59a296` patch `0020-power-UMP9620-stock-retained-soc.patch`
+against our 0011 and 0018 (FINDINGS 33d, 105), with his claims checked against the U30 Air's own stock module and
+Unisoc's source; two of his three changes taken, the third not, and replaced. His code not run.
+
+**The references.** The stock `sc27xx_fuel_gauge.ko` from our U30 Air's backup (`backup/u30air-20260927-205614`,
+`vendor_boot_a`'s ramdisk; `vermagic 5.4.254-android12-9-g4098d30a56ae`, md5 `4f808ad8...`; his was the same
+function layout from `-g9444efdc6885`), disassembled here, and the U30 Air's 5.4 kernel source
+(`zte-ums9620-mifi-u30air-5.4.254`, `drivers/power/supply/sc27xx_fuel_gauge.c`) with its device tree.
+
+* **The user area's writes: his claim holds.** `sc27xx_fgu_save_last_cap` (at `0x4ba4`, as he says) calls
+  `regmap_update_bits_base(map, base + 0xa4, 0xfff, 0xfff, NULL, false, false)`, `usleep_range(200, 210)`, the
+  same on `0xa0` with the value, a wait, `0xa4` to 0, and a third wait: `force` is false in all three, so it is
+  `regmap_update_bits()`, not `regmap_write_bits()`. The source has the same for `save_boot_mode()`. 0018 had made
+  the six writes `regmap_write_bits()` after his own earlier, unmeasured report (105); he has retracted it, and the
+  stock module agrees with the retraction. 0018 no longer changes them. It adds the third wait (after the release),
+  which both stock versions have and mainline does not, on UMP9620: the shutdown callback writes the boot mode
+  right after the capacity, and the power-off follows. His patch said "200 us waits" but kept mainline's two.
+* **The format and the migration guess: taken.** Stock decodes bits 7:0 as whole percent and 11:8 as tenths, as
+  0011 does. 0011 also sent a multiple of 10 with tenths (`value <= 1000`) to the OCV when the battery was at rest,
+  for values that the first version of 0011 (0.1 %, October 6-7, never released) might have left. That guess also
+  catches Android's own values (0x244 = 68.2 %, any tenths 1-3 with a whole percent that makes the number a
+  multiple of ten), and a device that ran that build has long since written whole percent. Gone: a value that is a
+  capacity in Android's format is taken as it is, as stock takes it; only one that is not goes to the OCV.
+* **The charger's Full: not taken as he has it.** 0011 set 100 % on the charger driver's Full only while the OCV table
+  put the battery at 70 % or more (an invented guard). He replaces it with the battery node's `fullbatt-voltage`
+  (4.2 V) and `fullbatt-current` (120 mA): Full counts when the battery voltage is at least 4.2 V and the current 0 to
+  120 mA. Those numbers are Unisoc's charger-manager's (`is_full_charged()`), which checks them *while charging*,
+  twice in a row, and then ends the charge itself. Here the check only runs after the charger has said Full, i.e.
+  after bq256xx's own termination (VREG 4.208 V, the node's 300 mA termination current); by then the current is
+  near 0 and the voltage settles below 4.2 V. The one Full measured here (33d) rested at 4.146 V with +2 mA: his
+  condition refuses it, and the capacity would stay where it was (58 % then) - the bug 0011 fixed. Taken instead:
+  the charger's Full (its termination is the voltage and current check, done by the chip) counts while the battery
+  current is within `fullbatt-current` either way (`|I| <= 120 mA`; no fullbatt-current in the node: the Full
+  alone). A Full while the battery charges or is drained harder than that is not the end of a charge. No OCV
+  percentage, no voltage condition.
+
+**Changed**: `upstream/patches/0011-...saved-capacity-and-full.patch` (no `UMP9620_FGU_RELAXED_MA`/`FULL_MIN_CAP`, no
+ambiguity branch, `ump9620_fgu_full_current()`, `fullbatt-current` read from the monitored battery on UMP9620) and
+`0018-...capacity-kept-at-power-off.patch` (the shutdown callback as before, `regmap_update_bits()` as mainline and
+stock, the wait after the release on UMP9620). Both kernels take the same file; both patches were regenerated against
+the tree as 0010 leaves it and apply there with `--fuzz=0`. FINDINGS 105's second point is superseded by this.
+
+**Built**: 6.18.57 and 7.2.11, `CONFIG_FUEL_GAUGE_SC27XX=y`, the file also with `W=1`: no warning; both bundles made. **Tests**: `test_fgu_shutdown.py` (the callback as before; `FguFull`: the current window
+compiled from the patch, +2 mA and -3 mA count, 121 mA and -400 mA do not, a failed read does not, no node value
+leaves the Full alone), `test_static.py` (the patch lines, nothing of the guess or of `fullbatt-voltage`, no
+`regmap_write_bits`, the two waits).
+
+**Device test (2026-10-17; U30 Air, openwrt-luci v2026.10.17.3 with this branch's 6.18.57 bundle, then back to the
+release by `rollback-boot`).** The battery stood at 80 % (`saved 0x050`, the owner's charge limit 80). With the limit
+at 100 for the test, on a CDP port (2 A input): charging from 4.179 V at 721 mA, the FGU's battery voltage never above
+4.183 V while the current tapered (the charger's 4.208 V is at its own pin), 294 mA at 14:12, then bq256xx Full
+(`Trickle`) and in the same minute `charge full: capacity 85 % -> 100 %`, read at 4.147 V and 0 mA. Kano's condition
+(at least 4.2 V) was never met during this charge, before or after the Full. The reboot after it: `boot capacity
+100 % (saved 0x064)` - the 100 written by the calibration and by the shutdown callback, read back - no `not kept`
+warning, no oops; the first reboot onto the new kernel had read `80 % (saved 0x050)` as before. The release kernel
+after the rollback read the same `0x064`. A power-off was not run (the U30 Air has a battery, and nothing here
+switches it on again without its button); `.shutdown` runs on both paths (105). The charge limit was put back to 80.
+A drain past a percent without a read before a reboot was not produced (the capacity sat at 80 and then 100).
+
+### 182. A root filesystem with recorded errors was mounted as it was, boot after boot: init now runs e2fsck first
+
+When ext4 finds corruption it sets ERROR_FS in the superblock's `s_state` (byte 1082 of the filesystem, bit 1) and
+counts `s_error_count`. Nothing on the device ever looked at that: init mounted the root, the system ran on the
+damaged filesystem, and the flag stayed set until someone ran e2fsck by hand from Android or a computer. kanoqwq's
+desktop init (`desktop_ext4_check` in his `storage.sh`) checks the flag before mounting; ours does the same now,
+with one difference: his returns failure when e2fsck does, ours never stops a boot.
+
+* `boot/init`, block `fsck`: `root_fsck DEV` before every mount of the root - the loop over the region, the GPT
+  partition named mu300root (#296), the card. A clean filesystem costs one byte read (`dd bs=1 skip=1082 count=1`).
+  With the bit set: `/sbin/e2fsck -fy DEV` on the unmounted device, `E2FSCK_CONFIG` with `broken_system_clock = 1`
+  (the clock before NTP is anywhere), at most `FSCK_TIMEOUT` = 120 s (`MU300_FSCK_TIMEOUT`), then TERM (e2fsck
+  cancels at a safe point) and 15 s later KILL. Whatever happens, `root_fsck` returns 0 and the mount follows.
+  Stage lines in `/run/stages`, kmsg (pstore) and the persistent log: `fsck-start` (device, state, error count),
+  `fsck-done rc=0|1|2` with the time and e2fsck's summary line, `fsck-TIMEOUT`, and for exit codes 4 and up
+  `fsck-FAILED rc=N (errors left uncorrected | operational error | cancelled | killed by signal N; booting anyway)`.
+  e2fsck's output stays in `/run/mu300/fsck.log` of the booted system. No e2fsck in the ramdisk (a boot image built
+  from an older bundle): `fsck-unavailable`, and the boot goes on. `MU300_FSCK=force|off` on the kernel command line.
+* `tools/e2fsck/build.sh`: e2fsprogs 1.47.4 from kernel.org (SHA-256 of its signed `sha256sums.asc`), in
+  `alpine:3.20` pinned by digest, musl, static, e2fsck only (no NLS, no undo database), `--gc-sections`, no build id,
+  stripped: 682 144 bytes, 374 KB in the LZ4 ramdisk; two builds gave the same SHA-256 (c38f85ac...).
+* `boot/build-boot-image.py --e2fsck` puts it at `sbin/e2fsck`. `tools/make-release.sh` builds it, ships it beside
+  busybox in `mu300-kernel.tar.gz` and puts it in the 5.4 generic segment; `upstream/make-bundle.sh` takes it from
+  that bundle for the 6.18 and 7.2 segments (an older bundle: a warning, no e2fsck); the release audit refuses a
+  bundle whose `ramdisk-generic.lz4` lacks `sbin/e2fsck`. install.sh and install.ps1 pass it for the vendor 5.4
+  kernel's first segment (prebuilt: from the bundle; install.sh's build mode builds it); a mainline kernel's segment
+  and the Magisk zips' on-device image (device segment + generic segment) bring it with the generic segment.
+* Tests: `test_boot_init.py` `Fsck` (clean: nothing runs; bit set: `-fy DEV` and the summary; exit codes 4, 8, 12,
+  16, 32; a hang stopped by the timeout; no binary; force/off; a real e2fsck on an image whose flag and error count
+  debugfs set, both cleared after it, and the next run reads one byte only), `RootSelect.test_fsck_before_every_mount`,
+  `test_boot_image.py` `test_e2fsck`, `test_static.py` `test_e2fsck_is_pinned_and_everywhere`.
+
+**On F50-C (2026-10-17)**, OpenWrt 25.12.5 on 6.18.57 in the internal region (804 MiB, offset 61698211840). boot_b
+(SHA-256 ca76e081...) and the region's superblock saved first; the test images were boot_b with one more ramdisk
+segment (this init and `sbin/e2fsck`), written from Android, booted with `su -c mu300-linux`:
+* clean filesystem: no fsck line; `root-offset` to `switch-root` 0.11 s, as with the image before (0.11 s).
+* `tune2fs -E force_fsck` from Android (state `clean with errors`, byte 1082 = 03): `fsck-start dev=/dev/loop0
+  state=3`, `fsck-done rc=0 (no errors) 0.1s: mu300root: 8176/51520 files ...` at 5.12 s, switch-root at 5.21 s;
+  the flag was cleared (01), the same lines in dmesg.
+* a fake e2fsck that exits 8: `fsck-FAILED rc=8 (operational error; booting anyway)`, OpenWrt up.
+* a fake e2fsck that hangs, timeout 20 s: `fsck-TIMEOUT ... after 20s`, `fsck-FAILED rc=143 (killed by signal 15;
+  booting anyway) 20.0s`, switch-root at 25.03 s, OpenWrt up.
+Then boot_b written back (ca76e081... read back), Android's e2fsck -fy on the region: clean; F50-C left in Android.
+
+**Not measured**: the vendor 5.4 kernel and a card or GPT-partition root on a device (the same function, called
+before those mounts; e2fsck is a static program and does not care which kernel runs it); a filesystem with real
+damage on a device (the image test in CI repairs only the flag; e2fsck's repairs are its own).
+
+### 184. VoLTE and VoNR per SIM, kept and replayed at every start of the card
 
 From kanoqwq's fork (kanoqwq/mu300-linux 5f4732e, 53ef7b1: per-SIM VoLTE and VoNR switches with a boot replay),
 rewritten for this tree: there the switches live in the Locks page's apply jobs; here they are a setting of the dial.
@@ -10952,5 +11109,63 @@ refuses there, puts 0 back and saves nothing - which is the point of the read-ba
 13, no 5G registration). `mu300-api voice.get`/`voice.set` the same; slot 3 refused. The board was left with the
 released `mobile-data` and no `sim-voice` file.
 
+
+**Device test (F50-C, OpenWrt v2026.10.17.3, 2026-10-17)**, the panel's files and `mobile-data`: Cellular > SIM
+settings shows both cards (SIM1 in use: saved and modem values; SIM2: saved values and "sent when its radio next
+starts"); `simcard_set` VoLTE off read back `+CAVIMS:0`, on again; VoNR on refused there too ("The modem did not take
+the setting; nothing was saved"), the modem back at 0.
+
 Tests: `tests/test_device_scripts.py` `SimVoice`, `tests/test_mu300dash_security.py` `SimCard`, `tests/test_api.py`
 `test_voice`.
+
+### 185. Each SIM's radio on or off, kept across reboots; all off is a persistent airplane mode
+
+From kanoqwq's fork (his unpublished image's `mu300-sim-radio`, `mu300-radio-allowed`, `sim-radio.js` and the changes
+around them), rewritten for this tree: his F50 runs both protocol stacks at once (`mu300-dual-radio`), ours runs the
+card in use only, so the setting decides whether that card's radio may come on, and the other card's whether it may
+ever start.
+
+**What was there.** The dashboard's radio button sent `AT+CFUN=0` (on: the SFUN power-on sequence) to whichever card,
+for this boot only: the next dial, the watchdog or a reboot switched the radio on again, and it was refused on the U30
+Air's dual-SIM boots. There was no way to keep a card (or the device) off the network.
+
+**Now.** `/etc/mu300/sim-radio` is one line, `<slot 0> <slot 1>`, 1 on and 0 off; no file is `1 1`, as every release
+before. A line that is not one of the four counts as `1 1` and says so: a broken file must not take the device off
+the network for good. `mu300-sim-radio set 0|1|all on|off` saves it and, when it concerns the card in use, runs
+`mobile-data rf-apply`: off takes the data down (netifd restarts the WAN, whose dial ends with `SIM_RADIO_DISABLED`;
+Ubuntu's connection goes down as `mobile-data down` takes it), then `AT+CFUN=4` on the card's own channel (flight mode:
+the SIM stays powered), read back; on brings the radio back (`AT+CFUN=1` from flight mode, the ordinary SFUN bring-up
+from the cold 0) and the data that was held for it. Data somebody had taken down (ifdown, the panel's button, the data
+cap, a stopped service) is not held and stays down. `all off` is the persistent airplane mode the owner asked for.
+
+Every path that brings a radio up asks first: `mobile-data`'s dial (exit 7 under netifd: `SIM_RADIO_DISABLED`, the
+restart blocked; Ubuntu: exit 0, the service stays up), the early warm-up (the radio stays at its cold CFUN 0 after the
+RIL handshake), the watchdog, mu300-power's resume, the modem reset (refused), the panel's lock apply (no SFUN restart;
+the locks take effect when the radio comes on), and on the U30 Air the cold start of the chosen card (put off without a
+verdict: the pending marker goes, no trial; `mu300-sim2-warmup --deferred` runs it when the radio is switched on) and
+the live switch (a target whose radio is off is refused; a card in use in flight mode because of its setting is a
+known state). Front ends: the dashboard's radio button (the card in use, persistent), LuCI Cellular > SIM settings
+(per card, and all off/on), `mu300-api radio.get` / `radio.set`, EN/TR/ZH and the other catalogs.
+
+**Device tests (2026-10-17).**
+- F50-C, OpenWrt v2026.10.17.3: the dashboard's button off: `+CFUN: 4` within 2 s, the WAN down with
+  `SIM_RADIO_DISABLED`; on from the SIM settings page: `+CFUN: 1`, an address 5 s later. All off and a reboot: after the
+  RIL handshake the radio stayed at `+CFUN: 0`, the WAN at `SIM_RADIO_DISABLED`, no redial; all on: SFUN=4, registered,
+  an address 8 s after the request. With the radio off the modem reset is refused and the lock helper does no stack
+  restart; a WAN taken down by `ifdown` stayed down when the radio came back, and came up on `ifup`. The page renders
+  both cards' radio, VoLTE and VoNR rows.
+- F50-B, Ubuntu (7.2.11): off: `+CFUN: 4`, `sipa_eth0` down, still down after 75 s of the watchdog and a restart of
+  `mu300-mobile-data` (the service active, "mobile data stays down: the radio of SIM1 is off"); on: an address 6 s
+  later. With the service stopped, off and on again left it stopped. One reboot with the radio off came up with the
+  modem's AT channels never ready (`stty_nr1` not ready in 240 s; no `sbuf` channel 5 in dmesg): the CP had not started
+  them, which nothing in userspace does or prevents; the next two boots were normal. The off-at-boot case is the
+  F50-C one above.
+- U30 Air (the owner's router, OpenWrt v2026.10.17.3, SIM1): SIM2 off is saved only; SIM1 off `+CFUN: 4` and on
+  `+CFUN: 1`, an address 3 s later and the VPN's HTTPS answering again 18 s after the off. Every board was left with
+  its released files.
+
+Not run on a device: the U30 Air's dual-SIM boot with the chosen card off and its deferred cold start, the live switch
+with a card off (one SIM per board here): `tests/test_sim2.py`, `tests/test_sim_hot.py`.
+
+Tests: `tests/test_device_scripts.py` `SimRadio`, `tests/test_sim2.py`, `tests/test_sim_hot.py`,
+`tests/test_mu300cell.py`, `tests/test_mu300dash_security.py` (`RadioLock`, `SimCard`), `tests/test_api.py` `test_radio`.
