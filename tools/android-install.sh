@@ -21,6 +21,8 @@
 #                      UPDATE=1: the accounts and passwords of the previous installation stay as they are
 #   PW_SET=0|1         the Magisk installer: 1 puts PWHASH into that account even when it is empty (OpenWrt's root
 #                      without a password, as the image ships it); 0 or not set (install.sh): as above
+#   KEEP_PW_OSES="..."  with UPDATE=1: the systems whose accounts and passwords stay exactly as they are (PWHASH and
+#                      PW_SET do not touch them); install.sh: those whose current password the user confirmed
 #   IMPORT_HOTSPOT=0|1 copy Android's hotspot SSID/passphrase into each system
 #   KERNEL=5.4|6.18|7.2  the kernel in the new boot image; mu300-update keeps installing that one (boot/kernel)
 #   ADB=0|1 ADB_KEY    adb over USB to each system: 1 lets in only the adb public key ADB_KEY ("BASE64 name",
@@ -333,6 +335,82 @@ downgrade_check() {
 }
 # --- downgrade end
 downgrade_check || exit 1
+
+# --- delta begin
+# An update writes only what changed (docs/FINDINGS.md 131; mu300-update's delta block): the files of the new image,
+# and of the device's own files the installers pack (mu300-vendor-OS.tar.gz), that the installed system has byte for
+# byte become second names of its own instead of being written again, and the room that takes is counted - and
+# checked, for every system - before anything is written. The new image's own parts do it (its mu300-update, its
+# mu300-carry, its static busybox), taken out of its tarball into a directory of the Linux filesystem that only root
+# can enter; Android's tar unpacks, as before. An image without those parts is unpacked whole, as before.
+DELTA_PARTS="./opt/mu300/bin/mu300-carry ./opt/mu300/bin/mu300-update ./usr/bin/busybox ./opt/mu300/bin/busybox ./etc/mu300/image-manifest.gz ./etc/mu300/image-version"
+# what an installation that was cut off left goes first, so that it is not counted against the room: a half-unpacked
+# <os>.new held 98 % of an F50's region until it was removed by hand
+for x in ubuntu openwrt openwrt-luci; do
+    for d in $M/$x.new $M/.mu300-delta-$x $M/$x.new.carry-log; do
+        if [ -e $d ]; then
+            stage_run "clean $x" 900 rm -rf $d || exit 1
+            say "$x: removed ${d##*/}, left by an installation that did not finish"
+        fi
+    done
+done
+need=0 whole=
+for os in $OSES; do
+    [ -f $T/mu300-$os.tar.gz ] || continue
+    w=$M/.mu300-delta-$os
+    ( umask 077; mkdir -p $w/root )
+    stage_run "look into $os" 1800 sh -c 'tar -xzf "$1" -C "$2" $3 2>/dev/null; true' sh $T/mu300-$os.tar.gz $w/root "$DELTA_PARTS" || exit 1
+    bb=
+    for b in $w/root/usr/bin/busybox $w/root/opt/mu300/bin/busybox; do
+        if [ -z "$bb" ] && [ -f $b ] && [ ! -L $b ] && [ -x $b ] && $b true 2>/dev/null; then bb=$b; fi
+    done
+    vt=; if [ -f $T/mu300-vendor-$os.tar.gz ]; then vt=$T/mu300-vendor-$os.tar.gz; fi
+    echo none > $w/room
+    # (MU300_DELTA=0 in the environment: the whole image is unpacked; the room for that is counted all the same)
+    if [ -n "$bb" ]; then
+        stage_run "compare $os" 3600 sh -c 'MU300_LIB= "$1" sh "$2/root/opt/mu300/bin/mu300-update" delta-room "$3" "$2" "$4" "$5" > "$2/room.new" && mv "$2/room.new" "$2/room"; true' \
+            sh $bb $w $M/$os $os "$vt" || exit 1
+    fi
+    set -- $(cat $w/room)
+    case ${1:-none} in
+        delta|full)
+            echo $1 > $w/mode
+            if [ $1 = full ]; then whole=1; fi
+            n=$(( $2 + $2 / 50 + 16384 + ${4:-0} + 8192 ))
+            need=$((need + n))
+            if [ $1 = delta ]; then
+                say "$os: $(( ($3 + 1023) / 1024 )) MB of the new release are in the installed $os as they are and are not written again; $(( ($2 + ${4:-0}) / 1024 )) MB are written"
+            fi ;;
+        *) echo none > $w/mode ;;
+    esac
+done
+set --
+free=$(df -Pk $M | awk 'NR == 2 { print $4 }')
+if [ "${free:-0}" -lt $need ]; then
+    for os in $OSES; do rm -rf $M/.mu300-delta-$os; done
+    what="the new release's files that are not in the installed system as they are"
+    [ -z "$whole" ] || what="the whole new release, unpacked beside what is installed"
+    say "not enough room on the Linux partition: $((need / 1024)) MB needed for $OSES ($what), $(( ${free:-0} / 1024 )) MB free"
+    say "nothing was changed"
+    exit 1
+fi
+# unpack_failed: the new system half made goes, and the run stops (nothing of the installed one was changed). After a
+# stage that timed out on the SD card nothing more is written (the stage block).
+unpack_failed() {
+    [ -n "$STALLED" ] || rm -rf $M/$os.new $M/.mu300-delta-$os
+    say "$os: unpacking the new system failed; $os was not replaced, and nothing of it was changed"
+    exit 1
+}
+# delta_unpack TARBALL LIST: the image (LIST: the files mu300-update's delta-room chose) or the device's files ("*":
+# every binary the installed system has byte for byte) into $M/$os.new, the files left out made as second names
+delta_unpack() {
+    _w=$M/.mu300-delta-$os
+    rm -f $_w/log
+    stage_run "unpack $os" 3600 sh -c '"$1/busybox" gzip -dc < "$2" | "$1/carry" tarfilter "$3" "$4" "$1/log" | tar -xpf - -C "$5"' \
+        sh $_w $1 $M/$os "$2" $M/$os.new || return 1
+    grep -q '^E ' $_w/log && $_w/carry tarlink $M/$os $M/$os.new < $_w/log > $_w/linked
+}
+# --- delta end
 
 # --- bootchain begin
 # The Linux slot's uboot, sml, teecfg, trustos and vbmeta become the ones of Android's slot (android-bootchain.sh),
@@ -739,14 +817,30 @@ for os in $OSES; do
     # the writes to the card run bounded (the stage block); on the eMMC as they are
     stage_run "clean $os" 900 rm -rf $M/$os.new
     mkdir $M/$os.new
-    stage_run "unpack $os" 3600 tar -xzpf $tarball -C $M/$os.new
+    # only what changed is written where the delta block could compare (its mode file says)
+    dmode=$(cat $M/.mu300-delta-$os/mode 2>/dev/null || echo none)
+    if [ "$dmode" = delta ]; then
+        delta_unpack $tarball $M/.mu300-delta-$os/link || unpack_failed
+    else
+        stage_run "unpack $os" 3600 tar -xzpf $tarball -C $M/$os.new || unpack_failed
+    fi
     # the account the installer gives a password (ubuntu, OpenWrt's root)
     case $os in ubuntu) pwu=ubuntu ;; *) pwu=root ;; esac
+    # KEEP_PW_OSES: the systems whose accounts and passwords this update keeps as they are, whatever PWHASH says (the
+    # user chose to keep them and confirmed the current password, or a Magisk zip was told nothing): only with a
+    # previous system to keep them from
+    pwkeep=0
+    case " ${KEEP_PW_OSES:-} " in *" $os "*) if [ "${UPDATE:-0}" = 1 ] && [ -f "$M/$os/etc/shadow" ]; then pwkeep=1; fi ;; esac
     # prebuilt images: firmware and Android userspace pulled from this device by install.sh (tools/vendor-overlay.py)
     if [ -f $T/mu300-vendor-$os.tar.gz ]; then
-        stage_run "unpack $os vendor" 900 tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new
+        if [ "$dmode" = delta ]; then
+            delta_unpack $T/mu300-vendor-$os.tar.gz '*' || unpack_failed
+        else
+            stage_run "unpack $os vendor" 900 tar -xzpf $T/mu300-vendor-$os.tar.gz -C $M/$os.new || unpack_failed
+        fi
         rm -f $T/mu300-vendor-$os.tar.gz
     fi
+    rm -rf $M/.mu300-delta-$os
     # update: everything of the user's in the previous installation goes into the new system. The new image brings
     # what does it (mu300-update's carry block, mu300-carry, a static busybox: docs/FINDINGS.md 85) and it is run from
     # there, by that busybox - one implementation for mu300-update apply, install.sh and the Magisk zip, with nothing
@@ -857,7 +951,9 @@ for os in $OSES; do
             # the log line says what the shadow will hold: with a hash, or PW_SET=1 (the Magisk installer's
             # MU300_PASSWORD_RESET=yes, or a system that still had the images' accounts), the system's own account
             # gets PWHASH below, and only the other accounts keep their passwords
-            if [ -n "$PWHASH" ]; then
+            if [ $pwkeep = 1 ]; then
+                say "kept the accounts and passwords of the previous $os"
+            elif [ -n "$PWHASH" ]; then
                 say "kept the other accounts of the previous $os; $pwu's password is the one the installer chose (the images' own, or MU300_PASSWORD)"
             elif [ "${PW_SET:-0}" = 1 ]; then
                 say "kept the other accounts of the previous $os; $pwu's password is the images' own again: none, until one is set"
@@ -872,7 +968,7 @@ for os in $OSES; do
     # empty one, OpenWrt's root without a password), else the accounts carried over, else the image's own (Ubuntu's
     # ubuntu/ubuntu, OpenWrt's root without a password: the well-known ones, issue #167). The accounts are this
     # system's now, whichever they are: never the mark that has mu300-update carry some <os>.old's over at boot.
-    if [ -n "$PWHASH" ] || [ "${PW_SET:-0}" = 1 ]; then
+    if [ $pwkeep = 0 ] && { [ -n "$PWHASH" ] || [ "${PW_SET:-0}" = 1 ]; }; then
         sed -i "s|^$pwu:[^:]*:|$pwu:$PWHASH:|" $M/$os.new/etc/shadow
     fi
     rm -f $M/$os.new$ACCOUNTS_MARK

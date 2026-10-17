@@ -75,6 +75,9 @@ and then waits up to a minute for the target's data.
 * The target gets no data and the card you came from had none either: the device stays on the target, which keeps
   dialling; the boot default is not changed. `mu300-sim switch <same card>` saves it once it has data, or
   `mu300-sim default <card>` saves it regardless.
+* Mobile data switched off (the panel's button, `ifdown wan`, the data cap): it stays off. The card is switched and
+  saved as the boot default without waiting for data, and nothing dials it, on the target or on the way back after
+  a failure ([FINDINGS](FINDINGS.md) 104).
 * Something breaks half way: one way back is tried. If that cannot be verified, or the switch is killed, the radio
   state is unknown: the device restarts into its saved boot default, which a failed switch never changes.
 
