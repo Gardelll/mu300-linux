@@ -11201,3 +11201,41 @@ with a card off (one SIM per board here): `tests/test_sim2.py`, `tests/test_sim_
 
 Tests: `tests/test_device_scripts.py` `SimRadio`, `tests/test_sim2.py`, `tests/test_sim_hot.py`,
 `tests/test_mu300cell.py`, `tests/test_mu300dash_security.py` (`RadioLock`, `SimCard`), `tests/test_api.py` `test_radio`.
+
+### 186. A slot with no card was dialled every 20 s for ever; now the dial waits for the card
+
+From kanoqwq's fork (kanoqwq/mu300-linux f59a296 and ab26e79: the SIM-state events, `registration.sh`, his
+`mu300-network-recovery`), rewritten for this tree, which has neither his registration cache nor his recovery daemon.
+
+**What was wrong.** With no card in the slot in use (an F50 set to its internal SIM that has none, a U30 Air position
+left empty) every dial switched the radio on, waited its 60 s for a registration that cannot come, failed, and netifd
+started it again 20 s later - for as long as the device ran, each round taking the radio lock and the AT channel.
+The panel's SMS daemon kept asking the empty card too.
+
+**Now.** `mu300-sim-state check` asks the card in use `AT+CPIN?` once and keeps the answer for the boot in
+`/run/mu300/sim<slot>.state`: `ready`, `locked` (PIN, PUK) or `absent` (`+CPIN: NOT INSERTED`, `+CME ERROR: 10`). An
+answer that says nothing about the card (busy, no answer, another error) keeps what was known. Only the card in use is
+asked: another position may have its SIM power off and answer `+CME ERROR: 10` whatever is in it (FINDINGS 74).
+- `mobile-data`'s dial asks it once the radio is on; `absent` twice, 3 s apart (a card still starting is not none),
+  ends the dial: netifd exit 6, `mu300cell` reports `SIM_MISSING` and makes the interface unavailable (no retry; LuCI
+  shows "device not present"); Ubuntu exit 0, the service stays up. A card that goes away while the dial waits for
+  its registration ends that wait.
+- `mu300-atd`'s drainer hands `+ECIND: 3,...` of the card's event channel (nr0 slot 0, nr3 slot 1) to
+  `mu300-sim-state event`, which takes the values the stock RIL's onSimStatusChanged reads CPIN after (as kano read
+  them) and asks the card 2 s later in the background. The event is a hint, never a verdict: SIM errors and PIN
+  changes send it too. A card that answers after `absent` makes the WAN available again (netifd starts it unless
+  somebody took it down) or, on Ubuntu, dials. The watchdog asks again every five minutes while the slot is empty,
+  for an event that was missed.
+- The panel's `mu300-smsd` asks an absent card nothing (no CPIN, CNMI, CMGL, CNMA) and sets itself up when a card
+  answers.
+
+**Device test (F50-C, OpenWrt v2026.10.17.3, 2026-10-17)**, the changed `mobile-data`, `mu300-sim-state`, `mu300-atd`
+and `mu300cell.sh`, with the internal SIM chosen (`mu300-sim select internal`, a slot without a card on this unit):
+the radio came on (SFUN=4 at 19 s), `AT+CPIN?` answered `+CME ERROR: 10`, the state `absent`, one line "SIM2: no
+card; mobile data waits for one", the WAN `SIM_MISSING` and unavailable, and no second dial in the following minutes
+(before: a dial every 80 s). An `ifup` ran one dial, which ended the same way; making the interface available ran one
+more. No `+ECIND` came on nr3 at that boot (nothing to filter). Back on the external card the state was `ready` and
+data came up as before. Not seen on a device: a card inserted or removed while running (no hands at the boards); the
+event path is covered by `tests/test_device_scripts.py` `SimState`.
+
+Tests: `tests/test_device_scripts.py` `SimState`, `tests/test_mu300cell.py`.
