@@ -102,7 +102,8 @@ installer. It is built next to 6.18: `OUTDIR=out-7.2 KV=7.2.11` for `build.sh` a
   Ubuntu boot that died early before the crash capture existed (31d) is unexplained, and has not recurred in the
   reboot loops since (Ubuntu 6/6, OpenWrt 4/4).
 - Power-off works through the PMIC (FINDINGS 31h); on a powered USB port the battery-less F50 starts again.
-- Audio: not ported (it does not work on 5.4 either).
+- Audio: call audio is ported (`modules/sprd_audio`, FINDINGS 188): the Unisoc AGDSP stack of 5.4 for 6.18 and 7.2.
+  The AGDSP image is the user's to supply (`mu300-audio-dsp install FILE`); this repository has none.
 
 ## Earlier status notes
 Clocks, pinctrl, power domains, USB 3.1 gadget, eMMC, PCIe, thermal, cpufreq, watchdog, LEDs and Wi-Fi/BT are
@@ -113,7 +114,7 @@ working (see the status below). What is still missing:
 - **PM co-processor**: without Android's `modem_control` the board powers off after ~290 s, so the vendor chroot is
   still required.
 - ~~**GPU**~~: works since 2026-09-19 (DDK r40p0 ported to 6.18, OpenCL verified on the device).
-- **Audio**: not started.
+- **Audio**: ported 2026-10-17 (FINDINGS 188).
 - **Bluetooth**: built as an out-of-tree module, untested on 6.18.
 
 ## Modem on 6.18: working (2026-09-19)
