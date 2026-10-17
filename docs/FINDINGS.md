@@ -11081,3 +11081,42 @@ Then boot_b written back (ca76e081... read back), Android's e2fsck -fy on the re
 **Not measured**: the vendor 5.4 kernel and a card or GPT-partition root on a device (the same function, called
 before those mounts; e2fsck is a static program and does not care which kernel runs it); a filesystem with real
 damage on a device (the image test in CI repairs only the flag; e2fsck's repairs are its own).
+### 183. The Ubuntu web panel (Cockpit) complete: every page through mu300-api, and a page Cockpit can show without root
+
+The owner opened Cockpit's MU300 page for the first time and found no VPN, and little else. Three causes, seen on F50-B
+(Ubuntu 24.04, 7.2.11, the panel extra and the VPN module with every engine installed):
+* **The page was not even in the menu with limited access** (Cockpit's default after a login): `/usr/share/cockpit/mu300`
+  was a link into `/mnt/mu300-disk/extra/panel/...`, and `/mnt/mu300-disk/extra` is root's alone (0700). Cockpit reads
+  a package as the logged-in user: `sudo -u ubuntu ls /usr/share/cockpit/mu300/` "Permission denied", the menu without
+  MU300, `/mu300` "Not found". `mu300-panel link` (every boot, every install) now copies the page there (0755/0644),
+  again whenever the extra's copy differs, and replaces an older panel's link.
+* **The VPN tab came only after `test -x /mnt/mu300-disk/extra/vpn/bin/mu300-vpn`**, run with `superuser: "try"`: as
+  the user (limited access) it always failed on the same 0700 directory, so the tab never appeared. The page now asks
+  `mu300-api hello` for the methods the device has; the VPN tab is always there (with the module missing it offers
+  `vpn.install`).
+* **The page had its own backend** (mu300-panel info, the CLIs one by one) and five tabs. It now has eleven - Overview,
+  Mobile network (data, APN, roaming, SIM choice, radio per SIM, VoLTE/VoNR, TTL, USSD, recovery), SMS, AT terminal, Data
+  usage (cycle, cap, cut, correction, history), Wi-Fi (hotspot settings and clients, joining a network), VPN (switch,
+  kill switch, exit address, profiles, subscriptions, engines, IPv6, log), Power and CPU (mu300-power state and profile
+  knobs, charge limit, LED timeout and test, zram, CPU profile, the EXPERIMENTAL voltage offset with its warning and
+  confirmation word), System (host name, time zone, password, SSH, LAN address, USB role, adb keys, boot, Docker,
+  logs), Updates (status, check and install as the job, kernel, mirror, extras, packages after an update), Backup
+  (export, sealed or not; check and restore) - every call `mu300-api METHOD` with the request on stdin, the same
+  backend as the web installer's manager and (for the shared methods) LuCI. A tab whose method the device lacks is not
+  shown. Long work runs as mu300-api's job, followed in a box above the page. Without administrative access the page
+  says so and shows the live rates only.
+* New mu300-api methods for it (each with its rules and tests in test_api `ModemTools`): `at.send` (the command on
+  mu300-at's stdin), `ussd.send/cancel`, `modem.restart`, `ttl.get/set`, `traffic.get/set`, `power.get/set`,
+  `led.get/set`, `zram.get/set`, `cpu.get/profile/voltage`, `update.status/source`, `packages.get/act`,
+  `docker.status` (a stopped, socket-activated Docker is not started by asking: `docker ps` would start it - it did,
+  once, on F50-B, and was stopped again), `vpn.engines`.
+
+**On F50-B (2026-10-17)**: logged in with limited access: MU300 in the menu, the page's notice and the live rates; with
+administrative access every tab rendered with the device's values (signal 5G NSA, SIM 1 in use, dual SIM, VoLTE live,
+the SMS of the SIM, data usage and history, hotspot F50_2 on channel 36, the four engines, power profiles, CPU
+policies and the voltage table, Docker inactive, the extras, the mirror). Changes made and put back: AT+CSQ from the
+terminal, TTL 64 (tc) and off again, the exit address asked, the VPN log, `update.check` as the job (no internet on
+the board: it ended with status 1 and its log in the box), the job cleared.
+
+**Still only on the OpenWrt panel**: network, band and cell locks and their boot replay (mu300dash/lock, uci), SMS
+forwarding (the SMS pool's daemon), the AT command history and the device's USB network mode.

@@ -505,10 +505,12 @@ const API_METHOD = /^[a-z][a-z0-9_.]{0,39}$/;
 export const API_METHODS = new Set(("hello overview wifi.get wifi.set wifi.power wificlient.status wificlient.scan wificlient.join " +
   "wificlient.leave data.get data.set data.power sim.get sim.select lock.get lock.set vpn.status vpn.profiles vpn.subs " +
   "vpn.settings vpn.service vpn.killswitch vpn.use vpn.add vpn.add_url vpn.rename vpn.remove vpn.setting vpn.sub_add " +
-  "vpn.sub_refresh vpn.sub_remove vpn.logs vpn.install vpn.engine_install sms.list sms.read sms.send sms.job sms.delete " +
+  "vpn.sub_refresh vpn.sub_remove vpn.logs vpn.install vpn.engine_install vpn.engines sms.list sms.read sms.send sms.job sms.delete " +
   "sms.forward lan.get lan.set usb.role adb.auth system.get system.hostname system.timezone system.password system.ssh " +
   "system.reboot system.boot system.bootos update.check update.apply kernel.set extra.list extra.install extra.remove logs " +
-  "backup.export backup.import job.status job.cancel job.clear").split(" "));
+  "backup.export backup.import at.send ussd.send ussd.cancel modem.restart ttl.get ttl.set traffic.get traffic.set power.get " +
+  "power.set led.get led.set zram.get zram.set cpu.get cpu.profile cpu.voltage update.status update.source packages.get " +
+  "packages.act docker.status job.status job.cancel job.clear").split(" "));
 // the last line of what mu300-api printed, as an object (it prints exactly one)
 export function parseApiAnswer(stdout) {
   const last = String(stdout || "").trim().split("\n").pop() || "";

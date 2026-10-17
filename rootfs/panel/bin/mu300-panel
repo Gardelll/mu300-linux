@@ -66,14 +66,16 @@ configure() {
     put_file "$DROPIN" "$(dropin_text)" && _ch=0
     return $_ch
 }
+# the page: a copy in Cockpit's own directory that every user can read. A link into the extra's directory was not
+# enough: the extras on the disk are root's alone (0700), and Cockpit reads the pages as the user who logged in - with
+# limited access (Cockpit's default) the MU300 page was not even in the menu. Copied again when the extra's differs.
 link_page() {
     [ -d "$PANEL/cockpit/mu300" ] || return 0
     mkdir -p "${PAGE%/*}"
-    if [ -L "$PAGE" ]; then
-        [ "$(readlink "$PAGE")" = "$PANEL/cockpit/mu300" ] || ln -sfn "$PANEL/cockpit/mu300" "$PAGE"
-    elif [ ! -e "$PAGE" ]; then
-        ln -s "$PANEL/cockpit/mu300" "$PAGE"
-    fi
+    [ ! -L "$PAGE" ] || rm -f "$PAGE"
+    if [ -d "$PAGE" ] && diff -r "$PANEL/cockpit/mu300" "$PAGE" >/dev/null 2>&1; then return 0; fi
+    rm -rf "$PAGE.new" && cp -R "$PANEL/cockpit/mu300" "$PAGE.new" && chmod -R u=rwX,go=rX "$PAGE.new" &&
+        rm -rf "$PAGE" && mv "$PAGE.new" "$PAGE"
 }
 reload_socket() {
     systemctl daemon-reload 2>/dev/null || true
@@ -117,7 +119,7 @@ do_remove() {
     need_root remove
     is_ubuntu || return 0
     systemctl disable --now cockpit.socket cockpit.service >/dev/null 2>&1 || true
-    [ -L "$PAGE" ] && rm -f "$PAGE"
+    rm -rf "$PAGE"
     rm -f "$DROPIN"; rmdir "${DROPIN%/*}" 2>/dev/null || true
     [ -f "$CONF" ] && head -n1 "$CONF" | grep -qF "$MARK" && rm -f "$CONF"
     if have_cockpit || dpkg-query -W cockpit-bridge >/dev/null 2>&1; then
@@ -178,7 +180,7 @@ do_status() {
     printf 'cockpit   %s\n' "$st"
     printf 'address   https://%s:9090 (the LAN only: USB and the hotspot)\n' "$(lan_ip)"
     printf 'login     your Ubuntu account and its password; root cannot log in\n'
-    [ -L "$PAGE" ] && printf 'page      MU300 (%s)\n' "$(readlink "$PAGE")"
+    [ -d "$PAGE" ] && printf 'page      MU300 (%s, from %s)\n' "$PAGE" "$PANEL/cockpit/mu300"
     if have_cockpit; then printf 'socket    %s\n' "$(systemctl is-active cockpit.socket 2>/dev/null || echo unknown)"; fi
 }
 

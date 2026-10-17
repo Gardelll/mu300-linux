@@ -135,6 +135,22 @@ module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `p
 | `extra.list`, `logs` | -, `lines` | `extras`, `text` |
 | `backup.export` | `passphrase` (8-256 characters: the file is encrypted), `with_password` (bool: the login password's hash) | `name encrypted file`: the backup as text (mu300-backup, FINDINGS 155); the one answer that carries secrets on purpose |
 | `backup.import` | `file` (the text of a backup, 4 MiB at most), `passphrase`, `dry_run` (bool), `force` (bool: a file of another model), `only`/`skip` (sections, comma-separated) | dry run: `valid text` (what would change, or why the file is refused); else `job` |
+| `vpn.engines` | - | `engines` (mu300-vpn engines --json: each engine, installed or not, its version and size) |
+| `at.send` | `command` (one AT command, printable ASCII, 512 bytes at most; on mu300-at's stdin), `timeout` 1-60 (10) | `rc text` (the modem's answer) |
+| `ussd.send`, `ussd.cancel` | `code` (`[0-9*#+]`, 40 at most: a code or a menu's answer), - | `text` |
+| `modem.restart` | - | - (mobile data dials again: Ubuntu's mu300-mobile-data restarted, OpenWrt's WAN down and up) |
+| `ttl.get`, `ttl.set` | -, `value` 1-255 or `off` | `enabled value backend` (mu300-ttl) |
+| `traffic.get`, `traffic.set` | -, `key` `reset_day cap warn cut used clear` and its `value` (1-31, bytes (0: none), 1-100, `on`/`off`, bytes, `yes`) | `traffic` (mu300-traffic json) |
+| `power.get`, `power.set` | -, `key` `PROFILE SAVER_BELOW CHARGE_TO` or `plugged`/`battery`/`saver` `.WIFI_IDLE .RADIO_IDLE .LEDS_IDLE .CPU`, `value` | `state profile why supply battery charge_off conf text` (mu300-power) |
+| `led.get`, `led.set` | -, `timeout` (seconds, 0: always on) and/or `test` (bool: each LED in turn) | `timeout device` |
+| `zram.get`, `zram.set` | -, `state` on/off | `active enabled text` |
+| `cpu.get` | - | `cpu` (mu300-cpu status --json), `voltage` (mu300-cpu voltage status --json, or null) |
+| `cpu.profile` | `name` `saving balanced performance` | - |
+| `cpu.voltage` | `op` `set` (`offsets` "A,B,C" in µV, `confirm` `EXPERIMENTAL`) / `off` / `stress` (`minutes` 1-120) | - (EXPERIMENTAL: it can damage the device for good) |
+| `update.status` | - | `status` (mu300-update status), `source` (where the release files come from), `version` (text) |
+| `update.source` | `url` (http(s) mirror of the release files) or `off` (GitHub) | `source` |
+| `packages.get`, `packages.act` | -, `op` `retry` (a `job`) `skip` `dismiss` | `text` (mu300-user-packages status) |
+| `docker.status` | - | `installed active containers` (name image state status; a stopped Docker is not started to ask) |
 | `job.status` | `from` (a line number) | `job`: `kind state rc started ended text next cancel` |
 | `job.cancel`, `job.clear` | - | - |
 
