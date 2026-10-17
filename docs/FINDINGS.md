@@ -167,7 +167,7 @@ what replaced it. The table below gives each section's state.
 | 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
 | 170 | "Failed to send request: Operation not permitted" behind the VPN's kill switch: uclient's connect error, the tunnel down; the failure now names the kill switch, one try instead of four; vpn-dae refused before the download on a kernel that cannot run it | current (reproduced in an OpenWrt 25.12 container with sing-box and the kill switch, 2026-10-17) |
-| 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; not yet run on a device: checklist in the section) |
+| 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; on the U30 Air (OpenWrt, 6.18.57): refusal, migration, notice, the panel's save; no F50 yet) |
 
 ## Hardware and firmware facts
 
@@ -9502,3 +9502,15 @@ an authentication bypass; WPA2-PSK only, on the F50, the U30 Air and the V50 (on
 5. `dmesg`: no oops on join/leave; with the old r9 wpad hand-installed, a WPA3 client cannot complete the handshake
    (no record reaches hostapd: `sprd_wlan: ...: a firmware PMK record ... dropped` if the firmware sent one).
 6. The owner's VPN (`cengiz-abi`) untouched: its configuration and state as before the update, the tunnel up.
+
+**On the U30 Air (2026-10-17, OpenWrt 25.12.5, 6.18.57 with this driver, the files of this change copied over a
+v2026.10.17.1 system; the stock `wpad-basic-mbedtls`, so not item 1's r9 wpad).** `encryption sae` + `ieee80211w 2`
+and `wifi`: the wifi-scripts line (`wifi-scripts: 01: encryption 'sae' refused: ... This access point is not
+started.`), `hostapd.wlan0` not there, no AP - not open. `openwrt-wifi-wpa2-only migrate`: `psk2+ccmp`,
+`ieee80211w` gone, `/etc/mu300/wireless.before-wpa2` mode 600 with the old `sae`, the notice file
+(`state=migrated`, `migrated=ap0`); `wifi`: `ENABLED`, `/var/run/hostapd-phy0.conf` `wpa_key_mgmt=WPA-PSK`,
+`wpa_pairwise=CCMP`, no `sae`; the Mac joined again with the same password. A second `migrate` does nothing. The
+notice on Status > Overview (amber, English) and on the panel's home; Dismiss removed the file. `sae-mixed` by hand,
+then `mu300-api wifi.set` with the same SSID: `security` was `wpa2-wpa3` before, `psk2+ccmp` after, the AP `ENABLED`,
+the client back. A deauth and rejoin of the client: no oops, no warning. The owner's VPN stayed up throughout.
+Not done: items 1 and 5's r9 wpad (not built), Turkish and Chinese notice text, an F50.
