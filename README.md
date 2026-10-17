@@ -68,7 +68,7 @@ them. If that is not acceptable to you, do not install it.
 |---|---|---|
 | Board, chip | `ums9620_2h10_feimao`, Unisoc T760 (UMS9620) | the same |
 | Power | USB only | battery (4050 mAh), charger and fuel gauge |
-| LEDs used by Linux | as in ZTE's firmware: network (blue: 4G, white: 5G, red: no service), Wi-Fi (on while the hotspot is up) | as in ZTE's firmware: battery (white: Linux is up), network (blue: 4G, white: 5G, red: no service), Wi-Fi (white: 2.4 GHz, blue: 5 GHz) |
+| LEDs used by Linux | as in ZTE's firmware: network (blue: 4G, white: 5G, red: no service), Wi-Fi (on while the hotspot is up) | as in ZTE's firmware: battery (white from 60 %, blue from 10 %, red below; breathing while it charges; no timeout on the charger), network (blue: 4G, white: 5G, red: no service), Wi-Fi (white: 5 GHz, blue: 2.4 GHz) |
 | Heat alarm | the network LED flashes red, white, blue in turn: the SoC at 85 °C, until it cools down (`thermal-guard`) | the battery LED flashes red, white, blue in turn: the SoC at 85 °C or the battery at 50 °C, until they cool down (`thermal-guard`) |
 | USB network | `192.168.77.1` | `192.168.78.1` (so both can be plugged into one computer) |
 | Tested | everything below | 5.4, 6.18 and 7.2: USB, Wi-Fi hotspot, Bluetooth, mobile data, VPN, LEDs |
@@ -340,7 +340,12 @@ For OpenWrt use `ssh root@192.168.77.1`, or open `http://192.168.77.1` in a brow
 address is `192.168.78.1` instead.
 
 The Wi-Fi network the device broadcasts is its hotspot; unless you chose otherwise it uses the name and password
-copied from Android.
+copied from Android. It is **WPA2-PSK (CCMP) only**, on every device: WPA3 (SAE) is disabled on this Wi-Fi chip,
+because the U30 Air's firmware WPA3 could let a client in without the password
+([docs/U30AIR-SAE.md](docs/U30AIR-SAE.md), FINDINGS 80 and 175). A hotspot that was set to WPA3 is switched to WPA2
+with the same password at the first boot of a newer image (or switched off, never left open, if it has no usable
+password), and LuCI shows a notice saying so; choosing WPA3 in LuCI leaves that access point down, with a line in
+the log.
 
 ### OpenWrt with the MU300 control panel
 

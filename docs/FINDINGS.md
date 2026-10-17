@@ -133,7 +133,7 @@ what replaced it. The table below gives each section's state.
 | 71 | A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found | current (run against an F50 from a Mac on 2026-10-15: check, backup, installs and uninstalls from the text installer and from the window; the U30 Air, a locked bootloader, Linux and Windows hosts not measured; Windows only by CI) |
 | 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; run end to end on an F50 from Chrome on macOS on 2026-10-13 (docs/web-installer.md), the real release mirror from Node on 2026-10-15; Windows, a Linux host, the U30 Air, KernelSU/APatch and a download over a carrier's network not measured |
 | 74 | The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, #194) | current (the maintainer's U30 Air on 7.2.10 and the contributor's on 7.2.9); two working cards, kernel 5.4 and an F50 not run |
-| 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | experimental, opt-in build recipe (7.2.9; 7.2.10 without a client); PMK provenance open; the WPA2 fallback measured on the U30 Air |
+| 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | **disabled** 2026-10-17 (§175): the PMK record cannot be told from one a client sends; history below |
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
@@ -164,11 +164,14 @@ what replaced it. The table below gives each section's state.
 | 138 | `mu300-atd` died at its first open of a SIPC tty that was not ready (a failed `exec` redirection ends dash and ash): it waits for the channel now, holding the command fifo (#226) | current (unit tests under dash, bash and busybox ash; not on a device) |
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
 | 150 | USB-C power delivery on the U30 Air: kano's UMP9620 port controller under TCPM, reviewed and rewritten (patches 0019/0020), off unless `mu300-usb pd on`; the charger refuses its boost against an outside supply | experimental (built for 6.18.56/57 and 7.2.10/11, unit tests; on the U30 Air with a computer only: device + sink, off by default changes nothing) |
+| 151 | The U30 Air's battery LED shows the battery as ZTE's firmware (white from 60 %, blue from 10 %, red below; breathing on the PMIC's curve while charging; no timeout on outside power, nor for the low-battery red), read at every tick of `mu300-buttons` | current (unit tests; ZTE's behaviour from the stock firmware and its guide; not yet watched on a device) |
+| 152 | The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware and its guide (it was the other way round); stock's network light shows the SIM in use, not 4G/5G (not changed) | current (read from the stock firmware and ZTE's guide; not yet looked at on a device) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 | 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
 | 170 | "Failed to send request: Operation not permitted" behind the VPN's kill switch: uclient's connect error, the tunnel down; the failure now names the kill switch, one try instead of four; vpn-dae refused before the download on a kernel that cannot run it | current (reproduced in an OpenWrt 25.12 container with sing-box and the kill switch, 2026-10-17) |
+| 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; on the U30 Air (OpenWrt, 6.18.57): refusal, migration, notice, the panel's save; no F50 yet) |
 
 ## Hardware and firmware facts
 
@@ -2799,6 +2802,9 @@ at a time, while someone watched the device, showed where they are:
 | Wi-Fi | white | LDO VDDCAMA1 |
 | Wi-Fi | blue | LDO VDDCAMA2 |
 
+**Update 2026-10-16:** which Wi-Fi colour means which band was a guess here, and the wrong way round (§152): ZTE's
+firmware lights the white one (VDDCAMA1) on 5 GHz and the blue one (VDDCAMA2) on 2.4 GHz.
+
 The device tree's six other GPIO LEDs (`pwr_green`, `net_red`, `net_green`, `net_white`, `wifi_blue`,
 `wifi_white`) light nothing; they come from a ZTE board file shared with other products, and Android never writes
 them either. The lights that never went out were the LDO ones: ZTE's `zte_ldo_leds` switches the camera supplies
@@ -2812,6 +2818,9 @@ changes under a live connection.
 
 The PMIC's LED also carries the heat alarm (`thermal-guard`, now running on 5.4 too; whether it also caps there, §139): one
 colour at a time, since the white outshines red and blue when they are mixed.
+
+**Update 2026-10-16:** the battery LED shows the battery now, as ZTE's firmware does, instead of white for "Linux
+is up" (§151).
 
 ### 33g. The U30 Air's NFC tag
 
@@ -7089,8 +7098,15 @@ device with openwrt-luci:
     # after: the same job, and crond running
     cat /etc/crontabs/root; ps | grep crond
 ### 80. WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat)
-The AP side of 14b's station finding. `docs/U30AIR-SAE.md` has the recipe and the open question; what the hardware
-showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
+
+**Status: disabled (2026-10-17, §175).** The owner switched the mode off in every layer because it cannot be shown
+safe: the PMK record hostapd imported comes in the same `EVT_NEW_STATION` element list as the client's own
+association-request elements, with no boundary, so a client could append a forged record and finish the 4-way
+handshake without the passphrase whenever the firmware does not append its own (the provenance points below). The
+recipe, the patch and the guard named below are gone from the tree (last in commit `2e5cf929`); the measurements stay
+as the record of what the firmware does. `docs/U30AIR-SAE.md` says why and what revisiting would need.
+
+The AP side of 14b's station finding. What the hardware showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
 
 * **Stock hostapd cannot do SAE on this driver.** The SME is in the firmware (`iw phy`: `connect`, no
   `authenticate`), so hostapd never sees the SAE frames: a WPA3-only BSS comes up, a client finishes SAE with the
@@ -7350,10 +7366,9 @@ one JSON object. Its interface is documented as stable in `docs/ADB-INTERFACE.md
   lines from N (whole lines while it runs, at most 400, each cut at 400 bytes, an address's path and query replaced by
   `...`). `hello` names the job, so a page that connects later follows it from the start. An update, a kernel or an
   extra's removal cannot be cancelled half way.
-* **WPA3 (FINDINGS 80)** is never switched on: the option needs a patched hostapd and a full `wifi down; wifi up`, and
-  a live change took a U30 Air's radio down. A hotspot already set to SAE by hand is shown as such and kept; a change
-  of its password restarts it with `wifi down; wifi up`, never `wifi reload`. An open hotspot gets `psk2` with its
-  first password.
+* **WPA3 (FINDINGS 80)** is never switched on. (Until 2026-10-17 a hotspot set to SAE by hand was shown as such and
+  kept; since §175 the mode is disabled, and a save on such a hotspot makes it `psk2+ccmp` with its password, or is
+  refused without one.) An open hotspot gets `psk2` with its first password.
 * **Hidden SSID on Ubuntu** is new in `hotspot-start` (`HIDDEN=1` -> `ignore_broadcast_ssid=1`).
 * **adb's keys mode** (FINDINGS 70) is only switched on together with the page's own key (`adb.auth {mode: keys, key}`:
   the key goes to `mu300-usb adb key -` first; a key that is refused leaves the mode alone), and every change of adb,
@@ -9025,6 +9040,95 @@ Then `pd on`: bound, data role device, power role sink, the USB network to the M
 the first two seconds, then steady); `pd off` unloads it and the port is a device as before. Not tried: an OTG adapter,
 a PD dock, a charger with PD (no such hardware at hand).
 
+### 151. The U30 Air's battery LED shows the battery, as ZTE's firmware
+
+**Status: current** (unit tests; ZTE's behaviour read from the stock firmware and ZTE's guide, 2026-10-16; not yet
+watched on a device, see the PR's checklist).
+
+**Before.** The battery LED (the PMIC's RGB LED, `sc27xx-bltc`; its green channel is white) was lit white while Linux
+ran (`mu300-led power on`), blinked 1 s / 1 s in the charging boot, and timed out with the others after LED_TIMEOUT.
+Nothing showed the charge. kano's fork (kanoqwq/mu300-linux, branch clean-tf-7.2, commit 2af101f8) made it blue and
+breathing while charging, white when full, red blinking at 15 % and below, and kept every LED lit on outside power;
+the thresholds and colours were his choice.
+
+**What ZTE's firmware does.** Read from a U30 Air's own backup (build `U30Air_SSV1.0.0B14`, the `super` partition's
+logical partitions taken apart offline, nothing run, no device booted into Android):
+
+- `system/framework/services.jar`, `ZteBatteryService$ZteLed.updateLightsLocked()`, the branch for the U30
+  ("IndicatingLed ufi with battery", gated by `ro.vendor.feature.zte_leds_for_u30`): white (`0x007800`: the green
+  channel at 120) at 60 % and above, blue (`0x0000c8`: 200) from 10 %, red (`0x960000`: 150) below; not charging (Full
+  included) `setFlashing(colour, 1, 0, 0)`, steady; charging `setFlashing(colour, 1, 800, 1200)`.
+- The lights HAL (`vendor.sprd.hardware.lights-service`, the battery handler): an on or off time under 125 ms is
+  steady (trigger `none`, the brightness written); otherwise the `pattern` trigger with
+  `hw_pattern` "b 2on/5 b 3on/5 b 2off/5 b 3off/5": for 800/1200 "b 320 b 480 b 480 b 720", the PMIC's own
+  rise/high/fall/low curve, a 2 s breath.
+- `NotificationManagerService`: every LED goes dark 15 s after boot, a key press or an unplug, unless the device is
+  charging or full on the charger; `ZteBatteryService.turnOffUfiBatteryLight()` leaves the battery LED on below
+  10 %, so the red does not time out.
+- Power-off charging (`ztecharger`) lights the same colours with another curve and 5 % for red; not used here (LK's
+  charging boot comes to Linux, §36).
+
+ZTE's guide for the U30 Air (国际漫游指南, https://oss.ztedevices.com/prod/cn/2024/12/20241213641.pdf, item 4, the battery
+light) agrees: 红色常亮：电池电量低。蓝色常亮：电池电量中等。白色常亮：电池电量高或满。红色、蓝色或白色闪烁：充电中 (steady
+red: low; steady blue: medium; steady white: high or full; red, blue or white blinking: charging).
+
+**Now.** `mu300-led` draws the three channels from the battery (U30 Air only; the F50's same LED is its network light,
+the V50's PMIC LEDs are never written):
+
+- the fuel gauge's capacity and status (`sc27xx-fgu` on mainline, `battery` on 5.4) and outside power from the
+  charger's `online` (`bq256xx-charger`; `usb`/`ac` on 5.4); the gauge's status alone only where no charger says
+  anything, since it says Charging for a while after an unplug (kano saw it);
+- ZTE's colours, levels and thresholds; breathing on the pattern trigger with ZTE's curve
+  (`CONFIG_LEDS_TRIGGER_PATTERN`, now in the mainline config; the port's `leds-sc27xx-bltc` has had `pattern_set`
+  all along), a timer blink 800/1200 ms where there is no pattern trigger; the curve is written only when the state
+  changes, so a tick does not restart the breath;
+- on outside power no LED times out; an unplug starts the timeout again from then (ZTE's 15 s; LED_TIMEOUT here,
+  60 s by default); below 10 % on the battery the red stays lit whatever the timeout; `power off` (shutdown) puts it
+  out for good;
+- the heat alarm's siren goes over it (`thermal-guard`), and the battery LED is drawn again as the battery is then
+  when the alarm ends; mu300-power's idle still darkens everything but the low-battery red.
+
+The battery is read at every tick of `mu300-buttons` (every 5 s, `mu300-led tick`, which then lets the LEDs time out
+as `sleep --if-due` did), so a plug or a crossing of 60 % or 10 % shows within 5 s, with no new event wiring on
+Ubuntu or OpenWrt. `mu300-led battery` does it on demand. The charging boot (`charge on`) shows the charge the same
+way instead of the white blink.
+### 152. The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware
+
+**Status: current** (read from the stock firmware and ZTE's own guide, 2026-10-16; not yet looked at on a device).
+
+**What was wrong.** §33f found which element is where (the Wi-Fi light's white is LDO VDDCAMA1, its blue LDO VDDCAMA2)
+but not what ZTE means by them, and `mu300-led` lit blue on 5 GHz and white on 2.4 GHz. kano's fork (kanoqwq/mu300-linux,
+branch clean-tf-7.2, commit 2af101f8, "complete U30 Air power, LED and PD dock support") has them the other way round,
+white on 5 GHz and blue on 2.4 GHz, as the V50's lamp is (§95).
+
+**What ZTE's firmware does.** Read from a U30 Air's own backup (build `U30Air_SSV1.0.0B14`, slot a; the `super`
+partition's logical partitions taken apart offline, nothing run, no device booted into Android):
+
+- `system/framework/services.jar`, `NotificationManagerService.updateLightsLocked()`: the hotspot off gives
+  `mWifiLight.setFlashing(100, 2, 0, 0)`; on, a `packed-switch` on `mWifiBand` (from
+  `WifiManager.getSoftApConfiguration().getBand()`) with the one key 1 (`BAND_2GHZ`) gives 102, every other band
+  (`BAND_5GHZ` = 2, combinations) 101. `mWifiLight` is `getLight(1)`, the keyboard light.
+- `vendor/bin/hw/vendor.sprd.hardware.lights-service`, the keyboard light's handler ("setLightKeyboard"): with flash
+  mode 2, 100 writes 0 to both `zte_ldo_leds/vddcama1_status` and `vddcama2_status`, 101 lights `vddcama1` alone, 102
+  `vddcama2` alone. The path is gated by `ro.vendor.feature.zte_leds_for_u30=true` and `zte_feature_ufi_light=true`
+  (`vendor/build.prop`, and the same in the unit's getprop).
+- So 5 GHz is VDDCAMA1, white; 2.4 GHz VDDCAMA2, blue; steady, never blinking.
+
+ZTE's guide for the U30 Air (国际漫游指南, https://oss.ztedevices.com/prod/cn/2024/12/20241213641.pdf, item 5, the Wi-Fi
+light) says the same: 白色常亮：Wi-Fi 5 GHz 启用。蓝色常亮：Wi-Fi 2.4GHz 启用。灭：Wi-Fi 关闭、关机或待机模式 (steady white: 5 GHz
+on; steady blue: 2.4 GHz on; off: Wi-Fi off, powered off or standby).
+
+**The change.** `mu300-led` maps the 5 GHz hotspot to `zte-ldo1` and 2.4 GHz to `zte-ldo2` (mainline's `leds-zte-ldo`,
+and `vddcama1/2_status` under 5.4). The README, the wiki's hardware notes and the website's feature pages (English,
+Turkish, Chinese) say white 5 GHz, blue 2.4 GHz.
+
+**Not changed here, for a look on the device.** The same `NotificationManagerService.setNetLight()` picks the network
+light by the SIM in use, not by the access technology: 11 (VDDCAMA0, white) for SIM slot 0, 12 (`net_blue`) for slot 1,
+13 (`keyboard-backlight`, red) without service; the variant that picks by 4G/5G (`ZTE_FEATURE_UFI_LIGHT_V1`) is not
+set on this unit. The guide says the same (blue: the built-in eSIM in use, white: the nano-SIM; blinking while the SIM
+is switched; white/blue with red flashing: no internet on that SIM). §33f's "blue on 4G, white on 5G" was sampled
+with the radio off and `vddcama0` lit on 5G, which a nano-SIM in slot 0 would also explain. `mu300-led` still shows
+4G/5G.
 ### 153. A reinstall after an uninstall on a device that made room: "it asks to repartition again"
 
 **The report** (a user, through the owner, 2026-10-16): a device whose userdata the installer had shrunk (the make-room
@@ -9735,3 +9839,82 @@ with the partial aged 61 s and the wrapper passing, round 3 filled the IMEI, wro
 the partial; with that cache aged 7 h and `AT+CGSN` failing again, the cache stayed byte for byte and the IMEI was
 still shown. The live path: `sim.json` removed, one normal full round wrote a complete one, and `ubus call mu300dash
 status` (what the dashboard reads) carried IMEI, IMSI and ICCID.
+
+### 175. The U30 Air's firmware SAE offload is disabled in every layer
+
+**Status: current** (unit tests, `tests/test_wpa2_only.py`; the driver built for the mainline kernels by the
+mainline workflow and, for 5.4, every `wlan_combo-*.patch` applied with `--fuzz=0` in the build's order on the
+pristine vendor tree and `common/report.o`, `sc2355/vendor.o` compiled without a warning (the module is not linked
+there: ThinLTO wants to write next to the kernel's objects); the wifi-scripts patch run on the OpenWrt 25.12.5 feed's
+scripts; **not yet run on a device**, the checklist is below).
+
+**Why.** §80's open point: the firmware's `dd 34 40:45:da:04 <PMK><PMKID>` record and the client's association
+request elements share one element list with nothing between them, so whether a client can choose the PMK hostapd
+imports depends on the firmware always appending its own record - which nobody can show for a closed blob, and the
+driver has no SAE-completion signal to check it against. The owner's decision (2026-10-17): no opt-in that might be
+an authentication bypass; WPA2-PSK only, on the F50, the U30 Air and the V50 (one chip, one driver).
+
+**What changed.**
+* **Driver** (`upstream/modules/sprd_wlan_combo`, and `kernel/patches/wlan_combo-softap-no-sae.patch` for 5.4, the
+  same code): `sprd_report_softap()` (`common/report.c`) runs the station's element list through
+  `mu300_strip_sae_pmk_record()` before `cfg80211_new_sta()`: every vendor element starting `40:45:da:04` goes,
+  whoever wrote it and whatever its length, and so does a malformed tail (an element longer than what is left, which
+  no parser takes apart); the list is compacted in place, the rest kept in order; one rate-limited line says a record
+  was dropped, without its bytes. `vendor_set_sae_password()` (`sc2355/vendor.c`, vendor subcommand 43) returns
+  `-EOPNOTSUPP` first thing: the firmware is never given an SAE password. A hostapd built by hand from the old patch
+  finds no record to import.
+* **hostapd**: `openwrt/patches/hostapd/990-u30-sae-offload.patch` and `openwrt/build-u30-sae.sh` removed; the images
+  install the stock `wpad-basic-mbedtls`; `openwrt/build-rootfs.sh` stops on `MU300_SAE_APK_DIR` with a line instead
+  of ignoring it.
+* **wifi-scripts** (`openwrt/patches/wifi-scripts-wpa2-only.patch`, after the DFS patch, whose `log` import it uses;
+  the build checks it is in): in `hostapd.setup()` an access point whose `encryption` is `sae`, `psk3`, `sae-mixed`,
+  `psk3-mixed` or `sae-compat` (with any `+cipher`), or whose `hostapd_bss_options` carries `u30_sae_offload`, is left
+  out of the hostapd configuration with `wifi-scripts: <section>: encryption '<value>' refused: WPA3/SAE is disabled
+  on this Wi-Fi chip ... WPA2-PSK only`. The others on the radio start; an SAE access point never starts, so never
+  open. Run on the 25.12.5 feed's scripts for a fake wiphy: `psk2` and `psk2+ccmp` give `wpa_key_mgmt=WPA-PSK`,
+  `wpa_pairwise=CCMP`; the five SAE modes and the option give the line and no `interface=` block.
+* **Boot** (`mu300-hw`, before its `wifi down; wifi up`): `openwrt-wifi-sae-guard` (precheck, and verify in
+  `mu300-post`) replaced by `openwrt-wifi-wpa2-only migrate`. Every access point (mode `ap` or none) on one of those
+  modes or with the option becomes `psk2+ccmp` with the same `key`; `ieee80211w`, `sae_pwe` and the option go; the
+  file as it was is kept once in `/etc/mu300/wireless.before-wpa2` (mode 600). The password must be one WPA2 takes
+  (8-63 printable ASCII, or 64 hex digits); otherwise, or when uci does not show `psk2+ccmp` afterwards, that access
+  point gets `disabled=1` (and `psk2+ccmp`) - off, never open. One line to the log (`mu300-wifi`, `daemon.warn`;
+  `daemon.err` when an access point is off), and `/etc/mu300/wpa3-disabled` (`state=migrated|down`, the time, the
+  sections; no password). A station-mode interface and a WPA2 hotspot are not touched, and a second boot does nothing.
+* **The notice**: `view/status/include/05_mu300_wpa2.js` (in both OpenWrt systems; Status > Overview) and the control
+  panel's home page, which loads the same module, show that file in English, Turkish or Chinese by the page's language
+  (the module carries its own text: the plain image has no panel catalog; other languages get English), amber when
+  migrated, red when an access point is off, with a Dismiss button that removes the file (rpcd ACL
+  `mu300-wpa2-notice`: that one file, read and remove).
+* **`mu300-api` / web device manager**: WPA3 was never offered. A save on a hotspot still on SAE (a hand edit after
+  boot) also makes it `psk2+ccmp` and restarts Wi-Fi fully; without a password it has or one given, the save is
+  refused (`missing password`). The manager's text says the mode is disabled and why (en/tr/zh).
+* **Ubuntu**: the hotspot was always WPA2-PSK (`hotspot-start`). An `ENCRYPTION`, `SECURITY` or `KEY_MGMT` in
+  `hotspot.conf` asking for SAE/WPA3 is refused with one line; the hotspot starts WPA2-PSK (CCMP).
+* Kept: the driver's removals of the passphrase, station-key and payload prints (§80), worth having without the mode.
+
+**Device checklist (U30 Air first, then an F50; before merge).**
+1. A U30 Air with the offload on (`encryption sae`, `u30_sae_offload=1`, r9 wpad) updated to an image with this change:
+   after the boot the hotspot is up as WPA2 (`ubus call hostapd.wlan0 get_status`: `ENABLED`; the generated
+   `/var/run/hostapd-phy0.conf` has `wpa_key_mgmt=WPA-PSK`, `wpa_pairwise=CCMP`, no `sae`), `logread -e mu300-wifi`
+   has the one line, `/etc/mu300/wireless.before-wpa2` is the old file (mode 600).
+2. A client joins with the same password, gets DHCP and reaches the internet.
+3. LuCI Status > Overview and the panel's home show the notice (English, then Turkish and Chinese); Dismiss removes
+   `/etc/mu300/wpa3-disabled` and the notice stays gone after a reload and a reboot.
+4. Setting WPA3 in LuCI and saving: that access point does not come up (LuCI's apply rolls back if it was the way
+   in), `logread` has the wifi-scripts line; the next boot migrates it again.
+5. `dmesg`: no oops on join/leave; with the old r9 wpad hand-installed, a WPA3 client cannot complete the handshake
+   (no record reaches hostapd: `sprd_wlan: ...: a firmware PMK record ... dropped` if the firmware sent one).
+6. The owner's VPN (`cengiz-abi`) untouched: its configuration and state as before the update, the tunnel up.
+
+**On the U30 Air (2026-10-17, OpenWrt 25.12.5, 6.18.57 with this driver, the files of this change copied over a
+v2026.10.17.1 system; the stock `wpad-basic-mbedtls`, so not item 1's r9 wpad).** `encryption sae` + `ieee80211w 2`
+and `wifi`: the wifi-scripts line (`wifi-scripts: 01: encryption 'sae' refused: ... This access point is not
+started.`), `hostapd.wlan0` not there, no AP - not open. `openwrt-wifi-wpa2-only migrate`: `psk2+ccmp`,
+`ieee80211w` gone, `/etc/mu300/wireless.before-wpa2` mode 600 with the old `sae`, the notice file
+(`state=migrated`, `migrated=ap0`); `wifi`: `ENABLED`, `/var/run/hostapd-phy0.conf` `wpa_key_mgmt=WPA-PSK`,
+`wpa_pairwise=CCMP`, no `sae`; the Mac joined again with the same password. A second `migrate` does nothing. The
+notice on Status > Overview (amber, English) and on the panel's home; Dismiss removed the file. `sae-mixed` by hand,
+then `mu300-api wifi.set` with the same SSID: `security` was `wpa2-wpa3` before, `psk2+ccmp` after, the AP `ENABLED`,
+the client back. A deauth and rejoin of the client: no oops, no warning. The owner's VPN stayed up throughout.
+Not done: items 1 and 5's r9 wpad (not built), Turkish and Chinese notice text, an F50.
