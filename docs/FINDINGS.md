@@ -163,6 +163,7 @@ what replaced it. The table below gives each section's state.
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
+| 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
 
 ## Hardware and firmware facts
@@ -8859,6 +8860,288 @@ parses the committed keyrings' packets to pin their fingerprints to the `.fpr` f
 OpenWrt's signature (`sha256sums.asc`/`.sig`); the vendor 5.4 sources are git checkouts pinned by commit hash
 (`kernel/build-all.sh`), which no tarball signature applies to.
 
+### 163. Linux 6.18.57 and 7.2.11 with every module the boards can use, KVM, and what Docker and dockur/windows-arm need
+
+**Versions.** 7.2.11 (stable) and 6.18.57 (longterm), both of 2026-10-15. kernel.org's `sha256sums.asc` for v6.x and
+v7.x carry a good signature of the checksum autosigner (`B886 8C80 BA62 A1FF FAF5 FDA9 632D 3A06 589D A6B1`, fetched
+by WKD), and both tarballs match it (`build.sh` checks the sums; the signature was checked by hand). `build.sh` and
+`build-modules.sh` default to 6.18.57; the release workflow takes the newest of each series from kernel.org anyway.
+All 17 patches (`patches/*` and `patches/6.18/0007`) and every `port/install.py` edit apply unchanged to both trees:
+none is upstream yet, none was dropped or changed.
+
+**All modules (`upstream/all-modules.py`).** Not allmodconfig. After the fragment, every option declared `tristate`
+in the tree that is off becomes `m`, `olddefconfig`, again until nothing changes (a fixpoint: a module whose
+dependencies are only now met comes in on the next round). The rules:
+
+* Bools stay as the fragment leaves them, except the ones `all-modules.config` turns on because they only open a
+  family: the Wi-Fi vendors (USB sticks), joysticks, tablets, touch screens (the USB ones), TV/radio/SDR, ALSA's
+  `snd-aloop`/`snd-dummy`, iSCSI, the legacy iptables/ebtables tables, `/dev/hidraw`; and it keeps
+  `DRM_FBDEV_EMULATION` off (no framebuffer console). A bool that only became visible with a new driver takes its
+  default, except that the ones that look like debugging or tests go off again (6-7 per kernel).
+* PCI cards are left out: the expansion runs once with `PCI=n`, and only what survives there is taken (the only PCIe
+  link is the soldered Marlin3).
+* `all-modules.exclude` keeps out test/debug/benchmark code, ASoC, display panels, the SoC GPU drivers (panfrost and
+  co. would bind next to the vendor Mali driver), VFIO (no mainline IOMMU driver for this SoC), legacy gadget drivers
+  and the dummy UDC (mu300-usb takes the first UDC), and by directory the drivers of chips that only a board's device
+  tree wires up (regulators, MFDs, power supplies, clocks, pins, PHYs, camera sensors, DSA switches, platform host
+  controllers, MACs, NAND...). A `keep` line takes a USB part of such a directory back in (`MMC_VUB300`,
+  `TOUCHSCREEN_USB_COMPOSITE`, LED triggers and the multicolor/flash LED classes HID drivers need). Tuners,
+  demodulators and webcam sensors are still built when a USB driver selects them.
+* It stops the build when a built-in option changed, and when something it must not turn on came on. Both fired while
+  the rules were written: `MMC_BLOCK` would have become a module (`depends on RPMB || !RPMB` - the eMMC driver), and
+  `BT_HCIUART` the same through `SERIAL_DEV_BUS`/`POWER_SEQUENCING`; `EXT4_USE_FOR_EXT2` would have gone with
+  `EXT2_FS`, `I3C_OR_I2C` with `I3C`; `PERF_EVENTS` (kept off, 31p) came with CoreSight; `IOMMU_DMA`/`OF_IOMMU`
+  and `CMA`/`DMA_CMA` (the DMA path of every vendor-tree device with an `iommus` property, and the vendor's
+  `shared-dma-pool` regions as CMA) came with panfrost/etnaviv, `IOMMU_API` with VFIO. Each is excluded, with the
+  reason, in `all-modules.exclude`.
+* `check-dt-modules.py` (in `build-modules.sh`) then fails the build when a module's `of:` alias matches a compatible
+  of the vendor device tree (`dt-compatibles.txt`: all 314 strings of the F50's and the U30 Air's
+  `/proc/device-tree`): udev would load it at boot and it would drive SoC hardware next to the vendor drivers. It
+  caught `spi_sprd` (`sprd,sc9860-spi`). On the device, F50-B then still loaded `sc27xx_vibra` (it bound nothing):
+  every Spreadtrum/Unisoc driver the fragment does not name is out now. Two rules were too broad and the device
+  test showed it (ebtables and the Logitech HID drivers were missing); both are fixed.
+* `make-bundle.sh` checks the Image's embedded config against `all-modules.report` too (what the expansion added),
+  as against the fragment. `MU300_ALL_MODULES=0` builds the fragment alone.
+
+| | 6.18.56 (v2026.10.16.1) | 6.18.57 | 7.2.10 (v2026.10.16.1) | 7.2.11 |
+|---|---|---|---|---|
+| options newly `m` / bools newly `y` | | 2358 / 197 | | 2442 / 206 |
+| modules in the bundle | 435 | 2946 | 442 | 3034 |
+| modules unpacked | 28.5 MB | 121.7 MB | 30.1 MB | 129.8 MB |
+| `mu300-kernel-*.tar.gz` | 20.3 MB | 52.7 MB | 21.0 MB | 55.0 MB |
+| Image as LK loads it (bytes) | 23 996 424 | 24 655 880 | 24 750 088 | 25 606 152 |
+| generic ramdisk segment (bytes) | 1 833 133 | 1 833 152 | 1 834 504 | 1 834 499 |
+| build tree (`out-*`) | 2.8 GB | 6.7 GB | 2.9 GB | 6.9 GB |
+
+The boot image grows only by the Image (+0.66 and +0.86 MB): the generic ramdisk still loads only
+`module-order.txt`. The Image grows by what the new drivers select into the core (netpoll for netconsole, devlink,
+DPLL, quota, hidraw, I2C slave, CRC/crypto library code). Docker's `contrib/check-config.sh`: the fragment alone
+missed ten "generally necessary" options (the legacy `iptable_*`/`ip6table_*` tables, `IP_NF_NAT`,
+MASQUERADE...), both new configs miss none; the optional misses are `CGROUP_PERF` (needs `PERF_EVENTS`, kept off),
+SELinux/AppArmor (not built) and ZFS.
+
+**One bundle, no separate extra.** The whole set stays in `mu300-kernel-<series>.tar.gz`. Its size is far below
+GitHub's 2 GB per asset (the largest Magisk zip, Ubuntu 26.04 with 7.2, goes from 134 MB to about 168 MB). A split
+would put one module set into two packages whose dependencies cross (the HID drivers need the multicolor LED class,
+the netfilter targets their cores) and which `depmod` and kmodloader must see together, and an installer would have
+to decide which half a device gets. On the device the cost is disk: about 100 MB more per installed mainline kernel
+and system (Ubuntu 135 MiB under `extra/`, OpenWrt 125 MiB flat), plus the previous set `mu300-update` keeps for
+`rollback-boot`. The OpenWrt images carry the 6.18 set as before (`build-rootfs.sh`), so they grow by the same ~96 MiB
+unpacked (~33 MB in the tarball). Plain OpenWrt in an 804 MiB region (F50-C, 613 MiB free in section 85) keeps
+about 517 MiB free, and about 270 MiB after a kernel switch (the new set and the kept previous one). A copy that
+does not fit fails safe: `kernel_modules_into_systems` returns an error, `mu300-update` puts the previous modules
+back and leaves the boot image unchanged.
+
+**KVM.** The firmware starts every CPU at EL2 on both boards, and both new kernels run KVM in VHE mode (F50-B,
+7.2.11; 6.18.57 the same with 568/664 trap handlers):
+```
+CPU: All CPU(s) started at EL2
+kvm [1]: IPA Size Limit: 40 bits
+kvm [1]: GICv3: no GICV resource entry
+kvm [1]: disabling GICv2 emulation
+kvm [1]: GIC system register CPU interface enabled
+kvm [1]: VHE mode initialized successfully
+```
+A guest ran: Alpine 3.22's aarch64 `vmlinuz-virt` + `initramfs-virt` (6.12.110) under `qemu-system-aarch64
+-machine virt,accel=kvm,gic-version=3 -cpu host -smp 2 -m 256`, pinned to the A76 cores 4-7 (`-cpu host` needs one
+core type; the A55/A76 mix is why), QEMU 11.1 from the dockur image, on 7.2.10, 7.2.11 and 6.18.57 alike: the guest
+logs `Booting Linux on physical CPU 0x0000000000 [0x414fd0b0]` (an A76), `smccc: KVM: hypervisor services detected`
+and reaches Alpine's initramfs shell. The U30 Air logs the same EL2/VHE lines on both kernels (it has no QEMU).
+
+**Docker and dockur/windows-arm** (on F50-B with Docker 29.1.3 from Ubuntu's archive, installed from .debs and
+removed again). What the container needs from the host: `/dev/kvm` (writable), `/dev/net/tun`, `NET_ADMIN`, a bridge
+and a tap for its NAT mode, iptables (nft or legacy) with `nat` (DNAT, MASQUERADE) and `mangle`, `/dev/vhost-net`
+and macvtap for its DHCP mode, passt as the fallback. `docker compose up` with its `compose.yml` (image
+`dockurr/windows-arm`, loaded from `docker save`, restart off):
+
+| | 7.2.10 (released) | 7.2.11 (this config) |
+|---|---|---|
+| `docker compose up` | fails: `Unable to enable DNAT rule ... Extension DNAT revision 0 not supported, missing kernel module?` (no `xt_nat`) | starts, ports published |
+| dockur's network stage | `Failed to configure IP tables` -> "falling back to user-mode networking" (passt) | `Mode: NAT` (bridge `docker`, tap `qemu`, DNAT/MASQUERADE rules in place) |
+| its KVM check, `info kvm` in its QEMU | passes, `kvm support: enabled` | the same |
+| its RAM check | `Windows 11 requires at least 2.0 GB of RAM, but only 668 MB can be allocated.` | the same (580 MB) |
+
+The kernel side is complete now, and the board is not: 1.4 GB of RAM cannot hold Windows 11 (2 GB minimum). With
+`RAM_CHECK=N` the container goes on to download Windows, which F50-B (no internet) could not; nothing past that was
+tried. Small Linux guests run.
+
+**Device tests** (2026-10-16, bundles installed with `MU300_KERNEL_BUNDLE=... MU300_RELEASE=v2026.10.16.1
+mu300-update kernel <series>`; each board then went back to its released kernel, with the v2026.10.27 boot image as
+its previous one again, as before):
+
+* F50-B, Ubuntu 24.04, 7.2.11 (twice: before and after the last exclusions) and 6.18.57: boots, kernel 5.3 s,
+  userspace 34 s, no oops or warning, no failed unit; the 5 GHz access point, Bluetooth, USB network, the mobile
+  bearer (an address and an IPv6 prefix; this carrier passes no traffic without a VPN, and the released 7.2.10 did
+  the same in the same minute), cpufreq and thermal. udev loads `drm` (systemd's `modprobe@drm`) and our
+  `extra-modules` loads `snd-aloop` (for mu300-voice), which exists now. `modprobe` of 109 names across the classes
+  (iptables tables, ebtables, SCTP, TIPC, batman-adv, Open vSwitch, USB serial/net/storage, btrfs/jfs/nilfs2/erofs/
+  gfs2/ocfs2/ceph/xfs, dm-raid/dm-vdo/bcache/drbd, NVMe-TCP, iSCSI, btusb, rtw88/rtw89/mt7921u/carl9170/ath9k_htc/
+  rt2800usb/brcmfmac, uvcvideo, em28xx, DVB, snd-usb-audio, HID, xpad, wacom, i2c-tiny-usb, gs_usb, NFC, vhost_net,
+  macvtap...): 94 load, 10 are built in, 5 are not modules by design (reiserfs is gone since 6.13, `iio_dummy` and
+  VFIO excluded, two names of the list were wrong: `hid-cp2112`, `can-j1939`); 252 modules loaded at once, no oops.
+* U30 Air, openwrt-luci, 6.18.57 and 7.2.11: boots in under a minute with the owner's VPN profile (sing-box, kill
+  switch on) back up and its exit IP answering, the access point, the charger and fuel gauge (80 %), the LEDs, mobile
+  data under the VPN; KVM in VHE mode. kmodloader handles 3010 modules: one `modprobe` takes 0.1 s, the 109-name
+  sample 10.8 s, no oops, the VPN up throughout. At boot it loads 114 modules (100 before): the `/etc/modules.d`
+  lists of the OpenWrt kmod packages name the legacy `iptable_filter`/`iptable_mangle`, `ipt_REJECT` and some `xt_`
+  targets, which exist now; such a table is only set up when iptables-legacy uses it. The VPN configuration is
+  byte-for-byte what it was (checksums compared after the restore).
+
+(The device runs above were made with the set before the review below; the review took modules out on each
+kernel: 64 of 6.18.57, 43 of 7.2.11 - the dead protocol families - and changed nothing else.)
+
+**On-demand loading: the answer to three security reviews of #256.** With the whole set installed, every module is
+one any user can have loaded: the kernel runs its module helper (`sysctl kernel.modprobe`) as root whenever code
+asks for something a module provides - a socket family (`net-pf-29`), a sock_diag or genetlink handler, a link kind
+(`rtnl-link-lowpan`), a filesystem (`fs-hfs`; a mount attempt in a user namespace is enough), a line discipline.
+Rarely used protocols have been the way in for many local root holes. What changed:
+
+* Not built at all (`all-modules.exclude`, with reasons): the `n_gsm` and `n_hdlc` line disciplines, ATM (and the
+  DSL modems on it), ISDN, AX.25/NET/ROM/ROSE and the amateur-radio drivers (the `HAMRADIO` switch of the first
+  version is gone), X.25/LAPB and the WAN cards, AppleTalk, Phonet, RDS, CAIF, KCM, SMC, QRTR, AF_RXRPC with the AFS
+  client, DCCP, LLC type 2 (AF_LLC; the bridge's `llc` is built in), the parallel port and HSI: 64 modules fewer on
+  6.18.57, 43 on 7.2.11. GAMEPORT stays (sound and joystick drivers select it; no user can reach it).
+  `tests/test_all_modules.py` checks both builds' module lists for every one of them.
+* Built, but never loaded on demand: 85 modules listed by name in `/opt/mu300/lib/autoload-blocked` - TIPC, SCTP,
+  CAN (`can`, `can_raw`, `can_bcm`, `can_gw`, `can_isotp`, `can_j1939`; `can_dev` for USB CAN adapters stays), NFC
+  and its drivers, AF_VSOCK and its transports (with `vhost_vsock`, which depends on `vsock`: root loads it before a
+  VM that wants it), IEEE 802.15.4/6LoWPAN and its radios, every line-discipline module that is built (`slcan`,
+  `can327`, `slip`, `ppp_synctty`, `pps_ldisc`, `nci_uart`; a test checks the build's `tty-ldisc-*` aliases against
+  the list), and old filesystems (adfs, affs, befs, bfs, ceph, coda, cramfs, efs, freevxfs, gfs2 with gfs2meta,
+  hfs, hpfs, jfs, minix, nilfs2, ocfs2, omfs, orangefs, qnx4/6, romfs, ufs; sysv left upstream in 6.15). Kept
+  loadable on purpose: `l2tp_*` (L2TP VPNs; OpenWrt carries xl2tpd).
+* `/opt/mu300/bin/mu300-modprobe-guard` becomes the kernel's helper at boot (`mu300-modprobe-guard.service` in
+  `sysinit.target` on Ubuntu, OpenWrt's `mu300-hw`). It refuses by MODULE, not by request string: the first review
+  showed that matching request strings is bypassable (one module answers to its name, `-`/`_` spellings, several
+  socket aliases, genetlink and rtnl-link aliases, a filesystem's names). The guard makes a table of every listed
+  module's names and aliases - the `alias=` strings of the module file itself, normalized as modprobe does (`-` =
+  `_` outside `[...]`) - and refuses a request that matches any of them with modprobe's own glob rules, with a line
+  in the kernel log; everything else goes to `/sbin/modprobe` unchanged. The list holds every module that depends on
+  a listed one (checked against the build), and where depmod's `modules.dep` is there (Ubuntu) the table takes in
+  every module whose dependencies reach a listed one besides, so no request reaches them through a dependency. That is not academic: upstream TIPC has no
+  `net-pf-30` alias at all, `socket(AF_TIPC)` never loads it; the way to it is `tipc_diag`, which pulls `tipc` in.
+  Root loads a refused module with `modprobe NAME` (that runs `/sbin/modprobe` itself), and
+  `touch /etc/mu300/autoload-allow-all` keeps the guard off.
+* The table is made once per boot and kernel in `/run/mu300-modprobe-guard` (root's, mode 700) before the guard
+  takes over, never inside a request: OpenWrt's `modinfo` reads all 3000 modules on every call, and a first version
+  that asked it for each listed module took 7.2 s inside the first request of the boot (on that boot the U30 Air's
+  mobile downlink stayed dead, which could not be pinned on it, and has not recurred since). Reading the strings from
+  the files takes 2.0 s, at boot, in the background. A table gone stale (the running kernel's modules reinstalled) is
+  made again on the spot (a table that cannot be made again leaves the one there was). A request for an alias of a
+  module that is not installed is handed on: modprobe finds nothing for it either. Without any table (the cache
+  directory not root's own) the guard fails closed for the kinds of request the list is about - `net-pf-*`
+  (socket, diag and genetlink families), `fs-*`, `tty-ldisc-*`, `rtnl-*` - with `(no alias table)` in the log, and
+  checks the other requests against the names.
+* `make-bundle.sh` runs `check-autoload-blocked.py` against the build: every module depending on a listed one must
+  be listed, the real guard script (under `sh`) must refuse every alias and both spellings of the name of every
+  listed module (304 requests on 7.2.11) without calling modprobe, and must hand on the names and aliases of the
+  modules the systems load every day (nft, wireguard, overlay, usb-storage, vfat, tun, bridge, veth, br_netfilter,
+  xt_*, kvm, vhost_net, l2tp, macvtap, can_dev...: 84 requests). `tests/test_all_modules.py` runs the same check on
+  a sample of the 7.2.11 build (every socket/diag/genetlink, filesystem, line-discipline and link-kind alias of it)
+  under sh, busybox sh and dash, and also every request the first, request-string list refused (`net-pf-29/30/36/
+  39/40`, SCTP's, the genetlink families, `rtnl-family-29`, each `fs-*`): refused, or answered by no module of the
+  build at all.
+* `dev.tty.ldisc_autoload = 0` (`etc/sysctl.d/98-mu300-modules.conf`): line disciplines load on demand for root only.
+  Both mainline kernels have it 0 already (`LDISC_AUTOLOAD` is not set); the file makes it so on 5.4 too.
+
+Measured on both boards (2026-10-16): F50-B Ubuntu 24.04 with 7.2.11, the U30 Air openwrt-luci with 6.18.57, the
+guard, its unit or hook and the sysctl file put in by hand. A static test program drops to uid/gid 65534 before it
+opens its sockets:
+
+| | Ubuntu, 7.2.11 | OpenWrt, 6.18.57 |
+|---|---|---|
+| the guard at boot | `the kernel's helper; 77 modules not loaded on demand, 203 names and aliases` (unit active; boot 5.3 s + 34.7 s, as before) | the same line (from `mu300-hw`) |
+| `nobody`: AF_TIPC, AF_CAN, SCTP, AF_NFC, AF_IEEE802154, AF_RDS | all refused, nothing loaded | the same |
+| root: `ip link add ... type lowpan`, `mount -t hfs` | `rtnl-link-lowpan (ieee802154_6lowpan) refused`, `fs-hfs (hfs) refused` | the same |
+| `nobody` in its own user and net namespace: `ip link add ... type lowpan` | refused, nothing loaded | (no setpriv) |
+| root: `modprobe tipc can-raw sctp` | loaded, the sockets open | the same |
+| on demand through the guard | vcan, wireguard, vxlan, geneve, gretap, l2tp (`ip l2tp add tunnel`); Docker with dockur: NAT networking, `compose up` and down, a KVM guest | vcan; the owner's VPN (sing-box, kill switch) up with its exit IP over flowing mobile data, two boots |
+
+The third review found that the module-name list had dropped AF_VSOCK, freevxfs and gfs2meta of the first list
+(gfs2meta is an alias of `gfs2`, so it was covered); the vsock family and freevxfs are back, LLC2 is out of the
+build, the dependants come from `modules.dep` too, and the fallback fails closed. The device runs in the table were
+made before that; the changed guard was run on the U30 Air's busybox by hand (`l2tp_ppp` handed on, `net-pf-40`
+refused, its table made in 0.12 s on 6.18.56, which has few of the listed modules).
+
+The kernel log names the module: `mu300: on-demand loading of net-pf-29 (can) refused (root: modprobe can; FINDINGS
+163)`. In a control run of the first version, with the system's modprobe as the helper, `nobody` did load `nfc`,
+`ieee802154` and `ieee802154_socket` by opening sockets. No oops in any of these runs.
+
+**User namespaces** (read, not changed): unprivileged user namespaces are open on both systems (`unshare -Ur` works
+for `ubuntu` on F50-B; `user.max_user_namespaces = 7949`). The mainline kernels have no AppArmor, so Ubuntu 24.04's
+`kernel.apparmor_restrict_unprivileged_userns` does not exist here, and there is no Debian-style
+`unprivileged_userns_clone`. `kernel.unprivileged_bpf_disabled = 2` on both. That is why the filesystem aliases are
+in the list: inside a user namespace an ordinary user gets as far as the kernel's request for `fs-<type>`. Docker
+and dockur run as root and need none of this.
+
+Not done: no ZTE V50 to read its compatibles from (`dt-compatibles.txt` has the F50's and the U30 Air's); no
+release was built or tagged; the boards ran the bundles built here, the CI workflows build the kernels.
+
+**The third review's guard on the boards (2026-10-17)**, the same bundles, the guard, list, sysctl file and unit (or
+`mu300-hw`'s line) of this branch. F50-B Ubuntu 7.2.11 and 6.18.57, U30 Air openwrt-luci 6.18.57:
+
+* The guard is the helper from boot (`/proc/sys/kernel/modprobe`), its table 219 names and aliases of 85 modules
+  (Ubuntu's `modules.dep` adds no module outside the list: the list is closed). Making it: 1.0-1.2 s in
+  `sysinit.target` on F50-B (boot 39.7 s on 7.2.11, 40.2 s on 6.18.57, 39.7 s on 7.2.10 before), 2.05 s in the
+  background on the U30 Air. One request through it: 0.11 s against kmodloader's 0.10 s.
+* As `nobody` (a static probe): sockets of AF_TIPC, AF_CAN raw/bcm, SCTP, AF_NFC, AF_IEEE802154, AF_VSOCK and AF_RDS,
+  sock_diag dumps of TIPC and VSOCK, and generic netlink lookups of `TIPCv2`, `nfc`, `nl802154`: all refused, nothing
+  loaded; `wireguard`'s genl family still found. On Ubuntu, in an unprivileged user+mount+net namespace: `mount -t
+  hfs` and `ip link add type lowpan` refused, `type vcan` and `type wireguard` work.
+* Root's `mount -t hfs|vxfs|freevxfs` refused; through the guard as the kernel calls it, refused: `tipc`,
+  `tipc-diag`, `net-pf-16-proto-4-type-30` (tipc_diag), `-type-40` (vsock_diag), `-type-2-132` (sctp_diag),
+  `net-pf-16-proto-16-family-TIPCv2|nfc`, `net-pf-29`, `net-pf-40`, `rtnl-link-lowpan`, `fs-hfs`, `fs-vxfs`,
+  `fs-gfs2meta`, `tty-ldisc-17`, and the dependants `vhost_vsock` and `vsock-loopback`; the kernel log names each.
+  Root's `modprobe tipc sctp can-raw vsock` loads them.
+* Everyday on-demand loads still work: vxlan, geneve, ip_gre (gretap), l2tp_netlink (`ip l2tp`), vcan load; wireguard,
+  veth, bridge, tun, overlay, vfat, nf_tables and usb-storage are built in on both kernels.
+* Without a table (the table moved away, the cache directory given to `nobody`): `net-pf-*`, `fs-*`, `rtnl-*`,
+  `tty-ldisc-*` refused with `(no alias table)`, the listed names refused, `nf_tables`, `usb-storage`,
+  `crypto-sha256`, `l2tp_ppp` handed on. The log's hint said `root: modprobe no alias table`; it names the request
+  now (`tests/test_all_modules.py`).
+* KVM: `VHE mode initialized successfully` on both kernels on F50-B and on the U30 Air. No oops on any board.
+* U30 Air: the owner's VPN (sing-box, kill switch on) up after two boots of 6.18.57 with the exit IP answering and
+  HTTPS through the tunnel over mobile data. On a third boot of 6.18.57 (with 0018 of #261, and the dual-SIM live
+  switching turned on for #260's test) the mobile downlink stayed dead: `sipa_eth0` received 0 bytes while sending,
+  and an `ifdown`/`ifup wan` did not bring it back. The released 6.18.56 with live switching on had a working downlink
+  the boot after; one occurrence in four U30 Air boots of 6.18.57 here (and one in the earlier runs above), not pinned on
+  anything yet. The reboot soak below found no regression.
+* `mount -o loop` of a fresh image fails with "already mounted or mount point busy" on Ubuntu with 7.2.11, 6.18.57
+  and the released 7.2.10 alike (`losetup -f` then `mount` works): util-linux's, not this kernel's.
+
+**The mobile downlink across reboots (2026-10-17).** Is the dead downlink above 6.18.57's? A reboot soak, each boot
+measured the same way: wait for an IPv4 address on `sipa_eth0` and a first HTTPS answer, then a 10 MB HTTPS download
+(`speed.cloudflare.com`), its bytes counted on `sipa_eth0`; the ipa/sipa/modem lines of the kernel log and
+`/proc/net/dev` kept per boot. A boot passes when the download finishes and `sipa_eth0` received more than 10 MB.
+
+* F50-C, plain OpenWrt v2026.10.16.1, its data SIM (no VPN needed there), Linux made the default boot for the run and
+  Android again after it, soft reboots only below 55 C (the hottest zone never passed 44 C). The same bundles as on
+  the U30 Air (`pr256-6.18.tar.gz` sha256 `e0ba980f...`, the released `rel-6.18.tar.gz` `d83c4d3d...`), 6.18.57 with
+  this branch's guard, list, sysctl file and `mu300-hw` line, as `mu300-update kernel 6.18` installs them.
+
+  | Kernel | Boots | Downlink working | Address / first answer after boot | 10 MB download | `sipa_eth0` RX errors, drops |
+  |---|---|---|---|---|---|
+  | 6.18.56 (released) | 12 | 12 | 33-34 s / 34 s | 3-50 s (median 43 s) | 0, 0 |
+  | 6.18.57 (this branch) | 12 | 12 | 33-35 s / 33-36 s | 2-43 s (median 13 s) | 0, 0 |
+
+  The kernel log's sipa lines are the same on both, every boot: `sipa_eth: fail to send, ret -115`, the delegate's
+  `dts parsing failed` / `get resource failed for remote-base!` and `don't have this flow ctrl err type`, one each; no
+  oops, no warning. The download times follow the carrier, not the kernel (the 6.18.56 runs came first). A final boot
+  of the restored 6.18.56 passed too.
+* U30 Air, openwrt-luci, the owner's VPN (sing-box, kill switch on): an earlier soak of the same 6.18.57 bundle,
+  stopped at its ninth reboot for the owner. All 8 measured boots passed: address at 35-36 s, the tunnel at 43-50 s,
+  10 MB through it in 1-11 s, `sipa_eth0` RX 10.42-10.45 MB each, the same four sipa lines, no oops.
+
+20 of 20 boots of 6.18.57 with a working downlink against 12 of 12 of 6.18.56: no regression measurable at this rate.
+The one dead downlink on the U30 Air came with 0018 of #261 and the dual-SIM live switching turned on for #260, which
+none of these boots had. A failure that rare cannot be pinned on a kernel without a reproducer: the 6.18.56 to
+6.18.57 upstream changes were not bisected. If it comes back, the boot's `/proc/net/dev`, the sipa lines and whether live
+switching ran are what to keep.
+
+The mainline workflow at this branch's head (`gh workflow run mainline.yml -f kv=...`): 7.2.11 run 38969488015 and
+6.18.57 run 38969491239 passed; after the build the runner (ubuntu-24.04-arm) had 99 GB free on `/` (145 GB), the
+volume held 8.7 GB (7.2.11) and 8.3 GB (6.18.57). The release job builds both into one volume, about 17 GB beside the
+5.4 build: no cleanup is needed. Both workflows print `df` and the volume's size after the kernels now.
 ### 104. The U30 Air's live SIM switch turned mobile data back on that the user had switched off
 
 From kanoqwq's clean-tf-7.2 `2d3b6f3f` ("complete U30 Air support"), where he took our dual-SIM controller
