@@ -1126,14 +1126,14 @@ msgstr "Σύνδεση δεδομένων…"
 msgid "Turn off cellular radio"
 msgstr "Απενεργοποίηση ραδιοφώνου κινητού δικτύου"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "Η συνδεσιμότητα κινητού δικτύου θα διακοπεί."
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "Αυτή η SIM δεν θα έχει κλήσεις, SMS ή δεδομένα, και ο πομπός της μένει κλειστός και μετά από επανεκκίνηση μέχρι να τον ανοίξετε ξανά."
 
 msgid "Turn on cellular radio"
 msgstr "Ενεργοποίηση ραδιοφώνου κινητού δικτύου"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "Θα εκτελεστεί η ακολουθία ενεργοποίησης SFUN (έως περίπου 1 λεπτό)."
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "Ο πομπός της SIM σε χρήση ανοίγει και μένει ανοιχτός μετά από επανεκκίνηση (έως περίπου 1 λεπτό)."
 
 msgid "Turn data roaming off"
 msgstr "Απενεργοποίηση περιαγωγής δεδομένων"
@@ -2000,6 +2000,9 @@ msgstr "Switch to SIM%d"
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
 
+msgid "Applying the radio setting…"
+msgstr "Εφαρμογή ρύθμισης πομπού…"
+
 msgid "SIM settings are not available"
 msgstr "Οι ρυθμίσεις SIM δεν είναι διαθέσιμες"
 
@@ -2011,6 +2014,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "σε χρήση"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "Απενεργοποίηση πομπού SIM%d"
+
+msgid "Radio"
+msgstr "Πομπός"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2026,6 +2035,21 @@ msgstr "Αποστέλλεται σε αυτή τη SIM την επόμενη φ
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "VoLTE και VoNR για κάθε SIM, διατηρούνται μετά από επανεκκίνηση και αποστέλλονται ξανά κάθε φορά που ξεκινά η SIM. Το VoLTE είναι ενεργό εκτός αν απενεργοποιηθεί· το VoNR μένει όπως στο μόντεμ μέχρι να οριστεί."
+
+msgid "All radios off (airplane mode)"
+msgstr "Όλοι οι πομποί κλειστοί (λειτουργία πτήσης)"
+
+msgid "All radios on"
+msgstr "Όλοι οι πομποί ανοιχτοί"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "Καμία SIM δεν θα έχει κλήσεις, SMS ή δεδομένα, ακόμη και μετά από επανεκκίνηση, μέχρι να ανοίξει ξανά ένας πομπός εδώ ή με το κουμπί πομπού του πίνακα."
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "Ο πομπός κάθε SIM μένει όπως ορίστηκε εδώ μετά από επανεκκίνηση. Μια SIM με κλειστό πομπό δεν έχει κλήσεις, SMS ή δεδομένα, και η συσκευή δεν μεταβαίνει σε αυτή."
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "Η ρύθμιση αποθηκεύτηκε, αλλά ο πομπός δεν την ακολούθησε ακόμη."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Παραλήπτης: αριθμός, π.χ. 10086 ή +86..."
@@ -3469,6 +3493,12 @@ msgstr "Η ενσωμάτωση δεδομένων κινητής δεν παρ�
 msgid "The SIM settings could not be read"
 msgstr "Δεν ήταν δυνατή η ανάγνωση των ρυθμίσεων SIM"
 
+msgid "Radio control is not provided by this platform"
+msgstr "Αυτή η πλατφόρμα δεν παρέχει έλεγχο πομπού"
+
+msgid "A SIM radio change is already running"
+msgstr "Μια αλλαγή πομπού SIM εκτελείται ήδη"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3637,12 +3667,15 @@ msgstr "Ο αριθμός γραμμών είναι από 1 έως 1000"
 msgid "The log could not be read"
 msgstr "Δεν ήταν δυνατή η ανάγνωση του αρχείου καταγραφής"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "Ο πομπός αυτής της SIM είναι κλειστός στις ρυθμίσεις της"
+
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
-msgid "Radio did not come up"
-msgstr "Το ραδιόφωνο δεν ενεργοποιήθηκε"
+msgid "The radio did not follow its setting"
+msgstr "Ο πομπός δεν ακολούθησε τη ρύθμισή του"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Δεν ήταν δυνατή η αποθήκευση της ρύθμισης περιαγωγής δεδομένων"

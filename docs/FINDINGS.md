@@ -11146,7 +11146,63 @@ the setting; nothing was saved"), the modem back at 0.
 Tests: `tests/test_device_scripts.py` `SimVoice`, `tests/test_mu300dash_security.py` `SimCard`, `tests/test_api.py`
 `test_voice`.
 
-### 185. The Ubuntu web panel (Cockpit) complete: every page through mu300-api, and a page Cockpit can show without root
+### 185. Each SIM's radio on or off, kept across reboots; all off is a persistent airplane mode
+
+From kanoqwq's fork (his unpublished image's `mu300-sim-radio`, `mu300-radio-allowed`, `sim-radio.js` and the changes
+around them), rewritten for this tree: his F50 runs both protocol stacks at once (`mu300-dual-radio`), ours runs the
+card in use only, so the setting decides whether that card's radio may come on, and the other card's whether it may
+ever start.
+
+**What was there.** The dashboard's radio button sent `AT+CFUN=0` (on: the SFUN power-on sequence) to whichever card,
+for this boot only: the next dial, the watchdog or a reboot switched the radio on again, and it was refused on the U30
+Air's dual-SIM boots. There was no way to keep a card (or the device) off the network.
+
+**Now.** `/etc/mu300/sim-radio` is one line, `<slot 0> <slot 1>`, 1 on and 0 off; no file is `1 1`, as every release
+before. A line that is not one of the four counts as `1 1` and says so: a broken file must not take the device off
+the network for good. `mu300-sim-radio set 0|1|all on|off` saves it and, when it concerns the card in use, runs
+`mobile-data rf-apply`: off takes the data down (netifd restarts the WAN, whose dial ends with `SIM_RADIO_DISABLED`
+and leaves the interface unavailable, so netifd does not retry; LuCI then shows it as "device not present";
+Ubuntu's connection goes down as `mobile-data down` takes it), then `AT+CFUN=4` on the card's own channel (flight mode:
+the SIM stays powered), read back; on brings the radio back (`AT+CFUN=1` from flight mode, the ordinary SFUN bring-up
+from the cold 0) and the data that was held for it (netifd: the interface made available again, which netifd starts
+unless somebody took it down; Ubuntu: the hold marker). Data somebody had taken down (ifdown, the panel's button, the
+data cap, a stopped service) stays down. `all off` is the persistent airplane mode the owner asked for.
+
+Every path that brings a radio up asks first: `mobile-data`'s dial (exit 7 under netifd: `SIM_RADIO_DISABLED`, the
+interface unavailable; Ubuntu: exit 0, the service stays up), the early warm-up (the radio stays at its cold CFUN 0 after the
+RIL handshake), the watchdog, mu300-power's resume, the modem reset (refused), the panel's lock apply (no SFUN restart;
+the locks take effect when the radio comes on), and on the U30 Air the cold start of the chosen card (put off without a
+verdict: the pending marker goes, no trial; `mu300-sim2-warmup --deferred` runs it when the radio is switched on) and
+the live switch (a target whose radio is off is refused; a card in use in flight mode because of its setting is a
+known state). Front ends: the dashboard's radio button (the card in use, persistent), LuCI Cellular > SIM settings
+(per card, and all off/on), `mu300-api radio.get` / `radio.set`, EN/TR/ZH and the other catalogs.
+
+**Device tests (2026-10-17).**
+- F50-C, OpenWrt v2026.10.17.3: the dashboard's button off: `+CFUN: 4` within 2 s, the WAN down with
+  `SIM_RADIO_DISABLED`; on from the SIM settings page: `+CFUN: 1`, an address 5 s later. All off and a reboot: after the
+  RIL handshake the radio stayed at `+CFUN: 0`, the WAN at `SIM_RADIO_DISABLED`, no redial; all on: SFUN=4, registered,
+  an address 8 s after the request. With the radio off the modem reset is refused and the lock helper does no stack
+  restart; a WAN taken down by `ifdown` stayed down when the radio came back, and came up on `ifup`. The page renders
+  both cards' radio, VoLTE and VoNR rows. Again with the interface made unavailable instead of a blocked restart:
+  off left it `available: false` with autostart on and no second dial in 30 s; on brought an address 5 s later.
+  A WAN taken down by `ifdown` (autostart off) stayed down through off and on, and came up on `ifup`.
+- F50-B, Ubuntu (7.2.11): off: `+CFUN: 4`, `sipa_eth0` down, still down after 75 s of the watchdog and a restart of
+  `mu300-mobile-data` (the service active, "mobile data stays down: the radio of SIM1 is off"); on: an address 6 s
+  later. With the service stopped, off and on again left it stopped. One reboot with the radio off came up with the
+  modem's AT channels never ready (`stty_nr1` not ready in 240 s; no `sbuf` channel 5 in dmesg): the CP had not started
+  them, which nothing in userspace does or prevents; the next two boots were normal. The off-at-boot case is the
+  F50-C one above.
+- U30 Air (the owner's router, OpenWrt v2026.10.17.3, SIM1): SIM2 off is saved only; SIM1 off `+CFUN: 4` and on
+  `+CFUN: 1`, an address 3 s later and the VPN's HTTPS answering again 18 s after the off. Every board was left with
+  its released files.
+
+Not run on a device: the U30 Air's dual-SIM boot with the chosen card off and its deferred cold start, the live switch
+with a card off (one SIM per board here): `tests/test_sim2.py`, `tests/test_sim_hot.py`.
+
+Tests: `tests/test_device_scripts.py` `SimRadio`, `tests/test_sim2.py`, `tests/test_sim_hot.py`,
+`tests/test_mu300cell.py`, `tests/test_mu300dash_security.py` (`RadioLock`, `SimCard`), `tests/test_api.py` `test_radio`.
+
+### 186. The Ubuntu web panel (Cockpit) complete: every page through mu300-api, and a page Cockpit can show without root
 
 The owner opened Cockpit's MU300 page for the first time and found no VPN, and little else. Three causes, seen on F50-B
 (Ubuntu 24.04, 7.2.11, the panel extra and the VPN module with every engine installed):
