@@ -53,9 +53,16 @@ conf_text() {
     printf '[WebService]\nLoginTitle = MU300\n# no "connect to another host" on the login page\nLoginTo = false\n'
     printf '\n[Session]\n# minutes without activity before the session ends\nIdleTimeout = %s\n' "$IDLE"
 }
+# One IPv4 address, never a wildcard (no 0.0.0.0, no ::, no IPv6 at all): lan_ip always yields an address, a
+# malformed lan.conf falls back to the device's default. A packet from the uplink addressed to the LAN address
+# (Linux accepts it on any interface) meets the firewall's sipa_eth* drop, and before the firewall is loaded,
+# IPAddressAllow: only the LAN's /24 and the device itself may connect (cgroup BPF on the socket; reverse-path
+# filtering keeps LAN sources off the uplink).
 dropin_text() {
+    _ip=$(lan_ip)
     printf '%s (the panel extra): Cockpit on the LAN address only (USB and the hotspot), never on the uplink\n' "$MARK"
-    printf '[Socket]\nListenStream=\nListenStream=%s:9090\nFreeBind=yes\n' "$(lan_ip)"
+    printf '[Socket]\nListenStream=\nListenStream=%s:9090\nFreeBind=yes\n' "$_ip"
+    printf 'IPAddressDeny=any\nIPAddressAllow=localhost %s.0/24\n' "${_ip%.*}"
 }
 # put_file FILE TEXT: written when it differs (atomically); 0 when it changed. A file of somebody else's
 # (no mark) is left alone, except the listen drop-in, which is ours by name.
