@@ -1126,14 +1126,14 @@ msgstr "데이터 연결 중…"
 msgid "Turn off cellular radio"
 msgstr "셀룰러 무선 끄기"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "셀룰러 연결이 중단됩니다."
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "이 SIM은 통화, SMS, 데이터를 쓸 수 없으며, 다시 켤 때까지 재부팅 후에도 무선이 꺼진 상태로 유지됩니다."
 
 msgid "Turn on cellular radio"
 msgstr "셀룰러 무선 켜기"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "SFUN 전원 켜기 절차가 실행됩니다 (최대 약 1분)."
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "사용 중인 SIM의 무선이 켜지고 재부팅 후에도 켜진 상태로 유지됩니다(최대 약 1분)."
 
 msgid "Turn data roaming off"
 msgstr "데이터 로밍 끄기"
@@ -2000,6 +2000,9 @@ msgstr "Switch to SIM%d"
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
 
+msgid "Applying the radio setting…"
+msgstr "무선 설정 적용 중…"
+
 msgid "SIM settings are not available"
 msgstr "SIM 설정을 사용할 수 없습니다"
 
@@ -2011,6 +2014,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "사용 중"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "SIM%d 무선 끄기"
+
+msgid "Radio"
+msgstr "무선"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2026,6 +2035,21 @@ msgstr "이 SIM의 무선이 다음에 시작될 때 전송됩니다."
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "SIM별 VoLTE와 VoNR. 재부팅 후에도 유지되며 해당 SIM이 시작될 때마다 다시 전송됩니다. VoLTE는 끄지 않는 한 켜져 있고, VoNR은 설정할 때까지 모뎀 상태 그대로입니다."
+
+msgid "All radios off (airplane mode)"
+msgstr "모든 무선 끄기(비행기 모드)"
+
+msgid "All radios on"
+msgstr "모든 무선 켜기"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "여기 또는 대시보드의 무선 버튼으로 무선을 다시 켤 때까지, 재부팅 후에도 어떤 SIM도 통화, SMS, 데이터를 쓸 수 없습니다."
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "각 SIM의 무선은 재부팅 후에도 여기서 설정한 대로 유지됩니다. 무선이 꺼진 SIM은 통화, SMS, 데이터를 쓸 수 없으며 기기가 해당 SIM으로 전환하지 않습니다."
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "설정은 저장되었지만 무선이 아직 반영하지 않았습니다."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "수신자: 번호 (예: 10086 또는 +86...)"
@@ -3469,6 +3493,12 @@ msgstr "이 플랫폼에서는 모바일 데이터 통합을 제공하지 않습
 msgid "The SIM settings could not be read"
 msgstr "SIM 설정을 읽을 수 없습니다"
 
+msgid "Radio control is not provided by this platform"
+msgstr "이 플랫폼은 무선 제어를 제공하지 않습니다"
+
+msgid "A SIM radio change is already running"
+msgstr "SIM 무선 변경이 이미 진행 중입니다"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3637,12 +3667,15 @@ msgstr "줄 수는 1에서 1000 사이여야 합니다"
 msgid "The log could not be read"
 msgstr "로그를 읽을 수 없습니다"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "이 SIM의 무선이 설정에서 꺼져 있습니다"
+
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
-msgid "Radio did not come up"
-msgstr "무선을 켜지 못했습니다"
+msgid "The radio did not follow its setting"
+msgstr "무선이 설정을 따르지 않았습니다"
 
 msgid "The data roaming setting could not be saved"
 msgstr "데이터 로밍 설정을 저장할 수 없습니다"

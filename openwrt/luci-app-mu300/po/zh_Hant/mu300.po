@@ -1126,14 +1126,14 @@ msgstr "正在建立數據連線…"
 msgid "Turn off cellular radio"
 msgstr "關閉行動網路射頻"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "行動網路連線將會中斷。"
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "關閉後該卡無法通話、收發簡訊或上網，重新開機後射頻仍保持關閉，直到再次開啟。"
 
 msgid "Turn on cellular radio"
 msgstr "開啟行動網路射頻"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "將執行 SFUN 開機程序（最多約 1 分鐘）。"
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "將開啟目前使用卡的射頻，重新開機後仍保持開啟（最多約 1 分鐘）。"
 
 msgid "Turn data roaming off"
 msgstr "關閉數據漫遊"
@@ -1995,6 +1995,9 @@ msgstr "切換到卡%d"
 msgid "Use SIM%d at next boot"
 msgstr "下次啟動使用卡%d"
 
+msgid "Applying the radio setting…"
+msgstr "正在套用射頻設定…"
+
 msgid "SIM settings are not available"
 msgstr "SIM 卡設定無法使用"
 
@@ -2006,6 +2009,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "使用中"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "關閉 SIM%d 射頻"
+
+msgid "Radio"
+msgstr "射頻"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2021,6 +2030,21 @@ msgstr "將在該卡射頻下次啟動時傳送。"
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "每張卡的 VoLTE 和 VoNR，重新開機後保留，並在該卡每次啟動時重新下發。VoLTE 預設開啟，除非關閉；VoNR 在設定之前保持模組原狀。"
+
+msgid "All radios off (airplane mode)"
+msgstr "關閉全部射頻（飛航模式）"
+
+msgid "All radios on"
+msgstr "開啟全部射頻"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "所有卡都將無法通話、收發簡訊或上網，重新開機後也一樣，直到在此處或用儀表板的射頻按鈕重新開啟射頻。"
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "每張卡的射頻在重新開機後保持此處的設定。射頻關閉的卡無法通話、收發簡訊或上網，裝置也不會切換到該卡。"
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "設定已儲存，但射頻尚未生效。"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "收件人：號碼，例如 10086 或 +86..."
@@ -3462,6 +3486,12 @@ msgstr "此平台未提供行動數據整合"
 msgid "The SIM settings could not be read"
 msgstr "無法讀取 SIM 卡設定"
 
+msgid "Radio control is not provided by this platform"
+msgstr "此平台不提供射頻控制"
+
+msgid "A SIM radio change is already running"
+msgstr "已有射頻設定正在執行"
+
 # Dual SIM controls.
 msgid "Invalid SIM setting"
 msgstr "SIM 設定無效"
@@ -3630,12 +3660,15 @@ msgstr "行數必須在 1 到 1000 之間"
 msgid "The log could not be read"
 msgstr "無法讀取記錄"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "該卡的射頻已在設定中關閉"
+
 # Dual SIM controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "請使用雙 SIM 控制頁或重新啟動來操作受管理的雙卡射頻。"
 
-msgid "Radio did not come up"
-msgstr "射頻未能啟動"
+msgid "The radio did not follow its setting"
+msgstr "射頻未按設定生效"
 
 msgid "The data roaming setting could not be saved"
 msgstr "無法儲存數據漫遊設定"

@@ -1126,14 +1126,14 @@ msgstr "Menyambungkan data…"
 msgid "Turn off cellular radio"
 msgstr "Matikan radio seluler"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "Konektivitas seluler akan terputus."
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "SIM ini tidak akan bisa menelepon, SMS, atau data, dan radionya tetap mati setelah reboot sampai Anda menyalakannya lagi."
 
 msgid "Turn on cellular radio"
 msgstr "Nyalakan radio seluler"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "Urutan penyalaan SFUN akan dijalankan (hingga sekitar 1 menit)."
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "Radio SIM yang digunakan menyala dan tetap menyala setelah reboot (hingga sekitar 1 menit)."
 
 msgid "Turn data roaming off"
 msgstr "Matikan roaming data"
@@ -2000,6 +2000,9 @@ msgstr "Switch to SIM%d"
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
 
+msgid "Applying the radio setting…"
+msgstr "Menerapkan pengaturan radio…"
+
 msgid "SIM settings are not available"
 msgstr "Pengaturan SIM tidak tersedia"
 
@@ -2011,6 +2014,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "digunakan"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "Matikan radio SIM%d"
+
+msgid "Radio"
+msgstr "Radio"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2026,6 +2035,21 @@ msgstr "Dikirim ke SIM ini saat radionya mulai lagi."
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "VoLTE dan VoNR untuk tiap SIM, tetap setelah reboot dan dikirim ulang setiap kali SIM itu mulai. VoLTE aktif kecuali dimatikan; VoNR tetap seperti di modem sampai diatur."
+
+msgid "All radios off (airplane mode)"
+msgstr "Semua radio mati (mode pesawat)"
+
+msgid "All radios on"
+msgstr "Semua radio menyala"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "Tidak ada SIM yang bisa menelepon, SMS, atau data, juga setelah reboot, sampai radio dinyalakan lagi di sini atau dengan tombol radio di dasbor."
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "Radio tiap SIM tetap seperti diatur di sini setelah reboot. SIM yang radionya mati tidak bisa menelepon, SMS, atau data, dan perangkat tidak beralih ke SIM itu."
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "Pengaturan tersimpan, tetapi radio belum mengikutinya."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Penerima: nomor, mis. 10086 atau +86..."
@@ -3469,6 +3493,12 @@ msgstr "Integrasi data seluler tidak disediakan oleh platform ini"
 msgid "The SIM settings could not be read"
 msgstr "Pengaturan SIM tidak dapat dibaca"
 
+msgid "Radio control is not provided by this platform"
+msgstr "Platform ini tidak menyediakan kontrol radio"
+
+msgid "A SIM radio change is already running"
+msgstr "Perubahan radio SIM sedang berjalan"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3637,12 +3667,15 @@ msgstr "Jumlah baris adalah 1 sampai 1000"
 msgid "The log could not be read"
 msgstr "Log tidak dapat dibaca"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "Radio SIM ini dimatikan di pengaturannya"
+
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
-msgid "Radio did not come up"
-msgstr "Radio tidak menyala"
+msgid "The radio did not follow its setting"
+msgstr "Radio tidak mengikuti pengaturannya"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Pengaturan roaming data tidak dapat disimpan"

@@ -1126,14 +1126,14 @@ msgstr "Opretter dataforbindelse…"
 msgid "Turn off cellular radio"
 msgstr "Slå mobilradio fra"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "Mobilforbindelsen vil blive afbrudt."
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "Dette SIM får ingen opkald, SMS eller data, og dets radio forbliver slukket efter genstart, indtil du tænder den igen."
 
 msgid "Turn on cellular radio"
 msgstr "Slå mobilradio til"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "SFUN-opstartssekvensen køres (op til ca. 1 minut)."
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "Radioen i det SIM, der bruges, tændes og forbliver tændt efter genstart (op til ca. 1 minut)."
 
 msgid "Turn data roaming off"
 msgstr "Slå dataroaming fra"
@@ -2000,6 +2000,9 @@ msgstr "Switch to SIM%d"
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
 
+msgid "Applying the radio setting…"
+msgstr "Anvender radioindstillingen…"
+
 msgid "SIM settings are not available"
 msgstr "SIM-indstillingerne er ikke tilgængelige"
 
@@ -2011,6 +2014,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "i brug"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "Sluk radioen i SIM%d"
+
+msgid "Radio"
+msgstr "Radio"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2026,6 +2035,21 @@ msgstr "Sendes til dette SIM, næste gang dets radio starter."
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "VoLTE og VoNR for hvert SIM, bevares ved genstart og sendes igen, hver gang det SIM starter. VoLTE er slået til, medmindre det slås fra; VoNR forbliver som i modemet, indtil det indstilles."
+
+msgid "All radios off (airplane mode)"
+msgstr "Alle radioer slukket (flytilstand)"
+
+msgid "All radios on"
+msgstr "Alle radioer tændt"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "Intet SIM får opkald, SMS eller data, heller ikke efter genstart, før en radio tændes igen her eller med radioknappen på oversigten."
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "Hvert SIM's radio forbliver som indstillet her efter genstart. Et SIM med slukket radio har ingen opkald, SMS eller data, og enheden skifter ikke til det."
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "Indstillingen er gemt, men radioen har ikke fulgt den endnu."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Modtager: nummer, f.eks. 10086 eller +86..."
@@ -3469,6 +3493,12 @@ msgstr "Integration af mobildata findes ikke på denne platform"
 msgid "The SIM settings could not be read"
 msgstr "SIM-indstillingerne kunne ikke læses"
 
+msgid "Radio control is not provided by this platform"
+msgstr "Denne platform har ingen radiostyring"
+
+msgid "A SIM radio change is already running"
+msgstr "En ændring af SIM-radioen er allerede i gang"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3637,12 +3667,15 @@ msgstr "Antallet af linjer er 1 til 1000"
 msgid "The log could not be read"
 msgstr "Loggen kunne ikke læses"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "Radioen i dette SIM er slået fra i dets indstillinger"
+
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
-msgid "Radio did not come up"
-msgstr "Radioen startede ikke"
+msgid "The radio did not follow its setting"
+msgstr "Radioen fulgte ikke sin indstilling"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Indstillingen for dataroaming kunne ikke gemmes"
