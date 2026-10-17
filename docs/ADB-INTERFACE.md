@@ -114,9 +114,10 @@ module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `p
 | `data.set` | `apn` `pdp` (`IP`/`IPV6`/`IPV4V6`) `auth` (`none`/`pap`/`chap`/`both`) `user` `password` `clear_credentials` `roaming` (bool: `mobile-data roaming on` or `off`; alone it restarts nothing) | `restart` |
 | `data.power` | `state` | - |
 | `sim.get`, `sim.select` | -, `slot` 1/2 | `sim` (mu300-sim's JSON) |
+| `sim.state` | `fresh` (bool: ask the card, AT+CPIN?) | `state` (`ready`/`locked`/`absent`, or null) `slot` (mu300-sim-state, FINDINGS 186) |
 | `voice.get`, `voice.set` | -, `slot` 1/2 `kind` volte/vonr `state` on/off | `voice` (`mobile-data voice --json --read`: the saved choice per card, `live` what the card in use says), `text` (FINDINGS 184) |
 | `radio.get`, `radio.set` | -, `slot` 1/2/"all" `state` on/off | `radio` (`mu300-sim-radio status --json`: `enabled` per card, `all_off`, `active`, `busy`, `result`), `text`; `busy` while another change runs (FINDINGS 185) |
-| `lock.get`, `lock.set` | -, `kind` (`mode endc lte nr cell reset`) `val` | `data`: the control panel's answer (openwrt-luci only) |
+| `lock.get`, `lock.set` | `fresh` (bool: read the modem again first), `kind` (`mode endc lte nr cell reset auto_apply`) `val` | `data`: the lock program's reading, or `started queued` (openwrt-luci, and Ubuntu with `/usr/libexec/unisoc-modem/lock`; FINDINGS 190) |
 | `vpn.status` | `exit_ip` (bool) | `installed`, `status` (mu300-vpn's JSON), `extra` |
 | `vpn.profiles`, `.subs`, `.settings` | - | `profiles`, `subscriptions`, `settings` (`KILL_SWITCH`, `IPV6`) |
 | `vpn.service` `vpn.killswitch` `vpn.use` | `op` on/off/restart, `value` on/off, `id` | - |
@@ -126,9 +127,12 @@ module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `p
 | `vpn.sub_refresh` `vpn.install` `vpn.engine_install` | `id`/`all`, -, `name` | `job` |
 | `vpn.logs` | `lines` 1-1000 | `log` |
 | `sms.list` `sms.read` `sms.send` `sms.delete` | `page`, `id`, `number text`, `id sim` | `data` or `text` |
-| `sms.job`, `sms.forward` | - | `data` (openwrt-luci) |
+| `sms.job` | - | `data` (openwrt-luci) |
+| `sms.forward`, `sms.forward_test`, `sms.forward_log_clear` | - | `data` (unisoc-modem/forward get: the settings with every secret masked, the queue, the log), `started`, - |
+| `sms.forward_set` | `enabled webhook telegram email sms` (bool), `template allow deny keywords clear webhook_url webhook_format webhook_headers webhook_body webhook_expect telegram_token telegram_chat email_host email_port email_tls email_user email_password email_from email_to sms_number` (text; the adapter's own rules; to it on stdin only) | - (openwrt-luci and Ubuntu; FINDINGS 190) |
 | `lan.get`, `lan.set` | -, `ip` (private, ending in `.1`) | `ip default_ip usb_role usb_role_switch adb` |
 | `usb.role` | `role` `host`/`device` (U30 Air) | - |
+| `usb.net` | `mode` (`ncm ecm rndis default`) `scope` (`once`/`permanent`); without `mode` it only reads | `mode once now` (the USB network from the next boot, and this boot's; mu300-usb net, or device-usb on openwrt-luci) |
 | `adb.auth` | `mode` `open`/`keys`, `key` (an adbkey.pub line; required for `keys`) | - |
 | `system.get` | - | `hostname timezone user ssh time release kernel kernel_choice boot extras` |
 | `system.hostname` `system.timezone` `system.password` `system.ssh` | `name`, `zone`, `password`, `state` | `user` for the password |
@@ -139,6 +143,7 @@ module installed, `vpn_extra` mu300-extra there, `wifi_client`, `sms` (`cli`, `p
 | `backup.import` | `file` (the text of a backup, 4 MiB at most), `passphrase`, `dry_run` (bool), `force` (bool: a file of another model), `only`/`skip` (sections, comma-separated) | dry run: `valid text` (what would change, or why the file is refused); else `job` |
 | `vpn.engines` | - | `engines` (mu300-vpn engines --json: each engine, installed or not, its version and size) |
 | `at.send` | `command` (one AT command, printable ASCII, 512 bytes at most; on mu300-at's stdin), `timeout` 1-60 (10) | `rc text` (the modem's answer) |
+| `at.history` | - | `history`: `time command`, newest first, the last 40 of this boot (a PIN or password's arguments left out) |
 | `ussd.send`, `ussd.cancel` | `code` (`[0-9*#+]`, 40 at most: a code or a menu's answer), - | `text` |
 | `modem.restart` | - | - (mobile data dials again: Ubuntu's mu300-mobile-data restarted, OpenWrt's WAN down and up) |
 | `ttl.get`, `ttl.set` | -, `value` 1-255 or `off` | `enabled value backend` (mu300-ttl) |

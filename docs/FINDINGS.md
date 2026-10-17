@@ -11603,4 +11603,59 @@ terminal, TTL 64 (tc) and off again, the exit address asked, the VPN log, `updat
 the board: it ended with status 1 and its log in the box), the job cleared.
 
 **Still only on the OpenWrt panel**: network, band and cell locks and their boot replay (mu300dash/lock, uci), SMS
-forwarding (the SMS pool's daemon), the AT command history and the device's USB network mode.
+forwarding (the SMS pool's daemon), the AT command history and the device's USB network mode. (All of them on Ubuntu
+since FINDINGS 190.)
+
+### 190. Cockpit's MU300 page catches up with LuCI: locks and their boot replay, SMS forwarding, AT history, USB mode
+
+**Status: current** (device-tested on F50-B, Ubuntu 24.04, 7.2.11, 2026-10-18).
+
+What FINDINGS 187 left to the OpenWrt panel is on Ubuntu now, through mu300-api like the rest of the page:
+
+* **Network, band and cell locks.** Ubuntu runs the control panel's own programs: `/usr/libexec/unisoc-modem/lock`,
+  `at`, `boot-replay` and `lib.sh`, copied byte for byte from `openwrt/luci-app-mu300/root` (test_static holds them
+  equal), not a second implementation. The only OpenWrt tool they used, `jsonfilter`, became `jfilter` in `lib.sh`:
+  jsonfilter where it exists, else the three expression forms the adapters use, through jq (`@.a.b`, `@.a[*]`).
+  `ifup wan` after the stack restart fails silently on Ubuntu, where mobile-data's watch redials by itself (seen:
+  a new address 4 s after the restart). `lock.get`/`lock.set` call the program on Ubuntu as mu300dash does on
+  openwrt-luci: the cache served, a reading in the background (`fresh`), an apply or reset detached; new kind
+  `auto_apply`. **Boot replay**: `mu300-lock-replay.service` runs `boot-replay` after mu300-atd (it waits for the AT
+  channel, never holds the boot up, and sends nothing when nothing is saved). `etc/unisoc-modem` is now in Ubuntu's
+  update keep list (mu300-update and tools/android-install.sh), and mu300-backup's `locks` section works wherever the
+  lock program is.
+* **SMS forwarding.** `mu300-sms-forward` moved from the openwrt-luci overlay to the shared `/opt/mu300/bin` (both get
+  the same file). On Ubuntu: HTTP through `/opt/mu300/lib/sms-forward-http.sh`, curl with the same stdin protocol as
+  the ucode helper (the URL and headers in curl's configuration on stdin, the body in a 0600 file in RAM: no secret in
+  a command line); the SMS target falls back to `sms send`. Ubuntu has no SMS pool, so `mu300-sms-forward.service`
+  (only while `enabled=1`; the adapter starts and stops it on save) runs `sms watch` with
+  `unisoc-modem/forward-feed` as its hook, which writes each new message into a pool of its own
+  (`/etc/mu300/sms-pool`, root only, newest 200) and enqueues it. `MU300_SMS_WATCH_FROM_NOW=1` (new in `sms watch`):
+  what the SIM holds when the service starts counts as seen, so only messages that arrive while forwarding is on go
+  out. The watch's stdout (it prints every message) goes nowhere, not to the journal. New methods
+  `sms.forward_set` (the settings to the adapter on stdin; the adapter checks every field), `sms.forward_test`,
+  `sms.forward_log_clear`; the page has the LuCI form with both preset menus (body: WeCom/DingTalk, Feishu/Lark;
+  answer check: errcode=0, code=0, code=200, ok=true) and the delivery log. E-mail needs msmtp, which the Ubuntu image
+  does not have either (the page says so).
+* **AT command history.** `at.send` appends to the control panel's file (`/var/run/unisoc-modem/at-history`, the
+  last 40, RAM, root only) and `at.history` reads it, newest first. mu300-api says nothing is logged that is secret,
+  so commands that carry a PIN or password (`AT+CPIN=`, `CPWD`, `CLCK`, `CGAUTH`) are kept as `AT+CPIN=...`. The page
+  lists them; a click puts one back in the field.
+* **USB network mode.** `mu300-usb net [ncm|ecm|rndis [once]|default]` writes `/etc/mu300/usb-net`, which boot/init
+  already reads from the system it boots (D12); `once` adds `/etc/mu300/usb-net.once`, and `mu300-usb boot`
+  (mu300-fixups) removes both once boot/init says it made the mode (`/run/mu300/usb-net-applied`). `usb.net` (on
+  openwrt-luci: its device-usb, UCI) and the System tab show the mode now and from the next boot.
+* **SIM state** (FINDINGS 186): `sim.state` answers `mu300-sim-state get` for the card in use, or asks the card
+  (`check`, one AT+CPIN?) when nothing is kept or `fresh` says so; the Mobile tab shows Ready / Locked / No card.
+* The web installer's device manager offers its lock form on Ubuntu now too (`features.locks`).
+
+**On F50-B (2026-10-18)**, every change put back: `lock.get` read the modem through jq (auto, LTE automatic, NR
+none); `mode 4g` applied (SFUN restart 7 s, registered LTE again, mobile-data redialled with a new address); reset
+from the page's button (verified read-back, saved settings cleared). `endc off` and `nr 78` saved, reboot:
+`mu300-lock-replay` sent both and restarted the stack once (`replay done (late)`), the userspace boot still 35.3 s;
+reset again. Forwarding to a webhook on the Mac: the test, then a message through forward-feed (Turkish text, quotes)
+delivered as WeCom JSON with `errcode=0` checked, the URL and header masked in `sms.forward`; the service seeded 7
+messages already on the SIM without sending them; turned off from the page: the service stopped. AT+CSQ from the page
+listed in the history. USB network ECM for one boot from the page: the next boot made ECM (the Mac connected over
+it), the choice was used up, the boot after that NCM again. No real incoming SMS was forwarded (nothing near F50-B to
+send one; the board's data works only through the VPN, so no internet target either).
+

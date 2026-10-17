@@ -503,12 +503,12 @@ export const API_PATH = "/opt/mu300/bin/mu300-api";
 const API_METHOD = /^[a-z][a-z0-9_.]{0,39}$/;
 // the methods this page ever asks for (mu300-api --methods; tests/web/manager.test.mjs holds the two to the same list)
 export const API_METHODS = new Set(("hello overview wifi.get wifi.set wifi.power wificlient.status wificlient.scan wificlient.join " +
-  "wificlient.leave data.get data.set data.power sim.get sim.select voice.get voice.set radio.get radio.set lock.get lock.set vpn.status vpn.profiles vpn.subs " +
+  "wificlient.leave data.get data.set data.power sim.get sim.select sim.state voice.get voice.set radio.get radio.set lock.get lock.set vpn.status vpn.profiles vpn.subs " +
   "vpn.settings vpn.service vpn.killswitch vpn.use vpn.add vpn.add_url vpn.rename vpn.remove vpn.setting vpn.sub_add " +
   "vpn.sub_refresh vpn.sub_remove vpn.logs vpn.install vpn.engine_install vpn.engines sms.list sms.read sms.send sms.job sms.delete " +
-  "sms.forward lan.get lan.set usb.role adb.auth system.get system.hostname system.timezone system.password system.ssh " +
+  "sms.forward sms.forward_set sms.forward_test sms.forward_log_clear lan.get lan.set usb.role usb.net adb.auth system.get system.hostname system.timezone system.password system.ssh " +
   "system.reboot system.boot system.bootos update.check update.apply kernel.set extra.list extra.install extra.remove logs " +
-  "backup.export backup.import at.send ussd.send ussd.cancel modem.restart ttl.get ttl.set traffic.get traffic.set power.get " +
+  "backup.export backup.import at.send at.history ussd.send ussd.cancel modem.restart ttl.get ttl.set traffic.get traffic.set power.get " +
   "power.set led.get led.set zram.get zram.set cpu.get cpu.profile cpu.voltage update.status update.source packages.get " +
   "packages.act docker.status job.status job.cancel job.clear").split(" "));
 // the last line of what mu300-api printed, as an object (it prints exactly one)

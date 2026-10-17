@@ -45,6 +45,7 @@ input, textarea, select { font: inherit; width: 100%; max-width: 420px; box-sizi
     overflow-wrap: anywhere; max-height: 420px; overflow: auto; font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace; }
 .mu-check { display: flex; align-items: center; gap: 6px; color: var(--mu-text); }
 .mu-check input { width: auto; }
+.mu-actions .mu-check.mu-band { margin: 4px 16px 4px 0; }
 .mu-field { margin-bottom: 4px; }
 .mu-table { border-collapse: collapse; width: 100%; margin: 6px 0; }
 .mu-table th, .mu-table td { text-align: left; padding: 4px 8px 4px 0; border-bottom: 1px solid var(--mu-line); vertical-align: middle; }

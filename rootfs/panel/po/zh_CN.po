@@ -314,6 +314,333 @@ msgstr "重启设备？所有连接（包括本页面）将中断一到两分钟
 msgid "The device is restarting."
 msgstr "设备正在重启。"
 
+msgid "Network, band and cell locks"
+msgstr "网络、频段和小区锁定"
+
+msgid "Automatic"
+msgstr "自动"
+
+msgid "4G only"
+msgstr "仅 4G"
+
+msgid "The modem's protocol stack restarts: cellular service stops for about half a minute."
+msgstr "调制解调器的协议栈将重启：蜂窝服务中断约半分钟。"
+
+msgid "Apply: $0?"
+msgstr "应用：$0？"
+
+msgid "Saved"
+msgstr "已保存"
+
+msgid "Started in the background; the reading below follows when the modem is back."
+msgstr "已在后台开始；调制解调器恢复后下方读数会更新。"
+
+msgid "Automatic ($0 supported)"
+msgstr "自动（支持 $0 个）"
+
+msgid "Reading the locks from the modem; try again in a few seconds."
+msgstr "正在从调制解调器读取锁定；请几秒后重试。"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "No reading of the locks yet."
+msgstr "尚未读取锁定状态。"
+
+msgid "Mode and band locks stay in the modem, in Android too: reset them before you switch to Android if you are not sure. Every change below restarts the modem's protocol stack (about half a minute without cellular), except EN-DC and the startup switch."
+msgstr "模式和频段锁定保存在调制解调器中，在 Android 中同样生效：如不确定，切换到 Android 前请先重置。下方每项更改都会重启调制解调器的协议栈（约半分钟无蜂窝网络），EN-DC 和启动开关除外。"
+
+msgid "Network mode"
+msgstr "网络模式"
+
+msgid "NR bands"
+msgstr "NR 频段"
+
+msgid "LTE bands"
+msgstr "LTE 频段"
+
+msgid "Cell lock"
+msgstr "小区锁定"
+
+msgid "$0 ARFCN $1, PCI $2"
+msgstr "$0 ARFCN $1，PCI $2"
+
+msgid "none"
+msgstr "无"
+
+msgid "Apply at startup"
+msgstr "启动时应用"
+
+msgid "running"
+msgstr "进行中"
+
+msgid "done"
+msgstr "已完成"
+
+msgid "failed"
+msgstr "失败"
+
+msgid "interrupted"
+msgstr "已中断"
+
+msgid "Last reset to automatic"
+msgstr "上次重置为自动"
+
+msgid "Read from the modem"
+msgstr "读取自调制解调器"
+
+msgid "Read again from the modem"
+msgstr "重新从调制解调器读取"
+
+msgid "Apply"
+msgstr "应用"
+
+msgid "network mode $0"
+msgstr "网络模式 $0"
+
+msgid "Turn EN-DC off"
+msgstr "关闭 EN-DC"
+
+msgid "Turn EN-DC on"
+msgstr "开启 EN-DC"
+
+msgid "EN-DC lets a 5G NSA connection use its LTE anchor; off keeps the modem on LTE alone where it would use NSA."
+msgstr "EN-DC 使 5G NSA 连接使用其 LTE 锚点；关闭后，在本会使用 NSA 的地方调制解调器只使用 LTE。"
+
+msgid "Bands"
+msgstr "频段"
+
+msgid "Apply NR bands"
+msgstr "应用 NR 频段"
+
+msgid "NR band lock $0"
+msgstr "NR 频段锁定 $0"
+
+msgid "NR bands automatic"
+msgstr "NR 频段自动"
+
+msgid "Apply LTE bands"
+msgstr "应用 LTE 频段"
+
+msgid "LTE band lock $0"
+msgstr "LTE 频段锁定 $0"
+
+msgid "LTE bands automatic"
+msgstr "LTE 频段自动"
+
+msgid "No band ticked: automatic (every band the modem supports)."
+msgstr "不勾选任何频段：自动（调制解调器支持的所有频段）。"
+
+msgid "ARFCN (NR-ARFCN or EARFCN)"
+msgstr "ARFCN（NR-ARFCN 或 EARFCN）"
+
+msgid "PCI"
+msgstr "PCI"
+
+msgid "Lock this cell"
+msgstr "锁定此小区"
+
+msgid "The ARFCN is a number of up to 7 digits, the PCI one of up to 4."
+msgstr "ARFCN 为最多 7 位的数字，PCI 为最多 4 位的数字。"
+
+msgid "$0 cell lock: ARFCN $1, PCI $2"
+msgstr "$0 小区锁定：ARFCN $1，PCI $2"
+
+msgid "Lock the serving cell"
+msgstr "锁定当前服务小区"
+
+msgid "a lock on the serving cell"
+msgstr "锁定当前服务小区"
+
+msgid "Unlock every cell"
+msgstr "解除所有小区锁定"
+
+msgid "no cell lock"
+msgstr "无小区锁定"
+
+msgid "A cell lock is not kept in the modem across a restart: with \"Apply at startup\" on, the device sends it again at every boot."
+msgstr "小区锁定在重启后不会保留在调制解调器中：开启“启动时应用”后，设备每次启动都会重新发送。"
+
+msgid "Startup and reset"
+msgstr "启动与重置"
+
+msgid "Do not apply at startup"
+msgstr "启动时不应用"
+
+msgid "Reset all to automatic"
+msgstr "全部重置为自动"
+
+msgid "Network mode automatic, EN-DC on, every LTE and NR band, no cell lock; the saved locks are cleared, so nothing is applied at startup."
+msgstr "网络模式自动、EN-DC 开启、所有 LTE 和 NR 频段、无小区锁定；已保存的锁定将被清除，启动时不再应用任何设置。"
+
+msgid "Off: nothing is sent at startup; the saved settings stay."
+msgstr "关闭：启动时不发送任何设置；已保存的设置保留。"
+
+msgid "Reading the locks from the modem..."
+msgstr "正在从调制解调器读取锁定..."
+
+msgid "SMS forwarding"
+msgstr "短信转发"
+
+msgid "Delivery log"
+msgstr "投递日志"
+
+msgid "Empty: keep the saved value"
+msgstr "留空：保留已保存的值"
+
+msgid "Saved: $0"
+msgstr "已保存：$0"
+
+msgid "Remove the saved value"
+msgstr "删除已保存的值"
+
+msgid "Waiting to be delivered"
+msgstr "等待投递"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "E-mail"
+msgstr "电子邮件"
+
+msgid "SMS to another phone"
+msgstr "短信转发到另一部手机"
+
+msgid "Delivered"
+msgstr "已投递"
+
+msgid "Will retry"
+msgstr "将重试"
+
+msgid "Filtered out"
+msgstr "已过滤"
+
+msgid "Dropped"
+msgstr "已丢弃"
+
+msgid "No deliveries yet."
+msgstr "尚无投递。"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Message"
+msgstr "消息"
+
+msgid "Target"
+msgstr "目标"
+
+msgid "Result"
+msgstr "结果"
+
+msgid "Detail"
+msgstr "详情"
+
+msgid "Test"
+msgstr "测试"
+
+msgid "Clear the log"
+msgstr "清空日志"
+
+msgid "Messages that reach the SIM while forwarding is on are sent on (the device looks for new ones every 20 seconds). A failed delivery is tried again after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "转发开启期间到达 SIM 卡的短信会被转发（设备每 20 秒检查一次新短信）。投递失败会在 30 秒后重试，之后每次间隔加倍（最长一小时），共十次。"
+
+msgid "Forward received messages"
+msgstr "转发收到的短信"
+
+msgid "Message template (placeholders: {sender}, {time}, {text}, {device})"
+msgstr "消息模板（占位符：{sender}、{time}、{text}、{device}）"
+
+msgid "Only these senders (one per line; empty: every sender; a * at the end matches the start)"
+msgstr "仅这些发件人（每行一个；留空：所有发件人；末尾的 * 匹配开头）"
+
+msgid "Never these senders"
+msgstr "排除这些发件人"
+
+msgid "Only messages with one of these words (one per line; empty: every message)"
+msgstr "仅包含以下任一关键词的短信（每行一个；留空：所有短信）"
+
+msgid "Address (http:// or https://)"
+msgstr "地址（http:// 或 https://）"
+
+msgid "Form (URL-encoded)"
+msgstr "表单（URL 编码）"
+
+msgid "Plain text"
+msgstr "纯文本"
+
+msgid "Body (fields: sender, time, text, device, message)"
+msgstr "正文（字段：sender、time、text、device、message）"
+
+msgid "Custom body (empty: the standard fields; placeholders {sender}, {time}, {text}, {device}, {message}, each escaped for the type; shown again here: keep secrets in the address or a header)"
+msgstr "自定义正文（留空：标准字段；占位符 {sender}、{time}、{text}、{device}、{message}，各自按类型转义；会在此再次显示：机密信息请放在地址或请求头中）"
+
+msgid "Presets"
+msgstr "预设"
+
+msgid "Body presets"
+msgstr "正文预设"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "额外请求头（每行一个 \"Name: value\"）"
+
+msgid "The answer must contain (key=value; empty: every HTTP 2xx answer counts)"
+msgstr "响应必须包含（key=value；留空：任何 HTTP 2xx 响应都算成功）"
+
+msgid "Answer presets"
+msgstr "响应预设"
+
+msgid "With key=value the answer must be a JSON object with that value under that key at its top level, or the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "设置 key=value 后，响应必须是一个 JSON 对象，其顶层该键下为该值，否则投递失败。日志中只记录检查结果，从不记录响应内容。"
+
+msgid "Bot token"
+msgstr "机器人令牌"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "聊天 ID（数字或 @频道）"
+
+msgid "E-mail needs msmtp, which this system does not have (sudo apt install msmtp)."
+msgstr "电子邮件需要 msmtp，本系统未安装（sudo apt install msmtp）。"
+
+msgid "Mail server"
+msgstr "邮件服务器"
+
+msgid "Port"
+msgstr "端口"
+
+msgid "None"
+msgstr "无"
+
+msgid "Security"
+msgstr "安全"
+
+msgid "User name"
+msgstr "用户名"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "From"
+msgstr "发件人"
+
+msgid "To"
+msgstr "收件人"
+
+msgid "Phone number (sent as one SMS: a longer message is cut short)"
+msgstr "手机号码（以一条短信发送：过长的消息会被截断）"
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Send a test"
+msgstr "发送测试"
+
+msgid "A test with the saved settings started; its result comes in the delivery log."
+msgstr "已使用已保存的设置开始测试；结果将显示在投递日志中。"
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again. A test uses the saved settings: save first."
+msgstr "令牌、密码以及 webhook 地址和请求头保存在设备上，不会再次显示。测试使用已保存的设置：请先保存。"
+
 msgid "APN"
 msgstr "APN"
 
@@ -344,9 +671,6 @@ msgstr "移动数据也会在漫游网络上使用，可能产生额外费用。
 msgid "Empty: the network's own APN. A change reconnects mobile data."
 msgstr "留空：使用网络自己的 APN。更改后将重连移动数据。"
 
-msgid "None"
-msgstr "无"
-
 msgid "(unchanged)"
 msgstr "（未更改）"
 
@@ -359,20 +683,32 @@ msgstr "IP 类型"
 msgid "Authentication"
 msgstr "认证方式"
 
-msgid "User name"
-msgstr "用户名"
-
-msgid "Password"
-msgstr "密码"
-
-msgid "Save"
-msgstr "保存"
-
 msgid "The APN may hold letters, digits, dots and hyphens."
 msgstr "APN 只能包含字母、数字、点和连字符。"
 
 msgid "Save the APN settings? Mobile data reconnects (about half a minute)."
 msgstr "保存 APN 设置？移动数据将重连（约半分钟）。"
+
+msgid "Card"
+msgstr "SIM 卡"
+
+msgid "Ready"
+msgstr "就绪"
+
+msgid "Locked (PIN or PUK needed)"
+msgstr "已锁定（需要 PIN 或 PUK）"
+
+msgid "No card in this slot"
+msgstr "此卡槽无 SIM 卡"
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Card (SIM $0)"
+msgstr "SIM 卡（SIM $0）"
+
+msgid "Ask the card"
+msgstr "查询 SIM 卡"
 
 msgid "No SIM control on this device."
 msgstr "此设备没有 SIM 卡控制。"
@@ -479,14 +815,8 @@ msgstr "结束会话"
 msgid "Code, or the answer to a menu"
 msgstr "代码，或菜单的回复"
 
-msgid "Network, band and cell locks"
-msgstr "网络、频段和小区锁定"
-
-msgid "The locks are on the OpenWrt control panel's Network locks page."
-msgstr "锁定功能位于 OpenWrt 控制面板的“网络锁定”页面。"
-
-msgid "The locks are part of the OpenWrt control panel (openwrt-luci) for now. Mode and band locks set there stay in the modem and apply here too; on Ubuntu, the AT terminal tab reaches the modem directly."
-msgstr "锁定功能目前属于 OpenWrt 控制面板（openwrt-luci）。在那里设置的模式和频段锁定保存在调制解调器中，在此同样生效；在 Ubuntu 上，可通过 AT 终端标签页直接访问调制解调器。"
+msgid "This system has no lock program yet (an older image): update it. Mode and band locks set elsewhere stay in the modem and apply here too."
+msgstr "本系统尚无锁定程序（旧镜像）：请更新。在其他地方设置的模式和频段锁定保存在调制解调器中，在这里同样生效。"
 
 msgid "Send a message"
 msgstr "发送短信"
@@ -509,9 +839,6 @@ msgstr "号码"
 msgid "Text"
 msgstr "内容"
 
-msgid "Refresh"
-msgstr "刷新"
-
 msgid "Reading the SIM..."
 msgstr "正在读取 SIM 卡..."
 
@@ -527,14 +854,8 @@ msgstr "从 SIM 卡删除这条短信？"
 msgid "$0 parts"
 msgstr "$0 部分"
 
-msgid "SMS forwarding"
-msgstr "短信转发"
-
-msgid "Forwarding is set on the OpenWrt control panel's SMS forwarding page."
-msgstr "转发在 OpenWrt 控制面板的“短信转发”页面设置。"
-
-msgid "Forwarding received messages (webhook, Telegram, e-mail) is part of the OpenWrt control panel (openwrt-luci) for now."
-msgstr "转发收到的短信（webhook、Telegram、电子邮件）目前属于 OpenWrt 控制面板（openwrt-luci）。"
+msgid "This system has no SMS forwarding yet (an older image): update it."
+msgstr "本系统尚无短信转发（旧镜像）：请更新。"
 
 msgid "AT terminal"
 msgstr "AT 终端"
@@ -554,6 +875,15 @@ msgstr "最长等待回复时间"
 msgid "Clear"
 msgstr "清除"
 
+msgid "History (this boot)"
+msgstr "历史（本次启动）"
+
+msgid "No commands yet."
+msgstr "尚无命令。"
+
+msgid "Newest first; a click puts the command in the field above."
+msgstr "最新的在前；点击会将命令填入上方输入框。"
+
 msgid "Billing cycle and cap"
 msgstr "计费周期和上限"
 
@@ -562,9 +892,6 @@ msgstr "历史"
 
 msgid "$0 days left"
 msgstr "剩余 $0 天"
-
-msgid "none"
-msgstr "无"
 
 msgid "Of the cap"
 msgstr "占上限"
@@ -595,9 +922,6 @@ msgstr "达到上限的此百分比时提醒"
 
 msgid "Check the values: a day from 1 to 31, a cap of 0 or more, a percentage from 1 to 100."
 msgstr "请检查数值：日期为 1 到 31，上限为 0 或以上，百分比为 1 到 100。"
-
-msgid "Saved"
-msgstr "已保存"
 
 msgid "What the operator says this cycle has used, in GiB (corrects the count)"
 msgstr "运营商显示本周期已用量，单位 GiB（用于校正统计）"
@@ -650,9 +974,6 @@ msgstr "信道"
 msgid "now $0"
 msgstr "当前 $0"
 
-msgid "Security"
-msgstr "安全"
-
 msgid "Country"
 msgstr "国家/地区"
 
@@ -664,9 +985,6 @@ msgstr "开启热点"
 
 msgid "Turn the hotspot off? Devices on it lose the connection; if you reach this page over the hotspot, you lose it too."
 msgstr "关闭热点？连接到热点的设备将断开；如果你是通过热点访问本页面，连接也会中断。"
-
-msgid "Automatic"
-msgstr "自动"
 
 msgid "Hidden network (the name is not broadcast)"
 msgstr "隐藏网络（不广播名称）"
@@ -1126,6 +1444,42 @@ msgstr "在试用启动期间于负载下测试新的偏移。电压过低时设
 
 msgid "A stress test is running."
 msgstr "压力测试正在运行。"
+
+msgid "NCM (the default)"
+msgstr "NCM（默认）"
+
+msgid "USB network now"
+msgstr "当前 USB 网络"
+
+msgid "USB network from the next boot"
+msgstr "下次启动起的 USB 网络"
+
+msgid "that boot only"
+msgstr "仅那一次启动"
+
+msgid "From the next boot on"
+msgstr "从下次启动起"
+
+msgid "The next boot only, then NCM again"
+msgstr "仅下次启动，之后恢复 NCM"
+
+msgid "USB network protocol"
+msgstr "USB 网络协议"
+
+msgid "How long"
+msgstr "持续时间"
+
+msgid "Save (used at the next boot)"
+msgstr "保存（下次启动时生效）"
+
+msgid "RNDIS is for older Windows: macOS has no driver for it, and a Mac on USB loses the connection to the device until NCM is back. Save?"
+msgstr "RNDIS 适用于旧版 Windows：macOS 没有其驱动，通过 USB 连接的 Mac 将失去与设备的连接，直到恢复 NCM。保存吗？"
+
+msgid "Saved: the USB connection to the computer drops for a moment at the next boot and comes back with it."
+msgstr "已保存：下次启动时与电脑的 USB 连接会短暂中断，并以此设置恢复。"
+
+msgid "NCM: Windows 10 2004 and newer, macOS, Linux. ECM: macOS, Linux (Windows has no driver). RNDIS: older Windows (macOS has no driver)."
+msgstr "NCM：Windows 10 2004 及更新版本、macOS、Linux。ECM：macOS、Linux（Windows 无驱动）。RNDIS：旧版 Windows（macOS 无驱动）。"
 
 msgid "Boot"
 msgstr "启动"
