@@ -9,7 +9,7 @@
             "order": 5,
             "keywords": [
                 {
-                    "matches": [ "mu300", "modem", "signal", "sms", "vpn", "battery", "hotspot", "wifi", "cpu", "update" ]
+                    "matches": [ "mu300", "modem", "signal", "sms", "vpn", "battery", "hotspot", "wifi", "cpu", "update", "apn", "sim", "ttl", "ussd", "backup", "led", "zram" ]
                 }
             ]
         }
