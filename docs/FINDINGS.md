@@ -11252,8 +11252,10 @@ Android up, `su -c mu300-linux`: `/run/mu300-root-dev` `mmcblk0@61698211840`, Op
 
 **Not done**: removing the partition itself is the other installer's job. Not measured on a device that installer
 set up (nobody here has one); the partition here was made by hand to cover our own region.
-`tools/android-import-hotspot.sh` (no caller left) still mounts the old fixed offset and writes into the
-filesystem's top level, not a system's: it predates the region and the systems' directories.
+`tools/android-import-hotspot.sh` (no caller left) still mounted the old fixed offset and wrote into the
+filesystem's top level, not a system's: it predated the region and the systems' directories. Removed (2026-10-18):
+the installers copy Android's hotspot themselves (`IMPORT_HOTSPOT` in `tools/android-install.sh`, into each system's
+own `etc/mu300/hotspot.conf`), so nothing needed it.
 
 ### 180. Wi-Fi access point: get_station answered for any address with the interface's own counters
 
