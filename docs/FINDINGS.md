@@ -149,7 +149,7 @@ what replaced it. The table below gives each section's state.
 | 102 | Mobile data TX: a full IPA FIFO pushed another Ethernet header at every retry; IRQ flags in a static (kanoqwq 149c9d2a) | current (fixed; run on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the busy path is every IPA resume; no difference visible on the device) |
 | 103 | Wi-Fi TX on the SC2355 (mainline): a freed skb used on, AP IPv6 multicast refused in bursts, a full EDMA ring counted as failure (kanoqwq 149c9d2a) | current (fixed; measured on the F50 with 7.2.10 and the U30 Air with 6.18.56, 2026-10-15: the multicast refusals gone, the full ring backpressure; one Wi-Fi client only) |
 | 104 | The U30 Air's live SIM switch turned mobile data back on that the user had switched off (kanoqwq 2d3b6f3f) | current (fixed; unit tests only, not run on a device) |
-| 105 | The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written (kanoqwq 2af101f8) | current (patch 0018; built for 7.2.10, a model test of the callback; not run on a device) |
+| 105 | The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written (kanoqwq 2af101f8) | current (patch 0018; the callback device-tested on the U30 Air, 2026-10-17; the always-written part superseded by 181: stock writes with `regmap_update_bits()`) |
 | 106 | Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes (kanoqwq 0e19fe32) | current (fixed in the mainline module and as a 5.4 patch; both built; not run on a device) |
 | 110 | The web installer as a device manager: one checked entry point on the device (mu300-api), the page over it | current (unit and Node tests against the real mu300-api; the device protocol run with the page's modules over WebUSB on a U30 Air, openwrt-luci, and an F50, Ubuntu, both v2026.10.27, 2026-10-16: six defects fixed; rows 6, 9, 16 and the Android restart not run) |
 | 111 | One zip, two ways in: Magisk on the device, or unpacked on a computer as the computer's installer (kano's two-entry package, `f6b0668d`); adb not bundled | current (unit and integration tests, the release's real zips built both ways and compared; no install from an unpacked zip on a device) |
@@ -175,6 +175,8 @@ what replaced it. The table below gives each section's state.
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
 | 170 | "Failed to send request: Operation not permitted" behind the VPN's kill switch: uclient's connect error, the tunnel down; the failure now names the kill switch, one try instead of four; vpn-dae refused before the download on a kernel that cannot run it | current (reproduced in an OpenWrt 25.12 container with sing-box and the kill switch, 2026-10-17) |
 | 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; on the U30 Air (OpenWrt, 6.18.57): refusal, migration, notice, the panel's save; no F50 yet) |
+| 180 | Wi-Fi access point: `get_station` answered any address with the interface's own counters and the station side's signal; now only this AP's stations, with nothing filled in (the firmware has no per-client figures), `-ENOENT` otherwise; `get_channel` link 0 only (kanoqwq f59a296) | current (mainline module and 5.4 patch built; unit tests; device test pending) |
+| 181 | The U30 Air's fuel gauge against the stock module: the user area's writes are `regmap_update_bits()` with a wait after the release (stock `save_last_cap` at 0x4ba4), no migration guess for a valid saved value, the charger's Full is 100 % with the battery current within `fullbatt-current` (kanoqwq f59a296 reviewed: his 4.2 V condition would refuse a real Full) | current (built for 6.18.57 and 7.2.11; unit tests; device test pending) |
 
 ## Hardware and firmware facts
 
@@ -9524,6 +9526,9 @@ negative):**
     # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
     # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
 
+**Superseded in part (181):** the U30 Air's stock module writes the user area with `regmap_update_bits()`, as
+mainline does; kano retracted the report above, and 0018 no longer makes them `regmap_write_bits()`.
+
 **Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
 built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
 callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
@@ -10924,3 +10929,88 @@ Android up, `su -c mu300-linux`: `/run/mu300-root-dev` `mmcblk0@61698211840`, Op
 set up (nobody here has one); the partition here was made by hand to cover our own region.
 `tools/android-import-hotspot.sh` (no caller left) still mounts the old fixed offset and writes into the
 filesystem's top level, not a system's: it predates the region and the systems' directories.
+
+### 180. Wi-Fi access point: get_station answered for any address with the interface's own counters
+
+**Status: current** (built and unit-tested; the device test follows). From kanoqwq's `f59a296` (his notes: the access point no longer passes station
+or interface figures off as a client's): his `upstream/modules/sprd_wlan_combo/common/cfg80211.c` and
+`kernel/patches/wlan_combo-ap-stats-scope.patch`, read and taken in our words; his code not run.
+
+**What it was.** `sprd_cfg80211_get_station()` is the station side's: it reports the interface's own byte and packet
+counters (`ndev->stats`) and the firmware's GET_STATION, which describes the link to the access point the interface
+is connected to (signal, rates, TX failures). It never looked at the address it was asked about. On our access
+point, `iw dev wlan0 station get <MAC>` answered for any MAC, a client or not, with the whole interface's counters and
+a signal that belongs to no client; whatever asked for a station by address got those figures. Since issue #8, `dump_station` lists the access point's
+stations from the firmware's peer table with nothing filled in: the firmware keeps no per-client figures, so the two
+paths disagreed about the same station.
+
+Two smaller ones next to it: `get_channel` (5.15 and later) indexed `wdev->links[link_id]` with the caller's link id
+unchecked (cfg80211 passes 0 for a driver without MLO, which this one is; an index past the array is not ours to
+read), and `dump_station` took a negative index as the first station.
+
+**Changed** (mainline module and, the same code, `kernel/patches/wlan_combo-ap-stats-scope.patch` for 5.4): in AP and
+P2P-GO mode, `get_station` answers `-ENOENT` unless the address is one of this interface's entries in the peer table
+(as `dump_station` lists them, never the interface's own address), and for a station of ours returns it with nothing
+filled in, as `dump_station` does. `get_channel` answers for link 0 only. `dump_station` refuses a negative index. In
+station mode nothing changes. So per-client counters do not exist on this driver; `iw ... station dump` shows the
+clients and no numbers, and hostapd's own `hostapd_cli all_sta` is unchanged. On 5.4 the 5.15+ variant of `get_channel` is not built; the code is kept the same as the mainline copy.
+
+**The 5.4 patch** applies after the series before it with `patch --fuzz=0`, no offsets, and so does every later
+patch (the realme tree at `4381465c`, all fifteen `wlan_combo-*.patch` in their order). His version's hunks were
+written against his tree; ours is made against ours.
+
+**Built**: the mainline module for 6.18.57 and 7.2.11 (92 warnings, as before this change; none in the changed lines); the 5.4 driver with all fifteen patches, linked against the U30 Air's 5.4 tree (`sprd_wlan_combo.ko`, no warning, as without this patch). **Tests**: `test_static.py` (`test_wifi_ap_get_station_answers_for_its_stations_only`: the
+same lines in the mainline module and the 5.4 patch, the AP branch before anything of the station side's).
+
+**Device test:** pending (U30 Air and an F50, 6.18).
+
+### 181. The U30 Air's fuel gauge against Unisoc's: the user area's writes, a migration guess, and the charger's Full
+
+**Status: current** (built and unit-tested; the device test follows). Review of kanoqwq's `f59a296` patch `0020-power-UMP9620-stock-retained-soc.patch`
+against our 0011 and 0018 (FINDINGS 33d, 105), with his claims checked against the U30 Air's own stock module and
+Unisoc's source; two of his three changes taken, the third not, and replaced. His code not run.
+
+**The references.** The stock `sc27xx_fuel_gauge.ko` from our U30 Air's backup (`backup/u30air-20260927-205614`,
+`vendor_boot_a`'s ramdisk; `vermagic 5.4.254-android12-9-g4098d30a56ae`, md5 `4f808ad8...`; his was the same
+function layout from `-g9444efdc6885`), disassembled here, and the U30 Air's 5.4 kernel source
+(`zte-ums9620-mifi-u30air-5.4.254`, `drivers/power/supply/sc27xx_fuel_gauge.c`) with its device tree.
+
+* **The user area's writes: his claim holds.** `sc27xx_fgu_save_last_cap` (at `0x4ba4`, as he says) calls
+  `regmap_update_bits_base(map, base + 0xa4, 0xfff, 0xfff, NULL, false, false)`, `usleep_range(200, 210)`, the
+  same on `0xa0` with the value, a wait, `0xa4` to 0, and a third wait: `force` is false in all three, so it is
+  `regmap_update_bits()`, not `regmap_write_bits()`. The source has the same for `save_boot_mode()`. 0018 had made
+  the six writes `regmap_write_bits()` after his own earlier, unmeasured report (105); he has retracted it, and the
+  stock module agrees with the retraction. 0018 no longer changes them. It adds the third wait (after the release),
+  which both stock versions have and mainline does not, on UMP9620: the shutdown callback writes the boot mode
+  right after the capacity, and the power-off follows. His patch said "200 us waits" but kept mainline's two.
+* **The format and the migration guess: taken.** Stock decodes bits 7:0 as whole percent and 11:8 as tenths, as
+  0011 does. 0011 also sent a multiple of 10 with tenths (`value <= 1000`) to the OCV when the battery was at rest,
+  for values that the first version of 0011 (0.1 %, October 6-7, never released) might have left. That guess also
+  catches Android's own values (0x244 = 68.2 %, any tenths 1-3 with a whole percent that makes the number a
+  multiple of ten), and a device that ran that build has long since written whole percent. Gone: a value that is a
+  capacity in Android's format is taken as it is, as stock takes it; only one that is not goes to the OCV.
+* **The charger's Full: not taken as he has it.** 0011 set 100 % on the charger driver's Full only while the OCV table
+  put the battery at 70 % or more (an invented guard). He replaces it with the battery node's `fullbatt-voltage`
+  (4.2 V) and `fullbatt-current` (120 mA): Full counts when the battery voltage is at least 4.2 V and the current 0 to
+  120 mA. Those numbers are Unisoc's charger-manager's (`is_full_charged()`), which checks them *while charging*,
+  twice in a row, and then ends the charge itself. Here the check only runs after the charger has said Full, i.e.
+  after bq256xx's own termination (VREG 4.208 V, the node's 300 mA termination current); by then the current is
+  near 0 and the voltage settles below 4.2 V. The one Full measured here (33d) rested at 4.146 V with +2 mA: his
+  condition refuses it, and the capacity would stay where it was (58 % then) - the bug 0011 fixed. Taken instead:
+  the charger's Full (its termination is the voltage and current check, done by the chip) counts while the battery
+  current is within `fullbatt-current` either way (`|I| <= 120 mA`; no fullbatt-current in the node: the Full
+  alone). A Full while the battery charges or is drained harder than that is not the end of a charge. No OCV
+  percentage, no voltage condition.
+
+**Changed**: `upstream/patches/0011-...saved-capacity-and-full.patch` (no `UMP9620_FGU_RELAXED_MA`/`FULL_MIN_CAP`, no
+ambiguity branch, `ump9620_fgu_full_current()`, `fullbatt-current` read from the monitored battery on UMP9620) and
+`0018-...capacity-kept-at-power-off.patch` (the shutdown callback as before, `regmap_update_bits()` as mainline and
+stock, the wait after the release on UMP9620). Both kernels take the same file; both patches were regenerated against
+the tree as 0010 leaves it and apply there with `--fuzz=0`. FINDINGS 105's second point is superseded by this.
+
+**Built**: 6.18.57 and 7.2.11, `CONFIG_FUEL_GAUGE_SC27XX=y`, the file also with `W=1`: no warning; both bundles made. **Tests**: `test_fgu_shutdown.py` (the callback as before; `FguFull`: the current window
+compiled from the patch, +2 mA and -3 mA count, 121 mA and -400 mA do not, a failed read does not, no node value
+leaves the Full alone), `test_static.py` (the patch lines, nothing of the guess or of `fullbatt-voltage`, no
+`regmap_write_bits`, the two waits).
+
+**Device test:** pending (U30 Air, 6.18).
