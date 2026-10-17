@@ -2,7 +2,10 @@
 # tools/reset-password.sh (su_do, ask, t, die and gib are theirs).
 #   region_probe     last_end / disk (sectors) and OFF / SIZE (bytes) of the free eMMC region; 1 when the device
 #                    gave no answer
-#   region_find_existing  existing=yes|no; an installed mu300root defines OFF / SIZE
+#   region_find_existing  existing=yes|no; an installed mu300root defines OFF / SIZE (IN_PART=1: in the GPT
+#                    partition named mu300root that another installer made; region_probe already aims there)
+#   region_in_bounds OFF SIZE  whether that place may hold the Linux filesystem (the free space or that partition)
+#   region_part_refusal / region_image_note  another installer's layout this one cannot use, in words
 #   region_dirty     DIRTY, how many of 16 samples across the region hold data
 #   sd_probe         SD_DEV / SD_BYTES of the card in the slot (empty without one), SD_SMALL=1 when it is too small
 #   sd_existing      yes when the card already holds a mu300sd filesystem, foreign for any other ext4, else no
@@ -219,17 +222,43 @@ pw_check() {
 
 # The free eMMC region: from the first 2 MiB boundary after the last partition to the last one before the backup
 # GPT. Byte counts are computed here, never in the device's shell (Android's mksh has 32-bit arithmetic).
+# Also what another installer may have left (kanoqwq's desktop installer, FINDINGS 178/179): a GPT partition named
+# mu300root (PART_OFF / PART_SIZE in bytes, empty without one) and an image file in Android's data (FOREIGN_IMAGE=1).
+# With such a partition the Linux filesystem goes there - it was made for it, and boot/init boots it (stage=root-part)
+# - so OFF / SIZE are the partition and IN_PART=1; the free region behind the partitions stays REG_OFF / REG_SIZE.
 region_probe() {
-    set -- $(su_do 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)')
-    [ $# -eq 2 ] || return 1
-    last_end=$1; disk=$2
+    # (the same command as install.ps1's: no double quotes, which Windows PowerShell 5.1 drops on the way to adb) the
+    # last line is the end of the last partition and the eMMC's size
+    set -- $(su_do 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/mmcblk0/size)')
+    PART_OFF=; PART_SIZE=; PART_COUNT=0; FOREIGN_IMAGE=0; IN_PART=0; last_end=; disk=
+    for _w; do
+        case $_w in
+            part:*:*) _ps=${_w#part:}; _pz=${_ps#*:}; _ps=${_ps%%:*}
+                      case $_ps$_pz in ''|*[!0-9]*) return 1 ;; esac
+                      PART_COUNT=$((PART_COUNT + 1)); PART_OFF=$((_ps * 512)); PART_SIZE=$((_pz * 512)) ;;
+            image) FOREIGN_IMAGE=1 ;;
+            *[!0-9]*|'') return 1 ;;
+            *) if [ -z "$last_end" ]; then last_end=$_w; elif [ -z "$disk" ]; then disk=$_w; else return 1; fi ;;
+        esac
+    done
+    [ -n "$disk" ] || return 1
     start=$(( (last_end / 4096 + 1) * 4096 ))
     end=$(( ((disk - 34) / 4096 - 1) * 4096 ))
     # A partition table that ends at the end of the eMMC (one alignment block or less behind the last partition,
     # issue #65): the two boundaries cross, and a negative size is not a region. It is an empty one - the callers
     # then offer the card or make room - and its start is not read (region_find_existing).
     [ $end -gt $start ] || end=$start
-    OFF=$((start * 512)); SIZE=$(( (end - start) * 512 ))
+    REG_OFF=$((start * 512)); REG_SIZE=$(( (end - start) * 512 ))
+    OFF=$REG_OFF; SIZE=$REG_SIZE
+    # two partitions of that name: which one is the system cannot be told, and neither is used (region_part_refusal)
+    if [ "$PART_COUNT" = 1 ]; then OFF=$PART_OFF; SIZE=$PART_SIZE; IN_PART=1; else PART_OFF=; PART_SIZE=; fi
+}
+
+# region_in_bounds OFF SIZE (bytes): the place a Linux filesystem may be written to - wholly in the free space behind
+# the last partition and before the backup GPT, or wholly inside the partition named mu300root (region_probe first)
+region_in_bounds() {
+    { [ $(($1 / 512)) -ge "$last_end" ] && [ $(( ($1 + $2) / 512 )) -le $((disk - 34)) ]; } ||
+    { [ -n "${PART_OFF:-}" ] && [ "$1" -ge "$PART_OFF" ] && [ $(($1 + $2)) -le $((PART_OFF + PART_SIZE)) ]; }
 }
 
 # region_on_disk BYTES: whether the ext4 superblock of a region at BYTES (its second KiB) lies on the eMMC. A read
@@ -242,18 +271,50 @@ region_on_disk() { [ $(( ($1 + 2048) / 512 )) -le "${disk:?region_probe first}" 
 # fixed offset of the first releases). Two bytes on the disk always read as four hex digits: no answer (adb lost
 # for a moment, 2026-10-16 on F50-C) is status 2, never "no installation" - that skipped the update-or-wipe
 # question and the data check, and the region was "free and empty".
+# The places in the order boot/init looks: the free region, the partition named mu300root, the old fixed offset (not
+# when it lies inside that partition: that is the partition's own data). A filesystem in the partition is as large
+# as its superblock says, never more than the partition. PART_FS: what the partition holds - mu300root, ext4 (another
+# ext4: not ours, never formatted) or none.
 region_find_existing() {
-    existing=no
-    for cand in $OFF 27762098176; do
+    existing=no; PART_FS=none
+    for cand in ${REG_OFF:-$OFF} ${PART_OFF:-} 27762098176; do
         region_on_disk "$cand" || continue
+        if [ "$cand" = 27762098176 ] && [ -n "${PART_OFF:-}" ] && [ "$cand" -ge "$PART_OFF" ] &&
+           [ "$cand" -lt $((PART_OFF + PART_SIZE)) ]; then continue; fi
         m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' \n')
         case $m in [0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;; *) existing=; return 2 ;; esac
         l=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | LC_ALL=C tr -d '\000')
+        if [ "$cand" = "${PART_OFF:-}" ] && [ "$m" = 53ef ]; then PART_FS=ext4; [ "$l" = mu300root ] && PART_FS=mu300root; fi
         if [ "$m" = 53ef ] && [ "$l" = mu300root ]; then
             blocks=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1028)) count=4 2>/dev/null | od -An -tu4" | tr -d ' ')
-            OFF=$cand; SIZE=$((blocks * 4096)); existing=yes; return 0
+            OFF=$cand; SIZE=$((blocks * 4096)); existing=yes; IN_PART=0
+            if [ "$cand" = "${PART_OFF:-}" ]; then
+                IN_PART=1; [ "$SIZE" -le "$PART_SIZE" ] || SIZE=$PART_SIZE
+            fi
+            return 0
         fi
     done
+}
+
+# region_part_refusal: why the partition named mu300root cannot be used, translated (status 0), else status 1 - one
+# that holds another ext4 is someone else's (the device refuses to format it too, android-install.sh), and of two such
+# partitions the one with the system cannot be told
+region_part_refusal() {
+    if [ "${PART_COUNT:-0}" -gt 1 ]; then
+        t 'The eMMC has {1} partitions named mu300root, and which one holds Linux cannot be told. Nothing was changed: remove the one that is not used (with the installer that made it) and try again.' "$PART_COUNT"
+    elif [ "${IN_PART:-0}" = 1 ] && [ "$existing" != yes ] && [ "${PART_FS:-none}" = ext4 ]; then
+        t 'The partition named mu300root holds another Linux (ext4) filesystem, not labelled mu300root, and the installer never formats one that is not its own. Nothing was changed.'
+    else
+        return 1
+    fi
+}
+
+# region_image_note: kanoqwq's installer can also keep the system as an image file in Android's data
+# (/data/mu300linux/openwrt.ext4, loop-mounted by its own boot image). This installer cannot update that layout, and the
+# boot image it writes does not start it: said once, translated; status 1 when there is none
+region_image_note() {
+    [ "${FOREIGN_IMAGE:-0}" = 1 ] || return 1
+    t 'Note: the Android data partition holds a Linux image file from another installer (/data/mu300linux/openwrt.ext4). This installer cannot update that layout, and after this installation the device starts the new system, not that one. The file is left as it is: delete it in Android to free its space.'
 }
 
 # unpartitioned space should be unused: sample 16 x 1 MiB across the region and count those with data. Empty is

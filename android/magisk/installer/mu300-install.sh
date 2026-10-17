@@ -421,6 +421,9 @@ plan_storage() {
     region_probe || die "$(t 'could not read the partition table')"
     region_find_existing
     INT_OFF=$OFF; INT_SIZE=$SIZE; int_existing=$existing
+    # another installer's layouts (FINDINGS 179): its partition named mu300root is where this goes; its image file
+    # in Android's data is not something this installer can update
+    if _note=$(region_image_note); then say "$_note"; fi
     sd_probe; sd_ex=no
     [ -n "$SD_DEV" ] && sd_ex=$(sd_existing)
     case ${MU300_STORAGE:-} in
@@ -434,6 +437,7 @@ $(t 'Take the card out and install the zip again, or install to the card (MU300_
         *)  # an installation where it is (the card first, as init looks there first), else inside when it fits
             if [ "$sd_ex" = yes ]; then SD_MODE=1
             elif [ "$int_existing" = yes ] || [ "$INT_SIZE" -ge "$(need_for "$OS")" ]; then SD_MODE=0
+            elif _why=$(region_part_refusal); then die "$_why"
             else no_room_inside
             fi ;;
     esac
@@ -442,11 +446,15 @@ $(t 'Take the card out and install the zip again, or install to the card (MU300_
         existing=$([ "$sd_ex" = yes ] && echo yes || echo no); TARGET_SIZE=$SD_BYTES
     else
         existing=$int_existing; TARGET_SIZE=$INT_SIZE; DIRTY=0
+        if _why=$(region_part_refusal); then die "$_why"; fi
+        if [ "$IN_PART" = 1 ]; then say "$(t 'Linux goes into the GPT partition named mu300root ({1}), which another installer made; the partition table is not changed' "$(gib "$INT_SIZE")")"; fi
         [ "$INT_SIZE" -ge $((700 * 1024 * 1024)) ] || no_room_inside
         if [ "$existing" = no ]; then
             region_dirty
-            [ "$DIRTY" = 0 ] || { [ "${MU300_REGION_OVERWRITE:-}" = yes ] && aimed_by_trust internal; } ||
+            if [ "$DIRTY" != 0 ] && ! { [ "${MU300_REGION_OVERWRITE:-}" = yes ] && aimed_by_trust internal; }; then
+                [ "$IN_PART" = 1 ] && die "$(t 'The partition named mu300root is not empty ({1} of 16 samples hold data), and it holds no Linux filesystem of this project. To use it anyway, put MU300_STORAGE=internal and MU300_REGION_OVERWRITE=yes into {2}, a file only root can change.' "$DIRTY" "$TRUSTED_CONF")"
                 die "$(t 'The free space behind the partitions is not empty ({1} of 16 samples hold data); it may be used by this firmware. To use it anyway, put MU300_STORAGE=internal and MU300_REGION_OVERWRITE=yes into {2}, a file only root can change.' "$DIRTY" "$TRUSTED_CONF")"
+            fi
             [ "$DIRTY" = 0 ] || USED_KEYS="$USED_KEYS MU300_REGION_OVERWRITE"
         fi
     fi
@@ -628,7 +636,11 @@ plan_print() {
     if [ "$SD_MODE" = 1 ]; then
         echo "  $(t 'storage:        SD card {1}, {2} ({3})' "$SD_DEV" "$(gib "$TARGET_SIZE")" "$(src_of MU300_STORAGE)")"
     else
-        echo "  $(t 'storage:        internal, offset {1}, {2} ({3})' "$INT_OFF" "$(gib "$TARGET_SIZE")" "$(src_of MU300_STORAGE)")"
+        if [ "$IN_PART" = 1 ]; then
+            echo "  $(t 'storage:        internal, the GPT partition mu300root at offset {1}, {2} ({3})' "$INT_OFF" "$(gib "$TARGET_SIZE")" "$(src_of MU300_STORAGE)")"
+        else
+            echo "  $(t 'storage:        internal, offset {1}, {2} ({3})' "$INT_OFF" "$(gib "$TARGET_SIZE")" "$(src_of MU300_STORAGE)")"
+        fi
     fi
     if [ "$FORMAT" = 1 ]; then _fs=$(t 'CREATE new ext4 (erases what is there: every installed system, every file in them, the extras)')
     else _fs=$(t 'keep: nothing is erased'); fi
@@ -667,7 +679,7 @@ plan_print() {
     fi
     [ -z "$EXTRAS" ] || echo "  $(t 'extras:         {1}' "$EXTRAS")"
     [ "$ADB" = 0 ] || echo "  $(t 'adb to Linux:   {1}' "$(t 'on, for {1}' "${ADB_KEY#* }")")"
-    echo "  $(t 'writes:         {1}, boot_{2}, 32 bytes of misc (boot_{3}, the partition table and userdata are not touched)' "$([ "$SD_MODE" = 1 ] && echo "$SD_DEV" || t 'the Linux region')" "$LINUX_SLOT" "$ANDROID_SLOT")"
+    echo "  $(t 'writes:         {1}, boot_{2}, 32 bytes of misc (boot_{3}, the partition table and userdata are not touched)' "$([ "$SD_MODE" = 1 ] && echo "$SD_DEV" || { [ "$IN_PART" = 1 ] && t 'the partition mu300root' || t 'the Linux region'; })" "$LINUX_SLOT" "$ANDROID_SLOT")"
     echo "  $BC_LINE"
     plan_machine
 }

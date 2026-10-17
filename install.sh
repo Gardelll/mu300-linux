@@ -587,7 +587,12 @@ gib() { awk -v b="$1" 'BEGIN { printf "%.1f GiB", b / 1073741824 }'; }
 # keeps the previous one as <os>.old while the new one is unpacked, so allow for two of each plus working room.
 NEED_OPENWRT=$((800 * 1024 * 1024)); NEED_UBUNTU=$((1600 * 1024 * 1024)); NEED_BOTH=$((2400 * 1024 * 1024))
 info need.openwrt $NEED_OPENWRT; info need.ubuntu $NEED_UBUNTU; info need.both $NEED_BOTH
-echo "$(t 'eMMC: {1} ({2} sectors), partitions end at {3} (sector {4}), free after them: {5}' "$(gib $((disk * 512)))" "$disk" "$(gib $((last_end * 512)))" "$last_end" "$(gib $SIZE)")"
+echo "$(t 'eMMC: {1} ({2} sectors), partitions end at {3} (sector {4}), free after them: {5}' "$(gib $((disk * 512)))" "$disk" "$(gib $((last_end * 512)))" "$last_end" "$(gib $REG_SIZE)")"
+# another installer's layouts (FINDINGS 179): a GPT partition named mu300root is where Linux goes (boot/init boots it),
+# an image file in Android's data is one this installer cannot update
+info region.partition "$IN_PART"
+[ "$IN_PART" = 0 ] || echo "$(t 'Linux partition: the GPT partition named mu300root, made by another installer, {1} at offset {2}; Linux goes there, the partition table is not changed' "$(gib $SIZE)" "$OFF")"
+if _note=$(region_image_note); then echo "$_note"; info region.foreign_image 1; fi
 # the SD card as the other place for it (boot/init looks there first)
 sd_probe
 [ "$SD_SMALL" = 1 ] && echo "$(t 'SD card present but smaller than 700 MiB; not used')"
@@ -612,6 +617,7 @@ fi
 # check the real requirement once the systems are known. There is nowhere else to put this region on these
 # devices: userdata is metadata-encrypted (dm-default-key), so an image file inside it cannot be read from
 # Linux, and the spare-looking blackbox and fulldumpdb partitions are written by the firmware itself.
+if [ $SD_MODE = 0 ] && _why=$(region_part_refusal); then die "$_why"; fi
 if [ $SD_MODE = 0 ] && [ $SIZE -lt $((700 * 1024 * 1024)) ]; then
     # --check with a card: a real run offers the card (as the default) and needs no repartitioning
     if [ $CHECK_ONLY = 1 ] && [ -n "$SD_DEV" ] && [ "$sd_ex" != foreign ]; then
@@ -623,6 +629,8 @@ if [ $SD_MODE = 0 ] && [ $SIZE -lt $((700 * 1024 * 1024)) ]; then
     offer_repartition   # exits, either by installing nothing or by rebooting for a second pass
 fi
 region_find_existing || die "$(t 'no answer from the device')"
+# what the partition holds is known now: another ext4 in it is not this installer's to format
+if [ $SD_MODE = 0 ] && _why=$(region_part_refusal); then die "$_why"; fi
 echo "$(t 'Linux region: offset {1}, {2}, existing mu300root filesystem: {3}' "$OFF" "$(gib $SIZE)" "$(t "$existing")")"
 INTERNAL_EXISTS=0; [ $existing = yes ] && INTERNAL_EXISTS=1; INT_SIZE=
 info region.existing "$existing"; info region.offset "$OFF"; info region.size "$SIZE"
@@ -649,6 +657,8 @@ elif [ $existing = yes ]; then
     vcode=existing; verdict=$(t 'OK: a MU300 Linux installation is already present (it can be kept or replaced)')
 elif [ $SD_MODE = 1 ]; then
     vcode=sd; verdict=$(t 'OK: the SD card will be formatted; everything on it is erased')
+elif [ "$DIRTY" -gt 0 ] && [ "$IN_PART" = 1 ]; then
+    vcode=dirty; verdict=$(t 'WARNING: the partition named mu300root is not empty, and it holds no Linux filesystem of this project. Installing overwrites it')
 elif [ "$DIRTY" -gt 0 ]; then
     vcode=dirty; verdict=$(t 'WARNING: the unpartitioned space is not empty; it may be used by this firmware. Installing overwrites it')
 elif [ $SIZE -ge $((20 * 1024 * 1024 * 1024)) ]; then
