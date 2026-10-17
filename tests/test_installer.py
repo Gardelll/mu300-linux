@@ -3,6 +3,7 @@ the device the installer must ask, never pick one by itself."""
 import hashlib
 import json
 import re
+import shutil
 import struct
 import subprocess
 import sys
@@ -771,9 +772,112 @@ class Region(ShellTest):
     def run_region(self, shell, call):
         su = (f'su_do() {{ printf "%s\\n" "$1" >> "{self.tmp}/su.log"; '
               f'sh -c "$(printf "%s" "$1" | sed -e "s|/sys/block|{self.tmp}/sys/block|g" '
-              f'-e "s|/dev/block/mmcblk0|{self.tmp}/mmcblk0|g")"; }}\n')
+              f'-e "s|/data/mu300linux|{self.tmp}/data/mu300linux|g" '
+              f'-e "s|/dev/block/mmcblk0|{self.tmp}/mmcblk0|g")"; }}\n'
+              # the installers' t: the message with its arguments in place
+              't() { _m=$1; shift; _i=1; for _a; do _m=$(printf "%s" "$_m" | sed "s|{$_i}|$_a|g"); _i=$((_i + 1)); done; '
+              'printf "%s" "$_m"; }\n')
         return self.sh(shell, su + f'. "{TOP}/tools/storage.sh"\n{call}\n'
                        'echo "rc=$? OFF=$OFF SIZE=$SIZE existing=${existing:-} DIRTY=${DIRTY:-}"')
+
+    def part(self, n, name, start, size):
+        """partition n of the fake eMMC, with its GPT name in uevent as the kernel gives it"""
+        d = self.tmp / f'sys/block/mmcblk0/mmcblk0p{n}'
+        d.mkdir(parents=True, exist_ok=True)
+        (d / 'start').write_text(f'{start}\n'); (d / 'size').write_text(f'{size}\n')
+        (d / 'uevent').write_text(f'DEVTYPE=partition\nPARTN={n}\nPARTNAME={name}\n')
+
+    @staticmethod
+    def ext4(emmc, at, label=b'mu300root', blocks=1000):
+        with open(emmc, 'r+b') as f:
+            f.seek(at + 1024 + 4); f.write(struct.pack('<I', blocks))
+            f.seek(at + 1080); f.write(b'\x53\xef')
+            f.seek(at + 1144); f.write(label.ljust(16, b'\0'))
+
+    # a GPT partition behind p1 (which ends at 8 GiB + 1 MiB): 3 GiB, 1 MiB aligned
+    PSTART, PSIZE = 2048 + (4 << 21) + 2048, 3 << 21
+
+    def test_a_gpt_partition_named_mu300root_is_where_linux_goes(self):
+        """kanoqwq's desktop installer puts the system in a GPT partition named mu300root behind userdata (FINDINGS
+        178/179). The region behind the last partition is then (nearly) nothing, and a U30 user was told there was
+        no room: the partition is the place - updated or wiped there - and boot/init boots it (stage=root-part)."""
+        emmc = self.fake()
+        ps, pz = self.PSTART, self.PSIZE
+        self.part(2, 'mu300root', ps, pz)
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; echo "IN_PART=$IN_PART"').stdout
+            self.assertIn(f'rc=0 OFF={ps * 512} SIZE={pz * 512}', out)
+            self.assertIn('IN_PART=1', out)
+            # empty: no installation, the whole partition to format (after the data check)
+            out = self.run_region(shell, 'region_probe; region_find_existing; echo "IN_PART=$IN_PART PART_FS=$PART_FS"; '
+                                  'region_part_refusal || echo no-refusal').stdout
+            self.assertIn(f'OFF={ps * 512} SIZE={pz * 512} existing=no', out)
+            self.assertIn('IN_PART=1 PART_FS=none', out)
+            self.assertIn('no-refusal', out)
+        self.ext4(emmc, ps * 512)
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; region_find_existing; echo "IN_PART=$IN_PART PART_FS=$PART_FS"').stdout
+            self.assertIn(f'rc=0 OFF={ps * 512} SIZE={1000 * 4096} existing=yes', out)
+            self.assertIn('IN_PART=1 PART_FS=mu300root', out)
+        # never larger than the partition, whatever the superblock says
+        self.ext4(emmc, ps * 512, blocks=(pz * 512 // 4096) + 10)
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; region_find_existing').stdout
+            self.assertIn(f'OFF={ps * 512} SIZE={pz * 512} existing=yes', out)
+            # the bounds the device checks again (android-install.sh): inside the partition, or in the free space
+            out = self.run_region(shell, f'region_probe; for a in "{ps * 512} {pz * 512}" "{ps * 512} {pz * 512 + 512}" '
+                                  f'"{(ps - 8) * 512} 4096"; do region_in_bounds $a && echo in || echo out; done').stdout
+            self.assertIn('in\nout\nout\n', out)
+
+    def test_a_region_installation_wins_over_the_partition(self):
+        # boot/init looks at the region first (find_root_offset before gpt_root): so do the installers
+        emmc = self.fake()
+        ps, pz = self.PSTART, self.PSIZE
+        self.part(2, 'mu300root', ps, pz)
+        rstart = ((ps + pz) // 4096 + 1) * 4096 * 512
+        self.ext4(emmc, rstart, blocks=500)
+        self.ext4(emmc, ps * 512)
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; region_find_existing; echo "IN_PART=$IN_PART"').stdout
+            self.assertIn(f'rc=0 OFF={rstart} SIZE={500 * 4096} existing=yes', out)
+            self.assertIn('IN_PART=0', out)
+
+    def test_a_partition_this_installer_cannot_use_says_why(self):
+        emmc = self.fake()
+        ps, pz = self.PSTART, self.PSIZE
+        self.part(2, 'mu300root', ps, pz)
+        self.ext4(emmc, ps * 512, label=b'rootfs')
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; region_find_existing; echo "PART_FS=$PART_FS"; '
+                                  'region_part_refusal; echo " refused=$?"').stdout
+            self.assertIn('existing=no', out)
+            self.assertIn('PART_FS=ext4', out)
+            self.assertIn('another Linux (ext4) filesystem', out)
+            self.assertIn(' refused=0', out)
+        # two of that name: neither is used, and the reason says so
+        self.part(3, 'mu300root', ps + pz, 4096)
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; echo "IN_PART=$IN_PART"; region_find_existing; region_part_refusal').stdout
+            self.assertIn('IN_PART=0', out)
+            self.assertIn('2 partitions named mu300root', out)
+        # its image file in Android's data: said, not refused
+        shutil.rmtree(self.tmp / 'sys/block/mmcblk0/mmcblk0p3')
+        (self.tmp / 'data/mu300linux').mkdir(parents=True)
+        (self.tmp / 'data/mu300linux/openwrt.ext4').write_bytes(b'')
+        for shell in self.each_shell():
+            out = self.run_region(shell, 'region_probe; region_image_note; echo " note=$?"').stdout
+            self.assertIn('/data/mu300linux/openwrt.ext4', out)
+            self.assertIn(' note=0', out)
+
+    def test_the_probe_command_is_install_ps1s_and_has_no_double_quotes(self):
+        # install.ps1 sends the same command, and Windows PowerShell 5.1 drops double quotes on the way to adb
+        self.fake()
+        for shell in self.each_shell():
+            self.run_region(shell, 'region_probe')
+            cmd = (self.tmp / 'su.log').read_text().splitlines()[0]
+            self.assertNotIn('"', cmd)
+            self.assertIn("(SuDo '" + cmd + "')", (TOP / 'install.ps1').read_text())
+            (self.tmp / 'su.log').unlink()
 
     def test_probe(self):
         self.fake()

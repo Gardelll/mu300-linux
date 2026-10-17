@@ -302,7 +302,7 @@ region_find_existing() {
 region_part_refusal() {
     if [ "${PART_COUNT:-0}" -gt 1 ]; then
         t 'The eMMC has {1} partitions named mu300root, and which one holds Linux cannot be told. Nothing was changed: remove the one that is not used (with the installer that made it) and try again.' "$PART_COUNT"
-    elif [ "${IN_PART:-0}" = 1 ] && [ "$existing" != yes ] && [ "${PART_FS:-none}" = ext4 ]; then
+    elif [ "${IN_PART:-0}" = 1 ] && [ "${existing:-}" != yes ] && [ "${PART_FS:-none}" = ext4 ]; then
         t 'The partition named mu300root holds another Linux (ext4) filesystem, not labelled mu300root, and the installer never formats one that is not its own. Nothing was changed.'
     else
         return 1
