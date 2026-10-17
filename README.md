@@ -435,8 +435,9 @@ sudo mu300-extra remove panel
 or answer yes to the installer's question (it takes the offline file, so the first boot needs no network). Then open
 `https://192.168.77.1:9090` (the U30 Air: `.78.1`; your LAN address if you changed it), accept Cockpit's own
 certificate, and log in as `ubuntu` with your password; "Turn on administrative access" (your password again) for
-the pages that need root. Cockpit listens on the LAN bridge only (USB and the hotspot: `BindToDevice=br-lan`), and the
-firewall drops everything new from the cellular uplink (and a Wi-Fi uplink) in front of it anyway; root cannot log in,
+the pages that need root. Cockpit listens on the LAN address only (USB and the hotspot: `ListenStream=LAN-ADDRESS:9090`
+with `FreeBind=yes`, so it is up from the start of the boot; it follows a changed LAN address; only the LAN's /24
+may connect, `IPAddressAllow`), and the firewall drops everything new from the cellular uplink (and a Wi-Fi uplink) in front of it anyway; root cannot log in,
 the login page offers no other host, and a session ends after 15 minutes idle. An update replaces Ubuntu without
 Cockpit's packages: its first boot puts them back in the background (from the extra when it carries them, else from
 the archive once online). `mu300-panel status` says where it is.
