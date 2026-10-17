@@ -40,6 +40,9 @@ msgstr "Gerenciamento do dispositivo"
 msgid "Update"
 msgstr "Atualizar"
 
+msgid "Backup of settings"
+msgstr "Backup das configurações"
+
 msgid "Languages"
 msgstr "Idiomas"
 
@@ -318,6 +321,75 @@ msgstr "Falha na requisição"
 
 msgid "(empty)"
 msgstr "(vazio)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Frase secreta (8 caracteres ou mais)"
+
+msgid "The passphrase again"
+msgstr "A frase secreta de novo"
+
+msgid "Download the backup"
+msgstr "Baixar o backup"
+
+msgid "Back up the settings"
+msgstr "Fazer backup das configurações"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Um arquivo com o hotspot, os dados móveis e o APN, os bloqueios de rede, os perfis e configurações de VPN, o encaminhamento de SMS, o endereço LAN, o nome do host, o fuso horário e as chaves SSH. Ele contém senhas: com uma frase secreta é criptografado, e só essa frase o abre de novo."
+
+msgid "Include the login password"
+msgstr "Incluir a senha de login"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Frase secreta, se o arquivo estiver criptografado"
+
+msgid "Show what would change"
+msgstr "Mostrar o que mudaria"
+
+msgid "Restore"
+msgstr "Restaurar"
+
+msgid "The file is larger than 4 MiB"
+msgstr "O arquivo tem mais de 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "As configurações do arquivo substituem estas. O hotspot, os dados móveis ou a LAN podem reiniciar, e esta página pode perder a conexão por um momento."
+
+msgid "Restore from a backup"
+msgstr "Restaurar de um backup"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Cada valor do arquivo é verificado primeiro; se um for recusado, nada é alterado. O que é igual fica como está, e nenhum perfil VPN, assinatura ou chave SSH deste dispositivo é removido."
+
+msgid "Keep this device's login password"
+msgstr "Manter a senha de login deste dispositivo"
+
+msgid "Take a file of another device model"
+msgstr "Aceitar um arquivo de outro modelo"
+
+msgid "The two passphrases differ"
+msgstr "As duas frases secretas são diferentes"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "A frase secreta precisa de 8 caracteres ou mais"
+
+msgid "Saved (encrypted)"
+msgstr "Salvo (criptografado)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Salvo. O arquivo não está criptografado: contém senhas, guarde-o em local seguro."
+
+msgid "Choose a backup file first"
+msgstr "Escolha primeiro um arquivo de backup"
+
+msgid "Restoring…"
+msgstr "Restaurando…"
+
+msgid "Restored"
+msgstr "Restaurado"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "A restauração não terminou: veja as linhas acima"
 
 msgid "Loading…"
 msgstr "Carregando…"
@@ -2234,6 +2306,12 @@ msgstr "Verificado há %s"
 msgid "Not checked yet"
 msgstr "Ainda não verificado"
 
+msgid "Mirror (release files)"
+msgstr "Espelho (arquivos da versão)"
+
+msgid "Leave empty for GitHub."
+msgstr "Deixe vazio para o GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Instalar de novo, após a atualização, os pacotes que eu adicionei (o dispositivo precisa estar online na primeira inicialização)"
 
@@ -3235,6 +3313,9 @@ msgstr "Operação de atualização desconhecida"
 msgid "Invalid update request"
 msgstr "Solicitação de atualização inválida"
 
+msgid "The backup tool gave no valid reply"
+msgstr "A ferramenta de backup não deu uma resposta válida"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3685,3 +3766,6 @@ msgstr "Este arquivo não está assinado: isso precisa de confirmação"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Este arquivo é mais antigo que o que está instalado: isso precisa de confirmação"
+
+msgid "The release source was not changed"
+msgstr "A origem da versão não foi alterada"

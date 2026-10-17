@@ -40,6 +40,9 @@ msgstr "Управление на устройството"
 msgid "Update"
 msgstr "Обнови"
 
+msgid "Backup of settings"
+msgstr "Резервно копие на настройките"
+
 msgid "Languages"
 msgstr "Езици"
 
@@ -318,6 +321,75 @@ msgstr "Заявката е неуспешна"
 
 msgid "(empty)"
 msgstr "(празно)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Парола (поне 8 знака)"
+
+msgid "The passphrase again"
+msgstr "Паролата отново"
+
+msgid "Download the backup"
+msgstr "Изтегляне на копието"
+
+msgid "Back up the settings"
+msgstr "Архивиране на настройките"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Един файл с точката за достъп, мобилните данни и APN, мрежовите заключвания, VPN профилите и настройките, препращането на SMS, LAN адреса, името на хоста, часовата зона и SSH ключовете. Съдържа пароли: с парола се шифрова и само тази парола го отваря отново."
+
+msgid "Include the login password"
+msgstr "Включване на паролата за вход"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Парола, ако файлът е шифрован"
+
+msgid "Show what would change"
+msgstr "Показване какво би се променило"
+
+msgid "Restore"
+msgstr "Възстановяване"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Файлът е по-голям от 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Настройките от файла заменят тези. Точката за достъп, мобилните данни или LAN може да се рестартират и страницата може за момент да загуби връзка."
+
+msgid "Restore from a backup"
+msgstr "Възстановяване от копие"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Всяка стойност от файла първо се проверява; ако една бъде отхвърлена, нищо не се променя. Еднаквото остава непокътнато и не се премахва нито един VPN профил, абонамент или SSH ключ на устройството."
+
+msgid "Keep this device's login password"
+msgstr "Запазване на паролата за вход на устройството"
+
+msgid "Take a file of another device model"
+msgstr "Приемане на файл от друг модел устройство"
+
+msgid "The two passphrases differ"
+msgstr "Двете пароли се различават"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Паролата трябва да е поне 8 знака"
+
+msgid "Saved (encrypted)"
+msgstr "Запазено (шифровано)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Запазено. Файлът не е шифрован: съдържа пароли, пазете го на сигурно място."
+
+msgid "Choose a backup file first"
+msgstr "Първо изберете файл с копие"
+
+msgid "Restoring…"
+msgstr "Възстановяване…"
+
+msgid "Restored"
+msgstr "Възстановено"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Възстановяването не завърши: вижте редовете по-горе"
 
 msgid "Loading…"
 msgstr "Зареждане…"
@@ -2234,6 +2306,12 @@ msgstr "Проверено преди %s"
 msgid "Not checked yet"
 msgstr "Още не е проверено"
 
+msgid "Mirror (release files)"
+msgstr "Огледало (файлове за изданието)"
+
+msgid "Leave empty for GitHub."
+msgstr "Оставете празно за GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "След обновяването да се инсталират отново пакетите, които съм добавил (устройството трябва да е онлайн при първото стартиране)"
 
@@ -3235,6 +3313,9 @@ msgstr "Непозната операция за обновяване"
 msgid "Invalid update request"
 msgstr "Невалидна заявка за обновяване"
 
+msgid "The backup tool gave no valid reply"
+msgstr "Инструментът за архивиране не даде валиден отговор"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3685,3 +3766,6 @@ msgstr "Този файл е неподписан: това изисква по�
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Този файл е по-стар от инсталираното: това изисква потвърждение"
+
+msgid "The release source was not changed"
+msgstr "Източникът на изданието не беше променен"

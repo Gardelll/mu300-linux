@@ -100,8 +100,11 @@ the device lands in Android about 20 minutes later. The cause is still open.
   off; on battery alone the boost supplies the 5 V as before.
 * **Charging boot:** a start caused by plugging in a charger stays a charging boot (LED blinking, hotspot and modem
   down) until the Wi-Fi key is pressed.
-* **LEDs (§33f):** battery (white: Linux is up), network (blue 4G, white 5G, red no service), Wi-Fi (white 2.4 GHz, blue
-  5 GHz). `sudo mu300-led test` shows which is which.
+* **LEDs (§33f, §151):** battery as ZTE's firmware (white from 60 %, blue from 10 %, red below 10 %; steady on the
+  battery, breathing while it charges, steady white when full on the charger; on the charger no LED times out, and
+  the red does not either), network (the SIM in use as ZTE's firmware, §154: white the nano-SIM,
+  blue the eSIM, blinking while a live switch goes to it; red no service), Wi-Fi (white 5 GHz, blue
+  2.4 GHz, as ZTE's firmware and its guide, §152). `sudo mu300-led test` shows which is which.
 * **Heat alarm:** the battery LED flashes red, white, blue in turn when the chip reaches 85 °C or the battery 50 °C
   (`thermal-guard`). On the F50 the network LED does this.
 * **Buttons:** power: a short press wakes the LEDs, held 3 s shuts down. Wi-Fi key: switches 2.4 / 5 GHz, held 3 s turns
@@ -110,6 +113,12 @@ the device lands in Android about 20 minutes later. The cause is still open.
   password into the tag (also `url`, `text`, `clear`, `on`/`off`).
 * **USB host (§33e):** `sudo mu300-usb host` with an OTG adapter, on the mainline kernels: flash drives (FAT, exFAT),
   keyboards, mice, USB modems and Ethernet adapters. `sudo mu300-usb device` goes back (the default at every boot).
+* **USB-C power delivery (§150, EXPERIMENTAL, off by default):** `sudo mu300-usb pd on` (mainline kernels) hands the
+  port to the kernel's Type-C/PD stack (TCPM, the `ump9620-tcpc` module, after kano's port): a computer makes it a
+  device, an OTG adapter or a USB device a host with 5 V out, and a PD dock with its own charger charges it while
+  `sudo mu300-usb host` asks the dock for the host role (USB ports and Ethernet on the dock). Only 5 V, at most 2 A in
+  and 400 mA out; the charger refuses 5 V out while anything else supplies VBUS. `sudo mu300-usb pd off` goes back
+  to the manual host mode; `mu300-usb pd status` shows the roles. Not tested on a device yet.
 * **Address:** `192.168.78.1`, so an F50 (`192.168.77.1`) and a U30 Air can be plugged into one computer (§33b).
 
 ## F50 specifics

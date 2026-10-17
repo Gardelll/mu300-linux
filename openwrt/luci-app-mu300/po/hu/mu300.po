@@ -40,6 +40,9 @@ msgstr "Eszközkezelés"
 msgid "Update"
 msgstr "Frissítés"
 
+msgid "Backup of settings"
+msgstr "Beállítások mentése"
+
 msgid "Languages"
 msgstr "Nyelvek"
 
@@ -318,6 +321,75 @@ msgstr "A kérés sikertelen"
 
 msgid "(empty)"
 msgstr "(üres)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Jelmondat (legalább 8 karakter)"
+
+msgid "The passphrase again"
+msgstr "A jelmondat újra"
+
+msgid "Download the backup"
+msgstr "A mentés letöltése"
+
+msgid "Back up the settings"
+msgstr "Beállítások mentése"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Egy fájl a hotspottal, a mobiladattal és az APN-nel, a hálózati zárakkal, a VPN-profilokkal és -beállításokkal, az SMS-továbbítással, a LAN-címmel, a gépnévvel, az időzónával és az SSH-kulcsokkal. Jelszavakat tartalmaz: jelmondattal titkosítva van, és csak az a jelmondat nyitja meg újra."
+
+msgid "Include the login password"
+msgstr "A bejelentkezési jelszóval együtt"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Jelmondat, ha a fájl titkosított"
+
+msgid "Show what would change"
+msgstr "Mutassa, mi változna"
+
+msgid "Restore"
+msgstr "Visszaállítás"
+
+msgid "The file is larger than 4 MiB"
+msgstr "A fájl nagyobb 4 MiB-nál"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "A fájl beállításai felváltják ezeket. A hotspot, a mobiladat vagy a LAN újraindulhat, és ez az oldal egy pillanatra elveszítheti a kapcsolatot."
+
+msgid "Restore from a backup"
+msgstr "Visszaállítás mentésből"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "A fájl minden értéke előbb ellenőrzésre kerül; ha egyet elutasít, semmi sem változik. Ami ugyanaz, az érintetlen marad, és az eszköz egyetlen VPN-profilja, előfizetése vagy SSH-kulcsa sem törlődik."
+
+msgid "Keep this device's login password"
+msgstr "Az eszköz bejelentkezési jelszavának megtartása"
+
+msgid "Take a file of another device model"
+msgstr "Más eszközmodell fájljának elfogadása"
+
+msgid "The two passphrases differ"
+msgstr "A két jelmondat eltér"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "A jelmondatnak legalább 8 karakter kell"
+
+msgid "Saved (encrypted)"
+msgstr "Mentve (titkosítva)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Mentve. A fájl nincs titkosítva: jelszavakat tartalmaz, tartsa biztonságban."
+
+msgid "Choose a backup file first"
+msgstr "Előbb válasszon mentésfájlt"
+
+msgid "Restoring…"
+msgstr "Visszaállítás…"
+
+msgid "Restored"
+msgstr "Visszaállítva"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "A visszaállítás nem fejeződött be: lásd a fenti sorokat"
 
 msgid "Loading…"
 msgstr "Betöltés…"
@@ -2234,6 +2306,12 @@ msgstr "Ellenőrizve ennyi ideje: %s"
 msgid "Not checked yet"
 msgstr "Még nincs ellenőrizve"
 
+msgid "Mirror (release files)"
+msgstr "Tükör (kiadási fájlok)"
+
+msgid "Leave empty for GitHub."
+msgstr "Hagyd üresen a GitHubhoz."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "A frissítés után telepítse újra az általam hozzáadott csomagokat (az első indításkor az eszköznek online kell lennie)"
 
@@ -3235,6 +3313,9 @@ msgstr "Ismeretlen frissítési művelet"
 msgid "Invalid update request"
 msgstr "Érvénytelen frissítési kérés"
 
+msgid "The backup tool gave no valid reply"
+msgstr "A mentőeszköz nem adott érvényes választ"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3685,3 +3766,6 @@ msgstr "Ez a fájl nincs aláírva: ehhez megerősítés szükséges"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Ez a fájl régebbi a telepítettnél: ehhez megerősítés szükséges"
+
+msgid "The release source was not changed"
+msgstr "A kiadás forrása nem változott"

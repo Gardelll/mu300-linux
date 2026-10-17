@@ -133,7 +133,7 @@ what replaced it. The table below gives each section's state.
 | 71 | A graphical installer that drives the text installers: an answers mode, a progress stream, a window; a beta question; where a Python with a usable Tk is found | current (run against an F50 from a Mac on 2026-10-15: check, backup, installs and uninstalls from the text installer and from the window; the U30 Air, a locked bootloader, Linux and Windows hosts not measured; Windows only by CI) |
 | 72 | The web installer: adb over WebUSB, how the release files reach the device, WebUSB per platform, and what a closed tab leaves | current; run end to end on an F50 from Chrome on macOS on 2026-10-13 (docs/web-installer.md), the real release mirror from Node on 2026-10-15; Windows, a Linux host, the U30 Air, KernelSU/APatch and a download over a carrier's network not measured |
 | 74 | The U30 Air's second SIM: what two units showed, and the selector built on it (PR #73/#166, #194) | current (the maintainer's U30 Air on 7.2.10 and the contributor's on 7.2.9); two working cards, kernel 5.4 and an F50 not run |
-| 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | experimental, opt-in build recipe (7.2.9; 7.2.10 without a client); PMK provenance open; the WPA2 fallback measured on the U30 Air |
+| 80 | WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat) | **disabled** 2026-10-17 (§175): the PMK record cannot be told from one a client sends; history below |
 | 81 | An update that brought another mu300-update ended with "another mu300-update is running": the lock was held by the first half's own keep-alive | current (fixed; found on the F50 updating v2026.10.23 to v2026.10.24) |
 | 82 | adb on by default, and no OpenWrt had it after a boot: the service gave up 13 s after power-on, before FunctionFS could be had | current (fixed; measured on the F50, openwrt-luci, 7.2.10) |
 | 83 | An update dropped the jobs of OpenWrt's System > Scheduled Tasks (`/etc/crontabs`) | current (fixed; a user's report of the symptom, unit tests only) |
@@ -159,12 +159,22 @@ what replaced it. The table below gives each section's state.
 | 126 | An update's password: kept by every installer, and checked on the device against the installed system's own hash, by the project's own static checker and never by a program of that system, when the user asks (the computer's installers ask; the Magisk zip takes the answer only from a `mu300-install.conf` inside the zip); the v2026.10.16.1 zip that reset an OpenWrt root of `ubuntu` to none | current (unit tests; the zip on an F50, OpenWrt 6.18, 2026-10-16: kept unchecked, kept checked, refused, a new one; `install.sh` from the unpacked zip: refused, kept checked; `install.ps1` and the window against the fake adb) |
 | 131 | An update writes only what changed: the new image's binaries that the installed system has byte for byte become second names of its files (never text, never `etc`, `var` or the user's places), the room counted before anything is written by every installer and by `mu300-update`, nothing left behind by a run that fails or is cut off, and the computer installer's switch module of the release | current (unit tests; the zip, `mu300-update apply` with rollback, and the computer installer on an F50, plain OpenWrt with Docker in its 804 MiB region, 2026-10-16; Ubuntu 24.04 by `mu300-update` with rollback on an F50, 2026-10-17) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
+| 136 | A carrier name the catalog has in another case (`CHINA BROADNET`) stayed English: looked up without case and spacing, then by its PLMN (#231) | current (unit tests; a user's report, not measured on our boards) |
+| 137 | The SMS webhook's custom body: the placeholder was Feishu's body, which WeCom refuses behind an HTTP 200; body presets for WeCom/DingTalk and Feishu/Lark that also fill in the answer check (#259) | current (unit tests; not sent to a real service) |
 | 138 | `mu300-atd` died at its first open of a SIPC tty that was not ready (a failed `exec` redirection ends dash and ash): it waits for the channel now, holding the command fifo (#226) | current (unit tests under dash, bash and busybox ash; not on a device) |
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
+| 150 | USB-C power delivery on the U30 Air: kano's UMP9620 port controller under TCPM, reviewed and rewritten (patches 0019/0020), off unless `mu300-usb pd on`; the charger refuses its boost against an outside supply | experimental (built for 6.18.56/57 and 7.2.10/11, unit tests; on the U30 Air with a computer only: device + sink, off by default changes nothing) |
+| 151 | The U30 Air's battery LED shows the battery as ZTE's firmware (white from 60 %, blue from 10 %, red below; breathing on the PMIC's curve while charging; no timeout on outside power, nor for the low-battery red), read at every tick of `mu300-buttons` | current (unit tests; ZTE's behaviour from the stock firmware and its guide; not yet watched on a device) |
+| 152 | The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware and its guide (it was the other way round); stock's network light shows the SIM in use, not 4G/5G (not changed) | current (read from the stock firmware and ZTE's guide; not yet looked at on a device) |
+| 154 | The U30 Air's network LED shows the SIM in use, as ZTE's firmware and its guide: white the nano-SIM (slot 0), blue the eSIM (slot 1), red no service, the target's colour blinking during a live switch; no longer 4G/5G | current (read from the stock firmware and ZTE's guide; unit tests; not yet looked at on a device) |
+| 155 | The settings as one file and back: `mu300-backup export|import|show` (Ubuntu and OpenWrt), `mu300-api backup.export/backup.import`, System > Backup of settings in the panel; a passphrase seals it (openssl enc has no GCM: AES-256-CBC with the SHA-256 of the contents inside), every value checked by its setter's own rules before anything changes | current (unit tests on the fake device of test_api, hostile files included; not yet run on a device) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
+| 160 | The eMMC at a cold boot: a failed HS400ES (`error -84`, issue #226) no longer leaves the board without `mmcblk0`; the core drops the failed timing and the next attempt takes HS200, then HS/DDR52, then HS; a test hook `sdhci_sprd.fail_hs400es` | current (unit tests; both mainline kernels built; not run on a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 | 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
+| 170 | "Failed to send request: Operation not permitted" behind the VPN's kill switch: uclient's connect error, the tunnel down; the failure now names the kill switch, one try instead of four; vpn-dae refused before the download on a kernel that cannot run it | current (reproduced in an OpenWrt 25.12 container with sing-box and the kill switch, 2026-10-17) |
+| 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; on the U30 Air (OpenWrt, 6.18.57): refusal, migration, notice, the panel's save; no F50 yet) |
 
 ## Hardware and firmware facts
 
@@ -746,6 +756,157 @@ Two ways of timing out a read do **not** work here, and both fail silently:
 Apply `stty` to the already-open descriptor (`stty raw -echo <&3`), never `stty -F /dev/stty_nr1`: the `-F` form is
 an extra open and close of the device, which takes the channel away from whoever owns it (13b).
 
+### 130. Docker in the images: Ubuntu's packages, OpenWrt ready to install, the data beside the systems
+
+**Status: current** (Ubuntu 24.04 on F50-B, kernel 7.2.10; plain OpenWrt on F50-C, kernels 6.18.56 and 5.4, in a region
+of 804 MiB; test releases v2026.10.16.97 and .98 built from the branch with v2026.10.16.1's kernels, never published).
+
+**What is in which image.**
+
+| system | Docker | image installed (4 KiB blocks) | tarball | Magisk zip (k7.2) |
+|---|---|---|---|---|
+| Ubuntu 24.04 | installed: `docker.io` 29.1.3, `containerd` 2.2.1, `runc` 1.3.4, `docker-compose-v2` 2.40.3 | 345 -> 608 MiB | 95 -> 175 MiB | 122 -> 206 MB |
+| Ubuntu 26.04 | installed: `docker.io` 29.1.3, `containerd` 2.2.2, `runc` 1.4.0, `docker-compose-v2` 2.40.3 | 384 -> 649 MiB | 107 -> 188 MiB | 134 -> 220 MB |
+| OpenWrt | ready: settings and firewall zone; `apk add dockerd docker docker-compose` (29.6.1, compose 5.1.4) | 58 MiB (251 with Docker in it) | 21 MiB (86) | 45 MB (113) |
+| OpenWrt with the panel | ready, as OpenWrt; `luci-app-dockerman` adds LuCI > Docker | 61 MiB (254 with Docker) | 23 MiB (87) | 46 MB (114) |
+
+Ubuntu's own packages, not docker-ce: they come from the archive the image already uses, `apt` updates them with
+everything else, and they are the versions Ubuntu supports (Docker 29 in both releases). containerd's stress tool, its
+command line (`ctr`) and the `docker trust` plugin are left out with dpkg `path-exclude` (55 MB that `docker` and
+`docker compose` do not use; upgrades do not bring them back). OpenWrt: the 25.12 feed's packages (`containerd-stress`
+and `ctr` removed in the image build when `MU300_DOCKER=1`).
+
+**Why OpenWrt has it ready and not installed.** With Docker in the image, plain OpenWrt's system on F50-C was 472 MiB
+(with the device's vendor files, 205 MiB) of the region's 775. The first install fits; the next update by zip does not:
+it unpacks the new system beside the old one before it carries the user's files over, and the zip of the same release
+stopped at `tar: No space left on device` (nothing was changed, as the installer says; it left `openwrt.new`, 300 MB,
+on the disk until the next run cleans it, and the disk was 98% full meanwhile). Without Docker the system is 263 MiB and
+the update fits. Docker installed with `apk` is a package of the device, which an update does not copy (it is installed
+again at the first boot), but on 800 MiB its 190 MB in the old system still leave too little room for the new one: the
+README says to remove the packages before such an update and add them after it (the data stays). `MU300_DOCKER=1`
+builds an OpenWrt image with Docker in it (and `luci-app-dockerman` on the panel system); one such image ran Docker on
+6.18 on F50-C.
+
+The same arithmetic for Ubuntu: 608 + 205 MiB per system, twice during a zip update, is about 1.63 GiB, more than the
+1.6 GiB region the installers allow for Ubuntu. Ubuntu keeps Docker installed (it is the system people install Docker on,
+and usually on far more room: F50-B has 32 GB); its minimum with room for an update should become 2.0 GiB (install.sh's
+`NEED_UBUNTU`, install.ps1, the Magisk installer's figures), or the update should link the new image's files that are
+byte for byte the old image's instead of unpacking them again. Neither is in this change.
+
+**Started when used, not at boot.** Ubuntu: `docker.socket` is enabled, `docker.service` and `containerd.service` are
+not; the first `docker` command started both in 1.8 s. dockerd and containerd took 115 + 50 MB RSS after a compose run
+(F50-B, 7.2), 85 + 44 MB on OpenWrt 6.18, 63 + 31 MB on 5.4: memory a dongle without containers keeps.
+`systemd-networkd-wait-online.service` is disabled in the image, so `docker.service`'s `Wants=network-online.target`
+does not wait. OpenWrt: the image build removes the enable link apk makes; an `apk add` on the device enables it (the
+package's post-install), which the README says.
+
+**The data lives beside the systems.** `data-root` is `/mnt/mu300-disk/docker/<system>` (ubuntu, openwrt,
+openwrt-luci): on the Linux partition next to `ubuntu/`, `openwrt/` and `extra/`, outside the directory a system boots
+from. An update unpacks the new system and carries the user's files of the old one into it (FINDINGS 85);
+`/var/lib/docker` inside the system would be carried too - copied in full when the old version is kept for a rollback
+(`mu300-update apply`), and its overlay2 layers are what fills a device. Outside, the carry never sees it: nothing is
+copied, nothing is left behind in `<os>.old`, and a rollback finds the same images and containers. Measured on F50-C:
+v2026.10.16.1 -> .97 (Docker in the image; images loaded, a compose project with `restart: unless-stopped`) -> .98
+(Docker not in the image) -> `apk add`: the images and the compose container were there and running, on 5.4 after 6.18;
+on F50-B .1 -> .98 by `mu300-update apply --from` the zip, then the rollback. A system without `/mnt/mu300-disk` (one at
+the root of the partition, from before the systems had directories) keeps the data inside itself and has it carried as
+before; `mu300-carry` keeps extended attributes and device nodes, so overlay2's whiteouts and opaque directories survive
+that too. The classic overlay2 store (`"features": {"containerd-snapshotter": false}`): on a fresh install Docker 29 uses
+containerd's image store, which keeps every image twice (the compressed blobs and the unpacked snapshots) and in
+containerd's own root.
+
+**The firewall: Docker's nftables backend.** `"firewall-backend": "nftables"` (Docker 29, experimental): Docker writes
+its own tables (`ip docker-bridges`, and `ip6 docker-bridges` on Ubuntu) and no iptables rules. With iptables Docker sets
+the iptables FORWARD policy to DROP when it turns forwarding on, which would stop the hotspot's forwarding on Ubuntu, and
+its rules need `xt_addrtype`, which the 5.4 kernel does not have (below). On Ubuntu `mu300_filter`'s forward policy is
+accept, so nothing else is needed; `"ip-forward": false` keeps Docker from refusing to start while the system forwards
+nothing (mobile-data and wifi-client turn forwarding on). On OpenWrt fw4's forward chain rejects what no zone lets
+through, and an accept in Docker's table does not end the packet's way through fw4's chain. So
+`/etc/uci-defaults/95-mu300-docker` adds, once (the marker `/etc/mu300/docker-zone`), the zone `docker`: devices
+`docker0`, `br-+` and `!br-lan` and subnet 172.16.0.0/12, which fw4 matches together (`iifname "br-*" iifname != "br-lan"
+ip saddr 172.16.0.0/12`), with Docker's `default-address-pools` set to that range in `/etc/docker/daemon.json`;
+input and forward REJECT (below); forwardings docker -> wan and lan -> docker, none from wan. Measured: containers on the default bridge and on a compose
+network reach the internet (masqueraded by Docker), a LAN client (a network namespace on br-lan, and the Mac over USB)
+reaches a published port and still reaches the internet, and a container does not reach a LAN client by itself. The
+package's init script reads `/etc/docker/daemon.json` (`alt_config_file`), so an `apk add` on the device keeps these
+settings (its own `/etc/config/dockerd` is written as `.apk-new`). The zone has the names of the package's `uciadd`
+(network `docker`, bridge device `docker0`), made in advance: when `uciadd` had to add them at the first boot with
+dockerd enabled, its network reload took docker0 from the dockerd that had just made it (`adding interface ... to bridge
+docker0 failed: Device does not exist`, F50-C, 5.4); with them in place it changes nothing (network and firewall
+unchanged across that boot, and Docker working, measured).
+
+**Containers are kept off the device itself (security review of this change).** The first version of the zone had
+input and forward ACCEPT: any container - often a third party's image - could open the router's own services (dropbear,
+uhttpd/LuCI, ubus over rpcd, dnsmasq), so a compromised container was a way into the device. Now the zone has input
+REJECT and forward REJECT (output ACCEPT), and no docker -> lan forwarding. Containers need nothing from the router:
+on the default bridge Docker gives them the host's upstream resolvers (8.8.8.8 when the host has only 127.0.0.1), on a
+user network its own resolver at 127.0.0.11 asks from the host's side, through loopback; DHCP is Docker's IPAM. Two
+containers on one network talk over their bridge, which is switched and never reaches the firewall (Docker 29 did not
+load br_netfilter, measured on 7.2; `13-mu300-docker.conf` keeps bridge filtering off where it is loaded), and Docker's
+own nftables chains drop what goes from one Docker network to another whatever fw4 says (measured on Ubuntu, whose
+forward policy is accept: a container on another network timed out against the compose service, one on its network got
+the page) - forward REJECT adds the same refusal in fw4. Measured with fw4's own ruleset (`fw4 print` of the image's
+config, loaded with nft in a network namespace setup like the device's: br-lan, docker0, a compose bridge, sipa_eth0):
+from a container the router's ports 22, 80 and 53 on its Docker and LAN addresses were refused, as were a container of
+another Docker network and a LAN client; a LAN client reached a container's port and the router's SSH. This review came
+before any release had the zone, so no device has the old one (and the marker would keep a changed one as it is).
+Ubuntu: Docker's nftables backend opens nothing of the host (no iptables rules, no FORWARD policy) and `docker run -p`
+publishes on every address, but what comes from the cellular side for a published port is DNATed and then dropped in
+`mu300_filter`'s forward chain (`iifname "sipa_eth*" counter drop` after established), and from a Wi-Fi uplink by
+wifi-client's table in the same way; docker-proxy's own listeners (IPv6, hairpin) are behind the input chain's drop for
+those interfaces. `firewall.nft` now drops what comes from `docker0` and the `br-*` bridges other than br-lan to the
+device itself (after established): measured on F50-B, a container got no answer from the device's SSH on 172.17.0.1 and
+on its LAN address 192.168.79.1 (drop counters rising), resolved names, and a LAN client still had SSH and the published
+port. On Ubuntu a container can open connections to LAN clients, as on any Docker host (the forward policy is accept).
+
+The feed's kmods for Docker add `/etc/modules.d` entries (br_netfilter, the legacy iptables tables, btrfs, raid6) that
+ubox would load at every boot of a mainline kernel that has them as modules; the image build removes the ones Docker's
+packages add, and `/etc/sysctl.d/13-mu300-docker.conf` turns bridge firewalling off again after the package's
+`12-br-netfilter-ip.conf` turned it on (with br_netfilter loaded, every frame between hotspot and USB clients would go
+through fw4; that happens after an `apk add` on the device).
+
+**Kernels (moby's `check-config.sh`).** Every "generally necessary" option is there in the three kernels (namespaces,
+cgroups v2 with cpu, cpuset, io, memory and pids, veth, bridge, overlayfs, nf_tables with NAT, masquerade, fib and ct,
+seccomp, keys). What is missing matters for the iptables backend, which the images do not use, or is optional:
+* 5.4 (`kernel/linux.config`): `NETFILTER_XT_MATCH_ADDRTYPE` (Docker's iptables rules need it: dockerd with the iptables
+  backend cannot start on 5.4), `BRIDGE_NETFILTER`, `IP6_NF_NAT`, `IP6_NF_TARGET_MASQUERADE`, `NETFILTER_XT_MATCH_IPVS`;
+  optional `CGROUP_HUGETLB`, `NET_CLS_CGROUP`, `CFS_BANDWIDTH` (`docker run --cpus`), `IP_VS*` (swarm), `IP_SCTP`.
+  Not changed here.
+* 6.18 and 7.2 (the v2026.10.16.1 builds of `upstream/mu300-mainline.config`): the legacy iptables tables
+  (`IP_NF_FILTER`, `IP_NF_NAT`, `IP_NF_MANGLE`, `IP_NF_RAW`, `IP_NF_TARGET_MASQUERADE`, `IP_NF_TARGET_REDIRECT` and the
+  IPv6 ones; the images' iptables is iptables-nft, which does not use them) and `NETFILTER_XT_NAT` (iptables-nft's
+  DNAT and SNAT: `docker run -p` with the iptables backend); optional `CGROUP_PERF`, `IP_SCTP`, `CRYPTO_GHASH`
+  (encrypted overlay networks, 7.2).
+* None of them: AppArmor or SELinux (Docker runs without a profile).
+
+**Found on the way: every OpenWrt device had the same TLS key.** The uhttpd package makes its key pair when apk installs
+it in the image build, and the published images carried `/etc/uhttpd.key` (v2026.10.16.1's plain OpenWrt: sha256
+ad78a3f7..., the same on F50-C as in the release tarball): LuCI over HTTPS used one private key on every device, and
+anyone who downloads the release has it. The image build removes the pair now (uhttpd makes its own at the first start,
+as it does whenever the pair is missing: F50-C got one), and the audit of `make-release.sh` refuses an image with
+`etc/uhttpd.key`. An update to such an image takes the old key away with the old image (the image's file, not the
+user's); a key the device made itself is the user's and is kept (the way back to v2026.10.16.1 kept F50-C's).
+(Main has the same fix as its own section, 132.)
+
+**Again after the delta updates, 2026-10-17** (test builds of this branch with the other open PRs; F50-B Ubuntu 24.04
+7.2.11, F50-C plain OpenWrt 6.18.57 in its 804 MiB region):
+
+* **Ubuntu:** Docker 29.1.3, `ubuntu` in the `docker` group, `docker.service` inactive until the first command
+  (socket), data-root `/mnt/mu300-disk/docker/ubuntu` (kept through the next update), an image loaded offline, a
+  container on docker0 and one on a user network: neither reaches the device's SSH (172.17.0.1, 192.168.79.1); compose
+  publishes a port that the Mac reached over the LAN.
+* **OpenWrt, ready (the default):** `/etc/docker/daemon.json`, `/etc/config/dockerd` and the `docker` zone (input and
+  forward REJECT) are in place; `apk add dockerd docker docker-compose` (+234 MiB) started with data-root
+  `/mnt/mu300-disk/docker/openwrt`, overlay2, 29.6.1; a container reached the internet over mobile data and neither
+  the router's SSH nor its web server; compose published a port the Mac fetched over USB. `apk del` took it out again
+  (its modules.d entries too), and with it the package removed the zone and the `docker` interface (its ucidel) but
+  left the two forwardings: a later `apk add` makes the package's own zone, not this one (the uci-defaults script ran
+  once at the first boot). Noted, not changed.
+* **Docker in the OpenWrt image, now that updates write only what changed?** Measured, and still no: a
+  `MU300_DOCKER=1` image (90 MB tarball) as an update of F50-C's OpenWrt (392 MiB installed, 345 MiB free with the
+  download staged elsewhere) needs 422 MB with the rollback copy and 390 MB with `--no-rollback`, as mu300-update
+  counts it - it refuses before changing anything. The images keep Docker ready, not installed.
+
 ### 138. A SIPC tty that is not ready yet: `mu300-atd` waits for it instead of dying at the first open (#226)
 
 Issue #226 (F50, OpenWrt, 6.18, v2026.10.23): after a cold boot the panel said "AT backend no response", and the log
@@ -1264,7 +1425,7 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
 * Not needed on Linux: `logobuffer` (9 MiB, there is no display) and `sysdump-uboot` (16 MiB, bootloader crash dumps).
   `kernel/patches/of-reserved-mem-skip.patch` adds `CONFIG_OF_RESERVED_MEM_SKIP` (the boot image command line is not
   passed on by LK, so a cmdline option alone would not work); MemTotal grew from 1447 to 1473 MiB.
-* `mu300-zram.service` adds lz4 zram swap of half the RAM (swappiness 100).
+* `mu300-zram.service` adds lz4 zram swap of half the RAM (swappiness 100); settings and the off switch: 162.
 
 
 ### 28. Mali-G57 GPU (OpenCL) without Android
@@ -2795,6 +2956,12 @@ at a time, while someone watched the device, showed where they are:
 | Wi-Fi | white | LDO VDDCAMA1 |
 | Wi-Fi | blue | LDO VDDCAMA2 |
 
+**Update 2026-10-16:** the network light's white and blue mean the SIM in use (white slot 0, blue slot 1), not 5G and
+4G (§154).
+
+**Update 2026-10-16:** which Wi-Fi colour means which band was a guess here, and the wrong way round (§152): ZTE's
+firmware lights the white one (VDDCAMA1) on 5 GHz and the blue one (VDDCAMA2) on 2.4 GHz.
+
 The device tree's six other GPIO LEDs (`pwr_green`, `net_red`, `net_green`, `net_white`, `wifi_blue`,
 `wifi_white`) light nothing; they come from a ZTE board file shared with other products, and Android never writes
 them either. The lights that never went out were the LDO ones: ZTE's `zte_ldo_leds` switches the camera supplies
@@ -2808,6 +2975,9 @@ changes under a live connection.
 
 The PMIC's LED also carries the heat alarm (`thermal-guard`, now running on 5.4 too; whether it also caps there, §139): one
 colour at a time, since the white outshines red and blue when they are mixed.
+
+**Update 2026-10-16:** the battery LED shows the battery now, as ZTE's firmware does, instead of white for "Linux
+is up" (§151).
 
 ### 33g. The U30 Air's NFC tag
 
@@ -4283,6 +4453,278 @@ watches only and keeps the power-off.
 
 Open: the 5.4 thermal sysfs on an F50 and a U30 Air (`/sys/class/thermal/thermal_zone*/{type,mode,trip_point_*}`,
 the `cdev*` links and `cooling_device*/type`) and which way the guard goes there; a load run on 5.4.
+### 155. The settings as one file, and back (`mu300-backup`)
+
+**Status: current** (unit tests on the fake device of `tests/test_api.py`; not yet run on a device).
+
+**Why.** An update keeps the settings (§85), a new installation, a second device or a lost card do not: the hotspot,
+the APN, the locks, the VPN profiles, SMS forwarding, the keys were typed in again by hand.
+
+**What.** `rootfs/overlay/opt/mu300/bin/mu300-backup` (one program for Ubuntu and OpenWrt; it takes mu300-api's helpers
+by sourcing it as a library, `MU300_LIB=1`):
+
+- `export [-o FILE|-] [--encrypt] [--with-password] [--only S,...]`: one JSON document,
+  `{"format":"mu300-backup","version":1,"created","source":{device,system,release,hostname},"sections":{...}}`, with
+  the sections `wifi` (name, password, band, channel, hidden, on), `data` (APN, PDP type, authentication, user,
+  password, data roaming), `sim` (the boot SIM), `locks` (the lock tool's saved `mode endc lte nr cell`,
+  openwrt-luci), `vpn` (on/off, the active profile's name, the settings `KILL_SWITCH TAILSCALE IPV6 REMOTE_DNS
+  BOOTSTRAP_DNS LAN_CIDRS`, the profiles the user made - name, type, configuration, options; OpenVPN's user and
+  password from `auth.txt` - and the subscriptions with their address), `sms_forward` (the panel's settings, secrets
+  included, openwrt-luci), `lan`, `system` (host name, time zone, SSH on/off), `ssh_keys` (the login user's: root's
+  `/etc/dropbear/authorized_keys` on OpenWrt, ubuntu's `~/.ssh/authorized_keys` on Ubuntu; a line with options in
+  front is left out, and said so) and with `--with-password` `password` (the hash from `/etc/shadow`). Settings are
+  read where they live (hotspot.conf, mobile-data.conf, lan.conf or UCI; the VPN module's `profile show --json
+  --reveal` and `subscription show --reveal`, which it gives root alone). Never in a file: the path of an engine
+  binary (`XRAY`, `SING_BOX`, ...: a file that set one would choose what runs as root), profiles that came from a
+  subscription (it brings them back), runtime state.
+- The file is written 0600 (aside, then renamed; never through a link); without `-o` it is
+  `./mu300-backup-HOST-DATE.json` (`.enc` when sealed).
+- `import FILE|- [--dry-run] [--force] [--only|--skip S,...]`, `show FILE`.
+
+**The seal.** `openssl enc -aes-256-gcm` was the first choice and does not exist: OpenSSL 3's `enc` refuses AEAD
+ciphers ("AEAD ciphers not supported"; LibreSSL's takes the name and writes no tag at all). `age` ships in neither
+image; `openssl` does in both (Ubuntu's `openssl`, OpenWrt's `openssl-util`, which the VPN module needs). So:
+`MU300-BACKUP-ENCRYPTED 1`, a line naming `cipher=aes-256-cbc kdf=pbkdf2 digest=sha256 iter=600000`, then
+`openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 -a` of `sha256=<hex>` + the document. The key and the IV
+both come from the passphrase and the file's salt; the SHA-256 inside the encryption is checked before the document is
+read, so a wrong passphrase, a changed character or a cut file is refused ("the file was changed after it was
+encrypted"). The passphrase (8-256 characters) reaches openssl on a pipe of its own (`-pass fd:3`), never on its
+command line; the rounds a file names are taken between 10000 and 5000000 only.
+
+**The import.** In order, and nothing changed until the end of step 4:
+
+1. The file (4 MiB at most) is opened and checked against the format with one jq program: every key known, every
+   value of its kind and size, no control character in anything but a VPN configuration and SMS forwarding's
+   texts. Anything else and the whole file is refused (exit 2).
+2. A file of another device type is refused without `--force`; one of the other system gives what both have
+   (locks and SMS forwarding are skipped where there is no panel, and said so).
+3. This device is read in the same form, and one jq program lists the steps: only what differs. Secrets are compared
+   and never shown ("the password changes"). Nothing is removed: a VPN profile, subscription or SSH key the file
+   lacks stays. Locks the device has and the file has not are reset first (`lock reset`, the verified one, §48),
+   then the file's are applied.
+4. Every step is checked by the rules of what will apply it: mu300-api's setters in a new check mode
+   (`MU300_API_CHECK=1`: `wifi.set wifi.power data.set sim.select lock.set lan.set system.hostname system.timezone
+   system.ssh` stop after their own field checks with `{"ok":1,"checked":true}`), the forwarding adapter's
+   (`MU300_FWD_CHECK=1`, after its checks, before it writes), and for the rest mu300-backup's own (VPN names by
+   mu300-api's rule, types, configurations as text, subscription addresses `https://` only, settings by the module's
+   own rules; SSH keys as OpenSSH public keys; a password hash as SHA-512/SHA-256 crypt, bcrypt or yescrypt -
+   yescrypt not on OpenWrt, whose musl cannot read it). One refusal and nothing is changed (exit 1); "unsupported"
+   (no hotspot.conf yet, no VPN module) skips that step. `--dry-run` stops here.
+5. The steps run (what can cut the connection last: SSH keys, password, SMS forwarding, VPN, SIM, mobile data, locks,
+   system, hotspot, LAN): through mu300-api's setters, the lock tool directly (one at a time: through the panel each
+   would start detached and the next would find the lock busy), the forwarding adapter (with `clear` naming the
+   secrets the file has none of: the adapter keeps a saved secret that comes empty), the VPN module's CLI (a
+   configuration and a subscription's address on its stdin; OpenVPN's user and password into the profile's
+   `auth.txt`, since `profile set` takes them on its command line), `chpasswd -e` (busybox's on OpenWrt) on its
+   stdin, and the keys file written aside and renamed (never through a link: ubuntu's home is its own). A step that
+   fails is reported and the others go on (exit 1).
+
+**Security review of the first version (before merge).** An imported file is untrusted, and three holes were found
+and closed:
+
+1. *Values that become options.* Values of the file reach command lines as positional arguments (`mu300-vpn profile
+   add TYPE NAME -`, `profile set ID KEY VALUE`, `settings set KEY VALUE`, `subscription add NAME - --type T
+   --interval N`, `lock apply KIND VALUE`). A value starting with `-` (`--json`, `--insecure`) would be read as an
+   option. The profile type's rule allowed `-` first (`[a-z0-9-]+`), and option values were only "one line of text".
+   Now every value that goes onto a command line passes `arg`: taken exactly from the step (no trailing newline lost
+   to `$(...)`), not empty, no control character, never starting with `-`. The type is `[a-z0-9][a-z0-9-]{0,15}`,
+   subscription type and interval are checked again where they are used, the profile id the module answers must look
+   like one, and a lock value goes through mu300-api's rule and `arg`. No `--` was added to the module or the lock
+   tool: nothing reaches them that could be taken for an option.
+2. *A line break inside a value.* Each of `allowed` (`is_ascii_line`, then `grep -x`), `text_ok` and `hash_ok` refused
+   one already, so `HASH\nroot:HASH` never matched. But the format's patterns used `test("^...$")`, and jq's `^` and
+   `$` are the ends of a line, not of the value. So an option key `A\nB` passed the format, and the shell then split
+   it into two keys. The patterns now use `\A...\z`, and every one-line field refuses any control character at the
+   format level. `chpasswd -e` gets exactly one line, `root:` or `ubuntu:` and a hash checked again just before.
+3. *Keys split into words.* `for _k in $(jq -r '.options | keys[]')` is now a loop over indices with each key read
+   exactly, and checked against an anchored pattern.
+
+Tests for each: `--json` as a type, a type and an option key with a line break, a hash followed by a second shadow
+line, a lock value with a line break, `--help` and `-x` as lock values (the lock tool is never called), `--insecure`
+as an option value, `--json` as a subscription name and `-x` as the active profile.
+
+**The API and the panel.** `mu300-api backup.export {passphrase, with_password}` answers `{"name","encrypted","file"}`
+- the one reply that carries secrets on purpose - and `backup.import {file, passphrase, dry_run, force, only, skip}`
+answers a dry run at once (`valid`, `text`) and otherwise starts the restore as the job (`job.status`); the request may
+be 6 MiB for this method alone. The file and the passphrase reach mu300-backup on its stdin (the job's input file is
+root's and removed when the job starts). On openwrt-luci, System > Backup of settings (`view/mu300/backup.js`) calls
+`mu300dash backup_export/backup_import/backup_job`, which pass the request to mu300-api; `run_m` keeps their replies
+out of the call log (their length only). The file is made in the browser and never stored on the device. The panel's
+page is in every catalog of the panel. No page on Ubuntu's Cockpit panel yet: the API is there for it and for the
+web installer's device manager.
+
+**Tests** (`tests/test_backup.py`, every shell): every section exported on Ubuntu, OpenWrt and openwrt-luci, the mode,
+no link followed, no engine path; the seal (wrong passphrase, one character changed, rounds from a hostile header,
+a short passphrase); a dry run that changes nothing and a restore of what differs (hotspot.conf, mobile data's
+roaming, lan.conf, the keys merged, `chpasswd -e` with the hash on stdin); a round trip with a fake VPN CLI (profiles,
+subscription, settings, active, on); another model with and without `--force`; an OpenWrt file on Ubuntu; hostile
+files (17 refused by the format, 11 by the setters' rules, 7 VPN values), each leaving the device as it was; the lock
+tool (reset, then the file's locks) and the real forwarding adapter (refusing an `ftp://` address, nothing written);
+the API methods and the job. In none of them a secret in an argument list, a job file or what is printed.
+`tests/test_sms_forward.py`: the adapter's check mode.
+
+**On a device (2026-10-17, F50-B Ubuntu 24.04 7.2.11, F50-C plain OpenWrt 6.18.57; test builds of this branch with
+the other open PRs).**
+
+* **OpenWrt refused every file, its own too:** `not a valid backup: a value of the wrong kind`. OpenWrt's jq (1.8.1)
+  is built without Oniguruma, so `test`, `capture` and `gsub` raise "jq was compiled without ONIGURUMA regex library"
+  and the schema's `try` turned that into a refusal; the SMS-forwarding export (openwrt-luci) used `capture`/`gsub`
+  too. The program now uses no regular expression in jq: characters are checked by code point (`l` refuses C0, DEL
+  and C1 as `[[:cntrl:]]` did; `word`, `optkey`, `lowalnum` stand for the three anchored patterns), and the
+  forwarding file is split at its first `=`. `OpenWrtJqWithoutRegex` / `LuciJqWithoutRegex` run the OpenWrt and panel
+  tests through a jq that refuses any program using them; both failed before the change.
+* **Not on PATH:** `mu300-backup export` said "not found" on Ubuntu; it is in `path-commands` now.
+* **Ubuntu:** `export --encrypt` (0600, the `MU300-BACKUP-ENCRYPTED` header), `show`, `import --dry-run` ("nothing to
+  change"); the SSID changed by hand and the APN through `mu300-api data.set`, then `import`: both back, the hotspot
+  and mobile data came back up (the restored hotspot.conf differs only in the order of its lines).
+* **OpenWrt (with the fix):** export, `show`, a dry run of its own file ("nothing to change"); the F50-B file,
+  encrypted, taken with "from ubuntu, taken on openwrt: what both systems have" (hotspot, LAN address); a file with
+  the login hash: F50-B's is `$6$`, which musl takes ("login password: changes"; the yescrypt refusal stays a unit
+  test); the SSID changed in uci and restored by `import`, WAN still up.
+* **The panel** (luci-app-mu300's files copied onto F50-C's plain OpenWrt for the test): System > Backup of settings
+  renders (passphrase twice, the login-password tick, restore with "Show what would change"; Restore disabled until
+  a preview), no console error; `ubus call mu300dash backup_export` returned the file, plain and sealed.
+* **Not run:** a download and restore through the page in a browser, the VPN and lock sections, the size limit
+  through rpcd/ubus.
+
+### 160. The eMMC at a cold boot: a failed HS400ES no longer ends the boot; the core falls back to HS200, then HS/DDR52
+
+**The report** (issue #226, a user, 6.18.56, release v2026.10.16.1): after a cold boot (powered off five minutes or
+more) the modem never came up, because there was no `mmcblk0` and so no modem firmware:
+
+    mmc0: SDHCI controller on 22200000.sdio [22200000.sdio] using ADMA 64-bit
+    mmc0: mmc_select_hs400es failed, error -84
+    mmc0: error -84 whilst initialising MMC card
+    ... the same three more times ...
+    mmc0: Failed to initialize a non-removable card
+
+Every cold boot of his failed; warm reboots of the same kernel sometimes came up at HS400ES; an unbind and bind of
+the host on the running system failed the same way. The vendor 5.4 kernel (its own eMMC driver) came up at HS400ES at
+200 MHz on the same unit. We saw it once ourselves, on an F50 after a sysrq reboot (§112's run: "on that boot the eMMC
+did not come up"); a normal reboot after it was fine. With the root on the eMMC that boot has no system at all.
+
+**What the log says.** -84 is -EILSEQ, a CRC error. `mmc_select_hs400es` prints its own message before the summary
+line for every step but two: the CMD13 status checks after the switch to HS at 52 MHz and after the host went to
+HS400 with the enhanced strobe (`mmc_switch_status(card, true)`, where a CRC error is fatal). There is no inner line,
+so it is one of those two, most likely the last: the card switched, the host latches the response with the strobe,
+and the CRC does not match. Why only at a cold start (the PHY's DLL, a delay value from the device tree, a supply
+still settling) is not known; it is not looked into here. The four lines are `mmc_rescan`'s four attempts (400, 300,
+200, 100 kHz initial clocks), each with a power cycle of the card, and every one went to HS400ES again.
+
+**Changed** (`upstream/patches/0021-mmc-HS400ES-failure-falls-back-to-HS200.patch`, both mainline kernels): when the
+timing selection of `mmc_init_card` fails (the selection itself, HS200 tuning or HS400 after it, HS400ES tuning,
+DDR52), the failed timing is taken out of the host's caps, with one warning (`mmc0: HS400ES failed (-84), the next
+initialisation uses HS200`), and the next attempt takes the next slower one: HS400ES (HS400 goes with it) -> HS200 ->
+HS with DDR52 -> HS. mmc_rescan's four attempts are exactly that ladder. The core chooses the card type from the host
+caps again at every initialisation, of a new card and of a known one (a reset, a resume), so the same lowering holds
+there. The core's own line then says which timing was taken: `mmc0: new HS200 MMC card at address 0001`. A boot whose
+HS400ES works runs no new code. The lowered caps last until the host is bound again, in practice until the next
+boot, which tries HS400ES again. A removed card (-ENOMEDIUM) lowers nothing; the SD slot is set up by `sd.c` and not
+touched.
+
+Considered and not taken: turning HS400ES off in the device tree for everyone (half the read speed on every unit
+that works; mainline runs on the stock device tree's capabilities); a retry inside `mmc_select_timing` without a
+power cycle (the card is half switched; mmc_rescan's attempts power it off and start again from CMD0); plain HS400
+with tuning as the first fallback (never run on this host: HS200 is the known-good step below).
+
+**Cost.** At HS200 the bus is 200 MHz single data rate, half of HS400ES's bus rate: sequential reads should drop
+from §93's 270-300 MB/s on the F50 to at most about 190 (not measured); writes (§93: 180-215 MB/s) are bound more by
+the eMMC itself. Only on a boot that fell back.
+
+**The test hook.** `sdhci_sprd.fail_hs400es=N` (sdhci-sprd module parameter, default 0, also writable at
+`/sys/module/sdhci_sprd/parameters/fail_hs400es`): the next N HS400ES selections get a CRC error (-EILSEQ) on every
+CMD13, only while a new card is set up at HS400ES - the failure of the report, at the place the log points to.
+Mainline forces its command line (`CONFIG_CMDLINE_FORCE`; the bootloader's and the boot image's `loglevel=5` are not
+read), so a test kernel gets it at build time: `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1` for
+`upstream/build.sh` appends it to `CONFIG_CMDLINE` after the config check. Releases never set it (a unit test checks
+the workflows).
+
+**Unit tests:** `tests/test_static.py` (`test_mainline_emmc_timing_falls_back`): the ladder, exactly the four timing
+failures routed through it, the hook off by default and limited to CMD13 during a new card's HS400ES, the build
+switch after the config check and in no workflow. **Built** locally, 2026-10-16: 6.18.56 and 7.2.10 with `build.sh` (the patch applied with no offset or fuzz, also to 6.18.57 and 7.2.11; no compiler warning in either file; both Images carry the new messages), and a 7.2.10 test build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`, whose `CONFIG_CMDLINE` and Image end with it. **On a device** (F50-B, Ubuntu 24.04, 2026-10-17; test kernels with this patch and the other open kernel PRs):
+7.2.11 and 6.18.57 normal boots: `new HS400 Enhanced strobe MMC card`, no fallback line, `ios` timing 10 at 200 MHz.
+A 7.2.11 build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`: `test: this HS400ES selection fails`,
+`mmc_select_hs400es failed, error -84`, `HS400ES failed (-84), the next initialisation uses HS200`, `error -84 whilst
+initialising MMC card`, then `new HS200 MMC card at address 0001` 0.33 s later; `ios` timing 9 (HS200) at 200 MHz,
+the system booted with mobile data and the hotspot, and the parameter read 0. Still not run: cold boots, the
+runtime rebind, throughput at HS200. Before that, the plan as written:
+
+    # 1. normal boots, both boards, 6.18 and 7.2: unchanged
+    dmesg | grep -iE 'mmc0|hs400|initialisation uses'     # "new HS400 Enhanced strobe MMC card", no fallback line
+    cat /sys/kernel/debug/mmc0/ios                          # timing spec: 10 (mmc HS400 enhanced strobe), 200 MHz
+    # 2. the forced failure: a test kernel built with MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1
+    dmesg | grep -iE 'mmc0'   # "test: this HS400ES selection fails", "mmc_select_hs400es failed, error -84",
+                              # "HS400ES failed (-84), the next initialisation uses HS200", "new HS200 MMC card"
+    cat /sys/kernel/debug/mmc0/ios                          # timing spec: 9 (mmc HS200); the system boots, modem up
+    cat /sys/module/sdhci_sprd/parameters/fail_hs400es     # 0
+    # with fail_hs400es=4: the same HS200 boot, and the parameter reads 3 (after the first failure the host has no
+    # HS400ES left to try)
+    # 3. on a running system with the root on the SD card (F50): the same without a reboot
+    echo 1 > /sys/module/sdhci_sprd/parameters/fail_hs400es
+    # nothing of the eMMC mounted; the modem stopped (its firmware partitions are on the eMMC)
+    echo 22200000.sdio > /sys/bus/platform/drivers/sdhci_sprd_r11/unbind
+    echo 22200000.sdio > /sys/bus/platform/drivers/sdhci_sprd_r11/bind
+    # 4. cold boots: power off >= 5 min, N times per board (the release kernel): count fallbacks; a unit like
+    #    #226's should now boot every time, at HS200 when HS400ES fails
+    # 5. at HS200: dd read/write throughput and a §93-style soak (write, verify, reboot, e2fsck -fn)
+
+### 162. zram by default: one script for every system, settings in a file, an off switch, zstd on mainline
+
+**What was there.** zram swap has been on since 27: `zram-start` (Ubuntu's and Arch's `mu300-zram.service` before
+`swap.target`, OpenWrt's `mu300-hw`) made lz4 zram of half of MemTotal, priority 100, `vm.swappiness=100`,
+`vm.page-cluster=0`. Nothing could change it or turn it off short of masking the unit. Its "already on" check was
+`swapon --show`, which OpenWrt's busybox `swapon` does not have (so it never saw a live swap there); its `-p` is in
+OpenWrt's busybox (`FEATURE_SWAPON_PRI` default y in 25.12's `Config-defaults.in`), as are `mkswap` and `swapoff`.
+
+**Kernels.**
+- 5.4 vendor (`kernel/linux.config`): `ZRAM=m` (the fragment's `=y` is refused, `fragment-rejected.txt`), `ZSMALLOC=m`,
+  `ZRAM_WRITEBACK`/`ZRAM_DEDUP`; zram there compresses through the crypto API, and `CRYPTO_LZ4`, `CRYPTO_ZSTD` are
+  built in, `CRYPTO_LZO` a module: every compressor is offered. Left as it is.
+- 6.18.56 and 7.2.10 as shipped (`upstream/out*/kernel.config`): `SWAP`, `ZRAM`, `ZSMALLOC`, `ZRAM_BACKEND_LZ4`,
+  default lz4, all built in; `ZSTD_COMPRESS`/`ZSTD_DECOMPRESS` built in already (for `CRYPTO_ZSTD`) but
+  `ZRAM_BACKEND_ZSTD` not set, so `comp_algorithm` offered `[lz4]` alone. `mu300-mainline.config` now sets
+  `ZRAM_BACKEND_ZSTD=y`: a bool, the library is there, so the Image grows by the backend's glue only (a few KiB).
+  Both versions have the option with the same `select`s (`drivers/block/zram/Kconfig` at v6.18 and v7.2).
+- PR #256 (every module): `all-modules.py` keeps every `=y` at `=y` and leaves bools alone outside the families it
+  opens, so zram, zsmalloc and both backends stay built in; nothing here depends on a module.
+
+**Why not systemd's zram-generator or OpenWrt's zram-swap.** Ubuntu ships `systemd-zram-generator`, but the same
+script serves Ubuntu, Arch and OpenWrt (busybox), with one settings file, and has run since 27; a second mechanism
+would only add a place where the two disagree. OpenWrt's `zram-swap` depends on `kmod-zram`, a 6.12 module that the
+image removes with every other kmod (the kernels are ours). The images install neither (a test checks).
+
+**Changed.**
+- `mu300-zram` (on `PATH`): `start` (the boot; `zram-start` stays as the name OpenWrt's `mu300-hw` calls), `stop`,
+  `on`/`off` (now and for every boot: `ZRAM_ENABLE` in `/etc/mu300/zram.conf`, a file of the user, kept by updates),
+  `status` (size, compressor, priority, and what the swapped-out pages cost: `mm_stat`'s orig_data_size against
+  mem_used_total), `brief` (a line in `mu300-toolkit info`). The toolkit's System menu has "Compressed swap (zram)".
+- Settings, each optional and checked (a value out of range or not a number takes the default):
+  `ZRAM_SIZE_PERCENT` (50; 1-200), `ZRAM_ALGORITHM` (lz4; one the kernel does not offer falls back to lz4, logged),
+  `ZRAM_PRIORITY` (100), `ZRAM_SWAPPINESS` (100; 0-200, and 100 where the kernel refuses more: 5.4 stops at 100).
+  `/opt/mu300/lib/zram.conf.example` explains them; it is in `/opt/mu300` so OpenWrt has it too.
+- The "already on" check reads `/proc/swaps`; under a live zram `start` only sets the sysctls again, it never resets
+  the device. `off` swaps off first and resets only after that worked: with too little free RAM for what zram holds,
+  swapoff fails, zram stays on and the command says why.
+
+**Sizes and memory.** MemTotal is ~1473 MiB (27), so the default is ~736 MiB of swap. An empty zram costs nothing
+(zsmalloc allocates per stored page); a full one holds those pages in about 736/2.5 ~ 290 MiB with lz4 or ~210 MiB
+with zstd (typical anonymous memory; text and JSON pack better, already-compressed data worse), plus about 0.1 % of
+the swap size for zram's own table. Swappiness 100 weighs swap and file cache equally, which suits a swap that is RAM;
+up to 200 makes sense on mainline when file cache matters more (a busy Docker/KVM host with little I/O), it is a
+setting rather than a new default because no device run has compared the two.
+
+**Tests.** `tests/test_zram.py` under each shell, against a fake `/sys/block/zram0` and `/proc`: defaults, every
+setting, the fallback compressor, hostile and out-of-range values, switched off, already on, no zram in the kernel,
+`on`/`off` keeping the other settings, a failed swapoff, `status`/`brief`; the wiring (unit, the three images,
+`mu300-hw`, `PATH`), no second zram setup in any image, both mainline compressors and 5.4's options.
+
+**On a device** (2026-10-17, test builds with the other open PRs). F50-B, Ubuntu 24.04: on at boot on 7.2.11 and
+6.18.57 (708/732 MiB, priority 100), `comp_algorithm` `[lz4] zstd`; `ZRAM_ALGORITHM=zstd` then stop/start: zstd; a
+1.2 GB compressible load swapped 30 MiB into 6 MiB (4.3:1), no OOM; `mu300-zram off` held over a reboot (no swap,
+"zram off"), `on` brought it back; `mu300-zram` and the toolkit line on PATH. F50-C, plain OpenWrt (busybox), the
+release's 6.18.57 without the zstd backend: on at boot from `mu300-hw`, `zstd not offered by this kernel (lz4 ), using
+lz4` in logread, off/on. **Open:** memory pressure with Docker or a KVM guest, lz4 against zstd.
+
 ### 166. Mainline's soc-thmzone did not hold a full CPU load: step_wise followed the sensors' noise
 
 PR #272's device test (§133, F50-C, 6.18.56/6.18.57) found that the toolkit's 10-minute CPU stress (8 awk loops)
@@ -4650,6 +5092,25 @@ alphabet): the report, the code and unit tests.
 
 Open: a name of two or more code units that are all decimal digits (U+8054 U+9010 would be `80549010`) stays hex
 under a character set other than UCS2 - the price of leaving digit names alone. Not seen in a report.
+### 136. A carrier name the catalog has in another case stayed English (#231)
+
+A Chinese panel showed `CHINA BROADNET` for a China Broadnet SIM (F50, OpenWrt, 6.18; issue #231): the modem
+answered `+COPS: 0,0,"CHINA BROADNET",11`, the catalogs have `msgid "China Broadnet"`, and a catalog key matches
+only exactly, so `_()` gave the name back unchanged and `carrierName` (`common.js`) returned it before it ever looked
+at the PLMN. Not measured on our boards (no such SIM): the report, the code and a unit test.
+
+* **The rule now** (`carrierName`): a name the catalog has exactly is translated, as before. Otherwise the name is
+  looked up again with its case and spacing folded among the five mainland carriers the panel already knows by
+  PLMN (`CARRIER_NAMES`, the same five messages, so no catalog changes), then by its PLMN (`PLMN_CN`); only a name
+  that is in neither is shown as the modem gave it. One effect beyond the report: a mainland network whose modem
+  name is not one of those five (`CMCC`, `CHN-CT`) is now named by its PLMN, as it was when COPS gave the numeric
+  format. Networks outside that table are untouched (`vodafone TR` stays `vodafone TR`).
+* The lookup is an own-property test, so a name like `constructor` is not answered from the object's prototype.
+* `tools/luci-i18n.py` allows a non-literal `_()` argument only for the names it lists; the call stays
+  `_(carrier.name)`, the one that list has.
+
+Test: `tests/test_luci_i18n.py` `Languages.test_carrier_name_whatever_its_case`, English and Simplified Chinese.
+
 ### 54. A webhook body of the user's own for SMS forwarding: values escaped for the type, never evaluated (#171)
 
 The webhook of §39 sent one of two fixed bodies (JSON or a form with `sender`, `time`, `text`, `device`,
@@ -5038,6 +5499,29 @@ Not measured: any real service; the translations on a device (the test unit ran 
 built without them, so the page's new strings were English); what uclient does with an answer whose `Content-Length`
 is wrong or that never ends (the helper's 15 s timeout is unchanged). The unit tests (`tests/test_sms_forward.py`)
 ran under dash and bash on macOS and under busybox ash with busybox 1.37 as awk in a Debian container.
+
+### 137. The SMS webhook's custom body: a placeholder no service refuses, and presets per service (#259)
+
+The *Custom body* field (§54) showed `{"msg_type":"text","content":{"text":"{message}"}}` as its placeholder: the
+Feishu/Lark custom-bot body. A WeCom group robot answers that body (and the standard one, and plain text) with HTTP 200
+and `{"errcode":40008,"errmsg":"invalid message type"}`; with the answer check (§58) empty, which is its default, the
+page's test then said "delivered" (issue #259, measured by the reporter with curl from a device; another user's WeCom
+works with `{"msgtype":"text","text":{"content":"{message}"}}` and the check `errcode=0`). Not sent from our boards to a
+real service.
+
+* **The placeholder** is now `{"text":"{message}"}`, the shape of no Chinese chat service in particular (Slack's
+  incoming webhook takes it). A placeholder is pasted as it is; it should not look like the answer for one service.
+* **Body presets** under the field, as the answer check has them: *WeCom, DingTalk* fills in
+  `{"msgtype":"text","text":{"content":"{message}"}}` (the two take the same text body), *Feishu, Lark*
+  `{"msg_type":"text","content":{"text":"{message}"}}`. A preset also sets the type to JSON and, only when the
+  answer check is empty, the check that service needs (`errcode=0`, `code=0`, both §58 presets), so the test reports
+  the service's verdict and not the HTTP status. A check the user wrote is left alone; nothing is saved until Save.
+  No new message (the menu reuses *Presets*; the service names are not translated, as in the check presets).
+* The sources are §58's table (DingTalk's text body from the same third-party write-ups as its reply).
+
+Test: `tests/test_sms_forward.py` `test_the_pages_body_presets_are_what_the_services_take` - each preset body, through
+`mu300-sms-forward` with a hostile sender and text, is one valid JSON document of that service's shape, and its check
+is one of the page's check presets.
 
 ### 66. The OpenWrt image build tries a package download again
 
@@ -5709,7 +6193,37 @@ mirror: `MU300_API_URL=` in place of `https://api.github.com/repos/dikeckaan/mu3
 `MU300_DOWNLOAD_URL=` in place of `https://github.com/dikeckaan/mu300-linux/releases/download`, plain http(s) URLs
 only; the command and the panel read the same file. It exists for the device test below and for places where GitHub
 cannot be reached. Without a release key a mirror is trusted as much as whoever runs it; with one it cannot change
-a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root.
+a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root. (Since the panel's
+Update page gained the same setting - a *Mirror (release files)* field, written through one `mu300-update source`
+command - an account that may use that page's write access can change the source as well, and its read access is what
+shows the address in force.)
+
+**When the mirror is not there.** A run whose mirror cannot be reached says so once and takes the rest of that run
+from github.com - but only for a mirror that is really absent: curl's connect-class failures (6 7 35 52), or a stall
+(28, 56) before a single byte arrived. A transfer that delivered bytes and then stalled is a working mirror on a bad
+line, and the run resumes from it with `-C -`, because the people who set a mirror are often the ones who cannot
+reach GitHub. The fallback happens by itself only for an https mirror on a public name: a plain-http mirror or a
+private address / LAN-only name is almost always a copy on the LAN, kept so the release does not come over a metered
+SIM, and there the update stops and says why. `MU300_MIRROR_FALLBACK=0|1` in the same file decides it for every
+mirror (the file only, never the environment). A self-update handover passes the state on
+(`MU300_MIRROR_FELL_BACK=1` in the environment of the release's own updater, which then does not wait for the same
+mirror again); the panel's adapter clears that variable like every other source variable. With the mirror field,
+`curl` joined the OpenWrt image so the exit codes exist there too: every OpenWrt update download moved from
+uclient-fetch to curl, mirror or not.
+
+**The mirror on devices, 2026-10-17** (test builds of this branch with the other open PRs). F50-B (Ubuntu, no
+internet): `mu300-update source http://<Mac>:8791` wrote `/etc/mu300/update-source` 0600 and `source` / `status` named it
+`(file)`; `MU300_RELEASE=<tag> mu300-update apply` took every file from that mirror and updated. The same mirror made
+unreachable: the run stopped - but said only `cannot download SHA256SUMS`, and with `MU300_MIRROR_FALLBACK=1` it went
+to github.com without a word. Apply's first fetch is its self-update check, run with `2>/dev/null`; the said-once
+line was said there. It goes to fd 7 now, the run's own stderr (`say_run`), and both runs say their line once (a
+test runs the two fetches as apply does). F50-C (plain OpenWrt, `curl` in the image, internet): a public https
+mirror that does not resolve (`https://mirror.invalid/dl`): `mirror unreachable: the rest comes from github.com`, and
+the checksums, signature and files of v2026.10.17.1 came from GitHub and verified. A fresh download also printed `sh:
+can't open ...: no such file` (busybox ash: `wc -c < FILE 2>/dev/null` redirects stderr only after the input);
+fixed. The panel's field (luci-app-mu300's files copied onto F50-C for the test): the page shows *Mirror (release
+files)* with the GitHub placeholder, Save wrote the file (`mu300-update source` says `(file)`), and the page shows the
+saved address. Not run: a self-update across the change, a resumed download.
 
 **What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
 (`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's
@@ -7043,8 +7557,15 @@ device with openwrt-luci:
     # after: the same job, and crond running
     cat /etc/crontabs/root; ps | grep crond
 ### 80. WPA3 on the U30 Air's access point: the SC2355 firmware does SAE itself (PR #74, Snrat)
-The AP side of 14b's station finding. `docs/U30AIR-SAE.md` has the recipe and the open question; what the hardware
-showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
+
+**Status: disabled (2026-10-17, §175).** The owner switched the mode off in every layer because it cannot be shown
+safe: the PMK record hostapd imported comes in the same `EVT_NEW_STATION` element list as the client's own
+association-request elements, with no boundary, so a client could append a forged record and finish the 4-way
+handshake without the passphrase whenever the firmware does not append its own (the provenance points below). The
+recipe, the patch and the guard named below are gone from the tree (last in commit `2e5cf929`); the measurements stay
+as the record of what the firmware does. `docs/U30AIR-SAE.md` says why and what revisiting would need.
+
+The AP side of 14b's station finding. What the hardware showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
 
 * **Stock hostapd cannot do SAE on this driver.** The SME is in the firmware (`iw phy`: `connect`, no
   `authenticate`), so hostapd never sees the SAE frames: a WPA3-only BSS comes up, a client finishes SAE with the
@@ -7068,6 +7589,30 @@ showed, on one U30 Air (OpenWrt 25.12.5, Linux 7.2.9):
   `assoc_req_ies` (`sc2355/cmdevt.c` -> `common/report.c`), the same bytes that carry the station's own IEs. The
   parser accepts exactly one trailing element and rejects any second marker, which only holds if the firmware
   always appends its own; nothing proves it refuses an association without a completed SAE exchange. Open.
+* **Why it stays open (2026-10-16, PR #237, mixed WPA2-PSK/WPA3-SAE).** Traced through the driver: the only
+  carrier is `EVT_NEW_STATION`, `struct evt_new_station { is_connect; mac[6]; __le16 ie_len; ie[] }`
+  (`sc2355/cmdevt.h`). One length, one byte array: the station's association request IEs - bytes a client chose and
+  sent over the air - and the firmware's `dd 34 40:45:da:04 <PMK 32> <PMKID 16>` record sit in the same element list,
+  with no field, count, flag or MAC that says where the client's part ends. `cmdevt_report_new_station_evt` ->
+  `sprd_report_softap` (`common/report.c`) hands that list to `cfg80211_new_sta` as `assoc_req_ies` unchanged, and
+  hostapd sees it as the request IEs (`nl80211: Assoc Req IEs`). A client can put a record of the same shape as the
+  last element of its own association request, with a PMK it picked and that PMK's PMKID in its RSN element (the
+  PMKID check compares two values the same client supplied). It then finishes the 4-way handshake with a key it
+  knows - without the passphrase - in every case where the firmware forwards such an association without appending a
+  record of its own: an association with the SAE AKM after open authentication, a PMKSA-caching or reassociation path
+  that skips SAE, a firmware build that only appends on some paths. "Exactly one terminal record" defends only the
+  case where the firmware always appends after the client's bytes; the driver cannot tell either way, and neither can
+  hostapd (it never sees the SAE commit/confirm, so it cannot recompute the PMK). PR #237 does not change this
+  transport (its station-event rewrite adds bounds and logging, the same buffer still goes up whole). Closing it
+  needs one of: (a) a firmware-originated transport - a separate event, or a firmware-given boundary/length inside
+  `EVT_NEW_STATION` the driver uses to split the client's IEs from the result and pass the result out of band (and to
+  drop any record of that OUI/type found in the client's part); or (b) evidence from the air: a malicious-client probe
+  (for example a modified wpa_supplicant or injected frames) that associates with the SAE AKM, MFP and a forged
+  trailing record (1) after open authentication with no SAE at all, (2) after a failed SAE (wrong password), (3) with a
+  PMKID for a PMKSA the AP never had, on each firmware the opt-in allows - and shows the firmware refuses (1)-(3) or
+  always appends its own record after the client's. Until then the opt-in (the merged pure-SAE path) carries this
+  exposure, and a mixed-mode variant is not taken. Two driver robustness fixes from #237 that do not depend on it
+  (a NULL channel in `mgmt_tx`, the station event's bounds) were taken on their own.
 * **The stock driver printed secrets at `L_DBG`**: the SAE passphrase (`pwd is :%s`, `vendor.c`), a station PSK
   (`cfg80211.c`, `%s` on a buffer that is not NUL-terminated), every TX command and up to 400 bytes of every RX
   message on PCIe (`pcie.c`, `sdio.c`), the `NEW_STATION` event (`cmdevt.c`). The default level is `L_INFO` and this
@@ -7280,10 +7825,9 @@ one JSON object. Its interface is documented as stable in `docs/ADB-INTERFACE.md
   lines from N (whole lines while it runs, at most 400, each cut at 400 bytes, an address's path and query replaced by
   `...`). `hello` names the job, so a page that connects later follows it from the start. An update, a kernel or an
   extra's removal cannot be cancelled half way.
-* **WPA3 (FINDINGS 80)** is never switched on: the option needs a patched hostapd and a full `wifi down; wifi up`, and
-  a live change took a U30 Air's radio down. A hotspot already set to SAE by hand is shown as such and kept; a change
-  of its password restarts it with `wifi down; wifi up`, never `wifi reload`. An open hotspot gets `psk2` with its
-  first password.
+* **WPA3 (FINDINGS 80)** is never switched on. (Until 2026-10-17 a hotspot set to SAE by hand was shown as such and
+  kept; since §175 the mode is disabled, and a save on such a hotspot makes it `psk2+ccmp` with its password, or is
+  refused without one.) An open hotspot gets `psk2` with its first password.
 * **Hidden SSID on Ubuntu** is new in `hotspot-start` (`HIDDEN=1` -> `ignore_broadcast_ssid=1`).
 * **adb's keys mode** (FINDINGS 70) is only switched on together with the page's own key (`adb.auth {mode: keys, key}`:
   the key goes to `mu300-usb adb key -` first; a key that is refused leaves the mode alone), and every change of adb,
@@ -8511,157 +9055,6 @@ written; after these two `ubuntu` logged in over ssh and a wrong password was re
 `MU300_PASSWORD` - the new one logged in, `ubuntu` no longer. The zip's `computer/install.sh` (answers mode, keep, the
 right password): pushed the zip's `mu300-pwcheck` and busybox, confirmed, updated, and `ubuntu` logged in afterwards.
 
-### 130. Docker in the images: Ubuntu's packages, OpenWrt ready to install, the data beside the systems
-
-**Status: current** (Ubuntu 24.04 on F50-B, kernel 7.2.10; plain OpenWrt on F50-C, kernels 6.18.56 and 5.4, in a region
-of 804 MiB; test releases v2026.10.16.97 and .98 built from the branch with v2026.10.16.1's kernels, never published).
-
-**What is in which image.**
-
-| system | Docker | image installed (4 KiB blocks) | tarball | Magisk zip (k7.2) |
-|---|---|---|---|---|
-| Ubuntu 24.04 | installed: `docker.io` 29.1.3, `containerd` 2.2.1, `runc` 1.3.4, `docker-compose-v2` 2.40.3 | 345 -> 608 MiB | 95 -> 175 MiB | 122 -> 206 MB |
-| Ubuntu 26.04 | installed: `docker.io` 29.1.3, `containerd` 2.2.2, `runc` 1.4.0, `docker-compose-v2` 2.40.3 | 384 -> 649 MiB | 107 -> 188 MiB | 134 -> 220 MB |
-| OpenWrt | ready: settings and firewall zone; `apk add dockerd docker docker-compose` (29.6.1, compose 5.1.4) | 58 MiB (251 with Docker in it) | 21 MiB (86) | 45 MB (113) |
-| OpenWrt with the panel | ready, as OpenWrt; `luci-app-dockerman` adds LuCI > Docker | 61 MiB (254 with Docker) | 23 MiB (87) | 46 MB (114) |
-
-Ubuntu's own packages, not docker-ce: they come from the archive the image already uses, `apt` updates them with
-everything else, and they are the versions Ubuntu supports (Docker 29 in both releases). containerd's stress tool, its
-command line (`ctr`) and the `docker trust` plugin are left out with dpkg `path-exclude` (55 MB that `docker` and
-`docker compose` do not use; upgrades do not bring them back). OpenWrt: the 25.12 feed's packages (`containerd-stress`
-and `ctr` removed in the image build when `MU300_DOCKER=1`).
-
-**Why OpenWrt has it ready and not installed.** With Docker in the image, plain OpenWrt's system on F50-C was 472 MiB
-(with the device's vendor files, 205 MiB) of the region's 775. The first install fits; the next update by zip does not:
-it unpacks the new system beside the old one before it carries the user's files over, and the zip of the same release
-stopped at `tar: No space left on device` (nothing was changed, as the installer says; it left `openwrt.new`, 300 MB,
-on the disk until the next run cleans it, and the disk was 98% full meanwhile). Without Docker the system is 263 MiB and
-the update fits. Docker installed with `apk` is a package of the device, which an update does not copy (it is installed
-again at the first boot), but on 800 MiB its 190 MB in the old system still leave too little room for the new one: the
-README says to remove the packages before such an update and add them after it (the data stays). `MU300_DOCKER=1`
-builds an OpenWrt image with Docker in it (and `luci-app-dockerman` on the panel system); one such image ran Docker on
-6.18 on F50-C.
-
-The same arithmetic for Ubuntu: 608 + 205 MiB per system, twice during a zip update, is about 1.63 GiB, more than the
-1.6 GiB region the installers allow for Ubuntu. Ubuntu keeps Docker installed (it is the system people install Docker on,
-and usually on far more room: F50-B has 32 GB); its minimum with room for an update should become 2.0 GiB (install.sh's
-`NEED_UBUNTU`, install.ps1, the Magisk installer's figures), or the update should link the new image's files that are
-byte for byte the old image's instead of unpacking them again. Neither is in this change.
-
-**Started when used, not at boot.** Ubuntu: `docker.socket` is enabled, `docker.service` and `containerd.service` are
-not; the first `docker` command started both in 1.8 s. dockerd and containerd took 115 + 50 MB RSS after a compose run
-(F50-B, 7.2), 85 + 44 MB on OpenWrt 6.18, 63 + 31 MB on 5.4: memory a dongle without containers keeps.
-`systemd-networkd-wait-online.service` is disabled in the image, so `docker.service`'s `Wants=network-online.target`
-does not wait. OpenWrt: the image build removes the enable link apk makes; an `apk add` on the device enables it (the
-package's post-install), which the README says.
-
-**The data lives beside the systems.** `data-root` is `/mnt/mu300-disk/docker/<system>` (ubuntu, openwrt,
-openwrt-luci): on the Linux partition next to `ubuntu/`, `openwrt/` and `extra/`, outside the directory a system boots
-from. An update unpacks the new system and carries the user's files of the old one into it (FINDINGS 85);
-`/var/lib/docker` inside the system would be carried too - copied in full when the old version is kept for a rollback
-(`mu300-update apply`), and its overlay2 layers are what fills a device. Outside, the carry never sees it: nothing is
-copied, nothing is left behind in `<os>.old`, and a rollback finds the same images and containers. Measured on F50-C:
-v2026.10.16.1 -> .97 (Docker in the image; images loaded, a compose project with `restart: unless-stopped`) -> .98
-(Docker not in the image) -> `apk add`: the images and the compose container were there and running, on 5.4 after 6.18;
-on F50-B .1 -> .98 by `mu300-update apply --from` the zip, then the rollback. A system without `/mnt/mu300-disk` (one at
-the root of the partition, from before the systems had directories) keeps the data inside itself and has it carried as
-before; `mu300-carry` keeps extended attributes and device nodes, so overlay2's whiteouts and opaque directories survive
-that too. The classic overlay2 store (`"features": {"containerd-snapshotter": false}`): on a fresh install Docker 29 uses
-containerd's image store, which keeps every image twice (the compressed blobs and the unpacked snapshots) and in
-containerd's own root.
-
-**The firewall: Docker's nftables backend.** `"firewall-backend": "nftables"` (Docker 29, experimental): Docker writes
-its own tables (`ip docker-bridges`, and `ip6 docker-bridges` on Ubuntu) and no iptables rules. With iptables Docker sets
-the iptables FORWARD policy to DROP when it turns forwarding on, which would stop the hotspot's forwarding on Ubuntu, and
-its rules need `xt_addrtype`, which the 5.4 kernel does not have (below). On Ubuntu `mu300_filter`'s forward policy is
-accept, so nothing else is needed; `"ip-forward": false` keeps Docker from refusing to start while the system forwards
-nothing (mobile-data and wifi-client turn forwarding on). On OpenWrt fw4's forward chain rejects what no zone lets
-through, and an accept in Docker's table does not end the packet's way through fw4's chain. So
-`/etc/uci-defaults/95-mu300-docker` adds, once (the marker `/etc/mu300/docker-zone`), the zone `docker`: devices
-`docker0`, `br-+` and `!br-lan` and subnet 172.16.0.0/12, which fw4 matches together (`iifname "br-*" iifname != "br-lan"
-ip saddr 172.16.0.0/12`), with Docker's `default-address-pools` set to that range in `/etc/docker/daemon.json`;
-input and forward REJECT (below); forwardings docker -> wan and lan -> docker, none from wan. Measured: containers on the default bridge and on a compose
-network reach the internet (masqueraded by Docker), a LAN client (a network namespace on br-lan, and the Mac over USB)
-reaches a published port and still reaches the internet, and a container does not reach a LAN client by itself. The
-package's init script reads `/etc/docker/daemon.json` (`alt_config_file`), so an `apk add` on the device keeps these
-settings (its own `/etc/config/dockerd` is written as `.apk-new`). The zone has the names of the package's `uciadd`
-(network `docker`, bridge device `docker0`), made in advance: when `uciadd` had to add them at the first boot with
-dockerd enabled, its network reload took docker0 from the dockerd that had just made it (`adding interface ... to bridge
-docker0 failed: Device does not exist`, F50-C, 5.4); with them in place it changes nothing (network and firewall
-unchanged across that boot, and Docker working, measured).
-
-**Containers are kept off the device itself (security review of this change).** The first version of the zone had
-input and forward ACCEPT: any container - often a third party's image - could open the router's own services (dropbear,
-uhttpd/LuCI, ubus over rpcd, dnsmasq), so a compromised container was a way into the device. Now the zone has input
-REJECT and forward REJECT (output ACCEPT), and no docker -> lan forwarding. Containers need nothing from the router:
-on the default bridge Docker gives them the host's upstream resolvers (8.8.8.8 when the host has only 127.0.0.1), on a
-user network its own resolver at 127.0.0.11 asks from the host's side, through loopback; DHCP is Docker's IPAM. Two
-containers on one network talk over their bridge, which is switched and never reaches the firewall (Docker 29 did not
-load br_netfilter, measured on 7.2; `13-mu300-docker.conf` keeps bridge filtering off where it is loaded), and Docker's
-own nftables chains drop what goes from one Docker network to another whatever fw4 says (measured on Ubuntu, whose
-forward policy is accept: a container on another network timed out against the compose service, one on its network got
-the page) - forward REJECT adds the same refusal in fw4. Measured with fw4's own ruleset (`fw4 print` of the image's
-config, loaded with nft in a network namespace setup like the device's: br-lan, docker0, a compose bridge, sipa_eth0):
-from a container the router's ports 22, 80 and 53 on its Docker and LAN addresses were refused, as were a container of
-another Docker network and a LAN client; a LAN client reached a container's port and the router's SSH. This review came
-before any release had the zone, so no device has the old one (and the marker would keep a changed one as it is).
-Ubuntu: Docker's nftables backend opens nothing of the host (no iptables rules, no FORWARD policy) and `docker run -p`
-publishes on every address, but what comes from the cellular side for a published port is DNATed and then dropped in
-`mu300_filter`'s forward chain (`iifname "sipa_eth*" counter drop` after established), and from a Wi-Fi uplink by
-wifi-client's table in the same way; docker-proxy's own listeners (IPv6, hairpin) are behind the input chain's drop for
-those interfaces. `firewall.nft` now drops what comes from `docker0` and the `br-*` bridges other than br-lan to the
-device itself (after established): measured on F50-B, a container got no answer from the device's SSH on 172.17.0.1 and
-on its LAN address 192.168.79.1 (drop counters rising), resolved names, and a LAN client still had SSH and the published
-port. On Ubuntu a container can open connections to LAN clients, as on any Docker host (the forward policy is accept).
-
-The feed's kmods for Docker add `/etc/modules.d` entries (br_netfilter, the legacy iptables tables, btrfs, raid6) that
-ubox would load at every boot of a mainline kernel that has them as modules; the image build removes the ones Docker's
-packages add, and `/etc/sysctl.d/13-mu300-docker.conf` turns bridge firewalling off again after the package's
-`12-br-netfilter-ip.conf` turned it on (with br_netfilter loaded, every frame between hotspot and USB clients would go
-through fw4; that happens after an `apk add` on the device).
-
-**Kernels (moby's `check-config.sh`).** Every "generally necessary" option is there in the three kernels (namespaces,
-cgroups v2 with cpu, cpuset, io, memory and pids, veth, bridge, overlayfs, nf_tables with NAT, masquerade, fib and ct,
-seccomp, keys). What is missing matters for the iptables backend, which the images do not use, or is optional:
-* 5.4 (`kernel/linux.config`): `NETFILTER_XT_MATCH_ADDRTYPE` (Docker's iptables rules need it: dockerd with the iptables
-  backend cannot start on 5.4), `BRIDGE_NETFILTER`, `IP6_NF_NAT`, `IP6_NF_TARGET_MASQUERADE`, `NETFILTER_XT_MATCH_IPVS`;
-  optional `CGROUP_HUGETLB`, `NET_CLS_CGROUP`, `CFS_BANDWIDTH` (`docker run --cpus`), `IP_VS*` (swarm), `IP_SCTP`.
-  Not changed here.
-* 6.18 and 7.2 (the v2026.10.16.1 builds of `upstream/mu300-mainline.config`): the legacy iptables tables
-  (`IP_NF_FILTER`, `IP_NF_NAT`, `IP_NF_MANGLE`, `IP_NF_RAW`, `IP_NF_TARGET_MASQUERADE`, `IP_NF_TARGET_REDIRECT` and the
-  IPv6 ones; the images' iptables is iptables-nft, which does not use them) and `NETFILTER_XT_NAT` (iptables-nft's
-  DNAT and SNAT: `docker run -p` with the iptables backend); optional `CGROUP_PERF`, `IP_SCTP`, `CRYPTO_GHASH`
-  (encrypted overlay networks, 7.2).
-* None of them: AppArmor or SELinux (Docker runs without a profile).
-
-**Found on the way: every OpenWrt device had the same TLS key.** The uhttpd package makes its key pair when apk installs
-it in the image build, and the published images carried `/etc/uhttpd.key` (v2026.10.16.1's plain OpenWrt: sha256
-ad78a3f7..., the same on F50-C as in the release tarball): LuCI over HTTPS used one private key on every device, and
-anyone who downloads the release has it. The image build removes the pair now (uhttpd makes its own at the first start,
-as it does whenever the pair is missing: F50-C got one), and the audit of `make-release.sh` refuses an image with
-`etc/uhttpd.key`. An update to such an image takes the old key away with the old image (the image's file, not the
-user's); a key the device made itself is the user's and is kept (the way back to v2026.10.16.1 kept F50-C's).
-(Main has the same fix as its own section, 132.)
-
-**Again after the delta updates, 2026-10-17** (test builds of this branch with the other open PRs; F50-B Ubuntu 24.04
-7.2.11, F50-C plain OpenWrt 6.18.57 in its 804 MiB region):
-
-* **Ubuntu:** Docker 29.1.3, `ubuntu` in the `docker` group, `docker.service` inactive until the first command
-  (socket), data-root `/mnt/mu300-disk/docker/ubuntu` (kept through the next update), an image loaded offline, a
-  container on docker0 and one on a user network: neither reaches the device's SSH (172.17.0.1, 192.168.79.1); compose
-  publishes a port that the Mac reached over the LAN.
-* **OpenWrt, ready (the default):** `/etc/docker/daemon.json`, `/etc/config/dockerd` and the `docker` zone (input and
-  forward REJECT) are in place; `apk add dockerd docker docker-compose` (+234 MiB) started with data-root
-  `/mnt/mu300-disk/docker/openwrt`, overlay2, 29.6.1; a container reached the internet over mobile data and neither
-  the router's SSH nor its web server; compose published a port the Mac fetched over USB. `apk del` took it out again
-  (its modules.d entries too), and with it the package removed the zone and the `docker` interface (its ucidel) but
-  left the two forwardings: a later `apk add` makes the package's own zone, not this one (the uci-defaults script ran
-  once at the first boot). Noted, not changed.
-* **Docker in the OpenWrt image, now that updates write only what changed?** Measured, and still no: a
-  `MU300_DOCKER=1` image (90 MB tarball) as an update of F50-C's OpenWrt (392 MiB installed, 345 MiB free with the
-  download staged elsewhere) needs 422 MB with the rollback copy and 390 MB with `--no-rollback`, as mu300-update
-  counts it - it refuses before changing anything. The images keep Docker ready, not installed.
-
 ### 131. An update writes only what changed: the unchanged binaries of the new image are the installed ones
 
 **Status: current** (unit tests; the zip, `mu300-update apply` and the computer installer on F50-C, plain OpenWrt with
@@ -8848,6 +9241,354 @@ in `/etc/uci-defaults`, a reboot: the script ran and was gone, uhttpd had made a
 answered over both. Through all of it the VPN stayed up with the same exit IP, and the sha256 of every file of
 `/etc/config` and `/etc/mu300/vpn*` was the same as before.
 
+### 104. The U30 Air's live SIM switch turned mobile data back on that the user had switched off
+
+From kanoqwq's clean-tf-7.2 `2d3b6f3f` ("complete U30 Air support"), where he took our dual-SIM controller
+(`mu300-sim-u30`, §74) into his tree and changed it: "when the user has switched the WAN off, it stays off after the
+switch; an explicit choice is saved as the boot default". Ours did not do that. Read in his code, rewritten here; none
+of it run on a device.
+
+**What ours did.** A live switch (`mu300-sim switch 1|2`, the Dual SIM page's buttons) takes the wan down, moves the
+radio, and then brings the wan up on the target with `ifup wan` (and on the way back after a failure, and after a busy
+channel). It also removed `/run/mu300-mobile-data-down`, the marker that `mobile-data down` leaves so that its
+watchdog does not dial again. So with mobile data switched off - the panel's button, `ifdown wan`, the data cap, all
+of which leave netifd's `autostart` off (`sim_wan_held_down`, §74) - a switch turned it back on: the `ifup` dialled
+the new card at once, and even without it the watchdog, its marker gone, would have found no context and run
+`ifup wan` itself ("mobile data lost, reconnecting"). For a user who turned data off for the cost (a card without a
+plan, abroad: the roaming hold of §120 is a separate thing and is not affected) that is data they did not ask for. The
+switch then also waited a minute for a bearer and, when none came because data was off, treated the target as a card
+without data: back to the previous card, or `no_data_kept`.
+
+**Changed.** The switch reads `sim_wan_held_down` before it touches anything. When the wan was held down:
+
+* no `ifup` anywhere (`wan_back`), and the watchdog's marker stays: data stays off on whichever card is in use, after
+  a switch, a rollback (`rolled_back`) or a busy channel (nothing changed);
+* after the radio sequence the target is published, saved as the boot default and reported `switched`, with no wait
+  for a bearer there cannot be (his choice, taken: the user chose the card; a second card with its connection off is
+  kept by the boot check as well, `mu300-sim2-warmup`). It is not added to `sim-data-seen`: no data was seen on it;
+* `switch <the card in use>` saves it as the default without asking for data.
+
+With mobile data on, nothing changes: the marker goes, `ifup`, the minute's wait, the way back without data.
+
+**Not taken from the same change.** His `wait_wan_down` (after `ifdown`, up to 15 s until netifd's status says
+`"up": false` and not `pending`) before the radio sequence. netifd sets the interface to its teardown state inside
+the `down` call itself, and its status reports a tearing-down interface as `"up": false, "pending": false` already:
+the check passes at once and does not wait for the protocol's teardown. What it was for, the old card's teardown
+(`mobile-data down`, AT commands) running into the switch, is covered here by `mu300-at`'s gate: while the switch
+holds its lock every AT client but the switch is told "busy" (§74). His per-SIM early lock replay after a switch and
+his `unisoc_modem.main.data_sim` storage belong to his per-SIM locks and his configuration layout; not taken.
+
+**Unit tests** (`tests/test_sim_hot.py`, the netifd stub reporting `"autostart": false` until an `ifup`): a switch
+both ways with data off (no `ifup`, the marker kept, the default saved, nothing in `sim-data-seen`); a failed switch
+and a busy channel with data off (no `ifup`, the marker kept); the card in use saved without data; with data on the
+marker still goes and the target is dialled. The first three fail on the previous script.
+
+**Device checklist (before merge; U30 Air, openwrt-luci, live switching on and both cards in):**
+
+    # data off: the panel's mobile data switch, or ifdown wan
+    ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # false, false
+    ls /run/mu300-mobile-data-down                                   # there
+    mu300-sim switch 2; ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # still false, false
+    ls /run/mu300-mobile-data-down; uci get network.wan.sim_slot     # still there; 1 (the boot default: SIM2)
+    sleep 70; ifconfig sipa_eth8 | grep inet                         # nothing: the watchdog did not dial
+    mu300-sim switch 1                                               # the same, back
+    # data on again (the panel or ifup wan): a switch dials the target and saves it once it has data, as before
+    mu300-sim switch 2; mu300-sim status                             # switched, wan up on sipa_eth8
+
+**Device test (2026-10-17, U30 Air, openwrt-luci v2026.10.16.1 with this `mu300-sim-u30`, live switching on, SIM1
+with data, SIM2 registered emergency-only).** Data off with `ifdown wan`: `up` false, `autostart` false, the marker
+there. `switch 2`: `switched`, `active`/`default` 2, wan still down, marker kept, `sim_slot` 1; 70 s later no address
+on either bearer and no redial in the log. `switch 1`: the same back (`sim_slot` 0), still nothing after 70 s.
+`switch 1` with SIM1 in use and data off: `switched`, no bearer wait. Data on (`ifup wan`), `switch 2`: SIM2 has no
+data, so `no_data`, rolled back to SIM1, wan up again on SIM1 with a new address (unchanged behaviour). The case
+"data on, `switch 2` dials SIM2" could not be run: SIM2 has no service here.
+
+### 105. The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written
+
+From kanoqwq's clean-tf-7.2 `2af101f8` ("complete U30 Air power, LED and PD dock support"), his patch 0017 ("retain
+live soc before reset"), on top of the same 0006/0010/0011 as ours (his copies are byte for byte ours). Rewritten here
+as `upstream/patches/0018-power-sc27xx-fuel-gauge-UMP9620-capacity-kept-at-power-off.patch`; his code read, not run.
+
+**What it is about.** The capacity a U30 Air boots with, under Linux or Android, is the one in the FGU's always-on
+user area (§33d). Since 0011 the driver writes it there whenever somebody reads the capacity and its whole percent
+has changed. Two gaps:
+
+* **Nobody has to read it before a power-off.** Here mu300-power reads it every 10 s (its loop), so the gap is at most
+  a loop; without that daemon (stopped, or a power-off right after a change, which is when the low-battery power-off
+  runs) the next boot starts from an older value. A `.shutdown` callback now reads the capacity once more under the
+  driver's lock, writes it (0-100) and the boot mode "normal power-on" with it. Only on UMP9620 with a battery present:
+  the F50 and the V50 have none (their FGU reports made-up values), SC2731 keeps mainline's behaviour, and a probe
+  that never finished (no driver data) is skipped. A failure is a `dev_warn`, never a stop: a power-off must go on.
+* **The user-area writes could be skipped.** The area is written in three steps: CLEAR (the mask), SET (the value),
+  CLEAR back to 0. `regmap_update_bits()` reads a register first and does not write when the bits already read back
+  as wanted. What these two registers read back is not documented; kano found that a skipped step loses the value
+  ("retained SET/CLEAR registers require unconditional writes even when their readback is unchanged"). The six writes
+  of `save_boot_mode()` and `save_last_cap()` are now `regmap_write_bits()`, which always writes. The values are the
+  same; each write was already followed by the datasheet's 200 us wait. Whether a skip ever happened on our boards is
+  not known: nothing here measured the read-back.
+
+**Built** for 7.2.10 in a copy of the `mu300-mainline` volume's tree (all of our patches, then this one;
+`CONFIG_FUEL_GAUGE_SC27XX=y`, `W=1`): no warning. The file is the same in our 6.18.56 tree, so the patch applies there
+too. **Unit tests:** `tests/test_fgu_shutdown.py` compiles the callback as the patch adds it against stubs of the
+driver's helpers: the capacity kept and clamped, the boot mode with it, nothing written after a failed read or a
+failed capacity write, the lock released on every path, nothing on SC2731, without a battery or without driver data;
+`tests/test_static.py` checks the patch's lines.
+
+**Device checklist (before merge; U30 Air, either system on a mainline kernel with this patch; an F50 for the
+negative):**
+
+    cat /sys/class/power_supply/sc27xx-fgu/capacity          # note it, e.g. 63
+    dmesg | grep -i 'boot capacity'                          # this boot's start
+    # run on battery until the capacity has dropped a few percent, stop mu300-power (systemctl stop mu300-power /
+    # /etc/init.d/mu300-power stop), let it drop one more percent without reading it, then poweroff
+    # power on: dmesg 'boot capacity N % (saved 0x...)' with N the last value, not the one of the last read
+    reboot; dmesg | grep -i 'battery capacity not kept'     # nothing
+    # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
+    # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
+
+**Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
+built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
+callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
+(saved 0x050)` every boot, the same as the capacity read before each reboot, no warning or oops. The battery stayed at
+80 % (`Not charging` on USB), so a capacity that changed without being read was not produced, and `poweroff` was not
+run: the U30 Air has a battery, so nothing here can switch it on again without a button. The low-battery power-off
+of `mu300-power` was not reached (not drained); it ends in the same `poweroff` path. F50-B (Ubuntu, no battery),
+7.2.11 + 0018: boots, the fuel gauge's messages are the same as without 0018 (it reads `boot capacity` from the user
+area as before), the reboot completed with nothing new in the log. Android after Linux was not checked.
+
+### 106. Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes
+
+From kanoqwq's clean-tf-7.2 `0e19fe32` ("fix Unisoc WPA3 hotspots"): among his firmware-SAE changes to
+`sc2355/cmdevt.c` are three return values in `sc2355_send_cmd_recv_rsp()`, which our driver (mainline module and the
+5.4 vendor driver, the same code at this point) has as he found them. Taken in our words; his SAE part is not
+(below).
+
+**What it was.** `sc2355_send_cmd_recv_rsp()` returned 0 without sending anything in three cases:
+
+* `cmdevt_lock_cmd()` refused the command lock: the driver is going away (`SPRD_CMD_EXIT_VAL` added to the count) or,
+  with `DRV_RESET_SELF`, the CP has asserted. `ret` was still the API check's 0.
+* `block_cmd_after_close`: between the CLOSE of the last interface and the WCN power-off, every command but CLOSE.
+* `change_iface_block_cmd`: during an interface type change with one mode open, every command but CLOSE and OPEN.
+
+The last two also left `*rlen` as the caller had set it (the size of its reply buffer), so the caller took its own
+buffer for the firmware's answer. `sc2355_get_station()` copies the reply into the station's signal, rates and
+failures whatever the return value, and `sprd_cfg80211_get_station()` reports them when the return is 0: the bytes of
+an uninitialised stack structure went to nl80211, whose GET_STATION any local user may ask (`iw dev wlan0 link`). A
+small leak of kernel stack in a narrow window (the hotspot stopping or changing mode, or the module unloading), but
+one. And every setting sent in those windows "succeeded" with the firmware never seeing it.
+
+**Changed (mainline `upstream/modules/sprd_wlan_combo/sc2355/cmdevt.c`, and the same as
+`kernel/patches/wlan_combo-unsent-cmd-error.patch` for 5.4):** the refused lock returns `-EIO`, the two blocked
+windows `-EBUSY` with `*rlen` 0 (the API-check failure keeps its own value and message); `get_station`'s reply
+structure starts zeroed, which also covers a reply shorter than the structure. Callers that only test for non-zero
+now see the failure: a userspace setting tried in those windows gets `EBUSY` instead of a silent no-op.
+
+**Not taken from `0e19fe32`.** The firmware-SAE bridge (driver: `sae.h`, `SAE_OFFLOAD_AP`, `max_num_akm_suites = 3`, a
+`CMD_SET_SAE_PARAM` status check; hostapd: `unisoc_sae_import()`, his patched wpad packages in every image). It imports
+the PMK from a vendor element (`dd 34 40 45 da 04`) at the end of the association IEs of `NEW_STATION`, which is the
+same design as our opt-in SAE work (`docs/U30AIR-SAE.md`, open PR #237) and has the same open question that
+`docs/U30AIR-SAE-HANDOFF.md` describes: that buffer carries client-controlled association IEs, and nothing shows that
+the element came from the firmware. His guard (one such element, at the end, or a cached PMKSA) is syntax, not
+provenance; a client that does PMKSA caching without a fresh firmware element and brings its own is the case to rule
+out. His build also turns the bridge on for every `sae`/`psk-sae` BSS on this driver, while ours is an opt-in. Left
+to that work; nothing of it here. Also not taken: his `wpad` replacement, the graphical installer (Tauri) and his
+desktop installer changes.
+
+**Built** (2026-10-16, compared with the same build of `main`): the mainline module for 7.2.10 against the
+`mu300-mainline` volume's tree, 92 warnings before and after, none in the changed lines; the 5.4 driver: the
+thirteen `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver, and every object compiles
+(the final ThinLTO link was not run: it needs a writable kernel output tree). **Unit tests:** `tests/test_wifi_tx_path.py`
+(`WifiCommandNotSent`) reads the source and the 5.4 patch.
+
+**Device checklist (before merge; F50 and U30 Air, 6.18, 7.2 and 5.4, the hotspot on):**
+
+    dmesg -C
+    wifi down; wifi up   (OpenWrt)  /  systemctl restart mu300-hotspot  (Ubuntu)   # the hotspot comes back, clients rejoin
+    dmesg | grep -E 'need block cmd'               # the blocked commands, if any, as before
+    # while restarting the hotspot, ask for the station from another shell as a normal user:
+    while :; do iw dev wlan0 link; done            # no made-up signal/rates; errors are fine
+    # switch the Wi-Fi client mode on and off (the wifi-client command or LuCI), then the hotspot again: comes back
+    # the U30 Air's Wi-Fi key (2.4 <-> 5 GHz, off/on): every change takes effect
+    rmmod sprd_wlan_combo; modprobe sprd_wlan_combo (or reboot): Wi-Fi comes up, no oops
+
+**Device test (2026-10-17).** The module of this branch, built against #256's 6.18.57 and 7.2.11 trees, and the 5.4
+driver built by `kernel/build-all.sh` with the new patch (the build is reproducible: of its 187 modules only
+`sprd_wlan_combo.ko` differs from v2026.10.16.1's, so it went onto the released 5.4 as the only change). An
+unprivileged user (`ubuntu`; `nobody` on OpenWrt) ran `iw dev wlan0 link` and `iw dev wlan0 station dump` in a loop
+throughout.
+
+| | F50-B Ubuntu 7.2.11 | F50-B Ubuntu 5.4 | U30 Air openwrt-luci 6.18.57 |
+|---|---|---|---|
+| hotspot restarts | `systemctl restart mu300-hotspot` x5: AP back in 21-22 s each (7.2.10 released: 21 s) | x5: 8-9 s (released driver: 8-9 s) | `wifi down; wifi up` x8: 3-6 s; band 2.4 -> 5 -> 2.4 -> 5 with `mu300-wifi-band`: takes effect (ch 6 / ch 36) |
+| the user's loop | 22902 rounds: `Not connected.` only | 21872 rounds: the same | 35965 rounds: the station's line, `No such device` while wlan0 was gone |
+| module reload | `rmmod`/`modprobe` under the loop: AP back | the same | `rmmod`, `insmod` of the released module, back to this one: the client rejoined each time |
+| client mode | scan mode on, reboot: station mode, scan lists networks; `wifi-client disconnect`: hotspot back | - | - |
+| errors | no `need block cmd`, no oops; `iface_tx_timeout` once per start, as with 7.2.10 | `iface_tx_timeout` and its `dev_watchdog` WARNING, and the boot's `add_uevent_var` WARNING: both the same with the released module | no oops, no warning |
+
+A station's figures on the U30 Air (one client): `signal 0 dBm`, `tx bitrate (unknown)`, rx 650-780 MBit/s VHT
+with this module and with the released one alike (the access point side reports what the firmware gives; not this
+change). Not run: a station whose link the F50 reports in client mode (no network it may join here), iperf.
+
+
+### 150. USB-C power delivery on the U30 Air: the UMP9620's port controller under TCPM (EXPERIMENTAL, off by default)
+
+**Status: experimental** (built against 6.18.57 and 7.2.11, unit tests; not run on a device yet, see the PR's device
+checklist). Off unless `sudo mu300-usb pd on`.
+
+**What for.** A PD dock with its own charger (USB-C charger in, USB-A ports and Ethernet out) is meant to charge the
+U30 Air and have it as its USB host at once; ZTE's Android does that. Mainline had no driver for the PMIC's Type-C
+and PD blocks: VBUS came from a GPIO, the source's Rp was read by the charger (§40, patch 0012), and `mu300-usb host`
+put the data role and the 5 V boost together, so a dock could either charge it or be its device, not both.
+
+**Where it comes from.** kano (kanoqwq/mu300-linux, branch clean-tf-7.2, commit 2af101f8, "complete U30 Air power, LED
+and PD dock support") put Unisoc's `sc27xx_pd.c` register sequences under mainline's TCPM: a 654-line driver, a charger
+patch (his 0018) that makes the boost a regulator and lets a PD contract set the input current, and `mu300-usb` asking
+`/sys/class/typec/port0/data_role`. On his unit a computer gave device + sink, and a dock with its charger gave host +
+sink after a manual data role swap (an RTL8153 on the dock came up in the LAN); the dock's own switch to host did not
+happen, and his last receive fix was not run against the dock again. Unisoc's originals were read for this review from
+ZTE's U30 Air kernel (Enceka/android_kernel_zte_ums9620_mifi_u30air: `drivers/usb/typec/tcpm/sc27xx_pd.c`,
+`drivers/usb/typec/sc27xx_typec.c`, `sprd_tcpm.c`).
+
+**Review of kano's driver.** What it does right: the Type-C block keeps its own state machine (attach, detach, the CC
+pin), which is how Unisoc uses it too; TCPM is registered last and unregistered first (its workers use the port);
+TX_OK and a received GoodCRC complete one transmission once; the RX FIFO is flushed after each frame (on the device it
+holds the CRC behind the frame, which was taken for the next header before); the VBUS GPIO's extcon covers VBUS
+changes without a CC event; and it binds only where the Type-C node has `use_pdhub_c2c`. What was changed:
+
+| | kano's version | now |
+|---|---|---|
+| on by default | built in, bound at every boot | a module, and probe returns at once unless `enable=1` (`mu300-usb pd on`); Ubuntu's udev does not load it (`modprobe.d` blacklist) |
+| boards | `use_pdhub_c2c` | that, the PD node enabled, and `/charger_policy_service` (the U30 Air only, as patch 0016); the F50's PD node is disabled, the V50 has no charger policy service |
+| 5 V out | `regulator_enable` whenever TCPM asked | the charger's `otg-vbus` regulator refuses while an outside supply is on VBUS (power good, VBUS_STAT not its own boost), after 100 ms for it to go (a power role swap) |
+| a boost left on by a crash in host mode | stayed on: `mu300-usb boot` skipped its check with the port controller there | switched off by the charger at probe, before anything can use the port |
+| VCONN | the PMIC's VCONN switch on whenever TCPM asked, a cable's Ra reported | never: ZTE's firmware does not source it (no `vconn-supply` on the PD node, so Unisoc's `set_vconn` fails) and which CC pin the switch drives is not known; Ra not reported |
+| missing `vbus-supply` | a dummy regulator (`devm_regulator_get`): "5 V on" with nothing on | an error (`devm_regulator_get_optional`) |
+| shutdown and unload | PD clocks off; the Type-C block left in whatever mode TCPM last set | the clocks stay on (the module enable covers the Type-C block LK and Android rely on); the Type-C block's mode and enable registers put back as the boot left them (the PMIC keeps them across a reboot: a block left source-only would not let a charger see a sink); boost off; device |
+| calibration | the Type-C trim written before the PD clocks were on | clocks, then calibration, in Unisoc's order, in TCPM's init |
+| message IDs | not cleared at a new session, the TX ID not at a hard reset | both FIFOs emptied and both IDs cleared at every new PD session and every hard reset, sent or received (Unisoc's `sc27xx_pd_reset`) |
+| input current | passed on after any received message, the Rp-based values TCPM reports included | only for an explicit contract (the partner sent Source_Capabilities): in PD 3.0 a source's Rp only says whether the sink may talk (SinkTxOk is Rp 3 A whatever it offers), so §40's Rp current would be wrong under a contract; without one the charger's BC1.2/Rp choice stays |
+| data role at unplug | stayed host (TCPM never hands it back at a detach) | device at once when the Type-C block says detached |
+| locking | `set_cc`, `set_roles`, `set_pd_rx` without the driver's lock | every callback that touches the PD block holds it; TCPM is called with it held only where TCPM merely queues |
+| receive errors | enabled as an interrupt and ignored | not enabled (Unisoc counts them and switches the interrupt off after 100 in two minutes) |
+| PDOs | source 5 V 500 mA, sink 5 V 2 A | source 5 V 400 mA (ZTE's own, from the board's connector node), Rp default; sink 5 V 2 A (the charger's DCP current) |
+
+Still open, for the device (the PR's checklist): whether the Type-C block follows a mode change while attached
+(TCPM's Try.SNK and power role swaps write it; Unisoc's driver never did, it signals a swap through `WC_REG`), whether
+a hard reset we send raises TX_OK, whether a second frame can sit behind the first in the RX FIFO (the FIFO level is at
+debug level: `echo 'module ump9620_tcpc +p' > /sys/kernel/debug/dynamic_debug/control`), and why the dock did not swap
+to host by itself on kano's unit (TCPM accepts a partner's DR_Swap; it does not start one).
+
+**The pieces.** `upstream/patches/0019` (charger: the boost as the `otg-vbus` regulator, refused against an outside
+supply, a stale boost off at probe, a PD contract's input current kept across VBUS events and dropped with VBUS),
+`0020` (`drivers/usb/typec/tcpm/ump9620-tcpc.c`, one file); `CONFIG_TYPEC`, `CONFIG_TYPEC_TCPM` and
+`CONFIG_TYPEC_UMP9620` as modules on both kernels. `mu300-usb pd on|off|status` loads the module with `enable=1` (and
+at every boot while on, `/etc/mu300/usb-pd`) or unloads it; while it is bound `host`/`device` ask TCPM for a data role
+swap and write no charger register, `device` is refused while the port powers what is plugged in (an OTG adapter:
+unplugging it is the way back), and a partner without PD on outside power (a hub with a charger) still gets host
+written directly, with the boost off, as before. `boot` keeps switching a stale boost off, unless the port controller
+is bound (then the boost is its source role).
+
+**On the U30 Air (2026-10-17, OpenWrt, 6.18.57 with 0019/0020, a Mac on the cable).** Off (the default): the module is
+not loaded, the charger probes as before (`PMIC + Type-C: usb_type 3 ... input current 2000 mA, charging on`), the
+`otg-vbus` regulator is registered, nothing else changes. Two fixes from that run: the build's device-tree check
+(`check-dt-modules.py`) stopped at `ump9620_tcpc binds to sprd,ump9620-pd` - it is listed in `dt-modules-allowed.txt`
+now, since its probe returns -ENODEV without `enable=1` and Ubuntu's udev does not load it at all; and OpenWrt's
+`modprobe` (kmodloader) loads the dependencies but drops `enable=1`, so `pd on` saw the probe say "off" and reported
+that the port controller did not bind - `mu300-usb` loads it again by its path with `insmod`, which passes the option.
+Then `pd on`: bound, data role device, power role sink, the USB network to the Mac kept (three attach/detach flaps in
+the first two seconds, then steady); `pd off` unloads it and the port is a device as before. Not tried: an OTG adapter,
+a PD dock, a charger with PD (no such hardware at hand).
+
+### 151. The U30 Air's battery LED shows the battery, as ZTE's firmware
+
+**Status: current** (unit tests; ZTE's behaviour read from the stock firmware and ZTE's guide, 2026-10-16; not yet
+watched on a device, see the PR's checklist).
+
+**Before.** The battery LED (the PMIC's RGB LED, `sc27xx-bltc`; its green channel is white) was lit white while Linux
+ran (`mu300-led power on`), blinked 1 s / 1 s in the charging boot, and timed out with the others after LED_TIMEOUT.
+Nothing showed the charge. kano's fork (kanoqwq/mu300-linux, branch clean-tf-7.2, commit 2af101f8) made it blue and
+breathing while charging, white when full, red blinking at 15 % and below, and kept every LED lit on outside power;
+the thresholds and colours were his choice.
+
+**What ZTE's firmware does.** Read from a U30 Air's own backup (build `U30Air_SSV1.0.0B14`, the `super` partition's
+logical partitions taken apart offline, nothing run, no device booted into Android):
+
+- `system/framework/services.jar`, `ZteBatteryService$ZteLed.updateLightsLocked()`, the branch for the U30
+  ("IndicatingLed ufi with battery", gated by `ro.vendor.feature.zte_leds_for_u30`): white (`0x007800`: the green
+  channel at 120) at 60 % and above, blue (`0x0000c8`: 200) from 10 %, red (`0x960000`: 150) below; not charging (Full
+  included) `setFlashing(colour, 1, 0, 0)`, steady; charging `setFlashing(colour, 1, 800, 1200)`.
+- The lights HAL (`vendor.sprd.hardware.lights-service`, the battery handler): an on or off time under 125 ms is
+  steady (trigger `none`, the brightness written); otherwise the `pattern` trigger with
+  `hw_pattern` "b 2on/5 b 3on/5 b 2off/5 b 3off/5": for 800/1200 "b 320 b 480 b 480 b 720", the PMIC's own
+  rise/high/fall/low curve, a 2 s breath.
+- `NotificationManagerService`: every LED goes dark 15 s after boot, a key press or an unplug, unless the device is
+  charging or full on the charger; `ZteBatteryService.turnOffUfiBatteryLight()` leaves the battery LED on below
+  10 %, so the red does not time out.
+- Power-off charging (`ztecharger`) lights the same colours with another curve and 5 % for red; not used here (LK's
+  charging boot comes to Linux, §36).
+
+ZTE's guide for the U30 Air (国际漫游指南, https://oss.ztedevices.com/prod/cn/2024/12/20241213641.pdf, item 4, the battery
+light) agrees: 红色常亮：电池电量低。蓝色常亮：电池电量中等。白色常亮：电池电量高或满。红色、蓝色或白色闪烁：充电中 (steady
+red: low; steady blue: medium; steady white: high or full; red, blue or white blinking: charging).
+
+**Now.** `mu300-led` draws the three channels from the battery (U30 Air only; the F50's same LED is its network light,
+the V50's PMIC LEDs are never written):
+
+- the fuel gauge's capacity and status (`sc27xx-fgu` on mainline, `battery` on 5.4) and outside power from the
+  charger's `online` (`bq256xx-charger`; `usb`/`ac` on 5.4); the gauge's status alone only where no charger says
+  anything, since it says Charging for a while after an unplug (kano saw it);
+- ZTE's colours, levels and thresholds; breathing on the pattern trigger with ZTE's curve
+  (`CONFIG_LEDS_TRIGGER_PATTERN`, now in the mainline config; the port's `leds-sc27xx-bltc` has had `pattern_set`
+  all along), a timer blink 800/1200 ms where there is no pattern trigger; the curve is written only when the state
+  changes, so a tick does not restart the breath;
+- on outside power no LED times out; an unplug starts the timeout again from then (ZTE's 15 s; LED_TIMEOUT here,
+  60 s by default); below 10 % on the battery the red stays lit whatever the timeout; `power off` (shutdown) puts it
+  out for good;
+- the heat alarm's siren goes over it (`thermal-guard`), and the battery LED is drawn again as the battery is then
+  when the alarm ends; mu300-power's idle still darkens everything but the low-battery red.
+
+The battery is read at every tick of `mu300-buttons` (every 5 s, `mu300-led tick`, which then lets the LEDs time out
+as `sleep --if-due` did), so a plug or a crossing of 60 % or 10 % shows within 5 s, with no new event wiring on
+Ubuntu or OpenWrt. `mu300-led battery` does it on demand. The charging boot (`charge on`) shows the charge the same
+way instead of the white blink.
+### 152. The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware
+
+**Status: current** (read from the stock firmware and ZTE's own guide, 2026-10-16; not yet looked at on a device).
+
+**What was wrong.** §33f found which element is where (the Wi-Fi light's white is LDO VDDCAMA1, its blue LDO VDDCAMA2)
+but not what ZTE means by them, and `mu300-led` lit blue on 5 GHz and white on 2.4 GHz. kano's fork (kanoqwq/mu300-linux,
+branch clean-tf-7.2, commit 2af101f8, "complete U30 Air power, LED and PD dock support") has them the other way round,
+white on 5 GHz and blue on 2.4 GHz, as the V50's lamp is (§95).
+
+**What ZTE's firmware does.** Read from a U30 Air's own backup (build `U30Air_SSV1.0.0B14`, slot a; the `super`
+partition's logical partitions taken apart offline, nothing run, no device booted into Android):
+
+- `system/framework/services.jar`, `NotificationManagerService.updateLightsLocked()`: the hotspot off gives
+  `mWifiLight.setFlashing(100, 2, 0, 0)`; on, a `packed-switch` on `mWifiBand` (from
+  `WifiManager.getSoftApConfiguration().getBand()`) with the one key 1 (`BAND_2GHZ`) gives 102, every other band
+  (`BAND_5GHZ` = 2, combinations) 101. `mWifiLight` is `getLight(1)`, the keyboard light.
+- `vendor/bin/hw/vendor.sprd.hardware.lights-service`, the keyboard light's handler ("setLightKeyboard"): with flash
+  mode 2, 100 writes 0 to both `zte_ldo_leds/vddcama1_status` and `vddcama2_status`, 101 lights `vddcama1` alone, 102
+  `vddcama2` alone. The path is gated by `ro.vendor.feature.zte_leds_for_u30=true` and `zte_feature_ufi_light=true`
+  (`vendor/build.prop`, and the same in the unit's getprop).
+- So 5 GHz is VDDCAMA1, white; 2.4 GHz VDDCAMA2, blue; steady, never blinking.
+
+ZTE's guide for the U30 Air (国际漫游指南, https://oss.ztedevices.com/prod/cn/2024/12/20241213641.pdf, item 5, the Wi-Fi
+light) says the same: 白色常亮：Wi-Fi 5 GHz 启用。蓝色常亮：Wi-Fi 2.4GHz 启用。灭：Wi-Fi 关闭、关机或待机模式 (steady white: 5 GHz
+on; steady blue: 2.4 GHz on; off: Wi-Fi off, powered off or standby).
+
+**The change.** `mu300-led` maps the 5 GHz hotspot to `zte-ldo1` and 2.4 GHz to `zte-ldo2` (mainline's `leds-zte-ldo`,
+and `vddcama1/2_status` under 5.4). The README, the wiki's hardware notes and the website's feature pages (English,
+Turkish, Chinese) say white 5 GHz, blue 2.4 GHz.
+
+**Not changed here, for a look on the device.** The same `NotificationManagerService.setNetLight()` picks the network
+light by the SIM in use, not by the access technology: 11 (VDDCAMA0, white) for SIM slot 0, 12 (`net_blue`) for slot 1,
+13 (`keyboard-backlight`, red) without service; the variant that picks by 4G/5G (`ZTE_FEATURE_UFI_LIGHT_V1`) is not
+set on this unit. The guide says the same (blue: the built-in eSIM in use, white: the nano-SIM; blinking while the SIM
+is switched; white/blue with red flashing: no internet on that SIM). §33f's "blue on 4G, white on 5G" was sampled
+with the radio off and `vddcama0` lit on 5G, which a nano-SIM in slot 0 would also explain. `mu300-led` still shows
+4G/5G. **Update:** changed in §154.
+
 ### 153. A reinstall after an uninstall on a device that made room: "it asks to repartition again"
 
 **The report** (a user, through the owner, 2026-10-16): a device whose userdata the installer had shrunk (the make-room
@@ -8902,6 +9643,63 @@ was never resized (sectors 12275712..120500223 throughout).
 uses the region (offer_repartition does, for userdata); only the grow path of uninstall.sh can make them differ, and
 it now says to restart.
 
+### 154. The U30 Air's network LED: the SIM in use, as ZTE's firmware (white slot 0, blue slot 1, red no service)
+
+**Status: current** (read from the stock firmware and ZTE's guide, 2026-10-16; unit tests; not yet looked at on a
+device).
+
+**What was wrong.** `mu300-led` lit the U30 Air's network light blue on 4G (`net_blue`) and white on 5G (LDO
+VDDCAMA0, `zte-ldo0`), as on the F50. §152 found that ZTE's firmware does not do that on this device: its
+`NotificationManagerService.setNetLight()` (U30 Air backup, build `U30Air_SSV1.0.0B14`, `system/framework/services.jar`)
+picks the colour by `mSimSlotId`, not by the access technology:
+
+- SIM ready and connected: `mWifiLight.setFlashing(11, ...)` for slot 0, `12` for slot 1 (dual SIM; a single-SIM
+  build always 11). The lights HAL (`vendor.sprd.hardware.lights-service`, the keyboard light's handler) lights
+  VDDCAMA0 for 11 (white) and `net_blue` for 12 (blue).
+- No SIM or not connected (`!mSimReady || !mNetConnected`), or `mNetValue` 1: 13, the red (`keyboard-backlight`); with
+  `FLASH_NONETWORK` a runnable flashes it instead.
+- A SIM switch (`zte.intent.action.sim_switch`): `mSwitching`, the light first off (10), then `switchSimRunnable`
+  until the new card is up.
+- The variant that picks by 4G/5G, `ZTE_FEATURE_UFI_LIGHT_V1`, is not set on this unit.
+
+ZTE's guide for the U30 Air (https://oss.ztedevices.com/prod/cn/2024/12/20241213641.pdf, the network light) says the
+same: blue, the built-in eSIM in use; white, the nano-SIM; blinking while the SIM is switched; red, no service; white
+or blue with red flashing, no internet on that SIM. Slot 0 is the nano-SIM (`mu300-sim select external`), slot 1 the
+eSIM (`internal`). §33f's "blue on 4G, white on 5G" was sampled with the radio off and `vddcama0` lit on 5G, which the
+nano-SIM in slot 0 explains as well.
+
+**The change** (`rootfs/overlay/opt/mu300/bin/mu300-led`, one program for Ubuntu and OpenWrt):
+
+- U30 Air, `data on` and `data 5g` (mobile-data still says which; the F50 and the V50 keep 4G/5G): white
+  (`zte-ldo0`, `vddcama0_status` under 5.4) for slot 0, blue (`net_blue`) for slot 1, the other colour and the red
+  dark. `data error` is red alone and `data off` dark, as before.
+- The slot is this boot's pin, `/run/mu300/sim-slot`, which the AT daemons and mobile-data read too (the saved
+  choice is never read: it is tomorrow's). `mu300-led` never creates the file (that would pin a slot before
+  `init.d/mu300-atd` chose one); missing or anything but `1` is slot 0. A `1` counts only on OpenWrt, where
+  `mu300-sim` supports slot 1 on the U30 Air; on Ubuntu `mu300-sim active` answers 0 for it, and so does the LED.
+- A live switch (`mu300-sim-u30 switch`, OpenWrt): once the old connection is taken down, `mu300-led data
+  switching <target>` makes the target card's colour blink (the timer trigger, 0.5 s on, 0.5 s off; the 5.4 kernel's
+  LDO switches have no trigger, so there it is steady). netifd's teardown of the old connection comes whenever it
+  comes; its `data off`/`data error` leave the blink alone while `/run/mu300/sim-switching` is there and the switch was
+  announced. The dial on the new card (`led_up`, refused while the switch marker exists) shows its colour steady; a
+  rollback's dial the old card's. A switch that ends without a dial (no data on either card, a radio left unknown and a
+  reboot) clears the marker, and the next `off`/`error` is shown as usual. The blink survives the LED timeout and idle
+  like every other state (`sleep` puts it out, `wake` starts it again).
+- The call is cosmetic: `mu300-sim-u30` ignores a missing or failing `mu300-led` (`MU300_LED_CMD` for tests).
+
+**Not done.** ZTE's "white or blue with red flashing" for a SIM without internet: here a card registered but
+without data is dark (`data off`), as before; whether that should flash red as well is the owner's call.
+
+**Tests** (`tests/test_device_scripts.py`, `Led`, every shell): both slots with `on`, `5g`, `on` (no colour change
+with the technology), `error` and `off`; the slot sources (none: slot 0 and no file made; `1` on Ubuntu: slot 0; junk:
+slot 0; `1` on OpenWrt: blue); the switch blink (the timer trigger and its delays, held through `off` and `error` while
+switching, kept across `sleep`/`wake`, steady on the next `on`, released once the marker is gone, a bad slot refused,
+other devices unaffected); the 5.4 LDO switch steady. `tests/test_sim_hot.py`: the switch calls `mu300-led data
+switching <slot>` after `ifdown wan` with the marker set, and a failing or missing `mu300-led` changes nothing.
+
+**On a device (to do):** a U30 Air on OpenWrt with both cards: the network light white on the nano-SIM, blue on the
+eSIM, whatever 4G or 5G; blinking during a live switch from the panel, steady in the new colour when data is up; red
+with no SIM; Ubuntu on the U30 Air white.
 ### 156. The release smoke test: tools/smoke.py
 
 **Status: current** (unit tests with fakes, `tests/test_smoke.py`; not yet run against a device).
@@ -9010,6 +9808,195 @@ parses the committed keyrings' packets to pin their fingerprints to the `.fpr` f
 **Not covered here:** the OpenWrt rootfs download (`openwrt/build-rootfs.sh`) still checks `sha256sums` without
 OpenWrt's signature (`sha256sums.asc`/`.sig`); the vendor 5.4 sources are git checkouts pinned by commit hash
 (`kernel/build-all.sh`), which no tarball signature applies to.
+
+### 104. The U30 Air's live SIM switch turned mobile data back on that the user had switched off
+
+From kanoqwq's clean-tf-7.2 `2d3b6f3f` ("complete U30 Air support"), where he took our dual-SIM controller
+(`mu300-sim-u30`, §74) into his tree and changed it: "when the user has switched the WAN off, it stays off after the
+switch; an explicit choice is saved as the boot default". Ours did not do that. Read in his code, rewritten here; none
+of it run on a device.
+
+**What ours did.** A live switch (`mu300-sim switch 1|2`, the Dual SIM page's buttons) takes the wan down, moves the
+radio, and then brings the wan up on the target with `ifup wan` (and on the way back after a failure, and after a busy
+channel). It also removed `/run/mu300-mobile-data-down`, the marker that `mobile-data down` leaves so that its
+watchdog does not dial again. So with mobile data switched off - the panel's button, `ifdown wan`, the data cap, all
+of which leave netifd's `autostart` off (`sim_wan_held_down`, §74) - a switch turned it back on: the `ifup` dialled
+the new card at once, and even without it the watchdog, its marker gone, would have found no context and run
+`ifup wan` itself ("mobile data lost, reconnecting"). For a user who turned data off for the cost (a card without a
+plan, abroad: the roaming hold of §120 is a separate thing and is not affected) that is data they did not ask for. The
+switch then also waited a minute for a bearer and, when none came because data was off, treated the target as a card
+without data: back to the previous card, or `no_data_kept`.
+
+**Changed.** The switch reads `sim_wan_held_down` before it touches anything. When the wan was held down:
+
+* no `ifup` anywhere (`wan_back`), and the watchdog's marker stays: data stays off on whichever card is in use, after
+  a switch, a rollback (`rolled_back`) or a busy channel (nothing changed);
+* after the radio sequence the target is published, saved as the boot default and reported `switched`, with no wait
+  for a bearer there cannot be (his choice, taken: the user chose the card; a second card with its connection off is
+  kept by the boot check as well, `mu300-sim2-warmup`). It is not added to `sim-data-seen`: no data was seen on it;
+* `switch <the card in use>` saves it as the default without asking for data.
+
+With mobile data on, nothing changes: the marker goes, `ifup`, the minute's wait, the way back without data.
+
+**Not taken from the same change.** His `wait_wan_down` (after `ifdown`, up to 15 s until netifd's status says
+`"up": false` and not `pending`) before the radio sequence. netifd sets the interface to its teardown state inside
+the `down` call itself, and its status reports a tearing-down interface as `"up": false, "pending": false` already:
+the check passes at once and does not wait for the protocol's teardown. What it was for, the old card's teardown
+(`mobile-data down`, AT commands) running into the switch, is covered here by `mu300-at`'s gate: while the switch
+holds its lock every AT client but the switch is told "busy" (§74). His per-SIM early lock replay after a switch and
+his `unisoc_modem.main.data_sim` storage belong to his per-SIM locks and his configuration layout; not taken.
+
+**Unit tests** (`tests/test_sim_hot.py`, the netifd stub reporting `"autostart": false` until an `ifup`): a switch
+both ways with data off (no `ifup`, the marker kept, the default saved, nothing in `sim-data-seen`); a failed switch
+and a busy channel with data off (no `ifup`, the marker kept); the card in use saved without data; with data on the
+marker still goes and the target is dialled. The first three fail on the previous script.
+
+**Device checklist (before merge; U30 Air, openwrt-luci, live switching on and both cards in):**
+
+    # data off: the panel's mobile data switch, or ifdown wan
+    ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # false, false
+    ls /run/mu300-mobile-data-down                                   # there
+    mu300-sim switch 2; ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # still false, false
+    ls /run/mu300-mobile-data-down; uci get network.wan.sim_slot     # still there; 1 (the boot default: SIM2)
+    sleep 70; ifconfig sipa_eth8 | grep inet                         # nothing: the watchdog did not dial
+    mu300-sim switch 1                                               # the same, back
+    # data on again (the panel or ifup wan): a switch dials the target and saves it once it has data, as before
+    mu300-sim switch 2; mu300-sim status                             # switched, wan up on sipa_eth8
+
+**Device test (2026-10-17, U30 Air, openwrt-luci v2026.10.16.1 with this `mu300-sim-u30`, live switching on, SIM1
+with data, SIM2 registered emergency-only).** Data off with `ifdown wan`: `up` false, `autostart` false, the marker
+there. `switch 2`: `switched`, `active`/`default` 2, wan still down, marker kept, `sim_slot` 1; 70 s later no address
+on either bearer and no redial in the log. `switch 1`: the same back (`sim_slot` 0), still nothing after 70 s.
+`switch 1` with SIM1 in use and data off: `switched`, no bearer wait. Data on (`ifup wan`), `switch 2`: SIM2 has no
+data, so `no_data`, rolled back to SIM1, wan up again on SIM1 with a new address (unchanged behaviour). The case
+"data on, `switch 2` dials SIM2" could not be run: SIM2 has no service here.
+
+### 105. The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written
+
+From kanoqwq's clean-tf-7.2 `2af101f8` ("complete U30 Air power, LED and PD dock support"), his patch 0017 ("retain
+live soc before reset"), on top of the same 0006/0010/0011 as ours (his copies are byte for byte ours). Rewritten here
+as `upstream/patches/0018-power-sc27xx-fuel-gauge-UMP9620-capacity-kept-at-power-off.patch`; his code read, not run.
+
+**What it is about.** The capacity a U30 Air boots with, under Linux or Android, is the one in the FGU's always-on
+user area (§33d). Since 0011 the driver writes it there whenever somebody reads the capacity and its whole percent
+has changed. Two gaps:
+
+* **Nobody has to read it before a power-off.** Here mu300-power reads it every 10 s (its loop), so the gap is at most
+  a loop; without that daemon (stopped, or a power-off right after a change, which is when the low-battery power-off
+  runs) the next boot starts from an older value. A `.shutdown` callback now reads the capacity once more under the
+  driver's lock, writes it (0-100) and the boot mode "normal power-on" with it. Only on UMP9620 with a battery present:
+  the F50 and the V50 have none (their FGU reports made-up values), SC2731 keeps mainline's behaviour, and a probe
+  that never finished (no driver data) is skipped. A failure is a `dev_warn`, never a stop: a power-off must go on.
+* **The user-area writes could be skipped.** The area is written in three steps: CLEAR (the mask), SET (the value),
+  CLEAR back to 0. `regmap_update_bits()` reads a register first and does not write when the bits already read back
+  as wanted. What these two registers read back is not documented; kano found that a skipped step loses the value
+  ("retained SET/CLEAR registers require unconditional writes even when their readback is unchanged"). The six writes
+  of `save_boot_mode()` and `save_last_cap()` are now `regmap_write_bits()`, which always writes. The values are the
+  same; each write was already followed by the datasheet's 200 us wait. Whether a skip ever happened on our boards is
+  not known: nothing here measured the read-back.
+
+**Built** for 7.2.10 in a copy of the `mu300-mainline` volume's tree (all of our patches, then this one;
+`CONFIG_FUEL_GAUGE_SC27XX=y`, `W=1`): no warning. The file is the same in our 6.18.56 tree, so the patch applies there
+too. **Unit tests:** `tests/test_fgu_shutdown.py` compiles the callback as the patch adds it against stubs of the
+driver's helpers: the capacity kept and clamped, the boot mode with it, nothing written after a failed read or a
+failed capacity write, the lock released on every path, nothing on SC2731, without a battery or without driver data;
+`tests/test_static.py` checks the patch's lines.
+
+**Device checklist (before merge; U30 Air, either system on a mainline kernel with this patch; an F50 for the
+negative):**
+
+    cat /sys/class/power_supply/sc27xx-fgu/capacity          # note it, e.g. 63
+    dmesg | grep -i 'boot capacity'                          # this boot's start
+    # run on battery until the capacity has dropped a few percent, stop mu300-power (systemctl stop mu300-power /
+    # /etc/init.d/mu300-power stop), let it drop one more percent without reading it, then poweroff
+    # power on: dmesg 'boot capacity N % (saved 0x...)' with N the last value, not the one of the last read
+    reboot; dmesg | grep -i 'battery capacity not kept'     # nothing
+    # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
+    # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
+
+**Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
+built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
+callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
+(saved 0x050)` every boot, the same as the capacity read before each reboot, no warning or oops. The battery stayed at
+80 % (`Not charging` on USB), so a capacity that changed without being read was not produced, and `poweroff` was not
+run: the U30 Air has a battery, so nothing here can switch it on again without a button. The low-battery power-off
+of `mu300-power` was not reached (not drained); it ends in the same `poweroff` path. F50-B (Ubuntu, no battery),
+7.2.11 + 0018: boots, the fuel gauge's messages are the same as without 0018 (it reads `boot capacity` from the user
+area as before), the reboot completed with nothing new in the log. Android after Linux was not checked.
+
+### 106. Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes
+
+From kanoqwq's clean-tf-7.2 `0e19fe32` ("fix Unisoc WPA3 hotspots"): among his firmware-SAE changes to
+`sc2355/cmdevt.c` are three return values in `sc2355_send_cmd_recv_rsp()`, which our driver (mainline module and the
+5.4 vendor driver, the same code at this point) has as he found them. Taken in our words; his SAE part is not
+(below).
+
+**What it was.** `sc2355_send_cmd_recv_rsp()` returned 0 without sending anything in three cases:
+
+* `cmdevt_lock_cmd()` refused the command lock: the driver is going away (`SPRD_CMD_EXIT_VAL` added to the count) or,
+  with `DRV_RESET_SELF`, the CP has asserted. `ret` was still the API check's 0.
+* `block_cmd_after_close`: between the CLOSE of the last interface and the WCN power-off, every command but CLOSE.
+* `change_iface_block_cmd`: during an interface type change with one mode open, every command but CLOSE and OPEN.
+
+The last two also left `*rlen` as the caller had set it (the size of its reply buffer), so the caller took its own
+buffer for the firmware's answer. `sc2355_get_station()` copies the reply into the station's signal, rates and
+failures whatever the return value, and `sprd_cfg80211_get_station()` reports them when the return is 0: the bytes of
+an uninitialised stack structure went to nl80211, whose GET_STATION any local user may ask (`iw dev wlan0 link`). A
+small leak of kernel stack in a narrow window (the hotspot stopping or changing mode, or the module unloading), but
+one. And every setting sent in those windows "succeeded" with the firmware never seeing it.
+
+**Changed (mainline `upstream/modules/sprd_wlan_combo/sc2355/cmdevt.c`, and the same as
+`kernel/patches/wlan_combo-unsent-cmd-error.patch` for 5.4):** the refused lock returns `-EIO`, the two blocked
+windows `-EBUSY` with `*rlen` 0 (the API-check failure keeps its own value and message); `get_station`'s reply
+structure starts zeroed, which also covers a reply shorter than the structure. Callers that only test for non-zero
+now see the failure: a userspace setting tried in those windows gets `EBUSY` instead of a silent no-op.
+
+**Not taken from `0e19fe32`.** The firmware-SAE bridge (driver: `sae.h`, `SAE_OFFLOAD_AP`, `max_num_akm_suites = 3`, a
+`CMD_SET_SAE_PARAM` status check; hostapd: `unisoc_sae_import()`, his patched wpad packages in every image). It imports
+the PMK from a vendor element (`dd 34 40 45 da 04`) at the end of the association IEs of `NEW_STATION`, which is the
+same design as our opt-in SAE work (`docs/U30AIR-SAE.md`, open PR #237) and has the same open question that
+`docs/U30AIR-SAE-HANDOFF.md` describes: that buffer carries client-controlled association IEs, and nothing shows that
+the element came from the firmware. His guard (one such element, at the end, or a cached PMKSA) is syntax, not
+provenance; a client that does PMKSA caching without a fresh firmware element and brings its own is the case to rule
+out. His build also turns the bridge on for every `sae`/`psk-sae` BSS on this driver, while ours is an opt-in. Left
+to that work; nothing of it here. Also not taken: his `wpad` replacement, the graphical installer (Tauri) and his
+desktop installer changes.
+
+**Built** (2026-10-16, compared with the same build of `main`): the mainline module for 7.2.10 against the
+`mu300-mainline` volume's tree, 92 warnings before and after, none in the changed lines; the 5.4 driver: the
+thirteen `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver, and every object compiles
+(the final ThinLTO link was not run: it needs a writable kernel output tree). **Unit tests:** `tests/test_wifi_tx_path.py`
+(`WifiCommandNotSent`) reads the source and the 5.4 patch.
+
+**Device checklist (before merge; F50 and U30 Air, 6.18, 7.2 and 5.4, the hotspot on):**
+
+    dmesg -C
+    wifi down; wifi up   (OpenWrt)  /  systemctl restart mu300-hotspot  (Ubuntu)   # the hotspot comes back, clients rejoin
+    dmesg | grep -E 'need block cmd'               # the blocked commands, if any, as before
+    # while restarting the hotspot, ask for the station from another shell as a normal user:
+    while :; do iw dev wlan0 link; done            # no made-up signal/rates; errors are fine
+    # switch the Wi-Fi client mode on and off (the wifi-client command or LuCI), then the hotspot again: comes back
+    # the U30 Air's Wi-Fi key (2.4 <-> 5 GHz, off/on): every change takes effect
+    rmmod sprd_wlan_combo; modprobe sprd_wlan_combo (or reboot): Wi-Fi comes up, no oops
+
+**Device test (2026-10-17).** The module of this branch, built against #256's 6.18.57 and 7.2.11 trees, and the 5.4
+driver built by `kernel/build-all.sh` with the new patch (the build is reproducible: of its 187 modules only
+`sprd_wlan_combo.ko` differs from v2026.10.16.1's, so it went onto the released 5.4 as the only change). An
+unprivileged user (`ubuntu`; `nobody` on OpenWrt) ran `iw dev wlan0 link` and `iw dev wlan0 station dump` in a loop
+throughout.
+
+| | F50-B Ubuntu 7.2.11 | F50-B Ubuntu 5.4 | U30 Air openwrt-luci 6.18.57 |
+|---|---|---|---|
+| hotspot restarts | `systemctl restart mu300-hotspot` x5: AP back in 21-22 s each (7.2.10 released: 21 s) | x5: 8-9 s (released driver: 8-9 s) | `wifi down; wifi up` x8: 3-6 s; band 2.4 -> 5 -> 2.4 -> 5 with `mu300-wifi-band`: takes effect (ch 6 / ch 36) |
+| the user's loop | 22902 rounds: `Not connected.` only | 21872 rounds: the same | 35965 rounds: the station's line, `No such device` while wlan0 was gone |
+| module reload | `rmmod`/`modprobe` under the loop: AP back | the same | `rmmod`, `insmod` of the released module, back to this one: the client rejoined each time |
+| client mode | scan mode on, reboot: station mode, scan lists networks; `wifi-client disconnect`: hotspot back | - | - |
+| errors | no `need block cmd`, no oops; `iface_tx_timeout` once per start, as with 7.2.10 | `iface_tx_timeout` and its `dev_watchdog` WARNING, and the boot's `add_uevent_var` WARNING: both the same with the released module | no oops, no warning |
+
+A station's figures on the U30 Air (one client): `signal 0 dBm`, `tx bitrate (unknown)`, rx 650-780 MBit/s VHT
+with this module and with the released one alike (the access point side reports what the firmware gives; not this
+change). Not run: a station whose link the F50 reports in client mode (no network it may join here), iperf.
+
 
 ### 163. Linux 6.18.57 and 7.2.11 with every module the boards can use, KVM, and what Docker and dockur/windows-arm need
 
@@ -9293,195 +10280,54 @@ The mainline workflow at this branch's head (`gh workflow run mainline.yml -f kv
 6.18.57 run 38969491239 passed; after the build the runner (ubuntu-24.04-arm) had 99 GB free on `/` (145 GB), the
 volume held 8.7 GB (7.2.11) and 8.3 GB (6.18.57). The release job builds both into one volume, about 17 GB beside the
 5.4 build: no cleanup is needed. Both workflows print `df` and the volume's size after the kernels now.
+### 170. "Failed to send request: Operation not permitted" behind the VPN's kill switch
+A report from the owner's U30 Air (openwrt-luci v2026.10.16.1, a sing-box profile, the kill switch on):
+`mu300-extra install vpn-dae` printed `Failed to send request: Operation not permitted` four times, then
+`cannot download SHA256SUMS of the VPN module` and `the VPN module could not be downloaded (is the device online?
+...)`. After `mu300-vpn killswitch off` (which restarts the VPN) the same command downloaded the tarball.
 
-### 104. The U30 Air's live SIM switch turned mobile data back on that the user had switched off
+**What the message means.** uclient-fetch (OpenWrt's `wget`) prints `Failed to send request: %s` with
+`strerror(rc)`, where `rc` is uclient's own error code, not an errno: `UCLIENT_ERROR_CONNECT` is 1, and
+`strerror(1)` is "Operation not permitted". So the line says only "no connection could be made" - a name that did
+not resolve, a refused or dropped connect, a timeout - never anything about permissions. The four lines are
+`fetch_stdout`'s four tries.
 
-From kanoqwq's clean-tf-7.2 `2d3b6f3f` ("complete U30 Air support"), where he took our dual-SIM controller
-(`mu300-sim-u30`, §74) into his tree and changed it: "when the user has switched the WAN off, it stays off after the
-switch; an explicit choice is saved as the boot default". Ours did not do that. Read in his code, rewritten here; none
-of it run on a device.
+**Reproduced** in an OpenWrt 25.12 container (the real uclient-fetch and busybox) with the uplink renamed
+`sipa_eth0`, mu300-vpn's kill switch ruleset, sing-box 1.14.1 with the TUN config `gen_singbox` writes
+(`auto_route`, `strict_route`, `default_mark` 0x2d0) and a shadowsocks server in a second container, running
+v2026.10.16.1's own `mu300-extra` and `mu300-update`:
 
-**What ours did.** A live switch (`mu300-sim switch 1|2`, the Dual SIM page's buttons) takes the wan down, moves the
-radio, and then brings the wan up on the target with `ifup wan` (and on the way back after a failure, and after a busy
-channel). It also removed `/run/mu300-mobile-data-down`, the marker that `mobile-data down` leaves so that its
-watchdog does not dial again. So with mobile data switched off - the panel's button, `ifdown wan`, the data cap, all
-of which leave netifd's `autostart` off (`sim_wan_held_down`, §74) - a switch turned it back on: the `ifup` dialled
-the new card at once, and even without it the watchdog, its marker gone, would have found no context and run
-`ifup wan` itself ("mobile data lost, reconnecting"). For a user who turned data off for the cost (a card without a
-plan, abroad: the roaming hold of §120 is a separate thing and is not affected) that is data they did not ask for. The
-switch then also waited a minute for a bearer and, when none came because data was off, treated the target as a card
-without data: back to the previous card, or `no_data_kept`.
-
-**Changed.** The switch reads `sim_wan_held_down` before it touches anything. When the wan was held down:
-
-* no `ifup` anywhere (`wan_back`), and the watchdog's marker stays: data stays off on whichever card is in use, after
-  a switch, a rollback (`rolled_back`) or a busy channel (nothing changed);
-* after the radio sequence the target is published, saved as the boot default and reported `switched`, with no wait
-  for a bearer there cannot be (his choice, taken: the user chose the card; a second card with its connection off is
-  kept by the boot check as well, `mu300-sim2-warmup`). It is not added to `sim-data-seen`: no data was seen on it;
-* `switch <the card in use>` saves it as the default without asking for data.
-
-With mobile data on, nothing changes: the marker goes, `ifup`, the minute's wait, the way back without data.
-
-**Not taken from the same change.** His `wait_wan_down` (after `ifdown`, up to 15 s until netifd's status says
-`"up": false` and not `pending`) before the radio sequence. netifd sets the interface to its teardown state inside
-the `down` call itself, and its status reports a tearing-down interface as `"up": false, "pending": false` already:
-the check passes at once and does not wait for the protocol's teardown. What it was for, the old card's teardown
-(`mobile-data down`, AT commands) running into the switch, is covered here by `mu300-at`'s gate: while the switch
-holds its lock every AT client but the switch is told "busy" (§74). His per-SIM early lock replay after a switch and
-his `unisoc_modem.main.data_sim` storage belong to his per-SIM locks and his configuration layout; not taken.
-
-**Unit tests** (`tests/test_sim_hot.py`, the netifd stub reporting `"autostart": false` until an `ifup`): a switch
-both ways with data off (no `ifup`, the marker kept, the default saved, nothing in `sim-data-seen`); a failed switch
-and a busy channel with data off (no `ifup`, the marker kept); the card in use saved without data; with data on the
-marker still goes and the target is dialled. The first three fail on the previous script.
-
-**Device checklist (before merge; U30 Air, openwrt-luci, live switching on and both cards in):**
-
-    # data off: the panel's mobile data switch, or ifdown wan
-    ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # false, false
-    ls /run/mu300-mobile-data-down                                   # there
-    mu300-sim switch 2; ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # still false, false
-    ls /run/mu300-mobile-data-down; uci get network.wan.sim_slot     # still there; 1 (the boot default: SIM2)
-    sleep 70; ifconfig sipa_eth8 | grep inet                         # nothing: the watchdog did not dial
-    mu300-sim switch 1                                               # the same, back
-    # data on again (the panel or ifup wan): a switch dials the target and saves it once it has data, as before
-    mu300-sim switch 2; mu300-sim status                             # switched, wan up on sipa_eth8
-
-**Device test (2026-10-17, U30 Air, openwrt-luci v2026.10.16.1 with this `mu300-sim-u30`, live switching on, SIM1
-with data, SIM2 registered emergency-only).** Data off with `ifdown wan`: `up` false, `autostart` false, the marker
-there. `switch 2`: `switched`, `active`/`default` 2, wan still down, marker kept, `sim_slot` 1; 70 s later no address
-on either bearer and no redial in the log. `switch 1`: the same back (`sim_slot` 0), still nothing after 70 s.
-`switch 1` with SIM1 in use and data off: `switched`, no bearer wait. Data on (`ifup wan`), `switch 2`: SIM2 has no
-data, so `no_data`, rolled back to SIM1, wan up again on SIM1 with a new address (unchanged behaviour). The case
-"data on, `switch 2` dials SIM2" could not be run: SIM2 has no service here.
-
-### 105. The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written
-
-From kanoqwq's clean-tf-7.2 `2af101f8` ("complete U30 Air power, LED and PD dock support"), his patch 0017 ("retain
-live soc before reset"), on top of the same 0006/0010/0011 as ours (his copies are byte for byte ours). Rewritten here
-as `upstream/patches/0018-power-sc27xx-fuel-gauge-UMP9620-capacity-kept-at-power-off.patch`; his code read, not run.
-
-**What it is about.** The capacity a U30 Air boots with, under Linux or Android, is the one in the FGU's always-on
-user area (§33d). Since 0011 the driver writes it there whenever somebody reads the capacity and its whole percent
-has changed. Two gaps:
-
-* **Nobody has to read it before a power-off.** Here mu300-power reads it every 10 s (its loop), so the gap is at most
-  a loop; without that daemon (stopped, or a power-off right after a change, which is when the low-battery power-off
-  runs) the next boot starts from an older value. A `.shutdown` callback now reads the capacity once more under the
-  driver's lock, writes it (0-100) and the boot mode "normal power-on" with it. Only on UMP9620 with a battery present:
-  the F50 and the V50 have none (their FGU reports made-up values), SC2731 keeps mainline's behaviour, and a probe
-  that never finished (no driver data) is skipped. A failure is a `dev_warn`, never a stop: a power-off must go on.
-* **The user-area writes could be skipped.** The area is written in three steps: CLEAR (the mask), SET (the value),
-  CLEAR back to 0. `regmap_update_bits()` reads a register first and does not write when the bits already read back
-  as wanted. What these two registers read back is not documented; kano found that a skipped step loses the value
-  ("retained SET/CLEAR registers require unconditional writes even when their readback is unchanged"). The six writes
-  of `save_boot_mode()` and `save_last_cap()` are now `regmap_write_bits()`, which always writes. The values are the
-  same; each write was already followed by the datasheet's 200 us wait. Whether a skip ever happened on our boards is
-  not known: nothing here measured the read-back.
-
-**Built** for 7.2.10 in a copy of the `mu300-mainline` volume's tree (all of our patches, then this one;
-`CONFIG_FUEL_GAUGE_SC27XX=y`, `W=1`): no warning. The file is the same in our 6.18.56 tree, so the patch applies there
-too. **Unit tests:** `tests/test_fgu_shutdown.py` compiles the callback as the patch adds it against stubs of the
-driver's helpers: the capacity kept and clamped, the boot mode with it, nothing written after a failed read or a
-failed capacity write, the lock released on every path, nothing on SC2731, without a battery or without driver data;
-`tests/test_static.py` checks the patch's lines.
-
-**Device checklist (before merge; U30 Air, either system on a mainline kernel with this patch; an F50 for the
-negative):**
-
-    cat /sys/class/power_supply/sc27xx-fgu/capacity          # note it, e.g. 63
-    dmesg | grep -i 'boot capacity'                          # this boot's start
-    # run on battery until the capacity has dropped a few percent, stop mu300-power (systemctl stop mu300-power /
-    # /etc/init.d/mu300-power stop), let it drop one more percent without reading it, then poweroff
-    # power on: dmesg 'boot capacity N % (saved 0x...)' with N the last value, not the one of the last read
-    reboot; dmesg | grep -i 'battery capacity not kept'     # nothing
-    # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
-    # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
-
-**Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
-built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
-callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
-(saved 0x050)` every boot, the same as the capacity read before each reboot, no warning or oops. The battery stayed at
-80 % (`Not charging` on USB), so a capacity that changed without being read was not produced, and `poweroff` was not
-run: the U30 Air has a battery, so nothing here can switch it on again without a button. The low-battery power-off
-of `mu300-power` was not reached (not drained); it ends in the same `poweroff` path. F50-B (Ubuntu, no battery),
-7.2.11 + 0018: boots, the fuel gauge's messages are the same as without 0018 (it reads `boot capacity` from the user
-area as before), the reboot completed with nothing new in the log. Android after Linux was not checked.
-
-### 106. Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes
-
-From kanoqwq's clean-tf-7.2 `0e19fe32` ("fix Unisoc WPA3 hotspots"): among his firmware-SAE changes to
-`sc2355/cmdevt.c` are three return values in `sc2355_send_cmd_recv_rsp()`, which our driver (mainline module and the
-5.4 vendor driver, the same code at this point) has as he found them. Taken in our words; his SAE part is not
-(below).
-
-**What it was.** `sc2355_send_cmd_recv_rsp()` returned 0 without sending anything in three cases:
-
-* `cmdevt_lock_cmd()` refused the command lock: the driver is going away (`SPRD_CMD_EXIT_VAL` added to the count) or,
-  with `DRV_RESET_SELF`, the CP has asserted. `ret` was still the API check's 0.
-* `block_cmd_after_close`: between the CLOSE of the last interface and the WCN power-off, every command but CLOSE.
-* `change_iface_block_cmd`: during an interface type change with one mode open, every command but CLOSE and OPEN.
-
-The last two also left `*rlen` as the caller had set it (the size of its reply buffer), so the caller took its own
-buffer for the firmware's answer. `sc2355_get_station()` copies the reply into the station's signal, rates and
-failures whatever the return value, and `sprd_cfg80211_get_station()` reports them when the return is 0: the bytes of
-an uninitialised stack structure went to nl80211, whose GET_STATION any local user may ask (`iw dev wlan0 link`). A
-small leak of kernel stack in a narrow window (the hotspot stopping or changing mode, or the module unloading), but
-one. And every setting sent in those windows "succeeded" with the firmware never seeing it.
-
-**Changed (mainline `upstream/modules/sprd_wlan_combo/sc2355/cmdevt.c`, and the same as
-`kernel/patches/wlan_combo-unsent-cmd-error.patch` for 5.4):** the refused lock returns `-EIO`, the two blocked
-windows `-EBUSY` with `*rlen` 0 (the API-check failure keeps its own value and message); `get_station`'s reply
-structure starts zeroed, which also covers a reply shorter than the structure. Callers that only test for non-zero
-now see the failure: a userspace setting tried in those windows gets `EBUSY` instead of a silent no-op.
-
-**Not taken from `0e19fe32`.** The firmware-SAE bridge (driver: `sae.h`, `SAE_OFFLOAD_AP`, `max_num_akm_suites = 3`, a
-`CMD_SET_SAE_PARAM` status check; hostapd: `unisoc_sae_import()`, his patched wpad packages in every image). It imports
-the PMK from a vendor element (`dd 34 40 45 da 04`) at the end of the association IEs of `NEW_STATION`, which is the
-same design as our opt-in SAE work (`docs/U30AIR-SAE.md`, open PR #237) and has the same open question that
-`docs/U30AIR-SAE-HANDOFF.md` describes: that buffer carries client-controlled association IEs, and nothing shows that
-the element came from the firmware. His guard (one such element, at the end, or a cached PMKSA) is syntax, not
-provenance; a client that does PMKSA caching without a fresh firmware element and brings its own is the case to rule
-out. His build also turns the bridge on for every `sae`/`psk-sae` BSS on this driver, while ours is an opt-in. Left
-to that work; nothing of it here. Also not taken: his `wpad` replacement, the graphical installer (Tauri) and his
-desktop installer changes.
-
-**Built** (2026-10-16, compared with the same build of `main`): the mainline module for 7.2.10 against the
-`mu300-mainline` volume's tree, 92 warnings before and after, none in the changed lines; the 5.4 driver: the
-thirteen `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver, and every object compiles
-(the final ThinLTO link was not run: it needs a writable kernel output tree). **Unit tests:** `tests/test_wifi_tx_path.py`
-(`WifiCommandNotSent`) reads the source and the 5.4 patch.
-
-**Device checklist (before merge; F50 and U30 Air, 6.18, 7.2 and 5.4, the hotspot on):**
-
-    dmesg -C
-    wifi down; wifi up   (OpenWrt)  /  systemctl restart mu300-hotspot  (Ubuntu)   # the hotspot comes back, clients rejoin
-    dmesg | grep -E 'need block cmd'               # the blocked commands, if any, as before
-    # while restarting the hotspot, ask for the station from another shell as a normal user:
-    while :; do iw dev wlan0 link; done            # no made-up signal/rates; errors are fine
-    # switch the Wi-Fi client mode on and off (the wifi-client command or LuCI), then the hotspot again: comes back
-    # the U30 Air's Wi-Fi key (2.4 <-> 5 GHz, off/on): every change takes effect
-    rmmod sprd_wlan_combo; modprobe sprd_wlan_combo (or reboot): Wi-Fi comes up, no oops
-
-**Device test (2026-10-17).** The module of this branch, built against #256's 6.18.57 and 7.2.11 trees, and the 5.4
-driver built by `kernel/build-all.sh` with the new patch (the build is reproducible: of its 187 modules only
-`sprd_wlan_combo.ko` differs from v2026.10.16.1's, so it went onto the released 5.4 as the only change). An
-unprivileged user (`ubuntu`; `nobody` on OpenWrt) ran `iw dev wlan0 link` and `iw dev wlan0 station dump` in a loop
-throughout.
-
-| | F50-B Ubuntu 7.2.11 | F50-B Ubuntu 5.4 | U30 Air openwrt-luci 6.18.57 |
+| | the router's own traffic (`ip route get 140.82.121.3`) | kill switch drops | result |
 |---|---|---|---|
-| hotspot restarts | `systemctl restart mu300-hotspot` x5: AP back in 21-22 s each (7.2.10 released: 21 s) | x5: 8-9 s (released driver: 8-9 s) | `wifi down; wifi up` x8: 3-6 s; band 2.4 -> 5 -> 2.4 -> 5 with `mu300-wifi-band`: takes effect (ch 6 / ch 36) |
-| the user's loop | 22902 rounds: `Not connected.` only | 21872 rounds: the same | 35965 rounds: the station's line, `No such device` while wlan0 was gone |
-| module reload | `rmmod`/`modprobe` under the loop: AP back | the same | `rmmod`, `insmod` of the released module, back to this one: the client rejoined each time |
-| client mode | scan mode on, reboot: station mode, scan lists networks; `wifi-client disconnect`: hotspot back | - | - |
-| errors | no `need block cmd`, no oops; `iface_tx_timeout` once per start, as with 7.2.10 | `iface_tx_timeout` and its `dev_watchdog` WARNING, and the boot's `add_uevent_var` WARNING: both the same with the released module | no oops, no warning |
+| tunnel up | `dev sbtun`, table 2022 (sing-box's rules 9000-9010: `from 0.0.0.0 iif lo lookup 2022`) | 0 | downloaded through the tunnel and installed in 4 s |
+| tunnel down | `dev sipa_eth0` (main) | 40 packets | the report's output, line for line, after 253 s |
 
-A station's figures on the U30 Air (one client): `signal 0 dBm`, `tx bitrate (unknown)`, rx 650-780 MBit/s VHT
-with this module and with the released one alike (the access point side reports what the firmware gives; not this
-change). Not run: a station whose link the F50 reports in client mode (no network it may join here), iperf.
+So the device's own traffic does go through the tunnel when it is up - for sing-box by its `auto_route`, for xray,
+mihomo, WireGuard, OpenVPN and dae by the core's `routes_up` (rule 9010 sends everything unmarked to table 2022, the
+device's own packets included) - and the kill switch drops it, as it promises, when the tunnel is down. Nothing in
+`mu300-extra install` or `mu300-vpn engine install` stops the tunnel: the download is made with the engine that is
+running, and the new engine is unpacked beside it. The report's "four failures, then success after killswitch off"
+is a tunnel that was not carrying traffic at that moment and came back with the restart that `killswitch off` does
+(`killswitch_cmd`: `svc restart`); a restart with the kill switch left on would have done the same. With the
+kill switch off, a first try made while the restarted engine was not up yet failed once and the retry went through.
 
+**Changed** (`mu300-update`, used by `mu300-extra`): `vpn_ks_blocks` - the kill switch's table `inet mu300_vpn` is
+there (and is not mu300-vpn's own download window, which has the `fetch4` set) and `ip route get` sends this device's
+traffic to `sipa_eth*` or the Wi-Fi client, or nowhere. Then the failure says `blocked by the VPN kill switch: the
+VPN is on and its tunnel is not up, and nothing leaves this device outside it - see mu300-vpn status, and try again
+once the tunnel is up; offline: mu300-extra install NAME --from DIR` instead of "is the device online?", for the VPN
+module, the other extras and `mu300-update check/apply/kernel/boot`; and `fetch_stdout` stops after the first try
+(one minute instead of four: the kill switch drops the next three the same way). Nothing is let through: no
+exemption for downloads, the LAN untouched.
+
+**dae before the download.** `mu300-extra install vpn-dae` now checks the running kernel first, as the module's
+`dae_kernel_ok` does (5.17 or newer, `/sys/kernel/btf/vmlinux`): on the 5.4 vendor kernel it refuses before 17 MB
+are fetched and 56 MB unpacked (`MU300_DAE_ANY_KERNEL=1` for a kernel the device is about to boot). The mainline
+kernels of v2026.10.16.1 (6.18.56, 7.2.10) have BTF and the BPF JIT (`upstream/mu300-mainline.config`, 31p). The
+v2.0.3 `vpn-dae` tarball installs with v2026.10.16.1's `mu300-extra` both online (tunnel up) and with `--from`.
+
+**Open:** why the U30's tunnel was not carrying traffic at that moment, and why the owner's later try ended in
+"vpn-dae was not installed" after the download completed: the device itself could not be examined for this entry.
 ### 174. The dashboard showed IMEI and IMSI as null for hours: a partial identity read was cached for 6 h
 
 Seen on the U30 Air (2026-10-17): the dashboard's IMEI and IMSI were `--` for hours after a boot. The collector
@@ -9510,3 +10356,82 @@ with the partial aged 61 s and the wrapper passing, round 3 filled the IMEI, wro
 the partial; with that cache aged 7 h and `AT+CGSN` failing again, the cache stayed byte for byte and the IMEI was
 still shown. The live path: `sim.json` removed, one normal full round wrote a complete one, and `ubus call mu300dash
 status` (what the dashboard reads) carried IMEI, IMSI and ICCID.
+
+### 175. The U30 Air's firmware SAE offload is disabled in every layer
+
+**Status: current** (unit tests, `tests/test_wpa2_only.py`; the driver built for the mainline kernels by the
+mainline workflow and, for 5.4, every `wlan_combo-*.patch` applied with `--fuzz=0` in the build's order on the
+pristine vendor tree and `common/report.o`, `sc2355/vendor.o` compiled without a warning (the module is not linked
+there: ThinLTO wants to write next to the kernel's objects); the wifi-scripts patch run on the OpenWrt 25.12.5 feed's
+scripts; **not yet run on a device**, the checklist is below).
+
+**Why.** §80's open point: the firmware's `dd 34 40:45:da:04 <PMK><PMKID>` record and the client's association
+request elements share one element list with nothing between them, so whether a client can choose the PMK hostapd
+imports depends on the firmware always appending its own record - which nobody can show for a closed blob, and the
+driver has no SAE-completion signal to check it against. The owner's decision (2026-10-17): no opt-in that might be
+an authentication bypass; WPA2-PSK only, on the F50, the U30 Air and the V50 (one chip, one driver).
+
+**What changed.**
+* **Driver** (`upstream/modules/sprd_wlan_combo`, and `kernel/patches/wlan_combo-softap-no-sae.patch` for 5.4, the
+  same code): `sprd_report_softap()` (`common/report.c`) runs the station's element list through
+  `mu300_strip_sae_pmk_record()` before `cfg80211_new_sta()`: every vendor element starting `40:45:da:04` goes,
+  whoever wrote it and whatever its length, and so does a malformed tail (an element longer than what is left, which
+  no parser takes apart); the list is compacted in place, the rest kept in order; one rate-limited line says a record
+  was dropped, without its bytes. `vendor_set_sae_password()` (`sc2355/vendor.c`, vendor subcommand 43) returns
+  `-EOPNOTSUPP` first thing: the firmware is never given an SAE password. A hostapd built by hand from the old patch
+  finds no record to import.
+* **hostapd**: `openwrt/patches/hostapd/990-u30-sae-offload.patch` and `openwrt/build-u30-sae.sh` removed; the images
+  install the stock `wpad-basic-mbedtls`; `openwrt/build-rootfs.sh` stops on `MU300_SAE_APK_DIR` with a line instead
+  of ignoring it.
+* **wifi-scripts** (`openwrt/patches/wifi-scripts-wpa2-only.patch`, after the DFS patch, whose `log` import it uses;
+  the build checks it is in): in `hostapd.setup()` an access point whose `encryption` is `sae`, `psk3`, `sae-mixed`,
+  `psk3-mixed` or `sae-compat` (with any `+cipher`), or whose `hostapd_bss_options` carries `u30_sae_offload`, is left
+  out of the hostapd configuration with `wifi-scripts: <section>: encryption '<value>' refused: WPA3/SAE is disabled
+  on this Wi-Fi chip ... WPA2-PSK only`. The others on the radio start; an SAE access point never starts, so never
+  open. Run on the 25.12.5 feed's scripts for a fake wiphy: `psk2` and `psk2+ccmp` give `wpa_key_mgmt=WPA-PSK`,
+  `wpa_pairwise=CCMP`; the five SAE modes and the option give the line and no `interface=` block.
+* **Boot** (`mu300-hw`, before its `wifi down; wifi up`): `openwrt-wifi-sae-guard` (precheck, and verify in
+  `mu300-post`) replaced by `openwrt-wifi-wpa2-only migrate`. Every access point (mode `ap` or none) on one of those
+  modes or with the option becomes `psk2+ccmp` with the same `key`; `ieee80211w`, `sae_pwe` and the option go; the
+  file as it was is kept once in `/etc/mu300/wireless.before-wpa2` (mode 600). The password must be one WPA2 takes
+  (8-63 printable ASCII, or 64 hex digits); otherwise, or when uci does not show `psk2+ccmp` afterwards, that access
+  point gets `disabled=1` (and `psk2+ccmp`) - off, never open. One line to the log (`mu300-wifi`, `daemon.warn`;
+  `daemon.err` when an access point is off), and `/etc/mu300/wpa3-disabled` (`state=migrated|down`, the time, the
+  sections; no password). A station-mode interface and a WPA2 hotspot are not touched, and a second boot does nothing.
+* **The notice**: `view/status/include/05_mu300_wpa2.js` (in both OpenWrt systems; Status > Overview) and the control
+  panel's home page, which loads the same module, show that file in English, Turkish or Chinese by the page's language
+  (the module carries its own text: the plain image has no panel catalog; other languages get English), amber when
+  migrated, red when an access point is off, with a Dismiss button that removes the file (rpcd ACL
+  `mu300-wpa2-notice`: that one file, read and remove).
+* **`mu300-api` / web device manager**: WPA3 was never offered. A save on a hotspot still on SAE (a hand edit after
+  boot) also makes it `psk2+ccmp` and restarts Wi-Fi fully; without a password it has or one given, the save is
+  refused (`missing password`). The manager's text says the mode is disabled and why (en/tr/zh).
+* **Ubuntu**: the hotspot was always WPA2-PSK (`hotspot-start`). An `ENCRYPTION`, `SECURITY` or `KEY_MGMT` in
+  `hotspot.conf` asking for SAE/WPA3 is refused with one line; the hotspot starts WPA2-PSK (CCMP).
+* Kept: the driver's removals of the passphrase, station-key and payload prints (§80), worth having without the mode.
+
+**Device checklist (U30 Air first, then an F50; before merge).**
+1. A U30 Air with the offload on (`encryption sae`, `u30_sae_offload=1`, r9 wpad) updated to an image with this change:
+   after the boot the hotspot is up as WPA2 (`ubus call hostapd.wlan0 get_status`: `ENABLED`; the generated
+   `/var/run/hostapd-phy0.conf` has `wpa_key_mgmt=WPA-PSK`, `wpa_pairwise=CCMP`, no `sae`), `logread -e mu300-wifi`
+   has the one line, `/etc/mu300/wireless.before-wpa2` is the old file (mode 600).
+2. A client joins with the same password, gets DHCP and reaches the internet.
+3. LuCI Status > Overview and the panel's home show the notice (English, then Turkish and Chinese); Dismiss removes
+   `/etc/mu300/wpa3-disabled` and the notice stays gone after a reload and a reboot.
+4. Setting WPA3 in LuCI and saving: that access point does not come up (LuCI's apply rolls back if it was the way
+   in), `logread` has the wifi-scripts line; the next boot migrates it again.
+5. `dmesg`: no oops on join/leave; with the old r9 wpad hand-installed, a WPA3 client cannot complete the handshake
+   (no record reaches hostapd: `sprd_wlan: ...: a firmware PMK record ... dropped` if the firmware sent one).
+6. The owner's VPN (`cengiz-abi`) untouched: its configuration and state as before the update, the tunnel up.
+
+**On the U30 Air (2026-10-17, OpenWrt 25.12.5, 6.18.57 with this driver, the files of this change copied over a
+v2026.10.17.1 system; the stock `wpad-basic-mbedtls`, so not item 1's r9 wpad).** `encryption sae` + `ieee80211w 2`
+and `wifi`: the wifi-scripts line (`wifi-scripts: 01: encryption 'sae' refused: ... This access point is not
+started.`), `hostapd.wlan0` not there, no AP - not open. `openwrt-wifi-wpa2-only migrate`: `psk2+ccmp`,
+`ieee80211w` gone, `/etc/mu300/wireless.before-wpa2` mode 600 with the old `sae`, the notice file
+(`state=migrated`, `migrated=ap0`); `wifi`: `ENABLED`, `/var/run/hostapd-phy0.conf` `wpa_key_mgmt=WPA-PSK`,
+`wpa_pairwise=CCMP`, no `sae`; the Mac joined again with the same password. A second `migrate` does nothing. The
+notice on Status > Overview (amber, English) and on the panel's home; Dismiss removed the file. `sae-mixed` by hand,
+then `mu300-api wifi.set` with the same SSID: `security` was `wpa2-wpa3` before, `psk2+ccmp` after, the AP `ENABLED`,
+the client back. A deauth and rejoin of the client: no oops, no warning. The owner's VPN stayed up throughout.
+Not done: items 1 and 5's r9 wpad (not built), Turkish and Chinese notice text, an F50.

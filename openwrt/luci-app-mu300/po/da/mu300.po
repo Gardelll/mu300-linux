@@ -40,6 +40,9 @@ msgstr "Enhedsstyring"
 msgid "Update"
 msgstr "Opdater"
 
+msgid "Backup of settings"
+msgstr "Sikkerhedskopi af indstillinger"
+
 msgid "Languages"
 msgstr "Sprog"
 
@@ -318,6 +321,75 @@ msgstr "Anmodning mislykkedes"
 
 msgid "(empty)"
 msgstr "(tom)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Adgangssætning (mindst 8 tegn)"
+
+msgid "The passphrase again"
+msgstr "Adgangssætningen igen"
+
+msgid "Download the backup"
+msgstr "Hent sikkerhedskopien"
+
+msgid "Back up the settings"
+msgstr "Sikkerhedskopiér indstillingerne"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Én fil med hotspot, mobildata og APN, netværkslåse, VPN-profiler og -indstillinger, SMS-videresendelse, LAN-adresse, værtsnavn, tidszone og SSH-nøgler. Den indeholder adgangskoder: med en adgangssætning krypteres den, og kun den adgangssætning åbner den igen."
+
+msgid "Include the login password"
+msgstr "Medtag login-adgangskoden"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Adgangssætning, hvis filen er krypteret"
+
+msgid "Show what would change"
+msgstr "Vis hvad der ville ændres"
+
+msgid "Restore"
+msgstr "Gendan"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Filen er større end 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Filens indstillinger erstatter disse. Hotspot, mobildata eller LAN kan genstarte, og siden kan miste forbindelsen et øjeblik."
+
+msgid "Restore from a backup"
+msgstr "Gendan fra en sikkerhedskopi"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Hver værdi i filen kontrolleres først; afvises én, ændres intet. Det, der er ens, bliver ikke rørt, og ingen VPN-profil, abonnement eller SSH-nøgle på enheden fjernes."
+
+msgid "Keep this device's login password"
+msgstr "Behold enhedens login-adgangskode"
+
+msgid "Take a file of another device model"
+msgstr "Accepter en fil fra en anden enhedsmodel"
+
+msgid "The two passphrases differ"
+msgstr "De to adgangssætninger er forskellige"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Adgangssætningen skal have mindst 8 tegn"
+
+msgid "Saved (encrypted)"
+msgstr "Gemt (krypteret)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Gemt. Filen er ikke krypteret: den indeholder adgangskoder, opbevar den sikkert."
+
+msgid "Choose a backup file first"
+msgstr "Vælg først en sikkerhedskopi"
+
+msgid "Restoring…"
+msgstr "Gendanner…"
+
+msgid "Restored"
+msgstr "Gendannet"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Gendannelsen blev ikke færdig: se linjerne ovenfor"
 
 msgid "Loading…"
 msgstr "Indlæser…"
@@ -2234,6 +2306,12 @@ msgstr "Kontrolleret for %s siden"
 msgid "Not checked yet"
 msgstr "Ikke kontrolleret endnu"
 
+msgid "Mirror (release files)"
+msgstr "Spejl (udgivelsesfiler)"
+
+msgid "Leave empty for GitHub."
+msgstr "Tom for GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Installer de pakker, jeg har tilføjet, igen efter opdateringen (enheden skal være online ved første start)"
 
@@ -3235,6 +3313,9 @@ msgstr "Ukendt opdateringshandling"
 msgid "Invalid update request"
 msgstr "Ugyldig opdateringsanmodning"
 
+msgid "The backup tool gave no valid reply"
+msgstr "Sikkerhedskopiværktøjet gav intet gyldigt svar"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3685,3 +3766,6 @@ msgstr "Denne fil er ikke signeret: det kræver bekræftelse"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Denne fil er ældre end det, der er installeret: det kræver bekræftelse"
+
+msgid "The release source was not changed"
+msgstr "Udgivelseskilden blev ikke ændret"

@@ -40,6 +40,9 @@ msgstr "Manajemen perangkat"
 msgid "Update"
 msgstr "Perbarui"
 
+msgid "Backup of settings"
+msgstr "Cadangan pengaturan"
+
 msgid "Languages"
 msgstr "Bahasa"
 
@@ -318,6 +321,75 @@ msgstr "Permintaan gagal"
 
 msgid "(empty)"
 msgstr "(kosong)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Frasa sandi (8 karakter atau lebih)"
+
+msgid "The passphrase again"
+msgstr "Frasa sandi sekali lagi"
+
+msgid "Download the backup"
+msgstr "Unduh cadangan"
+
+msgid "Back up the settings"
+msgstr "Cadangkan pengaturan"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Satu berkas berisi hotspot, data seluler dan APN, kunci jaringan, profil dan pengaturan VPN, penerusan SMS, alamat LAN, nama host, zona waktu, dan kunci SSH. Berkas ini berisi kata sandi: dengan frasa sandi berkas dienkripsi, dan hanya frasa itu yang dapat membukanya lagi."
+
+msgid "Include the login password"
+msgstr "Sertakan kata sandi login"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Frasa sandi, jika berkas terenkripsi"
+
+msgid "Show what would change"
+msgstr "Tampilkan apa yang akan berubah"
+
+msgid "Restore"
+msgstr "Pulihkan"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Berkas lebih besar dari 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Pengaturan dari berkas menggantikan yang ini. Hotspot, data seluler, atau LAN dapat dimulai ulang, dan halaman ini dapat kehilangan koneksi sesaat."
+
+msgid "Restore from a backup"
+msgstr "Pulihkan dari cadangan"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Setiap nilai berkas diperiksa lebih dulu; jika satu ditolak, tidak ada yang diubah. Yang sama dibiarkan, dan tidak ada profil VPN, langganan, atau kunci SSH perangkat ini yang dihapus."
+
+msgid "Keep this device's login password"
+msgstr "Pertahankan kata sandi login perangkat ini"
+
+msgid "Take a file of another device model"
+msgstr "Terima berkas dari model perangkat lain"
+
+msgid "The two passphrases differ"
+msgstr "Kedua frasa sandi berbeda"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Frasa sandi perlu 8 karakter atau lebih"
+
+msgid "Saved (encrypted)"
+msgstr "Tersimpan (terenkripsi)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Tersimpan. Berkas tidak terenkripsi: berisi kata sandi, simpan dengan aman."
+
+msgid "Choose a backup file first"
+msgstr "Pilih berkas cadangan dulu"
+
+msgid "Restoring…"
+msgstr "Memulihkan…"
+
+msgid "Restored"
+msgstr "Dipulihkan"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Pemulihan tidak selesai: lihat baris di atas"
 
 msgid "Loading…"
 msgstr "Memuat…"
@@ -2234,6 +2306,12 @@ msgstr "Diperiksa %s yang lalu"
 msgid "Not checked yet"
 msgstr "Belum diperiksa"
 
+msgid "Mirror (release files)"
+msgstr "Cermin (berkas rilis)"
+
+msgid "Leave empty for GitHub."
+msgstr "Biarkan kosong untuk GitHub."
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Pasang lagi paket yang saya tambahkan setelah pembaruan (perangkat harus daring pada penyalaan pertama)"
 
@@ -3235,6 +3313,9 @@ msgstr "Operasi pembaruan tidak dikenal"
 msgid "Invalid update request"
 msgstr "Permintaan pembaruan tidak valid"
 
+msgid "The backup tool gave no valid reply"
+msgstr "Alat cadangan tidak memberi jawaban yang valid"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3685,3 +3766,6 @@ msgstr "Berkas ini tidak ditandatangani: perlu konfirmasi"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Berkas ini lebih lama daripada yang terpasang: perlu konfirmasi"
+
+msgid "The release source was not changed"
+msgstr "Sumber rilis tidak diubah"

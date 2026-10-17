@@ -40,6 +40,9 @@ msgstr "裝置管理"
 msgid "Update"
 msgstr "更新"
 
+msgid "Backup of settings"
+msgstr "設定備份"
+
 msgid "Languages"
 msgstr "語言"
 
@@ -318,6 +321,75 @@ msgstr "請求失敗"
 
 msgid "(empty)"
 msgstr "（空）"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "口令（至少 8 個字元）"
+
+msgid "The passphrase again"
+msgstr "再次輸入口令"
+
+msgid "Download the backup"
+msgstr "下載備份"
+
+msgid "Back up the settings"
+msgstr "備份設定"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "一個檔案包含熱點、行動數據和 APN、網路鎖定、VPN 設定檔和設定、簡訊轉發、LAN 位址、主機名稱、時區和 SSH 金鑰。檔案中有密碼：設定口令後會被加密，只有該口令才能再次開啟。"
+
+msgid "Include the login password"
+msgstr "包含登入密碼"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "口令（如果檔案已加密）"
+
+msgid "Show what would change"
+msgstr "顯示將要變更的內容"
+
+msgid "Restore"
+msgstr "還原"
+
+msgid "The file is larger than 4 MiB"
+msgstr "檔案大於 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "檔案中的設定將取代目前設定。熱點、行動數據或 LAN 可能會重新啟動，本頁面可能會暫時中斷連線。"
+
+msgid "Restore from a backup"
+msgstr "從備份還原"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "檔案中的每個值都會先經過檢查；只要有一個被拒絕，就不會做任何變更。相同的設定保持不變，本裝置的 VPN 設定檔、訂閱和 SSH 金鑰都不會被刪除。"
+
+msgid "Keep this device's login password"
+msgstr "保留本裝置的登入密碼"
+
+msgid "Take a file of another device model"
+msgstr "接受其他裝置型號的檔案"
+
+msgid "The two passphrases differ"
+msgstr "兩次輸入的口令不同"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "口令至少需要 8 個字元"
+
+msgid "Saved (encrypted)"
+msgstr "已儲存（已加密）"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "已儲存。檔案未加密：其中含有密碼，請妥善保管。"
+
+msgid "Choose a backup file first"
+msgstr "請先選擇備份檔案"
+
+msgid "Restoring…"
+msgstr "正在還原…"
+
+msgid "Restored"
+msgstr "已還原"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "還原未完成：請查看上面的內容"
 
 msgid "Loading…"
 msgstr "載入中…"
@@ -2229,6 +2301,12 @@ msgstr "%s前已檢查"
 msgid "Not checked yet"
 msgstr "尚未檢查"
 
+msgid "Mirror (release files)"
+msgstr "鏡像（發行檔案）"
+
+msgid "Leave empty for GitHub."
+msgstr "留空即使用 GitHub。"
+
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "更新後重新安裝我加入的套件（首次啟動時裝置需要連上網路）"
 
@@ -3228,6 +3306,9 @@ msgstr "未知的更新操作"
 msgid "Invalid update request"
 msgstr "無效的更新要求"
 
+msgid "The backup tool gave no valid reply"
+msgstr "備份工具沒有給出有效的回覆"
+
 # Dual SIM controls.
 msgid "Invalid SIM setting"
 msgstr "SIM 設定無效"
@@ -3678,3 +3759,6 @@ msgstr "此檔案未簽署：需要確認"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "此檔案比已安裝的版本舊：需要確認"
+
+msgid "The release source was not changed"
+msgstr "發行來源未變更"
