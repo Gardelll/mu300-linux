@@ -162,7 +162,7 @@ what replaced it. The table below gives each section's state.
 | 136 | A carrier name the catalog has in another case (`CHINA BROADNET`) stayed English: looked up without case and spacing, then by its PLMN (#231) | current (unit tests; a user's report, not measured on our boards) |
 | 138 | `mu300-atd` died at its first open of a SIPC tty that was not ready (a failed `exec` redirection ends dash and ash): it waits for the channel now, holding the command fifo (#226) | current (unit tests under dash, bash and busybox ash; not on a device) |
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
-| 150 | USB-C power delivery on the U30 Air: kano's UMP9620 port controller under TCPM, reviewed and rewritten (patches 0019/0020), off unless `mu300-usb pd on`; the charger refuses its boost against an outside supply | experimental (built for 6.18.56/57 and 7.2.10/11, unit tests; not yet run on a device) |
+| 150 | USB-C power delivery on the U30 Air: kano's UMP9620 port controller under TCPM, reviewed and rewritten (patches 0019/0020), off unless `mu300-usb pd on`; the charger refuses its boost against an outside supply | experimental (built for 6.18.56/57 and 7.2.10/11, unit tests; on the U30 Air with a computer only: device + sink, off by default changes nothing) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 | 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
@@ -8964,6 +8964,17 @@ swap and write no charger register, `device` is refused while the port powers wh
 unplugging it is the way back), and a partner without PD on outside power (a hub with a charger) still gets host
 written directly, with the boost off, as before. `boot` keeps switching a stale boost off, unless the port controller
 is bound (then the boost is its source role).
+
+**On the U30 Air (2026-10-17, OpenWrt, 6.18.57 with 0019/0020, a Mac on the cable).** Off (the default): the module is
+not loaded, the charger probes as before (`PMIC + Type-C: usb_type 3 ... input current 2000 mA, charging on`), the
+`otg-vbus` regulator is registered, nothing else changes. Two fixes from that run: the build's device-tree check
+(`check-dt-modules.py`) stopped at `ump9620_tcpc binds to sprd,ump9620-pd` - it is listed in `dt-modules-allowed.txt`
+now, since its probe returns -ENODEV without `enable=1` and Ubuntu's udev does not load it at all; and OpenWrt's
+`modprobe` (kmodloader) loads the dependencies but drops `enable=1`, so `pd on` saw the probe say "off" and reported
+that the port controller did not bind - `mu300-usb` loads it again by its path with `insmod`, which passes the option.
+Then `pd on`: bound, data role device, power role sink, the USB network to the Mac kept (three attach/detach flaps in
+the first two seconds, then steady); `pd off` unloads it and the port is a device as before. Not tried: an OTG adapter,
+a PD dock, a charger with PD (no such hardware at hand).
 
 ### 153. A reinstall after an uninstall on a device that made room: "it asks to repartition again"
 
