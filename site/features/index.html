@@ -304,7 +304,11 @@ until you press the Wi-Fi key.</p>
 <pre><code>sudo mu300-nfc                 <span class="c"># shows the tag</span>
 sudo mu300-nfc wifi            <span class="c"># writes the hotspot's name and password</span></code></pre>
 <pre><code>sudo mu300-usb host            <span class="c"># U30 Air, mainline kernels: an OTG adapter, 5 V from the battery</span>
-sudo mu300-usb device          <span class="c"># back to the computer (the default at every start)</span></code></pre>
+sudo mu300-usb device          <span class="c"># back to the computer (the default at every start)</span>
+sudo mu300-usb pd on           <span class="c"># EXPERIMENTAL, off by default: USB-C power delivery picks the roles</span></code></pre>
+<p>With USB-C power delivery on (U30 Air, mainline kernels, not yet tested on a device), an OTG adapter makes the port a
+host by itself, and a PD dock with its own charger charges the U30 Air while <code>sudo mu300-usb host</code> asks the
+dock for the host role, so its USB ports and Ethernet work. 5 V only; <code>sudo mu300-usb pd off</code> goes back.</p>
 <p>On the F50 the USB port is its power supply, so it has no USB host mode; holding its power button 3 s shuts it
 down.</p>
 </section>

@@ -163,6 +163,7 @@ what replaced it. The table below gives each section's state.
 | 137 | The SMS webhook's custom body: the placeholder was Feishu's body, which WeCom refuses behind an HTTP 200; body presets for WeCom/DingTalk and Feishu/Lark that also fill in the answer check (#259) | current (unit tests; not sent to a real service) |
 | 138 | `mu300-atd` died at its first open of a SIPC tty that was not ready (a failed `exec` redirection ends dash and ash): it waits for the channel now, holding the command fifo (#226) | current (unit tests under dash, bash and busybox ash; not on a device) |
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
+| 150 | USB-C power delivery on the U30 Air: kano's UMP9620 port controller under TCPM, reviewed and rewritten (patches 0019/0020), off unless `mu300-usb pd on`; the charger refuses its boost against an outside supply | experimental (built for 6.18.56/57 and 7.2.10/11, unit tests; on the U30 Air with a computer only: device + sink, off by default changes nothing) |
 | 151 | The U30 Air's battery LED shows the battery as ZTE's firmware (white from 60 %, blue from 10 %, red below; breathing on the PMIC's curve while charging; no timeout on outside power, nor for the low-battery red), read at every tick of `mu300-buttons` | current (unit tests; ZTE's behaviour from the stock firmware and its guide; not yet watched on a device) |
 | 152 | The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware and its guide (it was the other way round); stock's network light shows the SIM in use, not 4G/5G (not changed) | current (read from the stock firmware and ZTE's guide; not yet looked at on a device) |
 | 154 | The U30 Air's network LED shows the SIM in use, as ZTE's firmware and its guide: white the nano-SIM (slot 0), blue the eSIM (slot 1), red no service, the target's colour blinking during a live switch; no longer 4G/5G | current (read from the stock firmware and ZTE's guide; unit tests; not yet looked at on a device) |
@@ -8973,6 +8974,75 @@ A station's figures on the U30 Air (one client): `signal 0 dBm`, `tx bitrate (un
 with this module and with the released one alike (the access point side reports what the firmware gives; not this
 change). Not run: a station whose link the F50 reports in client mode (no network it may join here), iperf.
 
+
+### 150. USB-C power delivery on the U30 Air: the UMP9620's port controller under TCPM (EXPERIMENTAL, off by default)
+
+**Status: experimental** (built against 6.18.57 and 7.2.11, unit tests; not run on a device yet, see the PR's device
+checklist). Off unless `sudo mu300-usb pd on`.
+
+**What for.** A PD dock with its own charger (USB-C charger in, USB-A ports and Ethernet out) is meant to charge the
+U30 Air and have it as its USB host at once; ZTE's Android does that. Mainline had no driver for the PMIC's Type-C
+and PD blocks: VBUS came from a GPIO, the source's Rp was read by the charger (§40, patch 0012), and `mu300-usb host`
+put the data role and the 5 V boost together, so a dock could either charge it or be its device, not both.
+
+**Where it comes from.** kano (kanoqwq/mu300-linux, branch clean-tf-7.2, commit 2af101f8, "complete U30 Air power, LED
+and PD dock support") put Unisoc's `sc27xx_pd.c` register sequences under mainline's TCPM: a 654-line driver, a charger
+patch (his 0018) that makes the boost a regulator and lets a PD contract set the input current, and `mu300-usb` asking
+`/sys/class/typec/port0/data_role`. On his unit a computer gave device + sink, and a dock with its charger gave host +
+sink after a manual data role swap (an RTL8153 on the dock came up in the LAN); the dock's own switch to host did not
+happen, and his last receive fix was not run against the dock again. Unisoc's originals were read for this review from
+ZTE's U30 Air kernel (Enceka/android_kernel_zte_ums9620_mifi_u30air: `drivers/usb/typec/tcpm/sc27xx_pd.c`,
+`drivers/usb/typec/sc27xx_typec.c`, `sprd_tcpm.c`).
+
+**Review of kano's driver.** What it does right: the Type-C block keeps its own state machine (attach, detach, the CC
+pin), which is how Unisoc uses it too; TCPM is registered last and unregistered first (its workers use the port);
+TX_OK and a received GoodCRC complete one transmission once; the RX FIFO is flushed after each frame (on the device it
+holds the CRC behind the frame, which was taken for the next header before); the VBUS GPIO's extcon covers VBUS
+changes without a CC event; and it binds only where the Type-C node has `use_pdhub_c2c`. What was changed:
+
+| | kano's version | now |
+|---|---|---|
+| on by default | built in, bound at every boot | a module, and probe returns at once unless `enable=1` (`mu300-usb pd on`); Ubuntu's udev does not load it (`modprobe.d` blacklist) |
+| boards | `use_pdhub_c2c` | that, the PD node enabled, and `/charger_policy_service` (the U30 Air only, as patch 0016); the F50's PD node is disabled, the V50 has no charger policy service |
+| 5 V out | `regulator_enable` whenever TCPM asked | the charger's `otg-vbus` regulator refuses while an outside supply is on VBUS (power good, VBUS_STAT not its own boost), after 100 ms for it to go (a power role swap) |
+| a boost left on by a crash in host mode | stayed on: `mu300-usb boot` skipped its check with the port controller there | switched off by the charger at probe, before anything can use the port |
+| VCONN | the PMIC's VCONN switch on whenever TCPM asked, a cable's Ra reported | never: ZTE's firmware does not source it (no `vconn-supply` on the PD node, so Unisoc's `set_vconn` fails) and which CC pin the switch drives is not known; Ra not reported |
+| missing `vbus-supply` | a dummy regulator (`devm_regulator_get`): "5 V on" with nothing on | an error (`devm_regulator_get_optional`) |
+| shutdown and unload | PD clocks off; the Type-C block left in whatever mode TCPM last set | the clocks stay on (the module enable covers the Type-C block LK and Android rely on); the Type-C block's mode and enable registers put back as the boot left them (the PMIC keeps them across a reboot: a block left source-only would not let a charger see a sink); boost off; device |
+| calibration | the Type-C trim written before the PD clocks were on | clocks, then calibration, in Unisoc's order, in TCPM's init |
+| message IDs | not cleared at a new session, the TX ID not at a hard reset | both FIFOs emptied and both IDs cleared at every new PD session and every hard reset, sent or received (Unisoc's `sc27xx_pd_reset`) |
+| input current | passed on after any received message, the Rp-based values TCPM reports included | only for an explicit contract (the partner sent Source_Capabilities): in PD 3.0 a source's Rp only says whether the sink may talk (SinkTxOk is Rp 3 A whatever it offers), so §40's Rp current would be wrong under a contract; without one the charger's BC1.2/Rp choice stays |
+| data role at unplug | stayed host (TCPM never hands it back at a detach) | device at once when the Type-C block says detached |
+| locking | `set_cc`, `set_roles`, `set_pd_rx` without the driver's lock | every callback that touches the PD block holds it; TCPM is called with it held only where TCPM merely queues |
+| receive errors | enabled as an interrupt and ignored | not enabled (Unisoc counts them and switches the interrupt off after 100 in two minutes) |
+| PDOs | source 5 V 500 mA, sink 5 V 2 A | source 5 V 400 mA (ZTE's own, from the board's connector node), Rp default; sink 5 V 2 A (the charger's DCP current) |
+
+Still open, for the device (the PR's checklist): whether the Type-C block follows a mode change while attached
+(TCPM's Try.SNK and power role swaps write it; Unisoc's driver never did, it signals a swap through `WC_REG`), whether
+a hard reset we send raises TX_OK, whether a second frame can sit behind the first in the RX FIFO (the FIFO level is at
+debug level: `echo 'module ump9620_tcpc +p' > /sys/kernel/debug/dynamic_debug/control`), and why the dock did not swap
+to host by itself on kano's unit (TCPM accepts a partner's DR_Swap; it does not start one).
+
+**The pieces.** `upstream/patches/0019` (charger: the boost as the `otg-vbus` regulator, refused against an outside
+supply, a stale boost off at probe, a PD contract's input current kept across VBUS events and dropped with VBUS),
+`0020` (`drivers/usb/typec/tcpm/ump9620-tcpc.c`, one file); `CONFIG_TYPEC`, `CONFIG_TYPEC_TCPM` and
+`CONFIG_TYPEC_UMP9620` as modules on both kernels. `mu300-usb pd on|off|status` loads the module with `enable=1` (and
+at every boot while on, `/etc/mu300/usb-pd`) or unloads it; while it is bound `host`/`device` ask TCPM for a data role
+swap and write no charger register, `device` is refused while the port powers what is plugged in (an OTG adapter:
+unplugging it is the way back), and a partner without PD on outside power (a hub with a charger) still gets host
+written directly, with the boost off, as before. `boot` keeps switching a stale boost off, unless the port controller
+is bound (then the boost is its source role).
+
+**On the U30 Air (2026-10-17, OpenWrt, 6.18.57 with 0019/0020, a Mac on the cable).** Off (the default): the module is
+not loaded, the charger probes as before (`PMIC + Type-C: usb_type 3 ... input current 2000 mA, charging on`), the
+`otg-vbus` regulator is registered, nothing else changes. Two fixes from that run: the build's device-tree check
+(`check-dt-modules.py`) stopped at `ump9620_tcpc binds to sprd,ump9620-pd` - it is listed in `dt-modules-allowed.txt`
+now, since its probe returns -ENODEV without `enable=1` and Ubuntu's udev does not load it at all; and OpenWrt's
+`modprobe` (kmodloader) loads the dependencies but drops `enable=1`, so `pd on` saw the probe say "off" and reported
+that the port controller did not bind - `mu300-usb` loads it again by its path with `insmod`, which passes the option.
+Then `pd on`: bound, data role device, power role sink, the USB network to the Mac kept (three attach/detach flaps in
+the first two seconds, then steady); `pd off` unloads it and the port is a device as before. Not tried: an OTG adapter,
+a PD dock, a charger with PD (no such hardware at hand).
 
 ### 151. The U30 Air's battery LED shows the battery, as ZTE's firmware
 
