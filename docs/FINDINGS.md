@@ -2420,6 +2420,38 @@ Measured on FE_ST_DUMP with a reader that stalls 0.8 s every few seconds: 9 over
 PREPARE + START on the same open; 9 times `new DMA descriptors`; 12 s of capture delivered; no oops. On 5.4 the first
 of these panicked the kernel.
 
+**Hardened before release (a security review of the port).** The stack is vendor code, and parts of it take
+values from userspace without checking them.
+
+* *Who can reach what.* The mixer and PCM nodes (`/dev/snd/*`) are `root:audio 0660` on both images (udev on
+  Ubuntu, procd's `hotplug.json` on OpenWrt). On Ubuntu the default user `ubuntu` is in `audio`, and so is the
+  logged-in user through logind's ACL. The tuning nodes (`/dev/vbc_turning*`), the DSP pipes (`/dev/audio_pipe_*`)
+  and the dumps (`/dev/audio_dsp_*`) have no rule, so they are `root 0600`; `android-vendor/ueventd-perms.sh` sets
+  the same. The mixer controls are therefore what a non-root user can reach.
+* *Every control write is range-checked by the kernel.* `CONFIG_SND_CTL_INPUT_VALIDATION=y`: the ALSA core refuses
+  a value outside the control's declared range or item count before the driver sees it. The vendor checks did not
+  always hold. About 40 enum puts compared `value.integer.value[0]` (a `long`) against the item count and then
+  indexed with `value.enumerated.item[0]` (an `unsigned int` in the same union). A second item that made the `long`
+  negative passed the check with any first item: an out-of-bounds read of the text tables, and an out-of-range
+  write into the DSP's settings. Each now checks the value it uses.
+* For that, two declared maxima had to become real. `MAX_32_BIT` (`0xffffffff`, held as -1 in a control's `int`
+  max) declared every 32-bit control's range as below its minimum; it is now `0x7fffffff`. The profile selects
+  declared `0x0fffffff`, while modes run to 66 (`mode << 24`). That is also why amixer clamped every mode from 16
+  up (24c); it is now `0x7fffffff`.
+* *Profiles.* A profile is a blob: header, then `num_mode` × `len_mode` bytes. It arrives from `/lib/firmware` or
+  through `/dev/vbc_turningN`, and its header was trusted:
+  * it was read from a buffer that could be shorter than the header;
+  * the data buffer of an earlier, smaller profile was kept, and a larger one was copied into it (a heap overflow);
+  * a "Profile Select" then read mode N of the new header out of the old buffer (an out-of-bounds read);
+  * the tuning node changed the profile without the lock the apply path takes, and its read returned a whole
+    `vmalloc` buffer that was only partly filled.
+  `vbc_profile_store()` now checks the size, the magic and the product (at most 256 modes, 4 MiB), and allocates
+  exactly what the header says. The apply path checks the mode against the profile that is loaded, the tuning node
+  works under the lock with a zeroed, bounded buffer, and a rejected blob changes nothing.
+* *Compressed offload is off.* `sprd-compr-2stage-dma` has to be there for the card to register (link
+  `FE_OFFLOAD`), but nothing here uses it, and its copy and `set_params` paths are unaudited vendor code. Its open
+  returns -EPERM unless the module is loaded with `allow_offload=1`.
+
 **Measured without a call: F50-B on 7.2.11 and 6.18.57, F50-C on 7.2.11 (OpenWrt).**
 
 * `mu300-audio-dsp load`: 19/19 modules, two DMA controllers with 60 channels. `sprdphone-sc2730` registers with
@@ -2455,8 +2487,8 @@ of these panicked the kernel.
   `mu300_uplink`. The owner: "I heard my voice and the music played." Both directions of a cellular call now work on
   the mainline kernel, through the AP taps, the same way as on 5.4.
 
-Not measured on mainline: a call to a Bluetooth headset (the `bt` route of 24c); the owner's SIP gateway on
-mainline (it decimates the dump and writes 16 kHz itself, so it needs no change but has not been run there).
+Not measured on mainline: a call to a Bluetooth headset (the `bt` route of 24c), and a program that bridges the
+voice taps for a whole call (it reads the dump and writes the uplink at 16 kHz itself, so it needs no change).
 
 ## Bluetooth
 
