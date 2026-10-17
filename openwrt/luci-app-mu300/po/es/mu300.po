@@ -40,6 +40,9 @@ msgstr "Administración del dispositivo"
 msgid "Update"
 msgstr "Actualizar"
 
+msgid "Backup of settings"
+msgstr "Copia de seguridad de la configuración"
+
 msgid "Languages"
 msgstr "Idiomas"
 
@@ -318,6 +321,75 @@ msgstr "La solicitud falló"
 
 msgid "(empty)"
 msgstr "(vacío)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Frase de contraseña (8 caracteres o más)"
+
+msgid "The passphrase again"
+msgstr "La frase de contraseña otra vez"
+
+msgid "Download the backup"
+msgstr "Descargar la copia"
+
+msgid "Back up the settings"
+msgstr "Copiar la configuración"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Un archivo con el punto de acceso, los datos móviles y el APN, los bloqueos de red, los perfiles y ajustes de VPN, el reenvío de SMS, la dirección LAN, el nombre del equipo, la zona horaria y las claves SSH. Contiene contraseñas: con una frase de contraseña se cifra, y solo esa frase lo vuelve a abrir."
+
+msgid "Include the login password"
+msgstr "Incluir la contraseña de inicio de sesión"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Frase de contraseña, si el archivo está cifrado"
+
+msgid "Show what would change"
+msgstr "Mostrar lo que cambiaría"
+
+msgid "Restore"
+msgstr "Restaurar"
+
+msgid "The file is larger than 4 MiB"
+msgstr "El archivo supera los 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "La configuración del archivo sustituye a esta. El punto de acceso, los datos móviles o la LAN pueden reiniciarse, y esta página puede perder la conexión un momento."
+
+msgid "Restore from a backup"
+msgstr "Restaurar desde una copia"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Cada valor del archivo se comprueba primero; si se rechaza uno, no cambia nada. Lo que es igual no se toca, y no se elimina ningún perfil VPN, suscripción ni clave SSH de este dispositivo."
+
+msgid "Keep this device's login password"
+msgstr "Conservar la contraseña de inicio de sesión de este dispositivo"
+
+msgid "Take a file of another device model"
+msgstr "Aceptar un archivo de otro modelo de dispositivo"
+
+msgid "The two passphrases differ"
+msgstr "Las dos frases de contraseña no coinciden"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "La frase de contraseña necesita 8 caracteres o más"
+
+msgid "Saved (encrypted)"
+msgstr "Guardado (cifrado)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Guardado. El archivo no está cifrado: contiene contraseñas, guárdelo en un lugar seguro."
+
+msgid "Choose a backup file first"
+msgstr "Elija primero un archivo de copia"
+
+msgid "Restoring…"
+msgstr "Restaurando…"
+
+msgid "Restored"
+msgstr "Restaurado"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "La restauración no terminó: vea las líneas de arriba"
 
 msgid "Loading…"
 msgstr "Cargando…"
@@ -3357,6 +3429,9 @@ msgstr "Operación de actualización desconocida"
 
 msgid "Invalid update request"
 msgstr "Solicitud de actualización no válida"
+
+msgid "The backup tool gave no valid reply"
+msgstr "La herramienta de copias no dio una respuesta válida"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

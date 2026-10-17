@@ -40,6 +40,9 @@ msgstr "مدیریت دستگاه"
 msgid "Update"
 msgstr "به‌روزرسانی"
 
+msgid "Backup of settings"
+msgstr "پشتیبان تنظیمات"
+
 msgid "Languages"
 msgstr "زبان‌ها"
 
@@ -318,6 +321,75 @@ msgstr "درخواست ناموفق بود"
 
 msgid "(empty)"
 msgstr "(خالی)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "عبارت عبور (۸ نویسه یا بیشتر)"
+
+msgid "The passphrase again"
+msgstr "دوباره عبارت عبور"
+
+msgid "Download the backup"
+msgstr "دریافت پشتیبان"
+
+msgid "Back up the settings"
+msgstr "پشتیبان‌گیری از تنظیمات"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "یک پرونده با هات‌اسپات، داده همراه و APN، قفل‌های شبکه، نمایه‌ها و تنظیمات VPN، بازارسال پیامک، نشانی LAN، نام میزبان، منطقه زمانی و کلیدهای SSH. گذرواژه‌ها در آن هستند: با عبارت عبور رمزگذاری می‌شود و فقط همان عبارت آن را دوباره باز می‌کند."
+
+msgid "Include the login password"
+msgstr "گذرواژه ورود هم باشد"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "عبارت عبور، اگر پرونده رمزگذاری شده است"
+
+msgid "Show what would change"
+msgstr "نمایش آنچه تغییر می‌کند"
+
+msgid "Restore"
+msgstr "بازگردانی"
+
+msgid "The file is larger than 4 MiB"
+msgstr "پرونده بزرگ‌تر از ۴ مبی‌بایت است"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "تنظیمات پرونده جای این‌ها را می‌گیرد. هات‌اسپات، داده همراه یا LAN ممکن است دوباره راه‌اندازی شوند و این صفحه ممکن است لحظه‌ای اتصال را از دست بدهد."
+
+msgid "Restore from a backup"
+msgstr "بازگردانی از پشتیبان"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "هر مقدار پرونده نخست بررسی می‌شود؛ اگر یکی رد شود هیچ چیز تغییر نمی‌کند. آنچه یکسان است دست نمی‌خورد و هیچ نمایه VPN، اشتراک یا کلید SSH این دستگاه حذف نمی‌شود."
+
+msgid "Keep this device's login password"
+msgstr "نگه داشتن گذرواژه ورود این دستگاه"
+
+msgid "Take a file of another device model"
+msgstr "پذیرفتن پرونده مدل دیگری از دستگاه"
+
+msgid "The two passphrases differ"
+msgstr "دو عبارت عبور یکسان نیستند"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "عبارت عبور باید ۸ نویسه یا بیشتر باشد"
+
+msgid "Saved (encrypted)"
+msgstr "ذخیره شد (رمزگذاری‌شده)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "ذخیره شد. پرونده رمزگذاری نشده است: گذرواژه‌ها در آن هستند، آن را امن نگه دارید."
+
+msgid "Choose a backup file first"
+msgstr "نخست یک پرونده پشتیبان برگزینید"
+
+msgid "Restoring…"
+msgstr "در حال بازگردانی…"
+
+msgid "Restored"
+msgstr "بازگردانی شد"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "بازگردانی تمام نشد: سطرهای بالا را ببینید"
 
 msgid "Loading…"
 msgstr "در حال بارگذاری…"
@@ -3357,6 +3429,9 @@ msgstr "عملیات به‌روزرسانی ناشناخته"
 
 msgid "Invalid update request"
 msgstr "درخواست به‌روزرسانی نامعتبر"
+
+msgid "The backup tool gave no valid reply"
+msgstr "ابزار پشتیبان پاسخ معتبری نداد"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

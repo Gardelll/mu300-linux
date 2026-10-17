@@ -40,6 +40,9 @@ msgstr "Quản lý thiết bị"
 msgid "Update"
 msgstr "Cập nhật"
 
+msgid "Backup of settings"
+msgstr "Sao lưu cài đặt"
+
 msgid "Languages"
 msgstr "Ngôn ngữ"
 
@@ -318,6 +321,75 @@ msgstr "Yêu cầu thất bại"
 
 msgid "(empty)"
 msgstr "(trống)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Cụm mật khẩu (8 ký tự trở lên)"
+
+msgid "The passphrase again"
+msgstr "Nhập lại cụm mật khẩu"
+
+msgid "Download the backup"
+msgstr "Tải bản sao lưu"
+
+msgid "Back up the settings"
+msgstr "Sao lưu cài đặt"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Một tệp chứa điểm phát sóng, dữ liệu di động và APN, khóa mạng, hồ sơ và cài đặt VPN, chuyển tiếp SMS, địa chỉ LAN, tên máy, múi giờ và khóa SSH. Tệp có mật khẩu: với cụm mật khẩu tệp được mã hóa, và chỉ cụm đó mở lại được."
+
+msgid "Include the login password"
+msgstr "Kèm mật khẩu đăng nhập"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Cụm mật khẩu, nếu tệp đã mã hóa"
+
+msgid "Show what would change"
+msgstr "Hiển thị những gì sẽ thay đổi"
+
+msgid "Restore"
+msgstr "Khôi phục"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Tệp lớn hơn 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Cài đặt trong tệp sẽ thay thế cài đặt này. Điểm phát sóng, dữ liệu di động hoặc LAN có thể khởi động lại, và trang này có thể mất kết nối trong giây lát."
+
+msgid "Restore from a backup"
+msgstr "Khôi phục từ bản sao lưu"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Mọi giá trị trong tệp được kiểm tra trước; nếu một giá trị bị từ chối thì không có gì thay đổi. Những gì giống nhau được giữ nguyên, và không hồ sơ VPN, gói đăng ký hay khóa SSH nào của thiết bị bị xóa."
+
+msgid "Keep this device's login password"
+msgstr "Giữ mật khẩu đăng nhập của thiết bị này"
+
+msgid "Take a file of another device model"
+msgstr "Chấp nhận tệp của mẫu thiết bị khác"
+
+msgid "The two passphrases differ"
+msgstr "Hai cụm mật khẩu khác nhau"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Cụm mật khẩu cần 8 ký tự trở lên"
+
+msgid "Saved (encrypted)"
+msgstr "Đã lưu (đã mã hóa)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Đã lưu. Tệp không được mã hóa: tệp có mật khẩu, hãy giữ an toàn."
+
+msgid "Choose a backup file first"
+msgstr "Hãy chọn tệp sao lưu trước"
+
+msgid "Restoring…"
+msgstr "Đang khôi phục…"
+
+msgid "Restored"
+msgstr "Đã khôi phục"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Khôi phục chưa xong: xem các dòng ở trên"
 
 msgid "Loading…"
 msgstr "Đang tải…"
@@ -3357,6 +3429,9 @@ msgstr "Thao tác cập nhật không xác định"
 
 msgid "Invalid update request"
 msgstr "Yêu cầu cập nhật không hợp lệ"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Công cụ sao lưu không trả lời hợp lệ"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

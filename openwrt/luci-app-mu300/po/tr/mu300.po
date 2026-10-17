@@ -40,6 +40,9 @@ msgstr "Cihaz yönetimi"
 msgid "Update"
 msgstr "Güncelle"
 
+msgid "Backup of settings"
+msgstr "Ayar yedeği"
+
 msgid "Languages"
 msgstr "Diller"
 
@@ -318,6 +321,75 @@ msgstr "İstek başarısız"
 
 msgid "(empty)"
 msgstr "(boş)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Parola (en az 8 karakter)"
+
+msgid "The passphrase again"
+msgstr "Parola tekrar"
+
+msgid "Download the backup"
+msgstr "Yedeği indir"
+
+msgid "Back up the settings"
+msgstr "Ayarları yedekle"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Hotspot, mobil veri ve APN, ağ kilitleri, VPN profilleri ve ayarları, SMS yönlendirme, LAN adresi, cihaz adı, saat dilimi ve SSH anahtarları tek bir dosyada. Dosyada parolalar var: parola verilirse şifrelenir ve yalnızca o parolayla yeniden açılır."
+
+msgid "Include the login password"
+msgstr "Giriş parolasını da ekle"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Dosya şifreliyse parolası"
+
+msgid "Show what would change"
+msgstr "Neyin değişeceğini göster"
+
+msgid "Restore"
+msgstr "Geri yükle"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Dosya 4 MiB'tan büyük"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Dosyadaki ayarlar bunların yerine geçer. Hotspot, mobil veri veya LAN yeniden başlayabilir ve bu sayfanın bağlantısı bir süre kopabilir."
+
+msgid "Restore from a backup"
+msgstr "Yedekten geri yükle"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Dosyadaki her değer önce denetlenir; biri reddedilirse hiçbir şey değişmez. Aynı olanlara dokunulmaz ve bu cihazın hiçbir VPN profili, aboneliği veya SSH anahtarı silinmez."
+
+msgid "Keep this device's login password"
+msgstr "Bu cihazın giriş parolasını koru"
+
+msgid "Take a file of another device model"
+msgstr "Başka bir cihaz modelinin dosyasını da kabul et"
+
+msgid "The two passphrases differ"
+msgstr "İki parola birbirini tutmuyor"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Parola en az 8 karakter olmalı"
+
+msgid "Saved (encrypted)"
+msgstr "Kaydedildi (şifreli)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Kaydedildi. Dosya şifreli değil: içinde parolalar var, güvenli bir yerde saklayın."
+
+msgid "Choose a backup file first"
+msgstr "Önce bir yedek dosyası seçin"
+
+msgid "Restoring…"
+msgstr "Geri yükleniyor…"
+
+msgid "Restored"
+msgstr "Geri yüklendi"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Geri yükleme tamamlanmadı: yukarıdaki satırlara bakın"
 
 msgid "Loading…"
 msgstr "Yükleniyor…"
@@ -3350,6 +3422,9 @@ msgstr "Bilinmeyen güncelleme işlemi"
 
 msgid "Invalid update request"
 msgstr "Geçersiz güncelleme isteği"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Yedekleme aracı geçerli bir yanıt vermedi"
 
 # Dual SIM controls.
 msgid "Invalid SIM setting"

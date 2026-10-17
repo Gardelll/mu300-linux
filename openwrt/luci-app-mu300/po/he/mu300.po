@@ -40,6 +40,9 @@ msgstr "ניהול התקן"
 msgid "Update"
 msgstr "עדכון"
 
+msgid "Backup of settings"
+msgstr "גיבוי הגדרות"
+
 msgid "Languages"
 msgstr "שפות"
 
@@ -318,6 +321,75 @@ msgstr "הבקשה נכשלה"
 
 msgid "(empty)"
 msgstr "(ריק)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "משפט סיסמה (8 תווים לפחות)"
+
+msgid "The passphrase again"
+msgstr "משפט הסיסמה שוב"
+
+msgid "Download the backup"
+msgstr "הורדת הגיבוי"
+
+msgid "Back up the settings"
+msgstr "גיבוי ההגדרות"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "קובץ אחד עם הנקודה החמה, נתונים סלולריים ו-APN, נעילות רשת, פרופילים והגדרות VPN, העברת SMS, כתובת LAN, שם המארח, אזור הזמן ומפתחות SSH. הוא מכיל סיסמאות: עם משפט סיסמה הוא מוצפן, ורק אותו משפט פותח אותו שוב."
+
+msgid "Include the login password"
+msgstr "לכלול את סיסמת הכניסה"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "משפט סיסמה, אם הקובץ מוצפן"
+
+msgid "Show what would change"
+msgstr "הצגת מה שישתנה"
+
+msgid "Restore"
+msgstr "שחזור"
+
+msgid "The file is larger than 4 MiB"
+msgstr "הקובץ גדול מ-4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "ההגדרות מהקובץ מחליפות את אלה. הנקודה החמה, הנתונים הסלולריים או ה-LAN עשויים להתאתחל, והדף עלול לאבד את החיבור לרגע."
+
+msgid "Restore from a backup"
+msgstr "שחזור מגיבוי"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "כל ערך בקובץ נבדק תחילה; אם אחד נדחה, דבר אינו משתנה. מה שזהה נשאר כפי שהוא, ואף פרופיל VPN, מינוי או מפתח SSH של המכשיר אינו נמחק."
+
+msgid "Keep this device's login password"
+msgstr "לשמור את סיסמת הכניסה של מכשיר זה"
+
+msgid "Take a file of another device model"
+msgstr "לקבל קובץ מדגם מכשיר אחר"
+
+msgid "The two passphrases differ"
+msgstr "שני משפטי הסיסמה שונים"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "משפט הסיסמה צריך 8 תווים לפחות"
+
+msgid "Saved (encrypted)"
+msgstr "נשמר (מוצפן)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "נשמר. הקובץ אינו מוצפן: הוא מכיל סיסמאות, יש לשמור אותו במקום בטוח."
+
+msgid "Choose a backup file first"
+msgstr "יש לבחור קודם קובץ גיבוי"
+
+msgid "Restoring…"
+msgstr "משחזר…"
+
+msgid "Restored"
+msgstr "שוחזר"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "השחזור לא הסתיים: ראו את השורות למעלה"
 
 msgid "Loading…"
 msgstr "טוען…"
@@ -3357,6 +3429,9 @@ msgstr "פעולת עדכון לא מוכרת"
 
 msgid "Invalid update request"
 msgstr "בקשת עדכון לא תקינה"
+
+msgid "The backup tool gave no valid reply"
+msgstr "כלי הגיבוי לא החזיר תשובה תקינה"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

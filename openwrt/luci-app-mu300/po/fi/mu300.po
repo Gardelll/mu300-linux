@@ -40,6 +40,9 @@ msgstr "Laitehallinta"
 msgid "Update"
 msgstr "Päivitä"
 
+msgid "Backup of settings"
+msgstr "Asetusten varmuuskopio"
+
 msgid "Languages"
 msgstr "Kielet"
 
@@ -318,6 +321,75 @@ msgstr "Pyyntö epäonnistui"
 
 msgid "(empty)"
 msgstr "(tyhjä)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Salalause (vähintään 8 merkkiä)"
+
+msgid "The passphrase again"
+msgstr "Salalause uudelleen"
+
+msgid "Download the backup"
+msgstr "Lataa varmuuskopio"
+
+msgid "Back up the settings"
+msgstr "Varmuuskopioi asetukset"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Yksi tiedosto, jossa ovat tukiasema, mobiilidata ja APN, verkkolukitukset, VPN-profiilit ja -asetukset, tekstiviestien välitys, LAN-osoite, laitenimi, aikavyöhyke ja SSH-avaimet. Siinä on salasanoja: salalauseella se salataan, ja vain sama salalause avaa sen."
+
+msgid "Include the login password"
+msgstr "Sisällytä kirjautumissalasana"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Salalause, jos tiedosto on salattu"
+
+msgid "Show what would change"
+msgstr "Näytä mikä muuttuisi"
+
+msgid "Restore"
+msgstr "Palauta"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Tiedosto on suurempi kuin 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Tiedoston asetukset korvaavat nämä. Tukiasema, mobiilidata tai LAN voi käynnistyä uudelleen, ja tämä sivu voi menettää yhteyden hetkeksi."
+
+msgid "Restore from a backup"
+msgstr "Palauta varmuuskopiosta"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Jokainen tiedoston arvo tarkistetaan ensin; jos yksikin hylätään, mitään ei muuteta. Samat arvot jätetään ennalleen, eikä yhtään tämän laitteen VPN-profiilia, tilausta tai SSH-avainta poisteta."
+
+msgid "Keep this device's login password"
+msgstr "Säilytä tämän laitteen kirjautumissalasana"
+
+msgid "Take a file of another device model"
+msgstr "Hyväksy toisen laitemallin tiedosto"
+
+msgid "The two passphrases differ"
+msgstr "Salalauseet eroavat toisistaan"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Salalauseessa on oltava vähintään 8 merkkiä"
+
+msgid "Saved (encrypted)"
+msgstr "Tallennettu (salattu)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Tallennettu. Tiedostoa ei ole salattu: siinä on salasanoja, säilytä se turvassa."
+
+msgid "Choose a backup file first"
+msgstr "Valitse ensin varmuuskopiotiedosto"
+
+msgid "Restoring…"
+msgstr "Palautetaan…"
+
+msgid "Restored"
+msgstr "Palautettu"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Palautus ei valmistunut: katso yllä olevat rivit"
 
 msgid "Loading…"
 msgstr "Ladataan…"
@@ -3357,6 +3429,9 @@ msgstr "Tuntematon päivitystoiminto"
 
 msgid "Invalid update request"
 msgstr "Virheellinen päivityspyyntö"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Varmuuskopiotyökalu ei antanut kelvollista vastausta"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
