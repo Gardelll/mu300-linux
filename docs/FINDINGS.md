@@ -175,8 +175,8 @@ what replaced it. The table below gives each section's state.
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
 | 170 | "Failed to send request: Operation not permitted" behind the VPN's kill switch: uclient's connect error, the tunnel down; the failure now names the kill switch, one try instead of four; vpn-dae refused before the download on a kernel that cannot run it | current (reproduced in an OpenWrt 25.12 container with sing-box and the kill switch, 2026-10-17) |
 | 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; on the U30 Air (OpenWrt, 6.18.57): refusal, migration, notice, the panel's save; no F50 yet) |
-| 180 | Wi-Fi access point: `get_station` answered any address with the interface's own counters and the station side's signal; now only this AP's stations, with nothing filled in (the firmware has no per-client figures), `-ENOENT` otherwise; `get_channel` link 0 only (kanoqwq f59a296) | current (mainline module and 5.4 patch built; unit tests; device test pending) |
-| 181 | The U30 Air's fuel gauge against the stock module: the user area's writes are `regmap_update_bits()` with a wait after the release (stock `save_last_cap` at 0x4ba4), no migration guess for a valid saved value, the charger's Full is 100 % with the battery current within `fullbatt-current` (kanoqwq f59a296 reviewed: his 4.2 V condition would refuse a real Full) | current (built for 6.18.57 and 7.2.11; unit tests; device test pending) |
+| 180 | Wi-Fi access point: `get_station` answered any address with the interface's own counters and the station side's signal; now only this AP's stations, with nothing filled in (the firmware has no per-client figures), `-ENOENT` otherwise; `get_channel` link 0 only (kanoqwq f59a296) | current (mainline module and 5.4 patch built; unit tests; U30 Air 6.18.57 with a client, F50-B 7.2.11, 2026-10-17) |
+| 181 | The U30 Air's fuel gauge against the stock module: the user area's writes are `regmap_update_bits()` with a wait after the release (stock `save_last_cap` at 0x4ba4), no migration guess for a valid saved value, the charger's Full is 100 % with the battery current within `fullbatt-current` (kanoqwq f59a296 reviewed: his 4.2 V condition would refuse a real Full) | current (built for 6.18.57 and 7.2.11; unit tests; U30 Air 6.18.57, 2026-10-17: Full at 4.147 V gave 100 %, kept across a reboot) |
 
 ## Hardware and firmware facts
 
@@ -10932,7 +10932,7 @@ filesystem's top level, not a system's: it predates the region and the systems' 
 
 ### 180. Wi-Fi access point: get_station answered for any address with the interface's own counters
 
-**Status: current** (built and unit-tested; the device test follows). From kanoqwq's `f59a296` (his notes: the access point no longer passes station
+**Status: current** (device-tested on the U30 Air, 6.18.57, and F50-B, 7.2.11, 2026-10-17). From kanoqwq's `f59a296` (his notes: the access point no longer passes station
 or interface figures off as a client's): his `upstream/modules/sprd_wlan_combo/common/cfg80211.c` and
 `kernel/patches/wlan_combo-ap-stats-scope.patch`, read and taken in our words; his code not run.
 
@@ -10962,11 +10962,20 @@ written against his tree; ours is made against ours.
 **Built**: the mainline module for 6.18.57 and 7.2.11 (92 warnings, as before this change; none in the changed lines); the 5.4 driver with all fifteen patches, linked against the U30 Air's 5.4 tree (`sprd_wlan_combo.ko`, no warning, as without this patch). **Tests**: `test_static.py` (`test_wifi_ap_get_station_answers_for_its_stations_only`: the
 same lines in the mainline module and the 5.4 patch, the AP branch before anything of the station side's).
 
-**Device test:** pending (U30 Air and an F50, 6.18).
+**Device test (2026-10-17).** U30 Air, openwrt-luci v2026.10.17.3, its 6.18.57 kernel bundle rebuilt from this branch
+(`mu300-update kernel 6.18` with the local bundle; afterwards `rollback-boot` to the release), one client on the 5 GHz
+hotspot. Before: `iw dev wlan0 station get 02:11:22:33:44:55` (no such station) answered with rx 315820 / tx 980745
+bytes, `signal 0 dBm` and an rx bitrate, the same figures as for the real client. After: that address and the
+access point's own both `No such file or directory (-2)`; the client by `station get` and in `station dump` with no
+figures; `iwinfo wlan0 assoclist` lists it, `iwinfo info` channel 36, VHT80. The client stayed associated over two
+reboots and about 35 minutes, the VPN (sing-box, kill switch on) up throughout. F50-B (Ubuntu, 7.2.11, hotspot,
+no client): the release module also answered the made-up address with counters; with this branch's module loaded in
+its place (hotspot restarted, nothing rebooted) `-ENOENT`, an empty dump, channel 36; then the release module back.
 
 ### 181. The U30 Air's fuel gauge against Unisoc's: the user area's writes, a migration guess, and the charger's Full
 
-**Status: current** (built and unit-tested; the device test follows). Review of kanoqwq's `f59a296` patch `0020-power-UMP9620-stock-retained-soc.patch`
+**Status: current** (device-tested on the U30 Air, 6.18.57, 2026-10-17: a full charge to the charger's Full, two
+reboots; a power-off not run). Review of kanoqwq's `f59a296` patch `0020-power-UMP9620-stock-retained-soc.patch`
 against our 0011 and 0018 (FINDINGS 33d, 105), with his claims checked against the U30 Air's own stock module and
 Unisoc's source; two of his three changes taken, the third not, and replaced. His code not run.
 
@@ -11013,4 +11022,14 @@ compiled from the patch, +2 mA and -3 mA count, 121 mA and -400 mA do not, a fai
 leaves the Full alone), `test_static.py` (the patch lines, nothing of the guess or of `fullbatt-voltage`, no
 `regmap_write_bits`, the two waits).
 
-**Device test:** pending (U30 Air, 6.18).
+**Device test (2026-10-17; U30 Air, openwrt-luci v2026.10.17.3 with this branch's 6.18.57 bundle, then back to the
+release by `rollback-boot`).** The battery stood at 80 % (`saved 0x050`, the owner's charge limit 80). With the limit
+at 100 for the test, on a CDP port (2 A input): charging from 4.179 V at 721 mA, the FGU's battery voltage never above
+4.183 V while the current tapered (the charger's 4.208 V is at its own pin), 294 mA at 14:12, then bq256xx Full
+(`Trickle`) and in the same minute `charge full: capacity 85 % -> 100 %`, read at 4.147 V and 0 mA. Kano's condition
+(at least 4.2 V) was never met during this charge, before or after the Full. The reboot after it: `boot capacity
+100 % (saved 0x064)` - the 100 written by the calibration and by the shutdown callback, read back - no `not kept`
+warning, no oops; the first reboot onto the new kernel had read `80 % (saved 0x050)` as before. The release kernel
+after the rollback read the same `0x064`. A power-off was not run (the U30 Air has a battery, and nothing here
+switches it on again without its button); `.shutdown` runs on both paths (105). The charge limit was put back to 80.
+A drain past a percent without a read before a reboot was not produced (the capacity sat at 80 and then 100).
