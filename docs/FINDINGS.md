@@ -4355,7 +4355,13 @@ the workflows).
 
 **Unit tests:** `tests/test_static.py` (`test_mainline_emmc_timing_falls_back`): the ladder, exactly the four timing
 failures routed through it, the hook off by default and limited to CMD13 during a new card's HS400ES, the build
-switch after the config check and in no workflow. **Built** locally, 2026-10-16: 6.18.56 and 7.2.10 with `build.sh` (the patch applied with no offset or fuzz, also to 6.18.57 and 7.2.11; no compiler warning in either file; both Images carry the new messages), and a 7.2.10 test build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`, whose `CONFIG_CMDLINE` and Image end with it. **Not run on a device**:
+switch after the config check and in no workflow. **Built** locally, 2026-10-16: 6.18.56 and 7.2.10 with `build.sh` (the patch applied with no offset or fuzz, also to 6.18.57 and 7.2.11; no compiler warning in either file; both Images carry the new messages), and a 7.2.10 test build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`, whose `CONFIG_CMDLINE` and Image end with it. **On a device** (F50-B, Ubuntu 24.04, 2026-10-17; test kernels with this patch and the other open kernel PRs):
+7.2.11 and 6.18.57 normal boots: `new HS400 Enhanced strobe MMC card`, no fallback line, `ios` timing 10 at 200 MHz.
+A 7.2.11 build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`: `test: this HS400ES selection fails`,
+`mmc_select_hs400es failed, error -84`, `HS400ES failed (-84), the next initialisation uses HS200`, `error -84 whilst
+initialising MMC card`, then `new HS200 MMC card at address 0001` 0.33 s later; `ios` timing 9 (HS200) at 200 MHz,
+the system booted with mobile data and the hotspot, and the parameter read 0. Still not run: cold boots, the
+runtime rebind, throughput at HS200. Before that, the plan as written:
 
     # 1. normal boots, both boards, 6.18 and 7.2: unchanged
     dmesg | grep -iE 'mmc0|hs400|initialisation uses'     # "new HS400 Enhanced strobe MMC card", no fallback line
