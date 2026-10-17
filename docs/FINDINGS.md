@@ -8910,8 +8910,12 @@ setting, the fallback compressor, hostile and out-of-range values, switched off,
 `on`/`off` keeping the other settings, a failed swapoff, `status`/`brief`; the wiring (unit, the three images,
 `mu300-hw`, `PATH`), no second zram setup in any image, both mainline compressors and 5.4's options.
 
-**Open.** No device run yet: zram at boot on each system and kernel, the off switch over a reboot, `zstd` on mainline
-(`comp_algorithm` should list `lz4 zstd` now), and memory pressure (Docker and a KVM guest) with lz4 against zstd.
+**On a device** (2026-10-17, test builds with the other open PRs). F50-B, Ubuntu 24.04: on at boot on 7.2.11 and
+6.18.57 (708/732 MiB, priority 100), `comp_algorithm` `[lz4] zstd`; `ZRAM_ALGORITHM=zstd` then stop/start: zstd; a
+1.2 GB compressible load swapped 30 MiB into 6 MiB (4.3:1), no OOM; `mu300-zram off` held over a reboot (no swap,
+"zram off"), `on` brought it back; `mu300-zram` and the toolkit line on PATH. F50-C, plain OpenWrt (busybox), the
+release's 6.18.57 without the zstd backend: on at boot from `mu300-hw`, `zstd not offered by this kernel (lz4 ), using
+lz4` in logread, off/on. **Open:** memory pressure with Docker or a KVM guest, lz4 against zstd.
 
 ### 163. Linux 6.18.57 and 7.2.11 with every module the boards can use, KVM, and what Docker and dockur/windows-arm need
 
