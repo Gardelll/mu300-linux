@@ -2297,8 +2297,8 @@ in `prepare`; that is a fix for the private audio patches.
 
 **What uses this now.** For the dsp route, `mu300-voice audio start` switches the dump on at `DUMP_POS_DAC1_E` through
 its undo log (`MU300_VOICE_DUMP_TAP=0` leaves it off). `tone` plays at 16 kHz (`MU300_VOICE_PLAY_RATE`). `echo`
-records the dump and plays it back through alsa-lib's `plug`. That echo path has not yet been run in a call. The SIP
-gateway (the owner's sipserver, mu300 build) reads the dump and decimates it to 8 kHz behind a 47-tap low-pass. It
+records the dump and plays it back through alsa-lib's `plug`. That echo path has not yet been run in a call. A SIP
+gateway built on these taps reads the dump and decimates it to 8 kHz behind a 47-tap low-pass. It
 writes the uplink at 16 kHz through a polyphase interpolator, and feeds silence for as long as the stream is open.
 
 ## Bluetooth
