@@ -109,9 +109,11 @@ step choices 25
 say "What should be removed?"
 wipe=keep
 if [ -n "$OFF" ]; then
-    echo "  secure  overwrite the whole $((SIZE / 1073741824)) GiB region and verify (recommended, takes a few"
+    # (in MiB: a region below 1 GiB, as a make-room run of 0.79 GiB leaves, read "the whole 0 GiB region")
+    echo "  secure  overwrite the whole $((SIZE / 1048576)) MiB region and verify (recommended, takes a few"
     echo "          minutes; your files are really gone afterwards)"
-    echo "  quick   only erase the filesystem headers (fast, but the files stay readable on the flash)"
+    echo "  quick   only erase the filesystem headers (fast, but the files stay readable on the flash; an"
+    echo "          installation into this space later finds it not empty and asks for the word overwrite)"
     echo "  keep    leave the Linux filesystem in place (it just never boots again)"
     ask wipe "Erase the Linux filesystem: secure / quick / keep" secure MU300_ANS_WIPE
     case $wipe in secure|quick|keep) ;; full) wipe=secure ;; *) die "invalid choice" ;; esac
@@ -200,7 +202,7 @@ if [ $wipe != keep ]; then
         # (not a secure erase: backup superblocks and file data stay until the space is reused or fully erased)
         su_do "dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=64 conv=notrunc 2>/dev/null; sync"
     else
-        echo "overwriting $((mib / 1024)) GiB, this takes a few minutes"
+        echo "overwriting $mib MiB, this takes a few minutes"
         # discard first when the eMMC supports it (fast and it also clears blocks the controller has remapped),
         # then overwrite everything, so nothing readable is left behind
         su_do "command -v blkdiscard >/dev/null && blkdiscard -o $OFF -l $SIZE /dev/block/mmcblk0 2>/dev/null; dd if=/dev/zero of=/dev/block/mmcblk0 bs=1048576 seek=$skip count=$mib conv=notrunc 2>/dev/null; sync"
@@ -263,6 +265,11 @@ if [ -s "$GPTW/gpt.head" ] && [ -s "$GPTW/gpt.tail" ] &&
     echo "  On the 64 GB variant about 32 GiB behind userdata is free from the factory - growing userdata"
     echo "  there changes the device away from its original layout. Say yes only if this installer shrank it."
     echo "  EXPERIMENTAL, and it erases Android's data again (the filesystem has to be recreated)."
+    # (FINDINGS 153: a reinstall on a device given its space back has to make room again - from the outside that is
+    # "the installer asks to repartition again")
+    echo "  Say no if Linux may be installed again: the installer then finds this space and installs into it"
+    echo "  without touching Android. After yes, a new installation has to make room again, which resets"
+    echo "  Android once more."
     ask grow "Grow userdata back over the freed space? (yes/no)" no MU300_ANS_GROW
     if [ "$grow" = yes ]; then
         ask sure2 "Type ERASE to rewrite the partition table and wipe Android's data" "" MU300_ANS_ERASE_ANDROID
@@ -288,6 +295,9 @@ The backup copy was written first, so Android's own repair may still fix this. D
         say "Clearing Android's data filesystem so it is recreated on the next boot"
         su_do "dd if=/dev/zero of=/dev/block/by-name/userdata bs=1M count=32 conv=fsync 2>/dev/null" >/dev/null
         echo "  Android will set its data partition up again on the next boot; that takes a few minutes."
+        # Android's kernel keeps the table it booted with: until a restart it still shows userdata ending where it
+        # did, and an installer run now would take the space just given to userdata for free space
+        echo "  Restart the device before anything else: until then Android still sees the old partition table."
     fi
 else
     echo "  could not read the partition table; leaving it alone"
