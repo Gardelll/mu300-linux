@@ -1380,6 +1380,9 @@ class App:
             ttk.Checkbutton(frame, text=_('Give the space behind userdata back to it (experimental; ERASES Android\'s data)'), variable=grow).pack(anchor='w')
             ttk.Label(frame, text=_('Only for a device where this installer shrank userdata to make room. On the usual 64 GB device the space behind userdata is free from the factory: leave this off.'),
                       style='Small.TLabel', wraplength=560, justify='left').pack(anchor='w', padx=(S5, 0))
+            # (FINDINGS 153: after a yes here a reinstall has to make room again, "it asks to repartition again")
+            ttk.Label(frame, text=_('Leave it off too if Linux may be installed again: the installer then uses this space without touching Android. With it on, a new installation has to make room again, which resets Android once more.'),
+                      style='Small.TLabel', wraplength=560, justify='left').pack(anchor='w', padx=(S5, 0))
             wl = ttk.Frame(frame)
             wl.pack(anchor='w', padx=(S5, 0), pady=(S1, 0))
             ttk.Label(wl, text=_('Type ERASE to allow that:')).pack(side='left')
