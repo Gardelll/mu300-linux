@@ -250,7 +250,8 @@ hiçbir komut ezberlemeden.</p>
 <pre><code>sudo mu300-toolkit                       <span class="c"># menü</span>
 mu300-toolkit top                        <span class="c"># sıcaklıklar, işlemci, RAM, ağ hızı</span>
 sudo mu300-toolkit profile performance   <span class="c"># eco ve balanced da var</span>
-sudo mu300-toolkit stress all 10         <span class="c"># yük altında kararlılık testi</span></code></pre>
+sudo mu300-toolkit stress all 10         <span class="c"># yük altında kararlılık testi</span>
+mu300-zram                               <span class="c"># RAM'de sıkıştırılmış takas: durum (sudo mu300-zram off|on)</span></code></pre>
 <p>İsteğe bağlı parçalara eklenti (extra) denir:</p>
 <pre><code>mu300-extra list
 sudo mu300-extra install lang            <span class="c"># daha fazla web arayüzü dili (OpenWrt)</span>
@@ -339,7 +340,8 @@ sudo mu300-usb adb on                   <span class="c"># kapatmak: sudo mu300-u
 <li><strong>Bluetooth:</strong> BlueZ; tarama çalışır.</li>
 <li><strong>GPU:</strong> Mali-G57 OpenCL 3.0 çalıştırır, ekransız.</li>
 <li><strong>KVM:</strong> üç çekirdekte de sanal makineler için <code>/dev/kvm</code>.</li>
-<li><strong>Bellek:</strong> yaklaşık 1.4 GB kullanılabilir, artı RAM'de sıkıştırılmış takas (zram).</li>
+<li><strong>Bellek:</strong> yaklaşık 1.4 GB kullanılabilir, artı RAM'de sıkıştırılmış takas (zram, varsayılan olarak açık:
+RAM'in yarısı, lz4; <code>sudo mu300-zram off</code> kapatır, boyut ve sıkıştırıcı <code>/etc/mu300/zram.conf</code> içinde).</li>
 <li><strong>Web arayüzü dilleri (OpenWrt):</strong> kutudan çıktığı gibi İngilizce, Türkçe ve Basitleştirilmiş Çince;
 <code>lang</code> eklentisiyle LuCI için 40, kontrol paneli için 29 dil daha. System &gt; System &gt; Language and
 Style'dan ya da kontrol panelinde Sistem &gt; Diller'den (Languages) değiştirin. Panelin diğer çevirileri makine çevirisidir;
