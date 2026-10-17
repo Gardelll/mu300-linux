@@ -178,6 +178,7 @@ what replaced it. The table below gives each section's state.
 | 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; on the U30 Air (OpenWrt, 6.18.57): refusal, migration, notice, the panel's save; no F50 yet) |
 | 180 | Wi-Fi access point: `get_station` answered any address with the interface's own counters and the station side's signal; now only this AP's stations, with nothing filled in (the firmware has no per-client figures), `-ENOENT` otherwise; `get_channel` link 0 only (kanoqwq f59a296) | current (mainline module and 5.4 patch built; unit tests; U30 Air 6.18.57 with a client, F50-B 7.2.11, 2026-10-17) |
 | 181 | The U30 Air's fuel gauge against the stock module: the user area's writes are `regmap_update_bits()` with a wait after the release (stock `save_last_cap` at 0x4ba4), no migration guess for a valid saved value, the charger's Full is 100 % with the battery current within `fullbatt-current` (kanoqwq f59a296 reviewed: his 4.2 V condition would refuse a real Full) | current (built for 6.18.57 and 7.2.11; unit tests; U30 Air 6.18.57, 2026-10-17: Full at 4.147 V gave 100 %, kept across a reboot) |
+| 188 | Call audio on the mainline kernels: the 5.4 stack (19 modules + the vendor AGDSP DMA) built for 6.18.57 and 7.2.11, the DSP's memory reserved (patch 0022), nothing autoloaded; the xrun restart that panicked 5.4 fixed (descriptors re-armed in `prepare`), the DSP's DDR mapped Normal-NC (7.x memcpy alignment fault), no 6 s spin under a lock waiting for the AGDSP domain, the domain held across the DSP start (warm reboots), the echo played at the tap's 16 kHz mono | current (F50-B 6.18.57 and 7.2.11, F50-C 7.2.11 OpenWrt, offline; a call on F50-C 7.2.11: ringback 425 Hz, melody heard, downlink recorded (his voice, F0 140 Hz); the echo through the fixed path, answered call 22:41: the owner heard his voice and the melody) |
 
 ## Hardware and firmware facts
 
@@ -2300,6 +2301,194 @@ its undo log (`MU300_VOICE_DUMP_TAP=0` leaves it off). `tone` plays at 16 kHz (`
 records the dump and plays it back through alsa-lib's `plug`. That echo path has not yet been run in a call. A SIP
 gateway built on these taps reads the dump and decimates it to 8 kHz behind a 47-tap low-pass. It
 writes the uplink at 16 kHz through a polyphase interpolator, and feeds silence for as long as the stream is open.
+
+### 188. Call audio on the mainline kernels: the 5.4 stack ported to 6.18 and 7.2
+The Unisoc audio stack of 24-24e ran only on the vendor 5.4 kernel. It is now built for 6.18.57 and 7.2.11 with
+every release (`upstream/modules/sprd_audio`), and `mu300-audio-dsp` and `mu300-voice` work on those kernels.
+F50-B was measured on 7.2.11 (Ubuntu 24.04) on 2026-10-17, with the 41S DSP image of 24c (sha256 `378ceea7…b937`).
+The image is still the user's to supply; this repository has no copy of it.
+
+**What was ported, and from where.** The sources are our own 5.4 drivers: the realme `unisoc-5.4` tree that
+`kernel/build-audio.sh` builds, with the same seven patches. These are the drivers measured in 24-24e. Their mixer
+controls, device numbers and scene behaviour are what `mu300-voice` relies on.
+
+The Rongyue E5's 6.18 port (Enceka/linux-lts-e5 `0015e503b`, `9c5909e2c`, `03e89ea23`, `8048e353a`) comes from
+Unisoc's 5.15 tree for the UMS9621. Two parts of it do not fit here. Its `agdsp_pd` replaces `agdsp_access`, and the
+F50's device tree describes `unisoc,agdsp-access`. Its VBC driver is 2200 lines newer. What it was used for:
+
+* the vendor AGCP DMA driver (`dma/sprd-dma.c`). This is the E5's file: the 5.15 driver with `slave_id` passed
+  through `peripheral_config`. It differs from our 5.4 driver in about 30 lines;
+* the `ioremap()` of memory without pages (`8048e353a`);
+* how each 5.4-to-6.x API change looks in this code: DAI probe and `compress_new` moved into the ops, and `aif_name`
+  became a per-DAI table;
+* the GPIO compatibility helpers.
+
+The stack is 19 modules plus `sprd-dma`. `saudio`, `sprd_dai`, `vaudio` and `ucp1301` are left out because no node of
+`sound@0` uses them.
+
+The API changes between 5.4 and 6.18, all in `mu300_audio_compat.h` or at the call site:
+
+* PCM and compress ops became component callbacks that take the component.
+* `pcm_new`/`pcm_free` became `pcm_construct`/`pcm_destruct`.
+* `rtd->cpu_dai` became `snd_soc_rtd_to_cpu()`.
+* `dpcm_playback`/`dpcm_capture` became `playback_only`/`capture_only`.
+* `snd_soc_of_parse_daifmt()` became `snd_soc_daifmt_parse_format()` plus the clock-provider call.
+* `dma_slave_config.slave_id` is gone. The request id now goes through `peripheral_config`, via a field of
+  `sprd_dma_cfg`.
+* Platform drivers' `remove()` returns void.
+* `class_create()` takes one argument.
+* The syscore hook is gone; it was a no-op.
+* `hrtimer_setup()` replaces `hrtimer_init()`.
+* `sched_set_fifo()` replaces `sched_setscheduler()`, which is not exported.
+* The wakeup-source calls changed.
+* `regulator_register()` takes the device.
+* The legacy GPIO calls changed.
+
+7.2 added more changes:
+
+* The DAPM context is opaque: `snd_soc_component_to_dapm()`, `snd_soc_card_to_dapm()`, `snd_soc_dapm_to_card()`.
+* `pcm_construct` is called `pcm_new` again.
+* `strncpy()` is gone.
+
+**The kernel.**
+
+* `patches/0022` adds `CONFIG_OF_RESERVED_MEM_ADD`, the 6.18 counterpart of the 5.4 patch. It reserves
+  `0xaf600000,3M;0xaf900000,7M`, as 5.4 does, with `memblock_reserve()`, so the pages stay.
+* The fragment sets:
+  * `SND_SOC=m`;
+  * `SND_SOC_SPRD=m`, only for its `select SND_SOC_COMPRESS`, which has no prompt. Its own platform driver matches
+    no vendor node;
+  * `SND_DYNAMIC_MINORS`, because the card has PCM devices up to 53;
+  * `DMADEVICES`.
+* `virt-dma` is not a symbol one can enable, so `sprd-dma` compiles the kernel's own `virt-dma.c` into itself.
+  `build-modules.sh` copies it from the tree it builds against.
+* `all-modules.exclude` gains `dir sound/soc`. Otherwise `SND_SOC=m` opens `SND_SIMPLE_CARD`, `SND_DESIGNWARE_I2S`
+  and other options whose names do not start with `SND_SOC`.
+* No audio module carries a `MODULE_DEVICE_TABLE`, so udev cannot load them. The trap of 24b (modules loaded without
+  parameters, then `[permanent]`) cannot happen. `mu300-audio-dsp` inserts them in order, after
+  `modprobe snd-soc-core snd-compress`. Neither module is on the on-demand guard's list.
+
+**Where the modules are.** On Ubuntu they are in `/lib/modules/<release>/extra`; on OpenWrt they sit flat in the
+release directory. `mu300-audio-dsp` looks in `audio/` (the private 5.4 stack), then `extra/`, then the release
+directory itself. `mu300-voice` used to refuse every non-5.4 kernel; it now refuses only a kernel with no audio
+drivers.
+
+At boot, `mu300-audio` runs on mainline when an AGDSP image is installed (`/lib/firmware/agdsp.bin`); without one,
+nothing loads. On 5.4 it runs when the private stack's `audio/` exists, as before.
+
+**Faults 5.4 never showed, or hid.** The first two each oopsed F50-B at the first PCM open and rebooted it.
+
+* *The DSP's DDR was mapped as Device memory.* `audio_mem_vmap()` maps it `pgprot_noncached`, and
+  `aud_send_cmd()` → `audio_cmd_copy()` memcpy()s the 620-byte scene command into it. The 7.x `memcpy` ends with an
+  overlapping unaligned store: `FSC = 0x21: alignment fault` in `__pi_memcpy_generic`. The DDR is now mapped
+  Normal non-cacheable (write-combine). That is still uncached for the DSP, and it allows unaligned access. The IRAM
+  has no pages and stays a Device `ioremap()`, because a speculative read into the AGCP while it is asleep would hang
+  the bus (24).
+* *No headset, and a NULL dereference.* The codec calls `headset_set_audio_state()` at every stream start, and on
+  mainline the headset does not probe (`get gpio for 'aud_int_all' failed`): `sprd_hdst` is NULL. The board has no
+  jack, so the function now returns when there is no headset; `sprd_headset_remove()` does the same.
+
+* *A power-up wait that held a CPU for seconds.* `agdsp_access_enable()` polled the PMU up to 1,000,000 times
+  with its spinlock held, which took about 6 s. On 6.18.57 after a warm reboot the domain did not come up, and the
+  card's bind calls it once for every codec register it reads. pstore holds 41 timeouts in a row, then the
+  soft-lockup detector (`softlockup_panic=1`) panicked the kernel inside `__delay`. The wait now runs with the lock
+  released: `regmap_read_poll_timeout()` with `usleep_range` for up to 200 ms where the caller may sleep, and at most
+  2 ms of spinning where it may not (a trigger). A timeout returns -EBUSY to the caller and never hangs the kernel.
+  A caller that arrives while another is waiting waits as well, and counts are given back on failure.
+* *The DSP restarted only in a powered domain.* After a warm reboot the AGDSP still runs the previous kernel's
+  image. `start` pulses its resets, and with the domain asleep the pulse does not reach it. Every step reports
+  success, and the old image never answers the new kernel: `aud_smsg_send, channel 0 not opened, ipc state : 2,
+  dsp_ready 0`. Holding the domain (`agdsp_access_en`) and starting again made it answer at once. `mu300-audio-dsp
+  start` now holds the domain across the firmware write and the start. This is the "start is once per boot" of 24:
+  a second start was the same reset into a sleeping domain. Since the change: 6.18.57 and 7.2.11 on F50-B, and
+  7.2.11 on F50-C (all after a warm reboot from a kernel whose DSP was running) give 0 power-up timeouts, and the DSP
+  answers.
+* *A WARNING at every boot.* `alsactl` restores every control when the card appears, and writing 0 to the codec's
+  bias control disabled a regulator that nobody had enabled. The control now only acts on a change.
+
+**The restart that panicked 5.4 (24e) is fixed in the driver.** `sprd_pcm_trigger()` submitted the descriptor that
+`hw_params` had prepared on every START, RESUME and PAUSE_RELEASE. A linked-list audio transfer never completes, so
+virt-dma still held the descriptor, and the second submit corrupted the channel's list. Now:
+
+* every descriptor is submitted once;
+* a paused or suspended stream is resumed (`dmaengine_resume()`);
+* `prepare()` of a stream that has run stops its channels with `dmaengine_terminate_sync()`, which frees every
+  descriptor virt-dma holds, then builds new ones from the configuration still in `dma_cfg_array`
+  (`sprd_pcm_prep_desc()`).
+
+Measured on FE_ST_DUMP with a reader that stalls 0.8 s every few seconds: 9 overruns, each followed by arecord's
+PREPARE + START on the same open; 9 times `new DMA descriptors`; 12 s of capture delivered; no oops. On 5.4 the first
+of these panicked the kernel.
+
+**Hardened before release (a security review of the port).** The stack is vendor code, and parts of it take
+values from userspace without checking them.
+
+* *Who can reach what.* The mixer and PCM nodes (`/dev/snd/*`) are `root:audio 0660` on both images (udev on
+  Ubuntu, procd's `hotplug.json` on OpenWrt). On Ubuntu the default user `ubuntu` is in `audio`, and so is the
+  logged-in user through logind's ACL. The tuning nodes (`/dev/vbc_turning*`), the DSP pipes (`/dev/audio_pipe_*`)
+  and the dumps (`/dev/audio_dsp_*`) have no rule, so they are `root 0600`; `android-vendor/ueventd-perms.sh` sets
+  the same. The mixer controls are therefore what a non-root user can reach.
+* *Every control write is range-checked by the kernel.* `CONFIG_SND_CTL_INPUT_VALIDATION=y`: the ALSA core refuses
+  a value outside the control's declared range or item count before the driver sees it. The vendor checks did not
+  always hold. About 40 enum puts compared `value.integer.value[0]` (a `long`) against the item count and then
+  indexed with `value.enumerated.item[0]` (an `unsigned int` in the same union). A second item that made the `long`
+  negative passed the check with any first item: an out-of-bounds read of the text tables, and an out-of-range
+  write into the DSP's settings. Each now checks the value it uses.
+* For that, two declared maxima had to become real. `MAX_32_BIT` (`0xffffffff`, held as -1 in a control's `int`
+  max) declared every 32-bit control's range as below its minimum; it is now `0x7fffffff`. The profile selects
+  declared `0x0fffffff`, while modes run to 66 (`mode << 24`). That is also why amixer clamped every mode from 16
+  up (24c); it is now `0x7fffffff`.
+* *Profiles.* A profile is a blob: header, then `num_mode` × `len_mode` bytes. It arrives from `/lib/firmware` or
+  through `/dev/vbc_turningN`, and its header was trusted:
+  * it was read from a buffer that could be shorter than the header;
+  * the data buffer of an earlier, smaller profile was kept, and a larger one was copied into it (a heap overflow);
+  * a "Profile Select" then read mode N of the new header out of the old buffer (an out-of-bounds read);
+  * the tuning node changed the profile without the lock the apply path takes, and its read returned a whole
+    `vmalloc` buffer that was only partly filled.
+  `vbc_profile_store()` now checks the size, the magic and the product (at most 256 modes, 4 MiB), and allocates
+  exactly what the header says. The apply path checks the mode against the profile that is loaded, the tuning node
+  works under the lock with a zeroed, bounded buffer, and a rejected blob changes nothing.
+* *Compressed offload is off.* `sprd-compr-2stage-dma` has to be there for the card to register (link
+  `FE_OFFLOAD`), but nothing here uses it, and its copy and `set_params` paths are unaudited vendor code. Its open
+  returns -EPERM unless the module is loaded with `allow_offload=1`.
+
+**Measured without a call: F50-B on 7.2.11 and 6.18.57, F50-C on 7.2.11 (OpenWrt).**
+
+* `mu300-audio-dsp load`: 19/19 modules, two DMA controllers with 60 channels. `sprdphone-sc2730` registers with
+  FE_ST_VOICE_PCM_P at device 53, FE_ST_DUMP at 16 and FE_ST_VOICE at 5, the numbers of 5.4.
+* `mu300-audio-dsp start`: `aud_send_cmd out,cmd =4 … repeat_count=1` and `cmd =5`; status `core=0 sys=0`. The DSP
+  runs and answers.
+* `mu300-voice audio start dsp` (no call): the hostless scene is RUNNING.
+  * FE_ST_VOICE_C at 8 kHz takes 4.13 s for 4 s (IIS1 on the internal clock, 24d).
+  * FE_ST_DUMP at 48 kHz stereo takes 4.01 s for 4 s. Opened at 16 kHz mono, it delivers about 46,000 frames/s
+    (24e).
+* `audio stop` restores every control, with no oops.
+* 6.18.57 and F50-C give the same figures within 0.1 s: FE_ST_VOICE_C 4.14 s, FE_ST_DUMP 4.02-4.14 s, and every
+  forced overrun re-armed (9, 10 and 3).
+
+**A call on mainline.** F50-C, 7.2.11 (OpenWrt), 2026-10-17 21:53, to the owner's phone, through
+`mu300-voice audio start dsp`:
+
+* The ringback in FE_ST_DUMP is exactly 425 Hz, so the capture rate is right.
+* The melody went into FE_ST_VOICE_PCM_P at 16 kHz with 320/1920 periods. The owner heard it as good, so the uplink
+  works on mainline.
+* While he counted, 10 s of FE_ST_DUMP were recorded: L == R on every frame, and the voiced segments have an F0 of
+  140 Hz (autocorrelation 0.72), which is his voice. So the downlink works too.
+* What he did not hear was the echo of it: "slow motion, crackly, unintelligible". That was `mu300-voice`'s echo,
+  not the kernel. It played the 48 kHz stereo file through `plughw:<card>,53`, and plug opened the tap at
+  48000 Hz / 2 channels (read back from its `hw_params`: the tap takes any rate it is offered). The DSP consumes it
+  as 16 kHz mono, so each sample came back doubled, at a third of the speed. 5.4 has the same bug: 24e notes that
+  the echo had never run in a call.
+* The echo now plays through `mu300_uplink`: an alsa-lib configuration of its own that includes the system's
+  `alsa.conf` and pins the plug's slave to the tap's rate in mono (`rate 16000 channels 1`), with 20 ms periods. On
+  F50-B the tap then reads back 16000 Hz / 1 channel.
+
+* The verification call (F50-C, 7.2.11, 22:41, answered) ran the melody and then `mu300-voice echo 10` through
+  `mu300_uplink`. The owner: "I heard my voice and the music played." Both directions of a cellular call now work on
+  the mainline kernel, through the AP taps, the same way as on 5.4.
+
+Not measured on mainline: a call to a Bluetooth headset (the `bt` route of 24c), and a program that bridges the
+voice taps for a whole call (it reads the dump and writes the uplink at 16 kHz itself, so it needs no change).
 
 ## Bluetooth
 
