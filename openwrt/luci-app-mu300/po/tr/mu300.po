@@ -13,6 +13,9 @@ msgstr "Hücresel"
 msgid "Dual SIM"
 msgstr "Çift SIM"
 
+msgid "SIM settings"
+msgstr "SIM ayarları"
+
 msgid "Network locks"
 msgstr "Ağ kilitleri"
 
@@ -763,6 +766,12 @@ msgstr "Kayıtlı değeri sil"
 msgid "Presets"
 msgstr "Hazır ayarlar"
 
+msgid "Form (URL-encoded)"
+msgstr "Form (URL kodlu)"
+
+msgid "Plain text"
+msgstr "Düz metin"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Gelen mesajlar SMS havuzuna ulaştıkça iletilir. Başarısız bir gönderim 30 sn sonra, ardından her seferinde iki kat sonra (en fazla bir saat) yeniden denenir; toplam on kez."
 
@@ -801,12 +810,6 @@ msgstr "Adres (http:// veya https://)"
 
 msgid "Body"
 msgstr "Gövde"
-
-msgid "Form (URL-encoded)"
-msgstr "Form (URL kodlu)"
-
-msgid "Plain text"
-msgstr "Düz metin"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Alanlar: sender, time, text, device, message (doldurulmuş şablon)"
@@ -1991,6 +1994,33 @@ msgstr "SIM%d kartına geç"
 # Dual SIM controls.
 msgid "Use SIM%d at next boot"
 msgstr "Sonraki başlatmada SIM%d kullan"
+
+msgid "SIM settings are not available"
+msgstr "SIM ayarları kullanılamıyor"
+
+msgid "Modem default"
+msgstr "Modemin kendi ayarı"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "kullanımda"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "Modem: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "Bu SIM'in radyosu bir sonraki açılışında gönderilir."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "Her SIM için VoLTE ve VoNR; yeniden başlatmada korunur ve o SIM her başladığında yeniden gönderilir. VoLTE kapatılmadıkça açıktır; VoNR ayarlanana kadar modemdeki gibi kalır."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Alıcı: numara, ör. 10086 veya +86..."
@@ -3426,9 +3456,18 @@ msgstr "Geçersiz güncelleme isteği"
 msgid "The backup tool gave no valid reply"
 msgstr "Yedekleme aracı geçerli bir yanıt vermedi"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Mobil veri entegrasyonu bu platformda sağlanmıyor"
+
+msgid "The SIM settings could not be read"
+msgstr "SIM ayarları okunamadı"
+
 # Dual SIM controls.
 msgid "Invalid SIM setting"
 msgstr "Geçersiz SIM ayarı"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "Modem ayarı kabul etmedi; hiçbir şey kaydedilmedi"
 
 # Dual SIM controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3597,9 +3636,6 @@ msgstr "Yönetilen çift SIM radyosu için SIM denetimini kullanın veya yeniden
 
 msgid "Radio did not come up"
 msgstr "Radyo açılmadı"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "Mobil veri entegrasyonu bu platformda sağlanmıyor"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Veri dolaşımı ayarı kaydedilemedi"

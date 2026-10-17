@@ -13,6 +13,9 @@ msgstr "Ұялы байланыс"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "SIM баптаулары"
+
 msgid "Network locks"
 msgstr "Желіні бекіту"
 
@@ -763,6 +766,12 @@ msgstr "Сақталған мәнді жою"
 msgid "Presets"
 msgstr "Дайын баптаулар"
 
+msgid "Form (URL-encoded)"
+msgstr "Пішін (URL кодталған)"
+
+msgid "Plain text"
+msgstr "Қарапайым мәтін"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Алынған хабарлар SMS пулына түскен бойда қайта жіберіледі. Сәтсіз жіберу 30 с кейін, содан кейін әр жолы екі есе ұзақ уақыттан соң (ең көбі бір сағат) қайталанады, барлығы он рет."
 
@@ -801,12 +810,6 @@ msgstr "Мекенжай (http:// немесе https://)"
 
 msgid "Body"
 msgstr "Мазмұны"
-
-msgid "Form (URL-encoded)"
-msgstr "Пішін (URL кодталған)"
-
-msgid "Plain text"
-msgstr "Қарапайым мәтін"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Өрістер: sender, time, text, device, message (толтырылған үлгі)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "SIM баптаулары қолжетімсіз"
+
+msgid "Modem default"
+msgstr "Модемнің әдепкі мәні"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "қолданыста"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "Модем: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "Бұл SIM радиосы келесі іске қосылғанда жіберіледі."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "Әр SIM үшін VoLTE және VoNR: қайта жүктеуден кейін сақталады және сол SIM іске қосылған сайын қайта жіберіледі. VoLTE өшірілмесе қосулы; VoNR орнатылғанша модемдегідей қалады."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Алушы: нөмір, мысалы 10086 немесе +86..."
@@ -3433,9 +3463,18 @@ msgstr "Жаңарту сұрауы жарамсыз"
 msgid "The backup tool gave no valid reply"
 msgstr "Сақтық көшірме құралы жарамды жауап бермеді"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Бұл платформада мобильді деректер интеграциясы жоқ"
+
+msgid "The SIM settings could not be read"
+msgstr "SIM баптауларын оқу мүмкін болмады"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "Модем баптауды қабылдамады; ештеңе сақталмады"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Радио қосылмады"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "Бұл платформада мобильді деректер интеграциясы жоқ"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Деректер роумингі параметрін сақтау мүмкін болмады"

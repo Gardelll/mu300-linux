@@ -13,6 +13,9 @@ msgstr "셀룰러"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "SIM 설정"
+
 msgid "Network locks"
 msgstr "네트워크 잠금"
 
@@ -763,6 +766,12 @@ msgstr "저장된 값 삭제"
 msgid "Presets"
 msgstr "사전 설정"
 
+msgid "Form (URL-encoded)"
+msgstr "양식(URL 인코딩)"
+
+msgid "Plain text"
+msgstr "일반 텍스트"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "받은 메시지는 SMS 풀에 도착하는 즉시 전달됩니다. 전송에 실패하면 30초 후 다시 시도하고, 이후 매번 두 배 간격(최대 1시간)으로 모두 열 번 시도합니다."
 
@@ -801,12 +810,6 @@ msgstr "주소(http:// 또는 https://)"
 
 msgid "Body"
 msgstr "본문"
-
-msgid "Form (URL-encoded)"
-msgstr "양식(URL 인코딩)"
-
-msgid "Plain text"
-msgstr "일반 텍스트"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "필드: sender, time, text, device, message(채워진 템플릿)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "SIM 설정을 사용할 수 없습니다"
+
+msgid "Modem default"
+msgstr "모뎀 기본값"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "사용 중"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "모뎀: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "이 SIM의 무선이 다음에 시작될 때 전송됩니다."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "SIM별 VoLTE와 VoNR. 재부팅 후에도 유지되며 해당 SIM이 시작될 때마다 다시 전송됩니다. VoLTE는 끄지 않는 한 켜져 있고, VoNR은 설정할 때까지 모뎀 상태 그대로입니다."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "수신자: 번호 (예: 10086 또는 +86...)"
@@ -3433,9 +3463,18 @@ msgstr "잘못된 업데이트 요청입니다"
 msgid "The backup tool gave no valid reply"
 msgstr "백업 도구가 올바른 응답을 주지 않았습니다"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "이 플랫폼에서는 모바일 데이터 통합을 제공하지 않습니다"
+
+msgid "The SIM settings could not be read"
+msgstr "SIM 설정을 읽을 수 없습니다"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "모뎀이 설정을 받아들이지 않았습니다. 아무것도 저장되지 않았습니다"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "무선을 켜지 못했습니다"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "이 플랫폼에서는 모바일 데이터 통합을 제공하지 않습니다"
 
 msgid "The data roaming setting could not be saved"
 msgstr "데이터 로밍 설정을 저장할 수 없습니다"

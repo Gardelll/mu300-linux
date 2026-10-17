@@ -13,6 +13,9 @@ msgstr "Mobilhálózat"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "SIM-beállítások"
+
 msgid "Network locks"
 msgstr "Hálózati zárolások"
 
@@ -763,6 +766,12 @@ msgstr "A mentett érték törlése"
 msgid "Presets"
 msgstr "Előbeállítások"
 
+msgid "Form (URL-encoded)"
+msgstr "Űrlap (URL-kódolt)"
+
+msgid "Plain text"
+msgstr "Egyszerű szöveg"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "A fogadott üzenetek továbbítása azonnal megtörténik, amint az SMS-tárba érnek. A sikertelen kézbesítést 30 mp után, majd minden alkalommal kétszer annyi idő után (legfeljebb egy óra) újra megpróbálja, összesen tízszer."
 
@@ -801,12 +810,6 @@ msgstr "Cím (http:// vagy https://)"
 
 msgid "Body"
 msgstr "Törzs"
-
-msgid "Form (URL-encoded)"
-msgstr "Űrlap (URL-kódolt)"
-
-msgid "Plain text"
-msgstr "Egyszerű szöveg"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Mezők: sender, time, text, device, message (a kitöltött sablon)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "A SIM-beállítások nem érhetők el"
+
+msgid "Modem default"
+msgstr "A modem alapértéke"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "használatban"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "Modem: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "Ennek a SIM-nek a rádiója következő indulásakor lesz elküldve."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "VoLTE és VoNR SIM-enként; újraindítás után is megmaradnak, és a SIM minden indulásakor újra elküldésre kerülnek. A VoLTE be van kapcsolva, amíg ki nem kapcsolja; a VoNR a modem szerinti marad, amíg be nem állítja."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Címzett: szám, pl. 10086 vagy +86..."
@@ -3433,9 +3463,18 @@ msgstr "Érvénytelen frissítési kérés"
 msgid "The backup tool gave no valid reply"
 msgstr "A mentőeszköz nem adott érvényes választ"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "A mobiladat-integráció ezen a platformon nem érhető el"
+
+msgid "The SIM settings could not be read"
+msgstr "A SIM-beállítások nem olvashatók"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "A modem nem fogadta el a beállítást; semmi sem lett mentve"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "A rádió nem kapcsolt be"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "A mobiladat-integráció ezen a platformon nem érhető el"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Az adatroaming beállítását nem sikerült menteni"
