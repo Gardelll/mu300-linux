@@ -163,7 +163,7 @@ what replaced it. The table below gives each section's state.
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
-| 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB) |
+| 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
 
 ## Hardware and firmware facts
@@ -9105,9 +9105,38 @@ release was built or tagged; the boards ran the bundles built here, the CI workf
   switching turned on for #260's test) the mobile downlink stayed dead: `sipa_eth0` received 0 bytes while sending,
   and an `ifdown`/`ifup wan` did not bring it back. The released 6.18.56 with live switching on had a working downlink
   the boot after; one occurrence in four U30 Air boots of 6.18.57 here (and one in the earlier runs above), not pinned on
-  anything yet.
+  anything yet. The reboot soak below found no regression.
 * `mount -o loop` of a fresh image fails with "already mounted or mount point busy" on Ubuntu with 7.2.11, 6.18.57
   and the released 7.2.10 alike (`losetup -f` then `mount` works): util-linux's, not this kernel's.
+
+**The mobile downlink across reboots (2026-10-17).** Is the dead downlink above 6.18.57's? A reboot soak, each boot
+measured the same way: wait for an IPv4 address on `sipa_eth0` and a first HTTPS answer, then a 10 MB HTTPS download
+(`speed.cloudflare.com`), its bytes counted on `sipa_eth0`; the ipa/sipa/modem lines of the kernel log and
+`/proc/net/dev` kept per boot. A boot passes when the download finishes and `sipa_eth0` received more than 10 MB.
+
+* F50-C, plain OpenWrt v2026.10.16.1, its data SIM (no VPN needed there), Linux made the default boot for the run and
+  Android again after it, soft reboots only below 55 C (the hottest zone never passed 44 C). The same bundles as on
+  the U30 Air (`pr256-6.18.tar.gz` sha256 `e0ba980f...`, the released `rel-6.18.tar.gz` `d83c4d3d...`), 6.18.57 with
+  this branch's guard, list, sysctl file and `mu300-hw` line, as `mu300-update kernel 6.18` installs them.
+
+  | Kernel | Boots | Downlink working | Address / first answer after boot | 10 MB download | `sipa_eth0` RX errors, drops |
+  |---|---|---|---|---|---|
+  | 6.18.56 (released) | 12 | 12 | 33-34 s / 34 s | 3-50 s (median 43 s) | 0, 0 |
+  | 6.18.57 (this branch) | 12 | 12 | 33-35 s / 33-36 s | 2-43 s (median 13 s) | 0, 0 |
+
+  The kernel log's sipa lines are the same on both, every boot: `sipa_eth: fail to send, ret -115`, the delegate's
+  `dts parsing failed` / `get resource failed for remote-base!` and `don't have this flow ctrl err type`, one each; no
+  oops, no warning. The download times follow the carrier, not the kernel (the 6.18.56 runs came first). A final boot
+  of the restored 6.18.56 passed too.
+* U30 Air, openwrt-luci, the owner's VPN (sing-box, kill switch on): an earlier soak of the same 6.18.57 bundle,
+  stopped at its ninth reboot for the owner. All 8 measured boots passed: address at 35-36 s, the tunnel at 43-50 s,
+  10 MB through it in 1-11 s, `sipa_eth0` RX 10.42-10.45 MB each, the same four sipa lines, no oops.
+
+20 of 20 boots of 6.18.57 with a working downlink against 12 of 12 of 6.18.56: no regression measurable at this rate.
+The one dead downlink on the U30 Air came with 0018 of #261 and the dual-SIM live switching turned on for #260, which
+none of these boots had. A failure that rare cannot be pinned on a kernel without a reproducer: the 6.18.56 to
+6.18.57 upstream changes were not bisected. If it comes back, the boot's `/proc/net/dev`, the sipa lines and whether live
+switching ran are what to keep.
 
 The mainline workflow at this branch's head (`gh workflow run mainline.yml -f kv=...`): 7.2.11 run 38969488015 and
 6.18.57 run 38969491239 passed; after the build the runner (ubuntu-24.04-arm) had 99 GB free on `/` (145 GB), the
