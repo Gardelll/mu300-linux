@@ -40,6 +40,9 @@ msgstr "डिवाइस प्रबंधन"
 msgid "Update"
 msgstr "अपडेट करें"
 
+msgid "Backup of settings"
+msgstr "सेटिंग्स का बैकअप"
+
 msgid "Languages"
 msgstr "भाषाएँ"
 
@@ -319,6 +322,75 @@ msgstr "अनुरोध विफल"
 msgid "(empty)"
 msgstr "(खाली)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "पासफ़्रेज़ (8 या अधिक अक्षर)"
+
+msgid "The passphrase again"
+msgstr "पासफ़्रेज़ दोबारा"
+
+msgid "Download the backup"
+msgstr "बैकअप डाउनलोड करें"
+
+msgid "Back up the settings"
+msgstr "सेटिंग्स का बैकअप लें"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "एक फ़ाइल जिसमें हॉटस्पॉट, मोबाइल डेटा और APN, नेटवर्क लॉक, VPN प्रोफ़ाइल और सेटिंग्स, SMS फ़ॉरवर्डिंग, LAN पता, होस्ट नाम, समय क्षेत्र और SSH कुंजियाँ हैं। इसमें पासवर्ड हैं: पासफ़्रेज़ से यह एन्क्रिप्ट होती है, और केवल वही पासफ़्रेज़ इसे फिर खोलता है।"
+
+msgid "Include the login password"
+msgstr "लॉगिन पासवर्ड भी शामिल करें"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "पासफ़्रेज़, यदि फ़ाइल एन्क्रिप्टेड है"
+
+msgid "Show what would change"
+msgstr "दिखाएँ क्या बदलेगा"
+
+msgid "Restore"
+msgstr "पुनर्स्थापित करें"
+
+msgid "The file is larger than 4 MiB"
+msgstr "फ़ाइल 4 MiB से बड़ी है"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "फ़ाइल की सेटिंग्स इनकी जगह लेंगी। हॉटस्पॉट, मोबाइल डेटा या LAN फिर से शुरू हो सकते हैं, और यह पेज कुछ पल के लिए कनेक्शन खो सकता है।"
+
+msgid "Restore from a backup"
+msgstr "बैकअप से पुनर्स्थापित करें"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "फ़ाइल का हर मान पहले जाँचा जाता है; एक भी अस्वीकार हो तो कुछ नहीं बदलता। जो समान है उसे छुआ नहीं जाता, और इस डिवाइस की कोई VPN प्रोफ़ाइल, सदस्यता या SSH कुंजी हटाई नहीं जाती।"
+
+msgid "Keep this device's login password"
+msgstr "इस डिवाइस का लॉगिन पासवर्ड रखें"
+
+msgid "Take a file of another device model"
+msgstr "दूसरे डिवाइस मॉडल की फ़ाइल स्वीकार करें"
+
+msgid "The two passphrases differ"
+msgstr "दोनों पासफ़्रेज़ अलग हैं"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "पासफ़्रेज़ में 8 या अधिक अक्षर चाहिए"
+
+msgid "Saved (encrypted)"
+msgstr "सहेजा गया (एन्क्रिप्टेड)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "सहेजा गया। फ़ाइल एन्क्रिप्टेड नहीं है: इसमें पासवर्ड हैं, इसे सुरक्षित रखें।"
+
+msgid "Choose a backup file first"
+msgstr "पहले एक बैकअप फ़ाइल चुनें"
+
+msgid "Restoring…"
+msgstr "पुनर्स्थापित हो रहा है…"
+
+msgid "Restored"
+msgstr "पुनर्स्थापित"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "पुनर्स्थापना पूरी नहीं हुई: ऊपर की पंक्तियाँ देखें"
+
 msgid "Loading…"
 msgstr "लोड हो रहा है…"
 
@@ -408,6 +480,111 @@ msgstr "ट्रिप पॉइंट"
 
 msgid "Cooling devices"
 msgstr "कूलिंग उपकरण"
+
+msgid "Stress test started"
+msgstr "स्ट्रेस टेस्ट शुरू हुआ"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "सहेजा गया: अगले रीबूट पर लागू होगा"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU वोल्टेज ऑफ़सेट (प्रायोगिक)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "प्रायोगिक: CPU वोल्टेज बदलने से डिवाइस अस्थिर हो सकता है, आपका डेटा खराब हो सकता है और आपके डिवाइस को स्थायी नुकसान पहुँच सकता है। इसका उपयोग पूरी तरह अपने जोखिम पर करें।"
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU वोल्टेज ऑफ़सेट उपलब्ध नहीं है"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "इस कर्नेल के साथ उपलब्ध नहीं (इस रिलीज़ या बाद के mainline कर्नेल में यह है)।"
+
+msgid "Off: the stock voltages"
+msgstr "बंद: फ़ैक्टरी वोल्टेज"
+
+msgid "Changes at the next reboot"
+msgstr "अगले रीबूट पर बदलेगा"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "परीक्षण बूट: यह बूट 10 मिनट चलने के बाद रखा जाएगा"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "रखा गया: इस ऑफ़सेट ने अपना परीक्षण बूट पास किया"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "इसके साथ एक बूट साफ़ शटडाउन के बिना समाप्त हुआ"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "इसका परीक्षण बूट 10 मिनट से पहले समाप्त हो गया"
+
+msgid "invalid value"
+msgstr "अमान्य मान"
+
+msgid "unknown SoC firmware"
+msgstr "अज्ञात SoC फ़र्मवेयर"
+
+msgid "refused by the kernel"
+msgstr "कर्नेल ने अस्वीकार किया"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "कर्नेल इसके साथ CPU स्केलिंग शुरू नहीं कर सका"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "तीन CPU डोमेन (CPU कोर 0-3, 4-6 और 7) के लिए µV में ऑफ़सेट, पूरे चरणों में। नया ऑफ़सेट अगले रीबूट पर परीक्षण के रूप में लागू होता है: वह बूट 10 मिनट चलने के बाद इसे रखा जाता है, और यदि इसके साथ कोई बूट क्रैश, watchdog रीसेट या बिजली कटने से समाप्त होता है तो इसे हटा दिया जाता है (वापस 0 पर)।"
+
+msgid "Running now (µV)"
+msgstr "अभी चल रहा (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "अगले बूट के लिए सहेजा गया (µV)"
+
+msgid "State"
+msgstr "स्थिति"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "स्वचालित रूप से वापस लिया गया: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "इस डिवाइस का SoC फ़र्मवेयर उनमें से नहीं है जिनकी वोल्टेज एन्कोडिंग ज्ञात है: केवल फ़ैक्टरी वोल्टेज संभव हैं।"
+
+msgid "Domain"
+msgstr "डोमेन"
+
+msgid "Offset now (µV)"
+msgstr "अभी का ऑफ़सेट (µV)"
+
+msgid "Highest step"
+msgstr "सबसे ऊँचा चरण"
+
+msgid "New offset (µV)"
+msgstr "नया ऑफ़सेट (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "सीमाएँ: %d से %d µV, %d µV के चरणों में।"
+
+msgid "Save for the next boot"
+msgstr "अगले बूट के लिए सहेजें"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "हर ऑफ़सेट %d µV का गुणज होना चाहिए, %d और %d के बीच।"
+
+msgid "Type %s to confirm."
+msgstr "पुष्टि करने के लिए %s टाइप करें।"
+
+msgid "Back to the stock voltages"
+msgstr "फ़ैक्टरी वोल्टेज पर वापस जाएँ"
+
+msgid "Type %s to confirm:"
+msgstr "पुष्टि करने के लिए %s टाइप करें:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "10 मिनट का CPU स्ट्रेस टेस्ट चलाएँ"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "नए ऑफ़सेट को उसके परीक्षण बूट के दौरान लोड में जाँचें। वोल्टेज बहुत कम होने पर डिवाइस क्रैश हो सकता है; तब अगला बूट फ़ैक्टरी वोल्टेज पर चलता है।"
+
+msgid "A stress test is running."
+msgstr "एक स्ट्रेस टेस्ट चल रहा है।"
 
 msgid "USB role"
 msgstr "USB भूमिका"
@@ -1254,9 +1431,6 @@ msgstr "कोड"
 
 msgid "Translated"
 msgstr "अनुवादित"
-
-msgid "State"
-msgstr "स्थिति"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "LuCI के अपने अनुवाद OpenWrt से आते हैं। तुर्की और चीनी के अलावा इस पैनल के अनुवाद मशीनी (AI) अनुवाद हैं; सुधारों का स्वागत है।"
@@ -2233,6 +2407,12 @@ msgstr "%s पहले जाँचा गया"
 
 msgid "Not checked yet"
 msgstr "अभी तक जाँचा नहीं गया"
+
+msgid "Mirror (release files)"
+msgstr "मिरर (रिलीज़ फ़ाइलें)"
+
+msgid "Leave empty for GitHub."
+msgstr "GitHub के लिए खाली छोड़ें।"
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "अपडेट के बाद मेरे जोड़े हुए पैकेज फिर से इंस्टॉल करें (पहले स्टार्ट पर डिवाइस का ऑनलाइन होना ज़रूरी है)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "अज्ञात CPU वोल्टेज ऑपरेशन"
+
+msgid "Invalid CPU voltage request"
+msgstr "अमान्य CPU वोल्टेज अनुरोध"
+
+msgid "Invalid CPU voltage offset"
+msgstr "अमान्य CPU वोल्टेज ऑफ़सेट"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "वोल्टेज ऑफ़सेट लागू करने के लिए पुष्टि शब्द टाइप करें"
+
+msgid "Invalid stress test length"
+msgstr "अमान्य स्ट्रेस टेस्ट अवधि"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "पैकेज एडेप्टर ने मान्य जवाब नहीं दिया"
 
@@ -3234,6 +3429,9 @@ msgstr "अज्ञात अपडेट ऑपरेशन"
 
 msgid "Invalid update request"
 msgstr "अमान्य अपडेट अनुरोध"
+
+msgid "The backup tool gave no valid reply"
+msgstr "बैकअप टूल ने कोई मान्य उत्तर नहीं दिया"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "CPU वोल्टेज ऑफ़सेट पढ़ा नहीं जा सका"
+
+msgid "The CPU voltage offset was refused"
+msgstr "CPU वोल्टेज ऑफ़सेट अस्वीकार कर दिया गया"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "CPU वोल्टेज ऑफ़सेट बंद नहीं किया जा सका"
+
+msgid "The stress test could not be started"
+msgstr "स्ट्रेस टेस्ट शुरू नहीं किया जा सका"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "यह फ़ाइल हस्ताक्षरित नहीं �
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "यह फ़ाइल इंस्टॉल किए गए संस्करण से पुरानी है: इसके लिए पुष्टि ज़रूरी है"
+
+msgid "The release source was not changed"
+msgstr "रिलीज़ स्रोत नहीं बदला गया"

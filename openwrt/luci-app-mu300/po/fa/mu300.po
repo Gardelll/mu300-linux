@@ -40,6 +40,9 @@ msgstr "مدیریت دستگاه"
 msgid "Update"
 msgstr "به‌روزرسانی"
 
+msgid "Backup of settings"
+msgstr "پشتیبان تنظیمات"
+
 msgid "Languages"
 msgstr "زبان‌ها"
 
@@ -319,6 +322,75 @@ msgstr "درخواست ناموفق بود"
 msgid "(empty)"
 msgstr "(خالی)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "عبارت عبور (۸ نویسه یا بیشتر)"
+
+msgid "The passphrase again"
+msgstr "دوباره عبارت عبور"
+
+msgid "Download the backup"
+msgstr "دریافت پشتیبان"
+
+msgid "Back up the settings"
+msgstr "پشتیبان‌گیری از تنظیمات"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "یک پرونده با هات‌اسپات، داده همراه و APN، قفل‌های شبکه، نمایه‌ها و تنظیمات VPN، بازارسال پیامک، نشانی LAN، نام میزبان، منطقه زمانی و کلیدهای SSH. گذرواژه‌ها در آن هستند: با عبارت عبور رمزگذاری می‌شود و فقط همان عبارت آن را دوباره باز می‌کند."
+
+msgid "Include the login password"
+msgstr "گذرواژه ورود هم باشد"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "عبارت عبور، اگر پرونده رمزگذاری شده است"
+
+msgid "Show what would change"
+msgstr "نمایش آنچه تغییر می‌کند"
+
+msgid "Restore"
+msgstr "بازگردانی"
+
+msgid "The file is larger than 4 MiB"
+msgstr "پرونده بزرگ‌تر از ۴ مبی‌بایت است"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "تنظیمات پرونده جای این‌ها را می‌گیرد. هات‌اسپات، داده همراه یا LAN ممکن است دوباره راه‌اندازی شوند و این صفحه ممکن است لحظه‌ای اتصال را از دست بدهد."
+
+msgid "Restore from a backup"
+msgstr "بازگردانی از پشتیبان"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "هر مقدار پرونده نخست بررسی می‌شود؛ اگر یکی رد شود هیچ چیز تغییر نمی‌کند. آنچه یکسان است دست نمی‌خورد و هیچ نمایه VPN، اشتراک یا کلید SSH این دستگاه حذف نمی‌شود."
+
+msgid "Keep this device's login password"
+msgstr "نگه داشتن گذرواژه ورود این دستگاه"
+
+msgid "Take a file of another device model"
+msgstr "پذیرفتن پرونده مدل دیگری از دستگاه"
+
+msgid "The two passphrases differ"
+msgstr "دو عبارت عبور یکسان نیستند"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "عبارت عبور باید ۸ نویسه یا بیشتر باشد"
+
+msgid "Saved (encrypted)"
+msgstr "ذخیره شد (رمزگذاری‌شده)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "ذخیره شد. پرونده رمزگذاری نشده است: گذرواژه‌ها در آن هستند، آن را امن نگه دارید."
+
+msgid "Choose a backup file first"
+msgstr "نخست یک پرونده پشتیبان برگزینید"
+
+msgid "Restoring…"
+msgstr "در حال بازگردانی…"
+
+msgid "Restored"
+msgstr "بازگردانی شد"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "بازگردانی تمام نشد: سطرهای بالا را ببینید"
+
 msgid "Loading…"
 msgstr "در حال بارگذاری…"
 
@@ -408,6 +480,111 @@ msgstr "نقاط آستانه"
 
 msgid "Cooling devices"
 msgstr "دستگاه‌های خنک‌کننده"
+
+msgid "Stress test started"
+msgstr "تست استرس شروع شد"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "ذخیره شد: در راه‌اندازی مجدد بعدی اعمال می‌شود"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "جابه‌جایی ولتاژ CPU (آزمایشی)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "آزمایشی: تغییر ولتاژ CPU می‌تواند دستگاه را ناپایدار کند، داده‌های شما را خراب کند و به دستگاه شما آسیب دائمی بزند. استفاده از آن تماماً با مسئولیت خود شماست."
+
+msgid "CPU voltage offset unavailable"
+msgstr "جابه‌جایی ولتاژ CPU در دسترس نیست"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "با این هسته در دسترس نیست (هسته‌ی mainline این نسخه یا جدیدتر آن را دارد)."
+
+msgid "Off: the stock voltages"
+msgstr "خاموش: ولتاژهای کارخانه"
+
+msgid "Changes at the next reboot"
+msgstr "در راه‌اندازی مجدد بعدی تغییر می‌کند"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "راه‌اندازی آزمایشی: وقتی این راه‌اندازی 10 دقیقه کار کند حفظ می‌شود"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "حفظ شد: این جابه‌جایی راه‌اندازی آزمایشی خود را با موفقیت گذراند"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "یک راه‌اندازی با آن بدون خاموش شدن درست پایان یافت"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "راه‌اندازی آزمایشی آن پیش از 10 دقیقه پایان یافت"
+
+msgid "invalid value"
+msgstr "مقدار نامعتبر"
+
+msgid "unknown SoC firmware"
+msgstr "میان‌افزار SoC ناشناخته"
+
+msgid "refused by the kernel"
+msgstr "هسته آن را رد کرد"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "هسته نتوانست مقیاس‌دهی فرکانس CPU را با آن آغاز کند"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "جابه‌جایی‌ها بر حسب µV برای سه دامنه‌ی CPU (هسته‌های پردازنده 0-3، 4-6 و 7)، در گام‌های کامل. جابه‌جایی جدید در راه‌اندازی مجدد بعدی به‌صورت آزمایشی اعمال می‌شود: وقتی آن راه‌اندازی 10 دقیقه کار کند حفظ می‌شود، و اگر راه‌اندازی با آن با خرابی، بازنشانی watchdog یا قطع برق پایان یابد کنار گذاشته می‌شود (به 0 برمی‌گردد)."
+
+msgid "Running now (µV)"
+msgstr "اکنون در حال اجرا (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "ذخیره‌شده برای راه‌اندازی بعدی (µV)"
+
+msgid "State"
+msgstr "وضعیت"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "به‌طور خودکار پس گرفته شد: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "میان‌افزار SoC این دستگاه از آن‌هایی نیست که رمزگذاری ولتاژشان شناخته شده است: فقط ولتاژهای کارخانه ممکن است."
+
+msgid "Domain"
+msgstr "دامنه"
+
+msgid "Offset now (µV)"
+msgstr "جابه‌جایی کنونی (µV)"
+
+msgid "Highest step"
+msgstr "بالاترین پله"
+
+msgid "New offset (µV)"
+msgstr "جابه‌جایی جدید (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "محدوده: %d تا %d µV، با گام‌های %d µV."
+
+msgid "Save for the next boot"
+msgstr "ذخیره برای راه‌اندازی بعدی"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "هر جابه‌جایی باید مضربی از %d µV بین %d و %d باشد."
+
+msgid "Type %s to confirm."
+msgstr "برای تأیید %s را تایپ کنید."
+
+msgid "Back to the stock voltages"
+msgstr "بازگشت به ولتاژهای کارخانه"
+
+msgid "Type %s to confirm:"
+msgstr "برای تأیید %s را تایپ کنید:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "اجرای تست استرس 10 دقیقه‌ای CPU"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "جابه‌جایی جدید را در طول راه‌اندازی آزمایشی‌اش زیر بار آزمایش کنید. اگر ولتاژ خیلی پایین باشد ممکن است دستگاه از کار بیفتد؛ در آن صورت راه‌اندازی بعدی با ولتاژهای کارخانه اجرا می‌شود."
+
+msgid "A stress test is running."
+msgstr "یک تست استرس در حال اجراست."
 
 msgid "USB role"
 msgstr "نقش USB"
@@ -1254,9 +1431,6 @@ msgstr "کد"
 
 msgid "Translated"
 msgstr "ترجمه‌شده"
-
-msgid "State"
-msgstr "وضعیت"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "ترجمه‌های خود LuCI از OpenWrt می‌آیند. ترجمه‌های این پنل به‌جز ترکی و چینی، ترجمهٔ ماشینی (هوش مصنوعی) هستند؛ از اصلاحات استقبال می‌شود."
@@ -2233,6 +2407,12 @@ msgstr "%s پیش بررسی شد"
 
 msgid "Not checked yet"
 msgstr "هنوز بررسی نشده"
+
+msgid "Mirror (release files)"
+msgstr "آینه (فایل‌های انتشار)"
+
+msgid "Leave empty for GitHub."
+msgstr "برای GitHub خالی بگذارید."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "بسته‌هایی که افزوده‌ام پس از به‌روزرسانی دوباره نصب شوند (دستگاه در نخستین شروع باید آنلاین باشد)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "عملیات ولتاژ CPU ناشناخته"
+
+msgid "Invalid CPU voltage request"
+msgstr "درخواست ولتاژ CPU نامعتبر"
+
+msgid "Invalid CPU voltage offset"
+msgstr "جابه‌جایی ولتاژ CPU نامعتبر"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "برای اعمال جابه‌جایی ولتاژ، واژه‌ی تأیید را تایپ کنید"
+
+msgid "Invalid stress test length"
+msgstr "مدت تست استرس نامعتبر"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "آداپتور بسته‌ها پاسخ معتبری نداد"
 
@@ -3234,6 +3429,9 @@ msgstr "عملیات به‌روزرسانی ناشناخته"
 
 msgid "Invalid update request"
 msgstr "درخواست به‌روزرسانی نامعتبر"
+
+msgid "The backup tool gave no valid reply"
+msgstr "ابزار پشتیبان پاسخ معتبری نداد"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "جابه‌جایی ولتاژ CPU خوانده نشد"
+
+msgid "The CPU voltage offset was refused"
+msgstr "جابه‌جایی ولتاژ CPU رد شد"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "جابه‌جایی ولتاژ CPU خاموش نشد"
+
+msgid "The stress test could not be started"
+msgstr "تست استرس آغاز نشد"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "این فایل امضا نشده است: این به تأیید نیا�
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "این فایل از نسخهٔ نصب‌شده قدیمی‌تر است: این به تأیید نیاز دارد"
+
+msgid "The release source was not changed"
+msgstr "منبع انتشار تغییر نکرد"

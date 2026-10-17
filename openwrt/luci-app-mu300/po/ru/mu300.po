@@ -40,6 +40,9 @@ msgstr "Управление устройством"
 msgid "Update"
 msgstr "Обновить"
 
+msgid "Backup of settings"
+msgstr "Резервная копия настроек"
+
 msgid "Languages"
 msgstr "Языки"
 
@@ -319,6 +322,75 @@ msgstr "Ошибка запроса"
 msgid "(empty)"
 msgstr "(пусто)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Парольная фраза (не менее 8 символов)"
+
+msgid "The passphrase again"
+msgstr "Парольная фраза ещё раз"
+
+msgid "Download the backup"
+msgstr "Скачать копию"
+
+msgid "Back up the settings"
+msgstr "Сохранить настройки"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Один файл с точкой доступа, мобильными данными и APN, блокировками сети, профилями и настройками VPN, пересылкой SMS, адресом LAN, именем хоста, часовым поясом и ключами SSH. В нём есть пароли: с парольной фразой он шифруется, и открыть его снова можно только ею."
+
+msgid "Include the login password"
+msgstr "Включить пароль входа"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Парольная фраза, если файл зашифрован"
+
+msgid "Show what would change"
+msgstr "Показать, что изменится"
+
+msgid "Restore"
+msgstr "Восстановить"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Файл больше 4 МиБ"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Настройки из файла заменят текущие. Точка доступа, мобильные данные или LAN могут перезапуститься, и страница может ненадолго потерять связь."
+
+msgid "Restore from a backup"
+msgstr "Восстановить из копии"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Каждое значение файла сначала проверяется; если хоть одно отклонено, ничего не меняется. Совпадающее не трогается, и ни один профиль VPN, подписка или ключ SSH этого устройства не удаляется."
+
+msgid "Keep this device's login password"
+msgstr "Сохранить пароль входа этого устройства"
+
+msgid "Take a file of another device model"
+msgstr "Принять файл другой модели устройства"
+
+msgid "The two passphrases differ"
+msgstr "Парольные фразы не совпадают"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Парольная фраза должна быть не короче 8 символов"
+
+msgid "Saved (encrypted)"
+msgstr "Сохранено (зашифровано)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Сохранено. Файл не зашифрован: в нём есть пароли, храните его надёжно."
+
+msgid "Choose a backup file first"
+msgstr "Сначала выберите файл копии"
+
+msgid "Restoring…"
+msgstr "Восстановление…"
+
+msgid "Restored"
+msgstr "Восстановлено"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Восстановление не завершилось: см. строки выше"
+
 msgid "Loading…"
 msgstr "Загрузка…"
 
@@ -408,6 +480,111 @@ msgstr "Пороговые точки"
 
 msgid "Cooling devices"
 msgstr "Устройства охлаждения"
+
+msgid "Stress test started"
+msgstr "Стресс-тест запущен"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Сохранено: вступит в силу при следующей перезагрузке"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Смещение напряжения CPU (ЭКСПЕРИМЕНТАЛЬНО)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Экспериментальная функция: изменение напряжения CPU может сделать устройство нестабильным, повредить ваши данные и необратимо повредить ваше устройство. Вы используете её полностью на свой страх и риск."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Смещение напряжения CPU недоступно"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Недоступно с этим ядром (есть в mainline-ядре этого выпуска или новее)."
+
+msgid "Off: the stock voltages"
+msgstr "Выключено: заводские напряжения"
+
+msgid "Changes at the next reboot"
+msgstr "Изменится при следующей перезагрузке"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Пробная загрузка: сохранится, когда эта загрузка проработает 10 минут"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Сохранено: это смещение прошло пробную загрузку"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "загрузка с ним завершилась без корректного выключения"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "его пробная загрузка завершилась раньше 10 минут"
+
+msgid "invalid value"
+msgstr "недопустимое значение"
+
+msgid "unknown SoC firmware"
+msgstr "неизвестная прошивка SoC"
+
+msgid "refused by the kernel"
+msgstr "отклонено ядром"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "ядро не смогло запустить масштабирование частоты CPU с ним"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Смещения в µV для трёх доменов CPU (ядра CPU 0-3, 4-6 и 7), целыми шагами. Новое смещение вступает в силу при следующей перезагрузке, в пробном режиме: оно сохраняется, когда эта загрузка проработает 10 минут, и сбрасывается (обратно в 0), если загрузка с ним закончится сбоем, сбросом по watchdog или отключением питания."
+
+msgid "Running now (µV)"
+msgstr "Работает сейчас (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Сохранено для следующей загрузки (µV)"
+
+msgid "State"
+msgstr "Состояние"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Автоматически отменено: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Прошивка SoC этого устройства не относится к тем, чья кодировка напряжения известна: возможны только заводские напряжения."
+
+msgid "Domain"
+msgstr "Домен"
+
+msgid "Offset now (µV)"
+msgstr "Смещение сейчас (µV)"
+
+msgid "Highest step"
+msgstr "Высшая ступень"
+
+msgid "New offset (µV)"
+msgstr "Новое смещение (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Пределы: от %d до %d µV, с шагом %d µV."
+
+msgid "Save for the next boot"
+msgstr "Сохранить для следующей загрузки"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Каждое смещение должно быть кратно %d µV и находиться между %d и %d."
+
+msgid "Type %s to confirm."
+msgstr "Введите %s для подтверждения."
+
+msgid "Back to the stock voltages"
+msgstr "Вернуть заводские напряжения"
+
+msgid "Type %s to confirm:"
+msgstr "Введите %s для подтверждения:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Запустить 10-минутный стресс-тест CPU"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Проверьте новое смещение под нагрузкой во время его пробной загрузки. При слишком низком напряжении устройство может дать сбой; тогда следующая загрузка пройдёт на заводских напряжениях."
+
+msgid "A stress test is running."
+msgstr "Идёт стресс-тест."
 
 msgid "USB role"
 msgstr "Роль USB"
@@ -1254,9 +1431,6 @@ msgstr "Код"
 
 msgid "Translated"
 msgstr "Переведено"
-
-msgid "State"
-msgstr "Состояние"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Собственные переводы LuCI взяты из OpenWrt. Переводы этой панели, кроме турецкого и китайского, машинные (ИИ); исправления приветствуются."
@@ -2233,6 +2407,12 @@ msgstr "Проверено %s назад"
 
 msgid "Not checked yet"
 msgstr "Ещё не проверялось"
+
+msgid "Mirror (release files)"
+msgstr "Зеркало (файлы выпуска)"
+
+msgid "Leave empty for GitHub."
+msgstr "Оставьте пустым для GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "После обновления снова установить добавленные мной пакеты (при первом запуске устройству нужен интернет)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Неизвестная операция с напряжением CPU"
+
+msgid "Invalid CPU voltage request"
+msgstr "Недопустимый запрос напряжения CPU"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Недопустимое смещение напряжения CPU"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Введите слово подтверждения, чтобы применить смещение напряжения"
+
+msgid "Invalid stress test length"
+msgstr "Недопустимая длительность стресс-теста"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Адаптер пакетов не дал корректного ответа"
 
@@ -3234,6 +3429,9 @@ msgstr "Неизвестная операция обновления"
 
 msgid "Invalid update request"
 msgstr "Недопустимый запрос обновления"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Инструмент резервного копирования не дал корректного ответа"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Не удалось прочитать смещение напряжения CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Смещение напряжения CPU отклонено"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Не удалось отключить смещение напряжения CPU"
+
+msgid "The stress test could not be started"
+msgstr "Не удалось запустить стресс-тест"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Этот файл не подписан: требуется подтве
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Этот файл старее установленного: требуется подтверждение"
+
+msgid "The release source was not changed"
+msgstr "Источник выпуска не изменён"

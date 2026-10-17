@@ -40,6 +40,9 @@ msgstr "Zarządzanie urządzeniem"
 msgid "Update"
 msgstr "Aktualizuj"
 
+msgid "Backup of settings"
+msgstr "Kopia zapasowa ustawień"
+
 msgid "Languages"
 msgstr "Języki"
 
@@ -319,6 +322,75 @@ msgstr "Żądanie nie powiodło się"
 msgid "(empty)"
 msgstr "(puste)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Hasło (co najmniej 8 znaków)"
+
+msgid "The passphrase again"
+msgstr "Hasło ponownie"
+
+msgid "Download the backup"
+msgstr "Pobierz kopię"
+
+msgid "Back up the settings"
+msgstr "Utwórz kopię ustawień"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Jeden plik z hotspotem, danymi komórkowymi i APN, blokadami sieci, profilami i ustawieniami VPN, przekazywaniem SMS, adresem LAN, nazwą hosta, strefą czasową i kluczami SSH. Zawiera hasła: z hasłem jest szyfrowany i tylko to hasło go ponownie otwiera."
+
+msgid "Include the login password"
+msgstr "Dołącz hasło logowania"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Hasło, jeśli plik jest zaszyfrowany"
+
+msgid "Show what would change"
+msgstr "Pokaż, co by się zmieniło"
+
+msgid "Restore"
+msgstr "Przywróć"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Plik jest większy niż 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Ustawienia z pliku zastąpią obecne. Hotspot, dane komórkowe lub LAN mogą się zrestartować, a ta strona może na chwilę stracić połączenie."
+
+msgid "Restore from a backup"
+msgstr "Przywróć z kopii"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Każda wartość z pliku jest najpierw sprawdzana; jeśli jedna zostanie odrzucona, nic się nie zmienia. To, co jest takie samo, zostaje bez zmian, i żaden profil VPN, subskrypcja ani klucz SSH tego urządzenia nie jest usuwany."
+
+msgid "Keep this device's login password"
+msgstr "Zachowaj hasło logowania tego urządzenia"
+
+msgid "Take a file of another device model"
+msgstr "Przyjmij plik z innego modelu urządzenia"
+
+msgid "The two passphrases differ"
+msgstr "Hasła się różnią"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Hasło musi mieć co najmniej 8 znaków"
+
+msgid "Saved (encrypted)"
+msgstr "Zapisano (zaszyfrowane)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Zapisano. Plik nie jest zaszyfrowany: zawiera hasła, przechowuj go bezpiecznie."
+
+msgid "Choose a backup file first"
+msgstr "Najpierw wybierz plik kopii"
+
+msgid "Restoring…"
+msgstr "Przywracanie…"
+
+msgid "Restored"
+msgstr "Przywrócono"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Przywracanie się nie zakończyło: zobacz wiersze powyżej"
+
 msgid "Loading…"
 msgstr "Ładowanie…"
 
@@ -408,6 +480,111 @@ msgstr "Punkty progowe"
 
 msgid "Cooling devices"
 msgstr "Urządzenia chłodzące"
+
+msgid "Stress test started"
+msgstr "Test obciążeniowy uruchomiony"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Zapisano: zacznie działać po następnym ponownym uruchomieniu"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Przesunięcie napięcia CPU (EKSPERYMENTALNE)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Funkcja eksperymentalna: zmiana napięcia CPU może spowodować niestabilność urządzenia, uszkodzić Twoje dane i trwale uszkodzić Twoje urządzenie. Korzystasz z niej wyłącznie na własne ryzyko."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Przesunięcie napięcia CPU niedostępne"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Niedostępne w tym jądrze (ma je jądro mainline z tego wydania lub nowszego)."
+
+msgid "Off: the stock voltages"
+msgstr "Wyłączone: fabryczne napięcia"
+
+msgid "Changes at the next reboot"
+msgstr "Zmieni się po następnym ponownym uruchomieniu"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Uruchomienie próbne: zostaje zachowane, gdy to uruchomienie działa 10 minut"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Zachowane: to przesunięcie przeszło swoje uruchomienie próbne"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "uruchomienie z nim zakończyło się bez poprawnego wyłączenia"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "jego uruchomienie próbne zakończyło się przed upływem 10 minut"
+
+msgid "invalid value"
+msgstr "nieprawidłowa wartość"
+
+msgid "unknown SoC firmware"
+msgstr "nieznane oprogramowanie układowe SoC"
+
+msgid "refused by the kernel"
+msgstr "odrzucone przez jądro"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "jądro nie mogło z nim uruchomić skalowania częstotliwości CPU"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Przesunięcia w µV dla trzech domen CPU (rdzenie 0-3, 4-6 i 7), w całych krokach. Nowe przesunięcie zaczyna działać po następnym ponownym uruchomieniu, próbnie: zostaje zachowane, gdy to uruchomienie działa 10 minut, i porzucone (powrót do 0), jeśli uruchomienie z nim zakończy się awarią, resetem przez watchdog lub zanikiem zasilania."
+
+msgid "Running now (µV)"
+msgstr "Działa teraz (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Zapisane na następne uruchomienie (µV)"
+
+msgid "State"
+msgstr "Stan"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Wycofane automatycznie: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Oprogramowanie układowe SoC tego urządzenia nie należy do tych, których kodowanie napięcia jest znane: możliwe są tylko fabryczne napięcia."
+
+msgid "Domain"
+msgstr "Domena"
+
+msgid "Offset now (µV)"
+msgstr "Obecne przesunięcie (µV)"
+
+msgid "Highest step"
+msgstr "Najwyższy krok"
+
+msgid "New offset (µV)"
+msgstr "Nowe przesunięcie (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Limity: od %d do %d µV, w krokach co %d µV."
+
+msgid "Save for the next boot"
+msgstr "Zapisz na następne uruchomienie"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Każde przesunięcie musi być wielokrotnością %d µV z zakresu od %d do %d."
+
+msgid "Type %s to confirm."
+msgstr "Wpisz %s, aby potwierdzić."
+
+msgid "Back to the stock voltages"
+msgstr "Powrót do fabrycznych napięć"
+
+msgid "Type %s to confirm:"
+msgstr "Wpisz %s, aby potwierdzić:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Uruchom 10-minutowy test obciążeniowy CPU"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Przetestuj nowe przesunięcie pod obciążeniem podczas jego uruchomienia próbnego. Urządzenie może się zawiesić, jeśli napięcie jest zbyt niskie; następne uruchomienie działa wtedy na fabrycznych napięciach."
+
+msgid "A stress test is running."
+msgstr "Trwa test obciążeniowy."
 
 msgid "USB role"
 msgstr "Rola USB"
@@ -1254,9 +1431,6 @@ msgstr "Kod"
 
 msgid "Translated"
 msgstr "Przetłumaczono"
-
-msgid "State"
-msgstr "Stan"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Tłumaczenia samego LuCI pochodzą z OpenWrt. Tłumaczenia tego panelu, poza tureckim i chińskim, są tłumaczeniami maszynowymi (AI); poprawki są mile widziane."
@@ -2233,6 +2407,12 @@ msgstr "Sprawdzono %s temu"
 
 msgid "Not checked yet"
 msgstr "Jeszcze nie sprawdzono"
+
+msgid "Mirror (release files)"
+msgstr "Lustro (pliki wydania)"
+
+msgid "Leave empty for GitHub."
+msgstr "Zostaw puste dla GitHuba."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Po aktualizacji zainstaluj ponownie dodane przeze mnie pakiety (urządzenie musi być online przy pierwszym uruchomieniu)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Nieznana operacja napięcia CPU"
+
+msgid "Invalid CPU voltage request"
+msgstr "Nieprawidłowe żądanie napięcia CPU"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Nieprawidłowe przesunięcie napięcia CPU"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Wpisz słowo potwierdzenia, aby zastosować przesunięcie napięcia"
+
+msgid "Invalid stress test length"
+msgstr "Nieprawidłowa długość testu obciążeniowego"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Adapter pakietów nie zwrócił prawidłowej odpowiedzi"
 
@@ -3234,6 +3429,9 @@ msgstr "Nieznana operacja aktualizacji"
 
 msgid "Invalid update request"
 msgstr "Nieprawidłowe żądanie aktualizacji"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Narzędzie kopii nie dało prawidłowej odpowiedzi"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Nie udało się odczytać przesunięcia napięcia CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Przesunięcie napięcia CPU zostało odrzucone"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Nie udało się wyłączyć przesunięcia napięcia CPU"
+
+msgid "The stress test could not be started"
+msgstr "Nie udało się uruchomić testu obciążeniowego"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Ten plik jest niepodpisany: to wymaga potwierdzenia"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Ten plik jest starszy niż to, co zainstalowane: to wymaga potwierdzenia"
+
+msgid "The release source was not changed"
+msgstr "Źródło wydania nie zostało zmienione"

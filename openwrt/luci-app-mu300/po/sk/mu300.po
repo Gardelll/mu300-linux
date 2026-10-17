@@ -40,6 +40,9 @@ msgstr "Správa zariadenia"
 msgid "Update"
 msgstr "Aktualizovať"
 
+msgid "Backup of settings"
+msgstr "Záloha nastavení"
+
 msgid "Languages"
 msgstr "Jazyky"
 
@@ -319,6 +322,75 @@ msgstr "Požiadavka zlyhala"
 msgid "(empty)"
 msgstr "(prázdne)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Heslová fráza (aspoň 8 znakov)"
+
+msgid "The passphrase again"
+msgstr "Heslová fráza znova"
+
+msgid "Download the backup"
+msgstr "Stiahnuť zálohu"
+
+msgid "Back up the settings"
+msgstr "Zálohovať nastavenia"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Jeden súbor s hotspotom, mobilnými dátami a APN, zámkami siete, profilmi a nastaveniami VPN, preposielaním SMS, adresou LAN, názvom hostiteľa, časovým pásmom a kľúčmi SSH. Obsahuje heslá: s heslovou frázou sa zašifruje a otvorí ho len tá fráza."
+
+msgid "Include the login password"
+msgstr "Zahrnúť prihlasovacie heslo"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Heslová fráza, ak je súbor zašifrovaný"
+
+msgid "Show what would change"
+msgstr "Ukázať, čo by sa zmenilo"
+
+msgid "Restore"
+msgstr "Obnoviť"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Súbor je väčší ako 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Nastavenia zo súboru nahradia tieto. Hotspot, mobilné dáta alebo LAN sa môžu reštartovať a táto stránka môže na chvíľu stratiť spojenie."
+
+msgid "Restore from a backup"
+msgstr "Obnoviť zo zálohy"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Každá hodnota súboru sa najprv skontroluje; ak je jedna odmietnutá, nič sa nezmení. Čo je rovnaké, zostane, a žiadny profil VPN, odber ani kľúč SSH tohto zariadenia sa neodstráni."
+
+msgid "Keep this device's login password"
+msgstr "Ponechať prihlasovacie heslo tohto zariadenia"
+
+msgid "Take a file of another device model"
+msgstr "Prijať súbor z iného modelu zariadenia"
+
+msgid "The two passphrases differ"
+msgstr "Heslové frázy sa líšia"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Heslová fráza musí mať aspoň 8 znakov"
+
+msgid "Saved (encrypted)"
+msgstr "Uložené (zašifrované)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Uložené. Súbor nie je zašifrovaný: obsahuje heslá, uložte ho bezpečne."
+
+msgid "Choose a backup file first"
+msgstr "Najprv vyberte súbor zálohy"
+
+msgid "Restoring…"
+msgstr "Obnovuje sa…"
+
+msgid "Restored"
+msgstr "Obnovené"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Obnovenie sa nedokončilo: pozri riadky vyššie"
+
 msgid "Loading…"
 msgstr "Načítava sa…"
 
@@ -408,6 +480,111 @@ msgstr "Prahové body"
 
 msgid "Cooling devices"
 msgstr "Chladiace zariadenia"
+
+msgid "Stress test started"
+msgstr "Záťažový test spustený"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Uložené: prejaví sa pri ďalšom reštarte"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Posun napätia CPU (EXPERIMENTÁLNE)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Experimentálne: zmena napätia CPU môže spôsobiť nestabilitu zariadenia, poškodiť vaše dáta a natrvalo poškodiť vaše zariadenie. Používate ju výlučne na vlastné riziko."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Posun napätia CPU nie je k dispozícii"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "S týmto jadrom nie je k dispozícii (má ho jadro mainline z tohto vydania alebo novšie)."
+
+msgid "Off: the stock voltages"
+msgstr "Vypnuté: továrenské napätia"
+
+msgid "Changes at the next reboot"
+msgstr "Zmení sa pri ďalšom reštarte"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Skúšobné spustenie: zachová sa, keď toto spustenie beží 10 minút"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Zachované: tento posun prešiel skúšobným spustením"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "spustenie s ním skončilo bez čistého vypnutia"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "jeho skúšobné spustenie skončilo skôr ako za 10 minút"
+
+msgid "invalid value"
+msgstr "neplatná hodnota"
+
+msgid "unknown SoC firmware"
+msgstr "neznámy firmvér SoC"
+
+msgid "refused by the kernel"
+msgstr "odmietnuté jadrom"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "jadro s ním nedokázalo spustiť škálovanie frekvencie CPU"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Posuny v µV pre tri domény CPU (jadrá CPU 0-3, 4-6 a 7), v celých krokoch. Nový posun sa prejaví pri ďalšom reštarte ako skúšobný: zachová sa, keď toto spustenie beží 10 minút, a zahodí sa (späť na 0), ak spustenie s ním skončí pádom, resetom watchdogu alebo výpadkom napájania."
+
+msgid "Running now (µV)"
+msgstr "Teraz beží (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Uložené pre ďalšie spustenie (µV)"
+
+msgid "State"
+msgstr "Stav"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Automaticky vrátené: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Firmvér SoC tohto zariadenia nepatrí medzi tie, ktorých kódovanie napätia je známe: možné sú iba továrenské napätia."
+
+msgid "Domain"
+msgstr "Doména"
+
+msgid "Offset now (µV)"
+msgstr "Aktuálny posun (µV)"
+
+msgid "Highest step"
+msgstr "Najvyšší stupeň"
+
+msgid "New offset (µV)"
+msgstr "Nový posun (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Limity: %d až %d µV, v krokoch po %d µV."
+
+msgid "Save for the next boot"
+msgstr "Uložiť pre ďalšie spustenie"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Každý posun musí byť násobkom %d µV v rozsahu %d až %d."
+
+msgid "Type %s to confirm."
+msgstr "Na potvrdenie napíšte %s."
+
+msgid "Back to the stock voltages"
+msgstr "Späť na továrenské napätia"
+
+msgid "Type %s to confirm:"
+msgstr "Na potvrdenie napíšte %s:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Spustiť 10-minútový záťažový test CPU"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Otestujte nový posun pod záťažou počas jeho skúšobného spustenia. Ak je napätie príliš nízke, zariadenie môže spadnúť; ďalšie spustenie potom beží s továrenskými napätiami."
+
+msgid "A stress test is running."
+msgstr "Prebieha záťažový test."
 
 msgid "USB role"
 msgstr "Rola USB"
@@ -1254,9 +1431,6 @@ msgstr "Kód"
 
 msgid "Translated"
 msgstr "Preložené"
-
-msgid "State"
-msgstr "Stav"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Vlastné preklady LuCI pochádzajú z OpenWrt. Preklady tohto panelu okrem turečtiny a čínštiny sú strojové (AI); opravy sú vítané."
@@ -2233,6 +2407,12 @@ msgstr "Skontrolované pred %s"
 
 msgid "Not checked yet"
 msgstr "Zatiaľ neskontrolované"
+
+msgid "Mirror (release files)"
+msgstr "Zrkadlo (súbory vydania)"
+
+msgid "Leave empty for GitHub."
+msgstr "Prázdne pre GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Po aktualizácii znova nainštalovať balíky, ktoré som pridal (pri prvom spustení musí byť zariadenie online)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Neznáma operácia s napätím CPU"
+
+msgid "Invalid CPU voltage request"
+msgstr "Neplatná požiadavka na napätie CPU"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Neplatný posun napätia CPU"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Na použitie posunu napätia napíšte potvrdzovacie slovo"
+
+msgid "Invalid stress test length"
+msgstr "Neplatná dĺžka záťažového testu"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Adaptér balíkov nevrátil platnú odpoveď"
 
@@ -3234,6 +3429,9 @@ msgstr "Neznáma operácia aktualizácie"
 
 msgid "Invalid update request"
 msgstr "Neplatná požiadavka na aktualizáciu"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Nástroj zálohy nedal platnú odpoveď"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Posun napätia CPU sa nepodarilo prečítať"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Posun napätia CPU bol odmietnutý"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Posun napätia CPU sa nepodarilo vypnúť"
+
+msgid "The stress test could not be started"
+msgstr "Záťažový test sa nepodarilo spustiť"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Tento súbor nie je podpísaný: to vyžaduje potvrdenie"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Tento súbor je starší než to, čo je nainštalované: to vyžaduje potvrdenie"
+
+msgid "The release source was not changed"
+msgstr "Zdroj vydania sa nezmenil"

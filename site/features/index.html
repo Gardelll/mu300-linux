@@ -98,6 +98,7 @@
 <li><a href="#battery">Battery, power and LEDs</a></li>
 <li><a href="#u30air">U30 Air extras</a></li>
 <li><a href="#panels">Web panels, a terminal in the browser, adb</a></li>
+<li><a href="#docker">Docker</a></li>
 <li><a href="#more">Bluetooth, GPU, KVM, languages</a></li>
 <li><a href="#limits">What does not work</a></li>
 </ol>
@@ -254,7 +255,8 @@ any command.</p>
 <pre><code>sudo mu300-toolkit                       <span class="c"># the menu</span>
 mu300-toolkit top                        <span class="c"># temperatures, CPU, RAM, network speed</span>
 sudo mu300-toolkit profile performance   <span class="c"># also eco, balanced</span>
-sudo mu300-toolkit stress all 10         <span class="c"># a stability test under load</span></code></pre>
+sudo mu300-toolkit stress all 10         <span class="c"># a stability test under load</span>
+mu300-zram                               <span class="c"># compressed swap in RAM: status (sudo mu300-zram off|on)</span></code></pre>
 <p>Optional parts are called extras:</p>
 <pre><code>mu300-extra list
 sudo mu300-extra install lang            <span class="c"># more web interface languages (OpenWrt)</span>
@@ -288,6 +290,22 @@ maximum: cooler, less power), <strong>balanced</strong> (the default, the stock 
 protection stays in charge in every profile. On the control panel: System &gt; CPU.</p>
 <pre><code>mu300-cpu status
 sudo mu300-cpu profile saving            <span class="c"># or balanced (the default), performance</span></code></pre>
+<h3 id="cpu-voltage">CPU voltage offset (experimental)</h3>
+<div class="callout warn">
+<strong>Experimental: it can damage your device for good</strong>
+<p>This feature is experimental and can permanently damage your device. Use it at your own risk.</p>
+</div>
+<p>On the mainline kernels (6.18 and 7.2) the CPU voltage can be moved a little, per core cluster (CPUs 0-3, 4-6 and
+7): from 25 mV lower to 12.5 mV higher, in steps of 3.125 mV. Off (0) by default. A new value applies at the next
+reboot as one trial boot; it is kept once that boot has been up 10 minutes, and dropped (back to 0) by any boot that
+ends in a crash, a watchdog reset or a power cut. It is refused on SoC firmware whose encoding is not known (only the
+F50's for now). Every place that sets it asks you to type <code>EXPERIMENTAL</code> first: the control panel's
+System &gt; CPU, the Ubuntu panel's Power page, <code>mu300-toolkit</code> and the command line. The firmware
+encoding was worked out by <a href="https://github.com/kanoqwq">kano</a>.</p>
+<pre><code>sudo mu300-cpu voltage status
+sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL   <span class="c"># uV for CPUs 0-3, 4-6, 7</span>
+sudo mu300-cpu voltage stress 10                                  <span class="c"># test it during the trial boot</span>
+sudo mu300-cpu voltage off                                        <span class="c"># back to stock at the next boot</span></code></pre>
 <p>A start that began because a charger was plugged in stays a charging start (LED blinking, hotspot and modem down)
 until you press the Wi-Fi key.</p>
 </section>
@@ -338,13 +356,31 @@ your own computers. The installer asks whether to turn it on for the computer it
 sudo mu300-usb adb on                   <span class="c"># and off: sudo mu300-usb adb off</span></code></pre>
 </section>
 
+<section id="docker">
+<h2>Docker</h2>
+<p><strong>Ubuntu</strong> (24.04 and 26.04) comes with Docker 29 and compose (Ubuntu's <code>docker.io</code> and
+<code>docker-compose-v2</code>); the user <code>ubuntu</code> is in the <code>docker</code> group. The engine starts on
+the first <code>docker</code> command, not at boot (it takes some 165 MB of RAM); <code>sudo systemctl enable docker</code>
+starts it at every boot. The <code>docker</code> group is as good as root: keep only trusted accounts in it.</p>
+<p><strong>OpenWrt</strong> has Docker ready, not installed: <code>apk add dockerd docker docker-compose</code> (and
+<code>luci-app-dockerman</code> on the control panel system), then <code>/etc/init.d/dockerd start</code>. The 190 MB
+would not leave room for an update in the smallest region OpenWrt is installed in.</p>
+<p>Images and containers live beside the systems, in <code>/mnt/mu300-disk/docker/&lt;system&gt;</code>: updates and
+rollbacks neither copy nor lose them. Docker uses its nftables backend; containers reach the internet, published ports
+are reachable from the hotspot and USB clients, not from the mobile network, and containers cannot open the
+device's own services (SSH, the web panels). Works on all three kernels.</p>
+<pre><code>docker run --rm hello-world
+docker compose up -d</code></pre>
+</section>
+
 <section id="more">
 <h2>Bluetooth, GPU, KVM, languages</h2>
 <ul>
 <li><strong>Bluetooth:</strong> BlueZ; scanning works.</li>
 <li><strong>GPU:</strong> the Mali-G57 runs OpenCL 3.0, with no screen.</li>
 <li><strong>KVM:</strong> <code>/dev/kvm</code> on all three kernels, for virtual machines.</li>
-<li><strong>Memory:</strong> about 1.4 GB usable, plus compressed swap in RAM (zram).</li>
+<li><strong>Memory:</strong> about 1.4 GB usable, plus compressed swap in RAM (zram, on by default: half the RAM, lz4;
+<code>sudo mu300-zram off</code> turns it off, <code>/etc/mu300/zram.conf</code> sets size and compressor).</li>
 <li><strong>Web interface languages (OpenWrt):</strong> English, Turkish and Simplified Chinese out of the box; 40
 more for LuCI and 29 more for the control panel with the <code>lang</code> extra. Switch under System &gt; System &gt;
 Language and Style, or System &gt; Languages on the control panel. The panel's other translations are machine

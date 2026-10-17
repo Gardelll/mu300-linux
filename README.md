@@ -115,6 +115,7 @@ LAN setting pins the address).
 * **A Wi-Fi hotspot** (5 GHz or 2.4 GHz) and **USB networking**: plug it into a computer and it shows up as a network adapter.
 * **SSH access** at `192.168.77.1` (U30 Air: `192.168.78.1`), plus a USB serial console.
 * **Bluetooth** and the **Mali GPU** (OpenCL; no screen output).
+* **Docker** on Ubuntu, ready to use (`docker run`, `docker compose`); on OpenWrt one `apk add` away, already set up.
 * **`mu300-toolkit`**, a menu like `raspi-config`: temperatures, CPU and RAM use, network speeds, performance
   profiles, stress tests, VPN and services.
 * **Android stays installed.** One command switches back.
@@ -132,7 +133,8 @@ trying it costs you the server.
     machine you use over SSH or the web interface;
   * no speaker or microphone: voice calls with audio, through the modem's audio DSP, are work in progress and carry
     no sound yet (see [What works](#what-works-and-what-does-not));
-  * about 1.4 GB of RAM, because the modem firmware reserves most of the rest.
+  * about 1.4 GB of RAM, because the modem firmware reserves most of the rest. Compressed swap in RAM (zram, half the
+    RAM, lz4) is on by default and stretches it; `sudo mu300-zram off` turns it off.
 
 ## Before you start
 
@@ -448,6 +450,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Watch temperatures, CPU, RAM, network speed | `mu300-toolkit top` |
 | Make it faster, or cooler and quieter | `sudo mu300-toolkit profile performance` (also `eco`, `balanced`) |
 | Test stability under load | `sudo mu300-toolkit stress all 10` |
+| Move the CPU voltage a little (EXPERIMENTAL, can damage the device for good) | `sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL`; see [CPU voltage offset](#cpu-voltage-offset-experimental) first |
 | Check the mobile connection | `sudo mobile-data status` |
 | Set the APN | Ubuntu: `/etc/mu300/mobile-data.conf` (`MU300_APN`, `MU300_PDP_TYPE`). OpenWrt: LuCI → Network → Interfaces → wan, or `uci set network.wan.apn='…'; uci commit network; ifup wan`. Leave it empty to keep the context the SIM defines, which is what most carriers expect |
 | No mobile data while roaming | `sudo mobile-data roaming off` (`on` allows it again, the default; `sudo mobile-data roaming` shows the setting, the network and whether data is held back). Ubuntu: `MU300_DATA_ROAMING=0` in `/etc/mu300/mobile-data.conf`; OpenWrt: `network.wan.roaming` (`roaming_internal` for the other SIM), the panel's dashboard or LuCI → Network → Interfaces → wan. SMS and calls are not affected. Some SIMs report roaming at home (an MVNO, national roaming): those need it on (FINDINGS 120) |
@@ -460,6 +463,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Connect the device to someone else's Wi-Fi | `sudo mu300-toolkit` → Network → Wi-Fi → "Join a network", or `sudo wifi-client scan` then `sudo wifi-client connect "NAME"` (it asks for the password); see [Wi-Fi client](#wi-fi-client) |
 | Update to the newest release | `sudo mu300-update check` then `sudo mu300-update apply`. The device looks for a new release at boot and every 6 hours and says so at login and in `mu300-toolkit`; it never installs one by itself |
 | Fixed TTL for mobile data (so the operator cannot tell hotspot traffic from the device's own) | `sudo mu300-ttl set 64` (`sudo mu300-ttl off` goes back to the default), `mu300-toolkit` -> Network -> TTL, or LuCI Cellular -> TTL. On the mainline kernels the rule is in tc and flow offloading stays on; on 5.4 it is in nftables and offloading is off while a TTL is set |
+| Compressed swap in RAM (zram) | On by default on every system and kernel: half the RAM (~700 MB of swap), lz4, priority 100, `vm.swappiness` 100. `mu300-zram` shows it and what it costs; `sudo mu300-zram off` / `on` (kept across reboots and updates), or `mu300-toolkit` → System → Compressed swap. Size, compressor (`zstd` packs ~3.5:1 against lz4's ~2.5:1, for more CPU) and swappiness: `/etc/mu300/zram.conf`, see `/opt/mu300/lib/zram.conf.example` (FINDINGS 162) |
 | Switch between OpenWrt and Ubuntu | `sudo mu300-os openwrt` / `sudo mu300-os ubuntu` (`openwrt-luci` for the one with the control panel) |
 | Failed boots in a row before it falls back to Android (1-6, default 5) | `sudo mu300-next-boot attempts N` |
 | Keep Linux for good: never back to Android by itself, only by hand | `sudo mu300-next-boot lock` (or "Lock Linux" on the panel's home page); `unlock` goes back to the attempts. See [Locked Linux](#locked-linux) |
@@ -471,6 +475,34 @@ the archive once online). `mu300-panel status` says where it is.
 | Language of the web interface (OpenWrt) | System -> System -> Language and Style; more languages: see Languages below |
 | Find out which LED is which | `sudo mu300-led test` |
 | `adb shell`, `adb push`/`pull`, `adb forward` to Linux from a computer, as with Android | on by default, for every computer (a root shell without a password for anyone with a cable); only your own computers: `sudo mu300-usb adb key adbkey.pub`, then `sudo mu300-usb adb auth keys`; not at all: `sudo mu300-usb adb off`; see [adb to Linux](#adb-to-linux) |
+
+### CPU voltage offset (EXPERIMENTAL)
+
+> **EXPERIMENTAL: this can PERMANENTLY DAMAGE your device. You use it entirely at your own risk.** Changing the CPU
+> voltage can make the device unstable, corrupt your data or break the hardware for good, and nobody can repair or
+> replace a device damaged this way. It is off by default; if you are not sure, leave it off.
+
+On the mainline kernels (6.18, 7.2; not 5.4) the CPU voltage can be moved per core cluster, domains 0, 1, 2 = CPUs
+0-3, 4-6, 7: from -25 mV to +12.5 mV in steps of 3.125 mV. The SoC firmware applies it once per boot, so a new value
+takes effect at the next reboot, as **one trial boot**: it is kept once that boot has been up 10 minutes, and it is
+dropped (back to 0, the setting cleared) by any boot with it that ends in a crash, a watchdog reset or a power cut,
+and by a trial boot that ends before its 10 minutes. It is refused on SoC firmware whose encoding is not known (only
+the F50's SML build is known; the U30 Air's not yet), and a raise needs the CPU regulator's maximum from the device
+tree.
+
+```sh
+sudo mu300-cpu voltage status                                     # what runs, what is asked for, the voltage table
+sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL   # uV for domains 0, 1, 2
+sudo mu300-cpu voltage stress 10                                  # test it under load during the trial boot
+sudo mu300-cpu voltage off                                        # back to the stock voltages at the next boot
+```
+
+The same with the same warning, each asking you to type `EXPERIMENTAL`: OpenWrt's control panel (System > CPU), the
+Ubuntu panel's Power page and `sudo mu300-toolkit` (Performance). If Linux no longer comes up, the device falls back
+to Android after the failed boots in a row (`mu300-next-boot attempts`, above); deleting `.mu300/cpu-voltage` on
+the Linux disk turns the offset off. The firmware encoding is kano's work ([kanoqwq](https://github.com/kanoqwq));
+how it is applied and why these limits: [docs/FINDINGS.md](docs/FINDINGS.md) section 133, and the wiki page
+[CPU Voltage Offset](https://github.com/dikeckaan/mu300-linux/wiki/CPU-Voltage-Offset).
 
 ### adb to Linux
 
@@ -794,6 +826,52 @@ mu300-update apply`). Module v1 (the engines inside the vpn extra) keeps both it
 system whose VPN is on with its kill switch and has lost the module fails closed: mobile data and the Wi-Fi client stay
 down until it is installed again (`mu300-extra install vpn`) or the VPN is turned off. A missing engine fails closed
 too, behind the kill switch, while the service fetches it again; mu300-toolkit says which one.
+
+### Docker
+
+**Ubuntu** (24.04 and 26.04) comes with Docker: Ubuntu's own `docker.io` (Docker 29), `containerd`, `runc` and the
+compose plugin (`docker-compose-v2`). The user `ubuntu` is in the `docker` group, so `docker` works without `sudo`:
+
+```sh
+docker run --rm hello-world             # the first docker command starts the engine (about two seconds)
+docker compose up -d                    # in a directory with a compose.yaml
+sudo systemctl enable docker            # start it at every boot (containers with a restart policy come back by themselves)
+sudo systemctl disable docker           # back to the default: started by its socket on first use
+```
+
+It is not started at boot: `docker.socket` starts it on the first `docker` command, because the engine and
+containerd take some 165 MB of RAM that a device without containers can keep. Membership of the `docker` group is as
+good as root (a container can mount `/`): give it only to accounts you trust - `sudo gpasswd -d ubuntu docker` takes
+it away, `docker` then needs `sudo`.
+
+**OpenWrt** (both systems) has Docker **ready, not installed**: its settings and its firewall zone are in the image,
+the programs (190 MB) are one command away. In the image they would be there twice while an update unpacks the new
+system next to the old one, and an update by zip or installer would no longer fit the smallest region OpenWrt is
+installed in (800 MiB).
+
+```sh
+apk update && apk add dockerd docker docker-compose        # control panel system: also luci-app-dockerman (LuCI > Docker)
+/etc/init.d/dockerd start               # now; "/etc/init.d/dockerd enable" starts it at every boot ("disable": not)
+docker run --rm hello-world
+```
+
+Packages added on the device are installed again after each update (it needs internet then). On an 800 MiB region an
+update needs that room for the new system: `apk del dockerd docker docker-compose` first, and `apk add` them again
+after it - your images and containers stay where they are.
+
+**Where Docker keeps its data:** not in the system, but beside it on the Linux partition:
+`/mnt/mu300-disk/docker/<system>` (`ubuntu`, `openwrt`, `openwrt-luci`; `docker info` says `Docker Root Dir`). An update
+and a rollback leave it alone - images, containers and volumes are neither copied nor lost - and each system has its own.
+The store is the classic `overlay2` one (no second, compressed copy of every image). Settings:
+`/etc/docker/daemon.json` (an update keeps your changes).
+
+**Networking:** Docker uses its nftables backend (no iptables rules, nothing changed in the firewall of the device).
+Containers reach the internet over mobile data or the Wi-Fi client; a port you publish (`-p 8080:80`) is reachable from
+the hotspot and USB clients, and **not** from the mobile network. Containers cannot open anything on the device
+itself (SSH, the web panels, LuCI, ubus): the firewall drops what comes from Docker's bridges to the device (their DNS
+works all the same). On OpenWrt every Docker network is in the firewall zone `docker` (172.16.0.0/12, the range Docker
+is given there), which reaches the internet but not the LAN, and one Docker network does not reach another; to publish
+to the mobile network, add a forwarding `wan -> docker`. Docker works on all three kernels (5.4, 6.18, 7.2).
 
 ### Languages
 

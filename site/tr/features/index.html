@@ -98,6 +98,7 @@ yazmayın.</p>
 <li><a href="#battery">Pil, güç ve LED'ler</a></li>
 <li><a href="#u30air">U30 Air'e özel</a></li>
 <li><a href="#panels">Web panelleri, tarayıcıda terminal, adb</a></li>
+<li><a href="#docker">Docker</a></li>
 <li><a href="#more">Bluetooth, GPU, KVM, diller</a></li>
 <li><a href="#limits">Neler çalışmaz</a></li>
 </ol>
@@ -250,7 +251,8 @@ hiçbir komut ezberlemeden.</p>
 <pre><code>sudo mu300-toolkit                       <span class="c"># menü</span>
 mu300-toolkit top                        <span class="c"># sıcaklıklar, işlemci, RAM, ağ hızı</span>
 sudo mu300-toolkit profile performance   <span class="c"># eco ve balanced da var</span>
-sudo mu300-toolkit stress all 10         <span class="c"># yük altında kararlılık testi</span></code></pre>
+sudo mu300-toolkit stress all 10         <span class="c"># yük altında kararlılık testi</span>
+mu300-zram                               <span class="c"># RAM'de sıkıştırılmış takas: durum (sudo mu300-zram off|on)</span></code></pre>
 <p>İsteğe bağlı parçalara eklenti (extra) denir:</p>
 <pre><code>mu300-extra list
 sudo mu300-extra install lang            <span class="c"># daha fazla web arayüzü dili (OpenWrt)</span>
@@ -284,6 +286,22 @@ yaklaşık %60'ıyla sınırlı: daha serin, daha az güç), <strong>balanced</s
 işini yapmaya devam eder. Kontrol panelinde: Sistem &gt; CPU.</p>
 <pre><code>mu300-cpu status
 sudo mu300-cpu profile saving            <span class="c"># ya da balanced (varsayılan), performance</span></code></pre>
+<h3 id="cpu-voltage">İşlemci voltaj kaydırma (deneysel)</h3>
+<div class="callout warn">
+<strong>Deneysel: cihazınıza kalıcı zarar verebilir</strong>
+<p>Bu özellik deneyseldir ve cihazınıza kalıcı zarar verebilirsiniz. Tüm risk size aittir.</p>
+</div>
+<p>Mainline çekirdeklerde (6.18 ve 7.2) işlemci voltajı çekirdek kümesi başına (CPU 0-3, 4-6 ve 7) biraz
+kaydırılabilir: 25 mV aşağıdan 12.5 mV yukarıya, 3.125 mV'lik adımlarla. Varsayılan kapalıdır (0). Yeni bir değer bir
+sonraki yeniden başlatmada tek bir deneme açılışı olarak uygulanır; o açılış 10 dakika açık kalırsa kalıcı olur, çökme,
+watchdog sıfırlaması ya da elektrik kesintisiyle biten her açılış onu geri alır (0'a döner). Kodlaması bilinmeyen SoC
+yazılımında reddedilir (şimdilik yalnızca F50'ninki biliniyor). Ayarlandığı her yer önce <code>EXPERIMENTAL</code>
+yazmanızı ister: kontrol panelinde Sistem &gt; CPU, Ubuntu panelinin Güç sayfası, <code>mu300-toolkit</code> ve
+komut satırı. Yazılım kodlamasını <a href="https://github.com/kanoqwq">kano</a> çözdü.</p>
+<pre><code>sudo mu300-cpu voltage status
+sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL   <span class="c"># µV: CPU 0-3, 4-6, 7</span>
+sudo mu300-cpu voltage stress 10                                  <span class="c"># deneme açılışında yük altında sınayın</span>
+sudo mu300-cpu voltage off                                        <span class="c"># sonraki açılışta fabrika değerleri</span></code></pre>
 <p>Şarj cihazı takıldığı için başlamış bir açılış, Wi-Fi tuşuna basana kadar şarj açılışı olarak kalır (LED yanıp
 söner, hotspot ve modem kapalı).</p>
 </section>
@@ -333,13 +351,31 @@ yalnızca kendi bilgisayarlarınızı yetkilendirin. Kurulum programı, çalış
 sudo mu300-usb adb on                   <span class="c"># kapatmak: sudo mu300-usb adb off</span></code></pre>
 </section>
 
+<section id="docker">
+<h2>Docker</h2>
+<p><strong>Ubuntu</strong> (24.04 ve 26.04) Docker 29 ve compose ile gelir (Ubuntu'nun <code>docker.io</code> ve
+<code>docker-compose-v2</code> paketleri); <code>ubuntu</code> kullanıcısı <code>docker</code> grubundadır. Motor açılışta
+değil, ilk <code>docker</code> komutunda başlar (yaklaşık 165 MB RAM kullanır); <code>sudo systemctl enable docker</code>
+her açılışta başlatır. <code>docker</code> grubu root ile eşdeğerdir: içinde yalnızca güvendiğiniz hesaplar olsun.</p>
+<p><strong>OpenWrt</strong>'te Docker hazırdır ama kurulu değildir: <code>apk add dockerd docker docker-compose</code>
+(kontrol paneli sisteminde ayrıca <code>luci-app-dockerman</code>), ardından <code>/etc/init.d/dockerd start</code>.
+190 MB, OpenWrt'nin kurulduğu en küçük alanda güncellemeye yer bırakmazdı.</p>
+<p>İmajlar ve konteynerler sistemlerin yanında, <code>/mnt/mu300-disk/docker/&lt;sistem&gt;</code> içinde durur:
+güncelleme ve geri alma onları ne kopyalar ne de kaybeder. Docker nftables arka ucunu kullanır; konteynerler internete
+çıkar, yayınlanan portlara hotspot ve USB istemcilerinden erişilir, mobil ağdan erişilmez; konteynerler cihazın
+kendi servislerine (SSH, web panelleri) bağlanamaz. Üç çekirdekte de çalışır.</p>
+<pre><code>docker run --rm hello-world
+docker compose up -d</code></pre>
+</section>
+
 <section id="more">
 <h2>Bluetooth, GPU, KVM, diller</h2>
 <ul>
 <li><strong>Bluetooth:</strong> BlueZ; tarama çalışır.</li>
 <li><strong>GPU:</strong> Mali-G57 OpenCL 3.0 çalıştırır, ekransız.</li>
 <li><strong>KVM:</strong> üç çekirdekte de sanal makineler için <code>/dev/kvm</code>.</li>
-<li><strong>Bellek:</strong> yaklaşık 1.4 GB kullanılabilir, artı RAM'de sıkıştırılmış takas (zram).</li>
+<li><strong>Bellek:</strong> yaklaşık 1.4 GB kullanılabilir, artı RAM'de sıkıştırılmış takas (zram, varsayılan olarak açık:
+RAM'in yarısı, lz4; <code>sudo mu300-zram off</code> kapatır, boyut ve sıkıştırıcı <code>/etc/mu300/zram.conf</code> içinde).</li>
 <li><strong>Web arayüzü dilleri (OpenWrt):</strong> kutudan çıktığı gibi İngilizce, Türkçe ve Basitleştirilmiş Çince;
 <code>lang</code> eklentisiyle LuCI için 40, kontrol paneli için 29 dil daha. System &gt; System &gt; Language and
 Style'dan ya da kontrol panelinde Sistem &gt; Diller'den (Languages) değiştirin. Panelin diğer çevirileri makine çevirisidir;

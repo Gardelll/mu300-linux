@@ -40,6 +40,9 @@ msgstr "裝置管理"
 msgid "Update"
 msgstr "更新"
 
+msgid "Backup of settings"
+msgstr "設定備份"
+
 msgid "Languages"
 msgstr "語言"
 
@@ -319,6 +322,75 @@ msgstr "請求失敗"
 msgid "(empty)"
 msgstr "（空）"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "口令（至少 8 個字元）"
+
+msgid "The passphrase again"
+msgstr "再次輸入口令"
+
+msgid "Download the backup"
+msgstr "下載備份"
+
+msgid "Back up the settings"
+msgstr "備份設定"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "一個檔案包含熱點、行動數據和 APN、網路鎖定、VPN 設定檔和設定、簡訊轉發、LAN 位址、主機名稱、時區和 SSH 金鑰。檔案中有密碼：設定口令後會被加密，只有該口令才能再次開啟。"
+
+msgid "Include the login password"
+msgstr "包含登入密碼"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "口令（如果檔案已加密）"
+
+msgid "Show what would change"
+msgstr "顯示將要變更的內容"
+
+msgid "Restore"
+msgstr "還原"
+
+msgid "The file is larger than 4 MiB"
+msgstr "檔案大於 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "檔案中的設定將取代目前設定。熱點、行動數據或 LAN 可能會重新啟動，本頁面可能會暫時中斷連線。"
+
+msgid "Restore from a backup"
+msgstr "從備份還原"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "檔案中的每個值都會先經過檢查；只要有一個被拒絕，就不會做任何變更。相同的設定保持不變，本裝置的 VPN 設定檔、訂閱和 SSH 金鑰都不會被刪除。"
+
+msgid "Keep this device's login password"
+msgstr "保留本裝置的登入密碼"
+
+msgid "Take a file of another device model"
+msgstr "接受其他裝置型號的檔案"
+
+msgid "The two passphrases differ"
+msgstr "兩次輸入的口令不同"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "口令至少需要 8 個字元"
+
+msgid "Saved (encrypted)"
+msgstr "已儲存（已加密）"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "已儲存。檔案未加密：其中含有密碼，請妥善保管。"
+
+msgid "Choose a backup file first"
+msgstr "請先選擇備份檔案"
+
+msgid "Restoring…"
+msgstr "正在還原…"
+
+msgid "Restored"
+msgstr "已還原"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "還原未完成：請查看上面的內容"
+
 msgid "Loading…"
 msgstr "載入中…"
 
@@ -408,6 +480,111 @@ msgstr "觸發點"
 
 msgid "Cooling devices"
 msgstr "冷卻裝置"
+
+msgid "Stress test started"
+msgstr "壓力測試已開始"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "已儲存：將在下次重新開機時生效"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU 電壓偏移（實驗性）"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "實驗性功能：變更 CPU 電壓可能導致裝置不穩定、損毀您的資料，並可能對您的裝置造成永久性損壞。風險完全由您自行承擔。"
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU 電壓偏移無法使用"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "此核心不支援（本版本或更新版本的主線核心支援）。"
+
+msgid "Off: the stock voltages"
+msgstr "關閉：原廠電壓"
+
+msgid "Changes at the next reboot"
+msgstr "將在下次重新開機時變更"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "試用開機：本次開機運行滿 10 分鐘後保留"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "已保留：此偏移已通過試用開機"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "使用此偏移的一次開機未正常關機即結束"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "其試用開機在 10 分鐘內結束"
+
+msgid "invalid value"
+msgstr "無效的值"
+
+msgid "unknown SoC firmware"
+msgstr "未知的 SoC 韌體"
+
+msgid "refused by the kernel"
+msgstr "遭核心拒絕"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "核心無法以此偏移啟動 CPU 調頻"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "三個 CPU 電壓域（CPU 核心 0-3、4-6 與 7）的偏移，單位 µV，須為整數步階。新的偏移在下次重新開機時以試用方式生效：該次開機運行滿 10 分鐘後保留；若使用它的開機以當機、看門狗重設或斷電結束，則捨棄（回到 0）。"
+
+msgid "Running now (µV)"
+msgstr "目前執行中（µV）"
+
+msgid "Saved for the next boot (µV)"
+msgstr "已儲存，下次開機生效（µV）"
+
+msgid "State"
+msgstr "狀態"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "已自動撤銷：%s µV（%s）"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "此裝置的 SoC 韌體不在已知電壓編碼的版本之列：只能使用原廠電壓。"
+
+msgid "Domain"
+msgstr "電壓域"
+
+msgid "Offset now (µV)"
+msgstr "目前偏移（µV）"
+
+msgid "Highest step"
+msgstr "最高檔位"
+
+msgid "New offset (µV)"
+msgstr "新偏移（µV）"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "範圍：%d 至 %d µV，步階 %d µV。"
+
+msgid "Save for the next boot"
+msgstr "儲存，下次開機生效"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "每個偏移必須是 %d µV 的整數倍，且介於 %d 與 %d 之間。"
+
+msgid "Type %s to confirm."
+msgstr "輸入 %s 以確認。"
+
+msgid "Back to the stock voltages"
+msgstr "恢復原廠電壓"
+
+msgid "Type %s to confirm:"
+msgstr "輸入 %s 以確認："
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "執行 10 分鐘 CPU 壓力測試"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "在試用開機期間於負載下測試新的偏移。電壓過低時裝置可能當機；之後的下次開機將使用原廠電壓。"
+
+msgid "A stress test is running."
+msgstr "壓力測試正在執行。"
 
 msgid "USB role"
 msgstr "USB 角色"
@@ -1254,9 +1431,6 @@ msgstr "代碼"
 
 msgid "Translated"
 msgstr "翻譯範圍"
-
-msgid "State"
-msgstr "狀態"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "LuCI 本身的翻譯來自 OpenWrt。本面板除土耳其文與中文外的翻譯皆為機器（AI）翻譯，歡迎指正。"
@@ -2228,6 +2402,12 @@ msgstr "%s前已檢查"
 
 msgid "Not checked yet"
 msgstr "尚未檢查"
+
+msgid "Mirror (release files)"
+msgstr "鏡像（發行檔案）"
+
+msgid "Leave empty for GitHub."
+msgstr "留空即使用 GitHub。"
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "更新後重新安裝我加入的套件（首次啟動時裝置需要連上網路）"
@@ -3210,6 +3390,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "未知的 CPU 電壓操作"
+
+msgid "Invalid CPU voltage request"
+msgstr "無效的 CPU 電壓請求"
+
+msgid "Invalid CPU voltage offset"
+msgstr "無效的 CPU 電壓偏移"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "輸入確認字以套用電壓偏移"
+
+msgid "Invalid stress test length"
+msgstr "無效的壓力測試時長"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "套件轉接器沒有傳回有效回覆"
 
@@ -3227,6 +3422,9 @@ msgstr "未知的更新操作"
 
 msgid "Invalid update request"
 msgstr "無效的更新要求"
+
+msgid "The backup tool gave no valid reply"
+msgstr "備份工具沒有給出有效的回覆"
 
 # Dual SIM controls.
 msgid "Invalid SIM setting"
@@ -3426,6 +3624,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "無法讀取 CPU 電壓偏移"
+
+msgid "The CPU voltage offset was refused"
+msgstr "CPU 電壓偏移遭拒絕"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "無法關閉 CPU 電壓偏移"
+
+msgid "The stress test could not be started"
+msgstr "無法啟動壓力測試"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3678,3 +3888,6 @@ msgstr "此檔案未簽署：需要確認"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "此檔案比已安裝的版本舊：需要確認"
+
+msgid "The release source was not changed"
+msgstr "發行來源未變更"

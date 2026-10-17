@@ -97,6 +97,7 @@
 <li><a href="#battery">电池、电源和指示灯</a></li>
 <li><a href="#u30air">U30 Air 的额外功能</a></li>
 <li><a href="#panels">网页面板、浏览器里的终端、adb</a></li>
+<li><a href="#docker">Docker</a></li>
 <li><a href="#more">蓝牙、GPU、KVM、语言</a></li>
 <li><a href="#limits">不能用的东西</a></li>
 </ol>
@@ -205,7 +206,8 @@ mu300-vpn status</code></pre>
 <pre><code>sudo mu300-toolkit                       <span class="c"># 菜单</span>
 mu300-toolkit top                        <span class="c"># 温度、CPU、内存、网速</span>
 sudo mu300-toolkit profile performance   <span class="c"># 还有 eco、balanced</span>
-sudo mu300-toolkit stress all 10         <span class="c"># 满载稳定性测试</span></code></pre>
+sudo mu300-toolkit stress all 10         <span class="c"># 满载稳定性测试</span>
+mu300-zram                               <span class="c"># 内存压缩交换：状态（sudo mu300-zram off|on）</span></code></pre>
 <p>可选组件叫作扩展（extras）：</p>
 <pre><code>mu300-extra list
 sudo mu300-extra install lang            <span class="c"># 更多网页界面语言（OpenWrt）</span>
@@ -232,6 +234,16 @@ sudo mu300-power set battery.WIFI_IDLE 10</code></pre>
 <p>三种模式决定处理器最快能跑多快：<strong>saving</strong>（省电，核心频率限制在最高的约 60 %：更凉、更省电）、<strong>balanced</strong>（均衡，默认，原厂行为）和 <strong>performance</strong>（性能，所有核心簇都跑在最高频率）。它们从不改电压，而且无论哪种模式，过热保护始终说了算。控制面板上是“系统 &gt; CPU”。</p>
 <pre><code>mu300-cpu status
 sudo mu300-cpu profile saving            <span class="c"># 或 balanced（默认）、performance</span></code></pre>
+<h3 id="cpu-voltage">CPU 电压偏移（实验性）</h3>
+<div class="callout warn">
+<strong>实验性：可能永久损坏设备</strong>
+<p>本功能为实验性功能，可能对您的设备造成永久性损坏。风险由您自行承担。</p>
+</div>
+<p>在主线内核（6.18 和 7.2）上，可以按核心簇（CPU 0-3、4-6 和 7）小幅调整 CPU 电压：最多降低 25 mV、最多升高 12.5 mV，步进 3.125 mV。默认关闭（0）。新值在下次重启时作为一次试运行开机生效；该次开机运行满 10 分钟后才保留，任何以崩溃、看门狗复位或断电结束的开机都会将其撤销（恢复为 0）。编码未知的 SoC 固件上会被拒绝（目前只有 F50 的已知）。所有设置入口都要求先输入 <code>EXPERIMENTAL</code>：控制面板的“系统 &gt; CPU”、Ubuntu 面板的电源页、<code>mu300-toolkit</code> 和命令行。固件编码由 <a href="https://github.com/kanoqwq">kano</a> 分析得出。</p>
+<pre><code>sudo mu300-cpu voltage status
+sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL   <span class="c"># 单位 µV：CPU 0-3、4-6、7</span>
+sudo mu300-cpu voltage stress 10                                  <span class="c"># 试运行开机时做压力测试</span>
+sudo mu300-cpu voltage off                                        <span class="c"># 下次开机恢复原厂电压</span></code></pre>
 <p>如果是插上充电器才开的机，这次开机会一直处于充电状态（指示灯闪烁，热点和基带关闭），直到你按下 Wi-Fi 键。</p>
 </section>
 
@@ -266,13 +278,28 @@ sudo mu300-extra install panel --from mu300-extra-panel-offline.tar.gz   <span c
 sudo mu300-usb adb on                   <span class="c"># 关闭：sudo mu300-usb adb off</span></code></pre>
 </section>
 
+<section id="docker">
+<h2>Docker</h2>
+<p><strong>Ubuntu</strong>（24.04 和 26.04）自带 Docker 29 和 compose（Ubuntu 的 <code>docker.io</code> 和
+<code>docker-compose-v2</code>）；用户 <code>ubuntu</code> 在 <code>docker</code> 组中。引擎不在开机时启动，而是在第一条
+<code>docker</code> 命令时启动（约占 165 MB 内存）；<code>sudo systemctl enable docker</code> 让它每次开机启动。
+<code>docker</code> 组等同于 root：只把信任的账户放进去。</p>
+<p><strong>OpenWrt</strong> 已为 Docker 准备好，但没有预装：<code>apk add dockerd docker docker-compose</code>
+（控制面板系统上再加 <code>luci-app-dockerman</code>），然后 <code>/etc/init.d/dockerd start</code>。这 190 MB
+会让 OpenWrt 所装的最小区域没有空间再更新。</p>
+<p>镜像和容器放在系统旁边的 <code>/mnt/mu300-disk/docker/&lt;系统&gt;</code> 中：更新和回滚既不复制也不丢失它们。Docker
+使用 nftables 后端；容器可以上网，发布的端口可从热点和 USB 客户端访问，不能从移动网络访问；容器无法连接设备本身的服务（SSH、网页面板）。三个内核都可用。</p>
+<pre><code>docker run --rm hello-world
+docker compose up -d</code></pre>
+</section>
+
 <section id="more">
 <h2>蓝牙、GPU、KVM、语言</h2>
 <ul>
 <li><strong>蓝牙：</strong>BlueZ；扫描可用。</li>
 <li><strong>GPU：</strong>Mali-G57 支持 OpenCL 3.0，没有屏幕输出。</li>
 <li><strong>KVM：</strong>三个内核都有 <code>/dev/kvm</code>，可以跑虚拟机。</li>
-<li><strong>内存：</strong>约 1.4 GB 可用，另外还有内存压缩交换（zram）。</li>
+<li><strong>内存：</strong>约 1.4 GB 可用，另外还有内存压缩交换（zram，默认开启：内存的一半，lz4；<code>sudo mu300-zram off</code> 关闭，大小和压缩算法在 <code>/etc/mu300/zram.conf</code> 中设置）。</li>
 <li><strong>网页界面语言（OpenWrt）：</strong>自带英语、土耳其语和简体中文；装上 <code>lang</code> 扩展，LuCI 再多 40 种，控制面板再多 29 种。在“系统 &gt; 系统 &gt; 语言和界面”里切换，控制面板上是“系统 &gt; 语言”（Languages）。面板的其他译文是机器翻译，<a href="https://github.com/dikeckaan/mu300-linux#languages" hreflang="en">欢迎指正</a>。</li>
 </ul>
 </section>

@@ -40,6 +40,9 @@ msgstr "Laitehallinta"
 msgid "Update"
 msgstr "Päivitä"
 
+msgid "Backup of settings"
+msgstr "Asetusten varmuuskopio"
+
 msgid "Languages"
 msgstr "Kielet"
 
@@ -319,6 +322,75 @@ msgstr "Pyyntö epäonnistui"
 msgid "(empty)"
 msgstr "(tyhjä)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Salalause (vähintään 8 merkkiä)"
+
+msgid "The passphrase again"
+msgstr "Salalause uudelleen"
+
+msgid "Download the backup"
+msgstr "Lataa varmuuskopio"
+
+msgid "Back up the settings"
+msgstr "Varmuuskopioi asetukset"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Yksi tiedosto, jossa ovat tukiasema, mobiilidata ja APN, verkkolukitukset, VPN-profiilit ja -asetukset, tekstiviestien välitys, LAN-osoite, laitenimi, aikavyöhyke ja SSH-avaimet. Siinä on salasanoja: salalauseella se salataan, ja vain sama salalause avaa sen."
+
+msgid "Include the login password"
+msgstr "Sisällytä kirjautumissalasana"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Salalause, jos tiedosto on salattu"
+
+msgid "Show what would change"
+msgstr "Näytä mikä muuttuisi"
+
+msgid "Restore"
+msgstr "Palauta"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Tiedosto on suurempi kuin 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Tiedoston asetukset korvaavat nämä. Tukiasema, mobiilidata tai LAN voi käynnistyä uudelleen, ja tämä sivu voi menettää yhteyden hetkeksi."
+
+msgid "Restore from a backup"
+msgstr "Palauta varmuuskopiosta"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Jokainen tiedoston arvo tarkistetaan ensin; jos yksikin hylätään, mitään ei muuteta. Samat arvot jätetään ennalleen, eikä yhtään tämän laitteen VPN-profiilia, tilausta tai SSH-avainta poisteta."
+
+msgid "Keep this device's login password"
+msgstr "Säilytä tämän laitteen kirjautumissalasana"
+
+msgid "Take a file of another device model"
+msgstr "Hyväksy toisen laitemallin tiedosto"
+
+msgid "The two passphrases differ"
+msgstr "Salalauseet eroavat toisistaan"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Salalauseessa on oltava vähintään 8 merkkiä"
+
+msgid "Saved (encrypted)"
+msgstr "Tallennettu (salattu)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Tallennettu. Tiedostoa ei ole salattu: siinä on salasanoja, säilytä se turvassa."
+
+msgid "Choose a backup file first"
+msgstr "Valitse ensin varmuuskopiotiedosto"
+
+msgid "Restoring…"
+msgstr "Palautetaan…"
+
+msgid "Restored"
+msgstr "Palautettu"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Palautus ei valmistunut: katso yllä olevat rivit"
+
 msgid "Loading…"
 msgstr "Ladataan…"
 
@@ -408,6 +480,111 @@ msgstr "Raja-arvopisteet"
 
 msgid "Cooling devices"
 msgstr "Jäähdytyslaitteet"
+
+msgid "Stress test started"
+msgstr "Kuormitustesti käynnistetty"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Tallennettu: tulee voimaan seuraavassa uudelleenkäynnistyksessä"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU:n jännitesiirtymä (KOKEELLINEN)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Kokeellinen: CPU:n jännitteen muuttaminen voi tehdä laitteesta epävakaan, turmella tietosi ja vahingoittaa laitettasi pysyvästi. Käytä täysin omalla vastuullasi."
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU:n jännitesiirtymä ei ole käytettävissä"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Ei käytettävissä tällä ytimellä (tämän julkaisun tai uudemman mainline-ytimessä se on)."
+
+msgid "Off: the stock voltages"
+msgstr "Pois: tehdasjännitteet"
+
+msgid "Changes at the next reboot"
+msgstr "Muuttuu seuraavassa uudelleenkäynnistyksessä"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Koekäynnistys: säilytetään, kun tämä käynnistys on ollut käynnissä 10 minuuttia"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Säilytetty: tämä siirtymä läpäisi koekäynnistyksensä"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "käynnistys sen kanssa päättyi ilman siistiä sammutusta"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "sen koekäynnistys päättyi ennen 10 minuutin kulumista"
+
+msgid "invalid value"
+msgstr "virheellinen arvo"
+
+msgid "unknown SoC firmware"
+msgstr "tuntematon SoC-laiteohjelmisto"
+
+msgid "refused by the kernel"
+msgstr "ydin hylkäsi sen"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "ydin ei pystynyt käynnistämään CPU:n taajuudensäätöä sen kanssa"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Siirtymät µV:inä kolmelle CPU-alueelle (suoritinytimet 0-3, 4-6 ja 7), kokonaisina askelina. Uusi siirtymä tulee voimaan seuraavassa uudelleenkäynnistyksessä koekäyttönä: se säilytetään, kun se käynnistys on ollut käynnissä 10 minuuttia, ja hylätään (takaisin 0:aan), jos käynnistys sen kanssa päättyy kaatumiseen, watchdog-nollaukseen tai sähkökatkoon."
+
+msgid "Running now (µV)"
+msgstr "Käytössä nyt (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Tallennettu seuraavaa käynnistystä varten (µV)"
+
+msgid "State"
+msgstr "Tila"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Peruttu automaattisesti: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Tämän laitteen SoC-laiteohjelmisto ei ole sellainen, jonka jännitekoodaus tunnetaan: vain tehdasjännitteet ovat mahdollisia."
+
+msgid "Domain"
+msgstr "Alue"
+
+msgid "Offset now (µV)"
+msgstr "Siirtymä nyt (µV)"
+
+msgid "Highest step"
+msgstr "Korkein askel"
+
+msgid "New offset (µV)"
+msgstr "Uusi siirtymä (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Rajat: %d – %d µV, %d µV:n askelin."
+
+msgid "Save for the next boot"
+msgstr "Tallenna seuraavaa käynnistystä varten"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Jokaisen siirtymän on oltava %d µV:n monikerta välillä %d – %d."
+
+msgid "Type %s to confirm."
+msgstr "Vahvista kirjoittamalla %s."
+
+msgid "Back to the stock voltages"
+msgstr "Takaisin tehdasjännitteisiin"
+
+msgid "Type %s to confirm:"
+msgstr "Vahvista kirjoittamalla %s:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Suorita 10 minuutin CPU-kuormitustesti"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Testaa uutta siirtymää kuormituksessa sen koekäynnistyksen aikana. Laite voi kaatua, jos jännite on liian matala; seuraava käynnistys käyttää silloin tehdasjännitteitä."
+
+msgid "A stress test is running."
+msgstr "Kuormitustesti on käynnissä."
 
 msgid "USB role"
 msgstr "USB-rooli"
@@ -1254,9 +1431,6 @@ msgstr "Koodi"
 
 msgid "Translated"
 msgstr "Käännetty"
-
-msgid "State"
-msgstr "Tila"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "LuCIn omat käännökset tulevat OpenWrt:stä. Tämän paneelin käännökset turkkia ja kiinaa lukuun ottamatta ovat konekäännöksiä (tekoäly); korjaukset ovat tervetulleita."
@@ -2233,6 +2407,12 @@ msgstr "Tarkistettu %s sitten"
 
 msgid "Not checked yet"
 msgstr "Ei vielä tarkistettu"
+
+msgid "Mirror (release files)"
+msgstr "Peili (julkaisutiedostot)"
+
+msgid "Leave empty for GitHub."
+msgstr "Jätä tyhjäksi, jos käytät GitHubia."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Asenna lisäämäni paketit uudelleen päivityksen jälkeen (laitteen on oltava verkossa ensimmäisellä käynnistyskerralla)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Tuntematon CPU-jännitetoiminto"
+
+msgid "Invalid CPU voltage request"
+msgstr "Virheellinen CPU-jännitepyyntö"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Virheellinen CPU:n jännitesiirtymä"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Kirjoita vahvistussana jännitesiirtymän käyttöön ottamiseksi"
+
+msgid "Invalid stress test length"
+msgstr "Virheellinen kuormitustestin kesto"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Pakettisovitin ei antanut kelvollista vastausta"
 
@@ -3234,6 +3429,9 @@ msgstr "Tuntematon päivitystoiminto"
 
 msgid "Invalid update request"
 msgstr "Virheellinen päivityspyyntö"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Varmuuskopiotyökalu ei antanut kelvollista vastausta"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "CPU:n jännitesiirtymää ei voitu lukea"
+
+msgid "The CPU voltage offset was refused"
+msgstr "CPU:n jännitesiirtymä hylättiin"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "CPU:n jännitesiirtymää ei voitu poistaa käytöstä"
+
+msgid "The stress test could not be started"
+msgstr "Kuormitustestiä ei voitu käynnistää"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Tätä tiedostoa ei ole allekirjoitettu: se vaatii vahvistuksen"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Tämä tiedosto on asennettua vanhempi: se vaatii vahvistuksen"
+
+msgid "The release source was not changed"
+msgstr "Julkaisulähdettä ei muutettu"

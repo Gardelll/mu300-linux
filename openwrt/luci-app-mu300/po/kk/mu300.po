@@ -40,6 +40,9 @@ msgstr "Құрылғыны басқару"
 msgid "Update"
 msgstr "Жаңарту"
 
+msgid "Backup of settings"
+msgstr "Баптаулардың сақтық көшірмесі"
+
 msgid "Languages"
 msgstr "Тілдер"
 
@@ -319,6 +322,75 @@ msgstr "Сұрау сәтсіз"
 msgid "(empty)"
 msgstr "(бос)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Құпия фраза (кемінде 8 таңба)"
+
+msgid "The passphrase again"
+msgstr "Құпия фраза қайтадан"
+
+msgid "Download the backup"
+msgstr "Көшірмені жүктеп алу"
+
+msgid "Back up the settings"
+msgstr "Баптауларды сақтау"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Хотспот, мобильді деректер мен APN, желі құлыптары, VPN профильдері мен баптаулары, SMS қайта жіберу, LAN мекенжайы, хост аты, уақыт белдеуі және SSH кілттері бар бір файл. Онда құпиясөздер бар: құпия фразамен шифрланады және оны тек сол фраза қайта ашады."
+
+msgid "Include the login password"
+msgstr "Кіру құпиясөзін қосу"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Құпия фраза, егер файл шифрланған болса"
+
+msgid "Show what would change"
+msgstr "Не өзгеретінін көрсету"
+
+msgid "Restore"
+msgstr "Қалпына келтіру"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Файл 4 МиБ-тан үлкен"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Файлдағы баптаулар осыларды алмастырады. Хотспот, мобильді деректер немесе LAN қайта іске қосылуы мүмкін, бұл бет байланысты біраз уақытқа жоғалтуы мүмкін."
+
+msgid "Restore from a backup"
+msgstr "Сақтық көшірмеден қалпына келтіру"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Файлдың әр мәні алдымен тексеріледі; біреуі қабылданбаса, ештеңе өзгермейді. Бірдей нәрселерге тиіспейді, бұл құрылғының бірде-бір VPN профилі, жазылымы немесе SSH кілті жойылмайды."
+
+msgid "Keep this device's login password"
+msgstr "Осы құрылғының кіру құпиясөзін сақтау"
+
+msgid "Take a file of another device model"
+msgstr "Басқа құрылғы үлгісінің файлын қабылдау"
+
+msgid "The two passphrases differ"
+msgstr "Екі құпия фраза сәйкес емес"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Құпия фраза кемінде 8 таңба болуы керек"
+
+msgid "Saved (encrypted)"
+msgstr "Сақталды (шифрланған)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Сақталды. Файл шифрланбаған: онда құпиясөздер бар, оны қауіпсіз жерде сақтаңыз."
+
+msgid "Choose a backup file first"
+msgstr "Алдымен сақтық көшірме файлын таңдаңыз"
+
+msgid "Restoring…"
+msgstr "Қалпына келтірілуде…"
+
+msgid "Restored"
+msgstr "Қалпына келтірілді"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Қалпына келтіру аяқталмады: жоғарыдағы жолдарды қараңыз"
+
 msgid "Loading…"
 msgstr "Жүктелуде…"
 
@@ -408,6 +480,111 @@ msgstr "Шекті нүктелер"
 
 msgid "Cooling devices"
 msgstr "Салқындату құрылғылары"
+
+msgid "Stress test started"
+msgstr "Стресс-тест басталды"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Сақталды: келесі қайта жүктеуде күшіне енеді"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU кернеуінің ығысуы (ЭКСПЕРИМЕНТТІК)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Эксперименттік: CPU кернеуін өзгерту құрылғыны тұрақсыз етуі, деректеріңізді бүлдіруі және құрылғыңызға біржола зақым келтіруі мүмкін. Барлық тәуекел толығымен өзіңізде."
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU кернеуінің ығысуы қолжетімсіз"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Бұл ядромен қолжетімсіз (осы шығарылымның немесе одан жаңасының mainline ядросында бар)."
+
+msgid "Off: the stock voltages"
+msgstr "Өшірулі: зауыттық кернеулер"
+
+msgid "Changes at the next reboot"
+msgstr "Келесі қайта жүктеуде өзгереді"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Сынақ жүктеуі: бұл жүктеу 10 минут жұмыс істегенде сақталады"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Сақталды: бұл ығысу сынақ жүктеуінен өтті"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "онымен жасалған жүктеу дұрыс өшірілмей аяқталды"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "оның сынақ жүктеуі 10 минутқа жетпей аяқталды"
+
+msgid "invalid value"
+msgstr "жарамсыз мән"
+
+msgid "unknown SoC firmware"
+msgstr "белгісіз SoC микробағдарламасы"
+
+msgid "refused by the kernel"
+msgstr "ядро қабылдамады"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "ядро онымен CPU жиілігін реттеуді іске қоса алмады"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Үш CPU доменіне (0-3, 4-6 және 7 CPU ядролары) арналған µV ығысулары, бүтін қадамдармен. Жаңа ығысу келесі қайта жүктеуде сынақ ретінде күшіне енеді: сол жүктеу 10 минут жұмыс істегенде сақталады, ал онымен жасалған жүктеу ақаумен, watchdog қалпына келтіруімен немесе қуаттың өшуімен аяқталса, алынып тасталады (0-ге қайтады)."
+
+msgid "Running now (µV)"
+msgstr "Қазір жұмыс істеп тұр (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Келесі жүктеуге сақталған (µV)"
+
+msgid "State"
+msgstr "Күйі"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Автоматты түрде қайтарылды: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Бұл құрылғының SoC микробағдарламасы кернеу кодтауы белгілі нұсқалардың бірі емес: тек зауыттық кернеулер мүмкін."
+
+msgid "Domain"
+msgstr "Домен"
+
+msgid "Offset now (µV)"
+msgstr "Қазіргі ығысу (µV)"
+
+msgid "Highest step"
+msgstr "Ең жоғары саты"
+
+msgid "New offset (µV)"
+msgstr "Жаңа ығысу (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Шектер: %d мен %d µV аралығы, %d µV қадаммен."
+
+msgid "Save for the next boot"
+msgstr "Келесі жүктеуге сақтау"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Әр ығысу %d µV еселігі болып, %d мен %d аралығында болуы керек."
+
+msgid "Type %s to confirm."
+msgstr "Растау үшін %s деп теріңіз."
+
+msgid "Back to the stock voltages"
+msgstr "Зауыттық кернеулерге оралу"
+
+msgid "Type %s to confirm:"
+msgstr "Растау үшін %s деп теріңіз:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "10 минуттық CPU стресс-тестін іске қосу"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Жаңа ығысуды оның сынақ жүктеуі кезінде жүктеме астында тексеріңіз. Кернеу тым төмен болса, құрылғы істен шығуы мүмкін; сонда келесі жүктеу зауыттық кернеулермен жұмыс істейді."
+
+msgid "A stress test is running."
+msgstr "Стресс-тест жүріп жатыр."
 
 msgid "USB role"
 msgstr "USB рөлі"
@@ -1254,9 +1431,6 @@ msgstr "Код"
 
 msgid "Translated"
 msgstr "Аударылған"
-
-msgid "State"
-msgstr "Күйі"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "LuCI-дің өз аудармалары OpenWrt-тен алынады. Бұл панельдің түрік және қытай тілдерінен басқа аудармалары машиналық (ЖИ) аударма; түзетулер қабылданады."
@@ -2233,6 +2407,12 @@ msgstr "%s бұрын тексерілді"
 
 msgid "Not checked yet"
 msgstr "Әлі тексерілген жоқ"
+
+msgid "Mirror (release files)"
+msgstr "Айна (шығарылым файлдары)"
+
+msgid "Leave empty for GitHub."
+msgstr "GitHub үшін бос қалдырыңыз."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Жаңартудан кейін өзім қосқан пакеттерді қайта орнату (алғашқы іске қосылғанда құрылғыға интернет керек)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Белгісіз CPU кернеуі операциясы"
+
+msgid "Invalid CPU voltage request"
+msgstr "Жарамсыз CPU кернеуі сұрауы"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Жарамсыз CPU кернеуінің ығысуы"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Кернеу ығысуын қолдану үшін растау сөзін теріңіз"
+
+msgid "Invalid stress test length"
+msgstr "Стресс-тест ұзақтығы жарамсыз"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Пакеттер адаптері жарамды жауап бермеді"
 
@@ -3234,6 +3429,9 @@ msgstr "Белгісіз жаңарту операциясы"
 
 msgid "Invalid update request"
 msgstr "Жаңарту сұрауы жарамсыз"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Сақтық көшірме құралы жарамды жауап бермеді"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "CPU кернеуінің ығысуын оқу мүмкін болмады"
+
+msgid "The CPU voltage offset was refused"
+msgstr "CPU кернеуінің ығысуы қабылданбады"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "CPU кернеуінің ығысуын өшіру мүмкін болмады"
+
+msgid "The stress test could not be started"
+msgstr "Стресс-тестті іске қосу мүмкін болмады"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Бұл файлға қол қойылмаған: бұл растауды
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Бұл файл орнатылғаннан ескі: бұл растауды қажет етеді"
+
+msgid "The release source was not changed"
+msgstr "Шығарылым көзі өзгертілмеді"

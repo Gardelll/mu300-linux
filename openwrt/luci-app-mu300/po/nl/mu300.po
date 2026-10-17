@@ -40,6 +40,9 @@ msgstr "Apparaatbeheer"
 msgid "Update"
 msgstr "Bijwerken"
 
+msgid "Backup of settings"
+msgstr "Back-up van instellingen"
+
 msgid "Languages"
 msgstr "Talen"
 
@@ -319,6 +322,75 @@ msgstr "Verzoek mislukt"
 msgid "(empty)"
 msgstr "(leeg)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Wachtzin (8 tekens of meer)"
+
+msgid "The passphrase again"
+msgstr "De wachtzin nogmaals"
+
+msgid "Download the backup"
+msgstr "Back-up downloaden"
+
+msgid "Back up the settings"
+msgstr "Instellingen back-uppen"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Eén bestand met de hotspot, mobiele data en de APN, de netwerkvergrendelingen, de VPN-profielen en -instellingen, sms-doorsturen, het LAN-adres, de hostnaam, de tijdzone en de SSH-sleutels. Het bevat wachtwoorden: met een wachtzin wordt het versleuteld, en alleen die wachtzin opent het weer."
+
+msgid "Include the login password"
+msgstr "Het inlogwachtwoord meenemen"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Wachtzin, als het bestand versleuteld is"
+
+msgid "Show what would change"
+msgstr "Tonen wat er zou veranderen"
+
+msgid "Restore"
+msgstr "Herstellen"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Het bestand is groter dan 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "De instellingen uit het bestand vervangen deze. De hotspot, mobiele data of het LAN kunnen herstarten, en deze pagina kan even de verbinding verliezen."
+
+msgid "Restore from a backup"
+msgstr "Herstellen vanuit een back-up"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Elke waarde in het bestand wordt eerst gecontroleerd; wordt er één geweigerd, dan verandert er niets. Wat gelijk is blijft ongemoeid, en geen VPN-profiel, abonnement of SSH-sleutel van dit apparaat wordt verwijderd."
+
+msgid "Keep this device's login password"
+msgstr "Het inlogwachtwoord van dit apparaat behouden"
+
+msgid "Take a file of another device model"
+msgstr "Een bestand van een ander apparaatmodel accepteren"
+
+msgid "The two passphrases differ"
+msgstr "De twee wachtzinnen verschillen"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "De wachtzin moet 8 tekens of meer hebben"
+
+msgid "Saved (encrypted)"
+msgstr "Opgeslagen (versleuteld)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Opgeslagen. Het bestand is niet versleuteld: het bevat wachtwoorden, bewaar het veilig."
+
+msgid "Choose a backup file first"
+msgstr "Kies eerst een back-upbestand"
+
+msgid "Restoring…"
+msgstr "Bezig met herstellen…"
+
+msgid "Restored"
+msgstr "Hersteld"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Het herstel is niet afgerond: zie de regels hierboven"
+
 msgid "Loading…"
 msgstr "Laden…"
 
@@ -408,6 +480,111 @@ msgstr "Drempelpunten"
 
 msgid "Cooling devices"
 msgstr "Koelapparaten"
+
+msgid "Stress test started"
+msgstr "Stresstest gestart"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Opgeslagen: wordt actief bij de volgende herstart"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU-spanningsoffset (EXPERIMENTEEL)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Experimenteel: het wijzigen van de CPU-spanning kan het apparaat instabiel maken, uw gegevens corrupt maken en uw apparaat permanent beschadigen. Gebruik is volledig op eigen risico."
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU-spanningsoffset niet beschikbaar"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Niet beschikbaar met deze kernel (een mainline-kernel van deze release of later heeft het)."
+
+msgid "Off: the stock voltages"
+msgstr "Uit: de fabrieksspanningen"
+
+msgid "Changes at the next reboot"
+msgstr "Verandert bij de volgende herstart"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Proefstart: behouden zodra deze start 10 minuten actief is"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Behouden: deze offset heeft zijn proefstart doorstaan"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "een start ermee eindigde zonder nette afsluiting"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "de proefstart eindigde binnen 10 minuten"
+
+msgid "invalid value"
+msgstr "ongeldige waarde"
+
+msgid "unknown SoC firmware"
+msgstr "onbekende SoC-firmware"
+
+msgid "refused by the kernel"
+msgstr "geweigerd door de kernel"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "de kernel kon de CPU-frequentieschaling er niet mee starten"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Offsets in µV voor de drie CPU-domeinen (cores 0-3, 4-6 en 7), in hele stappen. Een nieuwe offset wordt actief bij de volgende herstart, op proef: hij blijft behouden zodra die start 10 minuten actief is, en vervalt (terug naar 0) als een start ermee eindigt in een crash, een watchdog-reset of een stroomonderbreking."
+
+msgid "Running now (µV)"
+msgstr "Nu actief (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Opgeslagen voor de volgende start (µV)"
+
+msgid "State"
+msgstr "Status"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Automatisch teruggedraaid: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "De SoC-firmware van dit apparaat is er geen waarvan de spanningscodering bekend is: alleen de fabrieksspanningen zijn mogelijk."
+
+msgid "Domain"
+msgstr "Domein"
+
+msgid "Offset now (µV)"
+msgstr "Offset nu (µV)"
+
+msgid "Highest step"
+msgstr "Hoogste stap"
+
+msgid "New offset (µV)"
+msgstr "Nieuwe offset (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Grenzen: %d tot %d µV, in stappen van %d µV."
+
+msgid "Save for the next boot"
+msgstr "Opslaan voor de volgende start"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Elke offset moet een veelvoud van %d µV zijn tussen %d en %d."
+
+msgid "Type %s to confirm."
+msgstr "Typ %s om te bevestigen."
+
+msgid "Back to the stock voltages"
+msgstr "Terug naar de fabrieksspanningen"
+
+msgid "Type %s to confirm:"
+msgstr "Typ %s om te bevestigen:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Een CPU-stresstest van 10 minuten uitvoeren"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Test een nieuwe offset onder belasting tijdens de proefstart. Het apparaat kan crashen als de spanning te laag is; de volgende start draait dan op de fabrieksspanningen."
+
+msgid "A stress test is running."
+msgstr "Er loopt een stresstest."
 
 msgid "USB role"
 msgstr "USB-rol"
@@ -1254,9 +1431,6 @@ msgstr "Code"
 
 msgid "Translated"
 msgstr "Vertaald"
-
-msgid "State"
-msgstr "Status"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "De eigen vertalingen van LuCI komen van OpenWrt. De vertalingen van dit paneel, behalve Turks en Chinees, zijn machinevertalingen (AI); correcties zijn welkom."
@@ -2233,6 +2407,12 @@ msgstr "%s geleden gecontroleerd"
 
 msgid "Not checked yet"
 msgstr "Nog niet gecontroleerd"
+
+msgid "Mirror (release files)"
+msgstr "Spiegel (releasebestanden)"
+
+msgid "Leave empty for GitHub."
+msgstr "Leeg laten voor GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "De pakketten die ik heb toegevoegd na de update opnieuw installeren (het apparaat moet bij de eerste start online zijn)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Onbekende CPU-spanningsbewerking"
+
+msgid "Invalid CPU voltage request"
+msgstr "Ongeldig CPU-spanningsverzoek"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Ongeldige CPU-spanningsoffset"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Typ het bevestigingswoord om een spanningsoffset toe te passen"
+
+msgid "Invalid stress test length"
+msgstr "Ongeldige duur van de stresstest"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "De pakketadapter gaf geen geldig antwoord"
 
@@ -3234,6 +3429,9 @@ msgstr "Onbekende updatebewerking"
 
 msgid "Invalid update request"
 msgstr "Ongeldig updateverzoek"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Het back-uphulpmiddel gaf geen geldig antwoord"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "De CPU-spanningsoffset kon niet worden gelezen"
+
+msgid "The CPU voltage offset was refused"
+msgstr "De CPU-spanningsoffset werd geweigerd"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "De CPU-spanningsoffset kon niet worden uitgeschakeld"
+
+msgid "The stress test could not be started"
+msgstr "De stresstest kon niet worden gestart"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Dit bestand is niet ondertekend: dat moet worden bevestigd"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Dit bestand is ouder dan wat is geïnstalleerd: dat moet worden bevestigd"
+
+msgid "The release source was not changed"
+msgstr "De releasebron is niet gewijzigd"

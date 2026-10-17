@@ -40,6 +40,9 @@ msgstr "Eszközkezelés"
 msgid "Update"
 msgstr "Frissítés"
 
+msgid "Backup of settings"
+msgstr "Beállítások mentése"
+
 msgid "Languages"
 msgstr "Nyelvek"
 
@@ -319,6 +322,75 @@ msgstr "A kérés sikertelen"
 msgid "(empty)"
 msgstr "(üres)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Jelmondat (legalább 8 karakter)"
+
+msgid "The passphrase again"
+msgstr "A jelmondat újra"
+
+msgid "Download the backup"
+msgstr "A mentés letöltése"
+
+msgid "Back up the settings"
+msgstr "Beállítások mentése"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Egy fájl a hotspottal, a mobiladattal és az APN-nel, a hálózati zárakkal, a VPN-profilokkal és -beállításokkal, az SMS-továbbítással, a LAN-címmel, a gépnévvel, az időzónával és az SSH-kulcsokkal. Jelszavakat tartalmaz: jelmondattal titkosítva van, és csak az a jelmondat nyitja meg újra."
+
+msgid "Include the login password"
+msgstr "A bejelentkezési jelszóval együtt"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Jelmondat, ha a fájl titkosított"
+
+msgid "Show what would change"
+msgstr "Mutassa, mi változna"
+
+msgid "Restore"
+msgstr "Visszaállítás"
+
+msgid "The file is larger than 4 MiB"
+msgstr "A fájl nagyobb 4 MiB-nál"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "A fájl beállításai felváltják ezeket. A hotspot, a mobiladat vagy a LAN újraindulhat, és ez az oldal egy pillanatra elveszítheti a kapcsolatot."
+
+msgid "Restore from a backup"
+msgstr "Visszaállítás mentésből"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "A fájl minden értéke előbb ellenőrzésre kerül; ha egyet elutasít, semmi sem változik. Ami ugyanaz, az érintetlen marad, és az eszköz egyetlen VPN-profilja, előfizetése vagy SSH-kulcsa sem törlődik."
+
+msgid "Keep this device's login password"
+msgstr "Az eszköz bejelentkezési jelszavának megtartása"
+
+msgid "Take a file of another device model"
+msgstr "Más eszközmodell fájljának elfogadása"
+
+msgid "The two passphrases differ"
+msgstr "A két jelmondat eltér"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "A jelmondatnak legalább 8 karakter kell"
+
+msgid "Saved (encrypted)"
+msgstr "Mentve (titkosítva)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Mentve. A fájl nincs titkosítva: jelszavakat tartalmaz, tartsa biztonságban."
+
+msgid "Choose a backup file first"
+msgstr "Előbb válasszon mentésfájlt"
+
+msgid "Restoring…"
+msgstr "Visszaállítás…"
+
+msgid "Restored"
+msgstr "Visszaállítva"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "A visszaállítás nem fejeződött be: lásd a fenti sorokat"
+
 msgid "Loading…"
 msgstr "Betöltés…"
 
@@ -408,6 +480,111 @@ msgstr "Küszöbpontok"
 
 msgid "Cooling devices"
 msgstr "Hűtőeszközök"
+
+msgid "Stress test started"
+msgstr "Terheléses teszt elindítva"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Mentve: a következő újraindításkor lép életbe"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU-feszültségeltolás (KÍSÉRLETI)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Kísérleti funkció: a CPU-feszültség módosítása instabillá teheti az eszközt, megrongálhatja az adatait, és véglegesen károsíthatja az eszközét. Használata teljes mértékben a saját felelősségére történik."
+
+msgid "CPU voltage offset unavailable"
+msgstr "A CPU-feszültségeltolás nem érhető el"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Ezzel a kernellel nem érhető el (ennek a kiadásnak vagy egy újabbnak a mainline kernele tartalmazza)."
+
+msgid "Off: the stock voltages"
+msgstr "Ki: a gyári feszültségek"
+
+msgid "Changes at the next reboot"
+msgstr "A következő újraindításkor változik"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Próbaindítás: megmarad, amint ez az indítás 10 percig fut"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Megtartva: ez az eltolás átment a próbaindításon"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "egy vele történt indítás tiszta leállítás nélkül ért véget"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "a próbaindítása 10 percen belül véget ért"
+
+msgid "invalid value"
+msgstr "érvénytelen érték"
+
+msgid "unknown SoC firmware"
+msgstr "ismeretlen SoC-firmware"
+
+msgid "refused by the kernel"
+msgstr "a kernel elutasította"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "a kernel nem tudta elindítani vele a CPU-frekvenciaskálázást"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Eltolások µV-ban a három CPU-tartományhoz (0-3., 4-6. és 7. CPU-mag), egész lépésekben. Az új eltolás a következő újraindításkor lép életbe, próbaként: megmarad, amint az az indítás 10 percig fut, és elvetésre kerül (vissza 0-ra), ha egy vele történt indítás összeomlással, watchdog-visszaállítással vagy áramszünettel ér véget."
+
+msgid "Running now (µV)"
+msgstr "Most fut (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Mentve a következő indításra (µV)"
+
+msgid "State"
+msgstr "Állapot"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Automatikusan visszavonva: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Az eszköz SoC-firmware-e nem olyan, amelynek feszültségkódolása ismert: csak a gyári feszültségek lehetségesek."
+
+msgid "Domain"
+msgstr "Tartomány"
+
+msgid "Offset now (µV)"
+msgstr "Jelenlegi eltolás (µV)"
+
+msgid "Highest step"
+msgstr "Legmagasabb lépcső"
+
+msgid "New offset (µV)"
+msgstr "Új eltolás (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Korlátok: %d és %d µV között, %d µV-os lépésekben."
+
+msgid "Save for the next boot"
+msgstr "Mentés a következő indításra"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Minden eltolásnak %d µV többszörösének kell lennie %d és %d között."
+
+msgid "Type %s to confirm."
+msgstr "Írja be a(z) %s szót a megerősítéshez."
+
+msgid "Back to the stock voltages"
+msgstr "Vissza a gyári feszültségekre"
+
+msgid "Type %s to confirm:"
+msgstr "Írja be a(z) %s szót a megerősítéshez:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "10 perces CPU-terheléses teszt futtatása"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Tesztelje az új eltolást terhelés alatt a próbaindítása során. Ha a feszültség túl alacsony, az eszköz összeomolhat; a következő indítás ekkor a gyári feszültségekkel fut."
+
+msgid "A stress test is running."
+msgstr "Terheléses teszt fut."
 
 msgid "USB role"
 msgstr "USB-szerep"
@@ -1254,9 +1431,6 @@ msgstr "Kód"
 
 msgid "Translated"
 msgstr "Lefordítva"
-
-msgid "State"
-msgstr "Állapot"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "A LuCI saját fordításai az OpenWrt-ből származnak. Ennek a panelnek a török és kínai kivételével minden fordítása gépi (AI) fordítás; a javításokat szívesen fogadjuk."
@@ -2233,6 +2407,12 @@ msgstr "Ellenőrizve ennyi ideje: %s"
 
 msgid "Not checked yet"
 msgstr "Még nincs ellenőrizve"
+
+msgid "Mirror (release files)"
+msgstr "Tükör (kiadási fájlok)"
+
+msgid "Leave empty for GitHub."
+msgstr "Hagyd üresen a GitHubhoz."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "A frissítés után telepítse újra az általam hozzáadott csomagokat (az első indításkor az eszköznek online kell lennie)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Ismeretlen CPU-feszültségművelet"
+
+msgid "Invalid CPU voltage request"
+msgstr "Érvénytelen CPU-feszültségkérés"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Érvénytelen CPU-feszültségeltolás"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Írja be a megerősítő szót a feszültségeltolás alkalmazásához"
+
+msgid "Invalid stress test length"
+msgstr "Érvénytelen terheléses teszthossz"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "A csomagadapter nem adott érvényes választ"
 
@@ -3234,6 +3429,9 @@ msgstr "Ismeretlen frissítési művelet"
 
 msgid "Invalid update request"
 msgstr "Érvénytelen frissítési kérés"
+
+msgid "The backup tool gave no valid reply"
+msgstr "A mentőeszköz nem adott érvényes választ"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "A CPU-feszültségeltolás nem olvasható be"
+
+msgid "The CPU voltage offset was refused"
+msgstr "A CPU-feszültségeltolást elutasították"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "A CPU-feszültségeltolás nem kapcsolható ki"
+
+msgid "The stress test could not be started"
+msgstr "A terheléses teszt nem indítható el"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Ez a fájl nincs aláírva: ehhez megerősítés szükséges"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Ez a fájl régebbi a telepítettnél: ehhez megerősítés szükséges"
+
+msgid "The release source was not changed"
+msgstr "A kiadás forrása nem változott"

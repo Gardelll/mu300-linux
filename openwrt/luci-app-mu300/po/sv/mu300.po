@@ -40,6 +40,9 @@ msgstr "Enhetshantering"
 msgid "Update"
 msgstr "Uppdatera"
 
+msgid "Backup of settings"
+msgstr "Säkerhetskopia av inställningar"
+
 msgid "Languages"
 msgstr "Språk"
 
@@ -319,6 +322,75 @@ msgstr "Begäran misslyckades"
 msgid "(empty)"
 msgstr "(tom)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Lösenfras (minst 8 tecken)"
+
+msgid "The passphrase again"
+msgstr "Lösenfrasen igen"
+
+msgid "Download the backup"
+msgstr "Ladda ner säkerhetskopian"
+
+msgid "Back up the settings"
+msgstr "Säkerhetskopiera inställningarna"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "En fil med surfpunkten, mobildata och APN, nätverkslåsen, VPN-profiler och -inställningar, SMS-vidarebefordran, LAN-adressen, värdnamnet, tidszonen och SSH-nycklarna. Den innehåller lösenord: med en lösenfras krypteras den, och bara den lösenfrasen öppnar den igen."
+
+msgid "Include the login password"
+msgstr "Ta med inloggningslösenordet"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Lösenfras, om filen är krypterad"
+
+msgid "Show what would change"
+msgstr "Visa vad som skulle ändras"
+
+msgid "Restore"
+msgstr "Återställ"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Filen är större än 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Filens inställningar ersätter dessa. Surfpunkten, mobildata eller LAN kan starta om, och sidan kan tappa anslutningen en stund."
+
+msgid "Restore from a backup"
+msgstr "Återställ från en säkerhetskopia"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Varje värde i filen kontrolleras först; om ett avvisas ändras ingenting. Det som är lika lämnas orört, och ingen VPN-profil, prenumeration eller SSH-nyckel på enheten tas bort."
+
+msgid "Keep this device's login password"
+msgstr "Behåll enhetens inloggningslösenord"
+
+msgid "Take a file of another device model"
+msgstr "Ta emot en fil från en annan enhetsmodell"
+
+msgid "The two passphrases differ"
+msgstr "De två lösenfraserna skiljer sig"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Lösenfrasen måste ha minst 8 tecken"
+
+msgid "Saved (encrypted)"
+msgstr "Sparad (krypterad)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Sparad. Filen är inte krypterad: den innehåller lösenord, förvara den säkert."
+
+msgid "Choose a backup file first"
+msgstr "Välj en säkerhetskopia först"
+
+msgid "Restoring…"
+msgstr "Återställer…"
+
+msgid "Restored"
+msgstr "Återställd"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Återställningen blev inte klar: se raderna ovan"
+
 msgid "Loading…"
 msgstr "Läser in…"
 
@@ -408,6 +480,111 @@ msgstr "Tröskelpunkter"
 
 msgid "Cooling devices"
 msgstr "Kylenheter"
+
+msgid "Stress test started"
+msgstr "Stresstest startat"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Sparat: gäller från nästa omstart"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU-spänningsoffset (EXPERIMENTELLT)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Experimentellt: att ändra CPU-spänningen kan göra enheten instabil, förstöra dina data och skada din enhet permanent. Används helt på egen risk."
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU-spänningsoffset är inte tillgänglig"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Inte tillgänglig med den här kärnan (en mainline-kärna från den här versionen eller senare har det)."
+
+msgid "Off: the stock voltages"
+msgstr "Av: fabriksspänningarna"
+
+msgid "Changes at the next reboot"
+msgstr "Ändras vid nästa omstart"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Provstart: behålls när den här starten har varit igång i 10 minuter"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Behållen: den här offseten klarade sin provstart"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "en start med den slutade utan en ren avstängning"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "dess provstart slutade före 10 minuter"
+
+msgid "invalid value"
+msgstr "ogiltigt värde"
+
+msgid "unknown SoC firmware"
+msgstr "okänd SoC-firmware"
+
+msgid "refused by the kernel"
+msgstr "avvisad av kärnan"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "kärnan kunde inte starta CPU-frekvensskalningen med den"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Offsetar i µV för de tre CPU-domänerna (CPU-kärnor 0-3, 4-6 och 7), i hela steg. En ny offset gäller från nästa omstart, på prov: den behålls när den starten har varit igång i 10 minuter, och slopas (tillbaka till 0) om en start med den slutar med en krasch, en watchdog-återställning eller ett strömavbrott."
+
+msgid "Running now (µV)"
+msgstr "Körs nu (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Sparat till nästa start (µV)"
+
+msgid "State"
+msgstr "Tillstånd"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Automatiskt återtagen: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Enhetens SoC-firmware är inte en vars spänningskodning är känd: endast fabriksspänningarna är möjliga."
+
+msgid "Domain"
+msgstr "Domän"
+
+msgid "Offset now (µV)"
+msgstr "Offset nu (µV)"
+
+msgid "Highest step"
+msgstr "Högsta steg"
+
+msgid "New offset (µV)"
+msgstr "Ny offset (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Gränser: %d till %d µV, i steg om %d µV."
+
+msgid "Save for the next boot"
+msgstr "Spara till nästa start"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Varje offset måste vara en multipel av %d µV mellan %d och %d."
+
+msgid "Type %s to confirm."
+msgstr "Skriv %s för att bekräfta."
+
+msgid "Back to the stock voltages"
+msgstr "Tillbaka till fabriksspänningarna"
+
+msgid "Type %s to confirm:"
+msgstr "Skriv %s för att bekräfta:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Kör ett 10 minuter långt CPU-stresstest"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Testa en ny offset under last under dess provstart. Enheten kan krascha om spänningen är för låg; nästa start körs då med fabriksspänningarna."
+
+msgid "A stress test is running."
+msgstr "Ett stresstest körs."
 
 msgid "USB role"
 msgstr "USB-roll"
@@ -1254,9 +1431,6 @@ msgstr "Kod"
 
 msgid "Translated"
 msgstr "Översatt"
-
-msgid "State"
-msgstr "Tillstånd"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "LuCI:s egna översättningar kommer från OpenWrt. Denna panels översättningar utöver turkiska och kinesiska är maskinöversättningar (AI); rättelser är välkomna."
@@ -2233,6 +2407,12 @@ msgstr "Kontrollerades för %s sedan"
 
 msgid "Not checked yet"
 msgstr "Inte kontrollerat än"
+
+msgid "Mirror (release files)"
+msgstr "Spegel (utgivningsfiler)"
+
+msgid "Leave empty for GitHub."
+msgstr "Lämna tomt för GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Installera paketen jag har lagt till igen efter uppdateringen (enheten måste vara online vid första starten)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Okänd CPU-spänningsåtgärd"
+
+msgid "Invalid CPU voltage request"
+msgstr "Ogiltig CPU-spänningsbegäran"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Ogiltig CPU-spänningsoffset"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Skriv bekräftelseordet för att tillämpa en spänningsoffset"
+
+msgid "Invalid stress test length"
+msgstr "Ogiltig längd på stresstestet"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Paketadaptern gav inget giltigt svar"
 
@@ -3234,6 +3429,9 @@ msgstr "Okänd uppdateringsåtgärd"
 
 msgid "Invalid update request"
 msgstr "Ogiltig uppdateringsbegäran"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Säkerhetskopieringsverktyget gav inget giltigt svar"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "CPU-spänningsoffseten kunde inte läsas"
+
+msgid "The CPU voltage offset was refused"
+msgstr "CPU-spänningsoffseten avvisades"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "CPU-spänningsoffseten kunde inte stängas av"
+
+msgid "The stress test could not be started"
+msgstr "Stresstestet kunde inte startas"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Den här filen är inte signerad: det kräver bekräftelse"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Den här filen är äldre än det som är installerat: det kräver bekräftelse"
+
+msgid "The release source was not changed"
+msgstr "Utgivningskällan ändrades inte"

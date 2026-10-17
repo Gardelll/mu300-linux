@@ -167,7 +167,9 @@ what replaced it. The table below gives each section's state.
 | 151 | The U30 Air's battery LED shows the battery as ZTE's firmware (white from 60 %, blue from 10 %, red below; breathing on the PMIC's curve while charging; no timeout on outside power, nor for the low-battery red), read at every tick of `mu300-buttons` | current (unit tests; ZTE's behaviour from the stock firmware and its guide; not yet watched on a device) |
 | 152 | The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware and its guide (it was the other way round); stock's network light shows the SIM in use, not 4G/5G (not changed) | current (read from the stock firmware and ZTE's guide; not yet looked at on a device) |
 | 154 | The U30 Air's network LED shows the SIM in use, as ZTE's firmware and its guide: white the nano-SIM (slot 0), blue the eSIM (slot 1), red no service, the target's colour blinking during a live switch; no longer 4G/5G | current (read from the stock firmware and ZTE's guide; unit tests; not yet looked at on a device) |
+| 155 | The settings as one file and back: `mu300-backup export|import|show` (Ubuntu and OpenWrt), `mu300-api backup.export/backup.import`, System > Backup of settings in the panel; a passphrase seals it (openssl enc has no GCM: AES-256-CBC with the SHA-256 of the contents inside), every value checked by its setter's own rules before anything changes | current (unit tests on the fake device of test_api, hostile files included; not yet run on a device) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
+| 160 | The eMMC at a cold boot: a failed HS400ES (`error -84`, issue #226) no longer leaves the board without `mmcblk0`; the core drops the failed timing and the next attempt takes HS200, then HS/DDR52, then HS; a test hook `sdhci_sprd.fail_hs400es` | current (unit tests; both mainline kernels built; not run on a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 | 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
@@ -754,6 +756,335 @@ Two ways of timing out a read do **not** work here, and both fail silently:
 Apply `stty` to the already-open descriptor (`stty raw -echo <&3`), never `stty -F /dev/stty_nr1`: the `-F` form is
 an extra open and close of the device, which takes the channel away from whoever owns it (13b).
 
+### 130. Docker in the images: Ubuntu's packages, OpenWrt ready to install, the data beside the systems
+
+**Status: current** (Ubuntu 24.04 on F50-B, kernel 7.2.10; plain OpenWrt on F50-C, kernels 6.18.56 and 5.4, in a region
+of 804 MiB; test releases v2026.10.16.97 and .98 built from the branch with v2026.10.16.1's kernels, never published).
+
+**What is in which image.**
+
+| system | Docker | image installed (4 KiB blocks) | tarball | Magisk zip (k7.2) |
+|---|---|---|---|---|
+| Ubuntu 24.04 | installed: `docker.io` 29.1.3, `containerd` 2.2.1, `runc` 1.3.4, `docker-compose-v2` 2.40.3 | 345 -> 608 MiB | 95 -> 175 MiB | 122 -> 206 MB |
+| Ubuntu 26.04 | installed: `docker.io` 29.1.3, `containerd` 2.2.2, `runc` 1.4.0, `docker-compose-v2` 2.40.3 | 384 -> 649 MiB | 107 -> 188 MiB | 134 -> 220 MB |
+| OpenWrt | ready: settings and firewall zone; `apk add dockerd docker docker-compose` (29.6.1, compose 5.1.4) | 58 MiB (251 with Docker in it) | 21 MiB (86) | 45 MB (113) |
+| OpenWrt with the panel | ready, as OpenWrt; `luci-app-dockerman` adds LuCI > Docker | 61 MiB (254 with Docker) | 23 MiB (87) | 46 MB (114) |
+
+Ubuntu's own packages, not docker-ce: they come from the archive the image already uses, `apt` updates them with
+everything else, and they are the versions Ubuntu supports (Docker 29 in both releases). containerd's stress tool, its
+command line (`ctr`) and the `docker trust` plugin are left out with dpkg `path-exclude` (55 MB that `docker` and
+`docker compose` do not use; upgrades do not bring them back). OpenWrt: the 25.12 feed's packages (`containerd-stress`
+and `ctr` removed in the image build when `MU300_DOCKER=1`).
+
+**Why OpenWrt has it ready and not installed.** With Docker in the image, plain OpenWrt's system on F50-C was 472 MiB
+(with the device's vendor files, 205 MiB) of the region's 775. The first install fits; the next update by zip does not:
+it unpacks the new system beside the old one before it carries the user's files over, and the zip of the same release
+stopped at `tar: No space left on device` (nothing was changed, as the installer says; it left `openwrt.new`, 300 MB,
+on the disk until the next run cleans it, and the disk was 98% full meanwhile). Without Docker the system is 263 MiB and
+the update fits. Docker installed with `apk` is a package of the device, which an update does not copy (it is installed
+again at the first boot), but on 800 MiB its 190 MB in the old system still leave too little room for the new one: the
+README says to remove the packages before such an update and add them after it (the data stays). `MU300_DOCKER=1`
+builds an OpenWrt image with Docker in it (and `luci-app-dockerman` on the panel system); one such image ran Docker on
+6.18 on F50-C.
+
+The same arithmetic for Ubuntu: 608 + 205 MiB per system, twice during a zip update, is about 1.63 GiB, more than the
+1.6 GiB region the installers allow for Ubuntu. Ubuntu keeps Docker installed (it is the system people install Docker on,
+and usually on far more room: F50-B has 32 GB); its minimum with room for an update should become 2.0 GiB (install.sh's
+`NEED_UBUNTU`, install.ps1, the Magisk installer's figures), or the update should link the new image's files that are
+byte for byte the old image's instead of unpacking them again. Neither is in this change.
+
+**Started when used, not at boot.** Ubuntu: `docker.socket` is enabled, `docker.service` and `containerd.service` are
+not; the first `docker` command started both in 1.8 s. dockerd and containerd took 115 + 50 MB RSS after a compose run
+(F50-B, 7.2), 85 + 44 MB on OpenWrt 6.18, 63 + 31 MB on 5.4: memory a dongle without containers keeps.
+`systemd-networkd-wait-online.service` is disabled in the image, so `docker.service`'s `Wants=network-online.target`
+does not wait. OpenWrt: the image build removes the enable link apk makes; an `apk add` on the device enables it (the
+package's post-install), which the README says.
+
+**The data lives beside the systems.** `data-root` is `/mnt/mu300-disk/docker/<system>` (ubuntu, openwrt,
+openwrt-luci): on the Linux partition next to `ubuntu/`, `openwrt/` and `extra/`, outside the directory a system boots
+from. An update unpacks the new system and carries the user's files of the old one into it (FINDINGS 85);
+`/var/lib/docker` inside the system would be carried too - copied in full when the old version is kept for a rollback
+(`mu300-update apply`), and its overlay2 layers are what fills a device. Outside, the carry never sees it: nothing is
+copied, nothing is left behind in `<os>.old`, and a rollback finds the same images and containers. Measured on F50-C:
+v2026.10.16.1 -> .97 (Docker in the image; images loaded, a compose project with `restart: unless-stopped`) -> .98
+(Docker not in the image) -> `apk add`: the images and the compose container were there and running, on 5.4 after 6.18;
+on F50-B .1 -> .98 by `mu300-update apply --from` the zip, then the rollback. A system without `/mnt/mu300-disk` (one at
+the root of the partition, from before the systems had directories) keeps the data inside itself and has it carried as
+before; `mu300-carry` keeps extended attributes and device nodes, so overlay2's whiteouts and opaque directories survive
+that too. The classic overlay2 store (`"features": {"containerd-snapshotter": false}`): on a fresh install Docker 29 uses
+containerd's image store, which keeps every image twice (the compressed blobs and the unpacked snapshots) and in
+containerd's own root.
+
+**The firewall: Docker's nftables backend.** `"firewall-backend": "nftables"` (Docker 29, experimental): Docker writes
+its own tables (`ip docker-bridges`, and `ip6 docker-bridges` on Ubuntu) and no iptables rules. With iptables Docker sets
+the iptables FORWARD policy to DROP when it turns forwarding on, which would stop the hotspot's forwarding on Ubuntu, and
+its rules need `xt_addrtype`, which the 5.4 kernel does not have (below). On Ubuntu `mu300_filter`'s forward policy is
+accept, so nothing else is needed; `"ip-forward": false` keeps Docker from refusing to start while the system forwards
+nothing (mobile-data and wifi-client turn forwarding on). On OpenWrt fw4's forward chain rejects what no zone lets
+through, and an accept in Docker's table does not end the packet's way through fw4's chain. So
+`/etc/uci-defaults/95-mu300-docker` adds, once (the marker `/etc/mu300/docker-zone`), the zone `docker`: devices
+`docker0`, `br-+` and `!br-lan` and subnet 172.16.0.0/12, which fw4 matches together (`iifname "br-*" iifname != "br-lan"
+ip saddr 172.16.0.0/12`), with Docker's `default-address-pools` set to that range in `/etc/docker/daemon.json`;
+input and forward REJECT (below); forwardings docker -> wan and lan -> docker, none from wan. Measured: containers on the default bridge and on a compose
+network reach the internet (masqueraded by Docker), a LAN client (a network namespace on br-lan, and the Mac over USB)
+reaches a published port and still reaches the internet, and a container does not reach a LAN client by itself. The
+package's init script reads `/etc/docker/daemon.json` (`alt_config_file`), so an `apk add` on the device keeps these
+settings (its own `/etc/config/dockerd` is written as `.apk-new`). The zone has the names of the package's `uciadd`
+(network `docker`, bridge device `docker0`), made in advance: when `uciadd` had to add them at the first boot with
+dockerd enabled, its network reload took docker0 from the dockerd that had just made it (`adding interface ... to bridge
+docker0 failed: Device does not exist`, F50-C, 5.4); with them in place it changes nothing (network and firewall
+unchanged across that boot, and Docker working, measured).
+
+**Containers are kept off the device itself (security review of this change).** The first version of the zone had
+input and forward ACCEPT: any container - often a third party's image - could open the router's own services (dropbear,
+uhttpd/LuCI, ubus over rpcd, dnsmasq), so a compromised container was a way into the device. Now the zone has input
+REJECT and forward REJECT (output ACCEPT), and no docker -> lan forwarding. Containers need nothing from the router:
+on the default bridge Docker gives them the host's upstream resolvers (8.8.8.8 when the host has only 127.0.0.1), on a
+user network its own resolver at 127.0.0.11 asks from the host's side, through loopback; DHCP is Docker's IPAM. Two
+containers on one network talk over their bridge, which is switched and never reaches the firewall (Docker 29 did not
+load br_netfilter, measured on 7.2; `13-mu300-docker.conf` keeps bridge filtering off where it is loaded), and Docker's
+own nftables chains drop what goes from one Docker network to another whatever fw4 says (measured on Ubuntu, whose
+forward policy is accept: a container on another network timed out against the compose service, one on its network got
+the page) - forward REJECT adds the same refusal in fw4. Measured with fw4's own ruleset (`fw4 print` of the image's
+config, loaded with nft in a network namespace setup like the device's: br-lan, docker0, a compose bridge, sipa_eth0):
+from a container the router's ports 22, 80 and 53 on its Docker and LAN addresses were refused, as were a container of
+another Docker network and a LAN client; a LAN client reached a container's port and the router's SSH. This review came
+before any release had the zone, so no device has the old one (and the marker would keep a changed one as it is).
+Ubuntu: Docker's nftables backend opens nothing of the host (no iptables rules, no FORWARD policy) and `docker run -p`
+publishes on every address, but what comes from the cellular side for a published port is DNATed and then dropped in
+`mu300_filter`'s forward chain (`iifname "sipa_eth*" counter drop` after established), and from a Wi-Fi uplink by
+wifi-client's table in the same way; docker-proxy's own listeners (IPv6, hairpin) are behind the input chain's drop for
+those interfaces. `firewall.nft` now drops what comes from `docker0` and the `br-*` bridges other than br-lan to the
+device itself (after established): measured on F50-B, a container got no answer from the device's SSH on 172.17.0.1 and
+on its LAN address 192.168.79.1 (drop counters rising), resolved names, and a LAN client still had SSH and the published
+port. On Ubuntu a container can open connections to LAN clients, as on any Docker host (the forward policy is accept).
+
+The feed's kmods for Docker add `/etc/modules.d` entries (br_netfilter, the legacy iptables tables, btrfs, raid6) that
+ubox would load at every boot of a mainline kernel that has them as modules; the image build removes the ones Docker's
+packages add, and `/etc/sysctl.d/13-mu300-docker.conf` turns bridge firewalling off again after the package's
+`12-br-netfilter-ip.conf` turned it on (with br_netfilter loaded, every frame between hotspot and USB clients would go
+through fw4; that happens after an `apk add` on the device).
+
+**Kernels (moby's `check-config.sh`).** Every "generally necessary" option is there in the three kernels (namespaces,
+cgroups v2 with cpu, cpuset, io, memory and pids, veth, bridge, overlayfs, nf_tables with NAT, masquerade, fib and ct,
+seccomp, keys). What is missing matters for the iptables backend, which the images do not use, or is optional:
+* 5.4 (`kernel/linux.config`): `NETFILTER_XT_MATCH_ADDRTYPE` (Docker's iptables rules need it: dockerd with the iptables
+  backend cannot start on 5.4), `BRIDGE_NETFILTER`, `IP6_NF_NAT`, `IP6_NF_TARGET_MASQUERADE`, `NETFILTER_XT_MATCH_IPVS`;
+  optional `CGROUP_HUGETLB`, `NET_CLS_CGROUP`, `CFS_BANDWIDTH` (`docker run --cpus`), `IP_VS*` (swarm), `IP_SCTP`.
+  Not changed here.
+* 6.18 and 7.2 (the v2026.10.16.1 builds of `upstream/mu300-mainline.config`): the legacy iptables tables
+  (`IP_NF_FILTER`, `IP_NF_NAT`, `IP_NF_MANGLE`, `IP_NF_RAW`, `IP_NF_TARGET_MASQUERADE`, `IP_NF_TARGET_REDIRECT` and the
+  IPv6 ones; the images' iptables is iptables-nft, which does not use them) and `NETFILTER_XT_NAT` (iptables-nft's
+  DNAT and SNAT: `docker run -p` with the iptables backend); optional `CGROUP_PERF`, `IP_SCTP`, `CRYPTO_GHASH`
+  (encrypted overlay networks, 7.2).
+* None of them: AppArmor or SELinux (Docker runs without a profile).
+
+**Found on the way: every OpenWrt device had the same TLS key.** The uhttpd package makes its key pair when apk installs
+it in the image build, and the published images carried `/etc/uhttpd.key` (v2026.10.16.1's plain OpenWrt: sha256
+ad78a3f7..., the same on F50-C as in the release tarball): LuCI over HTTPS used one private key on every device, and
+anyone who downloads the release has it. The image build removes the pair now (uhttpd makes its own at the first start,
+as it does whenever the pair is missing: F50-C got one), and the audit of `make-release.sh` refuses an image with
+`etc/uhttpd.key`. An update to such an image takes the old key away with the old image (the image's file, not the
+user's); a key the device made itself is the user's and is kept (the way back to v2026.10.16.1 kept F50-C's).
+(Main has the same fix as its own section, 132.)
+
+**Again after the delta updates, 2026-10-17** (test builds of this branch with the other open PRs; F50-B Ubuntu 24.04
+7.2.11, F50-C plain OpenWrt 6.18.57 in its 804 MiB region):
+
+* **Ubuntu:** Docker 29.1.3, `ubuntu` in the `docker` group, `docker.service` inactive until the first command
+  (socket), data-root `/mnt/mu300-disk/docker/ubuntu` (kept through the next update), an image loaded offline, a
+  container on docker0 and one on a user network: neither reaches the device's SSH (172.17.0.1, 192.168.79.1); compose
+  publishes a port that the Mac reached over the LAN.
+* **OpenWrt, ready (the default):** `/etc/docker/daemon.json`, `/etc/config/dockerd` and the `docker` zone (input and
+  forward REJECT) are in place; `apk add dockerd docker docker-compose` (+234 MiB) started with data-root
+  `/mnt/mu300-disk/docker/openwrt`, overlay2, 29.6.1; a container reached the internet over mobile data and neither
+  the router's SSH nor its web server; compose published a port the Mac fetched over USB. `apk del` took it out again
+  (its modules.d entries too), and with it the package removed the zone and the `docker` interface (its ucidel) but
+  left the two forwardings: a later `apk add` makes the package's own zone, not this one (the uci-defaults script ran
+  once at the first boot). Noted, not changed.
+* **Docker in the OpenWrt image, now that updates write only what changed?** Measured, and still no: a
+  `MU300_DOCKER=1` image (90 MB tarball) as an update of F50-C's OpenWrt (392 MiB installed, 345 MiB free with the
+  download staged elsewhere) needs 422 MB with the rollback copy and 390 MB with `--no-rollback`, as mu300-update
+  counts it - it refuses before changing anything. The images keep Docker ready, not installed.
+
+### 133. The CPU voltage offset (EXPERIMENTAL): one value per boot, from the initramfs, taken back after a crash
+
+**Status: built, not yet device-tested.** Both mainline kernels (6.18.57 and 7.2.11, the trees of PR #256) build with
+it, and the unit tests pass (`tests/test_cpu_voltage.py`); no board has run it yet (the test plan is in the PR). It
+can permanently damage a device: every front end says so in English, Turkish and Chinese and wants the word
+`EXPERIMENTAL` typed before it saves anything but zero. Based on kano's work (github.com/kanoqwq/mu300-linux,
+`clean-tf-7.2` @ 3386928: the firmware analysis, the flag encoding and the read-only cpufreq attributes), deferred in
+the review of his fork (`docs/superpowers/reviews/2026-10-11-kano-clean-tf-7.2.md`) and taken now on the owner's
+decision, with the in-kernel limits and the boot guard that review asked for.
+
+**How the firmware takes an offset (kano's analysis).** Linux never sets a CPU voltage on this SoC: the SML/ATF
+firmware runs DVFS, and the kernel asks through SIP calls. The one call that takes an offset is DVFS_INIT
+(`0x8200060b`), once per boot: byte 0 of its flag word is the vendor's `androidboot.dvfs_set`, bytes 1-3 are domains
+0-2 (CPUs 0-3, 4-6, 7), bit 7 the sign (lower) and bits 0-6 whole millivolts. The firmware moves the CPU **and the
+SRAM** voltage tables by `ceil(mV * 1000 / 3125)` steps of its 3.125 mV selector. kano verified +3125 uV and back to
+0 on one F50 (all 31 OPPs up exactly 3125 uV, `vddcpu1`/`vddcpu2` read 753125 uV); nothing negative was ever run.
+
+**Why DVFS waits for the initramfs, and why the driver stays built in.** The offset can only be given to DVFS_INIT,
+and a second DVFS_INIT is not an option: whether the firmware then adds the offset again (tables moved in place) is
+not known, and finding out on a device means risking exactly the damage this guards against. So the value has to be
+known before DVFS starts, and the user's setting lives on the Linux disk, which only the initramfs can read (the
+command line is built into the kernel: `CMDLINE_FORCE`). kano made the driver `=m` and loaded it from a userspace
+script (S08 on OpenWrt), which delays every boot's DVFS until then and needs `EXPORT_SYMBOL_GPL(topology_set_freq_scale)`
+patched into mainline. Ours keeps `CONFIG_ARM_SPRD_CPUFREQ_V2=y` and no mainline patch: the driver probes as before
+(cluster setup, SIP handles, the DCDC limit) and then holds only DVFS_INIT and the cpufreq registration until
+`/sys/module/sprd_cpufreq_v2_driver/parameters/voltage_offset_uv` is written. boot/init writes it right after the
+Linux disk is mounted (and after the boot-tries backstop): `0,0,0` for the stock call, which is every boot without the
+setting. Nothing written within 45 s (`SPRD_VOLT_WAIT_S`; longer than init's longest card wait, 8 + 30 s), and the
+driver starts DVFS at the stock voltages by itself; the rescue path (no Linux disk) writes `0,0,0` at once.
+
+* **The gap.** DVFS (and with it the cpufreq cooling devices) now starts at the root mount rather than at the
+  driver's probe. On mainline the root is mounted at 5.0-5.2 s (§31l, F50 #1, 6.18.55, card) - after the initramfs'
+  vendor modules, its partition lookup and the USB gadget. The driver probes at device_initcall, about a second in, so
+  the CPUs stay at the bootloader's clocks for an estimated 4 s more than before, in every boot, offset or not. The
+  stock Android and our 5.4 kernel already load `sprd-cpufreq-v2.ko` from the initramfs (module 20 of
+  `boot/module-order.txt`), so the vendor's own gap is of this kind; nothing that needs cpufreq loads earlier on
+  mainline (`upstream/module-order.txt` has no cpufreq user; `wcn_bsp`'s frequency QoS and `mu300_thermal` load after
+  switch_root). Not measured yet: the device test reads the `DVFS waits for voltage_offset_uv` and
+  `register cpufreq driver success` timestamps, and compares with a 6.18.57 kernel without this change.
+* **Kernel and init travel together.** `upstream/make-bundle.sh` puts boot/init into the kernel's generic ramdisk, and
+  every way a mainline kernel is installed writes that ramdisk with it; an older initramfs with this kernel would only
+  cost the 45 s wait, never an offset.
+
+**The limits, in the kernel** (`sprd-cpufreq-v2-voltage.h`, pure functions the tests compile on the host):
+
+* **-25000 to +12500 uV**, a whole number of 3125 uV steps (8 down, 4 up; kano allowed -50..+25 mV). 3125 uV is the
+  firmware's selector step and the UMP9620 CPU DCDCs' own (`ump9620-regulator.c`: 3125 uV, 0..1596875 uV). Undervolt
+  is what is worth having on a router (less heat, less power); 25 mV is about 4 % of the ~650 mV middle of the table
+  and inside what vendors keep as margin, and a smaller range is easier to widen later than to find too wide. The
+  encoding is floor(mV), and the firmware's ceil gives back exactly the steps asked for: the tests check every step
+  of the range and of the 7-bit field.
+* **All three or none.** The three values are parsed (exactly three decimal integers, at most 6 digits) and checked
+  before anything is encoded, and DVFS_INIT applies the three in one call: a domain is never left half set. A value
+  is refused with `-ERANGE`, `-EINVAL`, `-EOPNOTSUPP` or `-EBUSY`, and the initramfs then writes `0,0,0`.
+* **A raise never past the DCDC maximum.** A positive value needs the lowest `regulator-max-microvolt` of the PMIC's
+  `DCDC_CPU1` and `DCDC_CPU2` nodes in the device tree (`voltage_limits`'s `dcdc_max`); without one, a raise is
+  refused. With one, every OPP the firmware reports after DVFS_INIT is compared with it, and the first one above it
+  ends the frequency table: the firmware's index is the table's, so only the top can go, and cpufreq never asks for
+  that step. Which DCDC feeds which domain is not known (two rails for three domains), so the lower maximum counts for
+  all. The firmware writes the PMIC itself, so Linux cannot check a voltage before it is set - only make sure no
+  frequency that would need it is ever requested.
+* **Only the stock call when in doubt.** Zero is the vendor's flag word exactly. A non-zero value is refused when the
+  vendor's `androidboot.dvfs_set` already uses the upper bytes (meaning unknown), on anything that is not
+  `sprd,ums9620`, when DVFS is off for debugging (magic 0x5A), and once DVFS runs (`-EBUSY`: one value per boot).
+* **Who can set it.** Never the command line: the parameter refuses any write before `SYSTEM_RUNNING`, which is when
+  the command line is parsed (a built-in driver's parameters can be given there). A write needs `CAP_SYS_ADMIN`, and
+  the sysfs file is 0644 root. The driver cannot be unbound (`suppress_bind_attrs`) and refuses a second probe.
+
+**The boot guard, in the initramfs** (boot/init, `cpu-voltage`; tested against a fake driver and disk). It never
+stops a boot: anything unclear is `0,0,0`. Files in `.mu300` of the Linux disk: `cpu-voltage` (the request, written by
+`mu300-cpu voltage set`), `cpu-voltage-trial`, `cpu-voltage-good`, `cpu-voltage-armed`, `cpu-voltage-rejected`.
+
+* A new value runs once, as its **trial boot** (`trial` written before it is applied). It is **good** once that boot
+  has been up 10 minutes (`mu300-cpu voltage mark-good`: a systemd timer, an OpenWrt procd instance) and runs from
+  then on. A trial boot that ends before its good mark, cleanly or not, gets no second one.
+* Every boot with an offset writes `armed` and syncs it **before** the kernel gets the value; only a clean shutdown
+  or reboot removes it (`mu300-cpu voltage shutdown`: a systemd unit's ExecStop that acts only while the system is
+  stopping - `systemctl stop` is not a shutdown -, and on OpenWrt the K10 link's `shutdown` action, never `stop`). A
+  boot that finds `armed` - a crash, a panic (`panic=5`, the lockup panics), a watchdog reset, `reboot -f`, a power
+  cut - drops the offset: `0,0,0`, the request cleared, the reason in `rejected` for the panels. The power cut is
+  counted too: it cannot be told from a hang, and the price is setting the value again.
+* A value the initramfs cannot check is never written: not three whole steps in range (the same check as the CLI,
+  kept identical by a test), or a **SoC firmware not known**: both `sml_a` and `sml_b` of the eMMC must have the
+  SHA-256 of the F50 build kano read (`ff4782690fd805ff54fe34853ef8ee5c7e51c3259e20077c55373b50a4b259c2`). The U30
+  Air's SML is not on the list until a device test reads it; any other firmware gets only the stock voltages.
+* A value the kernel refuses (a raise without a DCDC maximum) falls back to `0,0,0` in the same boot, and the
+  request is cleared.
+* The boot-tries backstop still applies: N boots that never reach `mu300-boot-ok` go to Android, and the boot after a
+  crash already runs at the stock voltages.
+
+**The front ends.** `mu300-cpu voltage status|set A,B,C --confirm EXPERIMENTAL|off|stress [MIN] [--background]|warning`
+(root only for anything that writes; `opt/mu300/lib/cpu-voltage-warning.txt` holds the warning in the three
+languages); LuCI System > CPU (`mu300dash` `cpu_voltage_get`, read ACL, and `cpu_voltage_set`, write ACL; the shape
+checked there and again in `unisoc-modem/cpu`, the limits in mu300-cpu and the kernel); the Ubuntu panel's Power page
+(Cockpit, administrative access, an argument array); mu300-toolkit Performance > 4. Each shows the warning first,
+saves nothing but zero without the word, and offers the 10-minute CPU stress test (mu300-toolkit's) for the trial
+boot. "Back to the stock voltages" needs no word. Nothing changes before the next reboot.
+
+**kano's code, reviewed** (3386928: the driver hunk, `cpu-voltage-platform`, `mu300-cpu-driver`, the plugin's
+`cpu-voltage.uc`):
+
+* Taken: the flag encoding (floor mV, sign bit), the one-shot guard and `suppress_bind_attrs`, the read-only cpufreq
+  attributes (`scaling_voltage_table`, `scaling_voltage_offset`, `scaling_voltage_domain`; the table read returns
+  `-EIO` on a failed pair instead of the raw SIP error, and a policy without driver data gives `-ENODEV`), the SML
+  hash and the armed-marker idea.
+* Changed: `=y` instead of `=m` (no `topology_set_freq_scale` export, no userspace-timed DVFS); the value from the
+  initramfs, with the trial/good/armed rules instead of "armed at load, cleared at shutdown" alone (which never asks
+  whether a value has ever completed a boot); -25..+12.5 mV instead of -50..+25; the vendor's upper flag bytes kept
+  for the stock call (kano cleared them in every boot, which changes the stock call wherever LK sets them) and a
+  non-zero value refused when they are set; a raise only under the DCDC maximum; a 0444 `module_param_array` became a
+  root-only write-once parameter that the command line cannot set; the SML partitions looked up on the eMMC only,
+  the way init finds misc (kano's took `/dev/disk/by-partlabel` first, which a card can also provide).
+* Not taken: the S08 module loader, the TF/standalone layout, `cpu-voltage.uc`'s per-cluster presets (-3.125 and
+  -6.25 mV buttons: ours has no presets, every value is typed).
+
+**Not known, and what the device test has to show.** Whether DVFS_INIT with a negative value behaves as the analysis
+says (kano never ran one); the voltages the firmware then reports (PAIR_GET) against the regulators' readback; the
+SRAM rail (moved with the CPU rail, not visible from Linux); the U30 Air's SML; the gap above.
+
+**F50-C, 2026-10-16/17: device plan steps 1-8 and 10 (OpenWrt v2026.10.16.1, with this PR's driver and init on
+6.18.57).** SML: both copies are `ff478269...`, the known build (the same as F50-B's). `dcdc_max` is 1596875 uV.
+
+* **Offset 0.** The driver reports `applied`, `0,0,0`, `stage=cpu-voltage 0,0,0` and `DVFS_INIT flag 0x00000000`.
+  All three tables match 6.18.56's OPP lines exactly. Thermal zones, cooling maps, the Wi-Fi AP, mobile data and USB
+  all come up. Three reboots gave the same result.
+* **The DVFS start delay, measured.** `register cpufreq driver success` comes at 2.03 s on 6.18.56. With this PR it
+  comes at 5.28-5.56 s with 0,0,0 and at 6.38-6.61 s with an offset (DVFS_INIT runs at 4.9-5.3 s). So DVFS starts
+  3.3-4.6 s later in every boot.
+* **What the boot paid for it, and the fix (F50-B, Ubuntu 24.04, 7.2.11, 2026-10-17).** The init waited for
+  `applied` after writing 0,0,0 too. With poll logging in the ramdisk: written at 4.99 s, `queued` at 5.00 and 5.22,
+  `applied` only at 6.34 - the registration itself ends at 5.37, and the 200 ms poll after it took a second (forks
+  stall while the new perf domains rebuild the scheduler domains). systemd's kernel phase went from 5.3 s (the
+  released 7.2.11) to 6.7 s, on two boots. Now the stock call is handed over and not waited for (`cpuv_stock`): only
+  an offset is waited for, so that a DVFS_INIT that fails with it is still taken back in the same boot. After the
+  change: written at 4.98 s, switch_root at 5.03 s, kernel phase 5.19 s (userspace 34.7 s, as before); the
+  registration finishes at 6.35 s while systemd starts. DVFS itself still starts some 3 s later than on the probe,
+  with the CPUs at the bootloader's clocks until then; that is the price of an offset the firmware takes only once.
+* **Offsets applied:**
+  * `-3125,0,0` (flag `0x00008300`), `-3125,-3125,-3125` (`0x83838300`) and `-6250,-6250,0` (`0x00868600`). In each
+    case, the offset domains' tables are exactly 3125 or 6250 uV lower and the other domains' tables are unchanged.
+    The `vddcpu1`/`vddcpu2` readback follows the live OPP, so it is a spot value (for example 746875 and 743750 uV).
+  * Each value passed a 10-minute `mu300-cpu voltage stress` with no oops. Each got its good mark at 10 minutes, and
+    the next clean reboot applied it again and re-armed it.
+  * No instability up to this round's limit (-6250 uV). Nothing beyond it was tried.
+  * `+3125,0,0` (flag `0x00000300`) raised every OPP by 3125 uV, and no OPP was cut.
+* **Taken back:**
+  * A sysrq panic with `-6250,-6250,0` good gave `unclean-end`.
+  * A watchdog reset during the `+3125,0,0` trial (procd stopped feeding: `ubus call system watchdog
+    '{"stop":true}'`) gave `unclean-end`. After that reset the board was off USB for about 17 minutes and came up in
+    Android.
+  * A clean reboot 33 s into a trial gave `no-good-mark`.
+  * `/etc/init.d/mu300-cpu-voltage stop` keeps `armed`, and `reboot` removes it.
+  * `off` followed by a reboot gives step 1's tables again.
+  * No USB power cut was tested: F50-C's Mac port has no port power switching.
+* **The CLI on a kernel without the offset.** On 6.18.56 the CLI reports `unsupported` and refuses `set`. It printed
+  "can't open .../voltage_limits" to stderr; that is fixed in this PR, with a test.
+* **Mainline thermal (not the offset, but it decides how the stress test has to be run):**
+  * Mainline's soc-thmzone does not hold this load. It has passive trips at 70 and 85 C, all three cpufreq maps are
+    bound, and thermal-guard is "watching only".
+  * At stock voltages, the toolkit's CPU stress (8 awk loops) took the SoC from 44 to 102.6 C in under 3 minutes.
+    Twice it went on to thermal-guard's 105 C power-off.
+  * The first trial of `-3125,0,0` ended that way. It was a clean shutdown, so the reason recorded is `no-good-mark`,
+    not a crash.
+  * For the stress runs above, scaling_max_freq was capped one step at 96 C, which kept the SoC under 97 C.
+  * The 5.4 kernel held a `yes` load at 80-91 C.
+* **The eMMC after hot shutdowns.** After each of those hot shutdowns or reboots, the next boot found no eMMC (`root-offset
+  not-found`, `losetup: /dev/mmcblk0: No such file`) and took the 300 s rescue reboot. This happened 5 times in this
+  run.
+* **Not run here:** the panels (plain OpenWrt has neither LuCI nor Cockpit) and the U30 Air's firmware check.
+
+**F50-B, Ubuntu 24.04, 7.2.11, 2026-10-17** (test kernels with this branch and the other open kernel PRs). SML known,
+`dcdc_max` 1596875 uV. Offset 0 with the stock call handed over (above): `applied`, `0,0,0`, flag `0x00000000`, then
+`mu300-cpu voltage set -3125,0,0 --confirm EXPERIMENTAL` (without the word: refused) and a reboot: flag `0x00008300`,
+policy0's table exactly 3125 uV lower (650000 -> 646875 ... 834375 -> 831250), policy4 unchanged, `trial` and `armed`
+on the disk, the good-mark timer armed for 10 minutes; `off` and a clean reboot: `0,0,0`, `armed` gone. 6.18.57 on the
+same board: `0,0,0` handed over at 4.90 s, switch_root at 5.01 s. The LuCI CPU page (luci-app-mu300's files copied
+onto F50-C's plain OpenWrt, release kernel): the section with the warning and "Not available with this kernel".
+
 ### 138. A SIPC tty that is not ready yet: `mu300-atd` waits for it instead of dying at the first open (#226)
 
 Issue #226 (F50, OpenWrt, 6.18, v2026.10.23): after a cold boot the panel said "AT backend no response", and the log
@@ -1272,7 +1603,7 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
 * Not needed on Linux: `logobuffer` (9 MiB, there is no display) and `sysdump-uboot` (16 MiB, bootloader crash dumps).
   `kernel/patches/of-reserved-mem-skip.patch` adds `CONFIG_OF_RESERVED_MEM_SKIP` (the boot image command line is not
   passed on by LK, so a cmdline option alone would not work); MemTotal grew from 1447 to 1473 MiB.
-* `mu300-zram.service` adds lz4 zram swap of half the RAM (swappiness 100).
+* `mu300-zram.service` adds lz4 zram swap of half the RAM (swappiness 100); settings and the off switch: 162.
 
 
 ### 28. Mali-G57 GPU (OpenCL) without Android
@@ -4300,6 +4631,278 @@ watches only and keeps the power-off.
 
 Open: the 5.4 thermal sysfs on an F50 and a U30 Air (`/sys/class/thermal/thermal_zone*/{type,mode,trip_point_*}`,
 the `cdev*` links and `cooling_device*/type`) and which way the guard goes there; a load run on 5.4.
+### 155. The settings as one file, and back (`mu300-backup`)
+
+**Status: current** (unit tests on the fake device of `tests/test_api.py`; not yet run on a device).
+
+**Why.** An update keeps the settings (§85), a new installation, a second device or a lost card do not: the hotspot,
+the APN, the locks, the VPN profiles, SMS forwarding, the keys were typed in again by hand.
+
+**What.** `rootfs/overlay/opt/mu300/bin/mu300-backup` (one program for Ubuntu and OpenWrt; it takes mu300-api's helpers
+by sourcing it as a library, `MU300_LIB=1`):
+
+- `export [-o FILE|-] [--encrypt] [--with-password] [--only S,...]`: one JSON document,
+  `{"format":"mu300-backup","version":1,"created","source":{device,system,release,hostname},"sections":{...}}`, with
+  the sections `wifi` (name, password, band, channel, hidden, on), `data` (APN, PDP type, authentication, user,
+  password, data roaming), `sim` (the boot SIM), `locks` (the lock tool's saved `mode endc lte nr cell`,
+  openwrt-luci), `vpn` (on/off, the active profile's name, the settings `KILL_SWITCH TAILSCALE IPV6 REMOTE_DNS
+  BOOTSTRAP_DNS LAN_CIDRS`, the profiles the user made - name, type, configuration, options; OpenVPN's user and
+  password from `auth.txt` - and the subscriptions with their address), `sms_forward` (the panel's settings, secrets
+  included, openwrt-luci), `lan`, `system` (host name, time zone, SSH on/off), `ssh_keys` (the login user's: root's
+  `/etc/dropbear/authorized_keys` on OpenWrt, ubuntu's `~/.ssh/authorized_keys` on Ubuntu; a line with options in
+  front is left out, and said so) and with `--with-password` `password` (the hash from `/etc/shadow`). Settings are
+  read where they live (hotspot.conf, mobile-data.conf, lan.conf or UCI; the VPN module's `profile show --json
+  --reveal` and `subscription show --reveal`, which it gives root alone). Never in a file: the path of an engine
+  binary (`XRAY`, `SING_BOX`, ...: a file that set one would choose what runs as root), profiles that came from a
+  subscription (it brings them back), runtime state.
+- The file is written 0600 (aside, then renamed; never through a link); without `-o` it is
+  `./mu300-backup-HOST-DATE.json` (`.enc` when sealed).
+- `import FILE|- [--dry-run] [--force] [--only|--skip S,...]`, `show FILE`.
+
+**The seal.** `openssl enc -aes-256-gcm` was the first choice and does not exist: OpenSSL 3's `enc` refuses AEAD
+ciphers ("AEAD ciphers not supported"; LibreSSL's takes the name and writes no tag at all). `age` ships in neither
+image; `openssl` does in both (Ubuntu's `openssl`, OpenWrt's `openssl-util`, which the VPN module needs). So:
+`MU300-BACKUP-ENCRYPTED 1`, a line naming `cipher=aes-256-cbc kdf=pbkdf2 digest=sha256 iter=600000`, then
+`openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 -a` of `sha256=<hex>` + the document. The key and the IV
+both come from the passphrase and the file's salt; the SHA-256 inside the encryption is checked before the document is
+read, so a wrong passphrase, a changed character or a cut file is refused ("the file was changed after it was
+encrypted"). The passphrase (8-256 characters) reaches openssl on a pipe of its own (`-pass fd:3`), never on its
+command line; the rounds a file names are taken between 10000 and 5000000 only.
+
+**The import.** In order, and nothing changed until the end of step 4:
+
+1. The file (4 MiB at most) is opened and checked against the format with one jq program: every key known, every
+   value of its kind and size, no control character in anything but a VPN configuration and SMS forwarding's
+   texts. Anything else and the whole file is refused (exit 2).
+2. A file of another device type is refused without `--force`; one of the other system gives what both have
+   (locks and SMS forwarding are skipped where there is no panel, and said so).
+3. This device is read in the same form, and one jq program lists the steps: only what differs. Secrets are compared
+   and never shown ("the password changes"). Nothing is removed: a VPN profile, subscription or SSH key the file
+   lacks stays. Locks the device has and the file has not are reset first (`lock reset`, the verified one, §48),
+   then the file's are applied.
+4. Every step is checked by the rules of what will apply it: mu300-api's setters in a new check mode
+   (`MU300_API_CHECK=1`: `wifi.set wifi.power data.set sim.select lock.set lan.set system.hostname system.timezone
+   system.ssh` stop after their own field checks with `{"ok":1,"checked":true}`), the forwarding adapter's
+   (`MU300_FWD_CHECK=1`, after its checks, before it writes), and for the rest mu300-backup's own (VPN names by
+   mu300-api's rule, types, configurations as text, subscription addresses `https://` only, settings by the module's
+   own rules; SSH keys as OpenSSH public keys; a password hash as SHA-512/SHA-256 crypt, bcrypt or yescrypt -
+   yescrypt not on OpenWrt, whose musl cannot read it). One refusal and nothing is changed (exit 1); "unsupported"
+   (no hotspot.conf yet, no VPN module) skips that step. `--dry-run` stops here.
+5. The steps run (what can cut the connection last: SSH keys, password, SMS forwarding, VPN, SIM, mobile data, locks,
+   system, hotspot, LAN): through mu300-api's setters, the lock tool directly (one at a time: through the panel each
+   would start detached and the next would find the lock busy), the forwarding adapter (with `clear` naming the
+   secrets the file has none of: the adapter keeps a saved secret that comes empty), the VPN module's CLI (a
+   configuration and a subscription's address on its stdin; OpenVPN's user and password into the profile's
+   `auth.txt`, since `profile set` takes them on its command line), `chpasswd -e` (busybox's on OpenWrt) on its
+   stdin, and the keys file written aside and renamed (never through a link: ubuntu's home is its own). A step that
+   fails is reported and the others go on (exit 1).
+
+**Security review of the first version (before merge).** An imported file is untrusted, and three holes were found
+and closed:
+
+1. *Values that become options.* Values of the file reach command lines as positional arguments (`mu300-vpn profile
+   add TYPE NAME -`, `profile set ID KEY VALUE`, `settings set KEY VALUE`, `subscription add NAME - --type T
+   --interval N`, `lock apply KIND VALUE`). A value starting with `-` (`--json`, `--insecure`) would be read as an
+   option. The profile type's rule allowed `-` first (`[a-z0-9-]+`), and option values were only "one line of text".
+   Now every value that goes onto a command line passes `arg`: taken exactly from the step (no trailing newline lost
+   to `$(...)`), not empty, no control character, never starting with `-`. The type is `[a-z0-9][a-z0-9-]{0,15}`,
+   subscription type and interval are checked again where they are used, the profile id the module answers must look
+   like one, and a lock value goes through mu300-api's rule and `arg`. No `--` was added to the module or the lock
+   tool: nothing reaches them that could be taken for an option.
+2. *A line break inside a value.* Each of `allowed` (`is_ascii_line`, then `grep -x`), `text_ok` and `hash_ok` refused
+   one already, so `HASH\nroot:HASH` never matched. But the format's patterns used `test("^...$")`, and jq's `^` and
+   `$` are the ends of a line, not of the value. So an option key `A\nB` passed the format, and the shell then split
+   it into two keys. The patterns now use `\A...\z`, and every one-line field refuses any control character at the
+   format level. `chpasswd -e` gets exactly one line, `root:` or `ubuntu:` and a hash checked again just before.
+3. *Keys split into words.* `for _k in $(jq -r '.options | keys[]')` is now a loop over indices with each key read
+   exactly, and checked against an anchored pattern.
+
+Tests for each: `--json` as a type, a type and an option key with a line break, a hash followed by a second shadow
+line, a lock value with a line break, `--help` and `-x` as lock values (the lock tool is never called), `--insecure`
+as an option value, `--json` as a subscription name and `-x` as the active profile.
+
+**The API and the panel.** `mu300-api backup.export {passphrase, with_password}` answers `{"name","encrypted","file"}`
+- the one reply that carries secrets on purpose - and `backup.import {file, passphrase, dry_run, force, only, skip}`
+answers a dry run at once (`valid`, `text`) and otherwise starts the restore as the job (`job.status`); the request may
+be 6 MiB for this method alone. The file and the passphrase reach mu300-backup on its stdin (the job's input file is
+root's and removed when the job starts). On openwrt-luci, System > Backup of settings (`view/mu300/backup.js`) calls
+`mu300dash backup_export/backup_import/backup_job`, which pass the request to mu300-api; `run_m` keeps their replies
+out of the call log (their length only). The file is made in the browser and never stored on the device. The panel's
+page is in every catalog of the panel. No page on Ubuntu's Cockpit panel yet: the API is there for it and for the
+web installer's device manager.
+
+**Tests** (`tests/test_backup.py`, every shell): every section exported on Ubuntu, OpenWrt and openwrt-luci, the mode,
+no link followed, no engine path; the seal (wrong passphrase, one character changed, rounds from a hostile header,
+a short passphrase); a dry run that changes nothing and a restore of what differs (hotspot.conf, mobile data's
+roaming, lan.conf, the keys merged, `chpasswd -e` with the hash on stdin); a round trip with a fake VPN CLI (profiles,
+subscription, settings, active, on); another model with and without `--force`; an OpenWrt file on Ubuntu; hostile
+files (17 refused by the format, 11 by the setters' rules, 7 VPN values), each leaving the device as it was; the lock
+tool (reset, then the file's locks) and the real forwarding adapter (refusing an `ftp://` address, nothing written);
+the API methods and the job. In none of them a secret in an argument list, a job file or what is printed.
+`tests/test_sms_forward.py`: the adapter's check mode.
+
+**On a device (2026-10-17, F50-B Ubuntu 24.04 7.2.11, F50-C plain OpenWrt 6.18.57; test builds of this branch with
+the other open PRs).**
+
+* **OpenWrt refused every file, its own too:** `not a valid backup: a value of the wrong kind`. OpenWrt's jq (1.8.1)
+  is built without Oniguruma, so `test`, `capture` and `gsub` raise "jq was compiled without ONIGURUMA regex library"
+  and the schema's `try` turned that into a refusal; the SMS-forwarding export (openwrt-luci) used `capture`/`gsub`
+  too. The program now uses no regular expression in jq: characters are checked by code point (`l` refuses C0, DEL
+  and C1 as `[[:cntrl:]]` did; `word`, `optkey`, `lowalnum` stand for the three anchored patterns), and the
+  forwarding file is split at its first `=`. `OpenWrtJqWithoutRegex` / `LuciJqWithoutRegex` run the OpenWrt and panel
+  tests through a jq that refuses any program using them; both failed before the change.
+* **Not on PATH:** `mu300-backup export` said "not found" on Ubuntu; it is in `path-commands` now.
+* **Ubuntu:** `export --encrypt` (0600, the `MU300-BACKUP-ENCRYPTED` header), `show`, `import --dry-run` ("nothing to
+  change"); the SSID changed by hand and the APN through `mu300-api data.set`, then `import`: both back, the hotspot
+  and mobile data came back up (the restored hotspot.conf differs only in the order of its lines).
+* **OpenWrt (with the fix):** export, `show`, a dry run of its own file ("nothing to change"); the F50-B file,
+  encrypted, taken with "from ubuntu, taken on openwrt: what both systems have" (hotspot, LAN address); a file with
+  the login hash: F50-B's is `$6$`, which musl takes ("login password: changes"; the yescrypt refusal stays a unit
+  test); the SSID changed in uci and restored by `import`, WAN still up.
+* **The panel** (luci-app-mu300's files copied onto F50-C's plain OpenWrt for the test): System > Backup of settings
+  renders (passphrase twice, the login-password tick, restore with "Show what would change"; Restore disabled until
+  a preview), no console error; `ubus call mu300dash backup_export` returned the file, plain and sealed.
+* **Not run:** a download and restore through the page in a browser, the VPN and lock sections, the size limit
+  through rpcd/ubus.
+
+### 160. The eMMC at a cold boot: a failed HS400ES no longer ends the boot; the core falls back to HS200, then HS/DDR52
+
+**The report** (issue #226, a user, 6.18.56, release v2026.10.16.1): after a cold boot (powered off five minutes or
+more) the modem never came up, because there was no `mmcblk0` and so no modem firmware:
+
+    mmc0: SDHCI controller on 22200000.sdio [22200000.sdio] using ADMA 64-bit
+    mmc0: mmc_select_hs400es failed, error -84
+    mmc0: error -84 whilst initialising MMC card
+    ... the same three more times ...
+    mmc0: Failed to initialize a non-removable card
+
+Every cold boot of his failed; warm reboots of the same kernel sometimes came up at HS400ES; an unbind and bind of
+the host on the running system failed the same way. The vendor 5.4 kernel (its own eMMC driver) came up at HS400ES at
+200 MHz on the same unit. We saw it once ourselves, on an F50 after a sysrq reboot (§112's run: "on that boot the eMMC
+did not come up"); a normal reboot after it was fine. With the root on the eMMC that boot has no system at all.
+
+**What the log says.** -84 is -EILSEQ, a CRC error. `mmc_select_hs400es` prints its own message before the summary
+line for every step but two: the CMD13 status checks after the switch to HS at 52 MHz and after the host went to
+HS400 with the enhanced strobe (`mmc_switch_status(card, true)`, where a CRC error is fatal). There is no inner line,
+so it is one of those two, most likely the last: the card switched, the host latches the response with the strobe,
+and the CRC does not match. Why only at a cold start (the PHY's DLL, a delay value from the device tree, a supply
+still settling) is not known; it is not looked into here. The four lines are `mmc_rescan`'s four attempts (400, 300,
+200, 100 kHz initial clocks), each with a power cycle of the card, and every one went to HS400ES again.
+
+**Changed** (`upstream/patches/0021-mmc-HS400ES-failure-falls-back-to-HS200.patch`, both mainline kernels): when the
+timing selection of `mmc_init_card` fails (the selection itself, HS200 tuning or HS400 after it, HS400ES tuning,
+DDR52), the failed timing is taken out of the host's caps, with one warning (`mmc0: HS400ES failed (-84), the next
+initialisation uses HS200`), and the next attempt takes the next slower one: HS400ES (HS400 goes with it) -> HS200 ->
+HS with DDR52 -> HS. mmc_rescan's four attempts are exactly that ladder. The core chooses the card type from the host
+caps again at every initialisation, of a new card and of a known one (a reset, a resume), so the same lowering holds
+there. The core's own line then says which timing was taken: `mmc0: new HS200 MMC card at address 0001`. A boot whose
+HS400ES works runs no new code. The lowered caps last until the host is bound again, in practice until the next
+boot, which tries HS400ES again. A removed card (-ENOMEDIUM) lowers nothing; the SD slot is set up by `sd.c` and not
+touched.
+
+Considered and not taken: turning HS400ES off in the device tree for everyone (half the read speed on every unit
+that works; mainline runs on the stock device tree's capabilities); a retry inside `mmc_select_timing` without a
+power cycle (the card is half switched; mmc_rescan's attempts power it off and start again from CMD0); plain HS400
+with tuning as the first fallback (never run on this host: HS200 is the known-good step below).
+
+**Cost.** At HS200 the bus is 200 MHz single data rate, half of HS400ES's bus rate: sequential reads should drop
+from §93's 270-300 MB/s on the F50 to at most about 190 (not measured); writes (§93: 180-215 MB/s) are bound more by
+the eMMC itself. Only on a boot that fell back.
+
+**The test hook.** `sdhci_sprd.fail_hs400es=N` (sdhci-sprd module parameter, default 0, also writable at
+`/sys/module/sdhci_sprd/parameters/fail_hs400es`): the next N HS400ES selections get a CRC error (-EILSEQ) on every
+CMD13, only while a new card is set up at HS400ES - the failure of the report, at the place the log points to.
+Mainline forces its command line (`CONFIG_CMDLINE_FORCE`; the bootloader's and the boot image's `loglevel=5` are not
+read), so a test kernel gets it at build time: `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1` for
+`upstream/build.sh` appends it to `CONFIG_CMDLINE` after the config check. Releases never set it (a unit test checks
+the workflows).
+
+**Unit tests:** `tests/test_static.py` (`test_mainline_emmc_timing_falls_back`): the ladder, exactly the four timing
+failures routed through it, the hook off by default and limited to CMD13 during a new card's HS400ES, the build
+switch after the config check and in no workflow. **Built** locally, 2026-10-16: 6.18.56 and 7.2.10 with `build.sh` (the patch applied with no offset or fuzz, also to 6.18.57 and 7.2.11; no compiler warning in either file; both Images carry the new messages), and a 7.2.10 test build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`, whose `CONFIG_CMDLINE` and Image end with it. **On a device** (F50-B, Ubuntu 24.04, 2026-10-17; test kernels with this patch and the other open kernel PRs):
+7.2.11 and 6.18.57 normal boots: `new HS400 Enhanced strobe MMC card`, no fallback line, `ios` timing 10 at 200 MHz.
+A 7.2.11 build with `MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1`: `test: this HS400ES selection fails`,
+`mmc_select_hs400es failed, error -84`, `HS400ES failed (-84), the next initialisation uses HS200`, `error -84 whilst
+initialising MMC card`, then `new HS200 MMC card at address 0001` 0.33 s later; `ios` timing 9 (HS200) at 200 MHz,
+the system booted with mobile data and the hotspot, and the parameter read 0. Still not run: cold boots, the
+runtime rebind, throughput at HS200. Before that, the plan as written:
+
+    # 1. normal boots, both boards, 6.18 and 7.2: unchanged
+    dmesg | grep -iE 'mmc0|hs400|initialisation uses'     # "new HS400 Enhanced strobe MMC card", no fallback line
+    cat /sys/kernel/debug/mmc0/ios                          # timing spec: 10 (mmc HS400 enhanced strobe), 200 MHz
+    # 2. the forced failure: a test kernel built with MU300_CMDLINE_EXTRA=sdhci_sprd.fail_hs400es=1
+    dmesg | grep -iE 'mmc0'   # "test: this HS400ES selection fails", "mmc_select_hs400es failed, error -84",
+                              # "HS400ES failed (-84), the next initialisation uses HS200", "new HS200 MMC card"
+    cat /sys/kernel/debug/mmc0/ios                          # timing spec: 9 (mmc HS200); the system boots, modem up
+    cat /sys/module/sdhci_sprd/parameters/fail_hs400es     # 0
+    # with fail_hs400es=4: the same HS200 boot, and the parameter reads 3 (after the first failure the host has no
+    # HS400ES left to try)
+    # 3. on a running system with the root on the SD card (F50): the same without a reboot
+    echo 1 > /sys/module/sdhci_sprd/parameters/fail_hs400es
+    # nothing of the eMMC mounted; the modem stopped (its firmware partitions are on the eMMC)
+    echo 22200000.sdio > /sys/bus/platform/drivers/sdhci_sprd_r11/unbind
+    echo 22200000.sdio > /sys/bus/platform/drivers/sdhci_sprd_r11/bind
+    # 4. cold boots: power off >= 5 min, N times per board (the release kernel): count fallbacks; a unit like
+    #    #226's should now boot every time, at HS200 when HS400ES fails
+    # 5. at HS200: dd read/write throughput and a §93-style soak (write, verify, reboot, e2fsck -fn)
+
+### 162. zram by default: one script for every system, settings in a file, an off switch, zstd on mainline
+
+**What was there.** zram swap has been on since 27: `zram-start` (Ubuntu's and Arch's `mu300-zram.service` before
+`swap.target`, OpenWrt's `mu300-hw`) made lz4 zram of half of MemTotal, priority 100, `vm.swappiness=100`,
+`vm.page-cluster=0`. Nothing could change it or turn it off short of masking the unit. Its "already on" check was
+`swapon --show`, which OpenWrt's busybox `swapon` does not have (so it never saw a live swap there); its `-p` is in
+OpenWrt's busybox (`FEATURE_SWAPON_PRI` default y in 25.12's `Config-defaults.in`), as are `mkswap` and `swapoff`.
+
+**Kernels.**
+- 5.4 vendor (`kernel/linux.config`): `ZRAM=m` (the fragment's `=y` is refused, `fragment-rejected.txt`), `ZSMALLOC=m`,
+  `ZRAM_WRITEBACK`/`ZRAM_DEDUP`; zram there compresses through the crypto API, and `CRYPTO_LZ4`, `CRYPTO_ZSTD` are
+  built in, `CRYPTO_LZO` a module: every compressor is offered. Left as it is.
+- 6.18.56 and 7.2.10 as shipped (`upstream/out*/kernel.config`): `SWAP`, `ZRAM`, `ZSMALLOC`, `ZRAM_BACKEND_LZ4`,
+  default lz4, all built in; `ZSTD_COMPRESS`/`ZSTD_DECOMPRESS` built in already (for `CRYPTO_ZSTD`) but
+  `ZRAM_BACKEND_ZSTD` not set, so `comp_algorithm` offered `[lz4]` alone. `mu300-mainline.config` now sets
+  `ZRAM_BACKEND_ZSTD=y`: a bool, the library is there, so the Image grows by the backend's glue only (a few KiB).
+  Both versions have the option with the same `select`s (`drivers/block/zram/Kconfig` at v6.18 and v7.2).
+- PR #256 (every module): `all-modules.py` keeps every `=y` at `=y` and leaves bools alone outside the families it
+  opens, so zram, zsmalloc and both backends stay built in; nothing here depends on a module.
+
+**Why not systemd's zram-generator or OpenWrt's zram-swap.** Ubuntu ships `systemd-zram-generator`, but the same
+script serves Ubuntu, Arch and OpenWrt (busybox), with one settings file, and has run since 27; a second mechanism
+would only add a place where the two disagree. OpenWrt's `zram-swap` depends on `kmod-zram`, a 6.12 module that the
+image removes with every other kmod (the kernels are ours). The images install neither (a test checks).
+
+**Changed.**
+- `mu300-zram` (on `PATH`): `start` (the boot; `zram-start` stays as the name OpenWrt's `mu300-hw` calls), `stop`,
+  `on`/`off` (now and for every boot: `ZRAM_ENABLE` in `/etc/mu300/zram.conf`, a file of the user, kept by updates),
+  `status` (size, compressor, priority, and what the swapped-out pages cost: `mm_stat`'s orig_data_size against
+  mem_used_total), `brief` (a line in `mu300-toolkit info`). The toolkit's System menu has "Compressed swap (zram)".
+- Settings, each optional and checked (a value out of range or not a number takes the default):
+  `ZRAM_SIZE_PERCENT` (50; 1-200), `ZRAM_ALGORITHM` (lz4; one the kernel does not offer falls back to lz4, logged),
+  `ZRAM_PRIORITY` (100), `ZRAM_SWAPPINESS` (100; 0-200, and 100 where the kernel refuses more: 5.4 stops at 100).
+  `/opt/mu300/lib/zram.conf.example` explains them; it is in `/opt/mu300` so OpenWrt has it too.
+- The "already on" check reads `/proc/swaps`; under a live zram `start` only sets the sysctls again, it never resets
+  the device. `off` swaps off first and resets only after that worked: with too little free RAM for what zram holds,
+  swapoff fails, zram stays on and the command says why.
+
+**Sizes and memory.** MemTotal is ~1473 MiB (27), so the default is ~736 MiB of swap. An empty zram costs nothing
+(zsmalloc allocates per stored page); a full one holds those pages in about 736/2.5 ~ 290 MiB with lz4 or ~210 MiB
+with zstd (typical anonymous memory; text and JSON pack better, already-compressed data worse), plus about 0.1 % of
+the swap size for zram's own table. Swappiness 100 weighs swap and file cache equally, which suits a swap that is RAM;
+up to 200 makes sense on mainline when file cache matters more (a busy Docker/KVM host with little I/O), it is a
+setting rather than a new default because no device run has compared the two.
+
+**Tests.** `tests/test_zram.py` under each shell, against a fake `/sys/block/zram0` and `/proc`: defaults, every
+setting, the fallback compressor, hostile and out-of-range values, switched off, already on, no zram in the kernel,
+`on`/`off` keeping the other settings, a failed swapoff, `status`/`brief`; the wiring (unit, the three images,
+`mu300-hw`, `PATH`), no second zram setup in any image, both mainline compressors and 5.4's options.
+
+**On a device** (2026-10-17, test builds with the other open PRs). F50-B, Ubuntu 24.04: on at boot on 7.2.11 and
+6.18.57 (708/732 MiB, priority 100), `comp_algorithm` `[lz4] zstd`; `ZRAM_ALGORITHM=zstd` then stop/start: zstd; a
+1.2 GB compressible load swapped 30 MiB into 6 MiB (4.3:1), no OOM; `mu300-zram off` held over a reboot (no swap,
+"zram off"), `on` brought it back; `mu300-zram` and the toolkit line on PATH. F50-C, plain OpenWrt (busybox), the
+release's 6.18.57 without the zstd backend: on at boot from `mu300-hw`, `zstd not offered by this kernel (lz4 ), using
+lz4` in logread, off/on. **Open:** memory pressure with Docker or a KVM guest, lz4 against zstd.
+
 ### 166. Mainline's soc-thmzone did not hold a full CPU load: step_wise followed the sensors' noise
 
 PR #272's device test (§133, F50-C, 6.18.56/6.18.57) found that the toolkit's 10-minute CPU stress (8 awk loops)
@@ -5768,7 +6371,37 @@ mirror: `MU300_API_URL=` in place of `https://api.github.com/repos/dikeckaan/mu3
 `MU300_DOWNLOAD_URL=` in place of `https://github.com/dikeckaan/mu300-linux/releases/download`, plain http(s) URLs
 only; the command and the panel read the same file. It exists for the device test below and for places where GitHub
 cannot be reached. Without a release key a mirror is trusted as much as whoever runs it; with one it cannot change
-a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root.
+a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root. (Since the panel's
+Update page gained the same setting - a *Mirror (release files)* field, written through one `mu300-update source`
+command - an account that may use that page's write access can change the source as well, and its read access is what
+shows the address in force.)
+
+**When the mirror is not there.** A run whose mirror cannot be reached says so once and takes the rest of that run
+from github.com - but only for a mirror that is really absent: curl's connect-class failures (6 7 35 52), or a stall
+(28, 56) before a single byte arrived. A transfer that delivered bytes and then stalled is a working mirror on a bad
+line, and the run resumes from it with `-C -`, because the people who set a mirror are often the ones who cannot
+reach GitHub. The fallback happens by itself only for an https mirror on a public name: a plain-http mirror or a
+private address / LAN-only name is almost always a copy on the LAN, kept so the release does not come over a metered
+SIM, and there the update stops and says why. `MU300_MIRROR_FALLBACK=0|1` in the same file decides it for every
+mirror (the file only, never the environment). A self-update handover passes the state on
+(`MU300_MIRROR_FELL_BACK=1` in the environment of the release's own updater, which then does not wait for the same
+mirror again); the panel's adapter clears that variable like every other source variable. With the mirror field,
+`curl` joined the OpenWrt image so the exit codes exist there too: every OpenWrt update download moved from
+uclient-fetch to curl, mirror or not.
+
+**The mirror on devices, 2026-10-17** (test builds of this branch with the other open PRs). F50-B (Ubuntu, no
+internet): `mu300-update source http://<Mac>:8791` wrote `/etc/mu300/update-source` 0600 and `source` / `status` named it
+`(file)`; `MU300_RELEASE=<tag> mu300-update apply` took every file from that mirror and updated. The same mirror made
+unreachable: the run stopped - but said only `cannot download SHA256SUMS`, and with `MU300_MIRROR_FALLBACK=1` it went
+to github.com without a word. Apply's first fetch is its self-update check, run with `2>/dev/null`; the said-once
+line was said there. It goes to fd 7 now, the run's own stderr (`say_run`), and both runs say their line once (a
+test runs the two fetches as apply does). F50-C (plain OpenWrt, `curl` in the image, internet): a public https
+mirror that does not resolve (`https://mirror.invalid/dl`): `mirror unreachable: the rest comes from github.com`, and
+the checksums, signature and files of v2026.10.17.1 came from GitHub and verified. A fresh download also printed `sh:
+can't open ...: no such file` (busybox ash: `wc -c < FILE 2>/dev/null` redirects stderr only after the input);
+fixed. The panel's field (luci-app-mu300's files copied onto F50-C for the test): the page shows *Mirror (release
+files)* with the GitHub placeholder, Save wrote the file (`mu300-update source` says `(file)`), and the page shows the
+saved address. Not run: a self-update across the change, a resumed download.
 
 **What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
 (`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's

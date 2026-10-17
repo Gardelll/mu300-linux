@@ -8,8 +8,8 @@ Conflicts=shutdown.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/opt/mu300/bin/zram-start
-ExecStop=-/usr/sbin/swapoff /dev/zram0
+ExecStart=/opt/mu300/bin/mu300-zram start
+ExecStop=-/opt/mu300/bin/mu300-zram stop
 
 [Install]
 WantedBy=swap.target

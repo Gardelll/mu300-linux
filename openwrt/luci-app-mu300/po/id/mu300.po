@@ -40,6 +40,9 @@ msgstr "Manajemen perangkat"
 msgid "Update"
 msgstr "Perbarui"
 
+msgid "Backup of settings"
+msgstr "Cadangan pengaturan"
+
 msgid "Languages"
 msgstr "Bahasa"
 
@@ -319,6 +322,75 @@ msgstr "Permintaan gagal"
 msgid "(empty)"
 msgstr "(kosong)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Frasa sandi (8 karakter atau lebih)"
+
+msgid "The passphrase again"
+msgstr "Frasa sandi sekali lagi"
+
+msgid "Download the backup"
+msgstr "Unduh cadangan"
+
+msgid "Back up the settings"
+msgstr "Cadangkan pengaturan"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Satu berkas berisi hotspot, data seluler dan APN, kunci jaringan, profil dan pengaturan VPN, penerusan SMS, alamat LAN, nama host, zona waktu, dan kunci SSH. Berkas ini berisi kata sandi: dengan frasa sandi berkas dienkripsi, dan hanya frasa itu yang dapat membukanya lagi."
+
+msgid "Include the login password"
+msgstr "Sertakan kata sandi login"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Frasa sandi, jika berkas terenkripsi"
+
+msgid "Show what would change"
+msgstr "Tampilkan apa yang akan berubah"
+
+msgid "Restore"
+msgstr "Pulihkan"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Berkas lebih besar dari 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Pengaturan dari berkas menggantikan yang ini. Hotspot, data seluler, atau LAN dapat dimulai ulang, dan halaman ini dapat kehilangan koneksi sesaat."
+
+msgid "Restore from a backup"
+msgstr "Pulihkan dari cadangan"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Setiap nilai berkas diperiksa lebih dulu; jika satu ditolak, tidak ada yang diubah. Yang sama dibiarkan, dan tidak ada profil VPN, langganan, atau kunci SSH perangkat ini yang dihapus."
+
+msgid "Keep this device's login password"
+msgstr "Pertahankan kata sandi login perangkat ini"
+
+msgid "Take a file of another device model"
+msgstr "Terima berkas dari model perangkat lain"
+
+msgid "The two passphrases differ"
+msgstr "Kedua frasa sandi berbeda"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Frasa sandi perlu 8 karakter atau lebih"
+
+msgid "Saved (encrypted)"
+msgstr "Tersimpan (terenkripsi)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Tersimpan. Berkas tidak terenkripsi: berisi kata sandi, simpan dengan aman."
+
+msgid "Choose a backup file first"
+msgstr "Pilih berkas cadangan dulu"
+
+msgid "Restoring…"
+msgstr "Memulihkan…"
+
+msgid "Restored"
+msgstr "Dipulihkan"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Pemulihan tidak selesai: lihat baris di atas"
+
 msgid "Loading…"
 msgstr "Memuat…"
 
@@ -408,6 +480,111 @@ msgstr "Titik pemicu"
 
 msgid "Cooling devices"
 msgstr "Perangkat pendingin"
+
+msgid "Stress test started"
+msgstr "Uji stres dimulai"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Tersimpan: berlaku pada boot ulang berikutnya"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Offset tegangan CPU (EKSPERIMENTAL)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Eksperimental: mengubah tegangan CPU dapat membuat perangkat tidak stabil, merusak data Anda, dan merusak perangkat Anda secara permanen. Gunakan sepenuhnya atas risiko Anda sendiri."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Offset tegangan CPU tidak tersedia"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Tidak tersedia dengan kernel ini (kernel mainline dari rilis ini atau yang lebih baru memilikinya)."
+
+msgid "Off: the stock voltages"
+msgstr "Mati: tegangan bawaan pabrik"
+
+msgid "Changes at the next reboot"
+msgstr "Berubah pada boot ulang berikutnya"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Boot percobaan: dipertahankan setelah boot ini berjalan 10 menit"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Dipertahankan: offset ini lolos boot percobaannya"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "sebuah boot dengannya berakhir tanpa pematian yang bersih"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "boot percobaannya berakhir sebelum 10 menit"
+
+msgid "invalid value"
+msgstr "nilai tidak valid"
+
+msgid "unknown SoC firmware"
+msgstr "firmware SoC tidak dikenal"
+
+msgid "refused by the kernel"
+msgstr "ditolak oleh kernel"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "kernel tidak dapat memulai penskalaan CPU dengannya"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Offset dalam µV untuk tiga domain CPU (inti CPU 0-3, 4-6, dan 7), dalam langkah utuh. Offset baru berlaku pada boot ulang berikutnya sebagai percobaan: dipertahankan setelah boot itu berjalan 10 menit, dan dibuang (kembali ke 0) jika boot dengannya berakhir karena crash, reset watchdog, atau listrik padam."
+
+msgid "Running now (µV)"
+msgstr "Berjalan sekarang (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Tersimpan untuk boot berikutnya (µV)"
+
+msgid "State"
+msgstr "Keadaan"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Ditarik kembali otomatis: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Firmware SoC perangkat ini bukan salah satu yang pengodean tegangannya diketahui: hanya tegangan bawaan pabrik yang dimungkinkan."
+
+msgid "Domain"
+msgstr "Domain"
+
+msgid "Offset now (µV)"
+msgstr "Offset sekarang (µV)"
+
+msgid "Highest step"
+msgstr "Langkah tertinggi"
+
+msgid "New offset (µV)"
+msgstr "Offset baru (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Batas: %d hingga %d µV, dengan langkah %d µV."
+
+msgid "Save for the next boot"
+msgstr "Simpan untuk boot berikutnya"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Setiap offset harus kelipatan %d µV antara %d dan %d."
+
+msgid "Type %s to confirm."
+msgstr "Ketik %s untuk mengonfirmasi."
+
+msgid "Back to the stock voltages"
+msgstr "Kembali ke tegangan bawaan pabrik"
+
+msgid "Type %s to confirm:"
+msgstr "Ketik %s untuk mengonfirmasi:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Jalankan uji stres CPU 10 menit"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Uji offset baru di bawah beban selama boot percobaannya. Perangkat dapat crash jika tegangan terlalu rendah; boot berikutnya lalu berjalan dengan tegangan bawaan pabrik."
+
+msgid "A stress test is running."
+msgstr "Uji stres sedang berjalan."
 
 msgid "USB role"
 msgstr "Peran USB"
@@ -1254,9 +1431,6 @@ msgstr "Kode"
 
 msgid "Translated"
 msgstr "Diterjemahkan"
-
-msgid "State"
-msgstr "Keadaan"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Terjemahan LuCI sendiri berasal dari OpenWrt. Terjemahan panel ini selain bahasa Turki dan Mandarin adalah terjemahan mesin (AI); koreksi dipersilakan."
@@ -2233,6 +2407,12 @@ msgstr "Diperiksa %s yang lalu"
 
 msgid "Not checked yet"
 msgstr "Belum diperiksa"
+
+msgid "Mirror (release files)"
+msgstr "Cermin (berkas rilis)"
+
+msgid "Leave empty for GitHub."
+msgstr "Biarkan kosong untuk GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Pasang lagi paket yang saya tambahkan setelah pembaruan (perangkat harus daring pada penyalaan pertama)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Operasi tegangan CPU tidak dikenal"
+
+msgid "Invalid CPU voltage request"
+msgstr "Permintaan tegangan CPU tidak valid"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Offset tegangan CPU tidak valid"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Ketik kata konfirmasi untuk menerapkan offset tegangan"
+
+msgid "Invalid stress test length"
+msgstr "Durasi uji stres tidak valid"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Adaptor paket tidak memberi balasan yang valid"
 
@@ -3234,6 +3429,9 @@ msgstr "Operasi pembaruan tidak dikenal"
 
 msgid "Invalid update request"
 msgstr "Permintaan pembaruan tidak valid"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Alat cadangan tidak memberi jawaban yang valid"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Offset tegangan CPU tidak dapat dibaca"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Offset tegangan CPU ditolak"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Offset tegangan CPU tidak dapat dimatikan"
+
+msgid "The stress test could not be started"
+msgstr "Uji stres tidak dapat dimulai"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Berkas ini tidak ditandatangani: perlu konfirmasi"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Berkas ini lebih lama daripada yang terpasang: perlu konfirmasi"
+
+msgid "The release source was not changed"
+msgstr "Sumber rilis tidak diubah"

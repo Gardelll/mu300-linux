@@ -72,6 +72,50 @@ A release can carry a signature of its checksums (`SHA256SUMS.sig`). A system th
 that has none unless you say so (`--unsigned`). Systems up to v2026.10.27 have no key and update as they always did. Details:
 [FINDINGS 86](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md).
 
+### Where the release files come from
+
+GitHub's release CDN throttles single connections in some regions, so the device can take its releases from
+somewhere else: a GitHub file proxy (a prefix in front of the release URL), or a copy of a release's files on your
+own network. The panel's **System > Update** page has a field for it - *Mirror (release files)*, under **Online
+update** - and the command line writes and reads the same file:
+
+```sh
+mu300-update source http://mirror.lan/mu300/releases/download
+mu300-update source        # what is in force now, and where it comes from
+mu300-update source off    # back to GitHub
+```
+
+Two addresses are involved, and they are not the same service:
+
+* **the release files** - `MU300_DOWNLOAD_URL` in `/etc/mu300/update-source`; the release tag is added after it, so
+  one line keeps working for every release;
+* **"which release is newest"** - `MU300_API_URL`, standing for `https://api.github.com/repos/dikeckaan/mu300-linux`.
+  The GitHub file proxies in common use serve the first and **not** the second: a request for `api.github.com`
+  through one of them comes back `403`. Leave this address alone unless your source serves the API too.
+
+Both live in `/etc/mu300/update-source`, which only root can write (a commented `update-source.example` sits beside
+it, and an update keeps the file). The environment wins over the file, which is how the computer installer's
+`MU300_RELEASE_URL` and a one-off run work. **The panel's field writes that file** through one `mu300-update source`
+command: an account that may use the Update page's write access can change where the device takes releases from, and
+the page's read access is what shows the address in force.
+
+**A mirror that cannot be reached is not the end of an update**: it is said once, and that run carries on with
+GitHub. The setting stays as you left it, so the next run tries your mirror again. A mirror that *answers* with the
+wrong files is another matter - the release is then not installed. A mirror that answers and *stalls* counts as an
+answer too: the run keeps taking the files from it rather than moving to GitHub, which is usually the host this
+setting exists for.
+
+If the device is on a metered link, that fallback can be the expensive answer - the release would come over mobile
+data. So it only happens by itself for an **https mirror on a public name**. A plain-`http://` mirror, or one on a
+private address or a LAN-only name (`192.168.x.x`, `10.x.x.x`, `172.16-31.x.x`, `nas.lan`, `box.local`, a name
+without a dot), is usually a copy on your own network; when it is off, the update stops and says why instead of
+quietly taking the release from GitHub over the SIM. One line in the same file decides it for every mirror:
+
+```
+MU300_MIRROR_FALLBACK=0    # never fall back: an update your mirror cannot serve fails
+MU300_MIRROR_FALLBACK=1    # always fall back, LAN and http mirrors too
+```
+
 ## What an update keeps
 
 **Everything you added to the system, and everything you changed in it.** Up to v2026.10.27 an update kept a list
@@ -282,6 +326,38 @@ does not start any more, run the computer installer and choose `update`.
 
 **From v2026.10.14 or older** an update prints "could not arm the Linux slot for a trial", because the older
 `mu300-next-boot` does not know `--trial`. The fallback to Android after failed boots still works.
+
+## Backing up your settings
+
+An update keeps your settings, but a new installation, a second device or a broken card do not. `mu300-backup` (Ubuntu
+and OpenWrt; on OpenWrt with the control panel also **System > Backup of settings**, and `backup.export` /
+`backup.import` of `mu300-api` for the device manager) writes them into one file:
+
+```sh
+mu300-backup export --encrypt              # asks for a passphrase twice; ./mu300-backup-HOST-DATE.enc, 0600
+mu300-backup export -o /root/settings.json --with-password   # not encrypted, with the login password's hash
+mu300-backup show settings.enc             # where it comes from and what it holds (no secret)
+mu300-backup import settings.enc --dry-run # what would change
+mu300-backup import settings.enc           # change it
+```
+
+What it holds: the hotspot (name, password, band, channel, hidden, on/off), mobile data (APN, PDP type,
+authentication, user, password, data roaming), the SIM used at boot, the network locks (OpenWrt with the control
+panel), the VPN module's own profiles, subscriptions and settings and whether it is on, SMS forwarding (OpenWrt with
+the control panel), the LAN address, host name, time zone, SSH on/off, the login user's SSH keys, and with
+`--with-password` the hash of the login password.
+
+* **The file holds secrets.** It is written readable by root alone; with a passphrase (`--encrypt`,
+  `--passphrase-file FILE`) it is encrypted with AES-256 (openssl, PBKDF2 with 600000 rounds), and a file changed
+  afterwards is refused.
+* **Every value is checked first**, by the same rules as the setting itself (the hotspot's, the APN's, the lock
+  page's, the VPN module's); one refused value and nothing is changed. What is the same is left alone; nothing is
+  removed (no VPN profile, subscription or SSH key of the device).
+* **A file of another model** (an F50 backup on a U30 Air) is refused unless you add `--force`. A file from the other
+  system (Ubuntu to OpenWrt or back) gives what both have; the rest is listed as skipped. OpenWrt cannot read
+  Ubuntu's yescrypt password hash: leave the password out there (`--skip password`).
+* Subscriptions are fetched again when they are restored, so the device needs internet for them; VPN profiles that
+  came from a subscription come back with it.
 
 ## Do not
 

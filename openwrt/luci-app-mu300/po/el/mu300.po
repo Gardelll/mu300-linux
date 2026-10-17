@@ -40,6 +40,9 @@ msgstr "Διαχείριση συσκευής"
 msgid "Update"
 msgstr "Ενημέρωση"
 
+msgid "Backup of settings"
+msgstr "Αντίγραφο ασφαλείας ρυθμίσεων"
+
 msgid "Languages"
 msgstr "Γλώσσες"
 
@@ -319,6 +322,75 @@ msgstr "Το αίτημα απέτυχε"
 msgid "(empty)"
 msgstr "(κενό)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Φράση πρόσβασης (8 χαρακτήρες ή περισσότεροι)"
+
+msgid "The passphrase again"
+msgstr "Η φράση πρόσβασης ξανά"
+
+msgid "Download the backup"
+msgstr "Λήψη αντιγράφου"
+
+msgid "Back up the settings"
+msgstr "Αντίγραφο των ρυθμίσεων"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Ένα αρχείο με το hotspot, τα δεδομένα κινητής και το APN, τα κλειδώματα δικτύου, τα προφίλ και τις ρυθμίσεις VPN, την προώθηση SMS, τη διεύθυνση LAN, το όνομα κεντρικού υπολογιστή, τη ζώνη ώρας και τα κλειδιά SSH. Περιέχει κωδικούς: με φράση πρόσβασης κρυπτογραφείται, και μόνο αυτή η φράση το ανοίγει ξανά."
+
+msgid "Include the login password"
+msgstr "Να περιληφθεί ο κωδικός σύνδεσης"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Φράση πρόσβασης, αν το αρχείο είναι κρυπτογραφημένο"
+
+msgid "Show what would change"
+msgstr "Εμφάνιση του τι θα άλλαζε"
+
+msgid "Restore"
+msgstr "Επαναφορά"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Το αρχείο είναι μεγαλύτερο από 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Οι ρυθμίσεις του αρχείου αντικαθιστούν αυτές. Το hotspot, τα δεδομένα κινητής ή το LAN μπορεί να επανεκκινήσουν, και η σελίδα μπορεί να χάσει τη σύνδεση για λίγο."
+
+msgid "Restore from a backup"
+msgstr "Επαναφορά από αντίγραφο"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Κάθε τιμή του αρχείου ελέγχεται πρώτα· αν απορριφθεί μία, δεν αλλάζει τίποτα. Ό,τι είναι ίδιο μένει ως έχει, και κανένα προφίλ VPN, συνδρομή ή κλειδί SSH της συσκευής δεν αφαιρείται."
+
+msgid "Keep this device's login password"
+msgstr "Διατήρηση του κωδικού σύνδεσης της συσκευής"
+
+msgid "Take a file of another device model"
+msgstr "Αποδοχή αρχείου άλλου μοντέλου συσκευής"
+
+msgid "The two passphrases differ"
+msgstr "Οι δύο φράσεις διαφέρουν"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Η φράση πρόσβασης θέλει 8 χαρακτήρες ή περισσότερους"
+
+msgid "Saved (encrypted)"
+msgstr "Αποθηκεύτηκε (κρυπτογραφημένο)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Αποθηκεύτηκε. Το αρχείο δεν είναι κρυπτογραφημένο: περιέχει κωδικούς, φυλάξτε το με ασφάλεια."
+
+msgid "Choose a backup file first"
+msgstr "Επιλέξτε πρώτα ένα αρχείο αντιγράφου"
+
+msgid "Restoring…"
+msgstr "Επαναφορά…"
+
+msgid "Restored"
+msgstr "Επαναφέρθηκε"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Η επαναφορά δεν ολοκληρώθηκε: δείτε τις παραπάνω γραμμές"
+
 msgid "Loading…"
 msgstr "Φόρτωση…"
 
@@ -408,6 +480,111 @@ msgstr "Σημεία ορίου"
 
 msgid "Cooling devices"
 msgstr "Συσκευές ψύξης"
+
+msgid "Stress test started"
+msgstr "Η δοκιμή καταπόνησης ξεκίνησε"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Αποθηκεύτηκε: ισχύει από την επόμενη επανεκκίνηση"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Μετατόπιση τάσης CPU (ΠΕΙΡΑΜΑΤΙΚΟ)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Πειραματικό: η αλλαγή της τάσης της CPU μπορεί να κάνει τη συσκευή ασταθή, να αλλοιώσει τα δεδομένα σας και να προκαλέσει μόνιμη ζημιά στη συσκευή σας. Η χρήση γίνεται εξ ολοκλήρου με δική σας ευθύνη."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Η μετατόπιση τάσης CPU δεν είναι διαθέσιμη"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Δεν είναι διαθέσιμο με αυτόν τον πυρήνα (το διαθέτει ένας mainline πυρήνας αυτής της έκδοσης ή νεότερης)."
+
+msgid "Off: the stock voltages"
+msgstr "Ανενεργό: οι εργοστασιακές τάσεις"
+
+msgid "Changes at the next reboot"
+msgstr "Αλλάζει στην επόμενη επανεκκίνηση"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Δοκιμαστική εκκίνηση: διατηρείται μόλις αυτή η εκκίνηση λειτουργήσει 10 λεπτά"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Διατηρήθηκε: αυτή η μετατόπιση πέρασε τη δοκιμαστική εκκίνησή της"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "μια εκκίνηση με αυτήν έληξε χωρίς ομαλό τερματισμό λειτουργίας"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "η δοκιμαστική εκκίνησή της έληξε πριν από τα 10 λεπτά"
+
+msgid "invalid value"
+msgstr "μη έγκυρη τιμή"
+
+msgid "unknown SoC firmware"
+msgstr "άγνωστο υλικολογισμικό SoC"
+
+msgid "refused by the kernel"
+msgstr "απορρίφθηκε από τον πυρήνα"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "ο πυρήνας δεν μπόρεσε να ξεκινήσει την κλιμάκωση συχνότητας της CPU με αυτήν"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Μετατοπίσεις σε µV για τους τρεις τομείς CPU (πυρήνες CPU 0-3, 4-6 και 7), σε ακέραια βήματα. Μια νέα μετατόπιση ισχύει από την επόμενη επανεκκίνηση, δοκιμαστικά: διατηρείται μόλις εκείνη η εκκίνηση λειτουργήσει 10 λεπτά και απορρίπτεται (επιστροφή στο 0) αν μια εκκίνηση με αυτήν λήξει με κατάρρευση, επαναφορά από watchdog ή διακοπή ρεύματος."
+
+msgid "Running now (µV)"
+msgstr "Λειτουργεί τώρα (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Αποθηκευμένο για την επόμενη εκκίνηση (µV)"
+
+msgid "State"
+msgstr "Κατάσταση"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Αναιρέθηκε αυτόματα: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Το υλικολογισμικό SoC αυτής της συσκευής δεν είναι από εκείνα με γνωστή κωδικοποίηση τάσης: μόνο οι εργοστασιακές τάσεις είναι δυνατές."
+
+msgid "Domain"
+msgstr "Τομέας"
+
+msgid "Offset now (µV)"
+msgstr "Μετατόπιση τώρα (µV)"
+
+msgid "Highest step"
+msgstr "Υψηλότερο βήμα"
+
+msgid "New offset (µV)"
+msgstr "Νέα μετατόπιση (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Όρια: %d έως %d µV, σε βήματα των %d µV."
+
+msgid "Save for the next boot"
+msgstr "Αποθήκευση για την επόμενη εκκίνηση"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Κάθε μετατόπιση πρέπει να είναι πολλαπλάσιο των %d µV μεταξύ %d και %d."
+
+msgid "Type %s to confirm."
+msgstr "Πληκτρολογήστε %s για επιβεβαίωση."
+
+msgid "Back to the stock voltages"
+msgstr "Επιστροφή στις εργοστασιακές τάσεις"
+
+msgid "Type %s to confirm:"
+msgstr "Πληκτρολογήστε %s για επιβεβαίωση:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Εκτέλεση 10λεπτης δοκιμής καταπόνησης CPU"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Δοκιμάστε μια νέα μετατόπιση υπό φορτίο κατά τη δοκιμαστική εκκίνησή της. Η συσκευή μπορεί να καταρρεύσει αν η τάση είναι πολύ χαμηλή· η επόμενη εκκίνηση τότε λειτουργεί με τις εργοστασιακές τάσεις."
+
+msgid "A stress test is running."
+msgstr "Εκτελείται δοκιμή καταπόνησης."
 
 msgid "USB role"
 msgstr "Ρόλος USB"
@@ -1254,9 +1431,6 @@ msgstr "Κωδικός"
 
 msgid "Translated"
 msgstr "Μεταφρασμένο"
-
-msgid "State"
-msgstr "Κατάσταση"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Οι μεταφράσεις του ίδιου του LuCI προέρχονται από το OpenWrt. Οι μεταφράσεις αυτού του πίνακα εκτός των Τουρκικών και των Κινεζικών είναι αυτόματες (AI)· οι διορθώσεις είναι ευπρόσδεκτες."
@@ -2233,6 +2407,12 @@ msgstr "Ελέγχθηκε πριν από %s"
 
 msgid "Not checked yet"
 msgstr "Δεν έχει ελεγχθεί ακόμη"
+
+msgid "Mirror (release files)"
+msgstr "Καθρέφτης (αρχεία έκδοσης)"
+
+msgid "Leave empty for GitHub."
+msgstr "Αφήστε κενό για το GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Εγκατάσταση ξανά, μετά την ενημέρωση, των πακέτων που πρόσθεσα (η συσκευή πρέπει να είναι σε σύνδεση στην πρώτη εκκίνηση)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Άγνωστη λειτουργία τάσης CPU"
+
+msgid "Invalid CPU voltage request"
+msgstr "Μη έγκυρο αίτημα τάσης CPU"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Μη έγκυρη μετατόπιση τάσης CPU"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Πληκτρολογήστε τη λέξη επιβεβαίωσης για να εφαρμόσετε μετατόπιση τάσης"
+
+msgid "Invalid stress test length"
+msgstr "Μη έγκυρη διάρκεια δοκιμής καταπόνησης"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Ο προσαρμογέας πακέτων δεν έδωσε έγκυρη απάντηση"
 
@@ -3234,6 +3429,9 @@ msgstr "Άγνωστη λειτουργία ενημέρωσης"
 
 msgid "Invalid update request"
 msgstr "Μη έγκυρο αίτημα ενημέρωσης"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Το εργαλείο αντιγράφων δεν έδωσε έγκυρη απάντηση"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Δεν ήταν δυνατή η ανάγνωση της μετατόπισης τάσης CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Η μετατόπιση τάσης CPU απορρίφθηκε"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Δεν ήταν δυνατή η απενεργοποίηση της μετατόπισης τάσης CPU"
+
+msgid "The stress test could not be started"
+msgstr "Δεν ήταν δυνατή η εκκίνηση της δοκιμής καταπόνησης"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Αυτό το αρχείο είναι χωρίς υπογραφή: αυ�
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Αυτό το αρχείο είναι παλαιότερο από το εγκατεστημένο: αυτό χρειάζεται επιβεβαίωση"
+
+msgid "The release source was not changed"
+msgstr "Η πηγή έκδοσης δεν άλλαξε"

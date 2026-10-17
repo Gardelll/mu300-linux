@@ -40,6 +40,9 @@ msgstr "Управление на устройството"
 msgid "Update"
 msgstr "Обнови"
 
+msgid "Backup of settings"
+msgstr "Резервно копие на настройките"
+
 msgid "Languages"
 msgstr "Езици"
 
@@ -319,6 +322,75 @@ msgstr "Заявката е неуспешна"
 msgid "(empty)"
 msgstr "(празно)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Парола (поне 8 знака)"
+
+msgid "The passphrase again"
+msgstr "Паролата отново"
+
+msgid "Download the backup"
+msgstr "Изтегляне на копието"
+
+msgid "Back up the settings"
+msgstr "Архивиране на настройките"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Един файл с точката за достъп, мобилните данни и APN, мрежовите заключвания, VPN профилите и настройките, препращането на SMS, LAN адреса, името на хоста, часовата зона и SSH ключовете. Съдържа пароли: с парола се шифрова и само тази парола го отваря отново."
+
+msgid "Include the login password"
+msgstr "Включване на паролата за вход"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Парола, ако файлът е шифрован"
+
+msgid "Show what would change"
+msgstr "Показване какво би се променило"
+
+msgid "Restore"
+msgstr "Възстановяване"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Файлът е по-голям от 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Настройките от файла заменят тези. Точката за достъп, мобилните данни или LAN може да се рестартират и страницата може за момент да загуби връзка."
+
+msgid "Restore from a backup"
+msgstr "Възстановяване от копие"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Всяка стойност от файла първо се проверява; ако една бъде отхвърлена, нищо не се променя. Еднаквото остава непокътнато и не се премахва нито един VPN профил, абонамент или SSH ключ на устройството."
+
+msgid "Keep this device's login password"
+msgstr "Запазване на паролата за вход на устройството"
+
+msgid "Take a file of another device model"
+msgstr "Приемане на файл от друг модел устройство"
+
+msgid "The two passphrases differ"
+msgstr "Двете пароли се различават"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Паролата трябва да е поне 8 знака"
+
+msgid "Saved (encrypted)"
+msgstr "Запазено (шифровано)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Запазено. Файлът не е шифрован: съдържа пароли, пазете го на сигурно място."
+
+msgid "Choose a backup file first"
+msgstr "Първо изберете файл с копие"
+
+msgid "Restoring…"
+msgstr "Възстановяване…"
+
+msgid "Restored"
+msgstr "Възстановено"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Възстановяването не завърши: вижте редовете по-горе"
+
 msgid "Loading…"
 msgstr "Зареждане…"
 
@@ -408,6 +480,111 @@ msgstr "Прагови точки"
 
 msgid "Cooling devices"
 msgstr "Охлаждащи устройства"
+
+msgid "Stress test started"
+msgstr "Стрес тестът е стартиран"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Запазено: влиза в сила при следващото рестартиране"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Отместване на напрежението на CPU (ЕКСПЕРИМЕНТАЛНО)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Експериментално: промяната на напрежението на CPU може да направи устройството нестабилно, да повреди данните ви и трайно да повреди устройството ви. Използвате го изцяло на свой риск."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Отместването на напрежението на CPU не е налично"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Не е налично с това ядро (има го mainline ядро от това издание или по-ново)."
+
+msgid "Off: the stock voltages"
+msgstr "Изключено: фабричните напрежения"
+
+msgid "Changes at the next reboot"
+msgstr "Променя се при следващото рестартиране"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Пробно стартиране: запазва се, след като това стартиране работи 10 минути"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Запазено: това отместване премина пробното си стартиране"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "стартиране с него завърши без чисто изключване"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "пробното му стартиране завърши преди 10 минути"
+
+msgid "invalid value"
+msgstr "невалидна стойност"
+
+msgid "unknown SoC firmware"
+msgstr "неизвестен фърмуер на SoC"
+
+msgid "refused by the kernel"
+msgstr "отхвърлено от ядрото"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "ядрото не успя да стартира мащабирането на честотата на CPU с него"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Отмествания в µV за трите домейна на CPU (CPU ядра 0-3, 4-6 и 7), в цели стъпки. Новото отместване влиза в сила при следващото рестартиране, пробно: запазва се, след като това стартиране работи 10 минути, и се отхвърля (връща се на 0), ако стартиране с него завърши със срив, нулиране от watchdog или спиране на тока."
+
+msgid "Running now (µV)"
+msgstr "Работи сега (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Запазено за следващото стартиране (µV)"
+
+msgid "State"
+msgstr "Състояние"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Автоматично отменено: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Фърмуерът на SoC на това устройство не е от тези с известно кодиране на напрежението: възможни са само фабричните напрежения."
+
+msgid "Domain"
+msgstr "Домейн"
+
+msgid "Offset now (µV)"
+msgstr "Текущо отместване (µV)"
+
+msgid "Highest step"
+msgstr "Най-висока стъпка"
+
+msgid "New offset (µV)"
+msgstr "Ново отместване (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Граници: от %d до %d µV, на стъпки от %d µV."
+
+msgid "Save for the next boot"
+msgstr "Запази за следващото стартиране"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Всяко отместване трябва да е кратно на %d µV между %d и %d."
+
+msgid "Type %s to confirm."
+msgstr "Въведете %s за потвърждение."
+
+msgid "Back to the stock voltages"
+msgstr "Обратно към фабричните напрежения"
+
+msgid "Type %s to confirm:"
+msgstr "Въведете %s за потвърждение:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Пусни 10-минутен стрес тест на CPU"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Тествайте новото отместване под натоварване по време на пробното му стартиране. Устройството може да се срине, ако напрежението е твърде ниско; следващото стартиране тогава работи с фабричните напрежения."
+
+msgid "A stress test is running."
+msgstr "Тече стрес тест."
 
 msgid "USB role"
 msgstr "USB роля"
@@ -1254,9 +1431,6 @@ msgstr "Код"
 
 msgid "Translated"
 msgstr "Преведено"
-
-msgid "State"
-msgstr "Състояние"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Собствените преводи на LuCI идват от OpenWrt. Преводите на този панел, освен турския и китайския, са машинни (AI); корекциите са добре дошли."
@@ -2233,6 +2407,12 @@ msgstr "Проверено преди %s"
 
 msgid "Not checked yet"
 msgstr "Още не е проверено"
+
+msgid "Mirror (release files)"
+msgstr "Огледало (файлове за изданието)"
+
+msgid "Leave empty for GitHub."
+msgstr "Оставете празно за GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "След обновяването да се инсталират отново пакетите, които съм добавил (устройството трябва да е онлайн при първото стартиране)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Неизвестна операция с напрежението на CPU"
+
+msgid "Invalid CPU voltage request"
+msgstr "Невалидна заявка за напрежение на CPU"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Невалидно отместване на напрежението на CPU"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Въведете думата за потвърждение, за да приложите отместване на напрежението"
+
+msgid "Invalid stress test length"
+msgstr "Невалидна продължителност на стрес теста"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Адаптерът за пакети не върна валиден отговор"
 
@@ -3234,6 +3429,9 @@ msgstr "Непозната операция за обновяване"
 
 msgid "Invalid update request"
 msgstr "Невалидна заявка за обновяване"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Инструментът за архивиране не даде валиден отговор"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Отместването на напрежението на CPU не можа да бъде прочетено"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Отместването на напрежението на CPU беше отхвърлено"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Отместването на напрежението на CPU не можа да бъде изключено"
+
+msgid "The stress test could not be started"
+msgstr "Стрес тестът не можа да бъде стартиран"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Този файл е неподписан: това изисква по�
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Този файл е по-стар от инсталираното: това изисква потвърждение"
+
+msgid "The release source was not changed"
+msgstr "Източникът на изданието не беше променен"

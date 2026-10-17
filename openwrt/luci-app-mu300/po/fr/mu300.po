@@ -40,6 +40,9 @@ msgstr "Gestion de l'appareil"
 msgid "Update"
 msgstr "Mettre à jour"
 
+msgid "Backup of settings"
+msgstr "Sauvegarde des réglages"
+
 msgid "Languages"
 msgstr "Langues"
 
@@ -319,6 +322,75 @@ msgstr "Échec de la requête"
 msgid "(empty)"
 msgstr "(vide)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "Phrase secrète (8 caractères ou plus)"
+
+msgid "The passphrase again"
+msgstr "La phrase secrète à nouveau"
+
+msgid "Download the backup"
+msgstr "Télécharger la sauvegarde"
+
+msgid "Back up the settings"
+msgstr "Sauvegarder les réglages"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Un fichier avec le point d'accès, les données mobiles et l'APN, les verrouillages réseau, les profils et réglages VPN, le transfert de SMS, l'adresse LAN, le nom d'hôte, le fuseau horaire et les clés SSH. Il contient des mots de passe : avec une phrase secrète il est chiffré, et seule cette phrase secrète l'ouvre à nouveau."
+
+msgid "Include the login password"
+msgstr "Inclure le mot de passe de connexion"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Phrase secrète, si le fichier est chiffré"
+
+msgid "Show what would change"
+msgstr "Montrer ce qui changerait"
+
+msgid "Restore"
+msgstr "Restaurer"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Le fichier dépasse 4 Mio"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Les réglages du fichier remplacent ceux-ci. Le point d'accès, les données mobiles ou le LAN peuvent redémarrer, et cette page peut perdre sa connexion un instant."
+
+msgid "Restore from a backup"
+msgstr "Restaurer depuis une sauvegarde"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Chaque valeur du fichier est d'abord vérifiée ; si une seule est refusée, rien n'est modifié. Ce qui est identique reste tel quel, et aucun profil VPN, abonnement ou clé SSH de cet appareil n'est supprimé."
+
+msgid "Keep this device's login password"
+msgstr "Garder le mot de passe de connexion de cet appareil"
+
+msgid "Take a file of another device model"
+msgstr "Accepter un fichier d'un autre modèle d'appareil"
+
+msgid "The two passphrases differ"
+msgstr "Les deux phrases secrètes diffèrent"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "La phrase secrète doit avoir 8 caractères ou plus"
+
+msgid "Saved (encrypted)"
+msgstr "Enregistré (chiffré)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Enregistré. Le fichier n'est pas chiffré : il contient des mots de passe, conservez-le en lieu sûr."
+
+msgid "Choose a backup file first"
+msgstr "Choisissez d'abord un fichier de sauvegarde"
+
+msgid "Restoring…"
+msgstr "Restauration…"
+
+msgid "Restored"
+msgstr "Restauré"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "La restauration n'est pas terminée : voir les lignes ci-dessus"
+
 msgid "Loading…"
 msgstr "Chargement…"
 
@@ -408,6 +480,111 @@ msgstr "Points de déclenchement"
 
 msgid "Cooling devices"
 msgstr "Dispositifs de refroidissement"
+
+msgid "Stress test started"
+msgstr "Test de charge démarré"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Enregistré : prend effet au prochain redémarrage"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Décalage de tension CPU (EXPÉRIMENTAL)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Expérimental : modifier la tension du CPU peut rendre l'appareil instable, corrompre vos données et endommager définitivement votre appareil. Utilisation entièrement à vos risques et périls."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Décalage de tension CPU indisponible"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Non disponible avec ce noyau (un noyau mainline de cette version ou d'une version ultérieure le propose)."
+
+msgid "Off: the stock voltages"
+msgstr "Désactivé : tensions d'origine"
+
+msgid "Changes at the next reboot"
+msgstr "Change au prochain redémarrage"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Démarrage d'essai : conservé une fois que ce démarrage a tourné 10 minutes"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Conservé : ce décalage a réussi son démarrage d'essai"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "un démarrage avec ce décalage s'est terminé sans arrêt propre"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "son démarrage d'essai s'est terminé avant 10 minutes"
+
+msgid "invalid value"
+msgstr "valeur non valide"
+
+msgid "unknown SoC firmware"
+msgstr "firmware SoC inconnu"
+
+msgid "refused by the kernel"
+msgstr "refusé par le noyau"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "le noyau n'a pas pu lancer la gestion de fréquence du CPU avec ce décalage"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Décalages en µV pour les trois domaines CPU (cœurs 0-3, 4-6 et 7), par pas entiers. Un nouveau décalage prend effet au prochain redémarrage, à l'essai : il est conservé une fois que ce démarrage a tourné 10 minutes, et abandonné (retour à 0) si un démarrage avec lui se termine par un plantage, une réinitialisation par le watchdog ou une coupure de courant."
+
+msgid "Running now (µV)"
+msgstr "Actif maintenant (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Enregistré pour le prochain démarrage (µV)"
+
+msgid "State"
+msgstr "État"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Annulé automatiquement : %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Le firmware SoC de cet appareil ne fait pas partie de ceux dont l'encodage de tension est connu : seules les tensions d'origine sont possibles."
+
+msgid "Domain"
+msgstr "Domaine"
+
+msgid "Offset now (µV)"
+msgstr "Décalage actuel (µV)"
+
+msgid "Highest step"
+msgstr "Palier le plus haut"
+
+msgid "New offset (µV)"
+msgstr "Nouveau décalage (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Limites : %d à %d µV, par pas de %d µV."
+
+msgid "Save for the next boot"
+msgstr "Enregistrer pour le prochain démarrage"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Chaque décalage doit être un multiple de %d µV compris entre %d et %d."
+
+msgid "Type %s to confirm."
+msgstr "Saisissez %s pour confirmer."
+
+msgid "Back to the stock voltages"
+msgstr "Revenir aux tensions d'origine"
+
+msgid "Type %s to confirm:"
+msgstr "Saisissez %s pour confirmer :"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Lancer un test de charge CPU de 10 minutes"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Testez un nouveau décalage sous charge pendant son démarrage d'essai. L'appareil peut planter si la tension est trop basse ; le démarrage suivant utilise alors les tensions d'origine."
+
+msgid "A stress test is running."
+msgstr "Un test de charge est en cours."
 
 msgid "USB role"
 msgstr "Rôle USB"
@@ -1254,9 +1431,6 @@ msgstr "Code"
 
 msgid "Translated"
 msgstr "Traduit"
-
-msgid "State"
-msgstr "État"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Les traductions propres à LuCI proviennent d'OpenWrt. Les traductions de ce panneau, hors turc et chinois, sont des traductions automatiques (IA) ; les corrections sont les bienvenues."
@@ -2233,6 +2407,12 @@ msgstr "Vérifié il y a %s"
 
 msgid "Not checked yet"
 msgstr "Pas encore vérifié"
+
+msgid "Mirror (release files)"
+msgstr "Miroir (fichiers de version)"
+
+msgid "Leave empty for GitHub."
+msgstr "Laissez vide pour GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "Réinstaller après la mise à jour les paquets que j'ai ajoutés (l'appareil doit être en ligne au premier démarrage)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Opération de tension CPU inconnue"
+
+msgid "Invalid CPU voltage request"
+msgstr "Requête de tension CPU non valide"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Décalage de tension CPU non valide"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Saisissez le mot de confirmation pour appliquer un décalage de tension"
+
+msgid "Invalid stress test length"
+msgstr "Durée de test de charge non valide"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "L'adaptateur des paquets n'a pas donné de réponse valide"
 
@@ -3234,6 +3429,9 @@ msgstr "Opération de mise à jour inconnue"
 
 msgid "Invalid update request"
 msgstr "Demande de mise à jour invalide"
+
+msgid "The backup tool gave no valid reply"
+msgstr "L'outil de sauvegarde n'a pas donné de réponse valide"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Impossible de lire le décalage de tension CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Le décalage de tension CPU a été refusé"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Impossible de désactiver le décalage de tension CPU"
+
+msgid "The stress test could not be started"
+msgstr "Impossible de démarrer le test de charge"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "Ce fichier est non signé : une confirmation est nécessaire"
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "Ce fichier est plus ancien que la version installée : une confirmation est nécessaire"
+
+msgid "The release source was not changed"
+msgstr "La source de la version n’a pas été modifiée"

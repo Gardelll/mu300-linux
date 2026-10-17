@@ -40,6 +40,9 @@ msgstr "إدارة الجهاز"
 msgid "Update"
 msgstr "تحديث"
 
+msgid "Backup of settings"
+msgstr "نسخة احتياطية من الإعدادات"
+
 msgid "Languages"
 msgstr "اللغات"
 
@@ -319,6 +322,75 @@ msgstr "فشل الطلب"
 msgid "(empty)"
 msgstr "(فارغ)"
 
+msgid "Passphrase (8 characters or more)"
+msgstr "عبارة المرور (8 أحرف أو أكثر)"
+
+msgid "The passphrase again"
+msgstr "عبارة المرور مرة أخرى"
+
+msgid "Download the backup"
+msgstr "تنزيل النسخة الاحتياطية"
+
+msgid "Back up the settings"
+msgstr "نسخ الإعدادات احتياطيًا"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "ملف واحد فيه نقطة الاتصال وبيانات الجوال ونقطة الوصول APN وأقفال الشبكة وملفات VPN وإعداداتها وإعادة توجيه الرسائل وعنوان LAN واسم المضيف والمنطقة الزمنية ومفاتيح SSH. يحتوي على كلمات مرور: مع عبارة مرور يُشفَّر، ولا يفتحه مرة أخرى إلا تلك العبارة."
+
+msgid "Include the login password"
+msgstr "تضمين كلمة مرور تسجيل الدخول"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "عبارة المرور إذا كان الملف مشفرًا"
+
+msgid "Show what would change"
+msgstr "عرض ما سيتغير"
+
+msgid "Restore"
+msgstr "استعادة"
+
+msgid "The file is larger than 4 MiB"
+msgstr "الملف أكبر من 4 ميبيبايت"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "إعدادات الملف تحل محل هذه. قد تعيد نقطة الاتصال أو بيانات الجوال أو الشبكة المحلية التشغيل، وقد تفقد هذه الصفحة الاتصال للحظة."
+
+msgid "Restore from a backup"
+msgstr "الاستعادة من نسخة احتياطية"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "تُفحص كل قيمة في الملف أولًا؛ إذا رُفضت قيمة واحدة لا يتغير شيء. ما هو مطابق يبقى كما هو، ولا يُحذف أي ملف VPN أو اشتراك أو مفتاح SSH من هذا الجهاز."
+
+msgid "Keep this device's login password"
+msgstr "الإبقاء على كلمة مرور تسجيل الدخول لهذا الجهاز"
+
+msgid "Take a file of another device model"
+msgstr "قبول ملف من طراز جهاز آخر"
+
+msgid "The two passphrases differ"
+msgstr "عبارتا المرور مختلفتان"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "تحتاج عبارة المرور إلى 8 أحرف أو أكثر"
+
+msgid "Saved (encrypted)"
+msgstr "تم الحفظ (مشفر)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "تم الحفظ. الملف غير مشفر: يحتوي على كلمات مرور، احفظه في مكان آمن."
+
+msgid "Choose a backup file first"
+msgstr "اختر ملف نسخة احتياطية أولًا"
+
+msgid "Restoring…"
+msgstr "جارٍ الاستعادة…"
+
+msgid "Restored"
+msgstr "تمت الاستعادة"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "لم تكتمل الاستعادة: انظر الأسطر أعلاه"
+
 msgid "Loading…"
 msgstr "جارٍ التحميل…"
 
@@ -408,6 +480,111 @@ msgstr "نقاط العتبة"
 
 msgid "Cooling devices"
 msgstr "أجهزة التبريد"
+
+msgid "Stress test started"
+msgstr "بدأ اختبار الإجهاد"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "تم الحفظ: يسري عند إعادة التشغيل التالية"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "إزاحة جهد CPU (تجريبي)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "تجريبي: تغيير جهد CPU قد يجعل الجهاز غير مستقر، ويُتلف بياناتك، ويُلحق ضررًا دائمًا بجهازك. استخدمه على مسؤوليتك الخاصة بالكامل."
+
+msgid "CPU voltage offset unavailable"
+msgstr "إزاحة جهد CPU غير متاحة"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "غير متاح مع هذه النواة (تتضمنه نواة mainline من هذا الإصدار أو أحدث)."
+
+msgid "Off: the stock voltages"
+msgstr "معطّل: جهود المصنع"
+
+msgid "Changes at the next reboot"
+msgstr "يتغير عند إعادة التشغيل التالية"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "إقلاع تجريبي: يُعتمد بعد أن يعمل هذا الإقلاع 10 دقائق"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "معتمد: اجتازت هذه الإزاحة إقلاعها التجريبي"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "انتهى إقلاع بها دون إيقاف تشغيل سليم"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "انتهى إقلاعها التجريبي قبل مرور 10 دقائق"
+
+msgid "invalid value"
+msgstr "قيمة غير صالحة"
+
+msgid "unknown SoC firmware"
+msgstr "برنامج SoC ثابت غير معروف"
+
+msgid "refused by the kernel"
+msgstr "رفضته النواة"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "تعذّر على النواة بدء تحجيم تردد CPU بها"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "الإزاحات بوحدة µV لنطاقات CPU الثلاثة (الأنوية 0-3 و4-6 و7)، بخطوات كاملة. تسري الإزاحة الجديدة عند إعادة التشغيل التالية كتجربة: تُعتمد بعد أن يعمل ذلك الإقلاع 10 دقائق، وتُلغى (تعود إلى 0) إذا انتهى إقلاع بها بانهيار أو إعادة ضبط من watchdog أو انقطاع في الكهرباء."
+
+msgid "Running now (µV)"
+msgstr "يعمل الآن (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "محفوظ للإقلاع التالي (µV)"
+
+msgid "State"
+msgstr "الحالة"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "تم التراجع تلقائيًا: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "البرنامج الثابت لـ SoC في هذا الجهاز ليس من الأنواع المعروف ترميز الجهد فيها: لا يمكن إلا استخدام جهود المصنع."
+
+msgid "Domain"
+msgstr "النطاق"
+
+msgid "Offset now (µV)"
+msgstr "الإزاحة الآن (µV)"
+
+msgid "Highest step"
+msgstr "أعلى خطوة"
+
+msgid "New offset (µV)"
+msgstr "الإزاحة الجديدة (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "الحدود: من %d إلى %d µV، بخطوات قدرها %d µV."
+
+msgid "Save for the next boot"
+msgstr "حفظ للإقلاع التالي"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "يجب أن تكون كل إزاحة من مضاعفات %d µV بين %d و%d."
+
+msgid "Type %s to confirm."
+msgstr "اكتب %s للتأكيد."
+
+msgid "Back to the stock voltages"
+msgstr "العودة إلى جهود المصنع"
+
+msgid "Type %s to confirm:"
+msgstr "اكتب %s للتأكيد:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "تشغيل اختبار إجهاد CPU لمدة 10 دقائق"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "اختبر الإزاحة الجديدة تحت الحمل أثناء إقلاعها التجريبي. قد ينهار الجهاز إذا كان الجهد منخفضًا جدًا؛ عندها يعمل الإقلاع التالي بجهود المصنع."
+
+msgid "A stress test is running."
+msgstr "اختبار إجهاد قيد التشغيل."
 
 msgid "USB role"
 msgstr "دور USB"
@@ -1254,9 +1431,6 @@ msgstr "الرمز"
 
 msgid "Translated"
 msgstr "مترجَم"
-
-msgid "State"
-msgstr "الحالة"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "ترجمات LuCI نفسها مصدرها OpenWrt. ترجمات هذه اللوحة، باستثناء التركية والصينية، ترجمات آلية (بالذكاء الاصطناعي)؛ نرحب بالتصحيحات."
@@ -2233,6 +2407,12 @@ msgstr "تم التحقق قبل %s"
 
 msgid "Not checked yet"
 msgstr "لم يتم التحقق بعد"
+
+msgid "Mirror (release files)"
+msgstr "مرآة (ملفات الإصدار)"
+
+msgid "Leave empty for GitHub."
+msgstr "اتركه فارغًا لاستخدام GitHub."
 
 msgid "Install the packages I added again after the update (needs the device online at the first start)"
 msgstr "إعادة تثبيت الحزم التي أضفتها بعد التحديث (يحتاج الجهاز إلى الإنترنت عند أول تشغيل)"
@@ -3217,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "عملية جهد CPU غير معروفة"
+
+msgid "Invalid CPU voltage request"
+msgstr "طلب جهد CPU غير صالح"
+
+msgid "Invalid CPU voltage offset"
+msgstr "إزاحة جهد CPU غير صالحة"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "اكتب كلمة التأكيد لتطبيق إزاحة الجهد"
+
+msgid "Invalid stress test length"
+msgstr "مدة اختبار الإجهاد غير صالحة"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "لم يُرجع محوّل الحزم ردًا صالحًا"
 
@@ -3234,6 +3429,9 @@ msgstr "عملية تحديث غير معروفة"
 
 msgid "Invalid update request"
 msgstr "طلب تحديث غير صالح"
+
+msgid "The backup tool gave no valid reply"
+msgstr "لم تعطِ أداة النسخ الاحتياطي ردًا صالحًا"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
@@ -3433,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "تعذّرت قراءة إزاحة جهد CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "رُفضت إزاحة جهد CPU"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "تعذّر إيقاف إزاحة جهد CPU"
+
+msgid "The stress test could not be started"
+msgstr "تعذّر بدء اختبار الإجهاد"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
@@ -3685,3 +3895,6 @@ msgstr "هذا الملف غير موقَّع: هذا يحتاج إلى تأكي
 
 msgid "This file is older than what is installed: that needs confirmation"
 msgstr "هذا الملف أقدم من المثبت: هذا يحتاج إلى تأكيد"
+
+msgid "The release source was not changed"
+msgstr "لم يتم تغيير مصدر الإصدار"
