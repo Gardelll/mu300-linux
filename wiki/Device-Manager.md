@@ -43,7 +43,8 @@ the buttons' rules itself: it checks everything the page asks for, and it never 
   network: closing the page or pulling the cable does not stop it. Connect again and the page shows where it is.
 * **adb "Keys only"** adds this browser's key first, so the page keeps working. If you later clear the site's data in
   the browser, the key is gone: run `sudo mu300-usb adb auth open` over SSH to get back in.
-* **WPA3** is not offered: the Wi-Fi chip needs a hand-built hostapd for it ([Wi-Fi Hotspot and Client](Wi-Fi-Hotspot-and-Client)).
+* **WPA3** is not offered: it is disabled on this Wi-Fi chip for security, the hotspot is WPA2-PSK only. A hotspot
+  still set to WPA3 is switched to WPA2 with its password when you save ([Wi-Fi Hotspot and Client](Wi-Fi-Hotspot-and-Client)).
 
 For programs: the device side is `mu300-api`, documented in
 [docs/ADB-INTERFACE.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/ADB-INTERFACE.md).

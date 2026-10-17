@@ -1,10 +1,14 @@
 # U30 Air SAE: remaining key-handoff work
 
+> **The offload is disabled (2026-10-17).** The opt-in this page was written for was removed in every layer
+> because its PMK record cannot be told from one a client sends ([U30AIR-SAE.md](U30AIR-SAE.md), FINDINGS 80):
+> the hostapd patch, its SDK recipe and the fallback guard are gone, and the driver now drops the record and
+> refuses the vendor command. What follows is what bringing WPA3 back would take. Where it names the SDK helper,
+> the parser or the existing opt-in, that code is in git history (as of commit `2e5cf929`), not in the tree.
+
 This is an implementation handoff for the blocking finding in
 [PR #74's device review](https://github.com/dikeckaan/mu300-linux/pull/74#issuecomment-6106003178).
 It describes work still needed, not an implemented or validated firmware API.
-The existing opt-in SAE integration remains in the branch for review. The
-logging/configuration fixes can be reviewed independently.
 
 ## What exists and what remains unproven
 
