@@ -10,6 +10,7 @@
 * [Wi-Fi Hotspot and Client](Wi-Fi-Hotspot-and-Client)
 * [SMS](SMS)
 * [VPN](VPN)
+* [Docker](Docker)
 * [Control Panel (LuCI)](Control-Panel-(LuCI))
 * [Device Manager](Device-Manager)
 * [CPU Voltage Offset (experimental)](CPU-Voltage-Offset)

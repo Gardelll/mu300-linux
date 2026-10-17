@@ -97,6 +97,7 @@
 <li><a href="#battery">电池、电源和指示灯</a></li>
 <li><a href="#u30air">U30 Air 的额外功能</a></li>
 <li><a href="#panels">网页面板、浏览器里的终端、adb</a></li>
+<li><a href="#docker">Docker</a></li>
 <li><a href="#more">蓝牙、GPU、KVM、语言</a></li>
 <li><a href="#limits">不能用的东西</a></li>
 </ol>
@@ -275,6 +276,21 @@ sudo mu300-extra install panel --from mu300-extra-panel-offline.tar.gz   <span c
 <p><strong>对 Linux 用 adb。</strong>从 v2026.10.20 起，Linux 也能像 Android 一样通过 USB 线提供 <code>adb shell</code>、<code>push</code>、<code>pull</code> 和 <code>forward</code>。它<strong>默认关闭</strong>，只有你授权过密钥的电脑才能进来；持有授权密钥的任何人都会得到 root shell，所以只授权你自己的电脑。安装程序会问要不要为它所在的电脑打开。</p>
 <pre><code>sudo mu300-usb adb key adbkey.pub       <span class="c"># 电脑上的 ~/.android/adbkey.pub，复制到设备上</span>
 sudo mu300-usb adb on                   <span class="c"># 关闭：sudo mu300-usb adb off</span></code></pre>
+</section>
+
+<section id="docker">
+<h2>Docker</h2>
+<p><strong>Ubuntu</strong>（24.04 和 26.04）自带 Docker 29 和 compose（Ubuntu 的 <code>docker.io</code> 和
+<code>docker-compose-v2</code>）；用户 <code>ubuntu</code> 在 <code>docker</code> 组中。引擎不在开机时启动，而是在第一条
+<code>docker</code> 命令时启动（约占 165 MB 内存）；<code>sudo systemctl enable docker</code> 让它每次开机启动。
+<code>docker</code> 组等同于 root：只把信任的账户放进去。</p>
+<p><strong>OpenWrt</strong> 已为 Docker 准备好，但没有预装：<code>apk add dockerd docker docker-compose</code>
+（控制面板系统上再加 <code>luci-app-dockerman</code>），然后 <code>/etc/init.d/dockerd start</code>。这 190 MB
+会让 OpenWrt 所装的最小区域没有空间再更新。</p>
+<p>镜像和容器放在系统旁边的 <code>/mnt/mu300-disk/docker/&lt;系统&gt;</code> 中：更新和回滚既不复制也不丢失它们。Docker
+使用 nftables 后端；容器可以上网，发布的端口可从热点和 USB 客户端访问，不能从移动网络访问；容器无法连接设备本身的服务（SSH、网页面板）。三个内核都可用。</p>
+<pre><code>docker run --rm hello-world
+docker compose up -d</code></pre>
 </section>
 
 <section id="more">
