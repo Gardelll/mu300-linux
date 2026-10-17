@@ -11081,6 +11081,7 @@ Then boot_b written back (ca76e081... read back), Android's e2fsck -fy on the re
 **Not measured**: the vendor 5.4 kernel and a card or GPT-partition root on a device (the same function, called
 before those mounts; e2fsck is a static program and does not care which kernel runs it); a filesystem with real
 damage on a device (the image test in CI repairs only the flag; e2fsck's repairs are its own).
+
 ### 183. The Ubuntu web panel (Cockpit) complete: every page through mu300-api, and a page Cockpit can show without root
 
 The owner opened Cockpit's MU300 page for the first time and found no VPN, and little else. Three causes, seen on F50-B
