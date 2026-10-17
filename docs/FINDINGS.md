@@ -8862,10 +8862,26 @@ tool (reset, then the file's locks) and the real forwarding adapter (refusing an
 the API methods and the job. In none of them a secret in an argument list, a job file or what is printed.
 `tests/test_sms_forward.py`: the adapter's check mode.
 
-**On a device (to do):** export and import on an F50 with Ubuntu and on a U30 Air with openwrt-luci (the VPN on, a
-subscription, locks); an Ubuntu file on OpenWrt; the panel's page (download, preview, restore while connected over the
-hotspot whose password changes); the size limit through rpcd/ubus (about 1 MiB for one message) with a large VPN
-configuration.
+**On a device (2026-10-17, F50-B Ubuntu 24.04 7.2.11, F50-C plain OpenWrt 6.18.57; test builds of this branch with
+the other open PRs).**
+
+* **OpenWrt refused every file, its own too:** `not a valid backup: a value of the wrong kind`. OpenWrt's jq (1.8.1)
+  is built without Oniguruma, so `test`, `capture` and `gsub` raise "jq was compiled without ONIGURUMA regex library"
+  and the schema's `try` turned that into a refusal; the SMS-forwarding export (openwrt-luci) used `capture`/`gsub`
+  too. The program now uses no regular expression in jq: characters are checked by code point (`l` refuses C0, DEL
+  and C1 as `[[:cntrl:]]` did; `word`, `optkey`, `lowalnum` stand for the three anchored patterns), and the
+  forwarding file is split at its first `=`. `OpenWrtJqWithoutRegex` / `LuciJqWithoutRegex` run the OpenWrt and panel
+  tests through a jq that refuses any program using them; both failed before the change.
+* **Not on PATH:** `mu300-backup export` said "not found" on Ubuntu; it is in `path-commands` now.
+* **Ubuntu:** `export --encrypt` (0600, the `MU300-BACKUP-ENCRYPTED` header), `show`, `import --dry-run` ("nothing to
+  change"); the SSID changed by hand and the APN through `mu300-api data.set`, then `import`: both back, the hotspot
+  and mobile data came back up (the restored hotspot.conf differs only in the order of its lines).
+* **OpenWrt (with the fix):** export, `show`, a dry run of its own file ("nothing to change"); the F50-B file,
+  encrypted, taken with "from ubuntu, taken on openwrt: what both systems have" (hotspot, LAN address); a file with
+  the login hash: F50-B's is `$6$`, which musl takes ("login password: changes"; the yescrypt refusal stays a unit
+  test); the SSID changed in uci and restored by `import`, WAN still up.
+* **Not run:** the panel's page (plain OpenWrt has none; the U30 Air is another agent's), the VPN and lock sections,
+  the size limit through rpcd/ubus.
 
 ### 156. The release smoke test: tools/smoke.py
 
