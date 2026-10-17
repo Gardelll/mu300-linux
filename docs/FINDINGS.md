@@ -10762,6 +10762,13 @@ Two more things filled the region over time: each kernel release a bundle brough
   go, and so does the bundle it downloaded when the step did not finish (`MU300_KERNEL_BUNDLE`, the caller's file,
   never). Only `SHA256SUMS` and its tag stay in `.mu300-update`, as for any run.
 
+**A system the same run replaced** (found on F50-B with the above, fixed right after): Ubuntu's sets come from the
+bundles and are never carried over by a system update, so after `apply` replaced Ubuntu and then the kernel, the new
+system had no set for the image in the slot and `prev.modules` kept none: `rollback-boot` would have brought that
+image back without its modules (the same before this change). The kernel step now gives the new system the slot
+image's set from the previous system kept beside it (`<os>.old`, which ran with that image), as second names
+(`kernel_set_from_old`), before it keeps anything.
+
 Hard links between the old and the new set (as §131 does for the systems' files) were measured and left out: two builds
 of 6.18.57 share 31 of 2946 module files byte for byte.
 
