@@ -481,6 +481,111 @@ msgstr "Puncte de prag"
 msgid "Cooling devices"
 msgstr "Dispozitive de răcire"
 
+msgid "Stress test started"
+msgstr "Test de stres pornit"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Salvat: intră în vigoare la următoarea repornire"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Decalaj de tensiune CPU (EXPERIMENTAL)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Experimental: modificarea tensiunii CPU poate face dispozitivul instabil, vă poate corupe datele și vă poate deteriora permanent dispozitivul. Utilizarea este în întregime pe propriul dvs. risc."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Decalajul de tensiune CPU nu este disponibil"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Indisponibil cu acest kernel (un kernel mainline din această versiune sau mai nouă îl are)."
+
+msgid "Off: the stock voltages"
+msgstr "Oprit: tensiunile din fabrică"
+
+msgid "Changes at the next reboot"
+msgstr "Se schimbă la următoarea repornire"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Pornire de probă: păstrat după ce această pornire funcționează 10 minute"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Păstrat: acest decalaj a trecut de pornirea de probă"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "o pornire cu el s-a încheiat fără o oprire curată"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "pornirea sa de probă s-a încheiat înainte de 10 minute"
+
+msgid "invalid value"
+msgstr "valoare nevalidă"
+
+msgid "unknown SoC firmware"
+msgstr "firmware SoC necunoscut"
+
+msgid "refused by the kernel"
+msgstr "refuzat de kernel"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "kernelul nu a putut porni scalarea frecvenței CPU cu el"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Decalaje în µV pentru cele trei domenii CPU (nucleele 0-3, 4-6 și 7), în pași întregi. Un decalaj nou intră în vigoare la următoarea repornire, de probă: este păstrat după ce acea pornire funcționează 10 minute și abandonat (revine la 0) dacă o pornire cu el se termină printr-o blocare, o resetare de watchdog sau o pană de curent."
+
+msgid "Running now (µV)"
+msgstr "Rulează acum (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Salvat pentru următoarea pornire (µV)"
+
+msgid "State"
+msgstr "Stare"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Retras automat: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Firmware-ul SoC al acestui dispozitiv nu este unul a cărui codificare a tensiunii este cunoscută: sunt posibile doar tensiunile din fabrică."
+
+msgid "Domain"
+msgstr "Domeniu"
+
+msgid "Offset now (µV)"
+msgstr "Decalaj actual (µV)"
+
+msgid "Highest step"
+msgstr "Treapta cea mai înaltă"
+
+msgid "New offset (µV)"
+msgstr "Decalaj nou (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Limite: între %d și %d µV, în pași de %d µV."
+
+msgid "Save for the next boot"
+msgstr "Salvează pentru următoarea pornire"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Fiecare decalaj trebuie să fie un multiplu de %d µV între %d și %d."
+
+msgid "Type %s to confirm."
+msgstr "Tastați %s pentru a confirma."
+
+msgid "Back to the stock voltages"
+msgstr "Înapoi la tensiunile din fabrică"
+
+msgid "Type %s to confirm:"
+msgstr "Tastați %s pentru a confirma:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Rulează un test de stres CPU de 10 minute"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Testați un decalaj nou sub sarcină în timpul pornirii sale de probă. Dispozitivul se poate bloca dacă tensiunea este prea mică; următoarea pornire rulează atunci cu tensiunile din fabrică."
+
+msgid "A stress test is running."
+msgstr "Rulează un test de stres."
+
 msgid "USB role"
 msgstr "Rol USB"
 
@@ -1326,9 +1431,6 @@ msgstr "Cod"
 
 msgid "Translated"
 msgstr "Tradus"
-
-msgid "State"
-msgstr "Stare"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Traducerile proprii ale LuCI provin din OpenWrt. Traducerile acestui panou, cu excepția turcei și chinezei, sunt traduceri automate (AI); corecturile sunt binevenite."
@@ -3295,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Operație de tensiune CPU necunoscută"
+
+msgid "Invalid CPU voltage request"
+msgstr "Cerere de tensiune CPU nevalidă"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Decalaj de tensiune CPU nevalid"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Tastați cuvântul de confirmare pentru a aplica un decalaj de tensiune"
+
+msgid "Invalid stress test length"
+msgstr "Durată nevalidă a testului de stres"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "Adaptorul de pachete nu a dat un răspuns valid"
 
@@ -3514,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Decalajul de tensiune CPU nu a putut fi citit"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Decalajul de tensiune CPU a fost refuzat"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Decalajul de tensiune CPU nu a putut fi dezactivat"
+
+msgid "The stress test could not be started"
+msgstr "Testul de stres nu a putut fi pornit"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

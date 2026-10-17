@@ -450,6 +450,7 @@ the archive once online). `mu300-panel status` says where it is.
 | Watch temperatures, CPU, RAM, network speed | `mu300-toolkit top` |
 | Make it faster, or cooler and quieter | `sudo mu300-toolkit profile performance` (also `eco`, `balanced`) |
 | Test stability under load | `sudo mu300-toolkit stress all 10` |
+| Move the CPU voltage a little (EXPERIMENTAL, can damage the device for good) | `sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL`; see [CPU voltage offset](#cpu-voltage-offset-experimental) first |
 | Check the mobile connection | `sudo mobile-data status` |
 | Set the APN | Ubuntu: `/etc/mu300/mobile-data.conf` (`MU300_APN`, `MU300_PDP_TYPE`). OpenWrt: LuCI → Network → Interfaces → wan, or `uci set network.wan.apn='…'; uci commit network; ifup wan`. Leave it empty to keep the context the SIM defines, which is what most carriers expect |
 | No mobile data while roaming | `sudo mobile-data roaming off` (`on` allows it again, the default; `sudo mobile-data roaming` shows the setting, the network and whether data is held back). Ubuntu: `MU300_DATA_ROAMING=0` in `/etc/mu300/mobile-data.conf`; OpenWrt: `network.wan.roaming` (`roaming_internal` for the other SIM), the panel's dashboard or LuCI → Network → Interfaces → wan. SMS and calls are not affected. Some SIMs report roaming at home (an MVNO, national roaming): those need it on (FINDINGS 120) |
@@ -474,6 +475,34 @@ the archive once online). `mu300-panel status` says where it is.
 | Language of the web interface (OpenWrt) | System -> System -> Language and Style; more languages: see Languages below |
 | Find out which LED is which | `sudo mu300-led test` |
 | `adb shell`, `adb push`/`pull`, `adb forward` to Linux from a computer, as with Android | on by default, for every computer (a root shell without a password for anyone with a cable); only your own computers: `sudo mu300-usb adb key adbkey.pub`, then `sudo mu300-usb adb auth keys`; not at all: `sudo mu300-usb adb off`; see [adb to Linux](#adb-to-linux) |
+
+### CPU voltage offset (EXPERIMENTAL)
+
+> **EXPERIMENTAL: this can PERMANENTLY DAMAGE your device. You use it entirely at your own risk.** Changing the CPU
+> voltage can make the device unstable, corrupt your data or break the hardware for good, and nobody can repair or
+> replace a device damaged this way. It is off by default; if you are not sure, leave it off.
+
+On the mainline kernels (6.18, 7.2; not 5.4) the CPU voltage can be moved per core cluster, domains 0, 1, 2 = CPUs
+0-3, 4-6, 7: from -25 mV to +12.5 mV in steps of 3.125 mV. The SoC firmware applies it once per boot, so a new value
+takes effect at the next reboot, as **one trial boot**: it is kept once that boot has been up 10 minutes, and it is
+dropped (back to 0, the setting cleared) by any boot with it that ends in a crash, a watchdog reset or a power cut,
+and by a trial boot that ends before its 10 minutes. It is refused on SoC firmware whose encoding is not known (only
+the F50's SML build is known; the U30 Air's not yet), and a raise needs the CPU regulator's maximum from the device
+tree.
+
+```sh
+sudo mu300-cpu voltage status                                     # what runs, what is asked for, the voltage table
+sudo mu300-cpu voltage set -6250,-3125,0 --confirm EXPERIMENTAL   # uV for domains 0, 1, 2
+sudo mu300-cpu voltage stress 10                                  # test it under load during the trial boot
+sudo mu300-cpu voltage off                                        # back to the stock voltages at the next boot
+```
+
+The same with the same warning, each asking you to type `EXPERIMENTAL`: OpenWrt's control panel (System > CPU), the
+Ubuntu panel's Power page and `sudo mu300-toolkit` (Performance). If Linux no longer comes up, the device falls back
+to Android after the failed boots in a row (`mu300-next-boot attempts`, above); deleting `.mu300/cpu-voltage` on
+the Linux disk turns the offset off. The firmware encoding is kano's work ([kanoqwq](https://github.com/kanoqwq));
+how it is applied and why these limits: [docs/FINDINGS.md](docs/FINDINGS.md) section 133, and the wiki page
+[CPU Voltage Offset](https://github.com/dikeckaan/mu300-linux/wiki/CPU-Voltage-Offset).
 
 ### adb to Linux
 

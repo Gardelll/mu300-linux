@@ -481,6 +481,111 @@ msgstr "Puntos de disparo"
 msgid "Cooling devices"
 msgstr "Dispositivos de refrigeración"
 
+msgid "Stress test started"
+msgstr "Prueba de estrés iniciada"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Guardado: se aplica en el próximo reinicio"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Desplazamiento de voltaje de la CPU (EXPERIMENTAL)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Experimental: cambiar el voltaje de la CPU puede volver inestable el dispositivo, corromper sus datos y dañar su dispositivo de forma permanente. Úselo totalmente bajo su propio riesgo."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Desplazamiento de voltaje de la CPU no disponible"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "No disponible con este kernel (lo incluye un kernel mainline de esta versión o posterior)."
+
+msgid "Off: the stock voltages"
+msgstr "Desactivado: voltajes de fábrica"
+
+msgid "Changes at the next reboot"
+msgstr "Cambia en el próximo reinicio"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Arranque de prueba: se conserva cuando este arranque lleve 10 minutos en marcha"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Conservado: este desplazamiento superó su arranque de prueba"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "un arranque con él terminó sin un apagado limpio"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "su arranque de prueba terminó antes de 10 minutos"
+
+msgid "invalid value"
+msgstr "valor no válido"
+
+msgid "unknown SoC firmware"
+msgstr "firmware del SoC desconocido"
+
+msgid "refused by the kernel"
+msgstr "rechazado por el kernel"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "el kernel no pudo iniciar el escalado de la CPU con él"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Desplazamientos en µV para los tres dominios de CPU (núcleos 0-3, 4-6 y 7), en pasos enteros. Un nuevo desplazamiento se aplica en el próximo reinicio, a prueba: se conserva cuando ese arranque lleve 10 minutos en marcha, y se descarta (vuelve a 0) si un arranque con él termina en un bloqueo, un reinicio del watchdog o un corte de corriente."
+
+msgid "Running now (µV)"
+msgstr "En uso ahora (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Guardado para el próximo arranque (µV)"
+
+msgid "State"
+msgstr "Estado"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Revertido automáticamente: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "El firmware del SoC de este dispositivo no es uno cuya codificación de voltaje se conozca: solo son posibles los voltajes de fábrica."
+
+msgid "Domain"
+msgstr "Dominio"
+
+msgid "Offset now (µV)"
+msgstr "Desplazamiento actual (µV)"
+
+msgid "Highest step"
+msgstr "Paso más alto"
+
+msgid "New offset (µV)"
+msgstr "Nuevo desplazamiento (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Límites: de %d a %d µV, en pasos de %d µV."
+
+msgid "Save for the next boot"
+msgstr "Guardar para el próximo arranque"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Cada desplazamiento debe ser un múltiplo de %d µV entre %d y %d."
+
+msgid "Type %s to confirm."
+msgstr "Escriba %s para confirmar."
+
+msgid "Back to the stock voltages"
+msgstr "Volver a los voltajes de fábrica"
+
+msgid "Type %s to confirm:"
+msgstr "Escriba %s para confirmar:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Ejecutar una prueba de estrés de la CPU de 10 minutos"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Pruebe un nuevo desplazamiento bajo carga durante su arranque de prueba. El dispositivo puede bloquearse si el voltaje es demasiado bajo; el siguiente arranque usará entonces los voltajes de fábrica."
+
+msgid "A stress test is running."
+msgstr "Hay una prueba de estrés en curso."
+
 msgid "USB role"
 msgstr "Rol USB"
 
@@ -1326,9 +1431,6 @@ msgstr "Código"
 
 msgid "Translated"
 msgstr "Traducido"
-
-msgid "State"
-msgstr "Estado"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Las traducciones propias de LuCI provienen de OpenWrt. Las traducciones de este panel, salvo el turco y el chino, son traducciones automáticas (IA); se agradecen las correcciones."
@@ -3295,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Operación de voltaje de la CPU desconocida"
+
+msgid "Invalid CPU voltage request"
+msgstr "Solicitud de voltaje de la CPU no válida"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Desplazamiento de voltaje de la CPU no válido"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Escriba la palabra de confirmación para aplicar un desplazamiento de voltaje"
+
+msgid "Invalid stress test length"
+msgstr "Duración de la prueba de estrés no válida"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "El adaptador de paquetes no dio una respuesta válida"
 
@@ -3514,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "No se pudo leer el desplazamiento de voltaje de la CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "Se rechazó el desplazamiento de voltaje de la CPU"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "No se pudo desactivar el desplazamiento de voltaje de la CPU"
+
+msgid "The stress test could not be started"
+msgstr "No se pudo iniciar la prueba de estrés"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

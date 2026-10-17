@@ -481,6 +481,111 @@ msgstr "Punti di soglia"
 msgid "Cooling devices"
 msgstr "Dispositivi di raffreddamento"
 
+msgid "Stress test started"
+msgstr "Stress test avviato"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "Salvato: avrà effetto al prossimo riavvio"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "Offset di tensione della CPU (SPERIMENTALE)"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "Sperimentale: modificare la tensione della CPU può rendere il dispositivo instabile, corrompere i tuoi dati e danneggiare in modo permanente il tuo dispositivo. Usalo interamente a tuo rischio."
+
+msgid "CPU voltage offset unavailable"
+msgstr "Offset di tensione della CPU non disponibile"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "Non disponibile con questo kernel (lo include un kernel mainline di questa release o successiva)."
+
+msgid "Off: the stock voltages"
+msgstr "Disattivato: tensioni di fabbrica"
+
+msgid "Changes at the next reboot"
+msgstr "Cambia al prossimo riavvio"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "Avvio di prova: mantenuto quando questo avvio resta attivo per 10 minuti"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "Mantenuto: questo offset ha superato l'avvio di prova"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "un avvio con questo offset è terminato senza uno spegnimento pulito"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "il suo avvio di prova è terminato prima di 10 minuti"
+
+msgid "invalid value"
+msgstr "valore non valido"
+
+msgid "unknown SoC firmware"
+msgstr "firmware del SoC sconosciuto"
+
+msgid "refused by the kernel"
+msgstr "rifiutato dal kernel"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "il kernel non è riuscito ad avviare lo scaling della CPU con questo offset"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "Offset in µV per i tre domini della CPU (core 0-3, 4-6 e 7), in passi interi. Un nuovo offset ha effetto al prossimo riavvio, in prova: viene mantenuto quando quell'avvio resta attivo per 10 minuti, e scartato (torna a 0) se un avvio con esso termina con un crash, un reset del watchdog o un'interruzione di corrente."
+
+msgid "Running now (µV)"
+msgstr "In uso ora (µV)"
+
+msgid "Saved for the next boot (µV)"
+msgstr "Salvato per il prossimo avvio (µV)"
+
+msgid "State"
+msgstr "Stato"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "Annullato automaticamente: %s µV (%s)"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "Il firmware del SoC di questo dispositivo non è tra quelli con una codifica della tensione nota: sono possibili solo le tensioni di fabbrica."
+
+msgid "Domain"
+msgstr "Dominio"
+
+msgid "Offset now (µV)"
+msgstr "Offset attuale (µV)"
+
+msgid "Highest step"
+msgstr "Passo più alto"
+
+msgid "New offset (µV)"
+msgstr "Nuovo offset (µV)"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "Limiti: da %d a %d µV, a passi di %d µV."
+
+msgid "Save for the next boot"
+msgstr "Salva per il prossimo avvio"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "Ogni offset deve essere un multiplo di %d µV compreso tra %d e %d."
+
+msgid "Type %s to confirm."
+msgstr "Digita %s per confermare."
+
+msgid "Back to the stock voltages"
+msgstr "Torna alle tensioni di fabbrica"
+
+msgid "Type %s to confirm:"
+msgstr "Digita %s per confermare:"
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "Esegui uno stress test della CPU di 10 minuti"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "Testa un nuovo offset sotto carico durante il suo avvio di prova. Il dispositivo può andare in crash se la tensione è troppo bassa; l'avvio successivo usa allora le tensioni di fabbrica."
+
+msgid "A stress test is running."
+msgstr "È in corso uno stress test."
+
 msgid "USB role"
 msgstr "Ruolo USB"
 
@@ -1326,9 +1431,6 @@ msgstr "Codice"
 
 msgid "Translated"
 msgstr "Tradotto"
-
-msgid "State"
-msgstr "Stato"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "Le traduzioni di LuCI provengono da OpenWrt. Le traduzioni di questo pannello, tranne turco e cinese, sono traduzioni automatiche (IA); le correzioni sono benvenute."
@@ -3295,6 +3397,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "Operazione di tensione della CPU sconosciuta"
+
+msgid "Invalid CPU voltage request"
+msgstr "Richiesta di tensione della CPU non valida"
+
+msgid "Invalid CPU voltage offset"
+msgstr "Offset di tensione della CPU non valido"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "Digita la parola di conferma per applicare un offset di tensione"
+
+msgid "Invalid stress test length"
+msgstr "Durata dello stress test non valida"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "L'adattatore dei pacchetti non ha dato una risposta valida"
 
@@ -3514,6 +3631,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "Impossibile leggere l'offset di tensione della CPU"
+
+msgid "The CPU voltage offset was refused"
+msgstr "L'offset di tensione della CPU è stato rifiutato"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "Impossibile disattivare l'offset di tensione della CPU"
+
+msgid "The stress test could not be started"
+msgstr "Impossibile avviare lo stress test"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"

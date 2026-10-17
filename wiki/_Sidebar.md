@@ -13,6 +13,7 @@
 * [Docker](Docker)
 * [Control Panel (LuCI)](Control-Panel-(LuCI))
 * [Device Manager](Device-Manager)
+* [CPU Voltage Offset (experimental)](CPU-Voltage-Offset)
 
 **Keeping it running**
 * [Updating](Updating)

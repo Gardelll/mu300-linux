@@ -481,6 +481,111 @@ msgstr "觸發點"
 msgid "Cooling devices"
 msgstr "冷卻裝置"
 
+msgid "Stress test started"
+msgstr "壓力測試已開始"
+
+msgid "Saved: it takes effect at the next reboot"
+msgstr "已儲存：將在下次重新開機時生效"
+
+msgid "CPU voltage offset (EXPERIMENTAL)"
+msgstr "CPU 電壓偏移（實驗性）"
+
+msgid "Experimental: changing the CPU voltage can make the device unstable, corrupt your data and permanently damage your device. Use it entirely at your own risk."
+msgstr "實驗性功能：變更 CPU 電壓可能導致裝置不穩定、損毀您的資料，並可能對您的裝置造成永久性損壞。風險完全由您自行承擔。"
+
+msgid "CPU voltage offset unavailable"
+msgstr "CPU 電壓偏移無法使用"
+
+msgid "Not available with this kernel (a mainline kernel of this release or later has it)."
+msgstr "此核心不支援（本版本或更新版本的主線核心支援）。"
+
+msgid "Off: the stock voltages"
+msgstr "關閉：原廠電壓"
+
+msgid "Changes at the next reboot"
+msgstr "將在下次重新開機時變更"
+
+msgid "Trial boot: kept once this boot has been up 10 minutes"
+msgstr "試用開機：本次開機運行滿 10 分鐘後保留"
+
+msgid "Kept: this offset passed its trial boot"
+msgstr "已保留：此偏移已通過試用開機"
+
+msgid "a boot with it ended without a clean shutdown"
+msgstr "使用此偏移的一次開機未正常關機即結束"
+
+msgid "its trial boot ended before 10 minutes"
+msgstr "其試用開機在 10 分鐘內結束"
+
+msgid "invalid value"
+msgstr "無效的值"
+
+msgid "unknown SoC firmware"
+msgstr "未知的 SoC 韌體"
+
+msgid "refused by the kernel"
+msgstr "遭核心拒絕"
+
+msgid "the kernel could not start CPU scaling with it"
+msgstr "核心無法以此偏移啟動 CPU 調頻"
+
+msgid "Offsets in µV for the three CPU domains (cores 0-3, 4-6 and 7), in whole steps. A new offset takes effect at the next reboot, as a trial: it is kept once that boot has been up 10 minutes, and dropped (back to 0) if a boot with it ends in a crash, a watchdog reset or a power cut."
+msgstr "三個 CPU 電壓域（CPU 核心 0-3、4-6 與 7）的偏移，單位 µV，須為整數步階。新的偏移在下次重新開機時以試用方式生效：該次開機運行滿 10 分鐘後保留；若使用它的開機以當機、看門狗重設或斷電結束，則捨棄（回到 0）。"
+
+msgid "Running now (µV)"
+msgstr "目前執行中（µV）"
+
+msgid "Saved for the next boot (µV)"
+msgstr "已儲存，下次開機生效（µV）"
+
+msgid "State"
+msgstr "狀態"
+
+msgid "Taken back automatically: %s µV (%s)"
+msgstr "已自動撤銷：%s µV（%s）"
+
+msgid "The SoC firmware of this device is not one whose voltage encoding is known: only the stock voltages are possible."
+msgstr "此裝置的 SoC 韌體不在已知電壓編碼的版本之列：只能使用原廠電壓。"
+
+msgid "Domain"
+msgstr "電壓域"
+
+msgid "Offset now (µV)"
+msgstr "目前偏移（µV）"
+
+msgid "Highest step"
+msgstr "最高檔位"
+
+msgid "New offset (µV)"
+msgstr "新偏移（µV）"
+
+msgid "Limits: %d to %d µV, in steps of %d µV."
+msgstr "範圍：%d 至 %d µV，步階 %d µV。"
+
+msgid "Save for the next boot"
+msgstr "儲存，下次開機生效"
+
+msgid "Each offset must be a multiple of %d µV between %d and %d."
+msgstr "每個偏移必須是 %d µV 的整數倍，且介於 %d 與 %d 之間。"
+
+msgid "Type %s to confirm."
+msgstr "輸入 %s 以確認。"
+
+msgid "Back to the stock voltages"
+msgstr "恢復原廠電壓"
+
+msgid "Type %s to confirm:"
+msgstr "輸入 %s 以確認："
+
+msgid "Run a 10-minute CPU stress test"
+msgstr "執行 10 分鐘 CPU 壓力測試"
+
+msgid "Test a new offset under load during its trial boot. The device may crash if the voltage is too low; the next boot then runs at the stock voltages."
+msgstr "在試用開機期間於負載下測試新的偏移。電壓過低時裝置可能當機；之後的下次開機將使用原廠電壓。"
+
+msgid "A stress test is running."
+msgstr "壓力測試正在執行。"
+
 msgid "USB role"
 msgstr "USB 角色"
 
@@ -1326,9 +1431,6 @@ msgstr "代碼"
 
 msgid "Translated"
 msgstr "翻譯範圍"
-
-msgid "State"
-msgstr "狀態"
 
 msgid "LuCI's own translations come from OpenWrt. This panel's translations other than Turkish and Chinese are machine (AI) translations; corrections are welcome."
 msgstr "LuCI 本身的翻譯來自 OpenWrt。本面板除土耳其文與中文外的翻譯皆為機器（AI）翻譯，歡迎指正。"
@@ -3288,6 +3390,21 @@ msgstr "The CPU adapter gave no valid reply"
 msgid "Invalid CPU profile"
 msgstr "Invalid CPU profile"
 
+msgid "Unknown CPU voltage operation"
+msgstr "未知的 CPU 電壓操作"
+
+msgid "Invalid CPU voltage request"
+msgstr "無效的 CPU 電壓請求"
+
+msgid "Invalid CPU voltage offset"
+msgstr "無效的 CPU 電壓偏移"
+
+msgid "Type the confirmation word to apply a voltage offset"
+msgstr "輸入確認字以套用電壓偏移"
+
+msgid "Invalid stress test length"
+msgstr "無效的壓力測試時長"
+
 msgid "The packages adapter gave no valid reply"
 msgstr "套件轉接器沒有傳回有效回覆"
 
@@ -3507,6 +3624,18 @@ msgstr "The CPU profile could not be read"
 
 msgid "The CPU profile could not be set"
 msgstr "The CPU profile could not be set"
+
+msgid "The CPU voltage offset could not be read"
+msgstr "無法讀取 CPU 電壓偏移"
+
+msgid "The CPU voltage offset was refused"
+msgstr "CPU 電壓偏移遭拒絕"
+
+msgid "The CPU voltage offset could not be turned off"
+msgstr "無法關閉 CPU 電壓偏移"
+
+msgid "The stress test could not be started"
+msgstr "無法啟動壓力測試"
 
 msgid "Unknown CPU operation"
 msgstr "Unknown CPU operation"
