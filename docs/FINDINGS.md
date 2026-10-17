@@ -11155,7 +11155,9 @@ known state). Front ends: the dashboard's radio button (the card in use, persist
   RIL handshake the radio stayed at `+CFUN: 0`, the WAN at `SIM_RADIO_DISABLED`, no redial; all on: SFUN=4, registered,
   an address 8 s after the request. With the radio off the modem reset is refused and the lock helper does no stack
   restart; a WAN taken down by `ifdown` stayed down when the radio came back, and came up on `ifup`. The page renders
-  both cards' radio, VoLTE and VoNR rows.
+  both cards' radio, VoLTE and VoNR rows. Again with the interface made unavailable instead of a blocked restart:
+  off left it `available: false` with autostart on and no second dial in 30 s; on brought an address 5 s later.
+  A WAN taken down by `ifdown` (autostart off) stayed down through off and on, and came up on `ifup`.
 - F50-B, Ubuntu (7.2.11): off: `+CFUN: 4`, `sipa_eth0` down, still down after 75 s of the watchdog and a restart of
   `mu300-mobile-data` (the service active, "mobile data stays down: the radio of SIM1 is off"); on: an address 6 s
   later. With the service stopped, off and on again left it stopped. One reboot with the radio off came up with the
