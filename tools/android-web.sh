@@ -362,8 +362,12 @@ status() {
         "$ANDROID_SLOT" "$LINUX_SLOT" "$(slots_ok && echo 1 || echo 0)" "$(root_kind)" \
         "$(js "$(magisk -v 2>/dev/null | head -n1)")" "$([ -x "$MAGISKBIN/magiskboot" ] && echo 1 || echo 0)" "$(js "$BB")"
     printf ',"misc":{"valid":%s,"bc":"%s"},"linux_boot":"%s"' "$_valid" "$([ "$_valid" = 1 ] && echo "$_bc")" "$(linux_boot_kind)"
-    printf ',"disk":%s,"last_end":%s,"region":{"off":%s,"size":%s,"existing":"%s","dirty":%s},"parts":%s' \
-        "$(num "$disk")" "$(num "$last_end")" "$(num "$OFF")" "$(num "$SIZE")" "$existing" "$_dirty" "$(parts_json)"
+    # part: the region is the GPT partition named mu300root another installer made (part_fs: what it holds, mu300root,
+    # ext4 or none; part_count: how many have that name); foreign_image: that installer's image file in Android's data
+    # (tools/storage.sh, FINDINGS 179)
+    printf ',"disk":%s,"last_end":%s,"region":{"off":%s,"size":%s,"existing":"%s","dirty":%s,"part":%s,"part_fs":"%s","part_count":%s,"foreign_image":%s},"parts":%s' \
+        "$(num "$disk")" "$(num "$last_end")" "$(num "$OFF")" "$(num "$SIZE")" "$existing" "$_dirty" "$(num "${IN_PART:-0}")" \
+        "${PART_FS:-none}" "$(num "${PART_COUNT:-0}")" "$(num "${FOREIGN_IMAGE:-0}")" "$(parts_json)"
     printf ',"sd":{"dev":%s,"bytes":%s,"small":%s,"existing":"%s"}' "$(js "$SD_DEV")" "$(num "$SD_BYTES")" "$(num "$SD_SMALL")" "$SD_EX"
     printf ',"data_free":%s,"stalled":%s,"module":%s,"job":%s' "$(num "$_free")" "$_stalled" \
         "$([ -f "$MODULES/mu300_linux_switch/switch.sh" ] && [ ! -e "$MODULES/mu300_linux_switch/remove" ] && echo 1 || echo 0)" "$(job_json)"
@@ -681,12 +685,12 @@ un_check() {
     region_probe || die "could not read the partition table; nothing was changed"
     region_find_existing
     if [ "$existing" = yes ]; then
-        # the region lies completely after the last partition and before the backup GPT, on a 1 MiB boundary
-        [ $((OFF / 512)) -ge "$last_end" ] && [ $(( (OFF + SIZE) / 512 )) -le $((disk - 34)) ] ||
-            die "the mu300root filesystem overlaps a partition; nothing was changed"
+        # the region lies completely after the last partition and before the backup GPT (or inside the GPT partition
+        # named mu300root that another installer made: region_in_bounds), on a 1 MiB boundary
+        region_in_bounds "$OFF" "$SIZE" || die "the mu300root filesystem overlaps a partition; nothing was changed"
         [ $((OFF % 1048576)) -eq 0 ] || die "unexpected filesystem offset $OFF; nothing was changed"
         [ $((SIZE / 1048576)) -gt 0 ] || die "the mu300root filesystem has no size; nothing was changed"
-        say "Linux filesystem: offset $OFF, $((SIZE / 1048576)) MiB"
+        say "Linux filesystem: offset $OFF, $((SIZE / 1048576)) MiB$([ "${IN_PART:-0}" = 1 ] && echo ", in the GPT partition named mu300root (the partition stays; remove it with the installer that made it)")"
     else
         say "no mu300root filesystem on the eMMC"
     fi
@@ -740,8 +744,8 @@ un_erase() {  # un_erase secure|quick|keep: the Linux filesystem in the free eMM
     done
     _skip=$((OFF / 1048576)); _mib=$((SIZE / 1048576)); _end=$((_skip + _mib))
     # once more, in the units the writes use: every megabyte written lies behind the last partition and before the
-    # backup partition table
-    [ $((_skip * 2048)) -ge "$last_end" ] && [ $((_end * 2048)) -le $((disk - 34)) ] ||
+    # backup partition table, or inside the GPT partition named mu300root
+    region_in_bounds $((_skip * 1048576)) $((_mib * 1048576)) ||
         die "the region does not lie in the free space; the filesystem was not erased"
     if [ "$1" = quick ]; then
         # superblock, group descriptors and the first inode tables: no filesystem for mount or blkid any more
