@@ -160,6 +160,7 @@ what replaced it. The table below gives each section's state.
 | 131 | An update writes only what changed: the new image's binaries that the installed system has byte for byte become second names of its files (never text, never `etc`, `var` or the user's places), the room counted before anything is written by every installer and by `mu300-update`, nothing left behind by a run that fails or is cut off, and the computer installer's switch module of the release | current (unit tests; the zip, `mu300-update apply` with rollback, and the computer installer on an F50, plain OpenWrt with Docker in its 804 MiB region, 2026-10-16; Ubuntu 24.04 by `mu300-update` with rollback on an F50, 2026-10-17) |
 | 132 | Every OpenWrt release from v2026.10.13 to v2026.10.16.1 shipped its web server's TLS key (one per image, the same on every device): the build removes the pair, the release audit refuses it, `92-mu300-uhttpd-key` removes a shipped key (32 fingerprints) at the first boot of each image | current (unit tests; fingerprints of every published OpenWrt tarball; on the U30 Air by hand and at boot) |
 | 136 | A carrier name the catalog has in another case (`CHINA BROADNET`) stayed English: looked up without case and spacing, then by its PLMN (#231) | current (unit tests; a user's report, not measured on our boards) |
+| 137 | The SMS webhook's custom body: the placeholder was Feishu's body, which WeCom refuses behind an HTTP 200; body presets for WeCom/DingTalk and Feishu/Lark that also fill in the answer check (#259) | current (unit tests; not sent to a real service) |
 | 138 | `mu300-atd` died at its first open of a SIPC tty that was not ready (a failed `exec` redirection ends dash and ash): it waits for the channel now, holding the command fifo (#226) | current (unit tests under dash, bash and busybox ash; not on a device) |
 | 139 | `thermal-guard` trusted the vendor 5.4 kernel to throttle by its release; a 5.4 whose `sprd_cpu_cooling` bound no zone overheated and reset (#229): every kernel is asked for a bound zone now | current (unit tests; the 5.4 thermal sysfs on our boards not read yet: device checklist in the PR) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
@@ -5059,6 +5060,29 @@ Not measured: any real service; the translations on a device (the test unit ran 
 built without them, so the page's new strings were English); what uclient does with an answer whose `Content-Length`
 is wrong or that never ends (the helper's 15 s timeout is unchanged). The unit tests (`tests/test_sms_forward.py`)
 ran under dash and bash on macOS and under busybox ash with busybox 1.37 as awk in a Debian container.
+
+### 137. The SMS webhook's custom body: a placeholder no service refuses, and presets per service (#259)
+
+The *Custom body* field (§54) showed `{"msg_type":"text","content":{"text":"{message}"}}` as its placeholder: the
+Feishu/Lark custom-bot body. A WeCom group robot answers that body (and the standard one, and plain text) with HTTP 200
+and `{"errcode":40008,"errmsg":"invalid message type"}`; with the answer check (§58) empty, which is its default, the
+page's test then said "delivered" (issue #259, measured by the reporter with curl from a device; another user's WeCom
+works with `{"msgtype":"text","text":{"content":"{message}"}}` and the check `errcode=0`). Not sent from our boards to a
+real service.
+
+* **The placeholder** is now `{"text":"{message}"}`, the shape of no Chinese chat service in particular (Slack's
+  incoming webhook takes it). A placeholder is pasted as it is; it should not look like the answer for one service.
+* **Body presets** under the field, as the answer check has them: *WeCom, DingTalk* fills in
+  `{"msgtype":"text","text":{"content":"{message}"}}` (the two take the same text body), *Feishu, Lark*
+  `{"msg_type":"text","content":{"text":"{message}"}}`. A preset also sets the type to JSON and, only when the
+  answer check is empty, the check that service needs (`errcode=0`, `code=0`, both §58 presets), so the test reports
+  the service's verdict and not the HTTP status. A check the user wrote is left alone; nothing is saved until Save.
+  No new message (the menu reuses *Presets*; the service names are not translated, as in the check presets).
+* The sources are §58's table (DingTalk's text body from the same third-party write-ups as its reply).
+
+Test: `tests/test_sms_forward.py` `test_the_pages_body_presets_are_what_the_services_take` - each preset body, through
+`mu300-sms-forward` with a hostile sender and text, is one valid JSON document of that service's shape, and its check
+is one of the page's check presets.
 
 ### 66. The OpenWrt image build tries a package download again
 
