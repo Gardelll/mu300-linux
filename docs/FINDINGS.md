@@ -166,6 +166,7 @@ what replaced it. The table below gives each section's state.
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
 | 163 | Linux 6.18.57 and 7.2.11 with every module the boards can use (`all-modules.py`, with a device-tree check), KVM in VHE mode with a guest, Docker's check-config and dockur/windows-arm; rare protocols, filesystems and line disciplines not loaded on demand, refused by module (`mu300-modprobe-guard`, three reviews of #256) | current (built here; F50-B Ubuntu and the U30 Air openwrt-luci, both kernels each, the guard on both, 2026-10-16; dockur stops at its own RAM check: the boards have 1.4 GB; reboot soak of the mobile downlink, 2026-10-17: 6.18.57 20/20 boots on F50-C and the U30 Air, 6.18.56 12/12 on F50-C) |
 | 166 | Mainline's soc-thmzone did not hold a full CPU load (38 to 98 C in three minutes): step_wise followed the sensors' noise. `mu300_thermal` gives it a trend over a second; `thermal-guard` caps on top of a kernel that does not hold the SoC from 92 C; the toolkit's stress test stops itself at 95 C | current (host tests of the trend and a plant model; F50-C, OpenWrt, 6.18.56, 10-minute runs; 7.2.10 built, not run) |
+| 170 | "Failed to send request: Operation not permitted" behind the VPN's kill switch: uclient's connect error, the tunnel down; the failure now names the kill switch, one try instead of four; vpn-dae refused before the download on a kernel that cannot run it | current (reproduced in an OpenWrt 25.12 container with sing-box and the kill switch, 2026-10-17) |
 
 ## Hardware and firmware facts
 
@@ -8880,6 +8881,195 @@ parses the committed keyrings' packets to pin their fingerprints to the `.fpr` f
 OpenWrt's signature (`sha256sums.asc`/`.sig`); the vendor 5.4 sources are git checkouts pinned by commit hash
 (`kernel/build-all.sh`), which no tarball signature applies to.
 
+### 104. The U30 Air's live SIM switch turned mobile data back on that the user had switched off
+
+From kanoqwq's clean-tf-7.2 `2d3b6f3f` ("complete U30 Air support"), where he took our dual-SIM controller
+(`mu300-sim-u30`, §74) into his tree and changed it: "when the user has switched the WAN off, it stays off after the
+switch; an explicit choice is saved as the boot default". Ours did not do that. Read in his code, rewritten here; none
+of it run on a device.
+
+**What ours did.** A live switch (`mu300-sim switch 1|2`, the Dual SIM page's buttons) takes the wan down, moves the
+radio, and then brings the wan up on the target with `ifup wan` (and on the way back after a failure, and after a busy
+channel). It also removed `/run/mu300-mobile-data-down`, the marker that `mobile-data down` leaves so that its
+watchdog does not dial again. So with mobile data switched off - the panel's button, `ifdown wan`, the data cap, all
+of which leave netifd's `autostart` off (`sim_wan_held_down`, §74) - a switch turned it back on: the `ifup` dialled
+the new card at once, and even without it the watchdog, its marker gone, would have found no context and run
+`ifup wan` itself ("mobile data lost, reconnecting"). For a user who turned data off for the cost (a card without a
+plan, abroad: the roaming hold of §120 is a separate thing and is not affected) that is data they did not ask for. The
+switch then also waited a minute for a bearer and, when none came because data was off, treated the target as a card
+without data: back to the previous card, or `no_data_kept`.
+
+**Changed.** The switch reads `sim_wan_held_down` before it touches anything. When the wan was held down:
+
+* no `ifup` anywhere (`wan_back`), and the watchdog's marker stays: data stays off on whichever card is in use, after
+  a switch, a rollback (`rolled_back`) or a busy channel (nothing changed);
+* after the radio sequence the target is published, saved as the boot default and reported `switched`, with no wait
+  for a bearer there cannot be (his choice, taken: the user chose the card; a second card with its connection off is
+  kept by the boot check as well, `mu300-sim2-warmup`). It is not added to `sim-data-seen`: no data was seen on it;
+* `switch <the card in use>` saves it as the default without asking for data.
+
+With mobile data on, nothing changes: the marker goes, `ifup`, the minute's wait, the way back without data.
+
+**Not taken from the same change.** His `wait_wan_down` (after `ifdown`, up to 15 s until netifd's status says
+`"up": false` and not `pending`) before the radio sequence. netifd sets the interface to its teardown state inside
+the `down` call itself, and its status reports a tearing-down interface as `"up": false, "pending": false` already:
+the check passes at once and does not wait for the protocol's teardown. What it was for, the old card's teardown
+(`mobile-data down`, AT commands) running into the switch, is covered here by `mu300-at`'s gate: while the switch
+holds its lock every AT client but the switch is told "busy" (§74). His per-SIM early lock replay after a switch and
+his `unisoc_modem.main.data_sim` storage belong to his per-SIM locks and his configuration layout; not taken.
+
+**Unit tests** (`tests/test_sim_hot.py`, the netifd stub reporting `"autostart": false` until an `ifup`): a switch
+both ways with data off (no `ifup`, the marker kept, the default saved, nothing in `sim-data-seen`); a failed switch
+and a busy channel with data off (no `ifup`, the marker kept); the card in use saved without data; with data on the
+marker still goes and the target is dialled. The first three fail on the previous script.
+
+**Device checklist (before merge; U30 Air, openwrt-luci, live switching on and both cards in):**
+
+    # data off: the panel's mobile data switch, or ifdown wan
+    ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # false, false
+    ls /run/mu300-mobile-data-down                                   # there
+    mu300-sim switch 2; ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # still false, false
+    ls /run/mu300-mobile-data-down; uci get network.wan.sim_slot     # still there; 1 (the boot default: SIM2)
+    sleep 70; ifconfig sipa_eth8 | grep inet                         # nothing: the watchdog did not dial
+    mu300-sim switch 1                                               # the same, back
+    # data on again (the panel or ifup wan): a switch dials the target and saves it once it has data, as before
+    mu300-sim switch 2; mu300-sim status                             # switched, wan up on sipa_eth8
+
+**Device test (2026-10-17, U30 Air, openwrt-luci v2026.10.16.1 with this `mu300-sim-u30`, live switching on, SIM1
+with data, SIM2 registered emergency-only).** Data off with `ifdown wan`: `up` false, `autostart` false, the marker
+there. `switch 2`: `switched`, `active`/`default` 2, wan still down, marker kept, `sim_slot` 1; 70 s later no address
+on either bearer and no redial in the log. `switch 1`: the same back (`sim_slot` 0), still nothing after 70 s.
+`switch 1` with SIM1 in use and data off: `switched`, no bearer wait. Data on (`ifup wan`), `switch 2`: SIM2 has no
+data, so `no_data`, rolled back to SIM1, wan up again on SIM1 with a new address (unchanged behaviour). The case
+"data on, `switch 2` dials SIM2" could not be run: SIM2 has no service here.
+
+### 105. The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written
+
+From kanoqwq's clean-tf-7.2 `2af101f8` ("complete U30 Air power, LED and PD dock support"), his patch 0017 ("retain
+live soc before reset"), on top of the same 0006/0010/0011 as ours (his copies are byte for byte ours). Rewritten here
+as `upstream/patches/0018-power-sc27xx-fuel-gauge-UMP9620-capacity-kept-at-power-off.patch`; his code read, not run.
+
+**What it is about.** The capacity a U30 Air boots with, under Linux or Android, is the one in the FGU's always-on
+user area (§33d). Since 0011 the driver writes it there whenever somebody reads the capacity and its whole percent
+has changed. Two gaps:
+
+* **Nobody has to read it before a power-off.** Here mu300-power reads it every 10 s (its loop), so the gap is at most
+  a loop; without that daemon (stopped, or a power-off right after a change, which is when the low-battery power-off
+  runs) the next boot starts from an older value. A `.shutdown` callback now reads the capacity once more under the
+  driver's lock, writes it (0-100) and the boot mode "normal power-on" with it. Only on UMP9620 with a battery present:
+  the F50 and the V50 have none (their FGU reports made-up values), SC2731 keeps mainline's behaviour, and a probe
+  that never finished (no driver data) is skipped. A failure is a `dev_warn`, never a stop: a power-off must go on.
+* **The user-area writes could be skipped.** The area is written in three steps: CLEAR (the mask), SET (the value),
+  CLEAR back to 0. `regmap_update_bits()` reads a register first and does not write when the bits already read back
+  as wanted. What these two registers read back is not documented; kano found that a skipped step loses the value
+  ("retained SET/CLEAR registers require unconditional writes even when their readback is unchanged"). The six writes
+  of `save_boot_mode()` and `save_last_cap()` are now `regmap_write_bits()`, which always writes. The values are the
+  same; each write was already followed by the datasheet's 200 us wait. Whether a skip ever happened on our boards is
+  not known: nothing here measured the read-back.
+
+**Built** for 7.2.10 in a copy of the `mu300-mainline` volume's tree (all of our patches, then this one;
+`CONFIG_FUEL_GAUGE_SC27XX=y`, `W=1`): no warning. The file is the same in our 6.18.56 tree, so the patch applies there
+too. **Unit tests:** `tests/test_fgu_shutdown.py` compiles the callback as the patch adds it against stubs of the
+driver's helpers: the capacity kept and clamped, the boot mode with it, nothing written after a failed read or a
+failed capacity write, the lock released on every path, nothing on SC2731, without a battery or without driver data;
+`tests/test_static.py` checks the patch's lines.
+
+**Device checklist (before merge; U30 Air, either system on a mainline kernel with this patch; an F50 for the
+negative):**
+
+    cat /sys/class/power_supply/sc27xx-fgu/capacity          # note it, e.g. 63
+    dmesg | grep -i 'boot capacity'                          # this boot's start
+    # run on battery until the capacity has dropped a few percent, stop mu300-power (systemctl stop mu300-power /
+    # /etc/init.d/mu300-power stop), let it drop one more percent without reading it, then poweroff
+    # power on: dmesg 'boot capacity N % (saved 0x...)' with N the last value, not the one of the last read
+    reboot; dmesg | grep -i 'battery capacity not kept'     # nothing
+    # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
+    # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
+
+**Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
+built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
+callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
+(saved 0x050)` every boot, the same as the capacity read before each reboot, no warning or oops. The battery stayed at
+80 % (`Not charging` on USB), so a capacity that changed without being read was not produced, and `poweroff` was not
+run: the U30 Air has a battery, so nothing here can switch it on again without a button. The low-battery power-off
+of `mu300-power` was not reached (not drained); it ends in the same `poweroff` path. F50-B (Ubuntu, no battery),
+7.2.11 + 0018: boots, the fuel gauge's messages are the same as without 0018 (it reads `boot capacity` from the user
+area as before), the reboot completed with nothing new in the log. Android after Linux was not checked.
+
+### 106. Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes
+
+From kanoqwq's clean-tf-7.2 `0e19fe32` ("fix Unisoc WPA3 hotspots"): among his firmware-SAE changes to
+`sc2355/cmdevt.c` are three return values in `sc2355_send_cmd_recv_rsp()`, which our driver (mainline module and the
+5.4 vendor driver, the same code at this point) has as he found them. Taken in our words; his SAE part is not
+(below).
+
+**What it was.** `sc2355_send_cmd_recv_rsp()` returned 0 without sending anything in three cases:
+
+* `cmdevt_lock_cmd()` refused the command lock: the driver is going away (`SPRD_CMD_EXIT_VAL` added to the count) or,
+  with `DRV_RESET_SELF`, the CP has asserted. `ret` was still the API check's 0.
+* `block_cmd_after_close`: between the CLOSE of the last interface and the WCN power-off, every command but CLOSE.
+* `change_iface_block_cmd`: during an interface type change with one mode open, every command but CLOSE and OPEN.
+
+The last two also left `*rlen` as the caller had set it (the size of its reply buffer), so the caller took its own
+buffer for the firmware's answer. `sc2355_get_station()` copies the reply into the station's signal, rates and
+failures whatever the return value, and `sprd_cfg80211_get_station()` reports them when the return is 0: the bytes of
+an uninitialised stack structure went to nl80211, whose GET_STATION any local user may ask (`iw dev wlan0 link`). A
+small leak of kernel stack in a narrow window (the hotspot stopping or changing mode, or the module unloading), but
+one. And every setting sent in those windows "succeeded" with the firmware never seeing it.
+
+**Changed (mainline `upstream/modules/sprd_wlan_combo/sc2355/cmdevt.c`, and the same as
+`kernel/patches/wlan_combo-unsent-cmd-error.patch` for 5.4):** the refused lock returns `-EIO`, the two blocked
+windows `-EBUSY` with `*rlen` 0 (the API-check failure keeps its own value and message); `get_station`'s reply
+structure starts zeroed, which also covers a reply shorter than the structure. Callers that only test for non-zero
+now see the failure: a userspace setting tried in those windows gets `EBUSY` instead of a silent no-op.
+
+**Not taken from `0e19fe32`.** The firmware-SAE bridge (driver: `sae.h`, `SAE_OFFLOAD_AP`, `max_num_akm_suites = 3`, a
+`CMD_SET_SAE_PARAM` status check; hostapd: `unisoc_sae_import()`, his patched wpad packages in every image). It imports
+the PMK from a vendor element (`dd 34 40 45 da 04`) at the end of the association IEs of `NEW_STATION`, which is the
+same design as our opt-in SAE work (`docs/U30AIR-SAE.md`, open PR #237) and has the same open question that
+`docs/U30AIR-SAE-HANDOFF.md` describes: that buffer carries client-controlled association IEs, and nothing shows that
+the element came from the firmware. His guard (one such element, at the end, or a cached PMKSA) is syntax, not
+provenance; a client that does PMKSA caching without a fresh firmware element and brings its own is the case to rule
+out. His build also turns the bridge on for every `sae`/`psk-sae` BSS on this driver, while ours is an opt-in. Left
+to that work; nothing of it here. Also not taken: his `wpad` replacement, the graphical installer (Tauri) and his
+desktop installer changes.
+
+**Built** (2026-10-16, compared with the same build of `main`): the mainline module for 7.2.10 against the
+`mu300-mainline` volume's tree, 92 warnings before and after, none in the changed lines; the 5.4 driver: the
+thirteen `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver, and every object compiles
+(the final ThinLTO link was not run: it needs a writable kernel output tree). **Unit tests:** `tests/test_wifi_tx_path.py`
+(`WifiCommandNotSent`) reads the source and the 5.4 patch.
+
+**Device checklist (before merge; F50 and U30 Air, 6.18, 7.2 and 5.4, the hotspot on):**
+
+    dmesg -C
+    wifi down; wifi up   (OpenWrt)  /  systemctl restart mu300-hotspot  (Ubuntu)   # the hotspot comes back, clients rejoin
+    dmesg | grep -E 'need block cmd'               # the blocked commands, if any, as before
+    # while restarting the hotspot, ask for the station from another shell as a normal user:
+    while :; do iw dev wlan0 link; done            # no made-up signal/rates; errors are fine
+    # switch the Wi-Fi client mode on and off (the wifi-client command or LuCI), then the hotspot again: comes back
+    # the U30 Air's Wi-Fi key (2.4 <-> 5 GHz, off/on): every change takes effect
+    rmmod sprd_wlan_combo; modprobe sprd_wlan_combo (or reboot): Wi-Fi comes up, no oops
+
+**Device test (2026-10-17).** The module of this branch, built against #256's 6.18.57 and 7.2.11 trees, and the 5.4
+driver built by `kernel/build-all.sh` with the new patch (the build is reproducible: of its 187 modules only
+`sprd_wlan_combo.ko` differs from v2026.10.16.1's, so it went onto the released 5.4 as the only change). An
+unprivileged user (`ubuntu`; `nobody` on OpenWrt) ran `iw dev wlan0 link` and `iw dev wlan0 station dump` in a loop
+throughout.
+
+| | F50-B Ubuntu 7.2.11 | F50-B Ubuntu 5.4 | U30 Air openwrt-luci 6.18.57 |
+|---|---|---|---|
+| hotspot restarts | `systemctl restart mu300-hotspot` x5: AP back in 21-22 s each (7.2.10 released: 21 s) | x5: 8-9 s (released driver: 8-9 s) | `wifi down; wifi up` x8: 3-6 s; band 2.4 -> 5 -> 2.4 -> 5 with `mu300-wifi-band`: takes effect (ch 6 / ch 36) |
+| the user's loop | 22902 rounds: `Not connected.` only | 21872 rounds: the same | 35965 rounds: the station's line, `No such device` while wlan0 was gone |
+| module reload | `rmmod`/`modprobe` under the loop: AP back | the same | `rmmod`, `insmod` of the released module, back to this one: the client rejoined each time |
+| client mode | scan mode on, reboot: station mode, scan lists networks; `wifi-client disconnect`: hotspot back | - | - |
+| errors | no `need block cmd`, no oops; `iface_tx_timeout` once per start, as with 7.2.10 | `iface_tx_timeout` and its `dev_watchdog` WARNING, and the boot's `add_uevent_var` WARNING: both the same with the released module | no oops, no warning |
+
+A station's figures on the U30 Air (one client): `signal 0 dBm`, `tx bitrate (unknown)`, rx 650-780 MBit/s VHT
+with this module and with the released one alike (the access point side reports what the firmware gives; not this
+change). Not run: a station whose link the F50 reports in client mode (no network it may join here), iperf.
+
+
 ### 163. Linux 6.18.57 and 7.2.11 with every module the boards can use, KVM, and what Docker and dockur/windows-arm need
 
 **Versions.** 7.2.11 (stable) and 6.18.57 (longterm), both of 2026-10-15. kernel.org's `sha256sums.asc` for v6.x and
@@ -9162,195 +9352,54 @@ The mainline workflow at this branch's head (`gh workflow run mainline.yml -f kv
 6.18.57 run 38969491239 passed; after the build the runner (ubuntu-24.04-arm) had 99 GB free on `/` (145 GB), the
 volume held 8.7 GB (7.2.11) and 8.3 GB (6.18.57). The release job builds both into one volume, about 17 GB beside the
 5.4 build: no cleanup is needed. Both workflows print `df` and the volume's size after the kernels now.
-### 104. The U30 Air's live SIM switch turned mobile data back on that the user had switched off
+### 170. "Failed to send request: Operation not permitted" behind the VPN's kill switch
+A report from the owner's U30 Air (openwrt-luci v2026.10.16.1, a sing-box profile, the kill switch on):
+`mu300-extra install vpn-dae` printed `Failed to send request: Operation not permitted` four times, then
+`cannot download SHA256SUMS of the VPN module` and `the VPN module could not be downloaded (is the device online?
+...)`. After `mu300-vpn killswitch off` (which restarts the VPN) the same command downloaded the tarball.
 
-From kanoqwq's clean-tf-7.2 `2d3b6f3f` ("complete U30 Air support"), where he took our dual-SIM controller
-(`mu300-sim-u30`, §74) into his tree and changed it: "when the user has switched the WAN off, it stays off after the
-switch; an explicit choice is saved as the boot default". Ours did not do that. Read in his code, rewritten here; none
-of it run on a device.
+**What the message means.** uclient-fetch (OpenWrt's `wget`) prints `Failed to send request: %s` with
+`strerror(rc)`, where `rc` is uclient's own error code, not an errno: `UCLIENT_ERROR_CONNECT` is 1, and
+`strerror(1)` is "Operation not permitted". So the line says only "no connection could be made" - a name that did
+not resolve, a refused or dropped connect, a timeout - never anything about permissions. The four lines are
+`fetch_stdout`'s four tries.
 
-**What ours did.** A live switch (`mu300-sim switch 1|2`, the Dual SIM page's buttons) takes the wan down, moves the
-radio, and then brings the wan up on the target with `ifup wan` (and on the way back after a failure, and after a busy
-channel). It also removed `/run/mu300-mobile-data-down`, the marker that `mobile-data down` leaves so that its
-watchdog does not dial again. So with mobile data switched off - the panel's button, `ifdown wan`, the data cap, all
-of which leave netifd's `autostart` off (`sim_wan_held_down`, §74) - a switch turned it back on: the `ifup` dialled
-the new card at once, and even without it the watchdog, its marker gone, would have found no context and run
-`ifup wan` itself ("mobile data lost, reconnecting"). For a user who turned data off for the cost (a card without a
-plan, abroad: the roaming hold of §120 is a separate thing and is not affected) that is data they did not ask for. The
-switch then also waited a minute for a bearer and, when none came because data was off, treated the target as a card
-without data: back to the previous card, or `no_data_kept`.
+**Reproduced** in an OpenWrt 25.12 container (the real uclient-fetch and busybox) with the uplink renamed
+`sipa_eth0`, mu300-vpn's kill switch ruleset, sing-box 1.14.1 with the TUN config `gen_singbox` writes
+(`auto_route`, `strict_route`, `default_mark` 0x2d0) and a shadowsocks server in a second container, running
+v2026.10.16.1's own `mu300-extra` and `mu300-update`:
 
-**Changed.** The switch reads `sim_wan_held_down` before it touches anything. When the wan was held down:
-
-* no `ifup` anywhere (`wan_back`), and the watchdog's marker stays: data stays off on whichever card is in use, after
-  a switch, a rollback (`rolled_back`) or a busy channel (nothing changed);
-* after the radio sequence the target is published, saved as the boot default and reported `switched`, with no wait
-  for a bearer there cannot be (his choice, taken: the user chose the card; a second card with its connection off is
-  kept by the boot check as well, `mu300-sim2-warmup`). It is not added to `sim-data-seen`: no data was seen on it;
-* `switch <the card in use>` saves it as the default without asking for data.
-
-With mobile data on, nothing changes: the marker goes, `ifup`, the minute's wait, the way back without data.
-
-**Not taken from the same change.** His `wait_wan_down` (after `ifdown`, up to 15 s until netifd's status says
-`"up": false` and not `pending`) before the radio sequence. netifd sets the interface to its teardown state inside
-the `down` call itself, and its status reports a tearing-down interface as `"up": false, "pending": false` already:
-the check passes at once and does not wait for the protocol's teardown. What it was for, the old card's teardown
-(`mobile-data down`, AT commands) running into the switch, is covered here by `mu300-at`'s gate: while the switch
-holds its lock every AT client but the switch is told "busy" (§74). His per-SIM early lock replay after a switch and
-his `unisoc_modem.main.data_sim` storage belong to his per-SIM locks and his configuration layout; not taken.
-
-**Unit tests** (`tests/test_sim_hot.py`, the netifd stub reporting `"autostart": false` until an `ifup`): a switch
-both ways with data off (no `ifup`, the marker kept, the default saved, nothing in `sim-data-seen`); a failed switch
-and a busy channel with data off (no `ifup`, the marker kept); the card in use saved without data; with data on the
-marker still goes and the target is dialled. The first three fail on the previous script.
-
-**Device checklist (before merge; U30 Air, openwrt-luci, live switching on and both cards in):**
-
-    # data off: the panel's mobile data switch, or ifdown wan
-    ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # false, false
-    ls /run/mu300-mobile-data-down                                   # there
-    mu300-sim switch 2; ubus call network.interface.wan status | grep -E '"(up|autostart)"'   # still false, false
-    ls /run/mu300-mobile-data-down; uci get network.wan.sim_slot     # still there; 1 (the boot default: SIM2)
-    sleep 70; ifconfig sipa_eth8 | grep inet                         # nothing: the watchdog did not dial
-    mu300-sim switch 1                                               # the same, back
-    # data on again (the panel or ifup wan): a switch dials the target and saves it once it has data, as before
-    mu300-sim switch 2; mu300-sim status                             # switched, wan up on sipa_eth8
-
-**Device test (2026-10-17, U30 Air, openwrt-luci v2026.10.16.1 with this `mu300-sim-u30`, live switching on, SIM1
-with data, SIM2 registered emergency-only).** Data off with `ifdown wan`: `up` false, `autostart` false, the marker
-there. `switch 2`: `switched`, `active`/`default` 2, wan still down, marker kept, `sim_slot` 1; 70 s later no address
-on either bearer and no redial in the log. `switch 1`: the same back (`sim_slot` 0), still nothing after 70 s.
-`switch 1` with SIM1 in use and data off: `switched`, no bearer wait. Data on (`ifup wan`), `switch 2`: SIM2 has no
-data, so `no_data`, rolled back to SIM1, wan up again on SIM1 with a new address (unchanged behaviour). The case
-"data on, `switch 2` dials SIM2" could not be run: SIM2 has no service here.
-
-### 105. The U30 Air's battery capacity kept at a power-off, and the fuel gauge's user area always written
-
-From kanoqwq's clean-tf-7.2 `2af101f8` ("complete U30 Air power, LED and PD dock support"), his patch 0017 ("retain
-live soc before reset"), on top of the same 0006/0010/0011 as ours (his copies are byte for byte ours). Rewritten here
-as `upstream/patches/0018-power-sc27xx-fuel-gauge-UMP9620-capacity-kept-at-power-off.patch`; his code read, not run.
-
-**What it is about.** The capacity a U30 Air boots with, under Linux or Android, is the one in the FGU's always-on
-user area (§33d). Since 0011 the driver writes it there whenever somebody reads the capacity and its whole percent
-has changed. Two gaps:
-
-* **Nobody has to read it before a power-off.** Here mu300-power reads it every 10 s (its loop), so the gap is at most
-  a loop; without that daemon (stopped, or a power-off right after a change, which is when the low-battery power-off
-  runs) the next boot starts from an older value. A `.shutdown` callback now reads the capacity once more under the
-  driver's lock, writes it (0-100) and the boot mode "normal power-on" with it. Only on UMP9620 with a battery present:
-  the F50 and the V50 have none (their FGU reports made-up values), SC2731 keeps mainline's behaviour, and a probe
-  that never finished (no driver data) is skipped. A failure is a `dev_warn`, never a stop: a power-off must go on.
-* **The user-area writes could be skipped.** The area is written in three steps: CLEAR (the mask), SET (the value),
-  CLEAR back to 0. `regmap_update_bits()` reads a register first and does not write when the bits already read back
-  as wanted. What these two registers read back is not documented; kano found that a skipped step loses the value
-  ("retained SET/CLEAR registers require unconditional writes even when their readback is unchanged"). The six writes
-  of `save_boot_mode()` and `save_last_cap()` are now `regmap_write_bits()`, which always writes. The values are the
-  same; each write was already followed by the datasheet's 200 us wait. Whether a skip ever happened on our boards is
-  not known: nothing here measured the read-back.
-
-**Built** for 7.2.10 in a copy of the `mu300-mainline` volume's tree (all of our patches, then this one;
-`CONFIG_FUEL_GAUGE_SC27XX=y`, `W=1`): no warning. The file is the same in our 6.18.56 tree, so the patch applies there
-too. **Unit tests:** `tests/test_fgu_shutdown.py` compiles the callback as the patch adds it against stubs of the
-driver's helpers: the capacity kept and clamped, the boot mode with it, nothing written after a failed read or a
-failed capacity write, the lock released on every path, nothing on SC2731, without a battery or without driver data;
-`tests/test_static.py` checks the patch's lines.
-
-**Device checklist (before merge; U30 Air, either system on a mainline kernel with this patch; an F50 for the
-negative):**
-
-    cat /sys/class/power_supply/sc27xx-fgu/capacity          # note it, e.g. 63
-    dmesg | grep -i 'boot capacity'                          # this boot's start
-    # run on battery until the capacity has dropped a few percent, stop mu300-power (systemctl stop mu300-power /
-    # /etc/init.d/mu300-power stop), let it drop one more percent without reading it, then poweroff
-    # power on: dmesg 'boot capacity N % (saved 0x...)' with N the last value, not the one of the last read
-    reboot; dmesg | grep -i 'battery capacity not kept'     # nothing
-    # Android after Linux: the battery percentage matches what Linux last showed (within a percent)
-    # F50: poweroff and reboot as usual, nothing new in dmesg (no battery: the callback does nothing)
-
-**Device test (2026-10-17; 0018 on #256's 6.18.57 and 7.2.11 trees, Image rebuilt, the rest of the bundle as
-built).** U30 Air, openwrt-luci, 6.18.57 + 0018: two boots and two reboots out of it, each reboot completed (the
-callback runs at a reboot too: `.shutdown` is called by `device_shutdown()` on both paths), `boot capacity 80 %
-(saved 0x050)` every boot, the same as the capacity read before each reboot, no warning or oops. The battery stayed at
-80 % (`Not charging` on USB), so a capacity that changed without being read was not produced, and `poweroff` was not
-run: the U30 Air has a battery, so nothing here can switch it on again without a button. The low-battery power-off
-of `mu300-power` was not reached (not drained); it ends in the same `poweroff` path. F50-B (Ubuntu, no battery),
-7.2.11 + 0018: boots, the fuel gauge's messages are the same as without 0018 (it reads `boot capacity` from the user
-area as before), the reboot completed with nothing new in the log. Android after Linux was not checked.
-
-### 106. Wi-Fi (SC2355): a command the driver never sent returned success, and get_station handed on stack bytes
-
-From kanoqwq's clean-tf-7.2 `0e19fe32` ("fix Unisoc WPA3 hotspots"): among his firmware-SAE changes to
-`sc2355/cmdevt.c` are three return values in `sc2355_send_cmd_recv_rsp()`, which our driver (mainline module and the
-5.4 vendor driver, the same code at this point) has as he found them. Taken in our words; his SAE part is not
-(below).
-
-**What it was.** `sc2355_send_cmd_recv_rsp()` returned 0 without sending anything in three cases:
-
-* `cmdevt_lock_cmd()` refused the command lock: the driver is going away (`SPRD_CMD_EXIT_VAL` added to the count) or,
-  with `DRV_RESET_SELF`, the CP has asserted. `ret` was still the API check's 0.
-* `block_cmd_after_close`: between the CLOSE of the last interface and the WCN power-off, every command but CLOSE.
-* `change_iface_block_cmd`: during an interface type change with one mode open, every command but CLOSE and OPEN.
-
-The last two also left `*rlen` as the caller had set it (the size of its reply buffer), so the caller took its own
-buffer for the firmware's answer. `sc2355_get_station()` copies the reply into the station's signal, rates and
-failures whatever the return value, and `sprd_cfg80211_get_station()` reports them when the return is 0: the bytes of
-an uninitialised stack structure went to nl80211, whose GET_STATION any local user may ask (`iw dev wlan0 link`). A
-small leak of kernel stack in a narrow window (the hotspot stopping or changing mode, or the module unloading), but
-one. And every setting sent in those windows "succeeded" with the firmware never seeing it.
-
-**Changed (mainline `upstream/modules/sprd_wlan_combo/sc2355/cmdevt.c`, and the same as
-`kernel/patches/wlan_combo-unsent-cmd-error.patch` for 5.4):** the refused lock returns `-EIO`, the two blocked
-windows `-EBUSY` with `*rlen` 0 (the API-check failure keeps its own value and message); `get_station`'s reply
-structure starts zeroed, which also covers a reply shorter than the structure. Callers that only test for non-zero
-now see the failure: a userspace setting tried in those windows gets `EBUSY` instead of a silent no-op.
-
-**Not taken from `0e19fe32`.** The firmware-SAE bridge (driver: `sae.h`, `SAE_OFFLOAD_AP`, `max_num_akm_suites = 3`, a
-`CMD_SET_SAE_PARAM` status check; hostapd: `unisoc_sae_import()`, his patched wpad packages in every image). It imports
-the PMK from a vendor element (`dd 34 40 45 da 04`) at the end of the association IEs of `NEW_STATION`, which is the
-same design as our opt-in SAE work (`docs/U30AIR-SAE.md`, open PR #237) and has the same open question that
-`docs/U30AIR-SAE-HANDOFF.md` describes: that buffer carries client-controlled association IEs, and nothing shows that
-the element came from the firmware. His guard (one such element, at the end, or a cached PMKSA) is syntax, not
-provenance; a client that does PMKSA caching without a fresh firmware element and brings its own is the case to rule
-out. His build also turns the bridge on for every `sae`/`psk-sae` BSS on this driver, while ours is an opt-in. Left
-to that work; nothing of it here. Also not taken: his `wpad` replacement, the graphical installer (Tauri) and his
-desktop installer changes.
-
-**Built** (2026-10-16, compared with the same build of `main`): the mainline module for 7.2.10 against the
-`mu300-mainline` volume's tree, 92 warnings before and after, none in the changed lines; the 5.4 driver: the
-thirteen `wlan_combo-*.patch` apply in the build's order on the pristine vendor driver, and every object compiles
-(the final ThinLTO link was not run: it needs a writable kernel output tree). **Unit tests:** `tests/test_wifi_tx_path.py`
-(`WifiCommandNotSent`) reads the source and the 5.4 patch.
-
-**Device checklist (before merge; F50 and U30 Air, 6.18, 7.2 and 5.4, the hotspot on):**
-
-    dmesg -C
-    wifi down; wifi up   (OpenWrt)  /  systemctl restart mu300-hotspot  (Ubuntu)   # the hotspot comes back, clients rejoin
-    dmesg | grep -E 'need block cmd'               # the blocked commands, if any, as before
-    # while restarting the hotspot, ask for the station from another shell as a normal user:
-    while :; do iw dev wlan0 link; done            # no made-up signal/rates; errors are fine
-    # switch the Wi-Fi client mode on and off (the wifi-client command or LuCI), then the hotspot again: comes back
-    # the U30 Air's Wi-Fi key (2.4 <-> 5 GHz, off/on): every change takes effect
-    rmmod sprd_wlan_combo; modprobe sprd_wlan_combo (or reboot): Wi-Fi comes up, no oops
-
-**Device test (2026-10-17).** The module of this branch, built against #256's 6.18.57 and 7.2.11 trees, and the 5.4
-driver built by `kernel/build-all.sh` with the new patch (the build is reproducible: of its 187 modules only
-`sprd_wlan_combo.ko` differs from v2026.10.16.1's, so it went onto the released 5.4 as the only change). An
-unprivileged user (`ubuntu`; `nobody` on OpenWrt) ran `iw dev wlan0 link` and `iw dev wlan0 station dump` in a loop
-throughout.
-
-| | F50-B Ubuntu 7.2.11 | F50-B Ubuntu 5.4 | U30 Air openwrt-luci 6.18.57 |
+| | the router's own traffic (`ip route get 140.82.121.3`) | kill switch drops | result |
 |---|---|---|---|
-| hotspot restarts | `systemctl restart mu300-hotspot` x5: AP back in 21-22 s each (7.2.10 released: 21 s) | x5: 8-9 s (released driver: 8-9 s) | `wifi down; wifi up` x8: 3-6 s; band 2.4 -> 5 -> 2.4 -> 5 with `mu300-wifi-band`: takes effect (ch 6 / ch 36) |
-| the user's loop | 22902 rounds: `Not connected.` only | 21872 rounds: the same | 35965 rounds: the station's line, `No such device` while wlan0 was gone |
-| module reload | `rmmod`/`modprobe` under the loop: AP back | the same | `rmmod`, `insmod` of the released module, back to this one: the client rejoined each time |
-| client mode | scan mode on, reboot: station mode, scan lists networks; `wifi-client disconnect`: hotspot back | - | - |
-| errors | no `need block cmd`, no oops; `iface_tx_timeout` once per start, as with 7.2.10 | `iface_tx_timeout` and its `dev_watchdog` WARNING, and the boot's `add_uevent_var` WARNING: both the same with the released module | no oops, no warning |
+| tunnel up | `dev sbtun`, table 2022 (sing-box's rules 9000-9010: `from 0.0.0.0 iif lo lookup 2022`) | 0 | downloaded through the tunnel and installed in 4 s |
+| tunnel down | `dev sipa_eth0` (main) | 40 packets | the report's output, line for line, after 253 s |
 
-A station's figures on the U30 Air (one client): `signal 0 dBm`, `tx bitrate (unknown)`, rx 650-780 MBit/s VHT
-with this module and with the released one alike (the access point side reports what the firmware gives; not this
-change). Not run: a station whose link the F50 reports in client mode (no network it may join here), iperf.
+So the device's own traffic does go through the tunnel when it is up - for sing-box by its `auto_route`, for xray,
+mihomo, WireGuard, OpenVPN and dae by the core's `routes_up` (rule 9010 sends everything unmarked to table 2022, the
+device's own packets included) - and the kill switch drops it, as it promises, when the tunnel is down. Nothing in
+`mu300-extra install` or `mu300-vpn engine install` stops the tunnel: the download is made with the engine that is
+running, and the new engine is unpacked beside it. The report's "four failures, then success after killswitch off"
+is a tunnel that was not carrying traffic at that moment and came back with the restart that `killswitch off` does
+(`killswitch_cmd`: `svc restart`); a restart with the kill switch left on would have done the same. With the
+kill switch off, a first try made while the restarted engine was not up yet failed once and the retry went through.
 
+**Changed** (`mu300-update`, used by `mu300-extra`): `vpn_ks_blocks` - the kill switch's table `inet mu300_vpn` is
+there (and is not mu300-vpn's own download window, which has the `fetch4` set) and `ip route get` sends this device's
+traffic to `sipa_eth*` or the Wi-Fi client, or nowhere. Then the failure says `blocked by the VPN kill switch: the
+VPN is on and its tunnel is not up, and nothing leaves this device outside it - see mu300-vpn status, and try again
+once the tunnel is up; offline: mu300-extra install NAME --from DIR` instead of "is the device online?", for the VPN
+module, the other extras and `mu300-update check/apply/kernel/boot`; and `fetch_stdout` stops after the first try
+(one minute instead of four: the kill switch drops the next three the same way). Nothing is let through: no
+exemption for downloads, the LAN untouched.
 
+**dae before the download.** `mu300-extra install vpn-dae` now checks the running kernel first, as the module's
+`dae_kernel_ok` does (5.17 or newer, `/sys/kernel/btf/vmlinux`): on the 5.4 vendor kernel it refuses before 17 MB
+are fetched and 56 MB unpacked (`MU300_DAE_ANY_KERNEL=1` for a kernel the device is about to boot). The mainline
+kernels of v2026.10.16.1 (6.18.56, 7.2.10) have BTF and the BPF JIT (`upstream/mu300-mainline.config`, 31p). The
+v2.0.3 `vpn-dae` tarball installs with v2026.10.16.1's `mu300-extra` both online (tunnel up) and with `--from`.
+
+**Open:** why the U30's tunnel was not carrying traffic at that moment, and why the owner's later try ended in
+"vpn-dae was not installed" after the download completed: the device itself could not be examined for this entry.
 ### 174. The dashboard showed IMEI and IMSI as null for hours: a partial identity read was cached for 6 h
 
 Seen on the U30 Air (2026-10-17): the dashboard's IMEI and IMSI were `--` for hours after a boot. The collector
