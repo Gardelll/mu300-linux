@@ -10,6 +10,8 @@ The layouts are built from the figures the project has, not from a dump of a dev
               fills the disk. The issue gives no sectors; this is factory64 with userdata extended to the last
               usable LBA, which is the layout that gives the "-4 MiB" it reports
   nvlast64    vendor64 with a partition behind userdata: not a table the make-room path may touch
+  part64      factory64 with a 128 MiB partition named mu300root right behind userdata, 1 MiB aligned: the layout of
+              kanoqwq's desktop installer (FINDINGS 179), small so that a test may erase it
   small64     vendor64 with userdata so small that there is nothing to split (4 GiB for Android + 800 MiB)
 Only the names, the order and userdata's sectors matter here; the other partitions' sizes are made up.
 """
@@ -34,6 +36,9 @@ def layout(name):
         parts.append(('userdata', USERDATA_FIRST, 54218752 - 1))
     elif name == 'vendor64':
         parts.append(('userdata', USERDATA_FIRST, USABLE_LAST64))
+    elif name == 'part64':
+        parts.append(('userdata', USERDATA_FIRST, 54218752 - 1))
+        parts.append(('mu300root', 54218752, 54218752 + (128 << 11) - 1))
     elif name == 'nvlast64':
         parts.append(('userdata', USERDATA_FIRST, USABLE_LAST64 - 2048))
         parts.append(('l_fixnv2_a', USABLE_LAST64 - 2047, USABLE_LAST64))

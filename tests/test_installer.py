@@ -870,13 +870,15 @@ class Region(ShellTest):
             self.assertIn(' note=0', out)
 
     def test_the_probe_command_is_install_ps1s_and_has_no_double_quotes(self):
-        # install.ps1 sends the same command, and Windows PowerShell 5.1 drops double quotes on the way to adb
+        # install.ps1 and uninstall.ps1 send the same command, and Windows PowerShell 5.1 drops double quotes on the
+        # way to adb
         self.fake()
         for shell in self.each_shell():
             self.run_region(shell, 'region_probe')
             cmd = (self.tmp / 'su.log').read_text().splitlines()[0]
             self.assertNotIn('"', cmd)
             self.assertIn("(SuDo '" + cmd + "')", (TOP / 'install.ps1').read_text())
+            self.assertIn("(SuDo '" + cmd + "')", (TOP / 'uninstall.ps1').read_text())
             (self.tmp / 'su.log').unlink()
 
     def test_probe(self):

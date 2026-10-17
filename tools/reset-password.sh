@@ -39,22 +39,15 @@ if [ -n "$SD_DEV" ] && [ "$(sd_existing)" = yes ]; then
 fi
 OFF=; SIZE=
 if [ -z "$MOUNTENV" ]; then
-    # the same search install.sh does; all byte arithmetic happens here, not in Android's 32-bit shell
-    set -- $(su_do 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)')
-    [ $# -eq 2 ] || die "could not read the partition table from the device"
-    disk=$2
-    for cand in $(( ($1 / 4096 + 1) * 4096 * 512 )) 27762098176; do
-        region_on_disk "$cand" || continue    # never read past the end of the eMMC (storage.sh)
-        m=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1080)) count=2 2>/dev/null | od -An -tx1" | tr -d ' ')
-        l=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1144)) count=16 2>/dev/null" | tr -d '\000')
-        if [ "$m" = 53ef ] && [ "$l" = mu300root ]; then
-            blocks=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1028)) count=4 2>/dev/null | od -An -tu4" | tr -d ' ')
-            logbs=$(su_do "dd if=/dev/block/mmcblk0 bs=1 skip=$((cand + 1048)) count=4 2>/dev/null | od -An -tu4" | tr -d ' ')
-            OFF=$cand; SIZE=$((blocks * (1024 << logbs))); break
-        fi
-    done
+    # the same search install.sh does (tools/storage.sh): the free region, a GPT partition named mu300root that
+    # another installer made (FINDINGS 179), the old fixed offset; all byte arithmetic happens here, not in Android's
+    # 32-bit shell
+    region_probe || die "could not read the partition table from the device"
+    region_find_existing || die "no answer from the device while looking for the Linux filesystem"
+    [ "${PART_COUNT:-0}" -le 1 ] || die "the eMMC has $PART_COUNT partitions named mu300root, and which one holds Linux cannot be told"
+    [ "$existing" = yes ] || OFF=
     [ -n "$OFF" ] || die "no Linux filesystem found on this device (neither mu300root in internal storage nor mu300sd on an SD card)"
-    echo " internal storage: offset $OFF, $((SIZE / 1048576)) MiB"
+    echo " internal storage: offset $OFF, $((SIZE / 1048576)) MiB$([ "$IN_PART" = 0 ] || echo ", in the GPT partition named mu300root")"
 fi
 
 say "Mounting the Linux filesystem"

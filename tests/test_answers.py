@@ -6,11 +6,13 @@ import json
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import unittest
 from pathlib import Path
 
+import fakeemmc  # noqa: E402
 from helpers import TOP, ShellTest
 
 FAKEADB = Path(__file__).resolve().parent / 'fakeadb.py'
@@ -943,6 +945,100 @@ class PowerShellNames(unittest.TestCase):
                 self.assertTrue(var.startswith('mu') or var.startswith('gui'), f'{var}: no prefix of its own')
                 bare = re.findall(r'(?i)\$(?!script:)' + re.escape(var) + r'\b', src)
                 self.assertEqual(bare, [], f'{name} has a variable of its own called ${var}')
+
+class UninstallInPartition(Device):
+    """uninstall.sh on a fake eMMC (tests/fakeemmc.py) whose system is in a GPT partition named mu300root, the layout
+    of kanoqwq's desktop installer (FINDINGS 179): it erased the filesystem inside the partition, never the partition
+    or anything around it. Before, it refused: "the mu300root filesystem overlaps a partition"."""
+    PSTART, PSECT = 54218752, 128 << 11
+
+    def setUp(self):
+        super().setUp()
+        self.emmc = fakeemmc.make(self.tmp / 'emmc', layout='part64')
+
+    def ext4(self, label=b'mu300root', blocks=(128 << 20) // 4096):
+        at = self.PSTART * 512
+        with open(self.emmc / 'dev/block/mmcblk0', 'r+b') as f:
+            f.seek(at + 1024 + 4); f.write(struct.pack('<I', blocks))
+            f.seek(at + 1080); f.write(b'\x53\xef')
+            f.seek(at + 1144); f.write(label.ljust(16, b'\0'))
+            # data in the filesystem, and right in front of and behind the partition
+            f.seek(at + (100 << 20)); f.write(b'files' * 100)
+            f.seek(at - 4096); f.write(b'in front' * 10)
+            f.seek(at + self.PSECT * 512); f.write(b'behind' * 10)
+
+    def around(self):
+        at = self.PSTART * 512
+        with open(self.emmc / 'dev/block/mmcblk0', 'rb') as f:
+            f.seek(at - 4096); front = f.read(80)
+            f.seek(at + self.PSECT * 512); back = f.read(60)
+            f.seek(at + 1080); magic = f.read(2)
+            f.seek(at + (100 << 20)); files = f.read(5)
+        return front, back, magic, files
+
+    def uninstall(self, shell, **env):
+        self.device(layout='part64', emmc=str(self.emmc), magisk='')
+        r = self.run_script(shell, 'uninstall.sh', MU300_NONINTERACTIVE=1, MU300_PROGRESS=1,
+                            MU300_ANS_CONFIRM='UNINSTALL', **env)
+        return r, events(r.stdout)
+
+    def test_the_filesystem_in_the_partition_is_erased_the_partition_stays(self):
+        for shell in self.each_shell():
+            for wipe in ('quick', 'secure'):
+                shutil.rmtree(self.emmc); self.emmc = fakeemmc.make(self.tmp / 'emmc', layout='part64')
+                self.ext4()
+                before = fakeemmc.table(self.emmc)
+                self.assertEqual(before[-1], ('mu300root', self.PSTART, self.PSTART + self.PSECT - 1))
+                r, ev = self.uninstall(shell, MU300_ANS_WIPE=wipe)
+                self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+                self.assertNotIn('overlaps a partition', r.stdout + r.stderr)
+                facts = {e['key']: e['value'] for e in ev if e['event'] == 'info'}
+                self.assertEqual((facts['region.existing'], facts['region.offset'], facts['region.size'],
+                                  facts['region.partition']), ('yes', str(self.PSTART * 512), str(128 << 20), '1'))
+                self.assertIn('the partition itself stays', r.stdout)
+                self.assertIn('the partition named mu300root too: it stays', r.stdout)
+                self.assertIn('the partition table is left alone', r.stdout)
+                front, back, magic, files = self.around()
+                self.assertEqual((front, back), (b'in front' * 10, b'behind' * 10))
+                self.assertEqual(magic, b'\0\0')
+                # quick: the headers only (the files stay until the space is reused); secure: everything
+                self.assertEqual(files, b'files' if wipe == 'quick' else bytes(5))
+                self.assertEqual(fakeemmc.table(self.emmc), before)
+                self.assertNotIn('resize-last-partition', ' '.join(c['cmd'] for c in self.calls()))
+
+    def test_keep_another_filesystem_and_two_partitions(self):
+        for shell in self.each_shell():
+            self.ext4()
+            r, ev = self.uninstall(shell, MU300_ANS_WIPE='keep')
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+            self.assertEqual(self.around()[2], b'\x53\xef')
+            self.assertIn('kept on the eMMC', r.stdout)
+            # another installer's ext4 that is not labelled mu300root: not this project's, nothing asked about it
+            self.ext4(label=b'rootfs')
+            r, ev = self.uninstall(shell)
+            self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr)
+            self.assertIn('no mu300root filesystem found', r.stdout)
+            self.assertIn('holds another Linux filesystem', r.stdout)
+            self.assertEqual(self.around()[2], b'\x53\xef')
+        # two partitions of that name: which one is the system cannot be told, nothing is changed
+        fakeemmc.sysfs(self.emmc, fakeemmc.table(self.emmc) + [('mu300root', self.PSTART + self.PSECT, self.PSTART + self.PSECT + 2047)])
+        for shell in self.each_shell():
+            r, ev = self.uninstall(shell, MU300_ANS_WIPE='quick')
+            self.assertEqual(r.returncode, 1)
+            self.assertIn('2 partitions named mu300root', ev[-1]['message'])
+            self.assertEqual(self.calls('write'), [])
+
+    def test_reset_password_mounts_inside_the_partition(self):
+        self.ext4()
+        for shell in self.each_shell():
+            self.device(layout='part64', emmc=str(self.emmc))
+            r = self.run_script(shell, 'tools/reset-password.sh', 'openwrt')
+            self.assertIn(f'internal storage: offset {self.PSTART * 512}, 128 MiB, in the GPT partition named mu300root',
+                          r.stdout)
+            # the mount itself needs a device (losetup): what it was asked for is enough here
+            mount = [c['cmd'] for c in self.calls() if 'android-mount-mu300root.sh /data/local/tmp/mu300root' in c['cmd']]
+            self.assertEqual(mount[:1], [f'MU300_OFF={self.PSTART * 512} MU300_SIZE={128 << 20} sh '
+                                         '/data/local/tmp/android-mount-mu300root.sh /data/local/tmp/mu300root'])
 
 
 class Uninstall(Device):
