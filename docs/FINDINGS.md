@@ -11081,3 +11081,31 @@ Then boot_b written back (ca76e081... read back), Android's e2fsck -fy on the re
 **Not measured**: the vendor 5.4 kernel and a card or GPT-partition root on a device (the same function, called
 before those mounts; e2fsck is a static program and does not care which kernel runs it); a filesystem with real
 damage on a device (the image test in CI repairs only the flag; e2fsck's repairs are its own).
+
+### 183. The dashboard's bearer QoS and data counters followed fixed names, not the WAN in use
+
+From kanoqwq's fork (kanoqwq/mu300-linux, his dashboard's `dashboard-network.sh`), rewritten for this tree.
+
+**What was wrong.** The collector (`unisoc-modem/cell`) asked `AT+CGEQOSRDP=1` on every full round: context 1, whatever
+bearer the WAN used, and also while the WAN was down, when the answer is an old bearer's or none. `dashboard-info`
+took the configured `unisoc_modem.main.data_device` before netifd's live `l3_device`, so a WAN on another device
+(another CID, or the other card's `sipa_eth8` after a U30 Air live switch) was counted on the wrong interface.
+
+**The fix.** `lib.sh` has `data_cid DEVICE SLOT`: `sipa_eth0-7` are CID 1-8 of slot 0, `sipa_eth8-15` CID 1-8 of
+slot 1 (as `mobile-data` names them), nothing for any other name or the other card's device. The collector asks
+`AT+CGEQOSRDP=<cid>` for the WAN's live device only while the WAN is up, keeps the answer only when it is for that
+CID, and only when netifd still shows the same connection afterwards (up, same device, an uptime that did not start
+over: netifd restarts it on a redial on the same device). Otherwise the QoS is null. `dashboard-info` reads the live
+`l3_device` first, then `data_device`, then the slot's `sipa_eth0`/`sipa_eth8`; `net_obj` reads `/sys/class/net`
+only for a name by `safe_iface`'s rule.
+
+Also: `mu300-buttons`' header said the U30 Air's Wi-Fi LED was "blue 5, white 2.4"; it is white on 5 GHz and blue on
+2.4 GHz (152).
+
+
+**Device test (F50-C, OpenWrt v2026.10.17.3, 2026-10-17)**, the changed `cell`, `dashboard-info` and `lib.sh`: with
+the WAN up on `sipa_eth0` the full round asked `AT+CGEQOSRDP=1` (CID 1 of slot 0) and showed QCI 9, 100/20 Mbit/s;
+with the WAN taken down the round asked nothing and `qos` was null; a configured `data_device` of `sipa_eth8` no
+longer replaced the live `sipa_eth0` in `sysinfo`.
+
+Tests: `tests/test_dashboard_info.py` `LiveBearer`.
