@@ -5727,6 +5727,20 @@ mirror again); the panel's adapter clears that variable like every other source 
 `curl` joined the OpenWrt image so the exit codes exist there too: every OpenWrt update download moved from
 uclient-fetch to curl, mirror or not.
 
+**The mirror on devices, 2026-10-17** (test builds of this branch with the other open PRs). F50-B (Ubuntu, no
+internet): `mu300-update source http://<Mac>:8791` wrote `/etc/mu300/update-source` 0600 and `source` / `status` named it
+`(file)`; `MU300_RELEASE=<tag> mu300-update apply` took every file from that mirror and updated. The same mirror made
+unreachable: the run stopped - but said only `cannot download SHA256SUMS`, and with `MU300_MIRROR_FALLBACK=1` it went
+to github.com without a word. Apply's first fetch is its self-update check, run with `2>/dev/null`; the said-once
+line was said there. It goes to fd 7 now, the run's own stderr (`say_run`), and both runs say their line once (a
+test runs the two fetches as apply does). F50-C (plain OpenWrt, `curl` in the image, internet): a public https
+mirror that does not resolve (`https://mirror.invalid/dl`): `mirror unreachable: the rest comes from github.com`, and
+the checksums, signature and files of v2026.10.17.1 came from GitHub and verified. A fresh download also printed `sh:
+can't open ...: no such file` (busybox ash: `wc -c < FILE 2>/dev/null` redirects stderr only after the input);
+fixed. The panel's field (luci-app-mu300's files copied onto F50-C for the test): the page shows *Mirror (release
+files)* with the GitHub placeholder, Save wrote the file (`mu300-update source` says `(file)`), and the page shows the
+saved address. Not run: a self-update across the change, a resumed download.
+
 **What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
 (`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's
 ubus endpoint takes POSTs with a session. Every parameter is a fixed word, a release tag
