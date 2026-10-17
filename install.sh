@@ -1052,7 +1052,7 @@ fi
 # the 5.4 bundle: its kernel, and for every kernel the busybox, logdw and modules of the boot image's first segment.
 # A package with a mainline kernel has no 5.4 bundle: its boot image is that kernel with its own generic segment,
 # which brings init's busybox, logdw and modules (build-boot-image.py checks that it does).
-KOUT=; BUSYBOX=; LOGDW=
+KOUT=; BUSYBOX=; LOGDW=; E2FSCK=
 if [ -z "$PKG" ] || [ "$KERNEL" = 5.4 ]; then
     rm -rf "$REL/kernel" && mkdir -p "$REL/kernel" && tar -xzf "$ASSETS/mu300-kernel.tar.gz" -C "$REL/kernel"
     KOUT=$REL/kernel
@@ -1060,6 +1060,8 @@ if [ -z "$PKG" ] || [ "$KERNEL" = 5.4 ]; then
     # is checked below)
     case $DEVICE in f50|v50) ;; *) [ -d "$KOUT/modules-$DEVICE" ] || die "$(t 'release {1} does not support this device yet; use a newer one' "$RELEASE")" ;; esac
     BUSYBOX=$KOUT/busybox; LOGDW=$KOUT/logdw
+    # init's e2fsck (FINDINGS 182): in the bundles of the releases since it came
+    [ ! -f "$KOUT/e2fsck" ] || E2FSCK=$KOUT/e2fsck
 fi
 # a mainline kernel (6.18, 7.2): its bundle, unpacked
 KMAIN=
@@ -1088,6 +1090,8 @@ rm -rf "$WORK/out/modules" && cp -R "$KOUT/modules" "$WORK/out/modules"
 cp "$KOUT/modules.builtin" "$KOUT/modules.builtin.modinfo" "$WORK/out/" 2>/dev/null || true
 docker build -q -t mu300-ubuntu:24.04 "$TOP/rootfs" >/dev/null
 docker run --rm mu300-ubuntu:24.04 cat /bin/busybox > "$WORK/busybox"; chmod +x "$WORK/busybox"
+# init's e2fsck for a root filesystem with recorded errors (FINDINGS 182)
+sh "$TOP/tools/e2fsck/build.sh" "$WORK/tools/e2fsck/e2fsck" >/dev/null && E2FSCK=$WORK/tools/e2fsck/e2fsck
 # adbd (adb to Linux is on by default; a build here takes a few minutes)
 sh "$TOP/tools/adbd/build.sh" "$WORK/tools/adbd/adbd" >/dev/null
 docker run --rm -v "$TOP/tools":/src:ro -v "$WORK/tools":/o mu300-kbuild sh -c '
@@ -1147,7 +1151,7 @@ python3 "$TOP/boot/build-boot-image.py" --stock-boot "$WORK/dumps/boot_$ANDROID_
   --kernel "${KMAIN:-$KOUT}/Image" ${KMAIN:+--append-ramdisk "$KMAIN/ramdisk-generic.lz4"} \
   ${KOUT:+--modules "$KOUT/modules"} --init "$WORK/init" ${BUSYBOX:+--busybox "$BUSYBOX"} --device "$DEVICE" \
   $([ -n "$KOUT" ] && [ -d "$KOUT/modules-u30air" ] && echo --device-modules "u30air=$KOUT/modules-u30air") \
-  ${LOGDW:+--logdw "$LOGDW"} --ueventd-perms "$TOP/android-vendor/ueventd-perms.sh" \
+  ${LOGDW:+--logdw "$LOGDW"} ${E2FSCK:+--e2fsck "$E2FSCK"} --ueventd-perms "$TOP/android-vendor/ueventd-perms.sh" \
   --android-subset "$WORK/android-subset" --linux-slot "$LINUX_SLOT" --out "$WORK/boot-linux-slot$LINUX_SLOT.img" >/dev/null
 
 # ---------------------------------------------------------------- confirm and install
