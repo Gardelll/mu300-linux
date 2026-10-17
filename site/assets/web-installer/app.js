@@ -626,6 +626,7 @@ function stepStorage() {
   const box = h("div", {});
   box.append(h("h3", {}, t("storage.title")), storageBar(a));
   box.append(h("p", {}, t("storage.verdict." + a.internal.verdict, fmtSize(a.internal.size), String(Math.max(a.internal.dirty, 0)))));
+  if (a.internal.foreignImage) box.append(callout("warn", "", t("storage.foreign-image")));
   if (a.makeRoom) {
     box.append(callout("warn", t("makeroom.title"),
       h("p", {}, t("makeroom.figures", fmtSize(a.makeRoom.userdata), fmtSize(a.makeRoom.total), fmtSize(Math.max(a.makeRoom.maxLinux, 0)), fmtSize(a.makeRoom.minLinux))),
@@ -657,7 +658,7 @@ function stepStorage() {
   }
   if (c.target === "internal" && existing && c.mode === "wipe") box.append(callout("warn", t("erase.title"), t("erase.internal")));
   if (c.target === "internal" && !existing && a.internal.dirty > 0) {
-    box.append(callout("warn", t("dirty.title"), t("dirty.text", String(a.internal.dirty)),
+    box.append(callout("warn", t("dirty.title"), t(a.internal.part ? "dirty.text.part" : "dirty.text", String(a.internal.dirty)),
       h("label", { class: "wi-field" }, t("erase.type", "overwrite"), h("input", { type: "text", autocomplete: "off", spellcheck: "false", value: w.overwriteTyped,
         oninput: (ev) => { w.overwriteTyped = ev.target.value; c.overwriteConfirmed = w.overwriteTyped.trim() === "overwrite"; document.getElementById("wi-next").disabled = !storageOk(); } }))));
   }

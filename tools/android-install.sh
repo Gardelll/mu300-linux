@@ -269,14 +269,24 @@ if [ "${SD_MODE:-0}" = 1 ]; then
     MU300_SD_DEV=$SD_DEV sh $T/android-mount-mu300root.sh $M
     trap sd_exit EXIT
 else
-# --- the region must not overlap any partition (checked again here, on the device itself)
-end=0
+# --- region-guard begin
+# --- the region must not overlap any partition (checked again here, on the device itself), unless it lies wholly
+# inside the one GPT partition named mu300root: another installer's place for this filesystem (tools/storage.sh's
+# region_in_bounds, FINDINGS 179)
+end=0; pn=0; ps=0; pz=0
 for p in /sys/block/mmcblk0/mmcblk0p*; do
     e=$(( $(cat $p/start) + $(cat $p/size) ))
     [ $e -gt $end ] && end=$e
+    grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && { pn=$((pn + 1)); ps=$(cat $p/start); pz=$(cat $p/size); }
 done
 disk=$(cat /sys/block/mmcblk0/size)
-[ "$OFF_S" -ge $end ] && [ $((OFF_S + SIZE_S)) -le $((disk - 34)) ] || { say "region overlaps partitions or the backup GPT"; exit 1; }
+if [ "$OFF_S" -ge $end ] && [ $((OFF_S + SIZE_S)) -le $((disk - 34)) ]; then :
+elif [ $pn = 1 ] && [ "$OFF_S" -ge $ps ] && [ $((OFF_S + SIZE_S)) -le $((ps + pz)) ]; then
+    say "the Linux filesystem goes into the GPT partition named mu300root (sectors $ps + $pz)"
+else
+    say "region overlaps partitions or the backup GPT"; exit 1
+fi
+# --- region-guard end
 
 attach() {
     for o in /sys/block/loop*/loop/offset; do

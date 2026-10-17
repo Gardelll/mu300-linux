@@ -823,9 +823,16 @@ Info 'bootchain' $BC_LINE
 
 Step 'storage' 6
 Say (T 'Locating free eMMC space after the last partition')
-$parts = (SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; done; echo $e $(cat /sys/block/mmcblk0/size)').Split(' ')
-if ($parts.Count -ne 2) { Die (T 'could not read the partition table from the device (is su granted? try again)') }
-[int64]$lastEnd = $parts[0]; [int64]$disk = $parts[1]
+# (tools/storage.sh's region_probe: the same command, so both installers see the same) the end of the last partition,
+# the eMMC's size (the last line), each GPT partition named mu300root as part:START:SECTORS, and "image" for another
+# installer's image file in Android's data (FINDINGS 179)
+# (no double quotes in a device command: Windows PowerShell 5.1 drops them on the way to adb)
+$parts = @((SuDo 'e=0; for p in /sys/block/mmcblk0/mmcblk0p*; do x=$(( $(cat $p/start) + $(cat $p/size) )); [ $x -gt $e ] && e=$x; grep -qx PARTNAME=mu300root $p/uevent 2>/dev/null && echo part:$(cat $p/start):$(cat $p/size); done; [ -f /data/mu300linux/openwrt.ext4 ] && echo image; echo $e $(cat /sys/block/mmcblk0/size)').Trim() -split '\s+')
+$nums = @($parts | Where-Object { $_ -match '^[0-9]+$' })
+$partList = @($parts | Where-Object { $_ -match '^part:[0-9]+:[0-9]+$' })
+$FOREIGN_IMAGE = @($parts | Where-Object { $_ -eq 'image' }).Count -gt 0
+if ($nums.Count -ne 2 -or ($nums.Count + $partList.Count + [int]$FOREIGN_IMAGE) -ne $parts.Count) { Die (T 'could not read the partition table from the device (is su granted? try again)') }
+[int64]$lastEnd = $nums[0]; [int64]$disk = $nums[1]
 # The free region behind the last partition, in sectors (tools/storage.sh's region_probe): from the first 4096-sector
 # (2 MiB) boundary behind the last partition - the next one even when the partition ends on one - to the last
 # boundary but one before the backup GPT. Each end gives up to one block away, so a partition table that ends at the
@@ -839,8 +846,17 @@ function FreeRegion([int64]$LastEnd, [int64]$Disk) {
     return @{ Start = $start; End = $end }
 }
 $region = FreeRegion $lastEnd $disk
-[int64]$OFF = $region.Start * 512
-[int64]$SIZE = ($region.End - $region.Start) * 512
+[int64]$REG_OFF = $region.Start * 512
+[int64]$REG_SIZE = ($region.End - $region.Start) * 512
+[int64]$OFF = $REG_OFF; [int64]$SIZE = $REG_SIZE
+# A GPT partition named mu300root (another installer's, kanoqwq's desktop installer): Linux goes there, boot/init boots
+# it. Two of them: which one is the system cannot be told, and neither is used.
+$IN_PART = 0; [int64]$PART_OFF = -1; [int64]$PART_SIZE = 0
+if ($partList.Count -eq 1) {
+    $pp = $partList[0].Split(':')
+    $PART_OFF = [int64]$pp[1] * 512; $PART_SIZE = [int64]$pp[2] * 512
+    $OFF = $PART_OFF; $SIZE = $PART_SIZE; $IN_PART = 1
+}
 Info 'emmc.sectors' $disk; Info 'emmc.last_end' $lastEnd; Info 'region.offset' $OFF; Info 'region.size' $SIZE
 # a prepared installation waiting for this device (the make-room path below, on an earlier run): its checks first
 $RESUMING = 0; $RESUME_TX = ''
@@ -1414,7 +1430,13 @@ function OfferRepartition([int64]$Disk, [int64]$LastEnd, [int64]$Size) {
 # keeps the previous one as <os>.old while the new one is unpacked, so allow for two of each plus working room.
 [int64]$NEED_OPENWRT = 800MB; [int64]$NEED_UBUNTU = 1600MB; [int64]$NEED_BOTH = 2400MB
 Info 'need.openwrt' $NEED_OPENWRT; Info 'need.ubuntu' $NEED_UBUNTU; Info 'need.both' $NEED_BOTH
-Write-Host (T 'eMMC: {1} ({2} sectors), partitions end at {3} (sector {4}), free after them: {5}' (Gib ($disk * 512)) $disk (Gib ($lastEnd * 512)) $lastEnd (Gib $SIZE))
+Write-Host (T 'eMMC: {1} ({2} sectors), partitions end at {3} (sector {4}), free after them: {5}' (Gib ($disk * 512)) $disk (Gib ($lastEnd * 512)) $lastEnd (Gib $REG_SIZE))
+Info 'region.partition' $IN_PART
+if ($IN_PART -eq 1) { Write-Host (T 'Linux partition: the GPT partition named mu300root, made by another installer, {1} at offset {2}; Linux goes there, the partition table is not changed' (Gib $SIZE) $OFF) }
+if ($FOREIGN_IMAGE) {
+    Write-Host (T 'Note: the Android data partition holds a Linux image file from another installer (/data/mu300linux/openwrt.ext4). This installer cannot update that layout, and after this installation the device starts the new system, not that one. The file is left as it is: delete it in Android to free its space.')
+    Info 'region.foreign_image' 1
+}
 # The SD card as the other place for it (boot/init looks there first): "<block device> <512-byte sectors> <type>"
 # of the first mmc disk that is not the eMMC - its first partition when it has one, the whole card otherwise. The
 # type keeps a second eMMC or an SDIO function out. Single quotes only (see the data check below).
@@ -1463,6 +1485,9 @@ if ($RESUMING -eq 1 -and -not $Check) {
 # check the real requirement once the systems are known. There is nowhere else to put this region on these
 # devices: userdata is metadata-encrypted (dm-default-key), so an image file inside it cannot be read from
 # Linux, and the spare-looking blackbox and fulldumpdb partitions are written by the firmware itself.
+if ($SD_MODE -eq 0 -and $partList.Count -gt 1) {
+    Die (T 'The eMMC has {1} partitions named mu300root, and which one holds Linux cannot be told. Nothing was changed: remove the one that is not used (with the installer that made it) and try again.' $partList.Count)
+}
 if ($SD_MODE -eq 0 -and $SIZE -lt 700MB) {
     # -Check with a card: a real run offers the card (as the default) and needs no repartitioning
     if ($Check -and $SD_DEV -and $sdEx -ne 'foreign') {
@@ -1481,17 +1506,28 @@ if ($SD_MODE -eq 0 -and $SIZE -lt 700MB) {
 # #43, #52, #65: a 32 GB eMMC whose table ends at its end puts the region's start at the disk's end, and the fixed
 # offset of the first releases lies beyond a 32 GB eMMC altogether).
 function RegionOnDisk([int64]$bytes) { [math]::Floor(($bytes + 2048) / 512) -le $disk }
-$existing = 'no'
-foreach ($cand in @($OFF, 27762098176)) {
+$existing = 'no'; $PART_FS = 'none'
+# the places in the order boot/init looks: the free region, the partition named mu300root, the old fixed offset (not
+# when it lies inside that partition); a filesystem in the partition is never larger than the partition
+$cands = @($REG_OFF); if ($IN_PART -eq 1) { $cands += $PART_OFF }; $cands += [int64]27762098176
+foreach ($cand in $cands) {
     if (-not (RegionOnDisk $cand)) { continue }
+    if ($cand -eq 27762098176 -and $IN_PART -eq 1 -and $cand -ge $PART_OFF -and $cand -lt ($PART_OFF + $PART_SIZE)) { continue }
     $m = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1080) count=2 2>/dev/null | od -An -tx1") -replace '\s', ''
     # two bytes on the disk always read as four hex digits: anything else is no answer, never "no installation"
     if ($m -notmatch '^[0-9a-f]{4}$') { Die (T 'no answer from the device') }
     $l = (SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1144) count=16 2>/dev/null") -replace '\0', ''
+    if ($IN_PART -eq 1 -and $cand -eq $PART_OFF -and $m -eq '53ef') { $PART_FS = $(if ($l.Trim() -eq 'mu300root') { 'mu300root' } else { 'ext4' }) }
     if ($m -eq '53ef' -and $l.Trim() -eq 'mu300root') {
         $blocks = [int64]((SuDo "dd if=/dev/block/mmcblk0 bs=1 skip=$($cand + 1028) count=4 2>/dev/null | od -An -tu4").Trim())
-        $OFF = $cand; $SIZE = $blocks * 4096; $existing = 'yes'; break
+        $OFF = $cand; $SIZE = $blocks * 4096; $existing = 'yes'
+        if ($IN_PART -eq 1 -and $cand -eq $PART_OFF) { if ($SIZE -gt $PART_SIZE) { $SIZE = $PART_SIZE } } else { $IN_PART = 0 }
+        break
     }
+}
+# another ext4 in that partition is not this installer's to format (the device refuses it too)
+if ($SD_MODE -eq 0 -and $IN_PART -eq 1 -and $existing -ne 'yes' -and $PART_FS -eq 'ext4') {
+    Die (T 'The partition named mu300root holds another Linux (ext4) filesystem, not labelled mu300root, and the installer never formats one that is not its own. Nothing was changed.')
 }
 Write-Host (T 'Linux region: offset {1}, {2}, existing mu300root filesystem: {3}' $OFF (Gib $SIZE) (T $existing))
 $INTERNAL_EXISTS = $(if ($existing -eq 'yes') { 1 } else { 0 }); [int64]$INT_SIZE = 0
@@ -1528,6 +1564,8 @@ if ($RESUMING -eq 1) {
     $vcode = 'existing'; $verdict = T 'OK: a MU300 Linux installation is already present (it can be kept or replaced)'
 } elseif ($SD_MODE -eq 1) {
     $vcode = 'sd'; $verdict = T 'OK: the SD card will be formatted; everything on it is erased'
+} elseif ($dirty -gt 0 -and $IN_PART -eq 1) {
+    $vcode = 'dirty'; $verdict = T 'WARNING: the partition named mu300root is not empty, and it holds no Linux filesystem of this project. Installing overwrites it'
 } elseif ($dirty -gt 0) {
     $vcode = 'dirty'; $verdict = T 'WARNING: the unpartitioned space is not empty; it may be used by this firmware. Installing overwrites it'
 } elseif ($SIZE -ge 20GB) {

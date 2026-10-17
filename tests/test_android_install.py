@@ -490,6 +490,42 @@ class Downgrade(ShellTest):
                       (TOP / 'android' / 'magisk' / 'installer' / 'mu300-install.sh').read_text())
 
 
+class RegionGuard(ShellTest):
+    """android-install.sh's own check of where it writes, on a fake sysfs: behind the last partition and before the
+    backup GPT, or wholly inside the one GPT partition named mu300root (another installer's place, FINDINGS 179)."""
+
+    def guard(self, shell, off_s, size_s, parts):
+        sysb = self.tmp / 'sys/block/mmcblk0'
+        shutil.rmtree(sysb, ignore_errors=True)
+        sysb.mkdir(parents=True)
+        (sysb / 'size').write_text(f'{16 << 21}\n')
+        for n, (name, start, size) in enumerate(parts, 1):
+            d = sysb / f'mmcblk0p{n}'
+            d.mkdir()
+            (d / 'start').write_text(f'{start}\n'); (d / 'size').write_text(f'{size}\n')
+            (d / 'uevent').write_text(f'PARTN={n}\nPARTNAME={name}\n')
+        block = re.search(r'# --- region-guard begin\n(.*?)# --- region-guard end', SRC, re.S).group(1)
+        block = block.replace('/sys/block/', f'{self.tmp}/sys/block/')
+        return self.sh(shell, f'say() {{ echo "[device] $*"; }}\nOFF_S={off_s}; SIZE_S={size_s}\n{block}echo PASSED')
+
+    def test_free_space_or_the_partition_named_mu300root_nothing_else(self):
+        ud = ('userdata', 2048, 8 << 21)
+        part = ('mu300root', 2048 + (8 << 21) + 2048, 2 << 21)
+        for shell in self.each_shell():
+            free = (2048 + (8 << 21)) // 4096 * 4096 + 4096
+            self.assertIn('PASSED', self.guard(shell, free, 1 << 21, [ud]).stdout)
+            out = self.guard(shell, part[1], part[2], [ud, part]).stdout
+            self.assertIn('PASSED', out)
+            self.assertIn('GPT partition named mu300root', out)
+            # one sector past the partition, a start inside userdata, another partition's name, two of the name
+            for off, size, parts in ((part[1], part[2] + 1, [ud, part]), (2048 + 4096, 4096, [ud, part]),
+                                     (part[1], part[2], [ud, ('mu300data', part[1], part[2])]),
+                                     (part[1], part[2], [ud, part, ('mu300root', part[1] + part[2], 4096)])):
+                out = self.guard(shell, off, size, parts).stdout
+                self.assertIn('region overlaps partitions', out, (off, size, parts))
+                self.assertNotIn('PASSED', out)
+
+
 class Systems(ShellTest):
     """The wipe of a root-level Ubuntu and the per-system install loop, run on a fake /data/local/tmp (T) and a
     fake mounted filesystem (M)."""

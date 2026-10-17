@@ -25,17 +25,25 @@ export function analyseStorage(status) {
   const disk = status.disk * 512;
   const parts = (status.parts || []).map(([name, start, size]) => ({ name, start: start * 512, size: size * 512 }))
     .sort((a, b) => a.start - b.start);
-  const last = parts.length ? parts[parts.length - 1] : null;
+  // a GPT partition named mu300root is not Android's: another installer made it for Linux (kanoqwq's desktop
+  // installer), and the region is that partition (region.part; tools/storage.sh, FINDINGS 179)
+  const android = parts.filter((p) => p.name !== "mu300root");
+  const last = android.length ? android[android.length - 1] : null;
   const region = status.region;
-  const internal = { off: region.off, size: region.size, existing: region.existing === "yes", dirty: region.dirty };
-  if (internal.existing) internal.verdict = "existing";
+  const internal = { off: region.off, size: region.size, existing: region.existing === "yes", dirty: region.dirty,
+    part: !!region.part, partFs: region.part_fs || "none", partCount: region.part_count || 0, foreignImage: !!region.foreign_image };
+  if (internal.partCount > 1) internal.verdict = "part-ambiguous";
+  else if (internal.part && !internal.existing && internal.partFs === "ext4") internal.verdict = "part-foreign";
+  else if (internal.existing) internal.verdict = internal.part ? "part-existing" : "existing";
   else if (internal.size < SD_MIN) internal.verdict = "too-small";
+  else if (internal.part) internal.verdict = internal.dirty > 0 ? "part-dirty" : "part-free";
   else if (internal.dirty > 0) internal.verdict = "dirty";
   else if (internal.size >= TESTED_LAYOUT) internal.verdict = "tested-layout";
   else if (internal.size >= NEED.both) internal.verdict = "both";
   else if (internal.size >= NEED.ubuntu) internal.verdict = "one";
   else internal.verdict = "openwrt-only";
-  internal.usable = internal.existing || internal.size >= SD_MIN;
+  internal.usable = internal.verdict !== "part-ambiguous" && internal.verdict !== "part-foreign" &&
+    (internal.existing || internal.size >= SD_MIN);
 
   const sd = { present: !!status.sd.dev, dev: status.sd.dev, size: status.sd.bytes, small: !!status.sd.small, existing: status.sd.existing };
   sd.usable = sd.present && sd.existing !== "foreign";
@@ -43,7 +51,7 @@ export function analyseStorage(status) {
   // Making room (the 32 GB variant): userdata is the last partition and fills the disk. Only its end would move.
   // The page shows the figures; the repartitioning itself stays with the installer for computers.
   let makeRoom = null;
-  if (!internal.usable && last && last.name === "userdata") {
+  if (!internal.usable && !internal.part && !internal.partCount && last && last.name === "userdata") {
     const usableEnd = (status.disk - 34) * 512;
     const total = usableEnd - last.start;
     makeRoom = { userdata: last.size, freeBehind: Math.max(0, usableEnd - (last.start + last.size)), total,
@@ -52,15 +60,15 @@ export function analyseStorage(status) {
 
   // the bar: Android's own partitions, userdata, then Linux or the free space, to scale
   const bar = [];
-  if (disk > 0 && parts.length) {
+  if (disk > 0 && last) {
     const ud = last && last.name === "userdata" ? last : null;
     const systemEnd = ud ? ud.start : last.start + last.size;
     bar.push({ kind: "android-system", size: systemEnd });
     if (ud) bar.push({ kind: "userdata", size: ud.size });
     const end = last.start + last.size;
-    if (internal.existing) {
+    if (internal.existing || internal.part) {
       if (internal.off > end) bar.push({ kind: "gap", size: internal.off - end });
-      bar.push({ kind: "linux", size: Math.min(internal.size, disk - internal.off) });
+      bar.push({ kind: internal.existing ? "linux" : "free", size: Math.min(internal.size, disk - internal.off) });
       const rest = disk - internal.off - internal.size;
       if (rest > 0) bar.push({ kind: "free", size: rest });
     } else if (disk > end) {
@@ -120,7 +128,11 @@ export function validateChoices(c, ctx) {
   if (c.target !== "internal" && c.target !== "sd") { e.push({ code: "no-target" }); return e; }
   if (c.target === "sd" && !analysis.sd.present) e.push({ code: "no-card" });
   if (c.target === "sd" && analysis.sd.existing === "foreign") e.push({ code: "card-foreign" });
-  if (c.target === "internal" && !analysis.internal.usable) e.push({ code: "internal-too-small" });
+  // another installer's partition named mu300root that cannot be used says why (two of them, another ext4 in it)
+  if (c.target === "internal" && !analysis.internal.usable) {
+    const v = analysis.internal.verdict;
+    e.push({ code: v === "part-foreign" || v === "part-ambiguous" ? v : "internal-too-small" });
+  }
   // init starts a mu300sd card before anything inside: an installation inside would never start
   if (c.target === "internal" && analysis.sd.existing === "yes") e.push({ code: "card-boots-first" });
 

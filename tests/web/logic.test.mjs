@@ -278,6 +278,39 @@ test("storage: the 32 GB variant gets the make-room figures, not an offer to rep
   assert.equal(analyseStorage({ ...s, parts: [["userdata", 2048, 1000], ["blackbox", 20000000, disk - 2048 - 20000000]] }).makeRoom, null);
 });
 
+test("storage: another installer's GPT partition named mu300root is Linux's place, not Android's (FINDINGS 179)", () => {
+  // F50-C with the layout emulated: userdata, then mu300root (804 MiB) right behind it, nothing free after it
+  const disk = 122159104, udEnd = 120500224, ps = 120504320, pz = 1646592;
+  const part = (region) => status({ disk, last_end: ps + pz,
+    parts: [["super", 200000, 10000000], ["userdata", 20000000, udEnd - 20000000], ["mu300root", ps, pz]],
+    region: { off: ps * 512, size: pz * 512, existing: "no", dirty: 0, part: 1, part_fs: "none", part_count: 1, foreign_image: 0, ...region } });
+  const ex = analyseStorage(part({ existing: "yes", part_fs: "mu300root" }));
+  assert.equal(ex.internal.verdict, "part-existing");
+  assert.equal(ex.internal.usable, true);
+  assert.equal(ex.target, "internal");
+  assert.equal(ex.makeRoom, null);
+  assert.deepEqual(ex.bar.map((b) => b.kind), ["android-system", "userdata", "gap", "linux", "free"]);
+  assert.equal(ex.bar.reduce((x, b) => x + b.size, 0), ex.disk);
+  assert.deepEqual(check(choices({ systems: ["openwrt"], bootOs: "openwrt", kernel: "6.18" }), part({ existing: "yes", part_fs: "mu300root" })), []);
+  assert.equal(analyseStorage(part({})).internal.verdict, "part-free");
+  assert.deepEqual(analyseStorage(part({})).bar.map((b) => b.kind), ["android-system", "userdata", "gap", "free", "free"]);
+  assert.equal(analyseStorage(part({ dirty: 4 })).internal.verdict, "part-dirty");
+  assert.deepEqual(check(choices({ systems: ["openwrt"], bootOs: "openwrt", kernel: "6.18" }), part({ dirty: 4 })), ["confirm-overwrite"]);
+  // what cannot be used says why, and is never offered
+  const foreign = analyseStorage(part({ part_fs: "ext4" }));
+  assert.equal(foreign.internal.verdict, "part-foreign");
+  assert.equal(foreign.internal.usable, false);
+  assert.deepEqual(check(choices({ systems: ["openwrt"], bootOs: "openwrt" }), part({ part_fs: "ext4" })), ["part-foreign"]);
+  const two = status({ disk, last_end: ps + pz, parts: [["userdata", 20000000, udEnd - 20000000], ["mu300root", ps, 2048], ["mu300root", ps + 2048, pz - 2048]],
+    region: { off: (ps + pz + 4096) * 512, size: 0, existing: "no", dirty: -1, part: 0, part_fs: "none", part_count: 2, foreign_image: 0 } });
+  assert.equal(analyseStorage(two).internal.verdict, "part-ambiguous");
+  assert.equal(analyseStorage(two).makeRoom, null);
+  assert.deepEqual(check(choices({ systems: ["openwrt"], bootOs: "openwrt" }), two), ["part-ambiguous", "too-small"]);
+  assert.equal(analyseStorage(part({ foreign_image: 1 })).internal.foreignImage, true);
+  // a status from before these fields: as before
+  assert.equal(analyseStorage(status()).internal.part, false);
+});
+
 test("choices the device would refuse are refused here first", () => {
   assert.deepEqual(check(choices()), []);
   assert.deepEqual(check(choices({ systems: [] })), ["no-system"]);
