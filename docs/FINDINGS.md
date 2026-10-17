@@ -10924,3 +10924,33 @@ Android up, `su -c mu300-linux`: `/run/mu300-root-dev` `mmcblk0@61698211840`, Op
 set up (nobody here has one); the partition here was made by hand to cover our own region.
 `tools/android-import-hotspot.sh` (no caller left) still mounts the old fixed offset and writes into the
 filesystem's top level, not a system's: it predates the region and the systems' directories.
+
+### 181. VoLTE and VoNR per SIM, kept and replayed at every start of the card
+
+From kanoqwq's fork (kanoqwq/mu300-linux 5f4732e, 53ef7b1: per-SIM VoLTE and VoNR switches with a boot replay),
+rewritten for this tree: there the switches live in the Locks page's apply jobs; here they are a setting of the dial.
+
+**What was there.** `mobile-data` sent `AT+CAVIMS=1` at every bring-up (the dial and the early warm-up): VoLTE was
+always on, and nothing touched VoNR.
+
+**Now.** `mobile-data voice volte|vonr on|off [--slot 0|1]`, the choice kept in `/etc/mu300/sim-voice` (`volte0=`,
+`vonr0=`, `volte1=`, `vonr1=`; 1 or 0; read, never executed; Ubuntu and OpenWrt alike). Every bring-up of a card sends
+its choice where `AT+CAVIMS=1` was (`voice_replay`): VoLTE `AT+CAVIMS=<x>` (on when there is no line, as before),
+VoNR `AT+SP5GCMDS="set nr param",45,<x>` only when the user set it, read back with
+`AT+SP5GCMDS="get nr synch_param",42`. No radio restart, no redial. A change for the card in use is sent at once and
+read back; a modem that does not read back what was asked for gets its previous value back and nothing is saved
+(exit 1). A change for the other card is saved for its next start. `voice --json [--read]` gives the saved choices and
+what the card in use says. Front ends: LuCI **Cellular > SIM settings** (mu300dash `simcard_get`/`simcard_set`),
+`mu300-api voice.get` / `voice.set` (EN/TR/ZH and the other catalogs).
+
+**Device test (F50-B, Ubuntu, Linux 7.2.11, 2026-10-17)**, the changed `mobile-data` and `mu300-api`: VoLTE off and
+on for the card in use, sent and read back (`+CAVIMS:0`/`+CAVIMS:1`, the modem's reply has no space); with
+`volte0=0` saved, a restart of `mu300-mobile-data` left the modem at `+CAVIMS:0` and data up; VoNR off read back 0.
+**VoNR on is not taken by this F50's firmware**: `AT+SP5GCMDS="set nr param",45,1` answers OK, but
+`"get nr synch_param",42` stays 0 for at least 30 s (`"get nr param",45` is `+CME ERROR: 0`). So `voice vonr on`
+refuses there, puts 0 back and saves nothing - which is the point of the read-back. The card was on LTE (CEREG AcT
+13, no 5G registration). `mu300-api voice.get`/`voice.set` the same; slot 3 refused. The board was left with the
+released `mobile-data` and no `sim-voice` file.
+
+Tests: `tests/test_device_scripts.py` `SimVoice`, `tests/test_mu300dash_security.py` `SimCard`, `tests/test_api.py`
+`test_voice`.

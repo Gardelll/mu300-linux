@@ -13,6 +13,9 @@ msgstr "Di động"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "Cài đặt SIM"
+
 msgid "Network locks"
 msgstr "Khóa mạng"
 
@@ -763,6 +766,12 @@ msgstr "Xóa giá trị đã lưu"
 msgid "Presets"
 msgstr "Mẫu có sẵn"
 
+msgid "Form (URL-encoded)"
+msgstr "Biểu mẫu (mã hóa URL)"
+
+msgid "Plain text"
+msgstr "Văn bản thuần"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Tin nhắn nhận được sẽ được chuyển tiếp ngay khi vào kho SMS. Lần gửi thất bại được thử lại sau 30 giây, sau đó mỗi lần cách gấp đôi (tối đa một giờ), tổng cộng mười lần."
 
@@ -801,12 +810,6 @@ msgstr "Địa chỉ (http:// hoặc https://)"
 
 msgid "Body"
 msgstr "Nội dung"
-
-msgid "Form (URL-encoded)"
-msgstr "Biểu mẫu (mã hóa URL)"
-
-msgid "Plain text"
-msgstr "Văn bản thuần"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Các trường: sender, time, text, device, message (mẫu đã điền)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "Không có cài đặt SIM"
+
+msgid "Modem default"
+msgstr "Mặc định của modem"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "đang dùng"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "Modem: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "Sẽ được gửi tới SIM này khi radio của nó khởi động lần tới."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "VoLTE và VoNR cho từng SIM, được giữ qua khởi động lại và gửi lại mỗi khi SIM đó khởi động. VoLTE bật trừ khi bị tắt; VoNR giữ như modem cho đến khi được đặt."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Người nhận: số, ví dụ 10086 hoặc +86..."
@@ -3433,9 +3463,18 @@ msgstr "Yêu cầu cập nhật không hợp lệ"
 msgid "The backup tool gave no valid reply"
 msgstr "Công cụ sao lưu không trả lời hợp lệ"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Nền tảng này không cung cấp tích hợp dữ liệu di động"
+
+msgid "The SIM settings could not be read"
+msgstr "Không đọc được cài đặt SIM"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "Modem không nhận cài đặt; chưa lưu gì"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio không bật lên được"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "Nền tảng này không cung cấp tích hợp dữ liệu di động"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Không thể lưu cài đặt chuyển vùng dữ liệu"

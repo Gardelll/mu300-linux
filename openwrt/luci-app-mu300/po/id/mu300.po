@@ -13,6 +13,9 @@ msgstr "Seluler"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "Pengaturan SIM"
+
 msgid "Network locks"
 msgstr "Kunci jaringan"
 
@@ -763,6 +766,12 @@ msgstr "Hapus nilai yang tersimpan"
 msgid "Presets"
 msgstr "Prasetel"
 
+msgid "Form (URL-encoded)"
+msgstr "Formulir (dienkode URL)"
+
+msgid "Plain text"
+msgstr "Teks biasa"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Pesan yang diterima diteruskan begitu sampai di pool SMS. Pengiriman yang gagal dicoba lagi setelah 30 dtk, lalu setiap kali setelah waktu dua kali lebih lama (paling lama satu jam), sepuluh kali seluruhnya."
 
@@ -801,12 +810,6 @@ msgstr "Alamat (http:// atau https://)"
 
 msgid "Body"
 msgstr "Isi"
-
-msgid "Form (URL-encoded)"
-msgstr "Formulir (dienkode URL)"
-
-msgid "Plain text"
-msgstr "Teks biasa"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Kolom: sender, time, text, device, message (templat yang sudah diisi)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "Pengaturan SIM tidak tersedia"
+
+msgid "Modem default"
+msgstr "Bawaan modem"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "digunakan"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "Modem: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "Dikirim ke SIM ini saat radionya mulai lagi."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "VoLTE dan VoNR untuk tiap SIM, tetap setelah reboot dan dikirim ulang setiap kali SIM itu mulai. VoLTE aktif kecuali dimatikan; VoNR tetap seperti di modem sampai diatur."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Penerima: nomor, mis. 10086 atau +86..."
@@ -3433,9 +3463,18 @@ msgstr "Permintaan pembaruan tidak valid"
 msgid "The backup tool gave no valid reply"
 msgstr "Alat cadangan tidak memberi jawaban yang valid"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Integrasi data seluler tidak disediakan oleh platform ini"
+
+msgid "The SIM settings could not be read"
+msgstr "Pengaturan SIM tidak dapat dibaca"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "Modem tidak menerima pengaturan; tidak ada yang disimpan"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio tidak menyala"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "Integrasi data seluler tidak disediakan oleh platform ini"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Pengaturan roaming data tidak dapat disimpan"

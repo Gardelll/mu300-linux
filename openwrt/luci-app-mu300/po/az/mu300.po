@@ -13,6 +13,9 @@ msgstr "Mobil şəbəkə"
 msgid "Dual SIM"
 msgstr "Dual SIM"
 
+msgid "SIM settings"
+msgstr "SIM ayarları"
+
 msgid "Network locks"
 msgstr "Şəbəkə kilidləri"
 
@@ -763,6 +766,12 @@ msgstr "Saxlanmış dəyəri sil"
 msgid "Presets"
 msgstr "Hazır seçimlər"
 
+msgid "Form (URL-encoded)"
+msgstr "Forma (URL kodlu)"
+
+msgid "Plain text"
+msgstr "Sadə mətn"
+
 msgid "Received messages are sent on as they reach the SMS pool. A failed delivery is retried after 30 s, then after twice as long each time (an hour at most), ten times in all."
 msgstr "Alınan mesajlar SMS hovuzuna çatan kimi yönləndirilir. Uğursuz göndəriş 30 san sonra, sonra hər dəfə iki dəfə uzun müddətdən sonra (ən çox bir saat) təkrarlanır, cəmi on dəfə."
 
@@ -801,12 +810,6 @@ msgstr "Ünvan (http:// və ya https://)"
 
 msgid "Body"
 msgstr "Gövdə"
-
-msgid "Form (URL-encoded)"
-msgstr "Forma (URL kodlu)"
-
-msgid "Plain text"
-msgstr "Sadə mətn"
 
 msgid "Fields: sender, time, text, device, message (the template filled in)"
 msgstr "Sahələr: sender, time, text, device, message (doldurulmuş şablon)"
@@ -1996,6 +1999,33 @@ msgstr "Switch to SIM%d"
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
+
+msgid "SIM settings are not available"
+msgstr "SIM ayarları mövcud deyil"
+
+msgid "Modem default"
+msgstr "Modemin öz ayarı"
+
+msgid "SIM%d"
+msgstr "SIM%d"
+
+msgid "in use"
+msgstr "istifadədə"
+
+msgid "VoLTE"
+msgstr "VoLTE"
+
+msgid "VoNR"
+msgstr "VoNR"
+
+msgid "Modem: %s"
+msgstr "Modem: %s"
+
+msgid "Sent to this SIM when its radio next starts."
+msgstr "Bu SIM-in radiosu növbəti dəfə başlayanda ona göndərilir."
+
+msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
+msgstr "Hər SIM üçün VoLTE və VoNR: yenidən başladıqdan sonra saxlanılır və həmin SIM hər başlayanda yenidən göndərilir. VoLTE söndürülməyibsə açıqdır; VoNR təyin olunana qədər modemdəki kimi qalır."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Alıcı: nömrə, məs. 10086 və ya +86..."
@@ -3433,9 +3463,18 @@ msgstr "Yanlış yeniləmə sorğusu"
 msgid "The backup tool gave no valid reply"
 msgstr "Ehtiyat nüsxə aləti etibarlı cavab vermədi"
 
+msgid "Mobile data integration is not provided by this platform"
+msgstr "Mobil məlumat inteqrasiyası bu platformada təmin edilmir"
+
+msgid "The SIM settings could not be read"
+msgstr "SIM ayarları oxuna bilmədi"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
+
+msgid "The modem did not take the setting; nothing was saved"
+msgstr "Modem ayarı qəbul etmədi; heç nə saxlanılmadı"
 
 # Source-language fallback for untranslated new controls.
 msgid "Enable hot switching; reboot if channels are unavailable or wait until idle"
@@ -3604,9 +3643,6 @@ msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
 msgid "Radio did not come up"
 msgstr "Radio işə düşmədi"
-
-msgid "Mobile data integration is not provided by this platform"
-msgstr "Mobil məlumat inteqrasiyası bu platformada təmin edilmir"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Məlumat rouminqi ayarı yadda saxlanıla bilmədi"
