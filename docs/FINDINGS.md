@@ -10614,7 +10614,100 @@ then `mu300-api wifi.set` with the same SSID: `security` was `wpa2-wpa3` before,
 the client back. A deauth and rejoin of the client: no oops, no warning. The owner's VPN stayed up throughout.
 Not done: items 1 and 5's r9 wpad (not built), Turkish and Chinese notice text, an F50.
 
-### 176. A kernel update wanted 500 MB free at once since every module is built: it did not fit F50-C's 804 MiB region
+### 176. "Dead downlink" on the U30 Air: the VPN engine started a moment before the bearer, and nothing restarted it
+
+**Status: current** (unit tests: `tests/test_device_scripts.py` `MobileData` (`dl_watch` and the tests after it) and
+`VpnUplink`; measured on the U30 Air, openwrt-luci v2026.10.17.1, kernels 6.18.57 and 6.18.56, the owner's sing-box
+profile with the kill switch on, about 60 reboots).
+
+**What was seen.** A boot of the owner's U30 Air came up with mobile data configured and nothing coming back:
+`sipa_eth0` received 988 bytes (7 packets) in six minutes while sending 206 packets (40 TX errors); `ifdown`/`ifup
+wan` did not help, a reboot did. `mobile-data watch` was running and did nothing.
+
+**How often.** A reboot soak (each boot: the address on `sipa_eth0`, the first HTTPS answer through the tunnel, a 10
+MB download through it, `sipa_eth0`'s counters, the kernel's ipa/sipa/modem lines; on a dead boot also the modem's
+`AT+CFUN?`, `+CEREG?`, `+CGATT?`, `+CGACT?`, `+CGPADDR`, `+CGCONTRDP`, and `/sys/kernel/debug/sipa`):
+
+| Kernel | Boots | Dead |
+|---|---|---|
+| 6.18.57 (v2026.10.17.1) | 15 | 8 |
+| 6.18.56 (v2026.10.16.1's bundle, `MU300_ALLOW_DOWNGRADE=1 MU300_KERNEL_BUNDLE=...`) | 17 | 15 |
+
+The same on both kernels, so not a 6.18.57 regression; and in clusters (06:30-06:47 dead, 06:48-06:52 good, then dead
+again), which is why the soaks of the morning (FINDINGS 163: 20 of 20, 12 of 12) saw none. The previous kernel was put
+back with `mu300-update rollback-boot` afterwards (the boot image's sha256 as before).
+
+**What a dead boot looks like.** Everything the watchdog asks passes: `+CGACT:1,1`, `sipa_eth0` on exactly the
+context's address, `+CEREG: 2,1,...,13`, `+CGATT: 1`, `+CFUN: 1`. In the IPA, the AP's side is ready: the receive
+buffers are posted (`sipa/mem`, `alloc_skb_cnt = 0`), the resource handshake of FINDINGS 13f runs whenever the AP
+sends (`type=5 flag=1` out, the modem's `type=6 flag=7` ack, `PROD_CP` granted), and the TX completions come. What
+never comes is the modem's own request to deliver (`sipa_dele: smsg_recv ... type=5, flag=0x1`, `CONS_WWAN_DL
+0->2`): on a good boot it is there six seconds after the dial; on a dead one never, or once for a handful of packets.
+Left alone a dead boot stayed dead (ten minutes watched).
+
+**What did not bring it back**, each tried on a dead boot: the data context again (`ifup wan`: `AT+CGACT=0`, the dial,
+the same address); the radio off and on (`mobile-data suspend off` / `resume`: a new address); the modem restarted
+(`AT+SPATASSERT=1`: modem_control reloaded the PS CP, the delegate reopened channel 5-120, the watchdog redialled);
+`sipa_eth0` unbound and bound again (`/sys/bus/platform/drivers/sipa_eth`). Not one packet came back after any of them.
+
+**What did: `mu300-vpn restart`.** On eight dead boots in a row, every one: 85-224 packets within twenty seconds, the
+tunnel up, the modem asking to deliver again. The VPN service starts at boot (S95) before there is a bearer, finds no
+uplink and is started again by procd every few seconds; on the dead boots the run that got as far as its engine did so
+a second or two before netifd had finished with the bearer (sing-box at 42-43 s, the address on `sipa_eth0` at 44-45
+s). That engine never gets a tunnel up, and nothing restarts it: the bearer's `ifup` did not touch the VPN, which is why
+the owner's `ifdown`/`ifup wan` changed nothing and the reboot (a new race) did. The engine's own state was not looked
+into (its configuration stays unread); what it does on such a start is the VPN module's to find out. Counted on the
+interface, the result is a downlink that is dead at every layer below it, which is what made it look like 13f again.
+
+**The open question of 13g** (why the watchdog missed a lost context): in the general case, because its round never
+looks at whether anything comes back; a context check and an address check cannot see a bearer that is up and carries
+nothing. That is fixed below for both.
+
+**What changed.**
+* **`mu300-vpn-uplink`** (`rootfs/overlay/opt/mu300/bin`), run at the bearer's `ifup` (OpenWrt:
+  `/etc/hotplug.d/iface/96-mu300-vpn-uplink`, `sipa_eth*` only, in the background; Ubuntu: the end of `mobile-data up`,
+  in the background): with the VPN on (`mu300-vpn enabled`), it waits 3 s for netifd, then up to 60 s for a run that is
+  starting to reach its engine (`/run/mu300-vpn/since`), and when that run started no later than the bearer came up
+  (the same second counts as before) it calls `mu300-vpn restart` and logs it (`logread -e mu300-vpn-uplink`). The kill
+  switch is never touched: `mu300-vpn restart` replaces it in one transaction. A VPN that is off, a run that started
+  after the bearer, or no run at all: nothing. One at a time (a lock); every later `ifup` (a redial by netifd or the
+  watchdog) gets the same treatment.
+* **The watchdog** (`mobile-data watch`, OpenWrt and Ubuntu), on rounds where the context and its address pass:
+  `sipa_eth0`'s own `rx_packets` and `tx_packets`. Stalled is at least 20 packets sent (`MU300_DL_STALL_TX`) and at most
+  2 received (`MU300_DL_RX_ALLOW`, a stray router advertisement) over at least 90 s (`MU300_DL_STALL_SECS`); more
+  received starts a new reference. Nothing is sent to find out: only what the device sends anyway counts, an idle link
+  is never a dead one, and the kill switch stays whole. Then one step per stall, each judged again on a new reference,
+  a step that does not apply passed over in the same round:
+  1. the VPN again (`mu300-vpn restart`), when one is on - the safety net for the hook above;
+  2. the data context again (`ifup wan` under netifd; on Ubuntu `AT+CGACT=0`, the link down, the dial) - 13g's case;
+  3. the radio off and on, then the dial (`suspend off` / `resume`, mu300-power's path; not on a managed or native
+     dual-SIM radio);
+  4. a reboot, only when `sipa_eth0` has received fewer than 200 packets in the whole boot (`MU300_DL_REBOOT_RX`) and
+     at most 3 times in a row (`MU300_DL_REBOOT_MAX`, counted in `/etc/mu300/downlink-reboots`, which goes once a boot
+     has received 1000 packets). Off with `uci set network.wan.dl_reboot=0` (OpenWrt) or `MU300_DL_REBOOT=0` in
+     `/etc/mu300/mobile-data.conf` (Ubuntu).
+  After step 4, 600 s until the next round of steps, doubled up to an hour. Every step goes to the system log and
+  `/run/mu300/radio.log`; at each the counters, `AT+CGACT?`, `AT+CGPADDR`, `AT+CEREG?` and the delegate's last kernel
+  lines go to `/run/mu300/downlink.log` (copied to `/etc/mu300/downlink-reboots.log` before a reboot). No identities.
+
+**Measured with the change** (U30 Air, 6.18.57, the files of this branch on openwrt-luci v2026.10.17.1):
+* 11 reboots: 10 with the tunnel up within 53-77 s and the 10 MB through it; on 7 of them `mu300-vpn-uplink` had
+  restarted a run that began before the bearer (`the VPN started before sipa_eth0 was up`), on 3 the run began after
+  it and was left alone. The eleventh had the tunnel up at 55 s and the download stopped after 34 kB (159 packets):
+  a stall of another kind, after a working start, for the watchdog.
+* The watchdog alone (the hook moved away, a dead boot: 7 packets received): `downlink stalled: sipa_eth0 sent 30
+  packets in 91 s and received 0; step 1: the VPN again` at 168 s, `the downlink is back: sipa_eth0 received 42
+  packets (after step 1)` at 229 s, the tunnel answering; `/run/mu300/downlink.log` had the counters, `+CGACT:1,1`,
+  the context's address, `+CEREG: 2,1,...,13` and the delegate's lines.
+* An earlier version of the hook compared only `since`: one boot of two stayed dead until the watchdog's step 1
+  brought it back at 139 s - the run had looked for its resolver while the bearer was coming up and reached its
+  engine after it. Hence the run's start (`/run/mu300-vpn/engine`).
+
+Not done: Ubuntu on a device (the same code paths: `mobile-data up` starts the hook, the watchdog is the same
+script); why the engine stays dead after such a start (the VPN module, `dikeckaan/mu300-linux-vpn`: it could restart
+itself when its uplink changes, which would make the hook here unnecessary).
+
+### 177. A kernel update wanted 500 MB free at once since every module is built: it did not fit F50-C's 804 MiB region
 
 **Status: current** (unit tests, `tests/test_update.py` `KernelStep`; device-tested on F50-C, internal OpenWrt in the
 default 804 MiB region, and F50-B, Ubuntu 24.04, 2026-10-17).
