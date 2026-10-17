@@ -88,7 +88,7 @@ Every word in plain language first, then what it means for this device. Grouped 
 
 **Wi-Fi client / station:** The device joining someone else's Wi-Fi, like a phone does. *Here:* `wifi-client`; the radio is either hotspot or client, decided at boot.
 
-**WPA2 / WPA3 / SAE:** Wi-Fi password security standards; SAE is the handshake WPA3 uses. *Here:* the driver has no SAE, so WPA3-only networks cannot be joined; WPA2 and mixed mode work.
+**WPA2 / WPA3 / SAE:** Wi-Fi password security standards; SAE is the handshake WPA3 uses. *Here:* the driver has no SAE, so WPA3-only networks cannot be joined (WPA2 and mixed mode work), and the hotspot is WPA2-PSK only: WPA3 on it is disabled for security ([U30AIR-SAE.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md)).
 
 **NCM / ECM / RNDIS:** Ways for a USB device to appear as a network card to a computer. *Here:* NCM is the default, ECM the fallback, RNDIS selectable.
 
