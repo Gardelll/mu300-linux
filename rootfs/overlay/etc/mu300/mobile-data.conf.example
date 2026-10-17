@@ -25,3 +25,9 @@
 # report roaming at home (an MVNO, national roaming): those need 1. `sudo mobile-data roaming on|off` writes this line;
 # the dial and its watchdog read it again within half a minute (docs/FINDINGS.md 120).
 #MU300_DATA_ROAMING=1
+
+# A downlink that stays dead under a working data context (docs/FINDINGS.md 176): the watchdog takes the context down
+# and dials again, and when nothing at all has come back on the interface in the whole boot it reboots the device,
+# at most 3 times in a row until a boot has a downlink again. 0 keeps the reboot out (the other steps still run).
+# (OpenWrt: uci set network.wan.dl_reboot=0; uci commit network)
+#MU300_DL_REBOOT=1
