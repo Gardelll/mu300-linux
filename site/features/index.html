@@ -152,6 +152,7 @@ sudo systemctl restart mu300-hotspot</code></pre>
 <p>On 5 GHz the hotspot uses channels 36-48 or 149-165, never a DFS channel (52-144): the Wi-Fi driver cannot detect
 radar, so a DFS channel chosen in the file or in LuCI is replaced by channel 36 (149 where 36-48 are not allowed) and
 the log says why (from v2026.10.20; releases before it failed to start the hotspot on such a channel).</p>
+<p>The hotspot is <strong>WPA2-PSK (CCMP) only</strong>, on every device. WPA3 (SAE) is disabled on this Wi-Fi chip for security: its firmware does the WPA3 exchange itself, and the way it hands the key back could let a client in without the password (<a href="https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md">why</a>). A hotspot that was set to WPA3 is switched to WPA2 with the same password at the next boot (switched off instead, never left open, if it has no usable password), and LuCI shows a notice; choosing WPA3 in LuCI leaves that access point down.</p>
 <p>If the Wi-Fi chip's firmware crashes, the driver resets the chip and the Wi-Fi comes back by itself, as a hotspot
 or as a client of another network: in the tests within 15 to 20 seconds, on 6.18 and 7.2. If the chip cannot be reset
 within 70 seconds, the device restarts cleanly instead of hanging.</p>

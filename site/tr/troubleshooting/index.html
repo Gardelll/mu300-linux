@@ -186,6 +186,11 @@ adb shell su -c id</code></pre><p>Cihaz <code>device</code> olarak listelenmeli 
 <p>SD yuvası boş bir F50'de, 6.18 ve 7.2'de v2026.10.21'e kadar, <code>dmesg -l err</code>'de birkaç saniyeden birkaç dakikaya varan aralıklarla <code>mmc1: Got command interrupt 0x00000001 even though no command operation was in progress</code> ve ardından 16 satırlık bir <code>SDHCI REGISTER DUMP</code> (sorun #181). Anaçizgi çekirdeğin EIC sürücüsü denetleyicinin altı bankasından yalnızca üçünü eşliyordu; yuvanın kart algılama hattı bulunamıyor, yuva bunun yerine sürekli yoklanıyordu: her saniye orada olmayan bir kart başlatılıyor, kimsenin yanıtlamadığı komuta denetleyicinin geç verdiği yanıt da dökümle birlikte günlüğe yazılıyordu. v2026.10.22'den beri düzeltildi: altı banka da eşlenir, yuvanın gerçek kart algılaması (bir kesme) vardır ve boş yuvaya kart takılana kadar dokunulmaz. Dökümler gürültüdür, arıza değil; eski bir sürümde yuvaya bir kart takın (kart varken döküm olmaz) ya da bunun hiç görülmediği 5.4'ü kullanın. U30 Air'de yuva yoktur.</p>
 </section>
 
+<section id="hotspot-wpa3">
+<h3>Hotspot WPA3'ten WPA2'ye geçti ya da WPA3 ile başlamıyor</h3>
+<p>Hotspot'ta WPA3 (SAE) bu Wi-Fi çipinde, her cihazda kapalı: U30 Air'in yazılımındaki WPA3 bir istemciyi parolasız içeri alabilir (<a href="https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md">neden</a>). WPA3 olan bir hotspot açılışta aynı parolayla WPA2'ye geçirildi: aynı parolayla yeniden bağlanın. LuCI'nin bildirimi hotspot'un kapalı olduğunu söylüyorsa WPA2'nin kullanabileceği bir parolası yoktu: LuCI → Ağ → Kablosuz'da WPA2-PSK ile bir parola (8-63 karakter) girip etkinleştirin (USB ya da SSH üzerinden). LuCI'de seçilen WPA3 ya da karma WPA2/WPA3 başlatılmaz; WPA2-PSK seçin.</p>
+</section>
+
 <section id="wpa3">
 <h3>Wi-Fi istemcisi bir ağa katılamıyor</h3>
 <p>Yalnızca WPA3 olan ağlar çalışmaz (Wi-Fi sürücüsünde SAE yok); yönlendiriciyi karma WPA2/WPA3 kipine alın. Ayrıca radyo ya hotspot ya istemcidir ve buna açılışta karar verilir: hotspot iken <code>wifi-client connect</code> yeniden başlatma ister.</p>

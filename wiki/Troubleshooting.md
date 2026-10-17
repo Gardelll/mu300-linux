@@ -98,6 +98,18 @@ You do not need to log in to get out (unless Linux is [locked](Going-Back-to-And
 
 Re-running `./install.sh` and choosing **update** also keeps your data and sets the password you type.
 
+## The hotspot went from WPA3 to WPA2, or does not come up after choosing WPA3
+
+WPA3 (SAE) on the hotspot is disabled on this Wi-Fi chip, on every device: the U30 Air's firmware WPA3 could let a
+client in without the password ([U30AIR-SAE.md](https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md)).
+
+* A hotspot that was WPA3 was switched to **WPA2 with the same password** at boot; LuCI shows a notice. Join again
+  with the same password. The old settings are in `/etc/mu300/wireless.before-wpa2`.
+* The notice says the hotspot is **off**: it had no password WPA2 can use (8-63 characters). Set one in LuCI →
+  Network → Wireless, choose WPA2-PSK and enable the network (over USB or SSH if the hotspot was your way in).
+* WPA3 or WPA2/WPA3 mixed chosen in LuCI: that access point is not started (`logread | grep wifi-scripts`). Choose
+  WPA2-PSK.
+
 ## Joining a Wi-Fi network fails
 
 * WPA3-only networks cannot be joined (the driver has no SAE). Switch the router to WPA2/WPA3 mixed mode.
