@@ -40,6 +40,9 @@ msgstr "Құрылғыны басқару"
 msgid "Update"
 msgstr "Жаңарту"
 
+msgid "Backup of settings"
+msgstr "Баптаулардың сақтық көшірмесі"
+
 msgid "Languages"
 msgstr "Тілдер"
 
@@ -318,6 +321,75 @@ msgstr "Сұрау сәтсіз"
 
 msgid "(empty)"
 msgstr "(бос)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Құпия фраза (кемінде 8 таңба)"
+
+msgid "The passphrase again"
+msgstr "Құпия фраза қайтадан"
+
+msgid "Download the backup"
+msgstr "Көшірмені жүктеп алу"
+
+msgid "Back up the settings"
+msgstr "Баптауларды сақтау"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Хотспот, мобильді деректер мен APN, желі құлыптары, VPN профильдері мен баптаулары, SMS қайта жіберу, LAN мекенжайы, хост аты, уақыт белдеуі және SSH кілттері бар бір файл. Онда құпиясөздер бар: құпия фразамен шифрланады және оны тек сол фраза қайта ашады."
+
+msgid "Include the login password"
+msgstr "Кіру құпиясөзін қосу"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Құпия фраза, егер файл шифрланған болса"
+
+msgid "Show what would change"
+msgstr "Не өзгеретінін көрсету"
+
+msgid "Restore"
+msgstr "Қалпына келтіру"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Файл 4 МиБ-тан үлкен"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Файлдағы баптаулар осыларды алмастырады. Хотспот, мобильді деректер немесе LAN қайта іске қосылуы мүмкін, бұл бет байланысты біраз уақытқа жоғалтуы мүмкін."
+
+msgid "Restore from a backup"
+msgstr "Сақтық көшірмеден қалпына келтіру"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Файлдың әр мәні алдымен тексеріледі; біреуі қабылданбаса, ештеңе өзгермейді. Бірдей нәрселерге тиіспейді, бұл құрылғының бірде-бір VPN профилі, жазылымы немесе SSH кілті жойылмайды."
+
+msgid "Keep this device's login password"
+msgstr "Осы құрылғының кіру құпиясөзін сақтау"
+
+msgid "Take a file of another device model"
+msgstr "Басқа құрылғы үлгісінің файлын қабылдау"
+
+msgid "The two passphrases differ"
+msgstr "Екі құпия фраза сәйкес емес"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Құпия фраза кемінде 8 таңба болуы керек"
+
+msgid "Saved (encrypted)"
+msgstr "Сақталды (шифрланған)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Сақталды. Файл шифрланбаған: онда құпиясөздер бар, оны қауіпсіз жерде сақтаңыз."
+
+msgid "Choose a backup file first"
+msgstr "Алдымен сақтық көшірме файлын таңдаңыз"
+
+msgid "Restoring…"
+msgstr "Қалпына келтірілуде…"
+
+msgid "Restored"
+msgstr "Қалпына келтірілді"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Қалпына келтіру аяқталмады: жоғарыдағы жолдарды қараңыз"
 
 msgid "Loading…"
 msgstr "Жүктелуде…"
@@ -3240,6 +3312,9 @@ msgstr "Белгісіз жаңарту операциясы"
 
 msgid "Invalid update request"
 msgstr "Жаңарту сұрауы жарамсыз"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Сақтық көшірме құралы жарамды жауап бермеді"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

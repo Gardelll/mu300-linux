@@ -508,7 +508,7 @@ export const API_METHODS = new Set(("hello overview wifi.get wifi.set wifi.power
   "vpn.sub_refresh vpn.sub_remove vpn.logs vpn.install vpn.engine_install sms.list sms.read sms.send sms.job sms.delete " +
   "sms.forward lan.get lan.set usb.role adb.auth system.get system.hostname system.timezone system.password system.ssh " +
   "system.reboot system.boot system.bootos update.check update.apply kernel.set extra.list extra.install extra.remove logs " +
-  "job.status job.cancel job.clear").split(" "));
+  "backup.export backup.import job.status job.cancel job.clear").split(" "));
 // the last line of what mu300-api printed, as an object (it prints exactly one)
 export function parseApiAnswer(stdout) {
   const last = String(stdout || "").trim().split("\n").pop() || "";

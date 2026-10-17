@@ -40,6 +40,9 @@ msgstr "Cihazın idarəsi"
 msgid "Update"
 msgstr "Yenilə"
 
+msgid "Backup of settings"
+msgstr "Ayarların ehtiyat nüsxəsi"
+
 msgid "Languages"
 msgstr "Dillər"
 
@@ -318,6 +321,75 @@ msgstr "Sorğu uğursuz oldu"
 
 msgid "(empty)"
 msgstr "(boş)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Parol ifadəsi (ən azı 8 simvol)"
+
+msgid "The passphrase again"
+msgstr "Parol ifadəsi yenidən"
+
+msgid "Download the backup"
+msgstr "Nüsxəni endir"
+
+msgid "Back up the settings"
+msgstr "Ayarların nüsxəsini çıxar"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Hotspot, mobil data və APN, şəbəkə kilidləri, VPN profilləri və ayarları, SMS yönləndirmə, LAN ünvanı, host adı, saat qurşağı və SSH açarları olan bir fayl. İçində parollar var: parol ifadəsi ilə şifrələnir və onu yalnız həmin ifadə yenidən açır."
+
+msgid "Include the login password"
+msgstr "Giriş parolunu daxil et"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Fayl şifrəlidirsə, parol ifadəsi"
+
+msgid "Show what would change"
+msgstr "Nəyin dəyişəcəyini göstər"
+
+msgid "Restore"
+msgstr "Bərpa et"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Fayl 4 MiB-dan böyükdür"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Fayldakı ayarlar bunları əvəz edir. Hotspot, mobil data və ya LAN yenidən başlaya bilər və bu səhifə bir anlıq bağlantını itirə bilər."
+
+msgid "Restore from a backup"
+msgstr "Ehtiyat nüsxədən bərpa et"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Faylın hər dəyəri əvvəlcə yoxlanılır; biri rədd edilsə, heç nə dəyişmir. Eyni olanlara toxunulmur və bu cihazın heç bir VPN profili, abunəliyi və ya SSH açarı silinmir."
+
+msgid "Keep this device's login password"
+msgstr "Bu cihazın giriş parolunu saxla"
+
+msgid "Take a file of another device model"
+msgstr "Başqa cihaz modelinin faylını qəbul et"
+
+msgid "The two passphrases differ"
+msgstr "İki parol ifadəsi fərqlidir"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Parol ifadəsi ən azı 8 simvol olmalıdır"
+
+msgid "Saved (encrypted)"
+msgstr "Saxlanıldı (şifrəli)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Saxlanıldı. Fayl şifrəli deyil: içində parollar var, onu təhlükəsiz saxlayın."
+
+msgid "Choose a backup file first"
+msgstr "Əvvəlcə ehtiyat nüsxə faylını seçin"
+
+msgid "Restoring…"
+msgstr "Bərpa edilir…"
+
+msgid "Restored"
+msgstr "Bərpa edildi"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Bərpa başa çatmadı: yuxarıdakı sətirlərə baxın"
 
 msgid "Loading…"
 msgstr "Yüklənir…"
@@ -3240,6 +3312,9 @@ msgstr "Naməlum yeniləmə əməliyyatı"
 
 msgid "Invalid update request"
 msgstr "Yanlış yeniləmə sorğusu"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Ehtiyat nüsxə aləti etibarlı cavab vermədi"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

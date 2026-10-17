@@ -40,6 +40,9 @@ msgstr "Управление устройством"
 msgid "Update"
 msgstr "Обновить"
 
+msgid "Backup of settings"
+msgstr "Резервная копия настроек"
+
 msgid "Languages"
 msgstr "Языки"
 
@@ -318,6 +321,75 @@ msgstr "Ошибка запроса"
 
 msgid "(empty)"
 msgstr "(пусто)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Парольная фраза (не менее 8 символов)"
+
+msgid "The passphrase again"
+msgstr "Парольная фраза ещё раз"
+
+msgid "Download the backup"
+msgstr "Скачать копию"
+
+msgid "Back up the settings"
+msgstr "Сохранить настройки"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Один файл с точкой доступа, мобильными данными и APN, блокировками сети, профилями и настройками VPN, пересылкой SMS, адресом LAN, именем хоста, часовым поясом и ключами SSH. В нём есть пароли: с парольной фразой он шифруется, и открыть его снова можно только ею."
+
+msgid "Include the login password"
+msgstr "Включить пароль входа"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Парольная фраза, если файл зашифрован"
+
+msgid "Show what would change"
+msgstr "Показать, что изменится"
+
+msgid "Restore"
+msgstr "Восстановить"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Файл больше 4 МиБ"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "Настройки из файла заменят текущие. Точка доступа, мобильные данные или LAN могут перезапуститься, и страница может ненадолго потерять связь."
+
+msgid "Restore from a backup"
+msgstr "Восстановить из копии"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Каждое значение файла сначала проверяется; если хоть одно отклонено, ничего не меняется. Совпадающее не трогается, и ни один профиль VPN, подписка или ключ SSH этого устройства не удаляется."
+
+msgid "Keep this device's login password"
+msgstr "Сохранить пароль входа этого устройства"
+
+msgid "Take a file of another device model"
+msgstr "Принять файл другой модели устройства"
+
+msgid "The two passphrases differ"
+msgstr "Парольные фразы не совпадают"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "Парольная фраза должна быть не короче 8 символов"
+
+msgid "Saved (encrypted)"
+msgstr "Сохранено (зашифровано)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Сохранено. Файл не зашифрован: в нём есть пароли, храните его надёжно."
+
+msgid "Choose a backup file first"
+msgstr "Сначала выберите файл копии"
+
+msgid "Restoring…"
+msgstr "Восстановление…"
+
+msgid "Restored"
+msgstr "Восстановлено"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Восстановление не завершилось: см. строки выше"
 
 msgid "Loading…"
 msgstr "Загрузка…"
@@ -3240,6 +3312,9 @@ msgstr "Неизвестная операция обновления"
 
 msgid "Invalid update request"
 msgstr "Недопустимый запрос обновления"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Инструмент резервного копирования не дал корректного ответа"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

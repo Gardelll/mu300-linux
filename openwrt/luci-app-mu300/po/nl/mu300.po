@@ -40,6 +40,9 @@ msgstr "Apparaatbeheer"
 msgid "Update"
 msgstr "Bijwerken"
 
+msgid "Backup of settings"
+msgstr "Back-up van instellingen"
+
 msgid "Languages"
 msgstr "Talen"
 
@@ -318,6 +321,75 @@ msgstr "Verzoek mislukt"
 
 msgid "(empty)"
 msgstr "(leeg)"
+
+msgid "Passphrase (8 characters or more)"
+msgstr "Wachtzin (8 tekens of meer)"
+
+msgid "The passphrase again"
+msgstr "De wachtzin nogmaals"
+
+msgid "Download the backup"
+msgstr "Back-up downloaden"
+
+msgid "Back up the settings"
+msgstr "Instellingen back-uppen"
+
+msgid "One file with the hotspot, mobile data and the APN, the network locks, the VPN profiles and settings, SMS forwarding, the LAN address, the host name, the time zone and the SSH keys. It holds passwords: with a passphrase it is encrypted, and only that passphrase opens it again."
+msgstr "Eén bestand met de hotspot, mobiele data en de APN, de netwerkvergrendelingen, de VPN-profielen en -instellingen, sms-doorsturen, het LAN-adres, de hostnaam, de tijdzone en de SSH-sleutels. Het bevat wachtwoorden: met een wachtzin wordt het versleuteld, en alleen die wachtzin opent het weer."
+
+msgid "Include the login password"
+msgstr "Het inlogwachtwoord meenemen"
+
+msgid "Passphrase, if the file is encrypted"
+msgstr "Wachtzin, als het bestand versleuteld is"
+
+msgid "Show what would change"
+msgstr "Tonen wat er zou veranderen"
+
+msgid "Restore"
+msgstr "Herstellen"
+
+msgid "The file is larger than 4 MiB"
+msgstr "Het bestand is groter dan 4 MiB"
+
+msgid "The settings of the file replace these. The hotspot, mobile data or the LAN may restart, and this page may lose its connection for a moment."
+msgstr "De instellingen uit het bestand vervangen deze. De hotspot, mobiele data of het LAN kunnen herstarten, en deze pagina kan even de verbinding verliezen."
+
+msgid "Restore from a backup"
+msgstr "Herstellen vanuit een back-up"
+
+msgid "Every value of the file is checked first; one that is refused and nothing is changed. What is the same is left alone, and no VPN profile, subscription or SSH key of this device is removed."
+msgstr "Elke waarde in het bestand wordt eerst gecontroleerd; wordt er één geweigerd, dan verandert er niets. Wat gelijk is blijft ongemoeid, en geen VPN-profiel, abonnement of SSH-sleutel van dit apparaat wordt verwijderd."
+
+msgid "Keep this device's login password"
+msgstr "Het inlogwachtwoord van dit apparaat behouden"
+
+msgid "Take a file of another device model"
+msgstr "Een bestand van een ander apparaatmodel accepteren"
+
+msgid "The two passphrases differ"
+msgstr "De twee wachtzinnen verschillen"
+
+msgid "The passphrase needs 8 characters or more"
+msgstr "De wachtzin moet 8 tekens of meer hebben"
+
+msgid "Saved (encrypted)"
+msgstr "Opgeslagen (versleuteld)"
+
+msgid "Saved. The file is not encrypted: it holds passwords, keep it safe."
+msgstr "Opgeslagen. Het bestand is niet versleuteld: het bevat wachtwoorden, bewaar het veilig."
+
+msgid "Choose a backup file first"
+msgstr "Kies eerst een back-upbestand"
+
+msgid "Restoring…"
+msgstr "Bezig met herstellen…"
+
+msgid "Restored"
+msgstr "Hersteld"
+
+msgid "The restore did not finish: see the lines above"
+msgstr "Het herstel is niet afgerond: zie de regels hierboven"
 
 msgid "Loading…"
 msgstr "Laden…"
@@ -3240,6 +3312,9 @@ msgstr "Onbekende updatebewerking"
 
 msgid "Invalid update request"
 msgstr "Ongeldig updateverzoek"
+
+msgid "The backup tool gave no valid reply"
+msgstr "Het back-uphulpmiddel gaf geen geldig antwoord"
 
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"

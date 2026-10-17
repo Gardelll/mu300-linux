@@ -167,6 +167,7 @@ what replaced it. The table below gives each section's state.
 | 151 | The U30 Air's battery LED shows the battery as ZTE's firmware (white from 60 %, blue from 10 %, red below; breathing on the PMIC's curve while charging; no timeout on outside power, nor for the low-battery red), read at every tick of `mu300-buttons` | current (unit tests; ZTE's behaviour from the stock firmware and its guide; not yet watched on a device) |
 | 152 | The U30 Air's Wi-Fi LED: white on 5 GHz, blue on 2.4 GHz, as ZTE's firmware and its guide (it was the other way round); stock's network light shows the SIM in use, not 4G/5G (not changed) | current (read from the stock firmware and ZTE's guide; not yet looked at on a device) |
 | 154 | The U30 Air's network LED shows the SIM in use, as ZTE's firmware and its guide: white the nano-SIM (slot 0), blue the eSIM (slot 1), red no service, the target's colour blinking during a live switch; no longer 4G/5G | current (read from the stock firmware and ZTE's guide; unit tests; not yet looked at on a device) |
+| 155 | The settings as one file and back: `mu300-backup export|import|show` (Ubuntu and OpenWrt), `mu300-api backup.export/backup.import`, System > Backup of settings in the panel; a passphrase seals it (openssl enc has no GCM: AES-256-CBC with the SHA-256 of the contents inside), every value checked by its setter's own rules before anything changes | current (unit tests on the fake device of test_api, hostile files included; not yet run on a device) |
 | 156 | The release smoke test, `tools/smoke.py`: identity first (SSH host key fingerprint, hostname, device, system, adb serial), the state before and after an update by each path (online, mirror, `--from`, the Magisk zip), the VPN's files compared by hash on the device | current (unit tests with fakes; not yet run against a device) |
 | 160 | The eMMC at a cold boot: a failed HS400ES (`error -84`, issue #226) no longer leaves the board without `mmcblk0`; the core drops the failed timing and the next attempt takes HS200, then HS/DDR52, then HS; a test hook `sdhci_sprd.fail_hs400es` | current (unit tests; both mainline kernels built; not run on a device) |
 | 161 | Mainline kernel sources: unpacked only after two OpenPGP signatures check out (kernel.org's autosigner over `sha256sums.asc`, the releaser over the tar) against keyrings pinned in `upstream/keys/`, fail closed | current (unit tests with throwaway keys; 6.18.56 and 7.2.10 from kernel.org and seven kinds of tampering checked in the build image, 2026-10-16) |
@@ -4301,6 +4302,140 @@ watches only and keeps the power-off.
 
 Open: the 5.4 thermal sysfs on an F50 and a U30 Air (`/sys/class/thermal/thermal_zone*/{type,mode,trip_point_*}`,
 the `cdev*` links and `cooling_device*/type`) and which way the guard goes there; a load run on 5.4.
+### 155. The settings as one file, and back (`mu300-backup`)
+
+**Status: current** (unit tests on the fake device of `tests/test_api.py`; not yet run on a device).
+
+**Why.** An update keeps the settings (§85), a new installation, a second device or a lost card do not: the hotspot,
+the APN, the locks, the VPN profiles, SMS forwarding, the keys were typed in again by hand.
+
+**What.** `rootfs/overlay/opt/mu300/bin/mu300-backup` (one program for Ubuntu and OpenWrt; it takes mu300-api's helpers
+by sourcing it as a library, `MU300_LIB=1`):
+
+- `export [-o FILE|-] [--encrypt] [--with-password] [--only S,...]`: one JSON document,
+  `{"format":"mu300-backup","version":1,"created","source":{device,system,release,hostname},"sections":{...}}`, with
+  the sections `wifi` (name, password, band, channel, hidden, on), `data` (APN, PDP type, authentication, user,
+  password, data roaming), `sim` (the boot SIM), `locks` (the lock tool's saved `mode endc lte nr cell`,
+  openwrt-luci), `vpn` (on/off, the active profile's name, the settings `KILL_SWITCH TAILSCALE IPV6 REMOTE_DNS
+  BOOTSTRAP_DNS LAN_CIDRS`, the profiles the user made - name, type, configuration, options; OpenVPN's user and
+  password from `auth.txt` - and the subscriptions with their address), `sms_forward` (the panel's settings, secrets
+  included, openwrt-luci), `lan`, `system` (host name, time zone, SSH on/off), `ssh_keys` (the login user's: root's
+  `/etc/dropbear/authorized_keys` on OpenWrt, ubuntu's `~/.ssh/authorized_keys` on Ubuntu; a line with options in
+  front is left out, and said so) and with `--with-password` `password` (the hash from `/etc/shadow`). Settings are
+  read where they live (hotspot.conf, mobile-data.conf, lan.conf or UCI; the VPN module's `profile show --json
+  --reveal` and `subscription show --reveal`, which it gives root alone). Never in a file: the path of an engine
+  binary (`XRAY`, `SING_BOX`, ...: a file that set one would choose what runs as root), profiles that came from a
+  subscription (it brings them back), runtime state.
+- The file is written 0600 (aside, then renamed; never through a link); without `-o` it is
+  `./mu300-backup-HOST-DATE.json` (`.enc` when sealed).
+- `import FILE|- [--dry-run] [--force] [--only|--skip S,...]`, `show FILE`.
+
+**The seal.** `openssl enc -aes-256-gcm` was the first choice and does not exist: OpenSSL 3's `enc` refuses AEAD
+ciphers ("AEAD ciphers not supported"; LibreSSL's takes the name and writes no tag at all). `age` ships in neither
+image; `openssl` does in both (Ubuntu's `openssl`, OpenWrt's `openssl-util`, which the VPN module needs). So:
+`MU300-BACKUP-ENCRYPTED 1`, a line naming `cipher=aes-256-cbc kdf=pbkdf2 digest=sha256 iter=600000`, then
+`openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -md sha256 -a` of `sha256=<hex>` + the document. The key and the IV
+both come from the passphrase and the file's salt; the SHA-256 inside the encryption is checked before the document is
+read, so a wrong passphrase, a changed character or a cut file is refused ("the file was changed after it was
+encrypted"). The passphrase (8-256 characters) reaches openssl on a pipe of its own (`-pass fd:3`), never on its
+command line; the rounds a file names are taken between 10000 and 5000000 only.
+
+**The import.** In order, and nothing changed until the end of step 4:
+
+1. The file (4 MiB at most) is opened and checked against the format with one jq program: every key known, every
+   value of its kind and size, no control character in anything but a VPN configuration and SMS forwarding's
+   texts. Anything else and the whole file is refused (exit 2).
+2. A file of another device type is refused without `--force`; one of the other system gives what both have
+   (locks and SMS forwarding are skipped where there is no panel, and said so).
+3. This device is read in the same form, and one jq program lists the steps: only what differs. Secrets are compared
+   and never shown ("the password changes"). Nothing is removed: a VPN profile, subscription or SSH key the file
+   lacks stays. Locks the device has and the file has not are reset first (`lock reset`, the verified one, §48),
+   then the file's are applied.
+4. Every step is checked by the rules of what will apply it: mu300-api's setters in a new check mode
+   (`MU300_API_CHECK=1`: `wifi.set wifi.power data.set sim.select lock.set lan.set system.hostname system.timezone
+   system.ssh` stop after their own field checks with `{"ok":1,"checked":true}`), the forwarding adapter's
+   (`MU300_FWD_CHECK=1`, after its checks, before it writes), and for the rest mu300-backup's own (VPN names by
+   mu300-api's rule, types, configurations as text, subscription addresses `https://` only, settings by the module's
+   own rules; SSH keys as OpenSSH public keys; a password hash as SHA-512/SHA-256 crypt, bcrypt or yescrypt -
+   yescrypt not on OpenWrt, whose musl cannot read it). One refusal and nothing is changed (exit 1); "unsupported"
+   (no hotspot.conf yet, no VPN module) skips that step. `--dry-run` stops here.
+5. The steps run (what can cut the connection last: SSH keys, password, SMS forwarding, VPN, SIM, mobile data, locks,
+   system, hotspot, LAN): through mu300-api's setters, the lock tool directly (one at a time: through the panel each
+   would start detached and the next would find the lock busy), the forwarding adapter (with `clear` naming the
+   secrets the file has none of: the adapter keeps a saved secret that comes empty), the VPN module's CLI (a
+   configuration and a subscription's address on its stdin; OpenVPN's user and password into the profile's
+   `auth.txt`, since `profile set` takes them on its command line), `chpasswd -e` (busybox's on OpenWrt) on its
+   stdin, and the keys file written aside and renamed (never through a link: ubuntu's home is its own). A step that
+   fails is reported and the others go on (exit 1).
+
+**Security review of the first version (before merge).** An imported file is untrusted, and three holes were found
+and closed:
+
+1. *Values that become options.* Values of the file reach command lines as positional arguments (`mu300-vpn profile
+   add TYPE NAME -`, `profile set ID KEY VALUE`, `settings set KEY VALUE`, `subscription add NAME - --type T
+   --interval N`, `lock apply KIND VALUE`). A value starting with `-` (`--json`, `--insecure`) would be read as an
+   option. The profile type's rule allowed `-` first (`[a-z0-9-]+`), and option values were only "one line of text".
+   Now every value that goes onto a command line passes `arg`: taken exactly from the step (no trailing newline lost
+   to `$(...)`), not empty, no control character, never starting with `-`. The type is `[a-z0-9][a-z0-9-]{0,15}`,
+   subscription type and interval are checked again where they are used, the profile id the module answers must look
+   like one, and a lock value goes through mu300-api's rule and `arg`. No `--` was added to the module or the lock
+   tool: nothing reaches them that could be taken for an option.
+2. *A line break inside a value.* Each of `allowed` (`is_ascii_line`, then `grep -x`), `text_ok` and `hash_ok` refused
+   one already, so `HASH\nroot:HASH` never matched. But the format's patterns used `test("^...$")`, and jq's `^` and
+   `$` are the ends of a line, not of the value. So an option key `A\nB` passed the format, and the shell then split
+   it into two keys. The patterns now use `\A...\z`, and every one-line field refuses any control character at the
+   format level. `chpasswd -e` gets exactly one line, `root:` or `ubuntu:` and a hash checked again just before.
+3. *Keys split into words.* `for _k in $(jq -r '.options | keys[]')` is now a loop over indices with each key read
+   exactly, and checked against an anchored pattern.
+
+Tests for each: `--json` as a type, a type and an option key with a line break, a hash followed by a second shadow
+line, a lock value with a line break, `--help` and `-x` as lock values (the lock tool is never called), `--insecure`
+as an option value, `--json` as a subscription name and `-x` as the active profile.
+
+**The API and the panel.** `mu300-api backup.export {passphrase, with_password}` answers `{"name","encrypted","file"}`
+- the one reply that carries secrets on purpose - and `backup.import {file, passphrase, dry_run, force, only, skip}`
+answers a dry run at once (`valid`, `text`) and otherwise starts the restore as the job (`job.status`); the request may
+be 6 MiB for this method alone. The file and the passphrase reach mu300-backup on its stdin (the job's input file is
+root's and removed when the job starts). On openwrt-luci, System > Backup of settings (`view/mu300/backup.js`) calls
+`mu300dash backup_export/backup_import/backup_job`, which pass the request to mu300-api; `run_m` keeps their replies
+out of the call log (their length only). The file is made in the browser and never stored on the device. The panel's
+page is in every catalog of the panel. No page on Ubuntu's Cockpit panel yet: the API is there for it and for the
+web installer's device manager.
+
+**Tests** (`tests/test_backup.py`, every shell): every section exported on Ubuntu, OpenWrt and openwrt-luci, the mode,
+no link followed, no engine path; the seal (wrong passphrase, one character changed, rounds from a hostile header,
+a short passphrase); a dry run that changes nothing and a restore of what differs (hotspot.conf, mobile data's
+roaming, lan.conf, the keys merged, `chpasswd -e` with the hash on stdin); a round trip with a fake VPN CLI (profiles,
+subscription, settings, active, on); another model with and without `--force`; an OpenWrt file on Ubuntu; hostile
+files (17 refused by the format, 11 by the setters' rules, 7 VPN values), each leaving the device as it was; the lock
+tool (reset, then the file's locks) and the real forwarding adapter (refusing an `ftp://` address, nothing written);
+the API methods and the job. In none of them a secret in an argument list, a job file or what is printed.
+`tests/test_sms_forward.py`: the adapter's check mode.
+
+**On a device (2026-10-17, F50-B Ubuntu 24.04 7.2.11, F50-C plain OpenWrt 6.18.57; test builds of this branch with
+the other open PRs).**
+
+* **OpenWrt refused every file, its own too:** `not a valid backup: a value of the wrong kind`. OpenWrt's jq (1.8.1)
+  is built without Oniguruma, so `test`, `capture` and `gsub` raise "jq was compiled without ONIGURUMA regex library"
+  and the schema's `try` turned that into a refusal; the SMS-forwarding export (openwrt-luci) used `capture`/`gsub`
+  too. The program now uses no regular expression in jq: characters are checked by code point (`l` refuses C0, DEL
+  and C1 as `[[:cntrl:]]` did; `word`, `optkey`, `lowalnum` stand for the three anchored patterns), and the
+  forwarding file is split at its first `=`. `OpenWrtJqWithoutRegex` / `LuciJqWithoutRegex` run the OpenWrt and panel
+  tests through a jq that refuses any program using them; both failed before the change.
+* **Not on PATH:** `mu300-backup export` said "not found" on Ubuntu; it is in `path-commands` now.
+* **Ubuntu:** `export --encrypt` (0600, the `MU300-BACKUP-ENCRYPTED` header), `show`, `import --dry-run` ("nothing to
+  change"); the SSID changed by hand and the APN through `mu300-api data.set`, then `import`: both back, the hotspot
+  and mobile data came back up (the restored hotspot.conf differs only in the order of its lines).
+* **OpenWrt (with the fix):** export, `show`, a dry run of its own file ("nothing to change"); the F50-B file,
+  encrypted, taken with "from ubuntu, taken on openwrt: what both systems have" (hotspot, LAN address); a file with
+  the login hash: F50-B's is `$6$`, which musl takes ("login password: changes"; the yescrypt refusal stays a unit
+  test); the SSID changed in uci and restored by `import`, WAN still up.
+* **The panel** (luci-app-mu300's files copied onto F50-C's plain OpenWrt for the test): System > Backup of settings
+  renders (passphrase twice, the login-password tick, restore with "Show what would change"; Restore disabled until
+  a preview), no console error; `ubus call mu300dash backup_export` returned the file, plain and sealed.
+* **Not run:** a download and restore through the page in a browser, the VPN and lock sections, the size limit
+  through rpcd/ubus.
+
 ### 160. The eMMC at a cold boot: a failed HS400ES no longer ends the boot; the core falls back to HS200, then HS/DDR52
 
 **The report** (issue #226, a user, 6.18.56, release v2026.10.16.1): after a cold boot (powered off five minutes or
