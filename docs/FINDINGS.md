@@ -10829,3 +10829,68 @@ The `--trial` line: the running system's `mu300-next-boot` (his, from before `--
 
 **Not measured here**: nobody here has a V50 or a system installed by that installer; the layout is read from his
 source (commit `abc5a93c`). Booting a `mu300root` partition from our init is a separate change.
+
+### 179. Another installer's GPT partition named mu300root: booted by init, and an installation the installers see
+
+**Status: current** (unit tests; device-tested on F50-C, 2026-10-17, with the layout emulated). Follows 178.
+
+**What was reported.** After 178, a U30 user of kanoqwq's desktop installer: our web installer "treats my Linux
+partition as Android" and says there is no space. That installer can put the system in a GPT partition of its own,
+named `mu300root` (ext4, label `mu300root`), carved out behind userdata, 1 MiB aligned. `region_probe`
+(`tools/storage.sh`) puts the free region behind the *last* partition - which is now that one - so the region was
+empty, `region_find_existing` never looked inside the partition, and the web page drew it as one of Android's.
+install.sh, install.ps1 and the Magisk zip (the web installer runs the zip's installer) all share that view.
+
+**The emulated layout (F50-C).** F50-C runs internal OpenWrt in an 804 MiB region right behind userdata (sectors
+120504320..122150911, the filesystem 205824 blocks of 4 KiB - exactly the region). One GPT entry was added (76,
+`mu300root`, type Linux filesystem) covering exactly that region, nothing moved: both GPT copies (first 34 and last
+33 sectors) were saved with their SHA-256 first, the new copies built and CRC-checked on the Mac
+(`scratchpad/scripts/gpt_add.py`), written with dd and read back. Android started normally with it
+(`/dev/block/by-name/mu300root -> mmcblk0p76`, `sys.boot_completed=1`).
+* **Release init (v2026.10.17.2) reproduces #290 exactly:** `stage=root-offset not-found (trying the default ...)`,
+  `stage=sd-wait`, `stage=rootfs-unavailable` at 13.5 s, `stage=pmic-wdt-NOT-ready` at 257 s, `stage=timer-reboot`
+  at 302 s, back to Android - the V50 report's numbers (258/302 s).
+* **#296's init** (the release's 6.18 bundle with only `ramdisk-generic.lz4` rebuilt from the PR's `boot/init` -
+  the release's segment rebuilt from its own tree gives its published sha256 bit for bit - and `gpt-root` in
+  `./features`, installed with `mu300-update boot` from a local copy of the release): `stage=root-part
+  dev=/dev/mmcblk0p76`, `/run/mu300-root-dev` = `mmcblk0@mu300root`, `/` and `/mnt/mu300-disk` are
+  `/dev/mmcblk0p76` (no loop), OpenWrt at 192.168.77.1, mobile data up (`sipa_eth0`, ping and HTTPS to GitHub).
+* With the table restored (hash-verified against the copies) the same init finds the region again
+  (`stage=root-offset found=61698211840`), data up, Android fine.
+
+**What changed (installers).**
+* `region_probe` also reports each GPT partition named `mu300root` (`part:START:SECTORS`, from sysfs `uevent`) and
+  an image file of that installer in Android's data (`/data/mu300linux/openwrt.ext4`, its "userdata image" mode).
+  One such partition is the target: `OFF`/`SIZE` are the partition, `IN_PART=1`; the free region stays
+  `REG_OFF`/`REG_SIZE`. `region_find_existing` looks where init does - the region, then the partition, then the old
+  fixed offset (not when it lies inside the partition) - and caps a filesystem's size at the partition's.
+  `region_in_bounds`: free space or wholly inside that partition, nothing else.
+* What this installer cannot handle is said, not guessed: another ext4 in the partition (never formatted: the
+  device refuses it too), two partitions of that name (neither used), the image file (a note: not updated, the new
+  boot image starts the new system, the file stays). The probe command has no double quotes and is the same in
+  install.ps1 (Windows PowerShell 5.1 drops them on the way to adb).
+* Device side: `android-install.sh` accepts a filesystem wholly inside the one partition named `mu300root` (it
+  checks sysfs itself); `android-web.sh` reports `part`, `part_fs`, `part_count`, `foreign_image` in its status,
+  and its uninstaller's bounds take the partition (the filesystem is erased, the partition stays).
+* Web page: the partition is not Android's in the bar; verdicts `part-existing`, `part-free`, `part-dirty`,
+  `part-foreign`, `part-ambiguous` (EN/TR/ZH); the make-room figures are not offered with such a partition.
+* **On F50-C, in the emulated layout:** the release's `android-web.sh status` said `size 0, existing no` (the
+  report); the new one `part 1, part_fs mu300root, existing yes, 843055104 bytes`, with the systems read from it.
+  The release's `install.sh --check` went to "Not enough free space - this looks like the 32 GB variant"; the new
+  one: "Linux partition: the GPT partition named mu300root ...", "existing mu300root filesystem: yes". A real update
+  through the web installer's device side (`take`, `answers`, `run install` of an OpenWrt 6.18 zip built from this
+  branch with #296's bundle): "Linux goes into the GPT partition named mu300root", the device's own check
+  "(sectors 120504320 + 1646592)", update carried 3009 files, boot_b written and verified; then `boot-linux`:
+  `stage=root-part`, data up.
+* Tests: `test_installer.py` `Region` (the partition, a region that wins over it, another ext4, two partitions,
+  the image file, the probe command shared with install.ps1), `test_android_install.py` `RegionGuard`,
+  `tests/web/logic.test.mjs` (the partition's verdicts and bar).
+
+**Found on the way.** `tools/self-update.sh` told a git checkout by `[ -d .git ]`: in a git worktree `.git` is a
+file, so `install.sh --check` run from a worktree took it for a downloaded copy and overwrote the uncommitted work
+in it with GitHub's main (it did, twice, during this work). `-e` now; install.ps1's `Test-Path` already saw both.
+
+**Not done**: uninstall.sh / uninstall.ps1 and tools/reset-password.sh still look only at the region and refuse
+such a partition (they say the filesystem overlaps a partition); removing the partition itself is the other
+installer's job. Not measured on a device that installer set up (nobody here has one); the partition here was
+made by hand to cover our own region.
