@@ -11604,3 +11604,33 @@ the board: it ended with status 1 and its log in the box), the job cleared.
 
 **Still only on the OpenWrt panel**: network, band and cell locks and their boot replay (mu300dash/lock, uci), SMS
 forwarding (the SMS pool's daemon), the AT command history and the device's USB network mode.
+
+### 188. Ubuntu's hotspot held the boot for 20 s; now 2.8 s
+
+**Status: current** (device-tested on F50-B, Ubuntu 24.04, 7.2.11, 2026-10-18, three reboots each way).
+
+**What it was.** `systemd-analyze blame` gave `mu300-hotspot.service` 20.8 s of a 35 s userspace boot, with the hotspot
+on the critical chain to `multi-user.target` (through `mu300-power`). A traced boot showed where it went:
+
+* `hotspot-verify` (ExecStartPost, so the unit is not started until it ends) waited for the firmware's answer to
+  `CMD_START_AP` in the kernel log for up to 20 s. The mainline driver prints an answer only when it is a failure
+  (`pr_debug` otherwise, `sc2355/cmdevt.c`), so a good start left no line and every boot waited the full 20 s.
+* `regdb-load` waited up to 3 s for each of `regulatory.db` and its signature to appear under
+  `/sys/class/firmware` (6 s). The mainline kernels have no sysfs fallback (`CONFIG_FW_LOADER_USER_HELPER` unset),
+  so `/sys/class/firmware` does not exist and nothing can ever appear there.
+* `iw dev wlan0 set type __ap` on the down interface always failed once and slept 2 s: the driver's
+  `change_iface` records the AP type but returns `EINVAL` (its firmware close fails on an interface that is closed
+  already); the retry then found the type AP and succeeded at once.
+* a fixed `sleep 1` after the country change, which the channel check that follows already waits for.
+
+**Now.** `hotspot-verify` stops once `iw` shows the access point's SSID while the unit's main process is hostapd
+(`$MAINPID`: an SSID left from before a restart does not count) and reads the log one last time (`CMD_START_AP` is
+synchronous: a refusal is printed before the SSID can appear); a refusal still sends the hotspot to 2.4 GHz.
+`regdb-load` waits for the sysfs nodes only where `/sys/class/firmware` exists (the vendor 5.4 kernel). The type
+switch counts an interface that is already AP as done; the channel check polls every 0.5 s.
+
+**Measured** (F50-B, SSID F50_2, channel 36, 80 MHz): before 20.77 s and 20.74 s (`AP-ENABLED` 9.5 s after the unit
+started); after 2.79 s, 2.75 s, 2.81 s (`AP-ENABLED` 2.1-2.3 s after). Cockpit listening on 192.168.79.1:9090 and
+br-lan up every time. The whole userspace boot stays at about 35 s: the critical chain is now
+`mu300-mobile-data.service` (25 s, the dial) before `mu300-user-packages.service`; the hotspot is up 7.5 s earlier.
+Not measured: a client joining (nothing near F50-B to join it), the 2.4 GHz fallback on a real refusal (tests only).
