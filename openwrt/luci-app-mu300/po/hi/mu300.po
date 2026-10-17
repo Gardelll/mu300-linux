@@ -1126,14 +1126,14 @@ msgstr "डेटा कनेक्ट किया जा रहा है…"
 msgid "Turn off cellular radio"
 msgstr "सेल्युलर रेडियो बंद करें"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "सेल्युलर कनेक्टिविटी बाधित होगी।"
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "इस SIM पर कॉल, SMS या डेटा नहीं होगा, और इसका रेडियो रीबूट के बाद भी तब तक बंद रहेगा जब तक आप इसे फिर से चालू न करें।"
 
 msgid "Turn on cellular radio"
 msgstr "सेल्युलर रेडियो चालू करें"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "SFUN पावर-ऑन क्रम चलेगा (लगभग 1 मिनट तक)।"
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "उपयोग में SIM का रेडियो चालू होता है और रीबूट के बाद भी चालू रहता है (लगभग 1 मिनट तक)।"
 
 msgid "Turn data roaming off"
 msgstr "डेटा रोमिंग बंद करें"
@@ -2000,6 +2000,9 @@ msgstr "Switch to SIM%d"
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
 
+msgid "Applying the radio setting…"
+msgstr "रेडियो सेटिंग लागू हो रही है…"
+
 msgid "SIM settings are not available"
 msgstr "SIM सेटिंग्स उपलब्ध नहीं हैं"
 
@@ -2011,6 +2014,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "उपयोग में"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "SIM%d का रेडियो बंद करें"
+
+msgid "Radio"
+msgstr "रेडियो"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2026,6 +2035,21 @@ msgstr "इस SIM का रेडियो अगली बार शुरू
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "हर SIM के लिए VoLTE और VoNR, रीबूट के बाद भी रहते हैं और वह SIM जब भी शुरू हो, फिर से भेजे जाते हैं। VoLTE बंद न करने तक चालू रहता है; VoNR सेट करने तक मॉडेम जैसा ही रहता है।"
+
+msgid "All radios off (airplane mode)"
+msgstr "सभी रेडियो बंद (हवाई जहाज़ मोड)"
+
+msgid "All radios on"
+msgstr "सभी रेडियो चालू"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "किसी भी SIM पर कॉल, SMS या डेटा नहीं होगा, रीबूट के बाद भी, जब तक यहाँ या डैशबोर्ड के रेडियो बटन से कोई रेडियो फिर चालू न हो।"
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "हर SIM का रेडियो रीबूट के बाद भी यहाँ सेट किए अनुसार रहता है। जिस SIM का रेडियो बंद है उस पर कॉल, SMS या डेटा नहीं होता, और डिवाइस उस पर स्विच नहीं करता।"
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "सेटिंग सहेज ली गई है, पर रेडियो ने अभी उसका पालन नहीं किया।"
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "प्राप्तकर्ता: नंबर, जैसे 10086 या +86..."
@@ -3469,6 +3493,12 @@ msgstr "इस प्लेटफ़ॉर्म पर मोबाइल ड�
 msgid "The SIM settings could not be read"
 msgstr "SIM सेटिंग्स पढ़ी नहीं जा सकीं"
 
+msgid "Radio control is not provided by this platform"
+msgstr "यह प्लेटफ़ॉर्म रेडियो नियंत्रण नहीं देता"
+
+msgid "A SIM radio change is already running"
+msgstr "SIM रेडियो का बदलाव पहले से चल रहा है"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3637,12 +3667,15 @@ msgstr "पंक्तियों की संख्या 1 से 1000 ह�
 msgid "The log could not be read"
 msgstr "लॉग पढ़ा नहीं जा सका"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "इस SIM का रेडियो उसकी सेटिंग्स में बंद है"
+
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
-msgid "Radio did not come up"
-msgstr "रेडियो चालू नहीं हुआ"
+msgid "The radio did not follow its setting"
+msgstr "रेडियो ने अपनी सेटिंग का पालन नहीं किया"
 
 msgid "The data roaming setting could not be saved"
 msgstr "डेटा रोमिंग सेटिंग सहेजी नहीं जा सकी"

@@ -1126,14 +1126,14 @@ msgstr "Подключение передачи данных…"
 msgid "Turn off cellular radio"
 msgstr "Выключить сотовый радиомодуль"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "Сотовая связь будет прервана."
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "У этой SIM не будет звонков, SMS и данных, а её радио останется выключенным и после перезагрузки, пока вы снова его не включите."
 
 msgid "Turn on cellular radio"
 msgstr "Включить сотовый радиомодуль"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "Будет выполнена последовательность включения SFUN (до 1 минуты)."
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "Радио используемой SIM включится и останется включённым после перезагрузки (до 1 минуты)."
 
 msgid "Turn data roaming off"
 msgstr "Отключить роуминг данных"
@@ -2000,6 +2000,9 @@ msgstr "Switch to SIM%d"
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
 
+msgid "Applying the radio setting…"
+msgstr "Применение настройки радио…"
+
 msgid "SIM settings are not available"
 msgstr "Настройки SIM недоступны"
 
@@ -2011,6 +2014,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "используется"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "Выключить радио SIM%d"
+
+msgid "Radio"
+msgstr "Радио"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2026,6 +2035,21 @@ msgstr "Будет отправлено этой SIM при следующем �
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "VoLTE и VoNR для каждой SIM: сохраняются после перезагрузки и отправляются заново при каждом запуске этой SIM. VoLTE включено, пока его не выключить; VoNR остаётся как в модеме, пока его не задать."
+
+msgid "All radios off (airplane mode)"
+msgstr "Все радио выключены (режим полёта)"
+
+msgid "All radios on"
+msgstr "Все радио включены"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "Ни у одной SIM не будет звонков, SMS и данных, в том числе после перезагрузки, пока радио не включат снова здесь или кнопкой радио на панели."
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "Радио каждой SIM после перезагрузки остаётся таким, как задано здесь. SIM с выключенным радио не имеет звонков, SMS и данных, и устройство на неё не переключается."
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "Настройка сохранена, но радио ей пока не последовало."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Получатель: номер, например 10086 или +86..."
@@ -3469,6 +3493,12 @@ msgstr "Интеграция мобильных данных на этой пл�
 msgid "The SIM settings could not be read"
 msgstr "Не удалось прочитать настройки SIM"
 
+msgid "Radio control is not provided by this platform"
+msgstr "Эта платформа не предоставляет управление радио"
+
+msgid "A SIM radio change is already running"
+msgstr "Изменение радио SIM уже выполняется"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3637,12 +3667,15 @@ msgstr "Число строк — от 1 до 1000"
 msgid "The log could not be read"
 msgstr "Не удалось прочитать журнал"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "Радио этой SIM выключено в её настройках"
+
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
-msgid "Radio did not come up"
-msgstr "Радиомодуль не включился"
+msgid "The radio did not follow its setting"
+msgstr "Радио не последовало своей настройке"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Не удалось сохранить настройку роуминга данных"

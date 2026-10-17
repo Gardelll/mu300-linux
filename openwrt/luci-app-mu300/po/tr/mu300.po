@@ -1126,14 +1126,14 @@ msgstr "Veri bağlantısı kuruluyor…"
 msgid "Turn off cellular radio"
 msgstr "Hücresel radyoyu kapat"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "Hücresel bağlantı kesilecek."
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "Bu SIM'de arama, SMS ve veri olmaz; radyosu siz yeniden açana kadar yeniden başlatmadan sonra da kapalı kalır."
 
 msgid "Turn on cellular radio"
 msgstr "Hücresel radyoyu aç"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "SFUN açılış sırası çalışacak (yaklaşık 1 dakikaya kadar)."
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "Kullanımdaki SIM'in radyosu açılır ve yeniden başlatmadan sonra da açık kalır (yaklaşık 1 dakikaya kadar)."
 
 msgid "Turn data roaming off"
 msgstr "Veri dolaşımını kapat"
@@ -1995,6 +1995,9 @@ msgstr "SIM%d kartına geç"
 msgid "Use SIM%d at next boot"
 msgstr "Sonraki başlatmada SIM%d kullan"
 
+msgid "Applying the radio setting…"
+msgstr "Radyo ayarı uygulanıyor…"
+
 msgid "SIM settings are not available"
 msgstr "SIM ayarları kullanılamıyor"
 
@@ -2006,6 +2009,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "kullanımda"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "SIM%d radyosunu kapat"
+
+msgid "Radio"
+msgstr "Radyo"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2021,6 +2030,21 @@ msgstr "Bu SIM'in radyosu bir sonraki açılışında gönderilir."
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "Her SIM için VoLTE ve VoNR; yeniden başlatmada korunur ve o SIM her başladığında yeniden gönderilir. VoLTE kapatılmadıkça açıktır; VoNR ayarlanana kadar modemdeki gibi kalır."
+
+msgid "All radios off (airplane mode)"
+msgstr "Tüm radyolar kapalı (uçak modu)"
+
+msgid "All radios on"
+msgstr "Tüm radyolar açık"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "Hiçbir SIM'de arama, SMS ve veri olmaz, yeniden başlatmadan sonra da; ta ki bir radyo burada ya da paneldeki radyo düğmesiyle yeniden açılana kadar."
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "Her SIM'in radyosu yeniden başlatmadan sonra burada ayarlandığı gibi kalır. Radyosu kapalı bir SIM'de arama, SMS ve veri olmaz ve cihaz ona geçmez."
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "Ayar kaydedildi, ancak radyo henüz ona uymadı."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Alıcı: numara, ör. 10086 veya +86..."
@@ -3462,6 +3486,12 @@ msgstr "Mobil veri entegrasyonu bu platformda sağlanmıyor"
 msgid "The SIM settings could not be read"
 msgstr "SIM ayarları okunamadı"
 
+msgid "Radio control is not provided by this platform"
+msgstr "Bu platform radyo denetimi sağlamıyor"
+
+msgid "A SIM radio change is already running"
+msgstr "Bir SIM radyo değişikliği zaten sürüyor"
+
 # Dual SIM controls.
 msgid "Invalid SIM setting"
 msgstr "Geçersiz SIM ayarı"
@@ -3630,12 +3660,15 @@ msgstr "Satır sayısı 1 ile 1000 arasında olmalı"
 msgid "The log could not be read"
 msgstr "Günlük okunamadı"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "Bu SIM'in radyosu ayarlarında kapalı"
+
 # Dual SIM controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "Yönetilen çift SIM radyosu için SIM denetimini kullanın veya yeniden başlatın."
 
-msgid "Radio did not come up"
-msgstr "Radyo açılmadı"
+msgid "The radio did not follow its setting"
+msgstr "Radyo ayarına uymadı"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Veri dolaşımı ayarı kaydedilemedi"

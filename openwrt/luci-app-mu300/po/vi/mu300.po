@@ -1126,14 +1126,14 @@ msgstr "Đang kết nối dữ liệu…"
 msgid "Turn off cellular radio"
 msgstr "Tắt radio di động"
 
-msgid "Cellular connectivity will be interrupted."
-msgstr "Kết nối di động sẽ bị gián đoạn."
+msgid "This SIM will have no calls, SMS or data, and its radio stays off after a reboot until you turn it on again."
+msgstr "SIM này sẽ không có cuộc gọi, SMS hay dữ liệu, và radio của nó vẫn tắt sau khi khởi động lại cho đến khi bạn bật lại."
 
 msgid "Turn on cellular radio"
 msgstr "Bật radio di động"
 
-msgid "The SFUN power-on sequence will run (up to about 1 minute)."
-msgstr "Trình tự bật nguồn SFUN sẽ chạy (tối đa khoảng 1 phút)."
+msgid "The radio of the SIM in use comes on and stays on after a reboot (up to about 1 minute)."
+msgstr "Radio của SIM đang dùng được bật và vẫn bật sau khi khởi động lại (tối đa khoảng 1 phút)."
 
 msgid "Turn data roaming off"
 msgstr "Tắt chuyển vùng dữ liệu"
@@ -2000,6 +2000,9 @@ msgstr "Switch to SIM%d"
 msgid "Use SIM%d at next boot"
 msgstr "Use SIM%d at next boot"
 
+msgid "Applying the radio setting…"
+msgstr "Đang áp dụng cài đặt radio…"
+
 msgid "SIM settings are not available"
 msgstr "Không có cài đặt SIM"
 
@@ -2011,6 +2014,12 @@ msgstr "SIM%d"
 
 msgid "in use"
 msgstr "đang dùng"
+
+msgid "Turn off the radio of SIM%d"
+msgstr "Tắt radio của SIM%d"
+
+msgid "Radio"
+msgstr "Radio"
 
 msgid "VoLTE"
 msgstr "VoLTE"
@@ -2026,6 +2035,21 @@ msgstr "Sẽ được gửi tới SIM này khi radio của nó khởi động l�
 
 msgid "VoLTE and VoNR for each SIM, kept across reboots and sent again whenever that SIM starts. VoLTE is on unless switched off; VoNR stays as the modem has it until set."
 msgstr "VoLTE và VoNR cho từng SIM, được giữ qua khởi động lại và gửi lại mỗi khi SIM đó khởi động. VoLTE bật trừ khi bị tắt; VoNR giữ như modem cho đến khi được đặt."
+
+msgid "All radios off (airplane mode)"
+msgstr "Tắt mọi radio (chế độ máy bay)"
+
+msgid "All radios on"
+msgstr "Bật mọi radio"
+
+msgid "No SIM will have calls, SMS or data, also after a reboot, until a radio is turned on again here or with the dashboard's radio button."
+msgstr "Không SIM nào có cuộc gọi, SMS hay dữ liệu, kể cả sau khi khởi động lại, cho đến khi một radio được bật lại tại đây hoặc bằng nút radio trên bảng điều khiển."
+
+msgid "Each SIM's radio stays as set here after a reboot. A SIM whose radio is off has no calls, SMS or data, and the device does not switch to it."
+msgstr "Radio của mỗi SIM giữ như cài đặt ở đây sau khi khởi động lại. SIM có radio tắt sẽ không có cuộc gọi, SMS hay dữ liệu, và thiết bị không chuyển sang SIM đó."
+
+msgid "The setting is saved, but the radio did not follow it yet."
+msgstr "Cài đặt đã được lưu nhưng radio chưa làm theo."
 
 msgid "Recipient: number, e.g. 10086 or +86..."
 msgstr "Người nhận: số, ví dụ 10086 hoặc +86..."
@@ -3469,6 +3493,12 @@ msgstr "Nền tảng này không cung cấp tích hợp dữ liệu di động"
 msgid "The SIM settings could not be read"
 msgstr "Không đọc được cài đặt SIM"
 
+msgid "Radio control is not provided by this platform"
+msgstr "Nền tảng này không hỗ trợ điều khiển radio"
+
+msgid "A SIM radio change is already running"
+msgstr "Đang có một thay đổi radio SIM"
+
 # Source-language fallback for untranslated new controls.
 msgid "Invalid SIM setting"
 msgstr "Invalid SIM setting"
@@ -3637,12 +3667,15 @@ msgstr "Số dòng từ 1 đến 1000"
 msgid "The log could not be read"
 msgstr "Không thể đọc nhật ký"
 
+msgid "The radio of this SIM is switched off in its settings"
+msgstr "Radio của SIM này đang tắt trong cài đặt"
+
 # Source-language fallback for untranslated new controls.
 msgid "Use SIM control or reboot for managed dual-SIM radio"
 msgstr "Use SIM control or reboot for managed dual-SIM radio"
 
-msgid "Radio did not come up"
-msgstr "Radio không bật lên được"
+msgid "The radio did not follow its setting"
+msgstr "Radio không làm theo cài đặt"
 
 msgid "The data roaming setting could not be saved"
 msgstr "Không thể lưu cài đặt chuyển vùng dữ liệu"
