@@ -139,6 +139,7 @@ sudo mu300-ttl off             <span class="c"># 恢复默认</span></code></pre
 <pre><code>sudo nano /etc/mu300/hotspot.conf        <span class="c"># SSID=、PSK=、BAND=5 或 2.4、CHANNEL=auto、COUNTRY=</span>
 sudo systemctl restart mu300-hotspot</code></pre>
 <p>在 5 GHz 上，热点使用 36-48 或 149-165 信道，从不使用 DFS 信道（52-144）：Wi-Fi 驱动无法检测雷达，所以在文件或 LuCI 中选择的 DFS 信道会被换成 36 信道（不允许 36-48 的国家用 149），日志里会写明原因（从 v2026.10.20 起；之前的版本在这种信道上热点根本起不来）。</p>
+<p>热点<strong>只使用 WPA2-PSK（CCMP）</strong>，所有设备都一样。出于安全原因，这块 Wi-Fi 芯片上的 WPA3（SAE）已被禁用：WPA3 握手由芯片固件自己完成，而它交回密钥的方式可能让客户端无需密码即可接入（<a href="https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md">原因</a>）。原来设为 WPA3 的热点会在下次开机时切换为 WPA2，密码不变（如果没有可用的密码，则关闭热点，绝不会变成开放网络），LuCI 会显示一条提示；在 LuCI 中选择 WPA3 时，该接入点不会启动。</p>
 <p>如果 Wi-Fi 芯片的固件崩溃，驱动会重置芯片，Wi-Fi 自己就会恢复，无论是热点还是连接其他网络的客户端：测试中在 6.18 和 7.2 上 15 到 20 秒就回来了。如果 70 秒内芯片重置不成功，设备会干净地重启，而不是卡死。</p>
 </section>
 
@@ -204,7 +205,8 @@ mu300-vpn status</code></pre>
 <pre><code>sudo mu300-toolkit                       <span class="c"># 菜单</span>
 mu300-toolkit top                        <span class="c"># 温度、CPU、内存、网速</span>
 sudo mu300-toolkit profile performance   <span class="c"># 还有 eco、balanced</span>
-sudo mu300-toolkit stress all 10         <span class="c"># 满载稳定性测试</span></code></pre>
+sudo mu300-toolkit stress all 10         <span class="c"># 满载稳定性测试</span>
+mu300-zram                               <span class="c"># 内存压缩交换：状态（sudo mu300-zram off|on）</span></code></pre>
 <p>可选组件叫作扩展（extras）：</p>
 <pre><code>mu300-extra list
 sudo mu300-extra install lang            <span class="c"># 更多网页界面语言（OpenWrt）</span>
@@ -216,9 +218,9 @@ sudo mu300-extra remove vpn</code></pre>
 <p>状态指示灯的含义和 ZTE 原厂固件下一样：</p>
 <div class="table-scroll"><table>
 <thead><tr><th scope="col">指示灯</th><th scope="col">F50 / MU300</th><th scope="col">U30 Air</th></tr></thead><tbody>
-<tr><th scope="row">网络</th><td>蓝色：4G，白色：5G，红色：无服务</td><td>蓝色：4G，白色：5G，红色：无服务</td></tr>
-<tr><th scope="row">Wi-Fi</th><td>热点开着时亮</td><td>白色：2.4 GHz，蓝色：5 GHz</td></tr>
-<tr><th scope="row">电池</th><td>-</td><td>白色：Linux 已启动</td></tr>
+<tr><th scope="row">网络</th><td>蓝色：4G，白色：5G，红色：无服务</td><td>正在使用的 SIM 卡：白色：nano-SIM 卡，蓝色：eSIM（切换到它时闪烁）；红色：无服务</td></tr>
+<tr><th scope="row">Wi-Fi</th><td>热点开着时亮</td><td>白色：5 GHz，蓝色：2.4 GHz</td></tr>
+<tr><th scope="row">电池</th><td>-</td><td>和 ZTE 原厂固件一样：电量 60 % 及以上白色，10 % 起蓝色，以下红色；充电时呼吸闪烁；插着充电器时指示灯不熄灭</td></tr>
 <tr><th scope="row">过热报警</th><td>网络灯轮流闪红、白、蓝：芯片到了 85 °C</td><td>电池灯轮流闪红、白、蓝：芯片到了 85 °C 或电池到了 50 °C</td></tr>
 </tbody></table></div>
 <pre><code>sudo mu300-led test            <span class="c"># 看看哪个灯是哪个</span></code></pre>
@@ -256,7 +258,11 @@ sudo mu300-cpu voltage off                                        <span class="c
 <pre><code>sudo mu300-nfc                 <span class="c"># 显示标签内容</span>
 sudo mu300-nfc wifi            <span class="c"># 写入热点名称和密码</span></code></pre>
 <pre><code>sudo mu300-usb host            <span class="c"># U30 Air，主线内核：接 OTG 转接头，由电池供 5 V</span>
-sudo mu300-usb device          <span class="c"># 切回连接电脑（每次开机的默认状态）</span></code></pre>
+sudo mu300-usb device          <span class="c"># 切回连接电脑（每次开机的默认状态）</span>
+sudo mu300-usb pd on           <span class="c"># 实验性，默认关闭：由 USB-C 供电协议（PD）决定角色</span></code></pre>
+<p>打开 USB-C PD 后（U30 Air，主线内核，尚未在设备上实测），插上 OTG 转接头端口会自动成为主机；接上自带充电器的 PD
+扩展坞时，U30 Air 一边充电，一边用 <code>sudo mu300-usb host</code> 向扩展坞请求主机角色，扩展坞的 USB 口和网口就能用。只用
+5 V；<code>sudo mu300-usb pd off</code> 恢复原样。</p>
 <p>F50 的 USB 口就是它的电源，所以没有 USB 主机模式；长按电源键 3 秒关机。</p>
 </section>
 
@@ -277,7 +283,7 @@ sudo mu300-usb adb on                   <span class="c"># 关闭：sudo mu300-us
 <li><strong>蓝牙：</strong>BlueZ；扫描可用。</li>
 <li><strong>GPU：</strong>Mali-G57 支持 OpenCL 3.0，没有屏幕输出。</li>
 <li><strong>KVM：</strong>三个内核都有 <code>/dev/kvm</code>，可以跑虚拟机。</li>
-<li><strong>内存：</strong>约 1.4 GB 可用，另外还有内存压缩交换（zram）。</li>
+<li><strong>内存：</strong>约 1.4 GB 可用，另外还有内存压缩交换（zram，默认开启：内存的一半，lz4；<code>sudo mu300-zram off</code> 关闭，大小和压缩算法在 <code>/etc/mu300/zram.conf</code> 中设置）。</li>
 <li><strong>网页界面语言（OpenWrt）：</strong>自带英语、土耳其语和简体中文；装上 <code>lang</code> 扩展，LuCI 再多 40 种，控制面板再多 29 种。在“系统 &gt; 系统 &gt; 语言和界面”里切换，控制面板上是“系统 &gt; 语言”（Languages）。面板的其他译文是机器翻译，<a href="https://github.com/dikeckaan/mu300-linux#languages" hreflang="en">欢迎指正</a>。</li>
 </ul>
 </section>

@@ -186,6 +186,11 @@ adb shell su -c id</code></pre><p>The device should be listed as <code>device</c
 <p><code>mmc1: Got command interrupt 0x00000001 even though no command operation was in progress</code>, followed by a 16-line <code>SDHCI REGISTER DUMP</code>, every few seconds to minutes in <code>dmesg -l err</code> on an F50 with nothing in the SD slot, on 6.18 and 7.2 up to v2026.10.21 (issue #181). Mainline's EIC driver mapped only three of the controller's six banks, so the slot's card-detect line could not be found and the slot was polled instead: every second a card that is not there was initialised, and the host's late answer to a command nothing replied to was logged with the dump. Fixed from v2026.10.22 on: the six banks are mapped, the slot has real card detect (an interrupt), and an empty slot is left alone until a card goes in. The dumps are noise, not a fault; on an older release put a card in the slot (with a card there are none) or use 5.4, which never had them. The U30 Air has no slot.</p>
 </section>
 
+<section id="hotspot-wpa3">
+<h3>The hotspot went from WPA3 to WPA2, or does not start with WPA3</h3>
+<p>WPA3 (SAE) on the hotspot is disabled on this Wi-Fi chip, on every device: the U30 Air's firmware WPA3 could let a client in without the password (<a href="https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md">why</a>). A hotspot that was WPA3 was switched to WPA2 with the same password at boot: join again with that password. If LuCI's notice says the hotspot is off, it had no password WPA2 can use: set one (8-63 characters) in LuCI → Network → Wireless with WPA2-PSK and enable it, over USB or SSH. WPA3 or WPA2/WPA3 mixed chosen in LuCI is not started; choose WPA2-PSK.</p>
+</section>
+
 <section id="wpa3">
 <h3>The Wi-Fi client cannot join a network</h3>
 <p>WPA3-only networks do not work (the Wi-Fi driver has no SAE); set the router to WPA2/WPA3 mixed mode. And the radio is either a hotspot or a client, decided at start-up: <code>wifi-client connect</code> asks for a restart while it is the hotspot.</p>
