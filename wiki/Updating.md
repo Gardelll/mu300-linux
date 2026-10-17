@@ -72,6 +72,50 @@ A release can carry a signature of its checksums (`SHA256SUMS.sig`). A system th
 that has none unless you say so (`--unsigned`). Systems up to v2026.10.27 have no key and update as they always did. Details:
 [FINDINGS 86](https://github.com/dikeckaan/mu300-linux/blob/main/docs/FINDINGS.md).
 
+### Where the release files come from
+
+GitHub's release CDN throttles single connections in some regions, so the device can take its releases from
+somewhere else: a GitHub file proxy (a prefix in front of the release URL), or a copy of a release's files on your
+own network. The panel's **System > Update** page has a field for it - *Mirror (release files)*, under **Online
+update** - and the command line writes and reads the same file:
+
+```sh
+mu300-update source http://mirror.lan/mu300/releases/download
+mu300-update source        # what is in force now, and where it comes from
+mu300-update source off    # back to GitHub
+```
+
+Two addresses are involved, and they are not the same service:
+
+* **the release files** - `MU300_DOWNLOAD_URL` in `/etc/mu300/update-source`; the release tag is added after it, so
+  one line keeps working for every release;
+* **"which release is newest"** - `MU300_API_URL`, standing for `https://api.github.com/repos/dikeckaan/mu300-linux`.
+  The GitHub file proxies in common use serve the first and **not** the second: a request for `api.github.com`
+  through one of them comes back `403`. Leave this address alone unless your source serves the API too.
+
+Both live in `/etc/mu300/update-source`, which only root can write (a commented `update-source.example` sits beside
+it, and an update keeps the file). The environment wins over the file, which is how the computer installer's
+`MU300_RELEASE_URL` and a one-off run work. **The panel's field writes that file** through one `mu300-update source`
+command: an account that may use the Update page's write access can change where the device takes releases from, and
+the page's read access is what shows the address in force.
+
+**A mirror that cannot be reached is not the end of an update**: it is said once, and that run carries on with
+GitHub. The setting stays as you left it, so the next run tries your mirror again. A mirror that *answers* with the
+wrong files is another matter - the release is then not installed. A mirror that answers and *stalls* counts as an
+answer too: the run keeps taking the files from it rather than moving to GitHub, which is usually the host this
+setting exists for.
+
+If the device is on a metered link, that fallback can be the expensive answer - the release would come over mobile
+data. So it only happens by itself for an **https mirror on a public name**. A plain-`http://` mirror, or one on a
+private address or a LAN-only name (`192.168.x.x`, `10.x.x.x`, `172.16-31.x.x`, `nas.lan`, `box.local`, a name
+without a dot), is usually a copy on your own network; when it is off, the update stops and says why instead of
+quietly taking the release from GitHub over the SIM. One line in the same file decides it for every mirror:
+
+```
+MU300_MIRROR_FALLBACK=0    # never fall back: an update your mirror cannot serve fails
+MU300_MIRROR_FALLBACK=1    # always fall back, LAN and http mirrors too
+```
+
 ## What an update keeps
 
 **Everything you added to the system, and everything you changed in it.** Up to v2026.10.27 an update kept a list

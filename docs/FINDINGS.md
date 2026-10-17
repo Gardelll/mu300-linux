@@ -6042,7 +6042,37 @@ mirror: `MU300_API_URL=` in place of `https://api.github.com/repos/dikeckaan/mu3
 `MU300_DOWNLOAD_URL=` in place of `https://github.com/dikeckaan/mu300-linux/releases/download`, plain http(s) URLs
 only; the command and the panel read the same file. It exists for the device test below and for places where GitHub
 cannot be reached. Without a release key a mirror is trusted as much as whoever runs it; with one it cannot change
-a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root.
+a file. The file is in `/etc/mu300`, so it survives updates: whoever could write it was root. (Since the panel's
+Update page gained the same setting - a *Mirror (release files)* field, written through one `mu300-update source`
+command - an account that may use that page's write access can change the source as well, and its read access is what
+shows the address in force.)
+
+**When the mirror is not there.** A run whose mirror cannot be reached says so once and takes the rest of that run
+from github.com - but only for a mirror that is really absent: curl's connect-class failures (6 7 35 52), or a stall
+(28, 56) before a single byte arrived. A transfer that delivered bytes and then stalled is a working mirror on a bad
+line, and the run resumes from it with `-C -`, because the people who set a mirror are often the ones who cannot
+reach GitHub. The fallback happens by itself only for an https mirror on a public name: a plain-http mirror or a
+private address / LAN-only name is almost always a copy on the LAN, kept so the release does not come over a metered
+SIM, and there the update stops and says why. `MU300_MIRROR_FALLBACK=0|1` in the same file decides it for every
+mirror (the file only, never the environment). A self-update handover passes the state on
+(`MU300_MIRROR_FELL_BACK=1` in the environment of the release's own updater, which then does not wait for the same
+mirror again); the panel's adapter clears that variable like every other source variable. With the mirror field,
+`curl` joined the OpenWrt image so the exit codes exist there too: every OpenWrt update download moved from
+uclient-fetch to curl, mirror or not.
+
+**The mirror on devices, 2026-10-17** (test builds of this branch with the other open PRs). F50-B (Ubuntu, no
+internet): `mu300-update source http://<Mac>:8791` wrote `/etc/mu300/update-source` 0600 and `source` / `status` named it
+`(file)`; `MU300_RELEASE=<tag> mu300-update apply` took every file from that mirror and updated. The same mirror made
+unreachable: the run stopped - but said only `cannot download SHA256SUMS`, and with `MU300_MIRROR_FALLBACK=1` it went
+to github.com without a word. Apply's first fetch is its self-update check, run with `2>/dev/null`; the said-once
+line was said there. It goes to fd 7 now, the run's own stderr (`say_run`), and both runs say their line once (a
+test runs the two fetches as apply does). F50-C (plain OpenWrt, `curl` in the image, internet): a public https
+mirror that does not resolve (`https://mirror.invalid/dl`): `mirror unreachable: the rest comes from github.com`, and
+the checksums, signature and files of v2026.10.17.1 came from GitHub and verified. A fresh download also printed `sh:
+can't open ...: no such file` (busybox ash: `wc -c < FILE 2>/dev/null` redirects stderr only after the input);
+fixed. The panel's field (luci-app-mu300's files copied onto F50-C for the test): the page shows *Mirror (release
+files)* with the GitHub placeholder, Save wrote the file (`mu300-update source` says `(file)`), and the page shows the
+saved address. Not run: a self-update across the change, a resumed download.
 
 **What a browser may ask for.** Reading (`update_get`, `update_job`) is in the ACL's read grant, every change
 (`update_act`) in the write grant, and the upload path is the one file path added. Nothing starts by a GET: LuCI's
