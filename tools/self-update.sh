@@ -20,7 +20,8 @@ self_update() {
         echo "  $(t 'could not check GitHub for a newer installer; continuing with this copy')"
         return 0
     fi
-    if [ -d "$TOP/.git" ] && command -v git >/dev/null; then
+    # (-e: in a git worktree .git is a file, and such a copy was taken for a download and overwritten with main)
+    if [ -e "$TOP/.git" ] && command -v git >/dev/null; then
         [ "$(git -C "$TOP" rev-parse HEAD 2>/dev/null)" = "$_su_remote" ] && return 0
         # a copy that already has GitHub's commit is ahead of it (someone working on the project): leave it alone
         git -C "$TOP" merge-base --is-ancestor "$_su_remote" HEAD 2>/dev/null && return 0
