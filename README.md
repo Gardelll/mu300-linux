@@ -68,12 +68,12 @@ them. If that is not acceptable to you, do not install it.
 |---|---|---|
 | Board, chip | `ums9620_2h10_feimao`, Unisoc T760 (UMS9620) | the same |
 | Power | USB only | battery (4050 mAh), charger and fuel gauge |
-| LEDs used by Linux | as in ZTE's firmware: network (blue: 4G, white: 5G, red: no service), Wi-Fi (on while the hotspot is up) | as in ZTE's firmware: battery (white: Linux is up), network (blue: 4G, white: 5G, red: no service), Wi-Fi (white: 2.4 GHz, blue: 5 GHz) |
+| LEDs used by Linux | as in ZTE's firmware: network (blue: 4G, white: 5G, red: no service), Wi-Fi (on while the hotspot is up) | as in ZTE's firmware: battery (white from 60 %, blue from 10 %, red below; breathing while it charges; no timeout on the charger), network (the SIM in use - white: the nano-SIM, blue: the eSIM, blinking: switching to it; red: no service), Wi-Fi (white: 5 GHz, blue: 2.4 GHz) |
 | Heat alarm | the network LED flashes red, white, blue in turn: the SoC at 85 °C, until it cools down (`thermal-guard`) | the battery LED flashes red, white, blue in turn: the SoC at 85 °C or the battery at 50 °C, until they cool down (`thermal-guard`) |
 | USB network | `192.168.77.1` | `192.168.78.1` (so both can be plugged into one computer) |
 | Tested | everything below | 5.4, 6.18 and 7.2: USB, Wi-Fi hotspot, Bluetooth, mobile data, VPN, LEDs |
 | Battery | - | level, voltage, current, temperature and charging state in `mu300-toolkit`, the `openwrt-luci` dashboard and `/sys/class/power_supply` on every kernel (mainline: `sc27xx-fgu`). Charging: on 5.4 by the vendor charger stack; on 6.18 and 7.2 by the `bq256xx` driver (from v2026.10.12; the mainline kernels of v2026.10.11 and older leave charging off). From v2026.10.20: a **charge limit** of 0-100 % (`sudo mu300-power charge-limit 80`, `CHARGE_TO` in the power settings, System > Power on the panel; charging stops at the limit and resumes 5 points below it, and the battery is never held under 5 %), and on the mainline kernels the **Type-C current** the port advertises is read, so a 1.5 A or 3 A port charges at up to 2 A instead of 500 mA |
-| USB host (OTG) | - (its USB port is its power supply) | `sudo mu300-usb host` with an OTG adapter: flash drives (FAT, exFAT), keyboards and mice, USB modems and Ethernet adapters, with 5 V from the battery; `sudo mu300-usb device` back to the computer (the default at every boot). Mainline kernels; HDMI through USB-C adapters does not work |
+| USB host (OTG) | - (its USB port is its power supply) | `sudo mu300-usb host` with an OTG adapter: flash drives (FAT, exFAT), keyboards and mice, USB modems and Ethernet adapters, with 5 V from the battery; `sudo mu300-usb device` back to the computer (the default at every boot). Mainline kernels; HDMI through USB-C adapters does not work. **Experimental:** `sudo mu300-usb pd on` lets USB-C power delivery choose the roles (an OTG adapter: host by itself; a PD dock with its charger: charging, and `mu300-usb host` asks it for the host role); off by default (FINDINGS 150) |
 | SD card | the Linux filesystem can live on a card instead of the internal storage (see [Install](#install)) | no card slot |
 | Buttons | power: held 3 s shuts down | power: a short press wakes the LEDs (they go dark after 60 s), held 3 s shuts down; the Wi-Fi key switches the hotspot 2.4 / 5 GHz, held 3 s turns it off or on |
 | NFC | - | a phone held to the device joins the hotspot, as with ZTE's firmware: `sudo mu300-nfc` shows the tag, `wifi` writes the hotspot's name and password (again at every hotspot start), `url https://...` or `text ...` anything else, `clear` empties it, `on`/`off` is the NFC switch of ZTE's web interface (kept in the tag) |
@@ -340,7 +340,12 @@ For OpenWrt use `ssh root@192.168.77.1`, or open `http://192.168.77.1` in a brow
 address is `192.168.78.1` instead.
 
 The Wi-Fi network the device broadcasts is its hotspot; unless you chose otherwise it uses the name and password
-copied from Android.
+copied from Android. It is **WPA2-PSK (CCMP) only**, on every device: WPA3 (SAE) is disabled on this Wi-Fi chip,
+because the U30 Air's firmware WPA3 could let a client in without the password
+([docs/U30AIR-SAE.md](docs/U30AIR-SAE.md), FINDINGS 80 and 175). A hotspot that was set to WPA3 is switched to WPA2
+with the same password at the first boot of a newer image (or switched off, never left open, if it has no usable
+password), and LuCI shows a notice saying so; choosing WPA3 in LuCI leaves that access point down, with a line in
+the log.
 
 ### OpenWrt with the MU300 control panel
 

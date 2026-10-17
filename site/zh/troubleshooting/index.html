@@ -184,6 +184,11 @@ adb shell su -c id</code></pre><p>设备应该显示为 <code>device</code>（�
 <p>在 SD 卡槽空着的 F50 上，6.18 和 7.2 直到 v2026.10.21，<code>dmesg -l err</code> 里每隔几秒到几分钟就出现一次 <code>mmc1: Got command interrupt 0x00000001 even though no command operation was in progress</code>，后面跟着 16 行的 <code>SDHCI REGISTER DUMP</code>（issue #181）。主线内核的 EIC 驱动只映射了控制器六个 bank 中的三个，卡槽的卡检测线因此找不到，卡槽改为轮询：每秒初始化一张并不存在的卡，而主机对那条无人应答的命令迟到的回应就连同转储一起写进日志。从 v2026.10.22 起已修复：六个 bank 都映射了，卡槽有了真正的卡检测（一个中断），空卡槽在插入卡之前不会被碰。这些转储是噪音，不是故障；在旧版本上往卡槽里插一张卡（有卡时就没有转储），或者改用从来没有这个问题的 5.4。U30 Air 没有卡槽。</p>
 </section>
 
+<section id="hotspot-wpa3">
+<h3>热点从 WPA3 变成了 WPA2，或者设成 WPA3 后起不来</h3>
+<p>所有设备上，这块 Wi-Fi 芯片的热点 WPA3（SAE）都已被禁用：U30 Air 固件实现的 WPA3 可能让客户端无需密码即可接入（<a href="https://github.com/dikeckaan/mu300-linux/blob/main/docs/U30AIR-SAE.md">原因</a>）。原来是 WPA3 的热点已在开机时切换为 WPA2，密码不变：用同一密码重新连接即可。如果 LuCI 的提示说热点已关闭，说明它没有 WPA2 可用的密码：请通过 USB 或 SSH 进入 LuCI → 网络 → 无线，选择 WPA2-PSK，设置 8-63 个字符的密码并启用。在 LuCI 中选择 WPA3 或 WPA2/WPA3 混合模式时，该接入点不会启动；请选择 WPA2-PSK。</p>
+</section>
+
 <section id="wpa3">
 <h3>Wi-Fi 客户端连不上某个网络</h3>
 <p>只有 WPA3 的网络连不上（Wi-Fi 驱动没有 SAE）；把路由器设成 WPA2/WPA3 混合模式。另外，无线要么当热点要么当客户端，在开机时决定：它正在当热点时，<code>wifi-client connect</code> 会请你重启。</p>
