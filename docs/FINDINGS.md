@@ -10924,3 +10924,51 @@ Android up, `su -c mu300-linux`: `/run/mu300-root-dev` `mmcblk0@61698211840`, Op
 set up (nobody here has one); the partition here was made by hand to cover our own region.
 `tools/android-import-hotspot.sh` (no caller left) still mounts the old fixed offset and writes into the
 filesystem's top level, not a system's: it predates the region and the systems' directories.
+
+### 182. A root filesystem with recorded errors was mounted as it was, boot after boot: init now runs e2fsck first
+
+When ext4 finds corruption it sets ERROR_FS in the superblock's `s_state` (byte 1082 of the filesystem, bit 1) and
+counts `s_error_count`. Nothing on the device ever looked at that: init mounted the root, the system ran on the
+damaged filesystem, and the flag stayed set until someone ran e2fsck by hand from Android or a computer. kanoqwq's
+desktop init (`desktop_ext4_check` in his `storage.sh`) checks the flag before mounting; ours does the same now,
+with one difference: his returns failure when e2fsck does, ours never stops a boot.
+
+* `boot/init`, block `fsck`: `root_fsck DEV` before every mount of the root - the loop over the region, the GPT
+  partition named mu300root (#296), the card. A clean filesystem costs one byte read (`dd bs=1 skip=1082 count=1`).
+  With the bit set: `/sbin/e2fsck -fy DEV` on the unmounted device, `E2FSCK_CONFIG` with `broken_system_clock = 1`
+  (the clock before NTP is anywhere), at most `FSCK_TIMEOUT` = 120 s (`MU300_FSCK_TIMEOUT`), then TERM (e2fsck
+  cancels at a safe point) and 15 s later KILL. Whatever happens, `root_fsck` returns 0 and the mount follows.
+  Stage lines in `/run/stages`, kmsg (pstore) and the persistent log: `fsck-start` (device, state, error count),
+  `fsck-done rc=0|1|2` with the time and e2fsck's summary line, `fsck-TIMEOUT`, and for exit codes 4 and up
+  `fsck-FAILED rc=N (errors left uncorrected | operational error | cancelled | killed by signal N; booting anyway)`.
+  e2fsck's output stays in `/run/mu300/fsck.log` of the booted system. No e2fsck in the ramdisk (a boot image built
+  from an older bundle): `fsck-unavailable`, and the boot goes on. `MU300_FSCK=force|off` on the kernel command line.
+* `tools/e2fsck/build.sh`: e2fsprogs 1.47.4 from kernel.org (SHA-256 of its signed `sha256sums.asc`), in
+  `alpine:3.20` pinned by digest, musl, static, e2fsck only (no NLS, no undo database), `--gc-sections`, no build id,
+  stripped: 682 144 bytes, 374 KB in the LZ4 ramdisk; two builds gave the same SHA-256 (c38f85ac...).
+* `boot/build-boot-image.py --e2fsck` puts it at `sbin/e2fsck`. `tools/make-release.sh` builds it, ships it beside
+  busybox in `mu300-kernel.tar.gz` and puts it in the 5.4 generic segment; `upstream/make-bundle.sh` takes it from
+  that bundle for the 6.18 and 7.2 segments (an older bundle: a warning, no e2fsck); the release audit refuses a
+  bundle whose `ramdisk-generic.lz4` lacks `sbin/e2fsck`. install.sh and install.ps1 pass it for the vendor 5.4
+  kernel's first segment (prebuilt: from the bundle; install.sh's build mode builds it); a mainline kernel's segment
+  and the Magisk zips' on-device image (device segment + generic segment) bring it with the generic segment.
+* Tests: `test_boot_init.py` `Fsck` (clean: nothing runs; bit set: `-fy DEV` and the summary; exit codes 4, 8, 12,
+  16, 32; a hang stopped by the timeout; no binary; force/off; a real e2fsck on an image whose flag and error count
+  debugfs set, both cleared after it, and the next run reads one byte only), `RootSelect.test_fsck_before_every_mount`,
+  `test_boot_image.py` `test_e2fsck`, `test_static.py` `test_e2fsck_is_pinned_and_everywhere`.
+
+**On F50-C (2026-10-17)**, OpenWrt 25.12.5 on 6.18.57 in the internal region (804 MiB, offset 61698211840). boot_b
+(SHA-256 ca76e081...) and the region's superblock saved first; the test images were boot_b with one more ramdisk
+segment (this init and `sbin/e2fsck`), written from Android, booted with `su -c mu300-linux`:
+* clean filesystem: no fsck line; `root-offset` to `switch-root` 0.11 s, as with the image before (0.11 s).
+* `tune2fs -E force_fsck` from Android (state `clean with errors`, byte 1082 = 03): `fsck-start dev=/dev/loop0
+  state=3`, `fsck-done rc=0 (no errors) 0.1s: mu300root: 8176/51520 files ...` at 5.12 s, switch-root at 5.21 s;
+  the flag was cleared (01), the same lines in dmesg.
+* a fake e2fsck that exits 8: `fsck-FAILED rc=8 (operational error; booting anyway)`, OpenWrt up.
+* a fake e2fsck that hangs, timeout 20 s: `fsck-TIMEOUT ... after 20s`, `fsck-FAILED rc=143 (killed by signal 15;
+  booting anyway) 20.0s`, switch-root at 25.03 s, OpenWrt up.
+Then boot_b written back (ca76e081... read back), Android's e2fsck -fy on the region: clean; F50-C left in Android.
+
+**Not measured**: the vendor 5.4 kernel and a card or GPT-partition root on a device (the same function, called
+before those mounts; e2fsck is a static program and does not care which kernel runs it); a filesystem with real
+damage on a device (the image test in CI repairs only the flag; e2fsck's repairs are its own).
