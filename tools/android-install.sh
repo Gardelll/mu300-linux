@@ -269,6 +269,7 @@ if [ "${SD_MODE:-0}" = 1 ]; then
     MU300_SD_DEV=$SD_DEV sh $T/android-mount-mu300root.sh $M
     trap sd_exit EXIT
 else
+# --- region-guard begin
 # --- the region must not overlap any partition (checked again here, on the device itself), unless it lies wholly
 # inside the one GPT partition named mu300root: another installer's place for this filesystem (tools/storage.sh's
 # region_in_bounds, FINDINGS 179)
@@ -285,6 +286,7 @@ elif [ $pn = 1 ] && [ "$OFF_S" -ge $ps ] && [ $((OFF_S + SIZE_S)) -le $((ps + pz
 else
     say "region overlaps partitions or the backup GPT"; exit 1
 fi
+# --- region-guard end
 
 attach() {
     for o in /sys/block/loop*/loop/offset; do
