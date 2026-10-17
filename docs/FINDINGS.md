@@ -11605,7 +11605,7 @@ the board: it ended with status 1 and its log in the box), the job cleared.
 **Still only on the OpenWrt panel**: network, band and cell locks and their boot replay (mu300dash/lock, uci), SMS
 forwarding (the SMS pool's daemon), the AT command history and the device's USB network mode.
 
-### 188. Ubuntu's hotspot held the boot for 20 s; now 2.8 s
+### 189. Ubuntu's hotspot held the boot for 20 s; now 2.8 s
 
 **Status: current** (device-tested on F50-B, Ubuntu 24.04, 7.2.11, 2026-10-18, three reboots each way).
 
