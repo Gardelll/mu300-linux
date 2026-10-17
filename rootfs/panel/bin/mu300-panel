@@ -99,7 +99,26 @@ reload_socket() {
 
 # ---- packages ---------------------------------------------------------------------------------------------------
 apt_env() { DEBIAN_FRONTEND=noninteractive APT_LISTCHANGES_FRONTEND=none "$@"; }
-# install_pkgs: this extra's packages for this release first (offline), then Ubuntu's archive
+# apt_net ARGS: apt-get for what needs the network, never without an end. Offline (or with only the VPN server
+# answering, as in some regions) a plain apt-get update waited on its connections for more than 10 minutes, while the
+# restore job and its lock held every other apt off (F50, after an offline mu300-update apply): 10 s per connection,
+# no retry, and the whole call ends after MU300_PANEL_APT_TIMEOUT seconds (300). Measured offline on F50-B: 8
+# addresses of ports.ubuntu.com, the update failed after 81 s. --error-on=any: offline is a failure (apt-get update
+# returns 0 otherwise, and the install after it then waited again).
+APT_NET_OPTS="-o Acquire::http::Timeout=10 -o Acquire::https::Timeout=10 -o Acquire::Retries=0"
+apt_net() {
+    _cmd=$1; shift
+    if command -v timeout >/dev/null 2>&1; then
+        # shellcheck disable=SC2086
+        apt_env timeout "${MU300_PANEL_APT_TIMEOUT:-300}" apt-get "$_cmd" $APT_NET_OPTS "$@"
+    else
+        # shellcheck disable=SC2086
+        apt_env apt-get "$_cmd" $APT_NET_OPTS "$@"
+    fi
+}
+# install_pkgs: this extra's packages for this release first (offline), then Ubuntu's archive. What the archive gives
+# is kept in the extra (debs/RELEASE, as the offline extra has them): an update replaces the system and its packages,
+# and the restore at its first boot then installs Cockpit from there, online or not.
 install_pkgs() {
     _rel=$(release)
     _debs=$PANEL/debs/$_rel
@@ -110,9 +129,25 @@ install_pkgs() {
         say "the extra's packages did not install; trying Ubuntu's archive"
     fi
     say "installing Cockpit from Ubuntu's archive ($PKGS)"
-    apt_env apt-get update -q >/dev/null || return 1
+    apt_net update -q --error-on=any >/dev/null || { say "Ubuntu's archive cannot be reached (offline?)"; return 1; }
+    # downloaded into the extra first, then installed from there: the files stay for the next time
+    _dl=$PANEL/.debs-new
+    rm -rf "$_dl"
+    if [ -n "$_rel" ] && mkdir -p "$_dl/partial" &&
+        apt_net install -y -q --download-only --no-install-recommends -o Dir::Cache::archives="$_dl" \
+            -o APT::Sandbox::User=root $PKGS >/dev/null && ls "$_dl"/*.deb >/dev/null 2>&1; then
+        # shellcheck disable=SC2046
+        if apt_env apt-get install -y -q --no-install-recommends -o Dpkg::Options::=--force-confold $(ls "$_dl"/*.deb); then
+            rm -rf "$_dl/partial" "$_dl/lock" "$_debs"
+            mkdir -p "$PANEL/debs" && mv "$_dl" "$_debs" && chmod -R go-w "$_debs" ||
+                say "Cockpit is installed, but its packages could not be kept in $_debs"
+            rm -rf "$_dl"
+            return 0
+        fi
+    fi
+    rm -rf "$_dl"
     # shellcheck disable=SC2086
-    apt_env apt-get install -y -q --no-install-recommends -o Dpkg::Options::=--force-confold $PKGS
+    apt_net install -y -q --no-install-recommends -o Dpkg::Options::=--force-confold $PKGS
 }
 
 do_install() {
@@ -175,7 +210,7 @@ do_restore() {
     _try=1
     while ! have_cockpit; do
         install_pkgs && break
-        [ "$_try" -ge "${MU300_PANEL_TRIES:-10}" ] && die "Cockpit could not be installed again; once online: sudo mu300-panel install"
+        [ "$_try" -ge "${MU300_PANEL_TRIES:-10}" ] && die "Cockpit could not be installed again: the device is offline and the panel extra has no packages for Ubuntu $(release). Copy mu300-extra-panel-offline.tar.gz of the release onto the device and run: sudo mu300-extra install panel --from FILE (or, once online: sudo mu300-panel install)"
         _try=$((_try + 1))
         sleep "${MU300_PANEL_RETRY:-60}"
     done
