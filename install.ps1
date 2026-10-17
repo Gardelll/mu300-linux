@@ -2056,6 +2056,8 @@ $bootArgs = @("$Top\boot\build-boot-image.py", '--stock-boot', "$Work\dumps\boot
     '--android-subset', "$Work\android-subset", '--out', "$Work\boot-linux-slot$LINUX_SLOT.img", '--device', $DEVICE, '--linux-slot', $LINUX_SLOT)
 if ($HAVE54) {
     $bootArgs += @('--modules', "$REL\kernel\modules", '--busybox', "$REL\kernel\busybox", '--logdw', "$REL\kernel\logdw")
+    # init's e2fsck (FINDINGS 182): in the bundles of the releases since it came
+    if (Test-Path "$REL\kernel\e2fsck") { $bootArgs += @('--e2fsck', "$REL\kernel\e2fsck") }
     if (Test-Path "$REL\kernel\modules-u30air") { $bootArgs += @('--device-modules', "u30air=$REL\kernel\modules-u30air") }
 }
 if ($KMAIN) { $bootArgs += @('--append-ramdisk', "$KMAIN\ramdisk-generic.lz4") }
