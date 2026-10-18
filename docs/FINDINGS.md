@@ -179,7 +179,7 @@ what replaced it. The table below gives each section's state.
 | 175 | The U30 Air's firmware SAE offload disabled in every layer: the driver drops the PMK record and refuses the vendor command, no hostapd import, the wifi-scripts refuse SAE, a hotspot left on SAE becomes WPA2-PSK with the same password (or off, never open) with a notice | current (unit tests; the driver built for 5.4 (objects), 6.18 and 7.2; on the U30 Air (OpenWrt, 6.18.57): refusal, migration, notice, the panel's save; no F50 yet) |
 | 180 | Wi-Fi access point: `get_station` answered any address with the interface's own counters and the station side's signal; now only this AP's stations, with nothing filled in (the firmware has no per-client figures), `-ENOENT` otherwise; `get_channel` link 0 only (kanoqwq f59a296) | current (mainline module and 5.4 patch built; unit tests; U30 Air 6.18.57 with a client, F50-B 7.2.11, 2026-10-17) |
 | 181 | The U30 Air's fuel gauge against the stock module: the user area's writes are `regmap_update_bits()` with a wait after the release (stock `save_last_cap` at 0x4ba4), no migration guess for a valid saved value, the charger's Full is 100 % with the battery current within `fullbatt-current` (kanoqwq f59a296 reviewed: his 4.2 V condition would refuse a real Full) | current (built for 6.18.57 and 7.2.11; unit tests; U30 Air 6.18.57, 2026-10-17: Full at 4.147 V gave 100 %, kept across a reboot) |
-| 188 | Call audio on the mainline kernels: the 5.4 stack (19 modules + the vendor AGDSP DMA) built for 6.18.57 and 7.2.11, the DSP's memory reserved (patch 0022), nothing autoloaded; the xrun restart that panicked 5.4 fixed (descriptors re-armed in `prepare`), the DSP's DDR mapped Normal-NC (7.x memcpy alignment fault), no 6 s spin under a lock waiting for the AGDSP domain, the domain held across the DSP start (warm reboots), the echo played at the tap's 16 kHz mono | current (F50-B 6.18.57 and 7.2.11, F50-C 7.2.11 OpenWrt, offline; a call on F50-C 7.2.11: ringback 425 Hz, melody heard, downlink recorded (his voice, F0 140 Hz); the echo through the fixed path, answered call 22:41: the owner heard his voice and the melody) |
+| 188 | Call audio on the mainline kernels: the 5.4 stack (19 modules + the vendor AGDSP DMA) built for 6.18.57 and 7.2.11, the DSP's memory reserved (patch 0022), nothing autoloaded; the xrun restart that panicked 5.4 fixed (descriptors re-armed in `prepare`), the DSP's DDR mapped Normal-NC (7.x memcpy alignment fault), no 6 s spin under a lock waiting for the AGDSP domain, the domain held across the DSP start (warm reboots), the echo played at the tap's 16 kHz mono | current (F50-B 6.18.57 and 7.2.11, F50-C 7.2.11 OpenWrt, offline; a call on F50-C 7.2.11: ringback 425 Hz, melody heard, downlink recorded (his voice, F0 140 Hz); the echo through the fixed path, answered call 22:41: the owner heard his voice and the melody; after a killed call, no player left behind and DSP replies nobody waited for no longer fail the next open: reproduced on F50-B without a call, script fix measured there, driver fix unit-tested) |
 
 ## Hardware and firmware facts
 
@@ -2493,6 +2493,63 @@ values from userspace without checking them.
 
 Not measured on mainline: a call to a Bluetooth headset (the `bt` route of 24c), and a program that bridges the
 voice taps for a whole call (it reads the dump and writes the uplink at 16 kHz itself, so it needs no change).
+
+**Two faults after a killed test call (F50-C, 7.2.11, 2026-10-18), and their fixes.** The owner stopped a running
+`mu300-voice call` with a TERM. The next `call` failed with `aplay: audio open error: Resource busy`, for the melody
+and for the echo. After that, the first FE_ST_DUMP open failed with EIO, and the open after it worked. Both were
+reproduced on F50-B (Ubuntu 24.04, 7.2.11, the release's audio stack, the 41S image) without a call: the hostless
+scene, `demo`, `echo`, and plain opens of the PCMs.
+
+* *The player outlived the script.* `mu300-voice` ran aplay and arecord in the foreground, and the melody's aplay
+  in a `$(...)`. A TERM ended the shell and nothing else. A shell also runs its trap only after the foreground command
+  returns, so a trap alone would not have helped. On F50-B: `echo 30` was killed during its arecord, and the arecord
+  kept FE_ST_DUMP (`pcmC1D16c`) open to the end of its 30 s. A second `echo` then failed with `audio open error:
+  Device or resource busy`. `echo 2` was killed during the echo's `aplay -D mu300_uplink`, and that aplay was still
+  holding `pcmC1D53p` a minute later. That is the owner's orphan; without a call the tap does not move, so it waits.
+  The same happened with INT.
+  Now every aplay/arecord is a child. The script starts it in the background and waits for it. TERM, INT, HUP and exit
+  end each child (TERM, then KILL after 3 s) and wait until it has gone, so its PCM is closed. A scene that is still
+  starting is stopped and its controls are put back. A scene that has started belongs to the call and stays (`audio
+  stop`, `hangup`), as before. On F50-B, TERM, INT (sent as a terminal sends it) and HUP each ended the script in
+  0.1-0.2 s with nothing left on either PCM.
+  When an open reports busy, the script says who holds the node (from `/proc/*/fd`; OpenWrt's busybox has no
+  `fuser`). If the holder is an aplay or arecord playing or recording one of the script's own files in
+  `/run/mu300-voice`, it is a leftover of an earlier run: the script ends it and tries once more. Anything else is
+  only reported. With the old script's one-minute-old orphan on `pcmC1D53p`, the new `echo` printed
+  `/dev/snd/pcmC1D53p is held by pid … (aplay), left over from an earlier mu300-voice: ending it` and went on.
+  Ending a player is a close of its PCM. Nothing here prepares and starts a stream again after it stopped, which
+  panics 5.4 (24e).
+* *DSP replies nobody waited for.* On the VBC control channel, the DSP's replies are read in order.
+  FE_ST_VOICE_PCM_P's trigger and its shutdown send a KCTL_SET (cmd 9, `SND_KCTL_TYPE_VOICE_MIX_UL`) with
+  `aud_send_cmd_no_wait_param()`. The DSP answers each one anyway, so every play into the uplink tap leaves two replies
+  in the channel's cache. A sender whose wait is interrupted leaves its reply too. The next KCTL_SET that does wait
+  drains them, because they carry its own command number. A STARTUP (cmd 4) does not:
+  `aud_recv_cmd()` failed on the first reply for another command. The drain before the send stopped there, and each
+  of the wait's 4 tries read one more. With five queued, the open failed:
+  `aud_recv_cmd, Haven't got right cmd(0x4), got cmd(0x9)` five times, then `aud_send_cmd: failed to get
+  command(4), ret=-5`, `dsp_startup: … vbc_dsp_func_startup return error`, and `ASoC error (-5) … BE_DAI_ID_DUMP`.
+  This is the same log as F50-C's. It took no kill. On F50-B, after `audio start dsp`, one play into
+  `hw:1,53` before a FE_ST_DUMP open gave `cmd =4 … repeat_count=4`, a pass by one try. Three plays gave the EIO
+  every time. `demo` reaches the state by itself: without a call each of the melody's three framings fails, which
+  makes six plays. The next open worked because the failed one had read five replies. The answer to the failed
+  STARTUP is then left in the cache too, and a later KCTL_SET read `got cmd(0x4)`.
+  * Fix in the driver (`upstream/modules/sprd_audio/.../audio-sipc.c`): a reply for another command is dropped
+    (`dropped a stale reply` in dmesg), and the wait goes on for the right one within the same timeout. A deadline
+    replaces the fresh 3 s of each try. With timeout 0 (the drain), it reads until the cache is empty, at most 256
+    replies. The 5.4 driver has the same function line for line. It gets the same change as
+    `kernel/patches/audio-sipc-stale-reply.patch`, the eighth patch of `build-audio.sh`, and in
+    [mu300-audio](https://github.com/dikeckaan/mu300-audio)'s prebuilt `audio_sipc.ko`.
+  * Fix in the script: an open that fails with `audio open error: Input/output error` is tried once more, after
+    0.5 s, as a new open. That covers a kernel without the fix. On F50-B with the release driver: `demo 2` printed
+    `/dev/snd/pcmC1D16c: the DSP refused the open (EIO), trying once more`, and the second open went through
+    (`repeat_count=1`) into the echo loop. The old script stopped at `capture failed`.
+  * Measured for the driver change: `tests/test_voice_cleanup.py` compiles `aud_recv_cmd()` against a fake message
+    cache. It covers the drain past stale replies, the wait that skips them within what is left of the timeout, never
+    longer, a cache full of wrong replies, and the plain case. The same test fails on the old function. The module
+    builds for 7.2.11 (the release's config, same vermagic) and for 5.4.254. **Not run on a board yet.** Swapping
+    `audio_sipc` needs a boot without the audio stack (its modules are permanent once loaded), which was not done
+    on F50-B. The first board to boot a release with it should show, after a few plays into FE_ST_VOICE_PCM_P,
+    `dropped a stale reply` lines and a FE_ST_DUMP open that works the first time.
 
 ## Bluetooth
 
