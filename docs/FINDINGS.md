@@ -1685,7 +1685,7 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
 * **A virtual card is enough for software that only needs a device.** The stock config leaves `SND_DRIVERS` off,
   which is what gates `snd-aloop` and `snd-dummy`; the fragment turns it on and builds both as modules.
   `snd-aloop` then gives card 0 with two PCM devices of eight substreams each - write to `hw:0,0` and the same
-  audio comes back on `hw:0,1` - which is what a call bridge or a SIP gateway on the device needs to hand audio
+  audio comes back on `hw:0,1` - which is what a program bridging a call on the device needs to hand audio
   between two programs. Verified on the device: `/proc/asound/cards` shows `Loopback`, and `/dev/snd` has
   `controlC0`, `pcmC0D0c/p` and `pcmC0D1c/p`. It carries no cellular voice by itself; that still needs the AGDSP
   path below.
@@ -1738,7 +1738,7 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
   blocks inside the reserved region and sends to the DSP. `mu300-audio-dsp` loads the 23 drivers with the right
   parameters.
 * The card now parses **57 of its 58 dai links**, where before it deferred at link 0 and never moved.
-  `BE_VOICE_PCM_P` - the back end the SIP gateway needs - parses fine. It stops on the last one,
+  `BE_VOICE_PCM_P` - the back end a program bridging the call needs - parses fine. It stops on the last one,
   `BE_FAST_P_SMART_AMP`, with `get dai name for 'codec' failed!(-517)`: that link wants the smart amplifier,
   which this board does not have (nothing answers at I2C 0x34, and the DT's own `sprd,spk-ext-pa-info` count
   fails with -22). Links whose `codec` phandle is simply missing already fall back to a dummy codec - the
@@ -1840,8 +1840,8 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
       # probe manual so a failed 104-second codec loop cannot stall every boot.
 
   and the Whale HAL module's README lists, as explicitly outside what it achieves: cellular call routing
-  through the F50's own earpiece, speaker and microphone, and **SIP/WebSocket apps bridging cellular RX/TX
-  through `AudioRecord`/`AudioTrack`** - which is exactly the thing a SIP gateway needs. What does work there
+  through the F50's own earpiece, speaker and microphone, and **apps bridging cellular RX/TX
+  through `AudioRecord`/`AudioTrack`** - which is exactly the thing a program bridging the call needs. What does work there
   is media audio, system sounds, and cellular calls over a **Bluetooth headset's SCO link**, which does not go
   through the AGDSP at all. `S_VOICE_P_BT` and `S_VOICE_C_BT` exist in the mixer, so that route is reachable
   from here too, and BlueZ already runs on this device (section 25).
@@ -2249,22 +2249,21 @@ Other things learned along the way:
 * **Network DTMF is not a tone channel.** `AT+EVTS=1,<d>` / `AT+EVTS=0,<d>` (what the RIL sends), `AT+VTS`, and
   `AT+VTD` (default 1) all work during a VoLTE call and return OK. They travel as RTP events, though, and what
   reaches the far end is not a recognisable tune. As keys they do what they are for, **but only while the audio DSP
-  is in the call**: `AT+VTS="<key>"`, one per key, sent from a SIP softphone through the F50 (its RFC 4733 events
-  turned into `AT+VTS` one for one, the call scene running) sounded all twelve keys on the phone at the other end
-  (F50, 6.18, 2026-10-17). Without the scene the modem takes them all the same and sends nothing. The far end of
-  these calls was a 4G voice module that reports each DTMF key it receives on its serial port: on five answered
-  voice calls with the scene down (and a video call on 6.18.57 with no audio driver loaded) every `AT+VTS` sent -
-  `123` on one, `*#0123456789` or the start of it on the others - returned OK and the module reported none; on the
-  next call, the scene started first (FE_ST_VOICE RUNNING), it reported all of `*#0123456789` in order, and the same
-  with `mu300-voice dtmf` as committed here (F50, 6.18, 2026-10-18). The modem hands its tone generator to the DSP
-  (next point); the RTP events evidently come from the DSP's side of the call as well. `mu300-voice dtmf KEYS` sends
-  them, and refuses unless FE_ST_VOICE runs (in either direction, whoever started it).
+  is in the call**: `AT+VTS="<key>"`, one per key. Without the scene the modem takes them all the same and sends
+  nothing. Measured against a 4G voice module at the far end that reports each DTMF key it receives on its serial
+  port (F50, OpenWrt, 6.18, 2026-10-18, by Gardelll): on five answered voice calls with the scene down (and a video
+  call on 6.18.57 with no audio driver loaded) every `AT+VTS` sent - `123` on one, `*#0123456789` or the start of
+  it on the others - returned OK and the module reported none; on the next call, the scene started first
+  (FE_ST_VOICE RUNNING), it reported all of `*#0123456789` in order, and the same with `mu300-voice dtmf`. The
+  modem hands its tone generator to the DSP (next point); the RTP events evidently come from the DSP's side of the
+  call as well. `mu300-voice dtmf KEYS` sends them, one `AT+VTS` per key, and refuses unless FE_ST_VOICE runs (in
+  either direction, whoever started it: `audio start`, or another program that runs the scene while it sends keys).
 * **`AT+STONE`, `AT+SPMSTONE`, `AT+SDTMF` and `AT+SPVLOOP` all return OK**, outside a call as well. The modem
   hands its tone generator to the DSP (`CP_CMDQ_START_TONE`), so on 6.18 these do nothing. None of them gave a
   heard tone on 5.4 before the clock fix either.
 * **The modem log costs nothing to keep open.** Stop `modem-log-drain` and read `/dev/slog_nr` in a loop: one
   `dd` returns at every channel close. `AT+ARMLOG=0` turns the log off again.
-* The owner's SIP project used `FE_ST_VOICE_PCM_P` at 16 kHz with period 640 x2. That is the MU5358's vendor
+* An earlier program of the owner's used `FE_ST_VOICE_PCM_P` at 16 kHz with period 640 x2. That is the MU5358's vendor
   scene, and on that board the HAL's own call scene clocks the port. Here 8 kHz with 160 / 960 is what was heard.
   16 kHz was only tried without the clock (call 2).
 
@@ -2311,8 +2310,8 @@ in `prepare`; that is a fix for the 5.4 audio patches (mu300-audio).
 
 **What uses this now.** For the dsp route, `mu300-voice audio start` switches the dump on at `DUMP_POS_DAC1_E` through
 its undo log (`MU300_VOICE_DUMP_TAP=0` leaves it off). `tone` plays at 16 kHz (`MU300_VOICE_PLAY_RATE`). `echo`
-records the dump and plays it back through alsa-lib's `plug`. That echo path has not yet been run in a call. A SIP
-gateway built on these taps reads the dump and decimates it to 8 kHz behind a 47-tap low-pass. It
+records the dump and plays it back through alsa-lib's `plug`. That echo path has not yet been run in a call. A program
+that bridges the call through these taps reads the dump and decimates it to 8 kHz behind a 47-tap low-pass. It
 writes the uplink at 16 kHz through a polyphase interpolator, and feeds silence for as long as the stream is open.
 
 ### 188. Call audio on the mainline kernels: the 5.4 stack ported to 6.18 and 7.2
