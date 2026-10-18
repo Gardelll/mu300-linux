@@ -108,6 +108,7 @@ what replaced it. The table below gives each section's state.
 | 38c | fw4 on 5.4: the boot ruleset without the LAN, and a reload that always fails | current (fixed at boot; a reload by hand still needs the flowtable deleted first) |
 | 40 | One stuck AT command wedged the control panel; a second per AT command on OpenWrt | current (fixed) |
 | 41 | The vendor daemons' own account | current |
+| 41a | OpenWrt with shadow-useradd: the modem's nodes the vendor account's, the daemons uid 1000 (issue #314) | current (fixed) |
 | 42 | No access point on a DFS channel (user report, 2026-10-11) | current |
 | 43 | adb over USB to Linux: adbd in the gadget, and what FunctionFS does to the rest of it | current; the default (off) and who is let in (keys only): superseded by §70 |
 | 44 | Network namespaces on 5.4: the vendor's fragment sysctl, torn down by the wrong namespace (#103) | current (fixed) |
@@ -4499,6 +4500,45 @@ where the kernel has them. `modem_control` and `refnotify` ran as `ubuntu` too: 
   ~290 s. The vendor log has the same errors as before the change (no `/dev/cp_dump`, no `/proc/bootconfig`, no
   property service) plus the two logged failed switches. Not measured: the 5.4 kernel, OpenWrt (unchanged there but
   for the modes), the modem with a SIM.
+
+### 41a. OpenWrt with shadow-useradd: the modem's nodes the vendor account's, the daemons uid 1000 (issue #314)
+
+Reported by Xiaol1n173 (F50, OpenWrt 25.12.5, v2026.10.17.3, 7.2.11): the modem never started - `run_state: 255`,
+every SIPC sbuf `state: 0`, `mu300-atd` gave up waiting for `/dev/stty_nr4`, `modem_control` at 100 % CPU as uid 1000
+with EACCES on `/dev/modem`, `/dev/pmsys`, `/dev/chsys`, `/dev/trusty-ipc-dev0` and the `nr_*` partitions, all
+`999 0660`. `shadow-useradd` was installed (nothing needs it).
+
+* **Cause** (confirmed in the code and on F50-C). Three scripts each decided on their own who the vendor daemons are
+  (§41). `android-vendor-start` made `mu300vnd` wherever `useradd` exists; `ueventd-perms.sh` gave the nodes to
+  `mu300vnd` wherever `/etc/passwd` has it; `android-run` started the daemons as it only where `command -v setpriv`
+  finds one, else `chroot` as root, after which the daemons `setuid(1000)` themselves. OpenWrt has no util-linux
+  `setpriv`, so with `shadow-useradd` the nodes went to 999 and the daemons ran as 1000. (Where busybox has its
+  `setpriv` applet, which has no `--reuid`, `command -v` found it and the `exec setpriv --reuid=...` failed: no
+  `modem_control` at all.)
+* **Fix.** One decision, `android-run`'s: the vendor account is used only where it exists **and** `setpriv` can start
+  a program as it (`setpriv --help` names `--reuid`: util-linux's does, busybox's does not). `android-run --switches`
+  says whether it can, `android-run --user` prints the account it starts `modem_control`/`refnotify` as (nothing: they
+  switch to 1000). `android-vendor-start` makes the account only where `useradd` exists and `android-run --switches`
+  succeeds, and passes `android-run --user` to `ueventd-perms.sh` as `MU300_VENDOR_USER`; empty means uid/gid 1000
+  even where `mu300vnd` exists (the reporter's board keeps the account its earlier boots made). `ueventd-perms.sh` run
+  without the variable (the initramfs' copy) looks `mu300vnd` up by name as before. Ubuntu and Arch (util-linux
+  `setpriv`, the account in the image) are unchanged.
+* **Test.** `tests/test_vendor_ids.py` (`OneDecision`): for every combination of account (there or not), `useradd`
+  (there or not) and `setpriv` (util-linux's, busybox's, none) - on a `PATH` without this machine's own - the uid
+  `ueventd-perms.sh` gives the nodes after the account block is the uid `modem_control` runs as; 999 only with
+  util-linux's `setpriv`; no account is made that nothing would run as. Nine of the twelve combinations failed before.
+* **Measured.** F50-C (OpenWrt 25.12.5, vendor kernel 5.4.254, this tree's scripts of main): `shadow-useradd` installed
+  (the release's package, offline), one reboot: `useradd` made `mu300vnd` 999/999 at boot, `/dev/modem`, `/dev/pmsys`
+  and `nr_modem_a`'s node `999 999`, `modem_control` and `refnotify` uid 1000 (`modem_control` at 587 % in `top`),
+  `cp_diskserver` root, `run_state: 255`, `refnotify` logging "open /dev/spipe_nr8 failed, error: Permission denied"
+  every second, `mu300-at` no answer. About five minutes into that boot the board went off the bus (the PM watchdog
+  §v9 cuts power when `modem_control` never loads the PM firmware).
+  F50-B (Ubuntu 24.04, 7.2.11, `mu300vnd` 999/991 in the image) with the three new scripts: `android-run --user`
+  `mu300vnd`; after a reboot the nodes `999 991`, `modem_control`/`refnotify` uid 999, `run_state: 1`, `+CFUN: 1` (as
+  before). With `/usr/bin/setpriv` moved away (the reporter's situation: the account there, no `setpriv`):
+  `android-run --user` empty; after a reboot the nodes `1000 1000`, the daemons uid 1000, `run_state: 1`, `+CFUN: 1`.
+  Ubuntu's busybox applet as `setpriv` (`setpriv: unrecognized option '--reuid=0'`): `--switches` 1, `--user` empty.
+  F50-B restored to its release scripts and `setpriv` afterwards (999, modem up).
 
 ### 42. No access point on a DFS channel (user report, 2026-10-11)
 
