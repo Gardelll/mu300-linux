@@ -167,7 +167,7 @@ CONFIG_NFT_QUEUE=y
 # CONFIG_SPRD_ROTATION_TASK is not set
 
 # Virtual sound cards. The board has no speaker path (docs/FINDINGS.md 24), so there is no real card for
-# software that insists on one - a SIP gateway on the device, for instance. snd-aloop gives a playback/capture
+# software that insists on one - a program that bridges a call, for instance. snd-aloop gives a playback/capture
 # pair wired back to back, which is what a call bridge needs to hand audio between two programs; snd-dummy is
 # the "there is a card" placeholder. Both are modules, so nothing loads unless asked for.
 # CONFIG_SND_DRIVERS is the menu that gates them and the stock config has it off.
