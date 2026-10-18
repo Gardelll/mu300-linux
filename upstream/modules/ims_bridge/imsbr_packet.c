@@ -36,6 +36,7 @@
 #include "imsbr_sipc.h"
 #include "imsbr_hooks.h"
 #include "imsbr_packet.h"
+#include "imsbr_parse.h"
 
 static int tcpdump_enable __read_mostly;
 module_param(tcpdump_enable, int, 0644);
@@ -103,46 +104,29 @@ static struct sk_buff *imsbr_pkt2skb(void *pkt, int pktlen)
 	return skb;
 }
 
-static void imsbr_flowi4_init(struct flowi4 *fl4, struct sk_buff *skb, struct iphdr *ip)
+/* mu300: the protocol and ports from the one parse (imsbr_parse.h), not read again here */
+static void imsbr_flowi4_init(struct flowi4 *fl4, const struct imsbr_l3 *l3, struct iphdr *ip)
 {
-	__u8 proto;
-	void *l4ptr;
-	u8 _l4[8];
-
-	proto = ip->protocol;
-
 	memset(fl4, 0, sizeof(*fl4));
 	fl4->flowi4_dscp = inet_dsfield_to_dscp(ip->tos);
-	fl4->flowi4_proto = proto;
+	fl4->flowi4_proto = l3->l4proto;
 	fl4->flowi4_scope = RT_SCOPE_UNIVERSE;
 	fl4->flowi4_flags = FLOWI_FLAG_ANYSRC;
 	fl4->saddr = ip->saddr;
 	fl4->daddr = ip->daddr;
-
-	/* mu300: linear, but not necessarily that long */
-	l4ptr = skb_header_pointer(skb, skb_network_offset(skb) + ip->ihl * 4, sizeof(_l4), _l4);
-	if (!l4ptr)
-		return;
-	if (proto == IPPROTO_UDP || proto == IPPROTO_TCP) {
-		struct udphdr *uh = l4ptr;
-
-		fl4->fl4_sport = uh->source;
-		fl4->fl4_dport = uh->dest;
-	} else if (proto == IPPROTO_ICMP) {
-		struct icmphdr *ih = l4ptr;
-
-		fl4->fl4_icmp_type = ih->type;
-		fl4->fl4_icmp_code = ih->code;
+	if (l3->has_ports) {
+		fl4->fl4_sport = htons(l3->sport);
+		fl4->fl4_dport = htons(l3->dport);
 	}
 }
 
-static void imsbr_packet_output_v4(struct sk_buff *skb, struct iphdr *ip)
+static void imsbr_packet_output_v4(struct sk_buff *skb, const struct imsbr_l3 *l3, struct iphdr *ip)
 {
 	struct flowi4 fl4;
 	struct rtable *rt;
 	int err;
 
-	imsbr_flowi4_init(&fl4, skb, ip);
+	imsbr_flowi4_init(&fl4, l3, ip);
 	security_skb_classify_flow(skb, flowi4_to_flowi_common(&fl4));
 
 	rt = ip_route_output_key(&init_net, &fl4);
@@ -162,42 +146,27 @@ static void imsbr_packet_output_v4(struct sk_buff *skb, struct iphdr *ip)
 	}
 }
 
-static void imsbr_flowi6_init(struct flowi6 *fl6, struct sk_buff *skb, struct ipv6hdr *ip6)
+/* mu300: the protocol after the extension headers and the ports from the one parse; the vendor took the first
+ * next header for the protocol */
+static void imsbr_flowi6_init(struct flowi6 *fl6, const struct imsbr_l3 *l3, struct ipv6hdr *ip6)
 {
-	__u8 proto;
-	void *l4ptr;
-	u8 _l4[8];
-
-	proto = ip6->nexthdr;
 	memset(fl6, 0, sizeof(*fl6));
-	fl6->flowi6_proto = proto;
+	fl6->flowi6_proto = l3->l4proto;
 	fl6->saddr = ip6->saddr;
 	fl6->daddr = ip6->daddr;
-
-	/* mu300: linear, but not necessarily that long */
-	l4ptr = skb_header_pointer(skb, skb_network_offset(skb) + sizeof(*ip6), sizeof(_l4), _l4);
-	if (!l4ptr)
-		return;
-	if (proto == IPPROTO_UDP || proto == IPPROTO_TCP) {
-		struct udphdr *uh = l4ptr;
-
-		fl6->fl6_sport = uh->source;
-		fl6->fl6_dport = uh->dest;
-	} else if (proto == IPPROTO_ICMPV6) {
-		struct icmp6hdr *ih = l4ptr;
-
-		fl6->fl6_icmp_type = ih->icmp6_type;
-		fl6->fl6_icmp_code = ih->icmp6_code;
+	if (l3->has_ports) {
+		fl6->fl6_sport = htons(l3->sport);
+		fl6->fl6_dport = htons(l3->dport);
 	}
 }
 
-static void imsbr_packet_output_v6(struct sk_buff *skb, struct ipv6hdr *ip6)
+static void imsbr_packet_output_v6(struct sk_buff *skb, const struct imsbr_l3 *l3, struct ipv6hdr *ip6)
 {
 	struct flowi6 fl6;
 	struct dst_entry *dst;
 	int err;
 
-	imsbr_flowi6_init(&fl6, skb, ip6);
+	imsbr_flowi6_init(&fl6, l3, ip6);
 	security_skb_classify_flow(skb, flowi6_to_flowi_common(&fl6));
 	fl6.flowi6_mark = skb->mark;
 	dst = ip6_route_output(&init_net, NULL, &fl6);
@@ -228,9 +197,8 @@ freeit:
 	}
 }
 
-static void imsbr_packet_output(struct sk_buff *skb)
+static void imsbr_packet_output(struct sk_buff *skb, const struct imsbr_l3 *l3)
 {
-	struct iphdr *ip = ip_hdr(skb);
 
 	/* Packets from cp are treated as the local generated packets, also
 	 * CP's mtu is ALWAYS less than AP's, so we need not consider the
@@ -238,26 +206,26 @@ static void imsbr_packet_output(struct sk_buff *skb)
 	 */
 	skb->ignore_df = 1;
 
-	if (ip->version == 4) {
-		imsbr_packet_output_v4(skb, ip);
+	if (l3->family == 4) {
+		imsbr_packet_output_v4(skb, l3, ip_hdr(skb));
 	} else {
 		/* Ipv6 route rule 11000 can not prevent apps to hit this rule,
 		 * so add mark 0x80000000 for the rule to avoid apps hitting.
 		 * For vowifi pkts,they need add mark for all.
 		 */
 		skb->mark |= 0x80000000;
-		imsbr_packet_output_v6(skb, ipv6_hdr(skb));
+		imsbr_packet_output_v6(skb, l3, ipv6_hdr(skb));
 	}
 }
 
 /* mu300: is the packet's destination an address of dev? */
-static bool imsbr_dst_on_dev(struct sk_buff *skb, struct net_device *dev)
+static bool imsbr_dst_on_dev(struct sk_buff *skb, const struct imsbr_l3 *l3, struct net_device *dev)
 {
 	struct in_device *in_dev;
 	const struct in_ifaddr *ifa;
 	bool found = false;
 
-	if (ip_hdr(skb)->version == 6)
+	if (l3->family == 6)
 		return ipv6_chk_addr(&init_net, &ipv6_hdr(skb)->daddr, dev, 0);
 
 	rcu_read_lock();
@@ -274,9 +242,8 @@ static bool imsbr_dst_on_dev(struct sk_buff *skb, struct net_device *dev)
 	return found;
 }
 
-static void imsbr_packet_input(struct sk_buff *skb)
+static void imsbr_packet_input(struct sk_buff *skb, const struct imsbr_l3 *l3)
 {
-	struct iphdr *ip = ip_hdr(skb);
 	struct net_device *dev;
 	struct ethhdr *eth;
 
@@ -285,7 +252,7 @@ static void imsbr_packet_input(struct sk_buff *skb)
 	/* mu300: only what is addressed to the AP on the input device - the call's address, which the program
 	 * running the media put there. Anything else would go on as if received on it: forwarded (the router
 	 * forwards), to the LAN or out of an uplink, around the firewall's idea of where it came from. */
-	if (dev && !imsbr_dst_on_dev(skb, dev)) {
+	if (dev && !imsbr_dst_on_dev(skb, l3, dev)) {
 		IMSBR_STAT_INC(imsbr_stats->ip_route_fail);
 		dev_put(dev);
 		kfree_skb(skb);
@@ -294,7 +261,7 @@ static void imsbr_packet_input(struct sk_buff *skb)
 
 	if (dev) {
 		eth = (struct ethhdr *)skb_mac_header(skb);
-		if (ip->version == 4)
+		if (l3->family == 4)
 			eth->h_proto = htons(ETH_P_IP);
 		else
 			eth->h_proto = htons(ETH_P_IPV6);
@@ -552,15 +519,30 @@ static bool imsbr_packet_invalid(struct imsbr_packet *phdr, int pktlen)
 	return false;
 }
 
-static bool imsbr_l3_sane(struct sk_buff *skb)
+/* mu300: the one parse of the modem's packet (imsbr_parse.h) feeds the check, the classification (the tuple
+ * matched against the flows), the routing and the delivery; the packet is cut to the length it found */
+static int imsbr_l3_from_cp(struct sk_buff *skb, struct imsbr_l3 *l3, struct nf_conntrack_tuple *nft)
 {
-	struct iphdr *ip = ip_hdr(skb);
+	/* built here, so linear; the whole packet is in the head */
+	if (skb_is_nonlinear(skb) || !pskb_may_pull(skb, skb->len))
+		return -EINVAL;
+	if (imsbr_l3_parse(skb->data, skb->len, l3))
+		return -EINVAL;
+	if (pskb_trim(skb, l3->len))
+		return -ENOMEM;
+	skb_reset_network_header(skb);
+	skb_set_transport_header(skb, l3->l4off);
 
-	if (skb->len < sizeof(struct iphdr))
-		return false;
-	if (ip->version == 4)
-		return ip->ihl >= 5 && skb->len >= ip->ihl * 4;
-	return ip->version == 6 && skb->len >= sizeof(struct ipv6hdr);
+	memset(nft, 0, sizeof(*nft));
+	nft->src.l3num = l3->family == 4 ? AF_INET : AF_INET6;
+	nft->dst.protonum = l3->l4proto;
+	memcpy(&nft->src.u3, skb->data + l3->saddr_off, l3->alen);
+	memcpy(&nft->dst.u3, skb->data + l3->daddr_off, l3->alen);
+	if (l3->has_ports) {
+		nft->src.u.all = htons(l3->sport);
+		nft->dst.u.all = htons(l3->dport);
+	}
+	return 0;
 }
 
 void imsbr_packet_exit(void)
@@ -575,6 +557,7 @@ void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 			  bool freeit)
 {
 	struct nf_conntrack_tuple nft_tuple;
+	struct imsbr_l3 l3;
 	struct imsbr_packet _pkthdr;
 	struct imsbr_flow *flow;
 	struct sk_buff *skb;
@@ -608,10 +591,10 @@ void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 	if (unlikely(!skb))
 		return;
 
-	/* mu300: the modem's bytes: an IP header that is there, before anything reads one */
-	if (!imsbr_l3_sane(skb)) {
+	/* mu300: the modem's bytes: one parse, checked against what there is, before anything reads a header */
+	if (imsbr_l3_from_cp(skb, &l3, &nft_tuple)) {
 		IMSBR_STAT_INC(imsbr_stats->sk_buff_fail);
-		pr_err_ratelimited("packet from cp: %u bytes, no IP header\n", skb->len);
+		pr_err_ratelimited("packet from cp: %u bytes, not a whole IP packet\n", skb->len);
 		kfree_skb(skb);
 		return;
 	}
@@ -621,8 +604,6 @@ void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 
 	/* Default to local input */
 	socket_type = IMSBR_SOCKET_AP;
-	if (imsbr_parse_nfttuple(&init_net, skb, &nft_tuple))
-		goto end;
 
 	imsbr_nfct_debug("fromcp", skb, &nft_tuple);
 
@@ -634,7 +615,6 @@ void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 	}
 	rcu_read_unlock();
 
-end:
 	/* mu300: the modem's own IMS packets, which the AP would route out for it (VoWiFi): vowifi=1 only */
 	if (socket_type == IMSBR_SOCKET_CP && !imsbr_vowifi) {
 		kfree_skb(skb);
@@ -652,13 +632,13 @@ end:
 			skb->mark |= IMSBR_SKB_MARK_VOICE;
 		}
 
-		imsbr_packet_output(skb);
+		imsbr_packet_output(skb, &l3);
 	} else {
 		skb->mark = vowifi_in_mark;
 
 		if (__ratelimit(&rlimit_fromcp_pkt))
 			imsbr_packet_info("process packet from cp in", skb);
 
-		imsbr_packet_input(skb);
+		imsbr_packet_input(skb, &l3);
 	}
 }

@@ -11933,12 +11933,20 @@ cut down to what a video call uses and made to load only when asked for:
   address of the AP on a tuple's ports (SIP, IKE, ESP), the IKE/ESP fragmentation hooks, the ESP sequence tracking,
   and routing the modem's own IMS packets out of the AP - are registered only with `vowifi=1`. `nft list hooks`
   shows `nf_imsbr_output [ims_bridge]` twice, and six hooks with `vowifi=1`.
+* **One parse of a packet from the modem** (`imsbr_parse.h`). The vendor checked nothing, classified the packet with
+  conntrack's parser (its own walk of the IPv6 extension headers, the inner tuple of an ICMP error), routed it with a
+  third reading (the first IPv6 next header taken as the protocol, the ports read without a length) and delivered it
+  by the version byte. Now one parse, which checks every field against the bytes there are (IPv4 options and total
+  length, IPv6 payload length and up to 8 extension headers, no ports in a later fragment), gives the family, length,
+  addresses, protocol and ports to the flow match, the routing and the delivery, and the packet is cut to the length
+  it found before the kernel's input path sees it. `tests/test_ims_bridge.py` compiles it on the host and runs it on
+  packets in buffers of exactly their size under AddressSanitizer, and on 3000 mangled ones.
 * **The modem's packets go up only to an address on dummy0.** Delivered as if received on dummy0, anything else would
   have been forwarded (the board routes) - to the LAN or out of an uplink. While dummy0 is down the kernel drops them
   anyway (`enqueue_to_backlog()` drops for a device that is not running), and extra-modules leaves it down. A packet
   from the modem must carry a whole IP header before anything reads it.
 * Bounds: the ESP header after UDP port 4500 (a NAT-T keepalive is one byte), the ICMP "fragmentation needed" inner
-  headers, the IKE check (52 bytes of any packet) and the routing of the modem's packets read within the packet now
+  headers and the IKE check (52 bytes of any packet) read within the packet now
   (`skb_header_pointer()`); the control messages are copied into a zeroed buffer with the command ended (the vendor
   printed and echoed stack bytes past the block); a reassembled packet starts zeroed (a fragment that never came left
   the heap's old bytes in it), and a half-reassembled one is freed on unload.
@@ -11963,4 +11971,6 @@ tunnel), not `sipa_eth*`, or the kill switch drops it first.
 and Cockpit (200) as before; `video on` loaded it with the modem up and made dummy0 (down); 16 rmmod/insmod cycles with
 the modem up, 10 of them under a DNS loop, each under 0.3 s, every load connected again, no oops or warning; with the
 file, loaded at boot, both channels connected and the modem's 8 signalling tuples registered, data, hotspot and Cockpit
-as before.
+as before. The version with the one parse again (a second bundle): loaded at boot with the file, connected, the
+modem's 8 tuples, 5 more rmmod/insmod cycles, no oops, data, hotspot and Cockpit as before; then `rollback-boot` to
+v2026.10.18.2's kernel, checked the same way.
