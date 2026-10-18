@@ -11867,10 +11867,10 @@ F50-B (7.2.11, a bundle of this tree through `mu300-update boot`, then `rollback
 kernel lines a minute** at uptime 402-462 s, from 203 (one `sprd-mpm` wakeup report, one loopcheck heartbeat); the
 journal had no "fail to send" or flow-control line that boot, and br-lan and mobile data came up.
 
-### 192. VoLTE video calls: the modem hands their media to the AP through ims_bridge, now built and loaded
+### 192. VoLTE video calls: the modem hands their media to the AP through ims_bridge, now built and loaded on request
 
-**Status: current** (device-tested on F50, OpenWrt, 6.18.57 built from this tree and 6.18.55, 2026-10-16 to 2026-10-18;
-builds against 7.2.11, not run there).
+**Status: current** (video calls on F50, OpenWrt, 6.18.57 built from this tree and 6.18.55, 2026-10-16 to 2026-10-18;
+the hardened version below without calls on F50-B, Ubuntu 24.04, 7.2.11, 2026-10-18).
 
 **How a video call works on this modem.** The modem keeps the signalling, the AP gets the media. `AT+SPVIDEOTYPE=3` then
 `ATD=<number>` (no `;`) places a video call: `^DSCI` reports call type 3 instead of 1, and the phone called rings with a
@@ -11884,7 +11884,7 @@ video (and its RTCP) to the AP through `ims_bridge`, a SIPC driver of its own, a
 AP sends from the call's address.
 
 **ims_bridge.** Unisoc's net/ims_bridge from the realme AndroidU 5.15 tree (GPL-2.0), now `upstream/modules/ims_bridge`,
-built by build-modules.sh after the modem stack and loaded by extra-modules on the mainline kernels. It talks to the
+built by build-modules.sh after the modem stack and loaded on the mainline kernels when asked for (below). It talks to the
 modem over two sblocks on core 5, data on channel 2 and control on 3, which spool's device tree nodes already create
 (`imsbr_data`, `imsbr_ctrl`); its packets from the modem go up as if received on its `input_device`, dummy0, which
 extra-modules creates. What matters about it on these kernels:
@@ -11892,8 +11892,9 @@ extra-modules creates. What matters about it on these kernels:
 * the sblocks' shared memory is Device memory: an unaligned load or store of it faults, so copies to and from it have to
   be `memcpy_fromio`/`memcpy_toio`.
 * it is loaded before the modem has started; the modem's ends open about 17 s after boot.
-* its netfilter hooks send to the modem from packet context (`sblock_send()`, then `smsg_send()` with no timeout), which
-  can sleep if the SIPC link is suspended at that moment.
+* its netfilter hooks send to the modem from packet context (`sblock_send()`, then `smsg_send()` with no timeout). On
+  this tree that does not sleep: `smsg_send()` waits only while `ipc->suspend` is set and the power manager only
+  through a `wait_resource` callback, and nothing sets either; the locks on the way are spinlocks.
 
 **What runs the media is not here.** A program on the AP that wants the video (a program that bridges the call, for one)
 reads the VTSP messages on spipe_nr9, puts the call's IMS address on dummy0 and brings it up, and sends and receives RTP
@@ -11916,3 +11917,50 @@ audio scene. `mu300-voice call --video NUMBER` places a video call with the sequ
 
 dummy0's own counters stay at 0 (the dummy driver counts nothing it is handed this way); a capture on it is what shows
 the packets.
+
+**Taken in (2026-10-18): what the port changed on review.** The module is vendor code with netfilter hooks, so it was
+cut down to what a video call uses and made to load only when asked for:
+
+* **Not loaded at boot by default.** `mu300-voice video on` loads it and creates `/etc/mu300/ims-bridge`, which has
+  extra-modules load it at every boot (before the modem starts, as the calls above were made); `video off` unloads it
+  and removes the file; `call --video` loads it for the call when it is not there. Loaded with the modem up it
+  connects at once: both sblocks are open and `ltevideo-apsk=1` goes out (F50-B, 17 loads, every one). The first load
+  of a boot got the modem's 8 IMS signalling tuples again at once; the loads after an rmmod did not (those tuples serve
+  VoWiFi only; a video call's own tuples come with the call). No video call has been placed with the module loaded
+  after boot yet: `video on` and a reboot is the way the calls above were made.
+* **Only the LOCAL_OUT hooks** (IPv4 and IPv6, priority filter - 1), and in the host's namespace only (the vendor
+  hooked every namespace). The VoWiFi paths - the LOCAL_IN hook that hands the modem's IMS stack whatever reaches an
+  address of the AP on a tuple's ports (SIP, IKE, ESP), the IKE/ESP fragmentation hooks, the ESP sequence tracking,
+  and routing the modem's own IMS packets out of the AP - are registered only with `vowifi=1`. `nft list hooks`
+  shows `nf_imsbr_output [ims_bridge]` twice, and six hooks with `vowifi=1`.
+* **The modem's packets go up only to an address on dummy0.** Delivered as if received on dummy0, anything else would
+  have been forwarded (the board routes) - to the LAN or out of an uplink. While dummy0 is down the kernel drops them
+  anyway (`enqueue_to_backlog()` drops for a device that is not running), and extra-modules leaves it down. A packet
+  from the modem must carry a whole IP header before anything reads it.
+* Bounds: the ESP header after UDP port 4500 (a NAT-T keepalive is one byte), the ICMP "fragmentation needed" inner
+  headers, the IKE check (52 bytes of any packet) and the routing of the modem's packets read within the packet now
+  (`skb_header_pointer()`); the control messages are copied into a zeroed buffer with the command ended (the vendor
+  printed and echoed stack bytes past the block); a reassembled packet starts zeroed (a fragment that never came left
+  the heap's old bytes in it), and a half-reassembled one is freed on unload.
+* `input_device`/`backhole_device` are read-only parameters (a charp written at run time is freed under readers that
+  take no lock), `/proc/net/imsbr_flow` (the call's addresses) is root's only, and the init work that waits for the
+  modem runs on `system_long_wq`.
+* The generic netlink family was right already: every command is `GENL_ADMIN_PERM` (CAP_NET_ADMIN in the initial user
+  namespace) and the family is not namespace-aware, so only the host's root talks to it.
+
+**What it opens, and the VPN.** Nothing for the LAN or Wi-Fi clients: their traffic is forwarded, and forwarded
+packets never pass LOCAL_OUT. On the device itself, a packet from an address and to a peer the modem registered as a
+tuple goes to the modem instead of out: the call's own media, into the IMS PDN, which never runs through the VPN (as
+the voice of every call does not: it never leaves the modem). The mu300-linux-vpn kill switch (output chain at
+priority filter - 5, before this hook) drops only what leaves on `sipa_eth*` or the Wi-Fi client; a packet routed into
+the tunnel passes it and is then taken by this hook if, and only if, it matches such a tuple. The IMS address exists
+on the AP only while the program running the media has put it on dummy0, so with no call and no such program nothing
+matches. A program that wants the video sent while the kill switch is up must route the peer through dummy0 (or the
+tunnel), not `sipa_eth*`, or the kill switch drops it first.
+
+**Measured without calls** (F50-B, Ubuntu 24.04, 7.2.11 built from this tree through `mu300-update boot`, then
+`rollback-boot`): not loaded at boot without the file, and mobile data (DNS over the bearer), the hotspot (AP mode)
+and Cockpit (200) as before; `video on` loaded it with the modem up and made dummy0 (down); 16 rmmod/insmod cycles with
+the modem up, 10 of them under a DNS loop, each under 0.3 s, every load connected again, no oops or warning; with the
+file, loaded at boot, both channels connected and the modem's 8 signalling tuples registered, data, hotspot and Cockpit
+as before.

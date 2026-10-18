@@ -13,6 +13,8 @@
 #                                     call's audio has to be running (audio start)
 #   mu300-voice status                what a call and the audio path are doing
 #   mu300-voice hangup
+#   mu300-voice video on|off|status   the video call bridge (ims_bridge) loaded now and at every boot, or not
+#                                     at all; call --video loads it for the call when it is off
 #
 # Outputs. This board has no speaker, earpiece or microphone, so a call's audio has two places to go:
 #
@@ -620,6 +622,30 @@ dial() {   # dial NUMBER [video]
     fi
 }
 
+# The video call bridge (upstream/modules/ims_bridge, docs/FINDINGS.md 192): the modem's video for a program on the AP
+# that runs the media. Not loaded unless asked for: "video on" loads it and has extra-modules load it at every boot
+# (the way it was tested with calls: before the modem starts), "video off" unloads it, and call --video loads it for
+# the call when it is not there (loaded with the modem up it connects at once; no video call has been placed that
+# way yet). Mainline kernels only (5.4's vendor build of it was never run here). dummy0, where it hands the modem's
+# packets, is made with it.
+IMSBR_FLAG=${MU300_IMSBR_FLAG:-/etc/mu300/ims-bridge}
+video_loaded() { grep -q '^ims_bridge ' /proc/modules 2>/dev/null; }
+video_load() {
+    case $(uname -r) in 5.4*) echo "mu300-voice: no video call bridge on 5.4 (mainline kernels only)" >&2; return 1 ;; esac
+    if ! video_loaded; then
+        _k=/lib/modules/$(uname -r)
+        for _f in "$_k/ims_bridge.ko" "$_k/extra/ims_bridge.ko"; do
+            [ -f "$_f" ] || continue
+            insmod "$_f" || { echo "mu300-voice: ims_bridge did not load" >&2; return 1; }
+            break
+        done
+        video_loaded || { echo "mu300-voice: no ims_bridge module on this kernel ($(uname -r))" >&2; return 1; }
+    fi
+    [ -e /sys/class/net/dummy0 ] || modprobe dummy 2>/dev/null
+    [ -e /sys/class/net/dummy0 ] || ip link add dummy0 type dummy ||
+        { echo "mu300-voice: no dummy0 for the video call bridge" >&2; return 1; }
+}
+
 demo() {
     scene_running || audio_start dsp
     echo "playing the melody..."
@@ -671,6 +697,7 @@ call)
     shift
     kind=; [ "${1:-}" = --video ] && { kind=video; shift; }
     num=${1:?usage: mu300-voice call [--video] NUMBER}
+    [ -z "$kind" ] || video_load || exit 1
     dial "$num" $kind || exit 1
     sleep 5
     in_call || { echo "mu300-voice: the call did not connect" >&2; exit 1; }
@@ -684,6 +711,19 @@ hangup) at 'AT+CHUP' 10; audio_stop ;;
 dtmf)   [ "$#" -le 2 ] || { echo "usage: mu300-voice dtmf KEYS (0-9 * # A-D)" >&2; exit 2; }
         dtmf "${2:-}" ;;
 
+video)
+    case "${2:-status}" in
+        on)  video_load || exit 1
+             mkdir -p "${IMSBR_FLAG%/*}" && : > "$IMSBR_FLAG" || exit 1
+             echo "video call bridge loaded, and at every boot" ;;
+        off) rm -f "$IMSBR_FLAG"
+             if video_loaded; then rmmod ims_bridge || exit 1; fi
+             echo "video call bridge unloaded, and not loaded at boot" ;;
+        status) echo "video call bridge: $(video_loaded && echo loaded || echo 'not loaded')," \
+                     "$([ -e "$IMSBR_FLAG" ] && echo 'at every boot' || echo 'not at boot')" ;;
+        *) echo "usage: mu300-voice video on|off|status" >&2; exit 2 ;;
+    esac ;;
+
 status)
     echo "call:     $(at 'AT+CLCC' 8 | tr '\n' ' ' | mask)"
     echo "scene:    $(scene_running && echo "running, output $(cat "$TMP/output")" || echo "not running") (hw:$card,$VOICE)"
@@ -693,6 +733,6 @@ status)
     mu300-audio-dsp status 2>/dev/null | sed -n 's/^dsp:/dsp:     /p' ;;
 
 *)
-    sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
     exit 2 ;;
 esac

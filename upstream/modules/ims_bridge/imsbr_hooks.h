@@ -37,5 +37,6 @@ struct espheader {
 };
 
 extern struct espheader esphs[];
+extern bool imsbr_vowifi;
 
 #endif

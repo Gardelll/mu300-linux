@@ -434,8 +434,9 @@ int __init imsbr_sipc_init(void)
 {
 	INIT_WORK(&imsbr_data.initwork, imsbr_sipc_init_work);
 	INIT_WORK(&imsbr_ctrl.initwork, imsbr_sipc_init_work);
-	schedule_work(&imsbr_data.initwork);
-	schedule_work(&imsbr_ctrl.initwork);
+	/* mu300: these wait for the modem for as long as it takes: not on system_wq */
+	queue_work(system_long_wq, &imsbr_data.initwork);
+	queue_work(system_long_wq, &imsbr_ctrl.initwork);
 
 	return 0;
 }

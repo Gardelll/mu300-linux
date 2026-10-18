@@ -36,6 +36,17 @@
 static int xfrm_frag_enable __read_mostly;
 module_param(xfrm_frag_enable, int, 0644);
 struct espheader esphs[MAX_ESPS];
+
+/* mu300: the vendor's VoWiFi paths - IMS over the AP's own uplink: the LOCAL_IN hook that hands packets
+ * from the network to the modem's IMS stack (SIP, IKE, ESP), the IKE/ESP fragmentation hooks, the ESP
+ * sequence tracking, and the modem's packets that the AP routes out for it. None of this is used on
+ * these boards (the modem reaches IMS over its own PDN, and a video call needs only the LOCAL_OUT hook
+ * and the packets from the modem to the AP), and the LOCAL_IN path would let anything that can reach
+ * an address of the AP with a matching tuple talk to the modem's IMS stack. Off unless loaded with
+ * vowifi=1 (docs/FINDINGS.md 192). */
+bool imsbr_vowifi __read_mostly;
+module_param_named(vowifi, imsbr_vowifi, bool, 0444);
+MODULE_PARM_DESC(vowifi, "also register the vendor's VoWiFi paths (default off)");
 static bool is_icmp_error(struct nf_conntrack_tuple *nft)
 {
 	u8 protonum = nft->dst.protonum;
@@ -153,10 +164,22 @@ imsbr_modify_esp_seq(unsigned int spi, unsigned int seq)
 #define IP_V6_FLAG 0x60
 #define TYPE_UDP 0x11
 
-static bool imsbr_packet_is_ike_auth(unsigned char *ptr, unsigned int len)
+static bool imsbr_packet_is_ike_auth(struct sk_buff *skb)
 {
 	unsigned int ub_begin, ub_end, i;
 	unsigned char pkt_type;
+	unsigned char _buf[52], *ptr;
+
+	/* mu300: the vendor read up to 52 bytes of skb->data whatever the packet's length */
+	ptr = skb_header_pointer(skb, 0, 1, _buf);
+	if (!ptr)
+		return false;
+	if ((ptr[0] & 0xf0) == 0x40)
+		ptr = skb_header_pointer(skb, 0, 32, _buf);
+	else
+		ptr = skb_header_pointer(skb, 0, 52, _buf);
+	if (!ptr)
+		return false;
 
 	/*IKE authentication packeet has 00 00 00 00 next to UDP header*/
 	if ((ptr[0] & IP_V_FLAG) == 0x40) {
@@ -190,20 +213,24 @@ static bool imsbr_packet_is_ike_auth(unsigned char *ptr, unsigned int len)
 
 static int imsbr_send_new_mtu2cp(struct sk_buff *skb)
 {
-	struct iphdr *iph, *iph1;
-	struct icmphdr *icmph;
-	struct udphdr *uh;
+	struct iphdr *iph, _iph1, *iph1;
+	struct icmphdr _icmph, *icmph;
+	struct udphdr _uh, *uh;
 	struct sblock blk;
+	unsigned int off;
 	u16 new_mtu;
 
 	iph = ip_hdr(skb);
 
-	if (skb->mark == MARK_FRAG_NEED && iph->protocol == IPPROTO_ICMP) {
-		iph1 = (struct iphdr *)(skb->data + (iph->ihl << 2) +
-					sizeof(struct icmphdr));
-		uh = (struct udphdr *)((unsigned char *)iph1 + (iph1->ihl << 2));
+	/* mu300: the inner headers of the ICMP error are the sender's: read them within the packet */
+	if (iph->version == 4 && skb->mark == MARK_FRAG_NEED && iph->protocol == IPPROTO_ICMP) {
+		off = skb_network_offset(skb) + (iph->ihl << 2);
+		icmph = skb_header_pointer(skb, off, sizeof(_icmph), &_icmph);
+		iph1 = skb_header_pointer(skb, off + sizeof(_icmph), sizeof(_iph1), &_iph1);
+		if (!icmph || !iph1 || iph1->ihl < 5)
+			return 0;
+		uh = skb_header_pointer(skb, off + sizeof(_icmph) + (iph1->ihl << 2), sizeof(_uh), &_uh);
 		if (uh && ntohs(uh->dest) == ESP_PORT) {
-			icmph = (struct icmphdr *)(skb->data + (iph->ihl << 2));
 			new_mtu = ntohs(icmph->un.frag.mtu);
 			if (!imsbr_build_cmd("new-mtu", &blk, &new_mtu,
 					     sizeof(u16)))
@@ -217,15 +244,32 @@ static int imsbr_send_new_mtu2cp(struct sk_buff *skb)
 	return 0;
 }
 
+/* mu300: the ESP header after a UDP header on port 4500 (NAT-T), read within the packet: the vendor read
+ * it past the end of short packets (a NAT-T keepalive is one byte). Only with vowifi=1. */
+static void imsbr_track_esp(struct sk_buff *skb, bool out)
+{
+	struct iphdr *iph = ip_hdr(skb);
+	struct udphdr _uh, *uh;
+	struct ip_esp_hdr _esph, *esph;
+	unsigned int off;
+
+	if (!imsbr_vowifi || iph->version != 4 || iph->protocol != IPPROTO_UDP || iph->ihl < 5)
+		return;
+	off = skb_network_offset(skb) + (iph->ihl << 2);
+	uh = skb_header_pointer(skb, off, sizeof(_uh), &_uh);
+	if (!uh || ntohs(out ? uh->dest : uh->source) != ESP_PORT)
+		return;
+	esph = skb_header_pointer(skb, off + sizeof(_uh), sizeof(_esph), &_esph);
+	if (esph && imsbr_spi_match(ntohl(esph->spi)))
+		imsbr_modify_esp_seq(ntohl(esph->spi), ntohl(esph->seq_no));
+}
+
 static unsigned int nf_imsbr_input(void *priv,
 				   struct sk_buff *skb,
 				   const struct nf_hook_state *state)
 {
 	struct nf_conntrack_tuple nft;
 	struct imsbr_flow *flow;
-	struct iphdr *iph;
-	struct udphdr *uh;
-	struct ip_esp_hdr *esph;
 
 	if (!atomic_read(&imsbr_enabled))
 		return NF_ACCEPT;
@@ -235,25 +279,12 @@ static unsigned int nf_imsbr_input(void *priv,
 
 	imsbr_nfct_debug("input", skb, &nft);
 
-	iph = ip_hdr(skb);
-
 	if (imsbr_send_new_mtu2cp(skb)) {
 		kfree_skb(skb);
 		return NF_STOLEN;
 	}
 
-	if (iph && (iph->version == 4 && iph->protocol == IPPROTO_UDP)) {
-		uh = udp_hdr(skb);
-		if (uh && ntohs(uh->source) == ESP_PORT) {
-			esph = (struct ip_esp_hdr *)((char *)uh + 8);
-			if (imsbr_spi_match(ntohl(esph->spi))) {
-				pr_info("spi 0x%x matched, update seq to %d\n",
-					ntohl(esph->spi), ntohl(esph->seq_no));
-				imsbr_modify_esp_seq(ntohl(esph->spi),
-						     ntohl(esph->seq_no));
-			}
-		}
-	}
+	imsbr_track_esp(skb, false);
 
 	/* rcu_read_lock hold by netfilter hook outside */
 	flow = imsbr_flow_match(&nft);
@@ -263,7 +294,7 @@ static unsigned int nf_imsbr_input(void *priv,
 	/*for cp vowifi */
 	if (flow->socket_type == IMSBR_SOCKET_CP &&
 	    flow->media_type == IMSBR_MEDIA_IKE) {
-		if (imsbr_packet_is_ike_auth(skb->data, skb->len)) {
+		if (imsbr_packet_is_ike_auth(skb)) {
 			imsbr_packet_relay2cp(skb);
 			pr_info("this is ike pkt, go to cp socket !");
 			return NF_STOLEN;
@@ -298,9 +329,6 @@ static unsigned int nf_imsbr_output(void *priv,
 	struct nf_conntrack_tuple nft;
 	struct imsbr_flow *flow;
 	int sim, link_type;
-	struct iphdr *iph;
-	struct udphdr *uh;
-	struct ip_esp_hdr *esph;
 
 	if (!atomic_read(&imsbr_enabled))
 		return NF_ACCEPT;
@@ -310,20 +338,7 @@ static unsigned int nf_imsbr_output(void *priv,
 
 	imsbr_nfct_debug("output", skb, &nft);
 
-	iph = ip_hdr(skb);
-	if (iph && (iph->version == 4 && iph->protocol == IPPROTO_UDP)) {
-		uh = udp_hdr(skb);
-		if (uh && ntohs(uh->dest) == ESP_PORT) {
-			esph = (struct ip_esp_hdr *)((char *)uh +
-				sizeof(struct udphdr));
-			if (imsbr_spi_match(ntohl(esph->spi))) {
-				pr_info("output spi %x matched, update seq to %d\n",
-					ntohl(esph->spi), ntohl(esph->seq_no));
-				imsbr_modify_esp_seq(ntohl(esph->spi),
-						     ntohl(esph->seq_no));
-			}
-		}
-	}
+	imsbr_track_esp(skb, true);
 
 	/* rcu_read_lock hold by netfilter hook outside */
 	flow = imsbr_flow_match(&nft);
@@ -1162,17 +1177,29 @@ static unsigned int nf_imsbr_ipv6_frag_output(void *priv,
 	return NF_ACCEPT;
 }
 
+/* What a video call needs: what the AP sends from the call's address goes to the modem. Locally generated
+ * packets only - nothing forwarded for a LAN or Wi-Fi client passes LOCAL_OUT. */
 static struct nf_hook_ops nf_imsbr_ops[] __read_mostly = {
-	{
-		.hook		= nf_imsbr_input,
-		.pf		= NFPROTO_IPV4,
-		.hooknum	= NF_INET_LOCAL_IN,
-		.priority	= NF_IP_PRI_FILTER - 1,
-	},
 	{
 		.hook		= nf_imsbr_output,
 		.pf		= NFPROTO_IPV4,
 		.hooknum	= NF_INET_LOCAL_OUT,
+		.priority	= NF_IP_PRI_FILTER - 1,
+	},
+	{
+		.hook		= nf_imsbr_output,
+		.pf		= NFPROTO_IPV6,
+		.hooknum	= NF_INET_LOCAL_OUT,
+		.priority	= NF_IP6_PRI_FILTER - 1,
+	},
+};
+
+/* vowifi=1 only (see imsbr_vowifi) */
+static struct nf_hook_ops nf_imsbr_vowifi_ops[] __read_mostly = {
+	{
+		.hook		= nf_imsbr_input,
+		.pf		= NFPROTO_IPV4,
+		.hooknum	= NF_INET_LOCAL_IN,
 		.priority	= NF_IP_PRI_FILTER - 1,
 	},
 	{
@@ -1193,22 +1220,31 @@ static struct nf_hook_ops nf_imsbr_ops[] __read_mostly = {
 		.hooknum	= NF_INET_LOCAL_IN,
 		.priority	= NF_IP6_PRI_FILTER - 1,
 	},
-	{
-		.hook		= nf_imsbr_output,
-		.pf		= NFPROTO_IPV6,
-		.hooknum	= NF_INET_LOCAL_OUT,
-		.priority	= NF_IP6_PRI_FILTER - 1,
-	},
 };
 
+/* mu300: the host's own namespace only. The flows are global and the packets from the modem go up in
+ * init_net, so a container's namespace has nothing to do here; the vendor hooked every one. */
 static int __net_init imsbr_nf_register(struct net *net)
 {
-	return nf_register_net_hooks(net, nf_imsbr_ops,
-				    ARRAY_SIZE(nf_imsbr_ops));
+	int err;
+
+	if (!net_eq(net, &init_net))
+		return 0;
+	err = nf_register_net_hooks(net, nf_imsbr_ops, ARRAY_SIZE(nf_imsbr_ops));
+	if (err || !imsbr_vowifi)
+		return err;
+	err = nf_register_net_hooks(net, nf_imsbr_vowifi_ops, ARRAY_SIZE(nf_imsbr_vowifi_ops));
+	if (err)
+		nf_unregister_net_hooks(net, nf_imsbr_ops, ARRAY_SIZE(nf_imsbr_ops));
+	return err;
 }
 
-static void __net_init imsbr_nf_unregister(struct net *net)
+static void __net_exit imsbr_nf_unregister(struct net *net)
 {
+	if (!net_eq(net, &init_net))
+		return;
+	if (imsbr_vowifi)
+		nf_unregister_net_hooks(net, nf_imsbr_vowifi_ops, ARRAY_SIZE(nf_imsbr_vowifi_ops));
 	nf_unregister_net_hooks(net, nf_imsbr_ops, ARRAY_SIZE(nf_imsbr_ops));
 }
 

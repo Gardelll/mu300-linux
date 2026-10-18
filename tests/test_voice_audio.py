@@ -412,6 +412,66 @@ class VideoDial(unittest.TestCase):
         body = src[src.index('\ncall)\n'):src.index('\ndemo)')]
         self.assertIn('[ "${1:-}" = --video ]', body)
         self.assertIn('dial "$num" $kind || exit 1', body)
+        # the bridge is loaded for a video call, before the dial; a voice call leaves it alone
+        self.assertLess(body.index('[ -z "$kind" ] || video_load || exit 1'), body.index('dial "$num"'))
+
+
+class VideoBridge(unittest.TestCase):
+    """FINDINGS 192: ims_bridge is loaded only when asked for (video on, call --video), from the release's module
+    directory (flat on OpenWrt, extra/ on Ubuntu), with dummy0; never on 5.4."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+
+    def load(self, release='6.18.57', sub='extra', loaded=False, insmod_rc=0, dummy_driver=True):
+        mods = self.tmp / 'lib' / 'modules' / release / sub
+        mods.mkdir(parents=True, exist_ok=True)
+        (mods / 'ims_bridge.ko').write_text('')
+        proc = self.tmp / 'proc-modules'
+        proc.write_text('ims_bridge 245760 0 - Live 0x0\n' if loaded else '')
+        dummy0 = self.tmp / 'dummy0'
+        src = DspClock.func(VOICE.read_text(), 'video_load')
+        for a, b in (('/lib/modules/', f'{self.tmp}/lib/modules/'), ('/proc/modules', str(proc)),
+                     ('/sys/class/net/dummy0', str(dummy0))):
+            src = src.replace(a, b)
+        script = ('video_loaded() { grep -q "^ims_bridge " %s; }\n' % proc +
+                  'uname() { echo %s; }\n' % release +
+                  'insmod() { echo "insmod $*"; [ %d = 0 ] && echo "ims_bridge 1 0 - Live" > %s; return %d; }\n'
+                  % (insmod_rc, proc, insmod_rc) +
+                  'modprobe() { echo "modprobe $*"; %s }\n' % ('mkdir %s;' % dummy0 if dummy_driver else ':;') +
+                  'ip() { echo "ip $*"; mkdir %s; }\n' % dummy0 + src + 'video_load\n')
+        r = subprocess.run(['sh', '-c', script], capture_output=True, text=True)
+        shutil.rmtree(self.tmp / 'lib')
+        if dummy0.exists():
+            dummy0.rmdir()
+        return r
+
+    def test_loads_the_module_and_makes_dummy0(self):
+        for sub in ('', 'extra'):
+            r = self.load(sub=sub)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('insmod %s/lib/modules/6.18.57/%sims_bridge.ko' % (self.tmp, sub + '/' if sub else ''),
+                          r.stdout)
+            self.assertIn('modprobe dummy', r.stdout)
+            self.assertNotIn('ip link', r.stdout)
+        r = self.load(dummy_driver=False)                                 # the dummy driver was there already
+        self.assertIn('ip link add dummy0 type dummy', r.stdout)
+
+    def test_loaded_already(self):
+        r = self.load(loaded=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn('insmod', r.stdout)
+
+    def test_a_failure_is_an_error(self):
+        r = self.load(insmod_rc=1)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('did not load', r.stderr)
+
+    def test_never_on_5_4(self):
+        r = self.load(release='5.4.210')
+        self.assertEqual(r.returncode, 1)
+        self.assertNotIn('insmod', r.stdout)
 
 
 if __name__ == '__main__':

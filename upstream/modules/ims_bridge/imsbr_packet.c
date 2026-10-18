@@ -24,6 +24,8 @@
 #include <net/flow.h>
 #include <net/ip.h>
 #include <net/ipv6.h>
+#include <net/addrconf.h>
+#include <linux/inetdevice.h>
 #include <net/ip6_route.h>
 #include <net/icmp.h>
 #include <net/route.h>
@@ -50,10 +52,12 @@ module_param_named(frag_size, imsbr_frag_size, uint, 0644);
  * stolen to the userspace, so use "dummy0" instead of "lo" here.
  */
 static char *input_device __read_mostly = "dummy0";
-module_param(input_device, charp, 0644);
+/* mu300: 0444, was 0644: a charp parameter written at run time frees the old string under readers that
+ * take no lock (the receive thread looks the device up by it for every packet) */
+module_param(input_device, charp, 0444);
 
 static char *backhole_device __read_mostly = "dummy0";
-module_param(backhole_device, charp, 0644);
+module_param(backhole_device, charp, 0444);
 
 static DEFINE_MUTEX(imsbr_reasm_lock);
 static struct sk_buff *imsbr_reasm_skb;
@@ -99,10 +103,11 @@ static struct sk_buff *imsbr_pkt2skb(void *pkt, int pktlen)
 	return skb;
 }
 
-static void imsbr_flowi4_init(struct flowi4 *fl4, struct iphdr *ip)
+static void imsbr_flowi4_init(struct flowi4 *fl4, struct sk_buff *skb, struct iphdr *ip)
 {
 	__u8 proto;
 	void *l4ptr;
+	u8 _l4[8];
 
 	proto = ip->protocol;
 
@@ -114,8 +119,10 @@ static void imsbr_flowi4_init(struct flowi4 *fl4, struct iphdr *ip)
 	fl4->saddr = ip->saddr;
 	fl4->daddr = ip->daddr;
 
-	/* Don't worry, this data buffer must be linear! */
-	l4ptr = (char *)ip + (ip->ihl * 4);
+	/* mu300: linear, but not necessarily that long */
+	l4ptr = skb_header_pointer(skb, skb_network_offset(skb) + ip->ihl * 4, sizeof(_l4), _l4);
+	if (!l4ptr)
+		return;
 	if (proto == IPPROTO_UDP || proto == IPPROTO_TCP) {
 		struct udphdr *uh = l4ptr;
 
@@ -135,7 +142,7 @@ static void imsbr_packet_output_v4(struct sk_buff *skb, struct iphdr *ip)
 	struct rtable *rt;
 	int err;
 
-	imsbr_flowi4_init(&fl4, ip);
+	imsbr_flowi4_init(&fl4, skb, ip);
 	security_skb_classify_flow(skb, flowi4_to_flowi_common(&fl4));
 
 	rt = ip_route_output_key(&init_net, &fl4);
@@ -155,10 +162,11 @@ static void imsbr_packet_output_v4(struct sk_buff *skb, struct iphdr *ip)
 	}
 }
 
-static void imsbr_flowi6_init(struct flowi6 *fl6, struct ipv6hdr *ip6)
+static void imsbr_flowi6_init(struct flowi6 *fl6, struct sk_buff *skb, struct ipv6hdr *ip6)
 {
 	__u8 proto;
 	void *l4ptr;
+	u8 _l4[8];
 
 	proto = ip6->nexthdr;
 	memset(fl6, 0, sizeof(*fl6));
@@ -166,8 +174,10 @@ static void imsbr_flowi6_init(struct flowi6 *fl6, struct ipv6hdr *ip6)
 	fl6->saddr = ip6->saddr;
 	fl6->daddr = ip6->daddr;
 
-	/* Don't worry, this data buffer must be linear! */
-	l4ptr = (char *)ip6 + sizeof(*ip6);
+	/* mu300: linear, but not necessarily that long */
+	l4ptr = skb_header_pointer(skb, skb_network_offset(skb) + sizeof(*ip6), sizeof(_l4), _l4);
+	if (!l4ptr)
+		return;
 	if (proto == IPPROTO_UDP || proto == IPPROTO_TCP) {
 		struct udphdr *uh = l4ptr;
 
@@ -187,7 +197,7 @@ static void imsbr_packet_output_v6(struct sk_buff *skb, struct ipv6hdr *ip6)
 	struct dst_entry *dst;
 	int err;
 
-	imsbr_flowi6_init(&fl6, ip6);
+	imsbr_flowi6_init(&fl6, skb, ip6);
 	security_skb_classify_flow(skb, flowi6_to_flowi_common(&fl6));
 	fl6.flowi6_mark = skb->mark;
 	dst = ip6_route_output(&init_net, NULL, &fl6);
@@ -240,6 +250,30 @@ static void imsbr_packet_output(struct sk_buff *skb)
 	}
 }
 
+/* mu300: is the packet's destination an address of dev? */
+static bool imsbr_dst_on_dev(struct sk_buff *skb, struct net_device *dev)
+{
+	struct in_device *in_dev;
+	const struct in_ifaddr *ifa;
+	bool found = false;
+
+	if (ip_hdr(skb)->version == 6)
+		return ipv6_chk_addr(&init_net, &ipv6_hdr(skb)->daddr, dev, 0);
+
+	rcu_read_lock();
+	in_dev = __in_dev_get_rcu(dev);
+	if (in_dev) {
+		in_dev_for_each_ifa_rcu(ifa, in_dev) {
+			if (ifa->ifa_local == ip_hdr(skb)->daddr) {
+				found = true;
+				break;
+			}
+		}
+	}
+	rcu_read_unlock();
+	return found;
+}
+
 static void imsbr_packet_input(struct sk_buff *skb)
 {
 	struct iphdr *ip = ip_hdr(skb);
@@ -247,6 +281,16 @@ static void imsbr_packet_input(struct sk_buff *skb)
 	struct ethhdr *eth;
 
 	dev = dev_get_by_name(&init_net, input_device);
+
+	/* mu300: only what is addressed to the AP on the input device - the call's address, which the program
+	 * running the media put there. Anything else would go on as if received on it: forwarded (the router
+	 * forwards), to the LAN or out of an uplink, around the firewall's idea of where it came from. */
+	if (dev && !imsbr_dst_on_dev(skb, dev)) {
+		IMSBR_STAT_INC(imsbr_stats->ip_route_fail);
+		dev_put(dev);
+		kfree_skb(skb);
+		return;
+	}
 
 	if (dev) {
 		eth = (struct ethhdr *)skb_mac_header(skb);
@@ -443,6 +487,8 @@ imsbr_pkt_reasm(struct imsbr_packet *phdr, void *pktdata, int pktlen)
 		imsbr_reasm_skb = imsbr_allocskb(reasm_tlen, GFP_KERNEL);
 		if (!imsbr_reasm_skb)
 			goto fail;
+		/* mu300: a fragment that never came would leave the heap's old bytes in the packet */
+		memset(imsbr_reasm_skb->data, 0, reasm_tlen);
 	} else if (!imsbr_reasm_skb) {
 		pr_err("First frag dropped, cannot reasm!\n");
 		goto fail;
@@ -506,6 +552,25 @@ static bool imsbr_packet_invalid(struct imsbr_packet *phdr, int pktlen)
 	return false;
 }
 
+static bool imsbr_l3_sane(struct sk_buff *skb)
+{
+	struct iphdr *ip = ip_hdr(skb);
+
+	if (skb->len < sizeof(struct iphdr))
+		return false;
+	if (ip->version == 4)
+		return ip->ihl >= 5 && skb->len >= ip->ihl * 4;
+	return ip->version == 6 && skb->len >= sizeof(struct ipv6hdr);
+}
+
+void imsbr_packet_exit(void)
+{
+	mutex_lock(&imsbr_reasm_lock);
+	kfree_skb(imsbr_reasm_skb);
+	imsbr_reasm_skb = NULL;
+	mutex_unlock(&imsbr_reasm_lock);
+}
+
 void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 			  bool freeit)
 {
@@ -516,7 +581,7 @@ void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 	int socket_type;
 	char *pktdata;
 	int pktlen;
-	int media_type;
+	int media_type = IMSBR_MEDIA_UNSPEC;
 
 	IMSBR_STAT_INC(imsbr_stats->pkts_fromcp);
 
@@ -543,6 +608,14 @@ void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 	if (unlikely(!skb))
 		return;
 
+	/* mu300: the modem's bytes: an IP header that is there, before anything reads one */
+	if (!imsbr_l3_sane(skb)) {
+		IMSBR_STAT_INC(imsbr_stats->sk_buff_fail);
+		pr_err_ratelimited("packet from cp: %u bytes, no IP header\n", skb->len);
+		kfree_skb(skb);
+		return;
+	}
+
 	if (tcpdump_enable)
 		imsbr_dumpcap(skb);
 
@@ -562,6 +635,11 @@ void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 	rcu_read_unlock();
 
 end:
+	/* mu300: the modem's own IMS packets, which the AP would route out for it (VoWiFi): vowifi=1 only */
+	if (socket_type == IMSBR_SOCKET_CP && !imsbr_vowifi) {
+		kfree_skb(skb);
+		return;
+	}
 	if (socket_type == IMSBR_SOCKET_CP) {
 		if (__ratelimit(&rlimit_fromcp_pkt))
 			imsbr_packet_info("process packet from cp out", skb);

@@ -104,8 +104,8 @@ installer. It is built next to 6.18: `OUTDIR=out-7.2 KV=7.2.11` for `build.sh` a
 - Power-off works through the PMIC (FINDINGS 31h); on a powered USB port the battery-less F50 starts again.
 - Audio: call audio is ported (`modules/sprd_audio`, FINDINGS 188): the Unisoc AGDSP stack of 5.4 for 6.18 and 7.2.
   The AGDSP image is the user's to supply (`mu300-audio-dsp install FILE`); this repository has none.
-- VoLTE video calls: `modules/ims_bridge` (FINDINGS 192) carries their media between the modem and the AP; extra-modules
-  loads it on 6.18 and 7.2.
+- VoLTE video calls: `modules/ims_bridge` (FINDINGS 192) carries their media between the modem and the AP; it is loaded
+  only when asked for (`mu300-voice video on`, or `call --video` for one call) on 6.18 and 7.2.
 
 ## Earlier status notes
 Clocks, pinctrl, power domains, USB 3.1 gadget, eMMC, PCIe, thermal, cpufreq, watchdog, LEDs and Wi-Fi/BT are

@@ -21,6 +21,7 @@
 #include "imsbr_core.h"
 #include "imsbr_hooks.h"
 #include "imsbr_netlink.h"
+#include "imsbr_packet.h"
 #include "imsbr_sipc.h"
 
 static int __init imsbr_init(void)
@@ -66,6 +67,7 @@ static void __exit imsbr_exit(void)
 	imsbr_netlink_exit();
 	imsbr_hooks_exit();
 	imsbr_sipc_exit();
+	imsbr_packet_exit();	/* mu300: a half-reassembled packet was left behind */
 	imsbr_core_exit();
 }
 

@@ -41,4 +41,5 @@ void imsbr_packet_relay2cp(struct sk_buff *skb);
 void imsbr_process_packet(struct imsbr_sipc *sipc, struct sblock *blk,
 			  bool freeit);
 void imsbr_dumpcap(struct sk_buff *skb);
+void imsbr_packet_exit(void);
 #endif

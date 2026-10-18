@@ -2677,7 +2677,8 @@ class SipaDele(ShellTest):
             text = text.replace('/dev/stty_nr$((SIM_SLOT * 3 + 1))', '/dev/null')
         for a, b in (('/lib/modules/', f'{self.tmp}/lib/modules/'), ('/proc/modules', f'{self.tmp}/proc-modules'),
                      ('/opt/mu300/bin/', f'{self.stubs}/'), ('/dev/stty_nr1', '/dev/null'),
-                     ('/sys/class/net/dummy0', f'{self.tmp}/dummy0')):
+                     ('/sys/class/net/dummy0', f'{self.tmp}/dummy0'),
+                     ('/etc/mu300/ims-bridge', f'{self.tmp}/ims-bridge')):
             text = text.replace(a, b)
         p = self.tmp / name
         p.write_text(text)
@@ -2732,9 +2733,11 @@ class SipaDele(ShellTest):
                 ko.unlink()
 
     def test_extra_modules_loads_ims_bridge_on_the_mainline_kernels(self):
-        """FINDINGS 192: a video call's media. The mainline kernels' port, by path (OpenWrt flat, Ubuntu extra/), once,
-        and dummy0 made for it to deliver to; the vendor 5.4 kernel's own build of it is never loaded."""
+        """FINDINGS 192: a video call's media, only when asked for (/etc/mu300/ims-bridge, `mu300-voice video on`).
+        The mainline kernels' port, by path (OpenWrt flat, Ubuntu extra/), once, and dummy0 made for it to deliver
+        to; the vendor 5.4 kernel's own build of it is never loaded."""
         (self.mods / 'ims_bridge.ko').write_text('')
+        (self.tmp / 'ims-bridge').write_text('')
         # the dummy driver makes dummy0 as it loads (DUMMY0 set), or does not (loaded already, dummy0 deleted since)
         self.stub('modprobe', 'echo "modprobe $*" >> "$STUBLOG/calls"\n'
                               '[ "$1" = dummy ] && [ -n "${DUMMY0:-}" ] && mkdir "$DUMMY0"\nexit "${MODPROBE_RC:-0}"')
@@ -2775,6 +2778,13 @@ class SipaDele(ShellTest):
                 r, calls = self.run_script(shell, 'extra-modules')
                 self.assertNotIn('modprobe dummy', calls)                            # there already
                 dummy0.rmdir()
+                (self.tmp / 'ims-bridge').unlink()                                   # not asked for: not loaded
+                r, calls = self.run_script(shell, 'extra-modules')
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertNotIn('ims_bridge', calls + r.stdout)
+                self.assertNotIn('modprobe dummy', calls)
+                self.assertNotIn('ip link', calls)
+                (self.tmp / 'ims-bridge').write_text('')
             ko.unlink()
 
     def test_refuses_after_the_wait(self):

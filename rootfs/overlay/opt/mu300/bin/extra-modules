@@ -20,28 +20,31 @@ if [ -f "$M/sipc-core.ko" ] && ! [ -e /dev/modem ]; then
 fi
 
 # A VoLTE video call's media (upstream/modules/ims_bridge, docs/FINDINGS.md 192): the modem hands the call's video RTP
-# to the AP through it, and takes what the AP sends back into the IMS PDN. Loaded after the modem stack and before the
-# modem starts; it waits for the modem to open its end. The mainline kernels' port only: 5.4's vendor build of it lacks
-# the port's fixes (shared memory read as Device memory, a NULL route on every local packet) and was never run here.
-# It hands the modem's packets to dummy0 (its input_device), which has to exist: the dummy driver makes it as it loads,
-# but not when it was loaded already (and dummy0 deleted since), so the link is made by hand then. Whatever runs the
-# media puts the call's IMS address on it and brings it up.
+# to the AP through it, and takes what the AP sends back into the IMS PDN. Only when asked for (`mu300-voice video on`
+# makes /etc/mu300/ims-bridge): a vendor driver with netfilter hooks has no place on a board that runs no video call,
+# and `mu300-voice call --video` loads it itself for one call. Loaded here, it comes after the modem stack and before
+# the modem starts; it waits for the modem to open its end. The mainline kernels' port only: 5.4's vendor build of it
+# lacks the port's fixes (shared memory read as Device memory, a NULL route on every local packet) and was never run
+# here. It hands the modem's packets to dummy0 (its input_device), which has to exist: the dummy driver makes it as it
+# loads, but not when it was loaded already (and dummy0 deleted since), so the link is made by hand then. Whatever runs
+# the media puts the call's IMS address on it and brings it up; until then the module drops what the modem sends.
 case $(uname -r) in
     5.4*) ;;
-    *)
-        imsbr=
-        if grep -q '^ims_bridge ' /proc/modules; then
-            imsbr=1
-        else
-            for f in "$M/ims_bridge.ko" "$M/extra/ims_bridge.ko"; do
-                [ -f "$f" ] || continue
-                if insmod "$f" 2>/dev/null; then echo "loaded ims_bridge"; imsbr=1; else echo "FAILED ims_bridge"; fi
-                break
-            done
-        fi
-        if [ -n "$imsbr" ] && [ ! -e /sys/class/net/dummy0 ]; then
-            modprobe dummy 2>/dev/null
-            [ -e /sys/class/net/dummy0 ] || ip link add dummy0 type dummy 2>/dev/null || echo "FAILED dummy0"
+    *)  if [ -e /etc/mu300/ims-bridge ]; then
+            imsbr=
+            if grep -q '^ims_bridge ' /proc/modules; then
+                imsbr=1
+            else
+                for f in "$M/ims_bridge.ko" "$M/extra/ims_bridge.ko"; do
+                    [ -f "$f" ] || continue
+                    if insmod "$f" 2>/dev/null; then echo "loaded ims_bridge"; imsbr=1; else echo "FAILED ims_bridge"; fi
+                    break
+                done
+            fi
+            if [ -n "$imsbr" ] && [ ! -e /sys/class/net/dummy0 ]; then
+                modprobe dummy 2>/dev/null
+                [ -e /sys/class/net/dummy0 ] || ip link add dummy0 type dummy 2>/dev/null || echo "FAILED dummy0"
+            fi
         fi ;;
 esac
 

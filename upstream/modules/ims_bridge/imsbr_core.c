@@ -526,7 +526,9 @@ void imsbr_process_msg(struct imsbr_sipc *sipc, struct sblock *blk,
 {
 	struct imsbr_msghdr *msghdr;
 	struct imsbr_msglist *list;
-	char msgbuff[IMSBR_CTRL_BLKSZ];
+	/* mu300: zeroed, and one byte more than a block: the command and an echo string are the modem's and
+	 * need not end within it, and the vendor's buffer passed stack bytes past the block on to the modem */
+	char msgbuff[IMSBR_CTRL_BLKSZ + 1] = { 0 };
 	int msglen, blklen;
 	char *cmd;
 	int i;
@@ -543,6 +545,7 @@ void imsbr_process_msg(struct imsbr_sipc *sipc, struct sblock *blk,
 	if (imsbr_msg_invalid(msghdr, msglen))
 		return;
 
+	msghdr->imsbr_cmd[IMSBR_CMD_MAXSZ - 1] = '\0';
 	cmd = msghdr->imsbr_cmd;
 	pr_debug("msghdr cmd=%s len=%d\n", cmd, msglen);
 
@@ -922,7 +925,8 @@ static int imsbr_stat_show(struct seq_file *s, void *v)
 
 static int imsbr_init_proc(struct net *net)
 {
-	if (!proc_create_net("imsbr_flow", 0444, net->proc_net,
+	/* mu300: 0400, was 0444: the call's addresses and ports */
+	if (!proc_create_net("imsbr_flow", 0400, net->proc_net,
 			     &imsbr_flow_seq_ops,
 			     sizeof(struct imsbr_flow_iter))) {
 		pr_err("proc create imsbr_flow fail!\n");
