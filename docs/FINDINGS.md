@@ -2248,7 +2248,17 @@ Other things learned along the way:
 
 * **Network DTMF is not a tone channel.** `AT+EVTS=1,<d>` / `AT+EVTS=0,<d>` (what the RIL sends), `AT+VTS`, and
   `AT+VTD` (default 1) all work during a VoLTE call and return OK. They travel as RTP events, though, and what
-  reaches the far end is not a recognisable tune.
+  reaches the far end is not a recognisable tune. As keys they do what they are for, **but only while the audio DSP
+  is in the call**: `AT+VTS="<key>"`, one per key, sent from a SIP softphone through the F50 (its RFC 4733 events
+  turned into `AT+VTS` one for one, the call scene running) sounded all twelve keys on the phone at the other end
+  (F50, 6.18, 2026-10-17). Without the scene the modem takes them all the same and sends nothing. The far end of
+  these calls was a 4G voice module that reports each DTMF key it receives on its serial port: on five answered
+  voice calls with the scene down (and a video call on 6.18.57 with no audio driver loaded) every `AT+VTS` sent -
+  `123` on one, `*#0123456789` or the start of it on the others - returned OK and the module reported none; on the
+  next call, the scene started first (FE_ST_VOICE RUNNING), it reported all of `*#0123456789` in order, and the same
+  with `mu300-voice dtmf` as committed here (F50, 6.18, 2026-10-18). The modem hands its tone generator to the DSP
+  (next point); the RTP events evidently come from the DSP's side of the call as well. `mu300-voice dtmf KEYS` sends
+  them, and refuses unless FE_ST_VOICE runs (in either direction, whoever started it).
 * **`AT+STONE`, `AT+SPMSTONE`, `AT+SDTMF` and `AT+SPVLOOP` all return OK**, outside a call as well. The modem
   hands its tone generator to the DSP (`CP_CMDQ_START_TONE`), so on 6.18 these do nothing. None of them gave a
   heard tone on 5.4 before the clock fix either.
