@@ -1,6 +1,6 @@
 audio_sipc: drop a stale DSP reply and keep waiting, instead of failing the command it was not for
 
-Replies on an SIPC channel are read in order, and some are never waited for: the voice PCM tap's trigger and
+Replies on a DSP message channel are read in order, and some are never waited for: the voice PCM tap's trigger and
 shutdown send a KCTL_SET (cmd 9) with aud_send_cmd_no_wait_param(), and the DSP answers each anyway; a sender whose
 wait was interrupted leaves its reply too. The drain before a send stopped at the first reply for another command,
 and each of the 4 tries of the wait read one more, so with 5 of them queued a STARTUP (cmd 4) failed:
