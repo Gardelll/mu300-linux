@@ -314,6 +314,333 @@ msgstr "Cihaz yeniden başlatılsın mı? Bu sayfa dahil her bağlantı bir iki 
 msgid "The device is restarting."
 msgstr "Cihaz yeniden başlatılıyor."
 
+msgid "Network, band and cell locks"
+msgstr "Ağ, bant ve hücre kilitleri"
+
+msgid "Automatic"
+msgstr "Otomatik"
+
+msgid "4G only"
+msgstr "Yalnızca 4G"
+
+msgid "The modem's protocol stack restarts: cellular service stops for about half a minute."
+msgstr "Modemin protokol yığını yeniden başlar: hücresel hizmet yaklaşık yarım dakika kesilir."
+
+msgid "Apply: $0?"
+msgstr "Uygulansın mı: $0?"
+
+msgid "Saved"
+msgstr "Kaydedildi"
+
+msgid "Started in the background; the reading below follows when the modem is back."
+msgstr "Arka planda başladı; aşağıdaki okuma modem geri geldiğinde güncellenir."
+
+msgid "Automatic ($0 supported)"
+msgstr "Otomatik ($0 destekleniyor)"
+
+msgid "Reading the locks from the modem; try again in a few seconds."
+msgstr "Kilitler modemden okunuyor; birkaç saniye sonra yeniden deneyin."
+
+msgid "Refresh"
+msgstr "Yenile"
+
+msgid "No reading of the locks yet."
+msgstr "Henüz kilit okuması yok."
+
+msgid "Mode and band locks stay in the modem, in Android too: reset them before you switch to Android if you are not sure. Every change below restarts the modem's protocol stack (about half a minute without cellular), except EN-DC and the startup switch."
+msgstr "Mod ve bant kilitleri modemde kalır, Android'de de geçerlidir: emin değilseniz Android'e geçmeden önce sıfırlayın. Aşağıdaki her değişiklik modemin protokol yığınını yeniden başlatır (yaklaşık yarım dakika hücresel bağlantı olmaz); EN-DC ve açılış anahtarı hariç."
+
+msgid "Network mode"
+msgstr "Ağ modu"
+
+msgid "NR bands"
+msgstr "NR bantları"
+
+msgid "LTE bands"
+msgstr "LTE bantları"
+
+msgid "Cell lock"
+msgstr "Hücre kilidi"
+
+msgid "$0 ARFCN $1, PCI $2"
+msgstr "$0 ARFCN $1, PCI $2"
+
+msgid "none"
+msgstr "yok"
+
+msgid "Apply at startup"
+msgstr "Açılışta uygula"
+
+msgid "running"
+msgstr "sürüyor"
+
+msgid "done"
+msgstr "tamamlandı"
+
+msgid "failed"
+msgstr "başarısız"
+
+msgid "interrupted"
+msgstr "yarıda kaldı"
+
+msgid "Last reset to automatic"
+msgstr "Otomatiğe son sıfırlama"
+
+msgid "Read from the modem"
+msgstr "Modemden okunma"
+
+msgid "Read again from the modem"
+msgstr "Modemden yeniden oku"
+
+msgid "Apply"
+msgstr "Uygula"
+
+msgid "network mode $0"
+msgstr "ağ modu $0"
+
+msgid "Turn EN-DC off"
+msgstr "EN-DC'yi kapat"
+
+msgid "Turn EN-DC on"
+msgstr "EN-DC'yi aç"
+
+msgid "EN-DC lets a 5G NSA connection use its LTE anchor; off keeps the modem on LTE alone where it would use NSA."
+msgstr "EN-DC, 5G NSA bağlantısının LTE çapasını kullanmasını sağlar; kapalıyken modem NSA kullanacağı yerde yalnızca LTE ile kalır."
+
+msgid "Bands"
+msgstr "Bantlar"
+
+msgid "Apply NR bands"
+msgstr "NR bantlarını uygula"
+
+msgid "NR band lock $0"
+msgstr "NR bant kilidi $0"
+
+msgid "NR bands automatic"
+msgstr "NR bantları otomatik"
+
+msgid "Apply LTE bands"
+msgstr "LTE bantlarını uygula"
+
+msgid "LTE band lock $0"
+msgstr "LTE bant kilidi $0"
+
+msgid "LTE bands automatic"
+msgstr "LTE bantları otomatik"
+
+msgid "No band ticked: automatic (every band the modem supports)."
+msgstr "Hiç bant işaretli değilse: otomatik (modemin desteklediği tüm bantlar)."
+
+msgid "ARFCN (NR-ARFCN or EARFCN)"
+msgstr "ARFCN (NR-ARFCN veya EARFCN)"
+
+msgid "PCI"
+msgstr "PCI"
+
+msgid "Lock this cell"
+msgstr "Bu hücreye kilitle"
+
+msgid "The ARFCN is a number of up to 7 digits, the PCI one of up to 4."
+msgstr "ARFCN en çok 7, PCI en çok 4 basamaklı bir sayıdır."
+
+msgid "$0 cell lock: ARFCN $1, PCI $2"
+msgstr "$0 hücre kilidi: ARFCN $1, PCI $2"
+
+msgid "Lock the serving cell"
+msgstr "Hizmet veren hücreye kilitle"
+
+msgid "a lock on the serving cell"
+msgstr "hizmet veren hücreye kilit"
+
+msgid "Unlock every cell"
+msgstr "Tüm hücre kilitlerini kaldır"
+
+msgid "no cell lock"
+msgstr "hücre kilidi yok"
+
+msgid "A cell lock is not kept in the modem across a restart: with \"Apply at startup\" on, the device sends it again at every boot."
+msgstr "Hücre kilidi yeniden başlatmada modemde kalmaz: \"Açılışta uygula\" açıkken cihaz onu her açılışta yeniden gönderir."
+
+msgid "Startup and reset"
+msgstr "Açılış ve sıfırlama"
+
+msgid "Do not apply at startup"
+msgstr "Açılışta uygulama"
+
+msgid "Reset all to automatic"
+msgstr "Tümünü otomatiğe sıfırla"
+
+msgid "Network mode automatic, EN-DC on, every LTE and NR band, no cell lock; the saved locks are cleared, so nothing is applied at startup."
+msgstr "Ağ modu otomatik, EN-DC açık, tüm LTE ve NR bantları, hücre kilidi yok; kayıtlı kilitler silinir, açılışta hiçbir şey uygulanmaz."
+
+msgid "Off: nothing is sent at startup; the saved settings stay."
+msgstr "Kapalı: açılışta hiçbir şey gönderilmez; kayıtlı ayarlar kalır."
+
+msgid "Reading the locks from the modem..."
+msgstr "Kilitler modemden okunuyor..."
+
+msgid "SMS forwarding"
+msgstr "SMS yönlendirme"
+
+msgid "Delivery log"
+msgstr "Teslim günlüğü"
+
+msgid "Empty: keep the saved value"
+msgstr "Boş: kayıtlı değer korunur"
+
+msgid "Saved: $0"
+msgstr "Kayıtlı: $0"
+
+msgid "Remove the saved value"
+msgstr "Kayıtlı değeri sil"
+
+msgid "Waiting to be delivered"
+msgstr "Teslim edilmeyi bekleyen"
+
+msgid "Webhook"
+msgstr "Webhook"
+
+msgid "E-mail"
+msgstr "E-posta"
+
+msgid "SMS to another phone"
+msgstr "Başka bir telefona SMS"
+
+msgid "Delivered"
+msgstr "Teslim edildi"
+
+msgid "Will retry"
+msgstr "Yeniden denenecek"
+
+msgid "Filtered out"
+msgstr "Filtrelendi"
+
+msgid "Dropped"
+msgstr "Bırakıldı"
+
+msgid "No deliveries yet."
+msgstr "Henüz teslim yok."
+
+msgid "Time"
+msgstr "Zaman"
+
+msgid "Message"
+msgstr "Mesaj"
+
+msgid "Target"
+msgstr "Hedef"
+
+msgid "Result"
+msgstr "Sonuç"
+
+msgid "Detail"
+msgstr "Ayrıntı"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Clear the log"
+msgstr "Günlüğü temizle"
+
+msgid "Messages that reach the SIM while forwarding is on are sent on (the device looks for new ones every 20 seconds). A failed delivery is tried again after 30 s, then after twice as long each time (an hour at most), ten times in all."
+msgstr "Yönlendirme açıkken SIM'e ulaşan mesajlar iletilir (cihaz her 20 saniyede yeni mesaja bakar). Başarısız bir teslim 30 sn sonra, ardından her seferinde iki kat sonra (en çok bir saat) yeniden denenir; toplam on kez."
+
+msgid "Forward received messages"
+msgstr "Gelen mesajları yönlendir"
+
+msgid "Message template (placeholders: {sender}, {time}, {text}, {device})"
+msgstr "Mesaj şablonu (yer tutucular: {sender}, {time}, {text}, {device})"
+
+msgid "Only these senders (one per line; empty: every sender; a * at the end matches the start)"
+msgstr "Yalnızca bu gönderenler (satır başına bir; boş: tüm gönderenler; sondaki * başlangıcı eşler)"
+
+msgid "Never these senders"
+msgstr "Asla bu gönderenler"
+
+msgid "Only messages with one of these words (one per line; empty: every message)"
+msgstr "Yalnızca bu sözcüklerden birini içeren mesajlar (satır başına bir; boş: tüm mesajlar)"
+
+msgid "Address (http:// or https://)"
+msgstr "Adres (http:// veya https://)"
+
+msgid "Form (URL-encoded)"
+msgstr "Form (URL kodlu)"
+
+msgid "Plain text"
+msgstr "Düz metin"
+
+msgid "Body (fields: sender, time, text, device, message)"
+msgstr "Gövde (alanlar: sender, time, text, device, message)"
+
+msgid "Custom body (empty: the standard fields; placeholders {sender}, {time}, {text}, {device}, {message}, each escaped for the type; shown again here: keep secrets in the address or a header)"
+msgstr "Özel gövde (boş: standart alanlar; yer tutucular {sender}, {time}, {text}, {device}, {message}, her biri türe göre kaçışlanır; burada yeniden gösterilir: gizli bilgileri adreste veya bir başlıkta tutun)"
+
+msgid "Presets"
+msgstr "Hazır ayarlar"
+
+msgid "Body presets"
+msgstr "Gövde hazır ayarları"
+
+msgid "Extra headers (one \"Name: value\" per line)"
+msgstr "Ek başlıklar (satır başına bir \"Ad: değer\")"
+
+msgid "The answer must contain (key=value; empty: every HTTP 2xx answer counts)"
+msgstr "Yanıt şunu içermeli (anahtar=değer; boş: her HTTP 2xx yanıtı sayılır)"
+
+msgid "Answer presets"
+msgstr "Yanıt hazır ayarları"
+
+msgid "With key=value the answer must be a JSON object with that value under that key at its top level, or the delivery fails. Only the result of the check is logged, never the answer."
+msgstr "anahtar=değer ile yanıt, en üst düzeyinde bu anahtarın altında bu değeri taşıyan bir JSON nesnesi olmalıdır; değilse teslim başarısız olur. Günlüğe yalnızca denetimin sonucu yazılır, yanıtın kendisi asla."
+
+msgid "Bot token"
+msgstr "Bot belirteci"
+
+msgid "Chat ID (a number, or @channel)"
+msgstr "Sohbet kimliği (bir sayı veya @kanal)"
+
+msgid "E-mail needs msmtp, which this system does not have (sudo apt install msmtp)."
+msgstr "E-posta için msmtp gerekir, bu sistemde yok (sudo apt install msmtp)."
+
+msgid "Mail server"
+msgstr "Posta sunucusu"
+
+msgid "Port"
+msgstr "Bağlantı noktası"
+
+msgid "None"
+msgstr "Yok"
+
+msgid "Security"
+msgstr "Güvenlik"
+
+msgid "User name"
+msgstr "Kullanıcı adı"
+
+msgid "Password"
+msgstr "Parola"
+
+msgid "From"
+msgstr "Gönderen"
+
+msgid "To"
+msgstr "Alıcı"
+
+msgid "Phone number (sent as one SMS: a longer message is cut short)"
+msgstr "Telefon numarası (tek SMS olarak gönderilir: daha uzun mesaj kısaltılır)"
+
+msgid "Save"
+msgstr "Kaydet"
+
+msgid "Send a test"
+msgstr "Test gönder"
+
+msgid "A test with the saved settings started; its result comes in the delivery log."
+msgstr "Kayıtlı ayarlarla bir test başladı; sonucu teslim günlüğünde görünür."
+
+msgid "Tokens, passwords and the webhook address and headers stay on the device and are never shown again. A test uses the saved settings: save first."
+msgstr "Belirteçler, parolalar ve webhook adresi ile başlıkları cihazda kalır ve bir daha gösterilmez. Test kayıtlı ayarları kullanır: önce kaydedin."
+
 msgid "APN"
 msgstr "APN"
 
@@ -344,9 +671,6 @@ msgstr "Mobil veri dolaşım ağlarında da kullanılır; bu ek ücrete yol aça
 msgid "Empty: the network's own APN. A change reconnects mobile data."
 msgstr "Boş: ağın kendi APN'i. Bir değişiklik mobil veriyi yeniden bağlar."
 
-msgid "None"
-msgstr "Yok"
-
 msgid "(unchanged)"
 msgstr "(değişmedi)"
 
@@ -359,20 +683,32 @@ msgstr "IP türü"
 msgid "Authentication"
 msgstr "Kimlik doğrulama"
 
-msgid "User name"
-msgstr "Kullanıcı adı"
-
-msgid "Password"
-msgstr "Parola"
-
-msgid "Save"
-msgstr "Kaydet"
-
 msgid "The APN may hold letters, digits, dots and hyphens."
 msgstr "APN harf, rakam, nokta ve kısa çizgi içerebilir."
 
 msgid "Save the APN settings? Mobile data reconnects (about half a minute)."
 msgstr "APN ayarları kaydedilsin mi? Mobil veri yeniden bağlanır (yaklaşık yarım dakika)."
+
+msgid "Card"
+msgstr "Kart"
+
+msgid "Ready"
+msgstr "Hazır"
+
+msgid "Locked (PIN or PUK needed)"
+msgstr "Kilitli (PIN veya PUK gerekli)"
+
+msgid "No card in this slot"
+msgstr "Bu yuvada kart yok"
+
+msgid "Unknown"
+msgstr "Bilinmiyor"
+
+msgid "Card (SIM $0)"
+msgstr "Kart (SIM $0)"
+
+msgid "Ask the card"
+msgstr "Karta sor"
 
 msgid "No SIM control on this device."
 msgstr "Bu cihazda SIM denetimi yok."
@@ -479,14 +815,8 @@ msgstr "Oturumu sonlandır"
 msgid "Code, or the answer to a menu"
 msgstr "Kod veya menüye yanıt"
 
-msgid "Network, band and cell locks"
-msgstr "Ağ, bant ve hücre kilitleri"
-
-msgid "The locks are on the OpenWrt control panel's Network locks page."
-msgstr "Kilitler, OpenWrt kontrol panelinin Ağ kilitleri sayfasındadır."
-
-msgid "The locks are part of the OpenWrt control panel (openwrt-luci) for now. Mode and band locks set there stay in the modem and apply here too; on Ubuntu, the AT terminal tab reaches the modem directly."
-msgstr "Kilitler şimdilik OpenWrt kontrol panelinin (openwrt-luci) parçasıdır. Orada ayarlanan mod ve bant kilitleri modemde kalır ve burada da geçerlidir; Ubuntu'da AT terminali sekmesi modeme doğrudan erişir."
+msgid "This system has no lock program yet (an older image): update it. Mode and band locks set elsewhere stay in the modem and apply here too."
+msgstr "Bu sistemde henüz kilit programı yok (eski bir imaj): güncelleyin. Başka yerde ayarlanan mod ve bant kilitleri modemde kalır ve burada da geçerlidir."
 
 msgid "Send a message"
 msgstr "Mesaj gönder"
@@ -509,9 +839,6 @@ msgstr "Numara"
 msgid "Text"
 msgstr "Metin"
 
-msgid "Refresh"
-msgstr "Yenile"
-
 msgid "Reading the SIM..."
 msgstr "SIM okunuyor..."
 
@@ -527,14 +854,8 @@ msgstr "Bu mesaj SIM'den silinsin mi?"
 msgid "$0 parts"
 msgstr "$0 parça"
 
-msgid "SMS forwarding"
-msgstr "SMS yönlendirme"
-
-msgid "Forwarding is set on the OpenWrt control panel's SMS forwarding page."
-msgstr "Yönlendirme, OpenWrt kontrol panelinin SMS yönlendirme sayfasında ayarlanır."
-
-msgid "Forwarding received messages (webhook, Telegram, e-mail) is part of the OpenWrt control panel (openwrt-luci) for now."
-msgstr "Alınan mesajları yönlendirme (webhook, Telegram, e-posta) şimdilik OpenWrt kontrol panelinin (openwrt-luci) parçasıdır."
+msgid "This system has no SMS forwarding yet (an older image): update it."
+msgstr "Bu sistemde henüz SMS yönlendirme yok (eski bir imaj): güncelleyin."
 
 msgid "AT terminal"
 msgstr "AT terminali"
@@ -554,6 +875,15 @@ msgstr "Yanıt için en fazla bekle"
 msgid "Clear"
 msgstr "Temizle"
 
+msgid "History (this boot)"
+msgstr "Geçmiş (bu açılış)"
+
+msgid "No commands yet."
+msgstr "Henüz komut yok."
+
+msgid "Newest first; a click puts the command in the field above."
+msgstr "En yenisi önce; tıklamak komutu yukarıdaki alana koyar."
+
 msgid "Billing cycle and cap"
 msgstr "Fatura dönemi ve kota"
 
@@ -562,9 +892,6 @@ msgstr "Geçmiş"
 
 msgid "$0 days left"
 msgstr "$0 gün kaldı"
-
-msgid "none"
-msgstr "yok"
 
 msgid "Of the cap"
 msgstr "Kotanın"
@@ -595,9 +922,6 @@ msgstr "Kotanın bu yüzdesinde uyar"
 
 msgid "Check the values: a day from 1 to 31, a cap of 0 or more, a percentage from 1 to 100."
 msgstr "Değerleri kontrol edin: 1 ile 31 arası bir gün, 0 veya daha büyük bir kota, 1 ile 100 arası bir yüzde."
-
-msgid "Saved"
-msgstr "Kaydedildi"
 
 msgid "What the operator says this cycle has used, in GiB (corrects the count)"
 msgstr "Operatörün bu dönemde kullanıldığını söylediği miktar, GiB cinsinden (sayacı düzeltir)"
@@ -650,9 +974,6 @@ msgstr "Kanal"
 msgid "now $0"
 msgstr "şu an $0"
 
-msgid "Security"
-msgstr "Güvenlik"
-
 msgid "Country"
 msgstr "Ülke"
 
@@ -664,9 +985,6 @@ msgstr "Hotspot'u aç"
 
 msgid "Turn the hotspot off? Devices on it lose the connection; if you reach this page over the hotspot, you lose it too."
 msgstr "Hotspot kapatılsın mı? Ona bağlı cihazlar bağlantıyı kaybeder; bu sayfaya hotspot üzerinden ulaşıyorsanız siz de kaybedersiniz."
-
-msgid "Automatic"
-msgstr "Otomatik"
 
 msgid "Hidden network (the name is not broadcast)"
 msgstr "Gizli ağ (ad yayınlanmaz)"
@@ -1126,6 +1444,42 @@ msgstr "Yeni bir ofseti deneme açılışı sırasında yük altında test edin.
 
 msgid "A stress test is running."
 msgstr "Bir stres testi çalışıyor."
+
+msgid "NCM (the default)"
+msgstr "NCM (varsayılan)"
+
+msgid "USB network now"
+msgstr "Şu anki USB ağı"
+
+msgid "USB network from the next boot"
+msgstr "Sonraki açılıştan itibaren USB ağı"
+
+msgid "that boot only"
+msgstr "yalnızca o açılış"
+
+msgid "From the next boot on"
+msgstr "Sonraki açılıştan itibaren"
+
+msgid "The next boot only, then NCM again"
+msgstr "Yalnızca sonraki açılış, sonra yine NCM"
+
+msgid "USB network protocol"
+msgstr "USB ağ protokolü"
+
+msgid "How long"
+msgstr "Ne kadar süre"
+
+msgid "Save (used at the next boot)"
+msgstr "Kaydet (sonraki açılışta kullanılır)"
+
+msgid "RNDIS is for older Windows: macOS has no driver for it, and a Mac on USB loses the connection to the device until NCM is back. Save?"
+msgstr "RNDIS eski Windows içindir: macOS'ta sürücüsü yoktur ve USB'deki bir Mac, NCM geri gelene kadar cihazla bağlantısını kaybeder. Kaydedilsin mi?"
+
+msgid "Saved: the USB connection to the computer drops for a moment at the next boot and comes back with it."
+msgstr "Kaydedildi: bilgisayarla USB bağlantısı sonraki açılışta bir an kesilir ve bu ayarla geri gelir."
+
+msgid "NCM: Windows 10 2004 and newer, macOS, Linux. ECM: macOS, Linux (Windows has no driver). RNDIS: older Windows (macOS has no driver)."
+msgstr "NCM: Windows 10 2004 ve sonrası, macOS, Linux. ECM: macOS, Linux (Windows'ta sürücü yok). RNDIS: eski Windows (macOS'ta sürücü yok)."
 
 msgid "Boot"
 msgstr "Açılış"

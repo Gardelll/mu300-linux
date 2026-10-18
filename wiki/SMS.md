@@ -37,7 +37,9 @@ Use **Cellular -> SMS** in the panel: read, send and delete. There a pool daemon
 ## SMS forwarding
 
 On OpenWrt with the control panel, **Cellular > SMS forwarding** passes incoming messages on to a webhook (JSON or a
-form), a Telegram chat or another phone by SMS. It is off until you turn it on. Each target has a template
+form), a Telegram chat or another phone by SMS. On Ubuntu the same settings are on Cockpit's MU300 page (SMS tab);
+there a service looks at the SIM for new messages every 20 s while forwarding is on, and only messages that arrive
+while it is on are passed on. It is off until you turn it on. Each target has a template
 (`{sender}`, `{time}`, `{text}`, `{device}`) and can filter by sender and keyword; there is a "Send test" button and
 a delivery log, and failed deliveries are retried with a growing wait. Tokens, passwords and the webhook's address
 stay in `/etc/mu300/sms-forward.conf` (root only) and never appear in a log. E-mail forwarding needs `msmtp`, which

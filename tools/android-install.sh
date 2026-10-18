@@ -893,7 +893,7 @@ for os in $OSES; do
             # the new image's version and package lists, and the names of its own etc/config files (upk_record)
             image_own_save "$M/$os.new"
             case $os in
-                ubuntu) keep="etc/mu300 etc/ssh etc/hostname etc/localtime etc/timezone etc/fstab home root srv usr/local var/lib/bluetooth" ;;
+                ubuntu) keep="etc/mu300 etc/unisoc-modem etc/ssh etc/hostname etc/localtime etc/timezone etc/fstab home root srv usr/local var/lib/bluetooth" ;;
                 openwrt|openwrt-*) keep="etc/config etc/mu300 etc/unisoc-modem etc/dropbear etc/rc.local etc/crontabs root" ;;
             esac
             kept=

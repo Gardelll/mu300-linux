@@ -383,8 +383,286 @@
         c.appendChild(actions([ m, r ]));
     }
 
-    /* Mobile: mobile data and the APN, data roaming, the SIM (dual SIM), the radio per SIM, VoLTE/VoNR, TTL, USSD,
-     * recovery, and where the locks are */
+    /* Network, band and cell locks (lock.get / lock.set): the lock program of the OpenWrt control panel, on Ubuntu too
+     * (mu300-lock-replay.service sends the saved locks again at every boot unless "apply at startup" is off). A change
+     * runs in the background and restarts the modem's protocol stack (half a minute without cellular), EN-DC and the
+     * startup switch excepted; the reading is cached and taken again on demand. Mode and band locks stay in the modem
+     * (Android too). */
+    var NR_CAND = [ 1, 5, 6, 8, 28, 41, 78 ], LTE_CAND = [ 1, 3, 5, 8, 34, 38, 39, 40, 41 ];
+    function bandList(s) {
+        return String(s || '').split(',').map(function (x) { return x.trim(); })
+            .filter(function (x) { return /^[0-9]{1,3}$/.test(x); }).map(Number);
+    }
+    function locksCard(root) {
+        var lc = root.appendChild(card(_('Network, band and cell locks'), 'mu-locks'));
+        var lb = lc.appendChild(el('div'));
+        var MODES = [ [ 'auto', _('Automatic') ], [ '4g', _('4G only') ], [ 'sa', '5G SA' ], [ 'nsa', '5G NSA' ] ];
+        var RESTART = _('The modem\'s protocol stack restarts: cellular service stops for about half a minute.');
+        function set(btn, kind, val, what, quick) {
+            act(btn, 'lock.set', { kind: kind, val: val }, {
+                confirm: quick ? null : cockpit.format(_('Apply: $0?'), what) + '\n\n' + RESTART,
+                ok: quick ? _('Saved') : _('Started in the background; the reading below follows when the modem is back.'),
+                done: function () { setTimeout(function () { refresh(true); }, quick ? 300 : 3000); } });
+        }
+        function bandBox(id, cand, locked) {
+            var box = el('div', { 'class': 'mu-actions', id: id }), boxes = {};
+            cand.forEach(function (b) {
+                var c = check(id + '-' + b, (id.indexOf('nr') >= 0 ? 'n' : 'B') + b, locked.indexOf(b) >= 0);
+                c.node.classList.add('mu-band');
+                boxes[b] = c.box;
+                box.appendChild(c.node);
+            });
+            return { node: box, chosen: function () { return cand.filter(function (b) { return boxes[b].checked; }); } };
+        }
+        function bandsLine(locked, cand, prefix) {
+            return !locked.length || locked.length >= cand.length ? cockpit.format(_('Automatic ($0 supported)'), cand.length)
+                : prefix + locked.join(' ' + prefix);
+        }
+        function paint(d) {
+            if (d.busy) {
+                lb.appendChild(note(_('Reading the locks from the modem; try again in a few seconds.')));
+                lb.appendChild(actions([ button(_('Refresh'), function () { refresh(false); }) ]));
+                return;
+            }
+            var m = d.mode || {}, caps = d.caps || {};
+            var nrCand = bandList(caps.nr).length ? bandList(caps.nr) : NR_CAND;
+            var lteCand = bandList(caps.lte).length ? bandList(caps.lte) : LTE_CAND;
+            var nrLocked = bandList((d.nr || {}).locked), lteLocked = bandList((d.lte || {}).locked);
+            if (!d.mode) lb.appendChild(note(_('No reading of the locks yet.'), 'warn'));
+            lb.appendChild(note(_('Mode and band locks stay in the modem, in Android too: reset them before you switch to Android if you are not sure. Every change below restarts the modem\'s protocol stack (about half a minute without cellular), except EN-DC and the startup switch.')));
+            var lm = MODES.filter(function (x) { return x[0] === m.label; })[0];
+            lb.appendChild(row(_('Network mode'), lm ? lm[1] : m.label));
+            lb.appendChild(row('EN-DC', d.endc === '1' ? _('On') : d.endc ? _('Off') : null));
+            lb.appendChild(row(_('NR bands'), bandsLine(nrLocked, nrCand, 'n')));
+            lb.appendChild(row(_('LTE bands'), bandsLine(lteLocked, lteCand, 'B')));
+            var cells = (d.cells || []).filter(function (c) { return /^(nr|lte):[0-9]+,[0-9]+$/.test(c); });
+            lb.appendChild(row(_('Cell lock'), cells.length ? cells.map(function (c) {
+                var p = c.split(/[:,]/);
+                return cockpit.format(_('$0 ARFCN $1, PCI $2'), p[0] === 'nr' ? 'NR' : 'LTE', p[1], p[2]);
+            }).join('; ') : _('none')));
+            lb.appendChild(row(_('Apply at startup'), on(d.auto_apply === 1 || d.auto_apply === true)));
+            var rs = d.reset;
+            if (rs && rs.state) {
+                var st = { running: _('running'), ok: _('done'), done: _('done'), failed: _('failed'), interrupted: _('interrupted') }[rs.state] || rs.state;
+                lb.appendChild(row(_('Last reset to automatic'), st + (rs.error ? ' (' + rs.error + ')' : '')));
+            }
+            if (d.ts) lb.appendChild(row(_('Read from the modem'), new Date(d.ts * 1000).toLocaleString()));
+            lb.appendChild(actions([ button(_('Read again from the modem'), function () { refresh(true); }) ]));
+
+            lb.appendChild(el('h3', { text: _('Network mode') }));
+            var mode = select('mu-lock-mode', MODES, m.label || 'auto');
+            lb.appendChild(field(_('Network mode'), mode));
+            var mb = button(_('Apply'), function () {
+                var ml = MODES.filter(function (x) { return x[0] === mode.value; })[0];
+                set(mb, 'mode', mode.value, cockpit.format(_('network mode $0'), ml ? ml[1] : mode.value));
+            }, 'primary');
+            var eon = d.endc === '1';
+            var eb = button(eon ? _('Turn EN-DC off') : _('Turn EN-DC on'), function () {
+                set(eb, 'endc', eon ? 'off' : 'on', '', true);
+            });
+            lb.appendChild(actions([ mb, eb ]));
+            lb.appendChild(note(_('EN-DC lets a 5G NSA connection use its LTE anchor; off keeps the modem on LTE alone where it would use NSA.')));
+
+            lb.appendChild(el('h3', { text: _('Bands') }));
+            var nr = bandBox('mu-lock-nr', nrCand, nrLocked.length >= nrCand.length ? [] : nrLocked);
+            var lte = bandBox('mu-lock-lte', lteCand, lteLocked.length >= lteCand.length ? [] : lteLocked);
+            lb.appendChild(el('label', { text: _('NR bands') })); lb.appendChild(nr.node);
+            lb.appendChild(el('label', { text: _('LTE bands') })); lb.appendChild(lte.node);
+            var nb = button(_('Apply NR bands'), function () {
+                var c = nr.chosen();
+                set(nb, 'nr', c.join(','), c.length ? cockpit.format(_('NR band lock $0'), 'n' + c.join(' n')) : _('NR bands automatic'));
+            });
+            var tb = button(_('Apply LTE bands'), function () {
+                var c = lte.chosen();
+                set(tb, 'lte', c.join(','), c.length ? cockpit.format(_('LTE band lock $0'), 'B' + c.join(' B')) : _('LTE bands automatic'));
+            });
+            lb.appendChild(actions([ nb, tb ]));
+            lb.appendChild(note(_('No band ticked: automatic (every band the modem supports).')));
+
+            lb.appendChild(el('h3', { text: _('Cell lock') }));
+            var rat = select('mu-lock-rat', [ [ 'nr', 'NR' ], [ 'lte', 'LTE' ] ], 'nr');
+            var arfcn = input('mu-lock-arfcn', { type: 'number', min: '0', max: '9999999', placeholder: '627264' });
+            var pci = input('mu-lock-pci', { type: 'number', min: '0', max: '1007', placeholder: '393' });
+            lb.appendChild(field(_('Technology'), rat));
+            lb.appendChild(field(_('ARFCN (NR-ARFCN or EARFCN)'), arfcn));
+            lb.appendChild(field(_('PCI'), pci));
+            var cb = button(_('Lock this cell'), function () {
+                var a = String(arfcn.value).trim(), p = String(pci.value).trim();
+                if (!/^[0-9]{1,7}$/.test(a) || !/^[0-9]{1,4}$/.test(p)) { toast(_('The ARFCN is a number of up to 7 digits, the PCI one of up to 4.'), 'error'); return; }
+                set(cb, 'cell', rat.value + ':' + a + ',' + p, cockpit.format(_('$0 cell lock: ARFCN $1, PCI $2'), rat.value === 'nr' ? 'NR' : 'LTE', a, p));
+            });
+            var sb = button(_('Lock the serving cell'), function () { set(sb, 'cell', 'auto', _('a lock on the serving cell')); });
+            var ub = button(_('Unlock every cell'), function () { set(ub, 'cell', 'off', _('no cell lock')); });
+            lb.appendChild(actions([ cb, sb, ub ]));
+            lb.appendChild(note(_('A cell lock is not kept in the modem across a restart: with "Apply at startup" on, the device sends it again at every boot.')));
+
+            lb.appendChild(el('h3', { text: _('Startup and reset') }));
+            var aon = d.auto_apply === 1 || d.auto_apply === true;
+            var ab = button(aon ? _('Do not apply at startup') : _('Apply at startup'), function () {
+                set(ab, 'auto_apply', aon ? 'off' : 'on', '', true);
+            });
+            var rb = button(_('Reset all to automatic'), function () {
+                act(rb, 'lock.set', { kind: 'reset', val: 'auto' }, {
+                    confirm: _('Network mode automatic, EN-DC on, every LTE and NR band, no cell lock; the saved locks are cleared, so nothing is applied at startup.') + '\n\n' + RESTART,
+                    ok: _('Started in the background; the reading below follows when the modem is back.'),
+                    done: function () { setTimeout(function () { refresh(true); }, 5000); } });
+            }, 'danger');
+            lb.appendChild(actions([ ab, rb ]));
+            lb.appendChild(note(_('Off: nothing is sent at startup; the saved settings stay.')));
+        }
+        function refresh(fresh) {
+            if (fresh) clear(lb).appendChild(note(_('Reading the locks from the modem...')));
+            return load(lb, 'lock.get', fresh ? { fresh: true } : {}, function (r) { paint(r.data || {}); });
+        }
+        refresh(false);
+    }
+
+    /* SMS forwarding (sms.forward, sms.forward_set, sms.forward_test, sms.forward_log_clear): received messages sent on
+     * to a webhook, a Telegram chat, an e-mail address (with msmtp) or another phone. The secrets (the webhook address
+     * and headers, the bot token, the mail password) are never sent back: an empty field keeps the saved one, a box
+     * removes it. The webhook's own body and the answer check are templates, not secrets: they come back. */
+    var FWD_TEMPLATE = '{text}\n-- {sender}, {time} ({device})';
+    function forwardCard(root) {
+        var fc = root.appendChild(card(_('SMS forwarding'), 'mu-sms-forward'));
+        var fb = fc.appendChild(el('div'));
+        var lc = root.appendChild(card(_('Delivery log'), 'mu-sms-forward-log'));
+        var logb = lc.appendChild(el('div'));
+        var F = {};
+        function area(id, value, rows, ph) { var a = el('textarea', { id: id, rows: String(rows), spellcheck: 'false', placeholder: ph || '' }); a.value = value || ''; return a; }
+        function secret(key, isSet, hint, label, opts) {
+            opts = opts || {};
+            var ctl = opts.area ? area('mu-fwd-' + key, '', 3, isSet ? _('Empty: keep the saved value') : opts.ph)
+                : input('mu-fwd-' + key, { type: opts.password ? 'password' : 'text', autocomplete: 'new-password', spellcheck: 'false',
+                    placeholder: isSet ? _('Empty: keep the saved value') : (opts.ph || '') });
+            F[key] = ctl;
+            fb.appendChild(field(label, ctl));
+            if (isSet) {
+                if (hint) fb.appendChild(note(cockpit.format(_('Saved: $0'), hint)));
+                var c = check('mu-fwd-' + key + '-clear', _('Remove the saved value'), false);
+                F[key + '_clear'] = c.box;
+                fb.appendChild(c.node);
+            }
+        }
+        function text(key, label, value, ph) { F[key] = input('mu-fwd-' + key, { value: value || '', placeholder: ph || '', spellcheck: 'false' }); fb.appendChild(field(label, F[key])); }
+        function box(key, label, v, disabled) { var c = check('mu-fwd-' + key, label, !!v); if (disabled) c.box.disabled = true; F[key] = c.box; fb.appendChild(c.node); }
+        function paintLog(st) {
+            clear(logb);
+            logb.appendChild(row(_('Waiting to be delivered'), String(st.queued || 0)));
+            var targets = { webhook: _('Webhook'), telegram: 'Telegram', email: _('E-mail'), sms: _('SMS to another phone') };
+            var results = { sent: _('Delivered'), retry: _('Will retry'), failed: _('Failed'), skipped: _('Filtered out'), dropped: _('Dropped') };
+            var log = st.log || [];
+            if (!log.length) logb.appendChild(note(_('No deliveries yet.')));
+            else logb.appendChild(table([ _('Time'), _('Message'), _('Target'), _('Result'), _('Detail') ], log.map(function (e) {
+                return [ new Date((e.time || 0) * 1000).toLocaleString(), e.id === 'test' ? _('Test') : '#' + e.id,
+                    targets[e.target] || '-', results[e.result] || e.result, e.detail || '' ];
+            })));
+            var cl = button(_('Clear the log'), function () { act(cl, 'sms.forward_log_clear', {}, { done: refresh }); });
+            var rf = button(_('Refresh'), function () { refresh(); });
+            logb.appendChild(actions([ rf ].concat(log.length ? [ cl ] : [])));
+        }
+        function paint(st) {
+            F = {};
+            var mail = !!st.email_available;
+            fb.appendChild(note(_('Messages that reach the SIM while forwarding is on are sent on (the device looks for new ones every 20 seconds). A failed delivery is tried again after 30 s, then after twice as long each time (an hour at most), ten times in all.')));
+            box('enabled', _('Forward received messages'), st.enabled);
+            F.template = area('mu-fwd-template', st.template || FWD_TEMPLATE, 3);
+            fb.appendChild(field(_('Message template (placeholders: {sender}, {time}, {text}, {device})'), F.template));
+            F.allow = area('mu-fwd-allow', st.allow, 2);
+            fb.appendChild(field(_('Only these senders (one per line; empty: every sender; a * at the end matches the start)'), F.allow));
+            F.deny = area('mu-fwd-deny', st.deny, 2);
+            fb.appendChild(field(_('Never these senders'), F.deny));
+            F.keywords = area('mu-fwd-keywords', st.keywords, 2);
+            fb.appendChild(field(_('Only messages with one of these words (one per line; empty: every message)'), F.keywords));
+
+            fb.appendChild(el('h3', { text: _('Webhook') }));
+            box('webhook', _('On'), st.webhook);
+            secret('webhook_url', st.webhook_url_set, st.webhook_url_hint, _('Address (http:// or https://)'), { ph: 'https://example.com/sms' });
+            var fmt = st.webhook_format === 'form' || st.webhook_format === 'text' ? st.webhook_format : 'json';
+            F.webhook_format = select('mu-fwd-webhook_format', [ [ 'json', 'JSON' ], [ 'form', _('Form (URL-encoded)') ], [ 'text', _('Plain text') ] ], fmt);
+            fb.appendChild(field(_('Body (fields: sender, time, text, device, message)'), F.webhook_format));
+            F.webhook_body = area('mu-fwd-webhook_body', st.webhook_body, 4, '{"text":"{message}"}');
+            fb.appendChild(field(_('Custom body (empty: the standard fields; placeholders {sender}, {time}, {text}, {device}, {message}, each escaped for the type; shown again here: keep secrets in the address or a header)'), F.webhook_body));
+            var BODIES = { wecom: [ '{"msgtype":"text","text":{"content":"{message}"}}', 'errcode=0' ],
+                feishu: [ '{"msg_type":"text","content":{"text":"{message}"}}', 'code=0' ] };
+            var bp = select('mu-fwd-body-preset', [ [ '', _('Presets') ], [ 'wecom', 'WeCom, DingTalk' ], [ 'feishu', 'Feishu, Lark' ] ], '');
+            bp.addEventListener('change', function () {
+                var b = Object.prototype.hasOwnProperty.call(BODIES, bp.value) ? BODIES[bp.value] : null;
+                if (b) {
+                    F.webhook_body.value = b[0];
+                    F.webhook_format.value = 'json';
+                    if (!F.webhook_expect.value.trim()) F.webhook_expect.value = b[1];
+                }
+                bp.value = '';
+            });
+            fb.appendChild(field(_('Body presets'), bp));
+            secret('webhook_headers', st.webhook_headers_set, st.webhook_header_names, _('Extra headers (one "Name: value" per line)'), { area: true, ph: 'Authorization: Bearer ...' });
+            text('webhook_expect', _('The answer must contain (key=value; empty: every HTTP 2xx answer counts)'), st.webhook_expect, 'errcode=0');
+            var ep = select('mu-fwd-expect-preset', [ [ '', _('Presets') ], [ 'errcode=0', 'DingTalk, WeCom: errcode=0' ], [ 'code=0', 'Feishu, Lark: code=0' ],
+                [ 'code=200', 'Bark: code=200' ], [ 'ok=true', 'Slack API, Telegram API: ok=true' ] ], '');
+            ep.addEventListener('change', function () { if (ep.value) F.webhook_expect.value = ep.value; ep.value = ''; });
+            fb.appendChild(field(_('Answer presets'), ep));
+            fb.appendChild(note(_('With key=value the answer must be a JSON object with that value under that key at its top level, or the delivery fails. Only the result of the check is logged, never the answer.')));
+
+            fb.appendChild(el('h3', { text: 'Telegram' }));
+            box('telegram', _('On'), st.telegram);
+            secret('telegram_token', st.telegram_token_set, st.telegram_token_hint, _('Bot token'), { password: true, ph: '123456789:AA...' });
+            text('telegram_chat', _('Chat ID (a number, or @channel)'), st.telegram_chat);
+
+            fb.appendChild(el('h3', { text: _('E-mail') }));
+            if (!mail) fb.appendChild(note(_('E-mail needs msmtp, which this system does not have (sudo apt install msmtp).')));
+            box('email', _('On'), st.email && mail, !mail);
+            text('email_host', _('Mail server'), st.email_host, 'smtp.example.com');
+            text('email_port', _('Port'), st.email_port || '587');
+            F.email_tls = select('mu-fwd-email_tls', [ [ 'starttls', 'STARTTLS' ], [ 'tls', 'TLS' ], [ 'off', _('None') ] ], st.email_tls || 'starttls');
+            fb.appendChild(field(_('Security'), F.email_tls));
+            text('email_user', _('User name'), st.email_user);
+            secret('email_password', st.email_password_set, '', _('Password'), { password: true });
+            text('email_from', _('From'), st.email_from);
+            text('email_to', _('To'), st.email_to);
+
+            fb.appendChild(el('h3', { text: _('SMS to another phone') }));
+            box('sms', _('On'), st.sms);
+            text('sms_number', _('Phone number (sent as one SMS: a longer message is cut short)'), st.sms_number, '+90...');
+
+            var save = button(_('Save'), function () {
+                var req = {}, clear = [];
+                [ 'enabled', 'webhook', 'telegram', 'email', 'sms' ].forEach(function (k) { req[k] = !!F[k].checked; });
+                [ 'template', 'allow', 'deny', 'keywords', 'webhook_body' ].forEach(function (k) { req[k] = F[k].value; });
+                [ 'webhook_url', 'webhook_expect', 'telegram_token', 'telegram_chat', 'email_host', 'email_port', 'email_user',
+                    'email_from', 'email_to', 'sms_number' ].forEach(function (k) { req[k] = F[k].value.trim(); });
+                req.webhook_format = F.webhook_format.value; req.email_tls = F.email_tls.value;
+                req.webhook_headers = F.webhook_headers.value; req.email_password = F.email_password.value;
+                [ 'webhook_url', 'webhook_headers', 'telegram_token', 'email_password' ].forEach(function (k) {
+                    if (F[k + '_clear'] && F[k + '_clear'].checked) clear.push(k);
+                });
+                req.clear = clear.join(' ');
+                act(save, 'sms.forward_set', req, { ok: _('Saved'), done: reload });
+            }, 'primary');
+            var test = button(_('Send a test'), function () {
+                act(test, 'sms.forward_test', {}, { ok: _('A test with the saved settings started; its result comes in the delivery log.'),
+                    done: function () { setTimeout(refresh, 4000); } });
+            });
+            fb.appendChild(actions([ save, test ]));
+            fb.appendChild(note(_('Tokens, passwords and the webhook address and headers stay on the device and are never shown again. A test uses the saved settings: save first.')));
+            paintLog(st);
+        }
+        function refresh() {
+            return api('sms.forward', {}).then(function (r) {
+                var st = r.data || {};
+                if (!fb.firstChild) paint(st); else paintLog(st);
+            }, function (ex) { clear(fb).appendChild(note(errText(ex), 'error')); });
+        }
+        /* the whole form again (after a save: the secrets' fields empty, what is saved said again) */
+        function reload() {
+            clear(fb).appendChild(note(_('Loading...')));
+            return api('sms.forward', {}).then(function (r) { clear(fb); paint(r.data || {}); },
+                function (ex) { clear(fb).appendChild(note(errText(ex), 'error')); });
+        }
+        reload();
+    }
+
+    /* Mobile: mobile data and the APN, data roaming, the SIM (dual SIM) and its card's state, the radio per SIM,
+     * VoLTE/VoNR, TTL, USSD, the network, band and cell locks, recovery */
     pages.mobile = function (root) {
         var dc = root.appendChild(card(_('Mobile data'), 'mu-md'));
         var db = dc.appendChild(el('div'));
@@ -446,9 +724,22 @@
             }, 'primary');
             ab.appendChild(actions([ b ]));
         }
+        /* what the card in use says of itself (sim.state): kept for the boot, asked again on demand */
+        function simState(box, fresh) {
+            if (!has('sim.state')) return;
+            var r0 = box.appendChild(row(_('Card'), '...'));
+            api('sim.state', fresh ? { fresh: true } : {}).then(function (o) {
+                var t = { ready: _('Ready'), locked: _('Locked (PIN or PUK needed)'), absent: _('No card in this slot') }[o.state] || _('Unknown');
+                var nr = row(o.slot ? cockpit.format(_('Card (SIM $0)'), o.slot) : _('Card'), t);
+                var ab = button(_('Ask the card'), function () { box.removeChild(nr); simState(box, true); });
+                nr.appendChild(ab);
+                box.insertBefore(nr, r0); box.removeChild(r0);
+            }, function (ex) { box.removeChild(r0); box.appendChild(note(errText(ex), 'error')); });
+        }
         function sim(s) {
             clear(sb);
-            if (!s) { sb.appendChild(note(_('No SIM control on this device.'))); return; }
+            if (!s) { sb.appendChild(note(_('No SIM control on this device.'))); simState(sb); return; }
+            simState(sb);
             sb.appendChild(row(_('SIM in use'), s.active ? cockpit.format(_('SIM $0'), s.active) : null));
             sb.appendChild(row(_('SIM at the next boot'), s.default ? cockpit.format(_('SIM $0'), s.default) : null));
             if (s.slot1_supported) {
@@ -556,9 +847,11 @@
             uc.appendChild(actions([ us, ux ]));
             uc.appendChild(out);
         }
-        var lc = root.appendChild(card(_('Network, band and cell locks'), 'mu-locks'));
-        lc.appendChild(note(S.features.locks ? _('The locks are on the OpenWrt control panel\'s Network locks page.')
-            : _('The locks are part of the OpenWrt control panel (openwrt-luci) for now. Mode and band locks set there stay in the modem and apply here too; on Ubuntu, the AT terminal tab reaches the modem directly.')));
+        if (has('lock.get') && S.features.locks) locksCard(root);
+        else {
+            var lc = root.appendChild(card(_('Network, band and cell locks'), 'mu-locks'));
+            lc.appendChild(note(_('This system has no lock program yet (an older image): update it. Mode and band locks set elsewhere stay in the modem and apply here too.')));
+        }
         recovery(root.appendChild(card(_('Recovery'), 'mu-recovery')));
     };
 
@@ -603,9 +896,11 @@
             }, function (ex) { busy(rb, false); clear(body).appendChild(note(errText(ex), 'error')); });
         }
         refresh();
-        var fc = root.appendChild(card(_('SMS forwarding'), 'mu-sms-forward'));
-        fc.appendChild(note(S.features.forward ? _('Forwarding is set on the OpenWrt control panel\'s SMS forwarding page.')
-            : _('Forwarding received messages (webhook, Telegram, e-mail) is part of the OpenWrt control panel (openwrt-luci) for now.')));
+        if (has('sms.forward_set') && S.features.forward) forwardCard(root);
+        else {
+            var fc = root.appendChild(card(_('SMS forwarding'), 'mu-sms-forward'));
+            fc.appendChild(note(_('This system has no SMS forwarding yet (an older image): update it.')));
+        }
     };
 
     /* AT terminal: one command at a time through mu300-at (mu300-atd owns the modem's channel), the answers kept below */
@@ -624,7 +919,8 @@
                 busy(sb, false);
                 out.textContent += (r.text || '') + '\n\n';
                 out.scrollTop = out.scrollHeight;
-            }, function (ex) { busy(sb, false); out.textContent += errText(ex) + '\n\n'; });
+                history();
+            }, function (ex) { busy(sb, false); out.textContent += errText(ex) + '\n\n'; history(); });
         }
         var sb = button(_('Send'), function () { send(cmd.value); }, 'primary');
         cmd.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(cmd.value); });
@@ -634,6 +930,24 @@
         c.appendChild(actions([ sb, button(_('Clear'), function () { out.textContent = ''; }) ]));
         c.appendChild(actions(quick.map(function (q) { return button(q, function () { cmd.value = q; send(q); }); })));
         c.appendChild(out);
+        /* the commands sent this boot (at.history, the same list as the OpenWrt control panel's AT terminal): one click
+         * puts a command back in the field, it is not sent again by itself. A PIN or password is never in it. */
+        var hc = has('at.history') ? root.appendChild(card(_('History (this boot)'), 'mu-at-history')) : null;
+        var hb = hc ? hc.appendChild(el('div')) : null;
+        function history() {
+            if (!hb) return;
+            api('at.history', {}).then(function (r) {
+                clear(hb);
+                var h = r.history || [];
+                if (!h.length) { hb.appendChild(note(_('No commands yet.'))); return; }
+                hb.appendChild(note(_('Newest first; a click puts the command in the field above.')));
+                hb.appendChild(table([ _('Time'), _('Command') ], h.map(function (x) {
+                    var b = button(String(x.command || ''), function () { cmd.value = String(x.command || ''); });
+                    return [ x.time, b ];
+                })));
+            }, function (ex) { clear(hb).appendChild(note(errText(ex), 'error')); });
+        }
+        history();
     };
 
     /* Data usage: mu300-traffic's count (per day, per billing cycle) and the monthly cap */
@@ -1203,6 +1517,30 @@
         refresh();
     }
 
+    /* the USB network to a computer (usb.net): NCM, ECM or RNDIS from the next boot, for good or for that boot only */
+    function usbNet(box) {
+        var b = box.appendChild(el('div', { id: 'mu-usbnet' }));
+        var NAMES = { ncm: 'NCM', ecm: 'ECM', rndis: 'RNDIS', 'default': _('NCM (the default)') };
+        function paint(o) {
+            b.appendChild(row(_('USB network now'), o.now ? NAMES[o.now] || o.now : NAMES['default']));
+            b.appendChild(row(_('USB network from the next boot'), (NAMES[o.mode] || o.mode) + (o.once ? ' (' + _('that boot only') + ')' : '')));
+            var mode = select('mu-usbnet-mode', [ [ 'default', NAMES['default'] ], [ 'ecm', 'ECM' ], [ 'rndis', 'RNDIS' ], [ 'ncm', 'NCM' ] ], o.mode || 'default');
+            var scope = select('mu-usbnet-scope', [ [ 'permanent', _('From the next boot on') ], [ 'once', _('The next boot only, then NCM again') ] ], o.once ? 'once' : 'permanent');
+            b.appendChild(field(_('USB network protocol'), mode));
+            b.appendChild(field(_('How long'), scope));
+            var sv = button(_('Save (used at the next boot)'), function () {
+                var req = { mode: mode.value };
+                if (mode.value !== 'default') req.scope = scope.value;
+                act(sv, 'usb.net', req, { confirm: mode.value === 'rndis' ? _('RNDIS is for older Windows: macOS has no driver for it, and a Mac on USB loses the connection to the device until NCM is back. Save?') : null,
+                    ok: _('Saved: the USB connection to the computer drops for a moment at the next boot and comes back with it.'),
+                    done: function () { clear(b); load(b, 'usb.net', {}, paint); } });
+            });
+            b.appendChild(actions([ sv ]));
+            b.appendChild(note(_('NCM: Windows 10 2004 and newer, macOS, Linux. ECM: macOS, Linux (Windows has no driver). RNDIS: older Windows (macOS has no driver).')));
+        }
+        load(b, 'usb.net', {}, paint);
+    }
+
     /* System: the host name, time zone, login password, SSH, the LAN address, USB and adb, how the device boots,
      * Docker, the logs */
     pages.system = function (root) {
@@ -1297,6 +1635,7 @@
                 var d = button(_('Device (network to a computer)'), function () { act(d, 'usb.role', { role: 'device' }); });
                 lb.appendChild(actions([ h, d ]));
             }
+            if (has('usb.net') && S.features.usb_net) usbNet(lb);
             var a = o.adb || {};
             lb.appendChild(row(_('adb'), a.state === 'off' ? _('Off') : a.auth === 'keys' ? cockpit.format(_('On, only for authorised computers ($0 keys)'), show(a.keys)) : _('On, for every computer')));
             if (a.auth !== 'keys') lb.appendChild(note(_('With adb open, anyone who plugs a cable into the device gets a root shell without a password.'), 'warn'));
