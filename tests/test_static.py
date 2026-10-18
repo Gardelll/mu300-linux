@@ -449,7 +449,7 @@ class Rules(unittest.TestCase):
         # (#315); its own reader of the Kbuild, run here against the real one
         rel = (TOP / 'tools' / 'make-release.sh').read_text()
         code = re.search(r"audio=\$\(python3 -c '(.*?)' \"\$TOP/upstream/modules/sprd_audio/Kbuild\"\)", rel, re.S).group(1)
-        self.assertIn('sprd_wlan_combo.ko $audio; do', rel)
+        self.assertIn('sprd_wlan_combo.ko ims_bridge.ko $audio; do', rel)
         r = subprocess.run([sys.executable, '-c', code, str(TOP / 'upstream/modules/sprd_audio/Kbuild')],
                            capture_output=True, text=True, check=True)
         mods = r.stdout.split()

@@ -5,7 +5,7 @@
 #   mu300-voice audio stop            take it out again and put every control it touched back
 #   mu300-voice watch                 follow calls and do the above by itself (and drive a Bluetooth headset)
 #   mu300-voice answer [-t SECONDS]   wait for a call, answer it, then run the demo below
-#   mu300-voice call NUMBER           place a call, then run the demo
+#   mu300-voice call [--video] NUMBER place a call (a VoLTE video call with --video), then run the demo
 #   mu300-voice demo                  on a call that is already up: play the melody, then echo
 #   mu300-voice tone [SECONDS]        play the melody into the call
 #   mu300-voice echo [SECONDS]        record that many seconds and play them back, for ever
@@ -604,6 +604,22 @@ dtmf() {   # dtmf KEYS
     done
 }
 
+# A video call is placed the way UNISOC's RIL places one (IMS_REQUEST_VIDEOPHONE_DIAL): video telephony switched on,
+# then ATD= without the semicolon - a data call in 27.007's terms, a VoLTE video call to this modem. Its voice is the
+# call scene of any call; its video goes through ims_bridge to whatever on the AP runs the media, a program that
+# bridges the call for one (docs/FINDINGS.md 192). Without one the far end sees no picture. Refused, ATD= would still
+# go out, as a data call, so it is not dialled then; mu300-at prints the modem's ERROR and still exits 0: the OK is
+# the answer.
+dial() {   # dial NUMBER [video]
+    if [ "${2:-}" = video ]; then
+        at 'AT+SPVIDEOTYPE=3' 5 | grep -q '^OK' ||
+            { echo "mu300-voice: the modem refused video telephony (AT+SPVIDEOTYPE=3); not dialling" >&2; return 1; }
+        at "ATD=$1" 20
+    else
+        at "ATD$1;" 20
+    fi
+}
+
 demo() {
     scene_running || audio_start dsp
     echo "playing the melody..."
@@ -652,12 +668,14 @@ answer)
     exit 1 ;;
 
 call)
-    num=${2:?usage: mu300-voice call NUMBER}
-    at "ATD$num;" 20
+    shift
+    kind=; [ "${1:-}" = --video ] && { kind=video; shift; }
+    num=${1:?usage: mu300-voice call [--video] NUMBER}
+    dial "$num" $kind || exit 1
     sleep 5
     in_call || { echo "mu300-voice: the call did not connect" >&2; exit 1; }
     audio_start dsp
-    demo "${3:-5}" ;;
+    demo "${2:-5}" ;;
 
 demo)   demo "${2:-5}" ;;
 tone)   scene_running || audio_start dsp; tone "${2:-1}" ;;

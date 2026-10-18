@@ -11866,3 +11866,53 @@ data moved and the board's services came up as before after both reboots. `sipa_
 F50-B (7.2.11, a bundle of this tree through `mu300-update boot`, then `rollback-boot` to its release kernel): **5
 kernel lines a minute** at uptime 402-462 s, from 203 (one `sprd-mpm` wakeup report, one loopcheck heartbeat); the
 journal had no "fail to send" or flow-control line that boot, and br-lan and mobile data came up.
+
+### 192. VoLTE video calls: the modem hands their media to the AP through ims_bridge, now built and loaded
+
+**Status: current** (device-tested on F50, OpenWrt, 6.18.57 built from this tree and 6.18.55, 2026-10-16 to 2026-10-18;
+builds against 7.2.11, not run there).
+
+**How a video call works on this modem.** The modem keeps the signalling, the AP gets the media. `AT+SPVIDEOTYPE=3` then
+`ATD=<number>` (no `;`) places a video call: `^DSCI` reports call type 3 instead of 1, and the phone called rings with a
+video call. The modem then describes the video stream on `/dev/spipe_nr9` ("VPR", the vendor's
+`libvolte_video_service_jni.so` and Unisoc's `volte_engine` headers agree field for field): fixed 3664-byte messages,
+the type at offset 0xe48, type 0 a VTSP command with its code at 0 and a `VTSP_StreamVideo` at 8 - direction at +4 (1
+inactive ... 4 sendrecv), encoder at +0xc (0 H.264), RTP payload types at +0x30, the far end's address and port at
++0xd0/+0xe4 and the AP's own at +0xf0/+0x104 (ports big-endian). The codes seen are 0x51 START, 0x52 MODIFY, 0x58 END
+and 0x0f CONFIG. The RTP itself does not come over spipe: in the vendor's `ltevideo-apsk` mode the modem passes the
+video (and its RTCP) to the AP through `ims_bridge`, a SIPC driver of its own, and sends into the IMS PDN whatever the
+AP sends from the call's address.
+
+**ims_bridge.** Unisoc's net/ims_bridge from the realme AndroidU 5.15 tree (GPL-2.0), now `upstream/modules/ims_bridge`,
+built by build-modules.sh after the modem stack and loaded by extra-modules on the mainline kernels. It talks to the
+modem over two sblocks on core 5, data on channel 2 and control on 3, which spool's device tree nodes already create
+(`imsbr_data`, `imsbr_ctrl`); its packets from the modem go up as if received on its `input_device`, dummy0, which
+extra-modules creates. What matters about it on these kernels:
+
+* the sblocks' shared memory is Device memory: an unaligned load or store of it faults, so copies to and from it have to
+  be `memcpy_fromio`/`memcpy_toio`.
+* it is loaded before the modem has started; the modem's ends open about 17 s after boot.
+* its netfilter hooks send to the modem from packet context (`sblock_send()`, then `smsg_send()` with no timeout), which
+  can sleep if the SIPC link is suspended at that moment.
+
+**What runs the media is not here.** A program on the AP that wants the video (a program that bridges the call, for one)
+reads the VTSP messages on spipe_nr9, puts the call's IMS address on dummy0 and brings it up, and sends and receives RTP
+on the ports the VTSP messages name. It need not tell the module anything: the modem adds the call's tuples itself
+(`cptuple-add(rtp-video) ... cpln@apsk` in the log), which is what sends the video to the AP. spipe_nr9 keeps its owner
+(`mu300vnd`, 0660, from ueventd-perms.sh), so such a program runs as root or in the mu300vnd group. The video needs no
+audio scene. `mu300-voice call --video NUMBER` places a video call with the sequence above.
+
+**Measured** (F50, OpenWrt, calls to a phone).
+
+* 6.18.57 from this tree (`mu300-update boot`, then `rollback-boot`): at 17 s ims_bridge found both of the modem's ends
+  open and sent `ltevideo-apsk=1`; at 31 s the modem registered the IMS signalling tuples with it. With nothing on the
+  AP sending, a rung call that was not answered brought the network's video ringback as early media (**6758 video RTP
+  packets in 60 s** on dummy0), and an answered one the phone's video (**3708 in 40 s**); spipe_nr9 carried CONFIG,
+  START (inactive, payload type 104), MODIFY to sendrecv (116, later 122) and END.
+* 6.18.55, `mu300-voice call --video`, a test bridge on the AP doing the part above with an H.264 test pattern (640x480
+  Constrained Baseline, RFC 6184 mode 1): in 50 s the AP sent **715 frames with no send error and the phone showed the
+  test pattern**, and received **the phone's camera at 540x960** (4489 packets, decoded to what the camera saw). rmmod
+  and insmod with the modem up both return at once, and the module connects again.
+
+dummy0's own counters stay at 0 (the dummy driver counts nothing it is handed this way); a capture on it is what shows
+the packets.

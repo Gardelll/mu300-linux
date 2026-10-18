@@ -2676,7 +2676,8 @@ class SipaDele(ShellTest):
         if name == 'sipa-dele-start':
             text = text.replace('/dev/stty_nr$((SIM_SLOT * 3 + 1))', '/dev/null')
         for a, b in (('/lib/modules/', f'{self.tmp}/lib/modules/'), ('/proc/modules', f'{self.tmp}/proc-modules'),
-                     ('/opt/mu300/bin/', f'{self.stubs}/'), ('/dev/stty_nr1', '/dev/null')):
+                     ('/opt/mu300/bin/', f'{self.stubs}/'), ('/dev/stty_nr1', '/dev/null'),
+                     ('/sys/class/net/dummy0', f'{self.tmp}/dummy0')):
             text = text.replace(a, b)
         p = self.tmp / name
         p.write_text(text)
@@ -2729,6 +2730,52 @@ class SipaDele(ShellTest):
                 r, calls = self.run_script(shell, 'extra-modules', 'mu300_thermal 12288 0 - Live 0x0 (O)\n')
                 self.assertNotIn('mu300_thermal', calls)                             # loaded already
                 ko.unlink()
+
+    def test_extra_modules_loads_ims_bridge_on_the_mainline_kernels(self):
+        """FINDINGS 192: a video call's media. The mainline kernels' port, by path (OpenWrt flat, Ubuntu extra/), once,
+        and dummy0 made for it to deliver to; the vendor 5.4 kernel's own build of it is never loaded."""
+        (self.mods / 'ims_bridge.ko').write_text('')
+        # the dummy driver makes dummy0 as it loads (DUMMY0 set), or does not (loaded already, dummy0 deleted since)
+        self.stub('modprobe', 'echo "modprobe $*" >> "$STUBLOG/calls"\n'
+                              '[ "$1" = dummy ] && [ -n "${DUMMY0:-}" ] && mkdir "$DUMMY0"\nexit "${MODPROBE_RC:-0}"')
+        self.stub('ip', 'echo "ip $*" >> "$STUBLOG/calls"\nexit "${IP_RC:-0}"')
+        dummy0 = self.tmp / 'dummy0'
+        for shell in self.each_shell():
+            r, calls = self.run_script(shell, 'extra-modules')                       # 5.4: left alone
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertNotIn('ims_bridge', calls)
+            self.assertNotIn('modprobe dummy', calls)
+        self.stub('uname', 'echo 6.18.57')
+        mods = self.tmp / 'lib' / 'modules' / '6.18.57'
+        for sub in ('', 'extra'):
+            ko = mods / sub / 'ims_bridge.ko'
+            ko.parent.mkdir(parents=True, exist_ok=True)
+            ko.write_text('')
+            for shell in self.each_shell():
+                r, calls = self.run_script(shell, 'extra-modules')
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertIn(f'insmod {ko}', calls)
+                self.assertIn('loaded ims_bridge', r.stdout)
+                self.assertIn('modprobe dummy', calls)                               # dummy0, its input_device
+                self.assertIn('ip link add dummy0 type dummy', calls)                # the driver made none
+                r, calls = self.run_script(shell, 'extra-modules', IP_RC=1)
+                self.assertIn('FAILED dummy0', r.stdout)
+                r, calls = self.run_script(shell, 'extra-modules', DUMMY0=str(dummy0))
+                self.assertIn('modprobe dummy', calls)
+                self.assertNotIn('ip link add', calls)                               # the driver made it
+                dummy0.rmdir()
+                r, calls = self.run_script(shell, 'extra-modules', INSMOD_RC=1)
+                self.assertEqual(r.returncode, 0, r.stderr)                          # a failure is logged, not fatal
+                self.assertIn('FAILED ims_bridge', r.stdout)
+                self.assertNotIn('modprobe dummy', calls)
+                r, calls = self.run_script(shell, 'extra-modules', 'ims_bridge 245760 0 - Live 0x0 (O)\n')
+                self.assertNotIn('ims_bridge', calls)                                # loaded already
+                self.assertIn('modprobe dummy', calls)
+                dummy0.mkdir()
+                r, calls = self.run_script(shell, 'extra-modules')
+                self.assertNotIn('modprobe dummy', calls)                            # there already
+                dummy0.rmdir()
+            ko.unlink()
 
     def test_refuses_after_the_wait(self):
         """K46: the packet domain never comes up: exit 1 after MU300_DELE_WAIT s, the module is not inserted."""

@@ -387,5 +387,32 @@ class Dtmf(unittest.TestCase):
                     self.assertEqual(r.returncode == 0, running)
 
 
+class VideoDial(unittest.TestCase):
+    """FINDINGS 192: a video call is placed as UNISOC's RIL places one; a voice call as before."""
+
+    def dial(self, *args, answer='OK'):
+        # a stand-in modem answering every command with the given answer; the commands go to fd 3
+        script = ('at() { echo "$1" >&3; echo "%s"; }\n' % answer + DspClock.func(VOICE.read_text(), 'dial') +
+                  'dial %s 3>&1 1>/dev/null\n' % ' '.join(args))
+        r = subprocess.run(['sh', '-c', script], capture_output=True, text=True)
+        return r.returncode, r.stdout.splitlines()
+
+    def test_video_switches_video_telephony_on_and_dials_without_the_semicolon(self):
+        self.assertEqual(self.dial('10086', 'video'), (0, ['AT+SPVIDEOTYPE=3', 'ATD=10086']))
+
+    def test_no_dial_when_video_telephony_is_refused(self):
+        # ATD= without the semicolon would go out as a data call; mu300-at exits 0 on ERROR, only an OK counts
+        self.assertEqual(self.dial('10086', 'video', answer='ERROR'), (1, ['AT+SPVIDEOTYPE=3']))
+
+    def test_voice_dials_as_before(self):
+        self.assertEqual(self.dial('10086'), (0, ['ATD10086;']))
+
+    def test_call_takes_video_before_the_number(self):
+        src = VOICE.read_text()
+        body = src[src.index('\ncall)\n'):src.index('\ndemo)')]
+        self.assertIn('[ "${1:-}" = --video ]', body)
+        self.assertIn('dial "$num" $kind || exit 1', body)
+
+
 if __name__ == '__main__':
     unittest.main()
