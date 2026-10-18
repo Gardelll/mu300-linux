@@ -71,9 +71,11 @@ fi
 # Three fixes from the Rongyue E5 port of the same drivers (kanoqwq/e5-linux, same SoC family, measured there):
 # period events from an hrtimer because the AGCP DMA interrupt never arrives, no DMA position read while the
 # AGCP domain is asleep, and the DSP front ends offered only the formats and layouts the DSP takes.
+# And one of ours: a DSP reply left behind by a killed command no longer fails the next one (FINDINGS 188).
 for p in audio-pcm-period-timer:sprd_pcm_period_tick:sprd/platform/dmaengine_pcm \
          audio-pcm-pointer-agcp-access:last_pointer:sprd/platform/dmaengine_pcm \
-         audio-fe-dai-formats:fe_dai_uses_mcdt:sprd/dai/vbc/v4/fe_dai; do
+         audio-fe-dai-formats:fe_dai_uses_mcdt:sprd/dai/vbc/v4/fe_dai \
+         audio-sipc-stale-reply:dropped:sprd_audio/audiosipc; do
     name=${p%%:*}; rest=${p#*:}; mark=${rest%%:*}; dir=${rest#*:}
     if ! grep -rq "$mark" $A/$dir; then
         (cd $A && patch -p1 -s -f < /work/patches/$name.patch)
