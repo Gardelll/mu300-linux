@@ -2169,8 +2169,9 @@ an address that is not bonded, and nothing is left running. The call itself, on 
 still unmeasured.
 
 ### 24d. A call carries audio: the voice port had no clock
-Measured on F50-C on 2026-10-17 (OpenWrt v2026.10.17.3 on the 5.4 kernel, the private audio stack, the 41S DSP image
-of 24c). Six calls went to the owner's own phone, and he reported what he heard:
+Measured on F50-C on 2026-10-17 (OpenWrt v2026.10.17.3 on the 5.4 kernel, the 5.4 audio stack now published as
+[mu300-audio](https://github.com/dikeckaan/mu300-audio), the 41S DSP image of 24c). Six calls went to the owner's
+own phone, and he reported what he heard:
 
 | call | what was sent | what he heard |
 |---|---|---|
@@ -2258,9 +2259,10 @@ Other things learned along the way:
   16 kHz was only tried without the clock (call 2).
 
 ### 24e. Both directions at the right speed: the downlink from the VBC dump, the uplink at 16 kHz
-Measured on F50-C on 2026-10-17 (OpenWrt v2026.10.17.4 on the 5.4 kernel, the private audio stack, the 41S DSP
-image), with the IIS1 clock of 24d. Most calls were left ringing and hung up before the answer: the network's
-early-media ringback (425 Hz, one second on, about four off) is a reference tone that needs nobody on the other end.
+Measured on F50-C on 2026-10-17 (OpenWrt v2026.10.17.4 on the 5.4 kernel, the 5.4 audio stack
+([mu300-audio](https://github.com/dikeckaan/mu300-audio)), the 41S DSP image), with the IIS1 clock of 24d. Most
+calls were left ringing and hung up before the answer: the network's early-media ringback (425 Hz, one second on,
+about four off) is a reference tone that needs nobody on the other end.
 A few calls were answered by the owner, who counted aloud and then heard his recording played back.
 
 **`FE_ST_VOICE_C` stays at half rate whatever is changed.** The tap runs at 8000 frames/s until the modem starts the
@@ -2295,7 +2297,7 @@ the board hung off USB until it was power-cycled. This was hit once, by a client
 PREPARE + START. aplay and arecord do the same on an underrun (EPIPE). Clients of these streams must not stop them:
 `stop_threshold` = the boundary, and for playback `silence_size` = the boundary, so that the kernel fills a late write
 with silence. A stream that does stop has to be closed and opened again. The driver could re-prepare the descriptor
-in `prepare`; that is a fix for the private audio patches.
+in `prepare`; that is a fix for the 5.4 audio patches (mu300-audio).
 
 **What uses this now.** For the dsp route, `mu300-voice audio start` switches the dump on at `DUMP_POS_DAC1_E` through
 its undo log (`MU300_VOICE_DUMP_TAP=0` leaves it off). `tone` plays at 16 kHz (`MU300_VOICE_PLAY_RATE`). `echo`
@@ -2375,7 +2377,8 @@ directory itself. `mu300-voice` used to refuse every non-5.4 kernel; it now refu
 drivers.
 
 At boot, `mu300-audio` runs on mainline when an AGDSP image is installed (`/lib/firmware/agdsp.bin`); without one,
-nothing loads. On 5.4 it runs when the private stack's `audio/` exists, as before.
+nothing loads. On 5.4 it runs when the `audio/` of [mu300-audio](https://github.com/dikeckaan/mu300-audio) exists,
+as before.
 
 **Faults 5.4 never showed, or hid.** The first two each oopsed F50-B at the first PCM open and rebooted it.
 
