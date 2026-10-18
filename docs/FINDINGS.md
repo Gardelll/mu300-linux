@@ -11704,3 +11704,52 @@ listed in the history. USB network ECM for one boot from the page: the next boot
 it), the choice was used up, the boot after that NCM again. No real incoming SMS was forwarded (nothing near F50-B to
 send one; the board's data works only through the VPN, so no internet target either).
 
+
+### 191. The IPA and Wi-Fi drivers filled OpenWrt's log in two minutes; now 33 kernel lines a minute and a 1 MiB log
+
+**Status: current** (device-tested on F50-C, OpenWrt, vendor kernel 5.4.254, 2026-10-18, two reboots; the mainline
+change is the same source edit, measured before on F50-B, 7.2.11).
+
+**What it was.** `logread` on F50-C held 1199 lines (128 KiB) that began 2.5 minutes before it was read: the
+services' boot lines were gone before anybody looked. A minute of `/dev/kmsg` on the idle hotspot (uptime 351-411 s,
+the modem's data up, the board's usual services running) gave **472 kernel lines (41.5 KB of text)
+a minute**, about 56 KiB a minute in logd:
+
+* **235 from the IPA.** With little traffic the IPA powers down and the next packet powers it up again, every 10-15
+  s, and each round trip printed about 30 info lines: `sipa_rm` resource state changes and "calling driver CB",
+  `sipa_dele`'s smsg exchange with the modem (`smsg_recv`, `smsg_send`, `on_cmd`, `pd_eb_flag`), "sipa ready to
+  suspend" / "sipa resume hrtimer start", and in `sipa_eth` "fail to send, ret -115" (at error level) with "stop
+  queue" / "SIPA LEAVE FLOWCTRL" / "wakeup queue". -115 is `-EINPROGRESS`: the packet found the IPA asleep, the
+  queue stops, and the resume's `SIPA_LEAVE_FLOWCTRL` starts it again. `sipa_nic_trigger_flow_ctrl_work()` did not
+  know that code either and warned "don't have this flow ctrl err type" each time. Nothing was wrong. (`sipa_dummy`
+  and `sipa_sys` printed nothing repeating.)
+* **169 from the Wi-Fi driver's TX path** (`sprd-wlan`): seven lines per transmit-complete round (free and data
+  counts, "to free list empty", ring reference counts), every firmware command response ("ctx_id 0 recv
+  rsp[CMD_SET_IE]"), every multicast frame, every beacon update (hostapd updated it every 6 s), and "out of time"
+  at error level whenever two TX completions were more than a second apart, i.e. every idle second.
+* **60 from the WCN loopcheck** (four lines every 5 s) and its 5 s DMA throughput line (`edma-tp`).
+* the rest: the power debug's light-sleep report (18), `mdbg_ring_write` (10), charger-manager's "battery overheat
+  or cold" (4, kept on purpose by logspam-quiet, #68: the only record of a JEITA charging stop).
+
+The mainline kernels have the same IPA drivers (upstream/modules/sprd_modem): F50-B on 7.2.11 printed 203 lines a
+minute, all of them IPA lines and the WCN `edma-tp`/`mdbg_tx_cb` ones (the mainline Wi-Fi driver was quiet
+already). On Ubuntu `kmsg-forward` writes warnings and errors to the journal on the eMMC: "fail to send" and the
+flow-control warning were 10 of them a minute.
+
+**Now.** At the source, for 5.4 (`kernel/patches/sipa-wcn-logspam-quiet.patch`, in KPATCHES after logspam-quiet, and
+`kernel/patches/wlan_combo-txrx-logs-quiet.patch`) and mainline (upstream/modules): these lines are `pr_debug` /
+`dev_dbg` / `netdev_dbg` / `WCN_DBG`, which `CONFIG_DYNAMIC_DEBUG` keeps available
+(`echo 'module sipa_core +p' > /sys/kernel/debug/dynamic_debug/control`). A failed send other than -EINPROGRESS is
+still an error, rate-limited; -EINPROGRESS has its own case in the flow-control switch. The errors next to them (a
+power domain refused, an smsg that could not be sent, a failed resource callback) are unchanged. On OpenWrt,
+`90-mu300` raises logd's buffer (`system.@system[0].log_size`) from a stock size (none, 64, 128 KiB) to 1024 KiB at
+every run; a size the user set stays. A boot alone writes about 1 MB to logd, a quarter of it the stock
+command line's `initcall_debug=1` (2158 `kern.debug` lines; the bootloader's, not ours).
+
+**Measured** (F50-C, same window, uptime 351-411 s, same idle state): **33 kernel lines (3.5 KB) a minute**, from 472
+(41.5 KB): the light-sleep report, `mdbg_ring_write` and the charger's JEITA line. In logread, 38 lines a minute of
+everything once the boot is over (about 4.7 KB). With 1024 KiB, 178 s after a boot logread held 8401 lines from the
+kernel's 1.47 s on; a service's line from a minute into the boot comes after 968 KB of them, so at 4.7 KB a minute it
+stays for about three hours (two minutes before). The new modules loaded (their `dynamic_debug` entries off), mobile
+data moved and the board's services came up as before after both reboots. `sipa_eth0`'s `tx_errors` still counts each
+-EINPROGRESS (the driver returns `NETDEV_TX_BUSY`); only the line is gone.
