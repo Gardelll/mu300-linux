@@ -1754,7 +1754,7 @@ Three separate traps, and the first one hid the other two for an evening. `mu300
   this repository and there cannot be: the project publishes no proprietary files, and unlike the Wi-Fi and
   modem firmware there is no copy on the device to take.
 * **The card registers: `sprdphone-sc2730`, 19 PCM devices, `FE_ST_VOICE_PCM_P` at card 1 device 53.** That
-  is the same card the community Android modules produce, and that endpoint is exactly what sipserver looks
+  is the same card the community Android modules produce, and that endpoint is exactly what call-audio programs look
   for. `mu300-audio-dsp load` does it in one command and it survives a reboot.
 * **The last thing in the way was the DMA engine, and nothing says so.** `CONFIG_SPRD_DMA` is a module and
   nothing pulls it in, so `/sys/class/dma` is empty, `sprd-pcm-audio` defers for want of a channel, its
