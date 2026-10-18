@@ -11638,6 +11638,17 @@ What FINDINGS 187 left to the OpenWrt panel is on Ubuntu now, through mu300-api 
   `sms.forward_log_clear`; the page has the LuCI form with both preset menus (body: WeCom/DingTalk, Feishu/Lark;
   answer check: errcode=0, code=0, code=200, ok=true) and the delivery log. E-mail needs msmtp, which the Ubuntu image
   does not have either (the page says so).
+* **Nothing of a message in a command line.** A review of the forwarding path found what anyone on the device could
+  read with `ps`: the first Ubuntu SMS target passed the forwarding number and the text as `sms send` arguments, and
+  both `sms` and openwrt-luci's `mu300-sms` handed the recipient and the text to the PDU encoder as `awk -v`
+  arguments (mu300-api's `sms.send` passed them to `sms` as arguments too). Now `sms send --stdin` and
+  `mu300-sms send --stdin` (without a number) take the number on stdin's first line and the text after it,
+  `sms-pdu.awk` reads `MU300_PDU_NUMBER` and `MU300_PDU_TEXT` from its environment (no `-v` escape handling either,
+  so a backslash stays one), and mu300-api and mu300-sms-forward use them. `mu300-sms-forward` refuses a runtime or
+  state directory that is a link or not its own (the `/tmp` fallback of its RAM directory had a fixed name), and
+  `mu300-sms-forward.service` runs with `UMask=0077` (the watch's list of seen messages holds senders and times).
+  Tests: the stub `awk`/`sms`/`curl` record their arguments and none holds the number, the text, the URL's token or
+  a header; the curl helper's request directory is 0700 and gone afterwards.
 * **AT command history.** `at.send` appends to the control panel's file (`/var/run/unisoc-modem/at-history`, the
   last 40, RAM, root only) and `at.history` reads it, newest first. mu300-api says nothing is logged that is secret,
   so commands that carry a PIN or password (`AT+CPIN=`, `CPWD`, `CLCK`, `CGAUTH`) are kept as `AT+CPIN=...`. The page

@@ -16,6 +16,8 @@ ExecStart=/opt/mu300/bin/sms watch /usr/libexec/unisoc-modem/forward-feed
 # sms watch prints every message it sees: never into the journal (the forwarding's log names no sender, no text)
 StandardOutput=null
 StandardError=journal
+# what it writes (the pool, the watch's list of seen messages: senders and times) is root's alone
+UMask=0077
 Restart=on-failure
 RestartSec=30
 
