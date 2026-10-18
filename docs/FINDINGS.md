@@ -11707,8 +11707,8 @@ send one; the board's data works only through the VPN, so no internet target eit
 
 ### 191. The IPA and Wi-Fi drivers filled OpenWrt's log in two minutes; now 33 kernel lines a minute and a 1 MiB log
 
-**Status: current** (device-tested on F50-C, OpenWrt, vendor kernel 5.4.254, 2026-10-18, two reboots; the mainline
-change is the same source edit, measured before on F50-B, 7.2.11).
+**Status: current** (device-tested on F50-C, OpenWrt, vendor kernel 5.4.254, and on F50-B, Ubuntu 24.04, 7.2.11,
+2026-10-18).
 
 **What it was.** `logread` on F50-C held 1199 lines (128 KiB) that began 2.5 minutes before it was read: the
 services' boot lines were gone before anybody looked. A minute of `/dev/kmsg` on the idle hotspot (uptime 351-411 s,
@@ -11738,13 +11738,13 @@ flow-control warning were 10 of them a minute.
 
 **Now.** At the source, for 5.4 (`kernel/patches/sipa-wcn-logspam-quiet.patch`, in KPATCHES after logspam-quiet, and
 `kernel/patches/wlan_combo-txrx-logs-quiet.patch`) and mainline (upstream/modules): these lines are `pr_debug` /
-`dev_dbg` / `netdev_dbg` / `WCN_DBG`, which `CONFIG_DYNAMIC_DEBUG` keeps available
-(`echo 'module sipa_core +p' > /sys/kernel/debug/dynamic_debug/control`). A failed send other than -EINPROGRESS is
-still an error, rate-limited; -EINPROGRESS has its own case in the flow-control switch. The errors next to them (a
-power domain refused, an smsg that could not be sent, a failed resource callback) are unchanged. On OpenWrt,
-`90-mu300` raises logd's buffer (`system.@system[0].log_size`) from a stock size (none, 64, 128 KiB) to 1024 KiB at
-every run; a size the user set stays. A boot alone writes about 1 MB to logd, a quarter of it the stock
-command line's `initcall_debug=1` (2158 `kern.debug` lines; the bootloader's, not ours).
+`dev_dbg` / `netdev_dbg` / `WCN_DBG`; 5.4 has `CONFIG_DYNAMIC_DEBUG`, which keeps them available (`echo 'module
+sipa_core +p' > /sys/kernel/debug/dynamic_debug/control`; the mainline config compiles them out). A failed send other
+than -EINPROGRESS is still an error, rate-limited; -EINPROGRESS has its own case in the flow-control switch. The
+errors next to them (a power domain refused, an smsg that could not be sent, a failed resource callback) are
+unchanged. On OpenWrt, `90-mu300` raises logd's buffer (`system.@system[0].log_size`) from a stock size (none, 64,
+128 KiB) to 1024 KiB at every run; a size the user set stays. A boot alone writes about 1 MB to logd, a quarter of it
+the stock command line's `initcall_debug=1` (2158 `kern.debug` lines; the bootloader's, not ours).
 
 **Measured** (F50-C, same window, uptime 351-411 s, same idle state): **33 kernel lines (3.5 KB) a minute**, from 472
 (41.5 KB): the light-sleep report, `mdbg_ring_write` and the charger's JEITA line. In logread, 38 lines a minute of
@@ -11753,3 +11753,7 @@ kernel's 1.47 s on; a service's line from a minute into the boot comes after 968
 stays for about three hours (two minutes before). The new modules loaded (their `dynamic_debug` entries off), mobile
 data moved and the board's services came up as before after both reboots. `sipa_eth0`'s `tx_errors` still counts each
 -EINPROGRESS (the driver returns `NETDEV_TX_BUSY`); only the line is gone.
+
+F50-B (7.2.11, a bundle of this tree through `mu300-update boot`, then `rollback-boot` to its release kernel): **5
+kernel lines a minute** at uptime 402-462 s, from 203 (one `sprd-mpm` wakeup report, one loopcheck heartbeat); the
+journal had no "fail to send" or flow-control line that boot, and br-lan and mobile data came up.
